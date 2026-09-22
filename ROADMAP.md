@@ -2,13 +2,11 @@
 
 ## Phase 0 — Spikes (resolve before building)
 
-These questions decide whether specific modules are even feasible and should be answered first.
-
-- [ ] **Verify bouquet editor API** — open WebControl's bouquet editor in a browser, watch the Network tab in devtools while moving/saving. Is there a reusable local endpoint (port 80), or does DreamHub need to parse/write bouquet files itself?
-- [ ] **Verify hardware transcoding** — check the box's Addon/Plugin Manager: is a "Transcoding" plugin even offered for the Dreambox One? (The S922X is a decode-only chip per its datasheet — likely no.)
-- [ ] **Verify ffmpeg availability** — is ffmpeg preinstalled on the box, or does it need to be provided separately for ARM64/DreamOS (needed for FilmHub's lossless trimmer)?
-- [ ] **List all recording sidecar files** — confirm `.ts`, `.ts.meta`, `.ts.ap`, `.ts.sc`, `.ts.cuts`, possibly `.eit` against the current firmware version, so the rename engine doesn't miss any.
-- [ ] **Verify Enigma2 language mechanism** — confirm reading `config.osd.language.value` and the correct gettext `.po`/`.mo` loading convention other Enigma2 plugins use, for the plugin's multilingual support.
+- [x] **Bouquet editing** — resolved: don't reimplement. A separate, existing Enigma2 webif plugin ("Bouqueteditor") already provides a complete bouquet editing UI. Link to or embed it; consider re-skinning later.
+- [x] **Hardware transcoding** — resolved: confirmed unavailable on this hardware.
+- [x] **ffmpeg availability** — resolved: available via the standard feed (package `ffmpeg`). Declare it as a dependency in DreamHub's own `.ipk` rather than assuming it's preinstalled, so it's pulled in on any device.
+- [x] **Enigma2 language mechanism** — resolved: `PluginLanguageDomain`/`PluginLanguagePath` + `gettext.bindtextdomain()` + `language.addCallback()`, `.po`→`.mo` via `msgfmt`. Reference: [`opendreambox/enigma2-plugins`](https://github.com/opendreambox/enigma2-plugins), [`opendreambox/enigma2-po`](https://github.com/opendreambox/enigma2-po).
+- [ ] **List all recording sidecar files** — still open. Needs read-only `ls -la` on an existing recording under `/media/hdd/movie/` via Telnet/SSH on the actual device — not verifiable remotely.
 
 ## Phase 1 — Base Engine
 
@@ -30,7 +28,7 @@ Go backend (port 8080) with a minimal embedded frontend. Filesystem scanner for 
 
 - Rebuild existing WebControl functionality (OSD screenshot, system message, power menu, live metrics) with a modern UI — the logic already exists, this is purely a UI upgrade.
 - **Grid EPG ("TV guide" view)**: tabular multi-channel overview. Online/AI enrichment (TMDB or similar) **only** for movie/series genres — daily formats (news, magazines) get no useful match.
-- **Bouquet editor**: implementation depends on the Phase 0 spike result.
+- **Bouquet editor**: link to/embed the existing "Bouqueteditor" plugin rather than reimplementing (see Phase 0). Re-skin its UI later if needed for visual consistency with the rest of DreamHub.
 - The Enigma2 plugin side of this phase must read and follow `config.osd.language.value` — see multilingual requirement.
 
 ## Phase 5 — Live-Streaming Bridge
@@ -53,4 +51,4 @@ Go backend (port 8080) with a minimal embedded frontend. Filesystem scanner for 
 
 ## Phase 8 — Packaging
 
-Target: an `.ipk` package installable via its own opkg feed, instead of a binary manually placed over Telnet. Risk from missing core firmware updates is already low (manufacturer insolvent), but proper packaging remains the goal for maintainability and future updates.
+Target: an `.ipk` package installable via its own opkg feed, instead of a binary manually placed over Telnet. Risk from missing core firmware updates is already low, but proper packaging remains the goal for maintainability and future updates. Declare real package dependencies (e.g. `ffmpeg`) in the `.ipk` control file rather than assuming they're preinstalled, so DreamHub installs cleanly on any device, not just a reference box that already happens to have them.

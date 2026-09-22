@@ -44,7 +44,7 @@ Established during planning research — treat as ground truth, don't re-derive:
 
 - **Backend**: Go, statically compiled for ARM64, single binary, port 8080. REST API + WebSockets.
 - **Frontend**: PWA (Vue.js + Tailwind), embedded into the Go binary via `go:embed`.
-- **Enigma2 TV client**: a minimal Python plugin (Py2/Py3-compatible), display-only, calling `127.0.0.1:8080` — no business logic on the Enigma2 side.
+- **Enigma2 TV client**: a minimal Python plugin, display-only, calling `127.0.0.1:8080` — no business logic on the Enigma2 side. Target **Python 2.7 specifically** — confirmed on-device as the only interpreter present (`python3` doesn't exist on this box; `enigma2` itself is a compiled ARM64 binary, Python 2.7 is just the plugin layer).
 - **Distribution target**: an installable `.deb` package via a proper apt feed — not a binary manually placed over Telnet. Persistence risk is already low (see OTA fact above), but proper packaging is still the goal for maintainability and future updates.
 - Coexists with native WebControl on port 80; never modifies it.
 - Must not depend on any external server that isn't guaranteed to be running — any feature touching one must be an on-demand/batch action, never something the core UI relies on being reachable.

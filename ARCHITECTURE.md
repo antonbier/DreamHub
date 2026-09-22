@@ -99,7 +99,63 @@ Other plugins present, listed for completeness (no direct overlap identified): `
 
 Third-party plugin feeds (e.g. `svenh-feed.list`, `mediaportal.list`, `plugins-boxpirates.list`) each get their own `.list` file in `sources.list.d/`. A DreamHub feed should follow the same convention: e.g. `/etc/apt/sources.list.d/dreamhub-feed.list` pointing at a self-hosted apt repository, with the `.deb` declaring `ffmpeg` as a `Depends` (see `PROJECT_PLAN.md`).
 
+## Runtime: systemd, not a bare embedded init
+
+Corrects an earlier assumption in this repo. PID 1 is `/lib/systemd/systemd` — **this box runs full systemd**, not a bare busybox-init/inittab setup as typically assumed for embedded receivers. `enigma2` itself runs as a proper unit:
+
+```ini
+# /lib/systemd/system/enigma2.service
+[Unit]
+Description=enigma2
+After=enigma2-environment.service sockets.target
+Requires=enigma2-environment.service sockets.target
+DefaultDependencies=no
+
+[Service]
+EnvironmentFile=/run/enigma2/environment
+EnvironmentFile=-/etc/default/enigma2
+ExecStart=/usr/bin/enigma2
+ExecStopPost=/usr/bin/enigma2-system-state
+Restart=on-failure
+RestartSec=0
+Type=notify
+
+[Install]
+WantedBy=graphical.target
+```
+
+**Impact on Phase 8 (packaging)**: DreamHub's backend should ship as a proper `dreamhub.service` systemd unit in its `.deb` (`Restart=on-failure`, `WantedBy=multi-user.target` or similar), not a hand-rolled autostart script. This is the standard, reliable persistence mechanism the platform already uses for its own core process — no need to invent anything.
+
+## Runtime: Python 2.7 only
+
+`python --version` → `Python 2.7.13`. **`python3` is not present on this box at all.** The `/usr/bin/enigma2` binary itself is a compiled ARM64 ELF executable (the C++ core); Python 2.7 is the plugin scripting layer. Drop the "Py2/Py3-compatible" hedge used elsewhere in this repo for the Enigma2 plugin — **target Python 2.7 specifically**, it's the only interpreter actually present.
+
+## Filesystem layout notes
+
+- **Picon (channel logo) storage**: `/data/piconpool` — standard PNG files, useful for showing channel logos in DreamHub's UI without needing to source/cache them separately.
+- `/media/hdd/` top level (beyond `movie/`): `SR_Backup` and `SR_Cover` (SeriesRecorder's own backup and cover-art cache — likely where some of the `.jpg` cover files found earlier actually originate from), firmware backup archives created by the GPT-Plugin (see below), a `mediaportal/` data folder, and an existing network mount to external NAS storage under `unraidnas/`.
+- Cron infrastructure exists (`busybox-cron`, `/etc/cron.daily/`, `/etc/cron/crontabs`) — available as an OS-level scheduling option for Phase 7, as an alternative/complement to the Go backend's own polling loop.
+- SSH is served by **dropbear**, not OpenSSH — a lightweight embedded SSH daemon; noted in case key-format quirks ever matter for tooling.
+
+## "GPT-Plugin" is not an AI plugin — false lead, resolved
+
+Read the actual source (`plugin.py`, `GPT_Setup.py`). **"GPT" here stands for GUID Partition Table**, not Generative Pre-trained Transformer. This is a firmware backup/flashing utility: method names include `showFlashDevices`, `showBackupDevices`, `backupFlash`, `flashSD_Card`, `flashBootDevice`, `checkFlashBooted`, `BoxReboot`. It manages flashing/backing up the box's boot partitions to SD/USB — completely unrelated to EPG or AI. **There is no existing AI/LLM plugin on this box.** Phase 6 (AI Discovery) is genuinely new ground, not overlapping with anything installed.
+
+## The other "overlapping" plugins are native GUI, not web — different surface than DreamHub
+
+Read the source structure of all four. Important correction to the earlier framing (issues #7–#9): **all of them are native, remote-control-driven, on-TV-screen plugins** — none expose a web/HTTP interface the way `WebBouquetEditor` or `WebAdmin` do. So they don't make the corresponding DreamHub module redundant; they solve the same underlying problem for a different surface (the TV + remote, not a browser/phone). This validates the "different approach" intuition — DreamHub's actual differentiator (browser-based, phone/tablet-usable control) isn't replicated by any of them. That said, each is a mature, working reference implementation worth reading before writing new logic from scratch:
+
+- **`GraphMultiEPG`**: the classic on-screen timeline grid EPG (`GraphMultiEpg.py`, uses `BouquetSelector`). Reference for the grid logic; DreamHub's Grid-EPG is still a new web build.
+- **`EPGSearch`**: on-screen EPG search, invoked via a key shortcut inside EPG screens, integrates with AutoTimer. Reference for search/filter logic.
+- **`TvSpielfilm`**: on-screen program guide with its own downloader pulling data from the TV Spielfilm service (`Downloader.py`). Confirms plugins can and do reach out to external APIs from the box — useful precedent for Phase 6's LLM calls.
+- **`CutListEditor`**: on-screen cut-marker editor built on the standard `InfoBarCueSheetSupport`/`ServicePositionGauge` components — confirms the standard mechanism for editing `.ts.cuts` files.
+- **`AdvancedMovieSelection`**: by far the most extensive — `SearchTMDb.py`, `SearchTMDbSeries.py`, `SearchTVDb.py`, `Rename.py`, `MoveCopy.py`, `TagEditor.py`, `Wastebasket.py`, `DownloadMovies.py`, `MoviePlayer.py`, `FileBrowser.py`, and more. It already does almost everything planned for FilmHub — TMDB/TVDB matching, renaming, moving, tagging, trash — just as an on-screen plugin. **Excellent reference implementation** for the naming/TMDB-matching engine specifically. **License note**: it's released under Creative Commons **Attribution-NonCommercial-ShareAlike 3.0** — fine to learn from and reference its approach, but its actual code cannot be copied into DreamHub (a different license) without complying with that license (attribution, non-commercial, share-alike).
+
+## WebControl plugin namespacing pattern
+
+Confirmed generalizes beyond `/bouqueteditor/`: **`DreamNetcast` runs under its own `/netcast/` path** the same way. `/web/external` is the endpoint WebControl itself calls to enumerate registered web plugins (populates the "WebPlugins" sidebar section). Any future DreamHub-adjacent web plugin should expect to register itself the same way if it wants to appear inside WebControl's own navigation — not required for DreamHub itself, which runs standalone on port 8080, but useful to know the convention exists.
+
 ## Open follow-ups
 
 - Write-permitted pass needed to confirm the `/bouqueteditor/` plugin's actual write endpoints (add/reorder/remove service) — not captured here since only read/list actions were performed.
-- The `GPT-Plugin` finding above should be investigated before any Phase 6 work starts.
+- `AdvancedMovieSelection`'s `Rename.py` and `SearchTMDb*.py` are worth a closer read (not just the file list) before starting Phase 2 — this session only confirmed their existence and rough purpose, not their actual logic.

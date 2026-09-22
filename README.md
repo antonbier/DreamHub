@@ -8,7 +8,7 @@ Combines media management, EPG search, TV control and optional AI recommendation
 
 - **Backend:** Go, statically compiled for ARM64. Runs on port 8080. REST API + WebSockets.
 - **Frontend:** PWA (Vue.js + Tailwind), embedded into the Go binary via `go:embed`.
-- **TV client:** a minimal Enigma2 plugin (Py2/Py3-compatible), display-only, calls `127.0.0.1:8080`.
+- **TV client:** a minimal Enigma2 plugin (Python 2.7 — confirmed the only interpreter on-device), display-only, calls `127.0.0.1:8080`.
 - **Distribution (target):** an installable `.deb` package via its own apt feed (this DreamOS build is apt/dpkg-based) — not a manually placed binary.
 
 ## Why this exists

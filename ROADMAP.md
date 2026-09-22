@@ -1,54 +1,56 @@
 # Roadmap
 
-## Phase 0 — Spikes (vor dem eigentlichen Bau klären)
+## Phase 0 — Spikes (resolve before building)
 
-Diese vier Fragen entscheiden über die Machbarkeit einzelner Module und sollten zuerst beantwortet werden.
+These questions decide whether specific modules are even feasible and should be answered first.
 
-- [ ] **Bouqueteditor-API prüfen** — WebControl-Bouqueteditor im Browser öffnen, Devtools → Network beim Verschieben/Speichern beobachten. Gibt es einen wiederverwendbaren lokalen Endpoint (Port 80), oder muss DreamHub Bouquet-Dateien selbst parsen/schreiben?
-- [ ] **Hardware-Transcoding verifizieren** — Addon-/Plugin-Manager der Box prüfen: wird ein "Transcoding"-Plugin für die Dreambox One überhaupt angeboten? (S922X ist laut Datenblatt ein reiner Decoder-Chip ohne Hardware-Encoder — vermutlich nein.)
-- [ ] **ffmpeg-Verfügbarkeit** — Ist ffmpeg auf der Box vorinstalliert, oder muss es separat für ARM64/DreamOS bereitgestellt werden (für den Lossless-Trimmer in FilmHub)?
-- [ ] **Sidecar-Dateien einer Aufnahme vollständig auflisten** — `.ts`, `.ts.meta`, `.ts.ap`, `.ts.sc`, `.ts.cuts`, ggf. `.eit` auf der aktuellen Firmware-Version gegenprüfen, damit die Rename-Engine nichts vergisst.
+- [ ] **Verify bouquet editor API** — open WebControl's bouquet editor in a browser, watch the Network tab in devtools while moving/saving. Is there a reusable local endpoint (port 80), or does DreamHub need to parse/write bouquet files itself?
+- [ ] **Verify hardware transcoding** — check the box's Addon/Plugin Manager: is a "Transcoding" plugin even offered for the Dreambox One? (The S922X is a decode-only chip per its datasheet — likely no.)
+- [ ] **Verify ffmpeg availability** — is ffmpeg preinstalled on the box, or does it need to be provided separately for ARM64/DreamOS (needed for FilmHub's lossless trimmer)?
+- [ ] **List all recording sidecar files** — confirm `.ts`, `.ts.meta`, `.ts.ap`, `.ts.sc`, `.ts.cuts`, possibly `.eit` against the current firmware version, so the rename engine doesn't miss any.
+- [ ] **Verify Enigma2 language mechanism** — confirm reading `config.osd.language.value` and the correct gettext `.po`/`.mo` loading convention other Enigma2 plugins use, for the plugin's multilingual support.
 
 ## Phase 1 — Base Engine
 
-Go-Backend (Port 8080) mit minimal eingebettetem Frontend. Dateisystem-Scanner für `/media/hdd/movie/`, liest `.ts.meta`, stellt Ergebnisse über REST-API bereit.
+Go backend (port 8080) with a minimal embedded frontend. Filesystem scanner for `/media/hdd/movie/`, parses `.ts.meta`, exposes results via REST API. Also where PWA i18n scaffolding (language selector, translation file structure) gets set up — see multilingual requirement in `PROJECT_PLAN.md`.
 
 ## Phase 2 — FilmHub
 
-- Grid-/Listenansicht für Aufnahmen.
-- Custom-Naming-Engine inkl. **aller** Sidecar-Dateien (nicht nur `.ts.meta` — siehe Phase 0).
-- Bulk Actions über Background-Queue.
-- Lossless Trimmer via `ffmpeg -c copy` (Hinweis: Schnitt ist keyframe-genau, nicht frame-genau).
+- Grid/list view for recordings.
+- Custom naming engine covering **all** sidecar files (not just `.ts.meta` — see Phase 0).
+- Bulk actions via a background queue.
+- Lossless trimmer via `ffmpeg -c copy` (note: cuts land on keyframe boundaries, not frame-exact).
 
 ## Phase 3 — AIO Universal Search
 
-- Quellen: lokale Aufnahmen, Timer/AutoTimer, SerienRecorder-Datenbank (bestätigt: SQLite unter `/etc/enigma2/SerienRecorder.db`).
-- EPG-Daten **nicht** durch eigenes Parsen von `epg.dat` gewinnen (undokumentiertes Binärformat, bricht bei Firmware-Updates) — stattdessen die bestehende lokale API von WebControl/Enigma2 anfragen.
+- Sources: local recordings, timers/AutoTimer, SeriesRecorder database (confirmed SQLite at `/etc/enigma2/SerienRecorder.db`).
+- EPG data should **not** come from parsing `epg.dat` directly (undocumented binary format, breaks across firmware updates) — query Enigma2/WebControl's existing local API instead.
 
-## Phase 4 — TV Control & WebAdmin (modernisierte Fassade)
+## Phase 4 — TV Control & WebAdmin (modernized facade)
 
-- Bestehende WebControl-Funktionen (OSD-Screenshot, System-Message, Power-Menü, Live-Metriken) mit moderner UI neu bauen — Logik existiert bereits, hier geht es nur um die Oberfläche.
-- **Grid-EPG ("TV-Zeitschrift")**: tabellarische Mehrkanal-Übersicht. Online-/KI-Anreicherung (TMDB o. ä.) **nur** für Film-/Serien-Genres — bei Tagesformaten (Nachrichten, Magazine) bringt Matching nichts.
-- **Bouqueteditor**: Umsetzung hängt von Spike-Ergebnis aus Phase 0 ab.
+- Rebuild existing WebControl functionality (OSD screenshot, system message, power menu, live metrics) with a modern UI — the logic already exists, this is purely a UI upgrade.
+- **Grid EPG ("TV guide" view)**: tabular multi-channel overview. Online/AI enrichment (TMDB or similar) **only** for movie/series genres — daily formats (news, magazines) get no useful match.
+- **Bouquet editor**: implementation depends on the Phase 0 spike result.
+- The Enigma2 plugin side of this phase must read and follow `config.osd.language.value` — see multilingual requirement.
 
 ## Phase 5 — Live-Streaming Bridge
 
-- Kein Software-Transcoding (S922X hat keinen Hardware-Encoder → wäre CPU-intensiv).
-- HTML5-Inline-Player nur für Sender mit AAC-kompatiblem Audio.
-- Für alle anderen Sender (AC3-Audio): Fallback auf **"In VLC öffnen"** (`.m3u`-Link an native VLC-App), da VLC eigene Audio-Decoder mitbringt und der Browser-Codec-Beschränkung (kein AC3 im HTML5-`<video>`) so ausweicht.
-- Kein In-Page-Embedding via Browser-Plugin (NPAPI/VLC-Plugin und Chromes "VXG" sind beide tot/veraltet).
+- No software transcoding (the S922X has no hardware encoder — would be CPU-heavy).
+- Inline HTML5 player only for channels with AAC-compatible audio.
+- For all other channels (AC3 audio): fall back to **"open in VLC"** (`.m3u` link handed off to the native VLC app), since VLC brings its own audio decoders and sidesteps the browser's codec restriction (no AC3 in HTML5 `<video>`).
+- No in-page embedding via browser plugin — both the old NPAPI VLC plugin and Chrome's "VXG" are dead/deprecated.
 
 ## Phase 6 — AI Discovery
 
-- Tagesaktuelles EPG (gefiltert nach Nutzerauswahl relevanter Sender in den Settings — Relevanz, nicht primär Kosten) an LLM-API senden, Empfehlung als OSD auf Fernbedienungs-Tastendruck.
-- Grobe Kostenschätzung: ~30 Sender × ~20 Sendungen/Tag × ~150 Tokens ≈ 90k Tokens/Tag — unkritisch im Cent-Bereich, Sender-Filter dient primär der Empfehlungsqualität.
+- Send the current day's EPG — filtered to the user's selected subset of channels in Settings, for recommendation relevance, not primarily cost — to an LLM API. Recommendation shown as an OSD on a remote button press.
+- Rough cost estimate: ~30 channels × ~20 programs/day × ~150 tokens ≈ 90k tokens/day — cents-level, not a real cost concern. The channel filter exists to improve recommendation quality, not to save money.
 
 ## Phase 7 — Plugin & Script Hub
 
-- Kein tiefer Enigma2-Hook für Events (zu aufwändig für v1).
-- Stattdessen: Go-Backend pollt `/api/timerlist` alle 30–60s und erkennt Statuswechsel (z. B. "Aufnahme beendet") selbst — ausreichend für Skript-Trigger.
-- Trennung: `scripts/` (einfache Bash/Python-Hooks) vs. `plugins/` (fest eingebundene Backend-Routen mit eigenem Settings-Tab).
+- No deep Enigma2 event hook (too much effort for v1).
+- Instead: the Go backend polls `/api/timerlist` every 30–60s and detects state changes itself (e.g. "recording finished") — good enough for script triggers.
+- Separation: `scripts/` (simple Bash/Python hooks) vs. `plugins/` (deeply integrated backend routes with their own settings tab).
 
 ## Phase 8 — Packaging
 
-Ziel-Zustand: `.ipk`-Paket über einen eigenen opkg-Feed installierbar, statt manuell per Telnet platziertem Binary. Risiko durch fehlende Kern-Firmware-Updates (Hersteller insolvent) ohnehin gering, sauberes Packaging bleibt trotzdem das Ziel für Wartbarkeit/Updates.
+Target: an `.ipk` package installable via its own opkg feed, instead of a binary manually placed over Telnet. Risk from missing core firmware updates is already low (manufacturer insolvent), but proper packaging remains the goal for maintainability and future updates.

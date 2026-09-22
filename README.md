@@ -1,26 +1,26 @@
 # DreamHub
 
-Modernes All-in-One Erweiterungssystem für die **Dreambox One (DreamOS AIO, Amlogic S922X)**.
+A modern all-in-one extension system for the **Dreambox One (DreamOS AIO, Amlogic S922X)**.
 
-Vereint Media-Management, EPG-Suche, TV-Steuerung und optionale KI-Empfehlungen in einer schnellen Weboberfläche — als Ergänzung, nicht als Ersatz für das native WebControl (Port 80).
+Combines media management, EPG search, TV control and optional AI recommendations in a fast web interface — as a companion to the native WebControl (port 80), not a replacement for it.
 
-## Tech-Stack
+## Tech stack
 
-- **Backend:** Go, statisch kompiliert für ARM64. Läuft auf Port 8080. REST-API + WebSockets.
-- **Frontend:** PWA (Vue.js + Tailwind), via `go:embed` in die Go-Binary eingebettet.
-- **TV-Client:** minimales Enigma2-Plugin (Py2/Py3-kompatibel), rein anzeigend, ruft nur `127.0.0.1:8080` ab.
-- **Distribution (Ziel):** installierbares `.ipk`-Paket über einen eigenen Feed — kein manuell platziertes Binary.
+- **Backend:** Go, statically compiled for ARM64. Runs on port 8080. REST API + WebSockets.
+- **Frontend:** PWA (Vue.js + Tailwind), embedded into the Go binary via `go:embed`.
+- **TV client:** a minimal Enigma2 plugin (Py2/Py3-compatible), display-only, calls `127.0.0.1:8080`.
+- **Distribution (target):** an installable `.ipk` package via its own feed — not a manually placed binary.
 
-## Warum überhaupt
+## Why this exists
 
-Alles, was "App-artig" ist (Fotos, Musik, Dashboards), macht Android TV auf dem Fernseher ohnehin besser. Sinnvoll ist nur, was **nur die Dreambox kann**, weil sie den einzigen Tuner im Haus hat: Live-TV, EPG, Aufnahmen, Timer. Das aktuelle native WebControl ist funktional, aber optisch und funktional veraltet — DreamHub soll das ersetzen, ohne den Enigma2-Kern anzufassen.
+Anything "app-like" (photos, music, dashboards) is already better handled by Android TV on the actual TV. The only thing worth building is what **only the Dreambox can do**, because it's the only device in the house with a tuner: live TV, EPG, recordings, timers. The current native WebControl is functional but dated, both visually and functionally — DreamHub aims to replace that experience without touching the Enigma2 core itself.
 
 ## Status
 
-Frühe Planungsphase. Siehe [ROADMAP.md](ROADMAP.md) für Module, Phasen und offene technische Fragen.
+Early planning phase. See [PROJECT_PLAN.md](PROJECT_PLAN.md) for full context (including rejected alternatives and confirmed technical facts) and [ROADMAP.md](ROADMAP.md) for the phase breakdown.
 
-## Nicht im Scope
+## Out of scope
 
-- **Space-Saver / Transcoding auf Unraid:** verworfen, weil der Unraid-Server nicht 24/7 läuft. Wird stattdessen als separates, unabhängiges Skript gelöst, das fertige Releases über den Arr-Stack nachlädt — kein Live-Feature, keine Abhängigkeit von DreamHub.
-- **Home Assistant Integration:** nicht relevant, wird nicht genutzt.
-- **Casting auf andere Geräte:** bereits durch DreamEPG Premium gelöst.
+- **Space-Saver / transcoding via Unraid:** dropped — the Unraid server isn't on 24/7. Solved separately, as an independent script that re-downloads finished releases through the Arr stack — not a live feature, no dependency on DreamHub.
+- **Home Assistant integration:** not used, not needed.
+- **Casting to other devices:** already solved by DreamEPG Premium.

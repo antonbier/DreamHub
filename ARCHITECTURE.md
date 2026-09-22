@@ -221,6 +221,58 @@ Treat it the same way as the other already-installed plugins in this document: a
 
 Not resolved — flagging honestly rather than guessing at a mechanism this session didn't actually verify. **Don't assume WebControl's `/web/*` API is always open on every device** just because it behaved that way here; the setting says it shouldn't be. If DreamHub's own backend ever proxies or depends on WebControl's API working unauthenticated, that assumption should be re-verified per device rather than taken as a given from this one inspection.
 
+## Three plugin tiers, not two
+
+Corrects/extends the earlier plugin survey, which only covered `Extensions/` and `SystemPlugins/`. There's a third, separate category: **`Plugins/GP4/`** — Gemini Project's own **first-party** plugins, distinct from both core Enigma2 and community `Extensions/`:
+
+```
+geminiaddonmanager   geminifilebrowser   geminiqbutton
+geminibluepanel       geminihwmanager     geminireceive
+geminibluetooth        geminiimagebackup   geminiserver
+geminicamswitch        geminilocale        geministreamripper
+geminicomm             gemininetcast       geminiwebremote
+                       gemininetcastwebif   geminiwidgets
+                       gemininetscan        geminizerotier
+                       geminioscaminfo
+```
+
+This resolves several earlier findings cleanly:
+
+- **`geminizerotier`** — ZeroTier isn't something bolted on separately; it's a **built-in, first-party remote-access feature of this image**. Explains the `zt...` interface and running `zerotier-one` process found earlier.
+- **`geminiwebremote`** — the actual implementation behind the "WebRemote" feature under WebControl's Steuerung tab.
+- **`geminioscaminfo`** / **`geminicamswitch`** — first-party integration with the OSCam CAM emulator found running earlier.
+- **`gemininetcast`** / **`gemininetcastwebif`** — "DreamNetcast" in the WebPlugins sidebar; the `webif` half explains the separate `/netcast/` URL namespace observed.
+- **`geminiimagebackup`** — likely the underlying engine behind the flash/backup functionality also exposed via the (community-authored) `GPT-Plugin`.
+- **Important contrast with `Extensions/`**: GP4 plugins are **closed** — shipped as compiled `.pyo` bytecode, some with compiled native `.so` libraries (`geminiwebremote/webremotetools.so`), no readable `.py` source. Community `Extensions/` plugins (SeriesRecorder, AdvancedMovieSelection, etc.) are plain, readable Python. Treat GP4 the same way as WebControl itself: observe its behavior/API, don't expect to read how it works internally.
+
+So the honest three-tier picture for "what comes from the system" is: **(1)** core Enigma2 + generic `SystemPlugins/` (open, part of the wider Enigma2 ecosystem), **(2)** Gemini Project's own closed `GP4/` layer (this image's actual value-add over plain Enigma2 — remote access, web remote, addon management), **(3)** community `Extensions/` (SeriesRecorder, AdvancedMovieSelection, MediaPortal, etc. — third-party, mostly open, independently maintained, installed via the feed system).
+
+## Package feeds are unsigned (`[trusted=yes]`)
+
+Read `geminilocale/plugin.py` (turns out to be misleadingly named — it's not about UI language at all, it's the component that **auto-detects the box's architecture/image type and writes the apt feed config files** found earlier under `/etc/apt/sources.list.d/`). The line it generates:
+
+```
+deb [trusted=yes] <url><type> ./
+```
+
+**`[trusted=yes]` means no GPG signature verification** — this platform's own feeds (and by extension, anything installed from them) aren't cryptographically verified. Two implications for DreamHub: packaging doesn't need to deal with GPG signing to match platform convention (lowers the Phase 8 bar), but it's also worth being aware there's no supply-chain verification happening anywhere in this ecosystem, on this device, by default.
+
+## WebAdmin's own Scripts/Terminal/Feed features (Phase 7/8 precedent)
+
+The `WebAdmin` plugin (endpoint namespace `/webadmin/*`) already provides three things directly relevant to later phases:
+
+- **`/webadmin/web/scriptlist`** — a "User Scripts" upload feature (currently empty on the reference device). A real, existing precedent for Phase 7's script hub — worth deciding whether DreamHub complements or duplicates this.
+- **`/webadmin/terminal/`** — a full **web-based root shell**, proxying to `shellinaboxd` (confirmed: the browser tab literally retitles to "Shell In A Box"). Not touched beyond confirming it exists — this is a live root shell, exploring further wasn't warranted for a documentation pass.
+- **A feed-management UI** with **"Upload new \*-feed.list"** — end users can add a custom apt feed (i.e. DreamHub's own) through this existing web page, no Telnet/SSH required. This is the actual, friendly install path to document for end users in Phase 8, not just "add a file via SSH."
+
+## No JSON API — XML only
+
+Tested directly: `?format=json` and `Accept: application/json` both still return XML from `/web/deviceinfo`. There is no shortcut here — DreamHub's Go backend needs a real XML parser (`encoding/xml` is fine) for anything it pulls from WebControl's API.
+
+## CLI tools available for Phase 7 scripts
+
+Confirmed present: `curl`, `wget`, `python` (2.7), `tar`, `unzip`, `sed`, `awk`. **Confirmed absent**: `jq`, `git`, `rsync`, `sqlite3`. Any bundled example scripts for the Phase 7 script hub should assume only the first list, or declare the others as explicit `.deb` dependencies if needed.
+
 ## Open follow-ups
 
 - Write-permitted pass needed to confirm the `/bouqueteditor/` plugin's actual write endpoints (add/reorder/remove service) — not captured here since only read/list actions were performed.

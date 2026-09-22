@@ -1,6 +1,6 @@
 # DreamHub — Project Plan
 
-Full technical context for DreamHub, written for whoever picks up the project next. Read this before writing any code.
+Full technical context for DreamHub, written for whoever picks up the project next. Read this before writing any code — and read [`ARCHITECTURE.md`](ARCHITECTURE.md) right after, it documents the actual platform (confirmed via a read-only inspection of a reference device): the WebControl API surface, already-installed plugins that overlap with planned modules, process/service layout, and config conventions.
 
 ## 1. Core insight
 
@@ -37,7 +37,7 @@ Established during planning research — treat as ground truth, don't re-derive:
 - **`ffmpeg-mp`** (seen in the Addon Manager) is a separate, fully self-contained ffmpeg build bundled under `/data/mediaportal/extra/ffmpeg/` for MediaPortal's own use — not on `PATH`, doesn't replace the system ffmpeg. Useful precedent if DreamHub ever needs GPL codecs the system build lacks: bundle your own binary+libs the same way, don't try to replace the system one. Not needed for anything currently planned.
 - Confirmed encoder list includes an `h264_v4l2m2m` entry (V4L2 hardware encoder wrapper) despite the no-hardware-encoder conclusion elsewhere in this doc. This is only a compiled-in wrapper registration, not proof the underlying kernel driver actually supports hardware encode on this SoC — the owner's own testing says hardware transcoding doesn't work in practice. Treat as unresolved/low-priority; would need an actual write-permitted test to confirm either way, not done here since this check was read-only.
 - **No hardware transcoding** — confirmed unavailable on this hardware, consistent with the no-hardware-encoder fact above. Any streaming approach must assume software-only, and therefore avoid transcoding entirely (see Phase 5).
-- **Enigma2 plugin localization mechanism confirmed**: define `PluginLanguageDomain` / `PluginLanguagePath` in the plugin, call `gettext.bindtextdomain()`, register with `language.addCallback()`; `.po` files compile to `.mo` via `msgfmt` into `locale/<lang>/LC_MESSAGES/<domain>.mo`. Reference implementation: [`opendreambox/enigma2-plugins`](https://github.com/opendreambox/enigma2-plugins) (DreamOS-specific) and [`opendreambox/enigma2-po`](https://github.com/opendreambox/enigma2-po) for real translation files.
+- **Enigma2 plugin localization mechanism confirmed**: define `PluginLanguageDomain` / `PluginLanguagePath` in the plugin, call `gettext.bindtextdomain()`, register with `language.addCallback()`; `.po` files compile to `.mo` via `msgfmt` into `locale/<lang>/LC_MESSAGES/<domain>.mo`. Reference implementation: [`opendreambox/enigma2-plugins`](https://github.com/opendreambox/enigma2-plugins) (DreamOS-specific) and [`opendreambox/enigma2-po`](https://github.com/opendreambox/enigma2-po) for real translation files. **Confirmed on-device**: `config.osd.language` is stored as a `<lang>_<COUNTRY>` locale string, e.g. `config.osd.language=de_DE` — not a 3-letter ISO code as might be assumed from generic Enigma2 docs.
 - **Recording sidecar files**: still unverified — needs someone with Telnet/SSH access to the box to run a read-only `ls -la` on an existing recording folder under `/media/hdd/movie/`. Not something verifiable remotely.
 
 ## 4. Architecture

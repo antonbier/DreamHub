@@ -14,26 +14,27 @@ Go backend (port 8080) with a minimal embedded frontend. Filesystem scanner for 
 
 ## Phase 2 — FilmHub
 
-- Grid/list view for recordings.
-- Custom naming engine covering **all** sidecar files — confirmed on-device, two different sets depending on recording type:
-  - `.ts` recordings: `.ts`, `.ts.meta`, `.ts.ap`, `.ts.sc`, `.ts.cuts`, `.eit`.
-  - `.mkv` recordings (already converted): only `.mkv`, `.mkv.cuts`, `.mkv.ts.meta` — no `.ap`/`.sc`/`.eit`, those are TS-stream-specific.
-  - Some recordings already have `.jpg`/`.basename.backdrop.jpg` cover art next to them (fetched by an existing plugin) — reuse/move these on rename too, don't assume they need re-fetching from TMDB.
+- **Check `AdvancedMovieSelection` and `CutListEditor` first** (both already installed — see `ARCHITECTURE.md`) before building a new recordings browser or cut-marker editor from scratch. DreamHub may only need to add the naming/bulk-rename/trim-execution layer on top.
+- Listing should use `/web/movielist` (already-parsed title/description/length/filesize — see `ARCHITECTURE.md`) rather than hand-parsing `.ts.meta` for every recording.
+- Custom naming engine covering **all** sidecar files for actual `.ts`-based recordings: `.ts`, `.ts.meta`, `.ts.ap`, `.ts.sc`, `.ts.cuts`, `.eit` — confirmed on-device. (Note: any `.mkv` files sitting in `/media/hdd/movie/` are **not** Dreambox recordings — they were manually copied in separately. The scanner must distinguish real recordings from arbitrary other media sitting in the same folder, and only manage the former.)
+- Some recordings already have `.jpg`/`.basename.backdrop.jpg` cover art next to them (fetched by an existing plugin) — reuse/move these on rename too, don't assume they need re-fetching from TMDB.
 - Bulk actions via a background queue.
 - Lossless trimmer via `ffmpeg -c copy` (note: cuts land on keyframe boundaries, not frame-exact).
-- `.ts.meta` is a plain-text file: line 1 service reference, line 2 title, line 3 title+description+genre, line 4 a unix timestamp — parse from here for the naming engine rather than guessing a schema.
+- `.ts.meta` is a plain-text file: line 1 service reference, line 2 title, line 3 title+description+genre, line 4 a unix timestamp — parse from here only where the API doesn't already provide the field.
 
 ## Phase 3 — AIO Universal Search
 
-- Sources: local recordings, timers/AutoTimer, SeriesRecorder database (confirmed SQLite at `/etc/enigma2/SerienRecorder.db`).
-- EPG data should **not** come from parsing `epg.dat` directly (undocumented binary format, breaks across firmware updates) — query Enigma2/WebControl's existing local API instead.
+- **Check `EPGSearch` first** (already installed — see `ARCHITECTURE.md`) before building EPG search from scratch. DreamHub's search may only need to unify recordings + timers + SeriesRecorder on top of what it already covers.
+- Sources: `/web/movielist`, `/web/timerlist`, SeriesRecorder database (confirmed SQLite at `/etc/enigma2/SerienRecorder.db`).
+- EPG data should **not** come from parsing `epg.dat` directly (undocumented binary format, breaks across firmware updates) — use `/web/epgnownext`/`/web/getcurrent` (confirmed working, see `ARCHITECTURE.md`) instead.
 
 ## Phase 4 — TV Control & WebAdmin (modernized facade)
 
 - Rebuild existing WebControl functionality (OSD screenshot, system message, power menu, live metrics) with a modern UI — the logic already exists, this is purely a UI upgrade.
-- **Grid EPG ("TV guide" view)**: tabular multi-channel overview. Online/AI enrichment (TMDB or similar) **only** for movie/series genres — daily formats (news, magazines) get no useful match.
-- **Bouquet editor**: link to/embed the existing "Bouqueteditor" plugin rather than reimplementing (see Phase 0). Re-skin its UI later if needed for visual consistency with the rest of DreamHub.
-- The Enigma2 plugin side of this phase must read and follow `config.osd.language.value` — see multilingual requirement.
+- **Check `GraphMultiEPG` and `TvSpielfilm` first** (both already installed — see `ARCHITECTURE.md`) before building a grid EPG from scratch. `GraphMultiEPG` may already be the timeline grid view planned here; `TvSpielfilm` may already provide the online enrichment data.
+- **Grid EPG ("TV guide" view)**: tabular multi-channel overview, if the existing plugins above don't already cover it. Online/AI enrichment (TMDB or similar) **only** for movie/series genres — daily formats (news, magazines) get no useful match.
+- **Bouquet editor**: link to/embed the existing "Bouqueteditor" plugin rather than reimplementing (confirmed API surface in `ARCHITECTURE.md`). Re-skin its UI later if needed for visual consistency with the rest of DreamHub.
+- The Enigma2 plugin side of this phase must read and follow `config.osd.language` (confirmed format: `de_DE`-style locale, e.g. `config.osd.language=de_DE` — see `ARCHITECTURE.md`) — see multilingual requirement.
 
 ## Phase 5 — Live-Streaming Bridge
 
@@ -44,6 +45,7 @@ Go backend (port 8080) with a minimal embedded frontend. Filesystem scanner for 
 
 ## Phase 6 — AI Discovery
 
+- **Investigate the already-installed `GPT-Plugin` first** (see `ARCHITECTURE.md`) — its name suggests it may already do LLM-based EPG features. If so, this phase may be redundant or need to build on top of it instead of starting fresh. Do this before writing any code here.
 - Send the current day's EPG — filtered to the user's selected subset of channels in Settings, for recommendation relevance, not primarily cost — to an LLM API. Recommendation shown as an OSD on a remote button press.
 - Rough cost estimate: ~30 channels × ~20 programs/day × ~150 tokens ≈ 90k tokens/day — cents-level, not a real cost concern. The channel filter exists to improve recommendation quality, not to save money.
 

@@ -186,6 +186,41 @@ DreamHub still doesn't use it, but as a **deliberate choice, not a technical nec
 
 Live snapshot on the reference device (enigma2 + all the services above already running): **1977 MB total RAM, ~1.2 GB "available"** (948 MB free + reclaimable cache), load average ~1.0 on a 6-core chip — healthy headroom for an additional lean Go process. **No swap configured at all** — if DreamHub's backend or embedded PWA assets balloon in memory use, there's no cushion, so keep the resident footprint deliberately small.
 
+## SystemPlugins — the other plugin category
+
+`/usr/lib/enigma2/python/Plugins/SystemPlugins/` is a separate category from `Extensions/` (lower-level, more "OS settings" than user-facing tools). Ones worth knowing about:
+
+- **`SoftwareManager`** — this is what actually implements the apt-backed "Packages" browser seen in the Addon Manager screenshots earlier in this project.
+- **`StreamServices`** — confirmed (read `StreamServicesConfig.py`) to be the actual settings screen for the streaming/transcoding ports discussed in Phase 5 (imports `eStreamProcessorFactory`, has `ConfigPassword` fields). This is the authoritative place those settings live if DreamHub ever needs to read or reference them.
+- **`NetworkManager`** — the box's own network configuration UI (interfaces, WiFi, static IP).
+- **`HdmiCec`** — Enigma2's own CEC handling layer. Relevant to be aware of if DreamHub ever touches CEC (nothing planned currently) so it doesn't fight the existing handler.
+- **`UPnP`** — the box already runs a DLNA/UPnP media server. A separate existing way to browse/stream recordings from other devices on the LAN, independent of WebControl or DreamHub.
+- **`MediaDatabaseManager`**, **`AutomaticTimerlistCleanup`** — recordings/timer housekeeping, context for Phase 2/7.
+- **`SetPasswd`**, **`SkinSelector`**, **`Styles`**, **`Videomode`**, **`VideoTune`**, **`VideoEnhancement`**, **`Satfinder`**, **`PositionerSetup`**, **`InputDeviceManager`**, **`Hotplug`**, **`FSBLUpdater`** — standard device/picture/input settings, no direct DreamHub relevance identified.
+- **`StartUpService`**: despite the generic-sounding name, reading its source shows it's about **which TV channel/service launches when the box boots** (`ChannelContextMenu`, service selection) — not a general-purpose "run my own service at startup" mechanism. Corrects an initial assumption; the actual autostart mechanism for DreamHub remains the systemd unit documented above.
+
+## Installed skins
+
+`/usr/share/enigma2/`: `Default-FHD`, `Default-WQHD`, `MetrixStyleHD`, `Shadow-WQHD` (the active one). A separate package `mediaportal-skin-shadow-wqhd` ("by Zombi, only for DreamOS and Amlogic Dreambox") confirms the same skin author also maintains a matching skin specifically for MediaPortal's own UI (see below) — consistent visual identity across both subsystems.
+
+## MediaPortal is a full parallel subsystem, not a small plugin
+
+Worth being explicit about this, since it shows up repeatedly across this investigation (its own `/data/mediaportal/` bundle, its own `ffmpeg-mp`, its own folder under `/media/hdd/mediaportal`) and could otherwise be mistaken for part of the base OS. It's a separate, actively maintained (package date `2026083001` — very recent) third-party extension with its own small ecosystem:
+
+- `enigma2-plugin-extensions-mediaportal` — the core plugin
+- `enigma2-plugin-extensions-mediaportal-hosters` — "hosters" in the Kodi-addon sense: modules that pull video from various external streaming/hosting sites
+- `curl-mp` — a `curl-impersonate` build (mimics real browser TLS fingerprints — typically needed to get past anti-bot measures on the sites the hosters modules talk to)
+- `ffmpeg-mp`, `yt-mp` (a YouTube downloader) — its own bundled media tooling, separate from the system `ffmpeg`
+- `mediaportal-skin-shadow-wqhd` — its own matching skin
+
+Treat it the same way as the other already-installed plugins in this document: a separate, mature, actively-maintained system solving overlapping problems (media streaming/aggregation) for the native on-screen surface — not something DreamHub needs to integrate with for its current scope, but worth knowing it exists so it isn't mistaken for a DreamHub concern or for a core OS component.
+
+## Open question: WebControl's own auth doesn't seem to be enforced
+
+`/etc/enigma2/settings` shows `config.plugins.Webinterface.http.auth=true` and `https.auth=true` — WebControl is configured to require authentication. But every request made during this investigation (via `curl` from the box itself, **and** via a normal browser session from an external machine) returned data successfully with no credentials ever supplied and no auth challenge observed. No separate username/password key was found in `/etc/enigma2/settings` either (`localauth=false`, `extended_security=false`, `anti_hijack=false`, `streamauth=false` are all explicitly off, which may be part of the explanation, but doesn't fully account for `http.auth=true` having no visible effect).
+
+Not resolved — flagging honestly rather than guessing at a mechanism this session didn't actually verify. **Don't assume WebControl's `/web/*` API is always open on every device** just because it behaved that way here; the setting says it shouldn't be. If DreamHub's own backend ever proxies or depends on WebControl's API working unauthenticated, that assumption should be re-verified per device rather than taken as a given from this one inspection.
+
 ## Open follow-ups
 
 - Write-permitted pass needed to confirm the `/bouqueteditor/` plugin's actual write endpoints (add/reorder/remove service) — not captured here since only read/list actions were performed.

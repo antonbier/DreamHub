@@ -172,9 +172,11 @@ This is exactly what the `GPT-Plugin` (see below — genuinely a **GUID Partitio
 
 `/data` (`mmcblk0p4`, 7.8 GB, separate from the 2 GB root) is where persistent application data lives (`/data/piconpool`, `/data/mediaportal`, `/data/GPT` backups, etc.) — it's lazy-mounted via `autofs` on first access, not mounted unconditionally at boot. **Implication for DreamHub**: root is small (2 GB) and shared by every installed package — keep the `.deb`'s installed footprint lean, and consider putting any larger persistent state under `/data` rather than assuming generous root space.
 
-## Docker/containers: not possible on this box
+## Docker: possible via a Gemini-team plugin, deliberately not used
 
-Checked directly: no `docker`, `dockerd`, `containerd`, or `runc` binary anywhere, and the kernel has **no `overlay` filesystem support** in `/proc/filesystems` at all. This definitively rules out containers as an option for DreamHub (or anything else) on this specific device, regardless of what package state the `docker` apt package shows. Confirms the Go static-binary approach is the right one — not just simpler, but the only real option.
+Correction to an earlier check in this doc: Docker **is** possible on this platform — there's an official Gemini-team Docker plugin available through the feed (explains the `docker` package seen earlier in `dpkg -l`, state `rc` — available/previously removed, just not installed on the reference device at the time of the `no overlay filesystem` check). So the earlier "not possible" conclusion only described the reference device's state at that moment, not a hard platform limit.
+
+DreamHub still doesn't use it, but as a **deliberate choice, not a technical necessity**: on a 2 GB RAM / no-swap device already running enigma2 and a handful of background services (see resource headroom below), adding a Docker daemon is a constant-overhead dependency a single static Go binary simply doesn't need. Simpler, lighter, one less moving part to keep working across the platform's own updates.
 
 ## mDNS/Avahi: an existing opportunity for zero-config discovery
 

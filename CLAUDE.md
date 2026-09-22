@@ -4,11 +4,9 @@ Instructions for any Claude Code (or other AI coding agent) instance working in 
 
 ## Start here
 
-Read [`PROJECT_PLAN.md`](PROJECT_PLAN.md) first — it has the full context: why this project exists, what was already considered and rejected, and what's technically confirmed. Then [`ROADMAP.md`](ROADMAP.md) for the phase breakdown. `README.md` is just the one-paragraph pitch.
+Read [`PROJECT_PLAN.md`](PROJECT_PLAN.md) first — it has the full technical context: why this project exists, what's out of scope, and what's technically confirmed. Then [`ROADMAP.md`](ROADMAP.md) for the phase breakdown. `README.md` is just the one-paragraph pitch.
 
-**Do not re-propose ideas listed as rejected in `PROJECT_PLAN.md`** without a genuinely new argument — they were already brought up and turned down for stated reasons during planning.
-
-The person you're working with (GitHub: `antonbier`) planned this project across a long conversation with another Claude instance that no longer has access to this repo. This file and `PROJECT_PLAN.md` exist so that context isn't lost. Treat them as ground truth for prior decisions, not as suggestions to second-guess from scratch.
+**Do not re-propose items listed as out of scope in `PROJECT_PLAN.md`** without a genuinely new technical argument — they were already evaluated and turned down for stated reasons. Treat `PROJECT_PLAN.md` and `ROADMAP.md` as ground truth for prior decisions, not as suggestions to second-guess from scratch.
 
 ## Language rule
 

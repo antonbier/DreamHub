@@ -155,6 +155,35 @@ Read the source structure of all four. Important correction to the earlier frami
 
 Confirmed generalizes beyond `/bouqueteditor/`: **`DreamNetcast` runs under its own `/netcast/` path** the same way. `/web/external` is the endpoint WebControl itself calls to enumerate registered web plugins (populates the "WebPlugins" sidebar section). Any future DreamHub-adjacent web plugin should expect to register itself the same way if it wants to appear inside WebControl's own navigation — not required for DreamHub itself, which runs standalone on port 8080, but useful to know the convention exists.
 
+## Standout finding: triple-slot rootfs, not just A/B
+
+`lsblk`/`blkid` reveal the eMMC (`mmcblk0`, 14.6 GB) is partitioned into **three independent, fully labeled root filesystems**, not the usual single rootfs:
+
+```
+mmcblk0p5   2G  ext4  PARTLABEL="dreambox-rootfs"    <- currently booted (root=/dev/mmcblk0p5 in /proc/cmdline)
+mmcblk0p6   2G  ext4  PARTLABEL="dreambox-rootfs1"    <- alternate slot, unmounted
+mmcblk0p7   2G  ext4  PARTLABEL="dreambox-rootfs2"    <- alternate slot, unmounted
+mmcblk0p4 7.8G  ext4  mounted at /data (lazy-mounted via autofs)
+mmcblk0p1-3     ~250M total, unidentified (likely bootloader/recovery)
+mmcblk0boot0/boot1/rpmb   hardware eMMC boot + RPMB areas (secure boot infra, not further inspected)
+```
+
+This is exactly what the `GPT-Plugin` (see below — genuinely a **GUID Partition Table** tool, not AI) is built to manage: `flashBootDevice`, `change_boot`, `checkFlashBooted` all operate on this scheme. In effect the box has **three swappable full-OS slots** — flash a new/updated image to a spare slot, boot into it to test, and fall back instantly by switching the active slot if something's broken, all without any network OTA mechanism. This is a more resilient, enthusiast-friendly design than a typical single-rootfs appliance, and is probably the practical reason a dead upstream (no more vendor OTA) is survivable at all for this device: the community can still hand-flash new images to a spare slot via GPT-Plugin. Not directly relevant to what DreamHub builds, but explains a lot about how this platform is actually maintained.
+
+`/data` (`mmcblk0p4`, 7.8 GB, separate from the 2 GB root) is where persistent application data lives (`/data/piconpool`, `/data/mediaportal`, `/data/GPT` backups, etc.) — it's lazy-mounted via `autofs` on first access, not mounted unconditionally at boot. **Implication for DreamHub**: root is small (2 GB) and shared by every installed package — keep the `.deb`'s installed footprint lean, and consider putting any larger persistent state under `/data` rather than assuming generous root space.
+
+## Docker/containers: not possible on this box
+
+Checked directly: no `docker`, `dockerd`, `containerd`, or `runc` binary anywhere, and the kernel has **no `overlay` filesystem support** in `/proc/filesystems` at all. This definitively rules out containers as an option for DreamHub (or anything else) on this specific device, regardless of what package state the `docker` apt package shows. Confirms the Go static-binary approach is the right one — not just simpler, but the only real option.
+
+## mDNS/Avahi: an existing opportunity for zero-config discovery
+
+`avahi-daemon` is running (confirmed earlier) and already advertises several services (`/etc/avahi/services/`): `ssh`, `sftp-ssh`, `ftp`, `nfs`, and interestingly **`geminiandroid.service`** — almost certainly how an existing companion Android app discovers the box on the LAN via Bonjour/mDNS instead of the user typing in an IP. **DreamHub should do the same**: drop a `dreamhub.service` file into `/etc/avahi/services/` (as part of the `.deb` install) advertising its own `_http._tcp` service on port 8080, so a phone/browser can find it automatically instead of requiring a manual IP entry. Cheap to add, meaningfully nicer UX, and the infrastructure is already running.
+
+## Resource headroom (for capacity planning)
+
+Live snapshot on the reference device (enigma2 + all the services above already running): **1977 MB total RAM, ~1.2 GB "available"** (948 MB free + reclaimable cache), load average ~1.0 on a 6-core chip — healthy headroom for an additional lean Go process. **No swap configured at all** — if DreamHub's backend or embedded PWA assets balloon in memory use, there's no cushion, so keep the resident footprint deliberately small.
+
 ## Open follow-ups
 
 - Write-permitted pass needed to confirm the `/bouqueteditor/` plugin's actual write endpoints (add/reorder/remove service) — not captured here since only read/list actions were performed.

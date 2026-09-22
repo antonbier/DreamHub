@@ -12,6 +12,8 @@
 
 Go backend (port 8080) with a minimal embedded frontend. Filesystem scanner for `/media/hdd/movie/`, parses `.ts.meta`, exposes results via REST API. Also where PWA i18n scaffolding (language selector, translation file structure) gets set up — see multilingual requirement in `PROJECT_PLAN.md`.
 
+Advertise the backend via mDNS/Bonjour (drop a service file into `/etc/avahi/services/`, `avahi-daemon` is already running and already used this way by an existing companion app — see `ARCHITECTURE.md`) so a phone/browser can find it without a manual IP entry.
+
 ## Phase 2 — FilmHub
 
 - Both `AdvancedMovieSelection` and `CutListEditor` are already installed and mature, but are **native on-screen (remote-control) plugins, not web-based** — they don't replace FilmHub's web UI, which is the actual point of this phase. Read `AdvancedMovieSelection`'s `Rename.py`/`SearchTMDb*.py` as a reference for the naming/TMDB-matching logic before writing DreamHub's own (note its CC BY-NC-SA license — reference only, don't copy the code directly). See `ARCHITECTURE.md`.

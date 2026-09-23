@@ -4,7 +4,7 @@ Instructions for any Claude Code (or other AI coding agent) instance working in 
 
 ## Start here
 
-Read [`PROJECT_PLAN.md`](PROJECT_PLAN.md) first — it has the full technical context: why this project exists, what's out of scope, and what's technically confirmed. Then [`ARCHITECTURE.md`](ARCHITECTURE.md) — a read-only inspection of a real reference device: the WebControl API, already-installed plugins that overlap with planned modules (check these before writing new code that duplicates them), process/service layout, config conventions. Then [`ROADMAP.md`](ROADMAP.md) for the phase breakdown. `README.md` is just the one-paragraph pitch.
+Read [`PROJECT_PLAN.md`](PROJECT_PLAN.md) first — it has the full technical context: why this project exists, what's out of scope, and what's technically confirmed. Then [`ARCHITECTURE.md`](ARCHITECTURE.md) — a read-only inspection of a real reference device: the WebControl API, already-installed plugins that overlap with planned modules (check these before writing new code that duplicates them), process/service layout, config conventions. Then [`PRINCIPLES.md`](PRINCIPLES.md) — the engineering principles every module must follow (auth model, API-first, modularity, settings/secrets handling, and more) regardless of which phase is being built. Then [`ROADMAP.md`](ROADMAP.md) for the phase breakdown. `README.md` is just the one-paragraph pitch.
 
 **Do not re-propose items listed as out of scope in `PROJECT_PLAN.md`** without a genuinely new technical argument — they were already evaluated and turned down for stated reasons. Treat `PROJECT_PLAN.md` and `ROADMAP.md` as ground truth for prior decisions, not as suggestions to second-guess from scratch.
 

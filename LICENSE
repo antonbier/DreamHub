@@ -1,0 +1,23 @@
+DreamHub
+
+Copyright (c) antonbier
+
+This project is licensed under the Creative Commons
+Attribution-NonCommercial-ShareAlike 3.0 Unported License.
+To view a copy of this license, visit
+http://creativecommons.org/licenses/by-nc-sa/3.0/ or send a letter to
+Creative Commons, 559 Nathan Abbott Way, Stanford, California 94305, USA.
+
+This matches the license convention used across the wider Enigma2/DreamOS
+plugin community (see e.g. AdvancedMovieSelection, StartUpService) so that
+DreamHub fits the ecosystem it runs in.
+
+Alternatively, this project may be distributed and executed on hardware
+which is licensed by Dream Property GmbH.
+
+This project is NOT public domain / permissive software. It is open
+source — you are allowed to read, modify, and redistribute it (if you
+keep this license and attribute the original project), but it may not
+be distributed commercially other than under the conditions noted above.
+
+SPDX-License-Identifier: CC-BY-NC-SA-3.0

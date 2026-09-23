@@ -72,6 +72,48 @@ The platform already runs full systemd with journald (see `ARCHITECTURE.md`). Lo
 
 This exact session is the reason this principle exists: architecture work happened live against a reference device, and now that device is offline and unreachable. Ongoing development shouldn't have the same constraint. The WebControl API surface documented in `ARCHITECTURE.md` should be mockable, so core logic (FilmHub naming, search, etc.) has tests that run without a live Dreambox connected — device-dependent behavior gets verified separately, opportunistically, whenever access is available.
 
+## License: CC BY-NC-SA 3.0, matching the ecosystem
+
+See [`LICENSE`](LICENSE). This isn't a generic pick — it's the license actually observed in wider use across this specific community (`AdvancedMovieSelection`, `StartUpService`, and others found during the `ARCHITECTURE.md` inspection all use this exact template, including the "may be distributed and executed on hardware licensed by Dream Property GmbH" rider). Fitting the ecosystem's own convention matters more here than picking a more common general-purpose OSS license.
+
+## Data storage: one SQLite file, on `/data`
+
+All of DreamHub's own persistent state (settings, API tokens, cached module state) lives in a single SQLite database, not scattered flat config files. Two reasons: it's the same pattern SeriesRecorder already uses on this platform (see `ARCHITECTURE.md`), and it keeps things in one place that's trivial to include in the backup/restore export described above.
+
+Location: under `/data/dreamhub/`, not the root partition. Root is a 2 GB slot shared by every installed package (see `ARCHITECTURE.md`'s triple-rootfs finding) — keep DreamHub's footprint there limited to the `.deb`'s own binary/assets, and put anything that grows (database, logs if ever file-based, cached data) on `/data`.
+
+## Consistent API error shape
+
+Every endpoint returns errors in the same JSON envelope (an error code plus a human-readable message, at minimum) rather than each module inventing its own shape as it's built. Decide the exact envelope once, in Phase 1, before any other module ships an endpoint.
+
+## Resource budget, stated up front
+
+Confirmed on the reference device: ~1.2 GB RAM available under normal load, **no swap at all** (see `ARCHITECTURE.md`). Target: the Go backend plus its embedded PWA assets should stay well under ~150–200 MB resident. This isn't a nice-to-have — it should actively shape implementation choices from the start: stream/parse XML responses rather than buffering them whole, paginate large lists (recordings, EPG) instead of loading everything into memory, avoid caching more than necessary given there's no swap to fall back on.
+
+## Mock-first development
+
+A config flag/environment variable that points the Go backend at a mocked WebControl API instead of a real device. Makes the "testable without the physical device" principle above concrete and actually usable — including for situations exactly like this one, where the device is temporarily unreachable.
+
+## Plugin/backend version compatibility check
+
+The Enigma2 plugin and the Go backend are separate deployable pieces (even if shipped in the same `.deb`) and can end up out of sync — e.g. the backend gets updated and restarted, the plugin doesn't. The plugin should check the backend's version (a simple `/api/v1/health` call with a version field) on connect and show a clear, friendly error on mismatch rather than failing in some confusing indirect way.
+
+## Semantic versioning + a changelog
+
+DreamHub releases follow SemVer (`MAJOR.MINOR.PATCH`), tracked in [`CHANGELOG.md`](CHANGELOG.md) (Keep a Changelog format). This is what makes the "Update available" flow in a WebAdmin-style UI (see Phase 8) mean anything concrete to the user, and gives a future contributor a fast way to see what changed between two versions without reading commit history.
+
+## Explicit hardware/support scope
+
+DreamHub officially targets the **Dreambox One / DreamOS AIO** — the actual reference device this whole `ARCHITECTURE.md` is built from. Other Enigma2 images or hardware (OpenATV, OpenPLi, non-DreamOS Dreamboxes, other DreamOS-Amlogic models) are best-effort at most, never a support obligation. Stating this explicitly now heads off scope-creep pressure later ("why doesn't this work on my Vu+"), consistent with the capability-detection principle above — DreamHub should degrade gracefully elsewhere, but isn't required to be *correct* elsewhere.
+
+## Code style: idiomatic, not bikeshed
+
+Go code is `gofmt`-formatted, full stop, no style debates. The frontend follows whatever the chosen framework's standard linter/formatter defaults to (e.g. Prettier/ESLint defaults for Vue). Pick the tool once in Phase 1 and never revisit the question.
+
+## Definition of done
+
+A module isn't finished when the feature works. It's finished when: it's documented in the relevant `.md` file, it follows the error-envelope and auth conventions above, it has at least one test that runs without the physical device, and it doesn't push the resource budget over its stated target.
+
 ## Keep the documentation current
 
 This isn't aspirational — it's how this project has been run since planning started. Any new confirmed device fact goes into `ARCHITECTURE.md`; any new scope or architecture decision goes into `PROJECT_PLAN.md` or here. A future contributor (human or AI) with no access to this conversation should be able to reconstruct every non-obvious decision from these files alone.

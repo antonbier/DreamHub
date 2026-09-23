@@ -14,6 +14,17 @@ Go backend (port 8080) with a minimal embedded frontend. Filesystem scanner for 
 
 Advertise the backend via mDNS/Bonjour (drop a service file into `/etc/avahi/services/`, `avahi-daemon` is already running and already used this way by an existing companion app — see `ARCHITECTURE.md`) so a phone/browser can find it without a manual IP entry.
 
+**Started** (built and tested against the mock WebControl client, without device access — see `backend/README.md`):
+- [x] Go module, `/api/v1` router, JSON error envelope, structured logging (`internal/api`)
+- [x] Basic Auth + API token middleware, toggleable (`internal/auth`)
+- [x] Environment-based config, mock/live mode switch (`internal/config`)
+- [x] WebControl client: real HTTP+XML implementation and the mock (fixtures from `ARCHITECTURE.md`) behind one interface (`internal/webcontrol`, `internal/webcontrol/mock`)
+- [x] `/api/v1/health`, `/api/v1/deviceinfo`, `/api/v1/movies` — first two live endpoints beyond health
+- [x] 4 passing tests, all running against the mock, no device required
+- [x] Confirmed cross-compiles to a static ARM64 Linux binary (`CGO_ENABLED=0 GOOS=linux GOARCH=arm64`), ~10 MB
+
+**Still open**: filesystem scanner for sidecar files, SQLite settings store (`internal/store` is scaffolded but empty), PWA frontend + `go:embed` wiring, i18n scaffolding, mDNS advertisement, Enigma2 plugin skeleton. Most of these need real device access to verify against `/media/hdd/movie/` and `/data/dreamhub/`.
+
 ## Phase 2 — FilmHub
 
 - Both `AdvancedMovieSelection` and `CutListEditor` are already installed and mature, but are **native on-screen (remote-control) plugins, not web-based** — they don't replace FilmHub's web UI, which is the actual point of this phase. Read `AdvancedMovieSelection`'s `Rename.py`/`SearchTMDb*.py` as a reference for the naming/TMDB-matching logic before writing DreamHub's own (note its CC BY-NC-SA license — reference only, don't copy the code directly). See `ARCHITECTURE.md`.

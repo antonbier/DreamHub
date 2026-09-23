@@ -3,32 +3,67 @@
 // a reachable Dreambox. See PRINCIPLES.md, "Mock-first development", and
 // ROADMAP.md, Foundation.
 //
-// Fixture values below are taken directly from the live responses recorded
-// in ARCHITECTURE.md, not invented, so behavior against the mock matches
-// what was actually observed on the reference Dreambox One.
+// Device info and the recording are taken directly from the live responses
+// recorded in ARCHITECTURE.md. The two timers are the example evening used
+// in the design mockup (docs/design/): "Bauer sucht Frau International" and
+// an overlapping "The Rookie" — a real conflict on a single-tuner box.
 package mock
 
 import (
 	"context"
+	"sync"
+	"time"
 
 	"github.com/antonbier/DreamHub/backend/internal/webcontrol"
 )
 
-// Client is a webcontrol.Client backed by fixed, in-memory fixture data.
-type Client struct{}
+// Client is a webcontrol.Client backed by in-memory fixture data. Timers
+// are stateful, so AddTimer is visible in later TimerList calls.
+type Client struct {
+	mu     sync.Mutex
+	timers []webcontrol.Timer
+}
 
-var _ webcontrol.Client = Client{}
+var _ webcontrol.Client = (*Client)(nil)
 
-func (Client) DeviceInfo(ctx context.Context) (*webcontrol.DeviceInfo, error) {
+// Evening is the day the fixture timers are on (2026-09-23, Europe/Rome).
+var Evening = time.Date(2026, 9, 23, 0, 0, 0, 0, time.FixedZone("CEST", 2*60*60))
+
+func at(h, m int) int64 {
+	return Evening.Add(time.Duration(h)*time.Hour + time.Duration(m)*time.Minute).Unix()
+}
+
+// New returns a mock with the fixture timers.
+func New() *Client {
+	return &Client{timers: []webcontrol.Timer{
+		{
+			ServiceReference: "1:0:19:2EE3:441:1:C00000:0:0:0:",
+			ServiceName:      "RTL Television",
+			Name:             "Bauer sucht Frau International",
+			Begin:            at(20, 15),
+			End:              at(21, 15),
+		},
+		{
+			ServiceReference: "1:0:19:2B7A:3F3:1:C00000:0:0:0:",
+			ServiceName:      "zdf_neo HD",
+			Name:             "The Rookie",
+			Begin:            at(21, 0),
+			End:              at(21, 45),
+		},
+	}}
+}
+
+func (*Client) DeviceInfo(ctx context.Context) (*webcontrol.DeviceInfo, error) {
 	return &webcontrol.DeviceInfo{
 		EnigmaVersion: "5.0.0r117-gutemine-2024-08-12",
 		ImageVersion:  "Experimental 2023-04-24",
 		WebifVersion:  "1.9.1",
 		DeviceName:    "one",
+		Frontends:     []webcontrol.Frontend{{Name: "Tuner A", Model: " Si2169D (DVB-S2 / DVB-C / DVB-T2)"}},
 	}, nil
 }
 
-func (Client) MovieList(ctx context.Context) ([]webcontrol.Movie, error) {
+func (*Client) MovieList(ctx context.Context) ([]webcontrol.Movie, error) {
 	return []webcontrol.Movie{
 		{
 			ServiceReference: `1:0:0:0:0:0:0:0:0:0:/media/hdd/movie/20260608 2048 - RTL Television - Bauer sucht Frau International.ts`,
@@ -41,4 +76,25 @@ func (Client) MovieList(ctx context.Context) ([]webcontrol.Movie, error) {
 			FileSize:         3802689536,
 		},
 	}, nil
+}
+
+func (c *Client) TimerList(ctx context.Context) ([]webcontrol.Timer, error) {
+	c.mu.Lock()
+	defer c.mu.Unlock()
+	out := make([]webcontrol.Timer, len(c.timers))
+	copy(out, c.timers)
+	return out, nil
+}
+
+func (c *Client) AddTimer(ctx context.Context, t webcontrol.NewTimer) error {
+	c.mu.Lock()
+	defer c.mu.Unlock()
+	c.timers = append(c.timers, webcontrol.Timer{
+		ServiceReference: t.ServiceReference,
+		Name:             t.Name,
+		Description:      t.Description,
+		Begin:            t.Begin,
+		End:              t.End,
+	})
+	return nil
 }

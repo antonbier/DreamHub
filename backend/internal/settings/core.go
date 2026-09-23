@@ -1,5 +1,7 @@
 package settings
 
+import "strings"
+
 // Core setting keys used outside this package.
 const (
 	KeyLanguage     = "general.language"
@@ -11,7 +13,23 @@ const (
 	KeyAuthEnabled  = "auth.enabled"
 	KeyAuthUsername = "auth.username"
 	KeyAuthPassword = "auth.password"
+
+	// KeyAllowedHosts is a comma-separated list of extra host names DreamHub
+	// may be reached by (besides IP addresses, localhost and *.local), e.g.
+	// a reverse-proxy name. See PRINCIPLES.md, "Security in the LAN".
+	KeyAllowedHosts = "network.allowedHosts"
 )
+
+// AllowedHosts splits the network.allowedHosts setting.
+func (v Values) AllowedHosts() []string {
+	var out []string
+	for _, h := range strings.Split(v.String(KeyAllowedHosts), ",") {
+		if h = strings.TrimSpace(h); h != "" {
+			out = append(out, h)
+		}
+	}
+	return out
+}
 
 // CoreSections are the settings owned by the core itself. Hubs and
 // connectors register their own sections alongside these.
@@ -55,6 +73,13 @@ func CoreSections() []Section {
 					errs[KeyAuthPassword] = FieldError{Code: ErrRequired, Params: map[string]any{"when": KeyAuthEnabled}}
 				}
 				return errs
+			},
+		},
+		{
+			ID:    "network",
+			Label: "settings.network",
+			Fields: []Field{
+				{Key: KeyAllowedHosts, Type: TypeString, Scope: ScopeGlobal, Label: "settings.network.allowedHosts", Default: ""},
 			},
 		},
 	}

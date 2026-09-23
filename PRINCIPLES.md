@@ -35,7 +35,7 @@ Backend, database and API use UTC exclusively (Unix timestamps or RFC 3339 with 
 
 A LAN appliance is not automatically safe. Two attacks matter specifically for a browser-based tool on a home network:
 
-- **CSRF**: with Basic Auth, the browser sends credentials automatically, so a foreign web page could trigger requests to DreamHub in the background. Every mutating request must carry something a foreign page can't forge (a custom header or a CSRF token); CORS stays strict (no wildcard origins).
+- **CSRF**: with Basic Auth, the browser sends credentials automatically, so a foreign web page could trigger requests to DreamHub in the background. Every mutating request must carry the header `X-DreamHub-Request` (a foreign page can't add custom headers without a CORS preflight), requests with a foreign `Origin` are rejected, and DreamHub never sends CORS headers.
 - **DNS rebinding**: a malicious site can make the browser talk to a LAN IP under a foreign host name. DreamHub checks the `Host` header against known names/IPs of the box.
 - Anything proxied through DreamHub (e.g. the terminal later) sits behind DreamHub's own auth and these checks.
 

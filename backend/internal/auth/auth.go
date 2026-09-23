@@ -10,6 +10,8 @@ import (
 	"crypto/subtle"
 	"net/http"
 	"strings"
+
+	"github.com/antonbier/DreamHub/backend/internal/httpx"
 )
 
 // Verifier checks whether a request is authenticated. Implementations must
@@ -63,8 +65,6 @@ func Middleware(v Verifier, next http.Handler) http.Handler {
 			return
 		}
 		w.Header().Set("WWW-Authenticate", `Basic realm="DreamHub"`)
-		w.Header().Set("Content-Type", "application/json")
-		w.WriteHeader(http.StatusUnauthorized)
-		_, _ = w.Write([]byte(`{"error":{"code":"unauthorized","message":"valid credentials or API token required"}}`))
+		httpx.WriteError(w, r, http.StatusUnauthorized, "unauthorized", "valid credentials required")
 	})
 }

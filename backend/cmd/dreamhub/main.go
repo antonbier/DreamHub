@@ -15,28 +15,32 @@ import (
 	"github.com/antonbier/DreamHub/backend/internal/api"
 	"github.com/antonbier/DreamHub/backend/internal/app"
 	"github.com/antonbier/DreamHub/backend/internal/config"
+	"github.com/antonbier/DreamHub/backend/internal/logging"
 	"github.com/antonbier/DreamHub/backend/internal/webcontrol"
 	"github.com/antonbier/DreamHub/backend/internal/webcontrol/mock"
 )
 
 func main() {
-	logger := slog.New(slog.NewJSONHandler(os.Stdout, nil))
-	if err := run(logger); err != nil {
+	level := logging.NewLevel(nil)
+	logger := slog.New(slog.NewJSONHandler(os.Stdout, &slog.HandlerOptions{Level: level.Leveler()}))
+	if err := run(logger, level); err != nil {
 		logger.Error("dreamhub stopped", "error", err)
 		os.Exit(1)
 	}
 }
 
-func run(logger *slog.Logger) error {
+func run(logger *slog.Logger, level *logging.Level) error {
 	cfg := config.Load()
 
 	var wc webcontrol.Client
 	switch cfg.Mode {
 	case config.ModeLive:
-		wc = webcontrol.NewHTTPClient(cfg.WebControlURL)
-		logger.Info("webcontrol client mode", "mode", "live", "url", cfg.WebControlURL)
+		c := webcontrol.NewHTTPClient(cfg.WebControlURL)
+		c.AllowWrites = cfg.EnableDeviceWrites
+		wc = c
+		logger.Info("webcontrol client mode", "mode", "live", "url", cfg.WebControlURL, "deviceWrites", cfg.EnableDeviceWrites)
 	default:
-		wc = mock.Client{}
+		wc = mock.New()
 		logger.Info("webcontrol client mode", "mode", "mock")
 	}
 
@@ -46,6 +50,7 @@ func run(logger *slog.Logger) error {
 		Mock:       cfg.Mode == config.ModeMock,
 		LookPath:   exec.LookPath,
 		Logger:     logger,
+		Level:      level,
 	})
 	if err != nil {
 		return err

@@ -36,6 +36,12 @@ type Config struct {
 	// "Data storage: one SQLite file, on /data". In mock mode it defaults to
 	// a local directory so development works on any machine.
 	DataDir string
+
+	// EnableDeviceWrites allows write operations against a real box (e.g.
+	// creating timers). Off by default: no write endpoint was observed during
+	// the read-only inspection, so they stay disabled until verified (#14).
+	// Has no effect in mock mode, where writes always work.
+	EnableDeviceWrites bool
 }
 
 // Load reads configuration from the environment, applying defaults for
@@ -52,6 +58,8 @@ func Load() Config {
 		ListenAddr:    getEnv("DREAMHUB_LISTEN_ADDR", ":8080"),
 		WebControlURL: getEnv("DREAMHUB_WEBCONTROL_URL", "http://127.0.0.1"),
 		DataDir:       getEnv("DREAMHUB_DATA_DIR", defaultDataDir),
+
+		EnableDeviceWrites: getEnv("DREAMHUB_ENABLE_DEVICE_WRITES", "") == "1",
 	}
 }
 

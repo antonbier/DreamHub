@@ -13,8 +13,10 @@ import (
 
 	"github.com/antonbier/DreamHub/backend/internal/api"
 	"github.com/antonbier/DreamHub/backend/internal/app"
+	"github.com/antonbier/DreamHub/backend/internal/httpx"
 	"github.com/antonbier/DreamHub/backend/internal/settings"
 	"github.com/antonbier/DreamHub/backend/internal/store"
+	"github.com/antonbier/DreamHub/backend/internal/webcontrol"
 	"github.com/antonbier/DreamHub/backend/internal/webcontrol/mock"
 )
 
@@ -30,11 +32,13 @@ type env struct {
 
 // newEnv builds the application exactly as production does (internal/app),
 // against the mock WebControl client and a real SQLite store in a temp dir.
-func newEnv(t *testing.T) *env {
+func newEnv(t *testing.T) *env { return newEnvWith(t, mock.New()) }
+
+func newEnvWith(t *testing.T, wc webcontrol.Client) *env {
 	t.Helper()
 	a, err := app.New(context.Background(), app.Options{
 		DataDir:    t.TempDir(),
-		WebControl: mock.Client{},
+		WebControl: wc,
 		Mock:       true,
 		LookPath:   func(string) (string, error) { return "/usr/bin/journalctl", nil },
 		Logger:     discardLogger(),
@@ -58,6 +62,11 @@ func (e *env) do(t *testing.T, method, path, body string, configure func(*http.R
 	req, _ := http.NewRequest(method, e.srv.URL+path, r)
 	if body != "" {
 		req.Header.Set("Content-Type", "application/json")
+	}
+	// A well-behaved client (the web UI) always sends the CSRF header on
+	// mutating requests; tests of the CSRF check remove it via configure.
+	if method != "GET" {
+		req.Header.Set(httpx.CSRFHeader, "1")
 	}
 	if configure != nil {
 		configure(req)
@@ -135,7 +144,7 @@ func TestSettings_GetReturnsCoreSections(t *testing.T) {
 	for _, s := range body.Sections {
 		ids = append(ids, s.ID)
 	}
-	if strings.Join(ids, ",") != "general,auth,ai,tmdb,hubs" {
+	if strings.Join(ids, ",") != "general,auth,network,ai,tmdb,hubs" {
 		t.Fatalf("expected core, connector and hub sections in order, got %v", ids)
 	}
 	if v := body.Sections[0].Fields[0]; v.Key != settings.KeyLanguage || v.Value != "en" {

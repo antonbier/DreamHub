@@ -55,10 +55,16 @@ func (failingClient) DeviceInfo(context.Context) (*webcontrol.DeviceInfo, error)
 func (failingClient) MovieList(context.Context) ([]webcontrol.Movie, error) {
 	return nil, errors.New("connection refused")
 }
+func (failingClient) TimerList(context.Context) ([]webcontrol.Timer, error) {
+	return nil, errors.New("connection refused")
+}
+func (failingClient) AddTimer(context.Context, webcontrol.NewTimer) error {
+	return errors.New("connection refused")
+}
 
 func TestWebControl(t *testing.T) {
 	ctx := context.Background()
-	if rep := (WebControl{Client: mock.Client{}}).Check(ctx, nil); rep.State != OK {
+	if rep := (WebControl{Client: mock.New()}).Check(ctx, nil); rep.State != OK {
 		t.Errorf("mock WebControl must be OK, got %+v", rep)
 	}
 	rep := WebControl{Client: failingClient{}}.Check(ctx, nil)

@@ -13,6 +13,9 @@ import (
 	"github.com/antonbier/DreamHub/backend/internal/auth"
 	"github.com/antonbier/DreamHub/backend/internal/connector"
 	"github.com/antonbier/DreamHub/backend/internal/hub"
+	hubs_ "github.com/antonbier/DreamHub/backend/internal/hubs"
+	"github.com/antonbier/DreamHub/backend/internal/logging"
+	"github.com/antonbier/DreamHub/backend/internal/plan"
 	"github.com/antonbier/DreamHub/backend/internal/settings"
 	"github.com/antonbier/DreamHub/backend/internal/store"
 	"github.com/antonbier/DreamHub/backend/internal/webcontrol"
@@ -32,6 +35,8 @@ type Options struct {
 	Now func() time.Time
 	// ConnectorTTL is how long connector checks are cached; 0 means 30s.
 	ConnectorTTL time.Duration
+	// Level is the runtime log level shared with the logger; nil creates one.
+	Level *logging.Level
 }
 
 // App is a wired DreamHub instance.
@@ -41,6 +46,8 @@ type App struct {
 	Settings   *settings.Service
 	Connectors *connector.Registry
 	Hubs       *hub.Registry
+	Plans      *plan.Service
+	Level      *logging.Level
 	User       store.User
 }
 
@@ -97,15 +104,35 @@ func New(ctx context.Context, o Options) (*App, error) {
 		return nil, err
 	}
 
+	now := o.Now
+	if now == nil {
+		now = time.Now
+	}
+	level := o.Level
+	if level == nil {
+		level = logging.NewLevel(now)
+	}
+	plans := plan.NewService(st, now)
+
+	timerHub := &hubs_.Timer{WC: o.WebControl, Plans: plans, Now: now}
+	systemHub := &hubs_.System{Store: st}
+	adminHub := &hubs_.Admin{Store: st, Level: level}
+
 	handler := api.NewRouter(api.Deps{
 		WebControl: o.WebControl,
 		Verifier:   auth.NewSettingsVerifier(svc),
 		Settings:   svc,
 		Connectors: conns,
 		Hubs:       hubs,
-		User:       user,
-		Logger:     o.Logger,
-		Now:        o.Now,
+		Plans:      plans,
+		Mounts: []api.Mount{
+			{HubID: hub.IDTimer, Prefixes: []string{"/api/v1/timers"}, Register: timerHub.Mount},
+			{HubID: hub.IDSystem, Prefixes: []string{"/api/v1/changes"}, Register: systemHub.Mount},
+			{HubID: hub.IDAdmin, Prefixes: []string{"/api/v1/admin"}, Register: adminHub.Mount},
+		},
+		User:   user,
+		Logger: o.Logger,
+		Now:    now,
 	})
-	return &App{Handler: handler, Store: st, Settings: svc, Connectors: conns, Hubs: hubs, User: user}, nil
+	return &App{Handler: handler, Store: st, Settings: svc, Connectors: conns, Hubs: hubs, Plans: plans, Level: level, User: user}, nil
 }

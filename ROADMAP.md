@@ -21,24 +21,29 @@ Releases: **Foundation** → **v1** → **v1.1** → **Later**. GitHub milestone
 - [x] WebControl client: real HTTP+XML implementation and a mock (fixtures from `ARCHITECTURE.md`) behind one interface
 - [x] `/api/v1/health`, `/api/v1/deviceinfo`, `/api/v1/movies`
 - [x] Tests run entirely against the mock
-- [x] Cross-compiles to a static ARM64 Linux binary (`CGO_ENABLED=0 GOOS=linux GOARCH=arm64`), ~10 MB
+- [x] Cross-compiles to a static ARM64 Linux binary (`CGO_ENABLED=0 GOOS=linux GOARCH=arm64`), ~11 MB stripped incl. SQLite
+- [x] **3a** SQLite store (`internal/store`, pure-Go driver, migrations via `PRAGMA user_version`, file mode 0600): users with **roles**, per-user and global settings, **multiple dashboards per user** (v1 creates one), change log. Data dir `/data/dreamhub` (live) or `./.dreamhub-data` (mock)
+- [x] **3a** Schema-driven settings backend (`internal/settings`): typed fields (string, bool, int, enum, timezone, secret, password), per-field validation codes, cross-field checks (e.g. auth can't be enabled without credentials), all-or-nothing updates recorded in the change log without secret values, secrets masked, passwords stored as bcrypt and never returned. `GET`/`PATCH /api/v1/settings`
+- [x] **3a** Auth configured through settings instead of env vars; Basic Auth verified with bcrypt, successful checks cached 10 min (bcrypt is slow on the box's ARM cores), cache invalidated on any auth change
+- [x] **3a** `/api/v1/health` reports server time in UTC (for the clock check)
 
 **Open**:
-- [ ] Hub registry implementing the hub contract (`CONCEPT.md`): routes, settings schema, search provider, home contributions, events, requirements → status
-- [ ] Connector registry; WebControl as the first connector
+- [ ] **3b** Hub registry implementing the hub contract (`CONCEPT.md`): routes, settings schema, search provider, tile types, events, requirements → status; `/api/v1/navigation`
+- [ ] **3b** Connector registry; WebControl as the first connector
+- [ ] **3c** Preview-and-confirm mechanism for every change: `plan` → `apply` with plan ID, written to the change log (see `PRINCIPLES.md`)
 - [ ] Core event bus (hub events → notifications, later AutomationHub)
-- [ ] Preview-and-confirm mechanism for every change: `plan` → `apply` with plan ID, change log (see `PRINCIPLES.md`)
-- [ ] SQLite store under `/data/dreamhub/` (`internal/store` is scaffolded but empty); data model with users, **roles** (admin/user), per-user settings, and **multiple dashboards per user** from day one
-- [ ] Schema-driven central settings (API + UI), secrets masked
+- [ ] API tokens (generate/revoke in settings, stored hashed) — Basic Auth works, bearer tokens are rejected until then
+- [ ] Dashboards API (read/save layout) on top of the existing store methods
+- [ ] Settings UI rendered from the schema (frontend)
 - [ ] Web frontend (Vue.js + Tailwind) embedded via `go:embed`, desktop-first and responsive. Source Sans 3 and all assets bundled (no CDN/Google Fonts at runtime). Dark by default, light/system switchable. Not an installable PWA yet (needs HTTPS, see "Later").
 - [ ] Navigation: sidebar generated from hub registry (group + order), collapsible; drawer on mobile; no bottom tab bar; labels switchable between descriptive names and hub names
 - [ ] Implement the design foundations from `DESIGN.md` (tokens, components) — the approved mockup is `docs/design/mockup-dashboard-v2.html`
 - [ ] Dashboard (tiles, decided in #16): show/hide, drag-and-drop reorder, width 1–4 columns, per-user layout; custom tiles as saved views (source + filters + sort + limit + display) built on hub search providers
 - [ ] Global search (`/`, `Cmd/Ctrl+K`), notifications inbox (stored as key + params), status strip, box-unreachable banner, live updates via WebSocket
 - [ ] i18n: DE/IT/EN locale files, runtime drop-in locales from `/data/dreamhub/locales/`, English fallback, `Intl` for all formatting and sorting, RTL-ready CSS (logical properties), language switcher
-- [ ] Time zones: UTC everywhere internally; per-user display zone (box / browser / fixed) with hint; server time in `/api/v1/health` for the clock check; tests with fixed clock incl. DST days for `Europe/Rome`
-- [ ] Security: CSRF protection for mutating requests (custom header or token), strict CORS, `Host` header check against DNS rebinding
-- [ ] Request IDs in logs and error responses; runtime-switchable log level
+- [ ] Time zones: UTC everywhere internally (store already does this); per-user display zone setting exists (box / browser / fixed, validated IANA names) — display logic and hint are frontend work; tests with fixed clock incl. DST days for `Europe/Rome`
+- [ ] **3c** Security: CSRF protection for mutating requests (custom header or token), strict CORS, `Host` header check against DNS rebinding
+- [ ] **3c** Request IDs in logs and error responses; runtime-switchable log level
 - [ ] Keyboard shortcuts (`/`, `g`+letter, arrows, `Esc`), accessible contrast and labels
 - [ ] Onboarding wizard
 - [ ] Diagnostics: hub status with reason and fix instructions; box clock check

@@ -8,6 +8,10 @@
 *.out
 /bin/
 /dreamhub-server
+dreamhub-arm64
+
+# Local data directory used in mock mode (SQLite database)
+.dreamhub-data/
 
 # Node / Frontend
 node_modules/

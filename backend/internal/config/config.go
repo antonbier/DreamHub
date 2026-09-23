@@ -32,28 +32,27 @@ type Config struct {
 	WebControlURL string
 
 	// DataDir is where DreamHub's own persistent state (SQLite database)
-	// lives. On a real device this is under /data/dreamhub — see
-	// PRINCIPLES.md, "Data storage: one SQLite file, on /data".
+	// lives. On a real device this is /data/dreamhub — see PRINCIPLES.md,
+	// "Data storage: one SQLite file, on /data". In mock mode it defaults to
+	// a local directory so development works on any machine.
 	DataDir string
-
-	// AuthEnabled toggles Basic Auth / API token enforcement for the web
-	// UI and API. Off by default — enabled from the Settings UI once it
-	// exists, per PRINCIPLES.md's auth section.
-	AuthEnabled bool
 }
 
 // Load reads configuration from the environment, applying defaults for
-// anything not set. Nothing here requires network or filesystem access
-// beyond the data directory, so it's safe to call in tests.
+// anything not set. Auth is not configured here: it lives in the settings
+// store and is changed through the settings API/UI.
 func Load() Config {
-	cfg := Config{
-		Mode:          Mode(getEnv("DREAMHUB_MODE", string(ModeMock))),
+	mode := Mode(getEnv("DREAMHUB_MODE", string(ModeMock)))
+	defaultDataDir := "/data/dreamhub"
+	if mode == ModeMock {
+		defaultDataDir = "./.dreamhub-data"
+	}
+	return Config{
+		Mode:          mode,
 		ListenAddr:    getEnv("DREAMHUB_LISTEN_ADDR", ":8080"),
 		WebControlURL: getEnv("DREAMHUB_WEBCONTROL_URL", "http://127.0.0.1"),
-		DataDir:       getEnv("DREAMHUB_DATA_DIR", "/data/dreamhub"),
-		AuthEnabled:   getEnv("DREAMHUB_AUTH_ENABLED", "false") == "true",
+		DataDir:       getEnv("DREAMHUB_DATA_DIR", defaultDataDir),
 	}
-	return cfg
 }
 
 func getEnv(key, fallback string) string {

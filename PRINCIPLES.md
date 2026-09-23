@@ -15,6 +15,7 @@ The most important rule in this document. DreamHub operates as root on a device 
 - **Never touch a file that's currently being recorded or played** — check timer state and the current service first.
 - **The AI only proposes.** A recommendation never creates a timer by itself.
 - **Dashboard tiles only show.** A tile never triggers an action on its own.
+- **DreamHub's own settings** don't touch recordings, timers or the system, so they're saved directly with an explicit "Save" rather than the two-step `plan` → `apply` — but they're validated all-or-nothing and every save is recorded in the change log (without secret values).
 - **The one exception is the terminal** (AdminHub, later): a shell can't preview its commands. It gets guardrails instead — off by default, can only be enabled while auth is on, admin role only, password re-entered before opening, a clear warning, session start/end recorded in the change log.
 
 ## Multilingual by construction

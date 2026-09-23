@@ -11,6 +11,7 @@ Read in this order:
 3. [`PRINCIPLES.md`](PRINCIPLES.md) — how everything is built. Start with "Preview and confirm — no silent changes".
 4. [`ARCHITECTURE.md`](ARCHITECTURE.md) — a read-only inspection of the real reference device: WebControl API, installed plugins, process/service layout, config conventions, partition layout.
 5. [`ROADMAP.md`](ROADMAP.md) — technical notes per hub and what's done/open.
+6. [`DESIGN.md`](DESIGN.md) — before touching the frontend: tokens, type, layout, components, and the approved mockup in `docs/design/`.
 
 `README.md` is the short pitch; `CHANGELOG.md` tracks releases; `backend/README.md` explains how to run and test the backend.
 

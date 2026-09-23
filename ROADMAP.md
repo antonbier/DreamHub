@@ -31,7 +31,8 @@ Releases: **Foundation** → **v1** → **v1.1** → **Later**. GitHub milestone
 - [ ] SQLite store under `/data/dreamhub/` (`internal/store` is scaffolded but empty); data model with users, **roles** (admin/user), per-user settings, and **multiple dashboards per user** from day one
 - [ ] Schema-driven central settings (API + UI), secrets masked
 - [ ] Web frontend (Vue.js + Tailwind) embedded via `go:embed`, desktop-first and responsive. Source Sans 3 and all assets bundled (no CDN/Google Fonts at runtime). Dark by default, light/system switchable. Not an installable PWA yet (needs HTTPS, see "Later").
-- [ ] Navigation: sidebar generated from hub registry (group + order), collapsible; drawer on mobile; no bottom tab bar
+- [ ] Navigation: sidebar generated from hub registry (group + order), collapsible; drawer on mobile; no bottom tab bar; labels switchable between descriptive names and hub names
+- [ ] Implement the design foundations from `DESIGN.md` (tokens, components) — the approved mockup is `docs/design/mockup-dashboard-v2.html`
 - [ ] Dashboard (tiles, decided in #16): show/hide, drag-and-drop reorder, width 1–4 columns, per-user layout; custom tiles as saved views (source + filters + sort + limit + display) built on hub search providers
 - [ ] Global search (`/`, `Cmd/Ctrl+K`), notifications inbox (stored as key + params), status strip, box-unreachable banner, live updates via WebSocket
 - [ ] i18n: DE/IT/EN locale files, runtime drop-in locales from `/data/dreamhub/locales/`, English fallback, `Intl` for all formatting and sorting, RTL-ready CSS (logical properties), language switcher
@@ -42,7 +43,7 @@ Releases: **Foundation** → **v1** → **v1.1** → **Later**. GitHub milestone
 - [ ] Onboarding wizard
 - [ ] Diagnostics: hub status with reason and fix instructions; box clock check
 - [ ] mDNS advertisement via a service file in `/etc/avahi/services/` (`avahi-daemon` already runs and is used this way by an existing companion app — see `ARCHITECTURE.md`)
-- [ ] Fixture-capture script: run once with device access, save real responses from every relevant endpoint as test fixtures, so development can continue offline with real data
+- [ ] Capture real fixtures (#14): at the next device access, fetch every relevant endpoint directly over SSH/HTTP and save the responses as test fixtures, so development continues offline with real data
 
 ## v1 — hubs
 
@@ -155,7 +156,7 @@ Tracked as GitHub issues with the `device-access` label:
 - #11 Verify Enigma2 picks up recordings renamed outside Enigma2
 - #12 Detect in-progress recording/playback before any file operation
 - #13 Resolve the WebControl auth discrepancy (`ARCHITECTURE.md`)
-- #14 Write and run the fixture-capture script
+- #14 Capture real API responses as test fixtures (done directly on the device, no script needed)
 - #15 Investigate the remaining GP4 plugins (`geminiserver`, `geminicomm`, `geministreamripper`)
 - #17 Check where Enigma2 stores its time zone and whether NTP is running
 - #18 Check whether WebAdmin's existing terminal (`/webadmin/terminal/`) requires a login — if not, anyone on the LAN/ZeroTier network has a root shell

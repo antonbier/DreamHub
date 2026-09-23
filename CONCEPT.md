@@ -31,7 +31,7 @@ Rules between them:
 
 Every hub registers itself with the core by declaring:
 
-- an ID, a localized name, an icon, a **navigation group and order**
+- an ID, an icon, a **navigation group and order**, and two names: a **descriptive, localized label** ("Recordings" / "Aufnahmen" / "Registrazioni") and a fixed **hub name** ("MediaHub")
 - its API routes (under `/api/v1/<hub>/...`)
 - a **settings schema** (fields, types, validation, which fields are secrets) — the core renders the settings UI from this
 - optionally a **search provider** for global search (also the data source for custom dashboard tiles)
@@ -103,6 +103,7 @@ The home page is a **personal dashboard made of tiles** (decided from the mockup
   - *Program*: GuideHub, TimerHub, DiscoveryHub, RadioHub
   - *Device*: ChannelHub, ControlHub, SystemHub
   - bottom: AdminHub (admins only), Settings
+- **Labels selectable per user**: descriptive names (default, translated) or hub names (MediaHub, TimerHub, …) — similar to how nzb360 names the services it manages. The other name appears as a tooltip.
 - Hubs that are *unavailable* appear greyed out with the reason; hubs that are disabled don't appear.
 - **Top bar**: global search in the center; on the right notifications, the **language switcher**, and the user menu.
 
@@ -183,6 +184,8 @@ Prepared, not built. The data model attaches preferences, language, time zone se
 - **Later**: recommendations and notifications shown directly on the TV.
 
 ## UX direction: a good-looking work tool
+
+Concrete tokens, type scale, layout and components: [`DESIGN.md`](DESIGN.md), with the approved interactive mockup in `docs/design/`.
 
 **Desktop first** — most use will be on a PC — but fully usable on a phone.
 

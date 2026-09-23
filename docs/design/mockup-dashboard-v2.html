@@ -1,0 +1,679 @@
+<title>DreamHub Startseite</title>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Source+Sans+3:wght@400;500;600;700&family=Source+Code+Pro:wght@400;500&display=swap">
+<style>
+  .app{
+    --font:'Source Sans 3',system-ui,-apple-system,'Segoe UI',sans-serif;
+    --mono:'Source Code Pro',ui-monospace,Menlo,monospace;
+    --bg:#0F1215; --side:#0B0D10; --tile:#161A1F; --tile-2:#1C2127; --field:#1A1F25;
+    --line:#252B32; --line-soft:#1E2329;
+    --text:#E6E9EC; --muted:#9BA4AE; --faint:#6C7580;
+    --accent:#6AA6E8; --accent-ink:#0B1422; --accent-soft:rgba(106,166,232,.12);
+    --onair:#F2564A; --warn:#E0A23B; --warn-soft:rgba(224,162,59,.12); --ok:#4FBF7F; --ok-soft:rgba(79,191,127,.12);
+    --scrim:rgba(0,0,0,.55); --toast:#E6E9EC; --on-toast:#0F1215; --shadow:0 18px 48px -18px rgba(0,0,0,.7);
+    --picon:#E4E7EA; --on-picon:#1A1E23;
+  }
+  .app[data-appearance="light"]{
+    --bg:#F2F3F5; --side:#FAFBFC; --tile:#FFFFFF; --tile-2:#F4F6F8; --field:#ECEFF2;
+    --line:#DCE0E5; --line-soft:#EAEDF0;
+    --text:#15191D; --muted:#505A64; --faint:#7B858F;
+    --accent:#1F64C8; --accent-ink:#FFFFFF; --accent-soft:rgba(31,100,200,.09);
+    --onair:#D23A2E; --warn:#B7730F; --warn-soft:rgba(183,115,15,.10); --ok:#2C8150; --ok-soft:rgba(44,129,80,.10);
+    --scrim:rgba(15,18,21,.35); --toast:#15191D; --on-toast:#F2F3F5; --shadow:0 18px 48px -20px rgba(20,24,28,.35);
+    --picon:#2A3038; --on-picon:#F2F3F5;
+  }
+  body{margin:0;background:#0F1215}
+  .app{min-height:100vh;background:var(--bg);color:var(--text);font-family:var(--font);font-size:15px;line-height:1.45;display:flex;flex-direction:column}
+  .app *{box-sizing:border-box}
+  .app button{font:inherit;color:inherit}
+  .app :focus-visible{outline:2px solid var(--accent);outline-offset:2px}
+
+  .banner{padding-block:7px;padding-inline:16px;font-size:13px;color:var(--muted);background:var(--side);border-block-end:1px solid var(--line);text-align:center}
+  .banner b{color:var(--text);font-weight:600}
+
+  .shell{flex:1;display:grid;grid-template-columns:232px minmax(0,1fr);min-height:0}
+  .shell[data-collapsed="true"]{grid-template-columns:60px minmax(0,1fr)}
+
+  /* sidebar */
+  .side{background:var(--side);border-inline-end:1px solid var(--line);display:flex;flex-direction:column;padding-block:10px 12px;padding-inline:10px;position:sticky;top:0;height:calc(100vh - 34px);overflow-y:auto}
+  .side-top{display:flex;align-items:center;gap:8px;padding-inline:2px;margin-block-end:14px;min-height:36px}
+  .brand{font-weight:700;font-size:17px;letter-spacing:-.005em;white-space:nowrap}
+  .iconbtn{border:0;background:transparent;width:36px;height:36px;border-radius:6px;display:inline-grid;place-items:center;cursor:pointer;color:var(--muted);flex:none;position:relative}
+  .iconbtn:hover{background:var(--tile-2);color:var(--text)}
+  .ic{width:18px;height:18px;fill:none;stroke:currentColor;stroke-width:1.7;stroke-linecap:round;stroke-linejoin:round;flex:none}
+  .nav{display:flex;flex-direction:column;gap:1px}
+  .group{font-size:12.5px;color:var(--faint);padding-block:14px 4px;padding-inline:10px;white-space:nowrap}
+  .item{display:flex;align-items:center;gap:11px;padding-block:7px;padding-inline:10px;border-radius:6px;color:var(--muted);text-decoration:none;white-space:nowrap;cursor:pointer;border:0;background:transparent;width:100%;text-align:start}
+  .item:hover{background:var(--tile-2);color:var(--text)}
+  .item.on{background:var(--tile-2);color:var(--text);font-weight:600}
+  .item .lbl{flex:1;overflow:hidden;text-overflow:ellipsis}
+  .count{font-size:12px;font-weight:600;color:var(--muted);font-variant-numeric:tabular-nums}
+  .count.warn{color:var(--warn)}
+  .side-bottom{margin-block-start:auto;padding-block-start:10px;border-block-start:1px solid var(--line);display:flex;flex-direction:column;gap:1px}
+  .shell[data-collapsed="true"] .brand,.shell[data-collapsed="true"] .lbl,.shell[data-collapsed="true"] .count,.shell[data-collapsed="true"] .group{display:none}
+  .shell[data-collapsed="true"] .item{justify-content:center;padding-inline:0}
+  .shell[data-collapsed="true"] .group + .item{margin-block-start:10px}
+
+  /* top */
+  .main{min-width:0;display:flex;flex-direction:column}
+  .top{display:flex;align-items:center;gap:12px;padding-block:10px;padding-inline:24px;border-block-end:1px solid var(--line);background:var(--bg);position:sticky;top:0;z-index:3}
+  .search{flex:1;max-width:560px;margin-inline:auto;height:38px;border:1px solid var(--line);border-radius:7px;background:var(--field);display:flex;align-items:center;gap:9px;padding-inline:12px;color:var(--faint);cursor:text;text-align:start}
+  .search span{flex:1;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+  .search kbd{font:500 12px var(--mono);border:1px solid var(--line);border-radius:4px;padding-inline:6px;color:var(--faint)}
+  .top-right{display:flex;align-items:center;gap:6px}
+  .dotn{position:absolute;top:5px;inset-inline-end:5px;min-width:15px;height:15px;border-radius:8px;background:var(--onair);color:#fff;font:600 10.5px/15px var(--font);padding-inline:4px}
+  .menu-wrap{position:relative}
+  .lang{border:0;background:transparent;height:36px;padding-inline:9px;border-radius:6px;display:flex;align-items:center;gap:5px;cursor:pointer;color:var(--muted);font-weight:600;font-size:13.5px}
+  .lang:hover{background:var(--tile-2);color:var(--text)}
+  .avatar{width:32px;height:32px;border-radius:50%;border:1px solid var(--line);background:var(--tile-2);font-weight:600;font-size:14px;cursor:pointer;margin-inline-start:4px}
+  .menu{position:absolute;inset-inline-end:0;top:calc(100% + 6px);min-width:190px;background:var(--tile);border:1px solid var(--line);border-radius:8px;box-shadow:var(--shadow);padding:5px;z-index:10}
+  .menu button{display:flex;justify-content:space-between;align-items:center;width:100%;border:0;background:transparent;text-align:start;padding-block:7px;padding-inline:10px;border-radius:5px;cursor:pointer;color:var(--text);font-size:14px}
+  .menu button:hover{background:var(--tile-2)}
+  .menu button[aria-checked="true"]::after{content:"✓";color:var(--accent);font-weight:600}
+  .menu-label{font-size:12.5px;color:var(--faint);padding-block:7px 3px;padding-inline:10px}
+  .menu-who{padding-block:8px;padding-inline:10px;border-block-end:1px solid var(--line);margin-block-end:4px}
+  .menu-who strong{display:block;font-size:14px}
+  .menu-who span{font-size:12.5px;color:var(--faint)}
+  .menu hr{border:0;border-block-start:1px solid var(--line);margin-block:5px}
+
+  .statusline{display:flex;flex-wrap:wrap;gap:6px 22px;align-items:center;padding-block:9px;padding-inline:24px;font-size:13.5px;color:var(--muted);border-block-end:1px solid var(--line-soft)}
+  .st{display:flex;align-items:center;gap:7px;white-space:nowrap}
+  .st::before{content:"";width:7px;height:7px;border-radius:50%;background:var(--faint)}
+  .st.ok::before{background:var(--ok)}
+  .st.warn::before{background:var(--warn)}
+  .st.warn{color:var(--text)}
+  .st.tz{margin-inline-start:auto;color:var(--faint)}
+  .st.tz::before{display:none}
+
+  /* content */
+  .content{padding-block:22px 40px;padding-inline:24px;max-width:1480px;width:100%}
+  .pagehead{display:flex;justify-content:space-between;align-items:flex-end;gap:16px;margin-block-end:18px;flex-wrap:wrap}
+  .pagehead h1{margin:0;font-size:26px;font-weight:700;letter-spacing:-.01em;line-height:1.15}
+  .date{color:var(--muted);font-size:14.5px;margin-block-start:2px}
+  .textbtn{border:0;background:transparent;color:var(--accent);font-weight:600;font-size:14px;cursor:pointer;display:inline-flex;align-items:center;gap:6px;padding-block:6px;padding-inline:8px;border-radius:6px}
+  .textbtn:hover{background:var(--accent-soft)}
+  .primary{border:1px solid var(--accent);background:var(--accent);color:var(--accent-ink);font-weight:600;font-size:14px;border-radius:6px;padding-block:7px;padding-inline:14px;cursor:pointer}
+  .primary:hover{filter:brightness(1.07)}
+
+  .grid{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:14px;align-items:start}
+  .grid .tile[data-w="1"]{grid-column:span 1}
+  .grid .tile[data-w="2"]{grid-column:span 2}
+  .grid .tile[data-w="3"]{grid-column:span 3}
+  .grid .tile[data-w="4"]{grid-column:span 4}
+
+  .tile{background:var(--tile);border:1px solid var(--line);border-radius:6px;min-width:0;display:flex;flex-direction:column}
+  .tile-head{display:flex;align-items:baseline;gap:10px;padding-block:12px 4px;padding-inline:14px}
+  .tile-head h2{margin:0;font-size:15.5px;font-weight:600;flex:1;min-width:0}
+  .tile-meta{font-size:13px;color:var(--faint);white-space:nowrap}
+  .tile-body{padding-block:4px 14px;padding-inline:14px;display:flex;flex-direction:column;gap:8px}
+  .tile.is-warn{border-color:color-mix(in srgb,var(--warn) 50%,var(--line))}
+  .tile.is-warn .tile-head h2{color:var(--warn)}
+
+  .rows{display:flex;flex-direction:column}
+  .r{display:grid;grid-template-columns:auto minmax(0,1fr) auto;align-items:center;gap:12px;padding-block:8px;border-block-start:1px solid var(--line-soft)}
+  .r:first-child{border-block-start:0}
+  .r .main-col{min-width:0}
+  .r .t1{font-weight:600;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+  .r .t2{font-size:13px;color:var(--muted);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+  .r .t3{font-size:12.5px;color:var(--faint)}
+  .r .end{font-size:13.5px;color:var(--muted);text-align:end;white-space:nowrap;font-variant-numeric:tabular-nums}
+  .r .act{border:0;background:transparent;color:var(--accent);font-weight:600;font-size:13.5px;cursor:pointer;padding-block:4px;padding-inline:6px;border-radius:5px;white-space:nowrap}
+  .r .act:hover{background:var(--accent-soft)}
+  .r .act.done{color:var(--ok);cursor:default}
+  .r .act.done:hover{background:transparent}
+  .r:hover{background:linear-gradient(var(--tile-2),var(--tile-2)) padding-box}
+  .time{font-weight:600;font-variant-numeric:tabular-nums;font-size:14.5px;min-width:3.4em}
+  .time.range{min-width:6.8em}
+  .picon{display:inline-grid;place-items:center;width:44px;height:26px;border-radius:4px;background:var(--picon);color:var(--on-picon);font-weight:700;font-size:11.5px;letter-spacing:.01em}
+  .thumb{width:36px;height:52px;border-radius:3px;position:relative;overflow:hidden;display:grid;place-items:end start;padding:4px;font-weight:700;font-size:15px;color:rgba(255,255,255,.55);line-height:1}
+  .prog{height:3px;background:var(--line);border-radius:2px;overflow:hidden;margin-block-start:5px}
+  .prog i{display:block;height:100%;background:var(--onair)}
+  .flag-warn{color:var(--warn);font-weight:600}
+  .big{font-size:34px;font-weight:700;line-height:1;font-variant-numeric:tabular-nums;letter-spacing:-.01em}
+  .bar{height:6px;border-radius:3px;background:var(--line);overflow:hidden}
+  .bar i{display:block;height:100%;background:var(--warn)}
+  .muted{color:var(--muted);font-size:13.5px}
+  .kvs{display:grid;grid-template-columns:auto minmax(0,1fr);gap:6px 14px;font-size:14px;margin:0}
+  .kvs dt{color:var(--muted)}
+  .kvs dd{margin:0;text-align:end;font-variant-numeric:tabular-nums}
+  .kvs dd.ok{color:var(--ok)}
+
+  /* conflict timeline */
+  .ctl{position:relative;height:68px;margin-block:6px 2px}
+  .ctl .lane{position:absolute;inset-inline:0;height:22px;border-radius:4px}
+  .ctl .blk{position:absolute;height:22px;border-radius:4px;background:var(--line);border:1px solid color-mix(in srgb,var(--muted) 35%,transparent);font-size:12.5px;font-weight:600;padding-inline:8px;display:flex;align-items:center;white-space:nowrap;overflow:hidden}
+  .ctl .ov{position:absolute;top:0;height:50px;background:repeating-linear-gradient(135deg,var(--warn-soft) 0 5px,transparent 5px 10px);border-inline:1.5px solid var(--warn)}
+  .ctl .now{position:absolute;top:-3px;height:56px;width:2px;background:var(--onair)}
+  .ctl .axis{position:absolute;top:54px;inset-inline:0;display:flex;justify-content:space-between;font-size:12px;color:var(--faint);font-variant-numeric:tabular-nums}
+  .ok-state{display:flex;align-items:center;gap:10px;color:var(--ok);font-weight:600}
+
+  /* edit mode */
+  .edit-ctl{display:none;gap:2px;align-items:center}
+  .grid.editing .edit-ctl{display:flex}
+  .grid.editing .tile{border-style:dashed;cursor:grab}
+  .grid.editing .tile.dragging{opacity:.4}
+  .grid.editing .tile.drop-before{box-shadow:inset 3px 0 0 var(--accent)}
+  .ectl{border:0;background:transparent;width:26px;height:26px;border-radius:5px;cursor:pointer;color:var(--muted);display:inline-grid;place-items:center;font-size:13px;font-weight:600}
+  .ectl:hover{background:var(--tile-2);color:var(--text)}
+  .ectl[aria-pressed="true"]{background:var(--accent-soft);color:var(--accent)}
+  .wsep{width:1px;height:16px;background:var(--line);margin-inline:4px}
+  .addtile{border:1px dashed var(--line);border-radius:6px;padding-block:14px;padding-inline:14px;display:flex;flex-direction:column;gap:6px}
+  .addtile h2{margin:0 0 4px;font-size:15.5px;font-weight:600}
+  .addtile button{border:0;background:transparent;text-align:start;color:var(--accent);font-weight:600;font-size:14px;cursor:pointer;padding-block:4px;padding-inline:0}
+  .addtile .muted{font-size:13px}
+
+  .footnote{margin-block-start:22px;font-size:13px;color:var(--faint);max-width:80ch}
+
+  /* dialog */
+  .backdrop{position:fixed;inset:0;background:var(--scrim);z-index:20}
+  .dialog{position:fixed;top:50%;left:50%;transform:translate(-50%,-50%);width:min(520px,calc(100vw - 32px));max-height:calc(100vh - 48px);overflow-y:auto;background:var(--tile);border:1px solid var(--line);border-radius:10px;box-shadow:var(--shadow);z-index:21;padding-block:20px;padding-inline:22px}
+  .dlg-eyebrow{font-size:13px;color:var(--faint)}
+  .dialog h3{margin:3px 0 14px;font-size:21px;font-weight:700;letter-spacing:-.005em}
+  .dkv{display:grid;grid-template-columns:120px minmax(0,1fr);gap:8px 14px;font-size:14.5px;margin:0}
+  .dkv dt{color:var(--muted)}
+  .dkv dd{margin:0;font-variant-numeric:tabular-nums}
+  .dkv dd.ok{color:var(--ok)}
+  .dkv dd.warn{color:var(--warn)}
+  .diff{border:1px solid var(--line);border-radius:6px;overflow:hidden;font:400 13px/1.5 var(--mono)}
+  .diff div{padding-block:9px;padding-inline:12px;word-break:break-all}
+  .diff .old{color:var(--faint);text-decoration:line-through}
+  .diff .new{border-block-start:1px solid var(--line);background:var(--tile-2)}
+  .diff small{display:block;font:500 12px var(--font);color:var(--faint);text-decoration:none;margin-block-end:2px}
+  .files{display:flex;flex-wrap:wrap;gap:6px;margin-block-start:10px}
+  .files code{font:400 12.5px var(--mono);color:var(--muted);border:1px solid var(--line);border-radius:4px;padding-inline:6px}
+  .opt{display:grid;grid-template-columns:18px minmax(0,1fr);gap:10px;border:1px solid var(--line);border-radius:7px;padding-block:10px;padding-inline:12px;cursor:pointer;margin-block-end:8px}
+  .opt:has(input:checked){border-color:var(--accent);background:var(--accent-soft)}
+  .opt input{margin-block-start:3px;accent-color:var(--accent)}
+  .opt strong{display:block;font-size:14.5px}
+  .opt span{font-size:13.5px;color:var(--muted)}
+  .opt em{font-style:normal;color:var(--accent);font-size:13px;font-weight:600;margin-inline-start:6px}
+  .note{font-size:13.5px;color:var(--muted);margin-block:16px 0}
+  .dlg-actions{display:flex;justify-content:flex-end;gap:10px;margin-block-start:20px}
+  .ghostbtn{border:1px solid var(--line);background:transparent;color:var(--text);font-weight:600;font-size:14px;border-radius:6px;padding-block:7px;padding-inline:14px;cursor:pointer}
+  .ghostbtn:hover{background:var(--tile-2)}
+  .field{display:grid;gap:5px;margin-block-end:12px}
+  .field label{font-size:13.5px;color:var(--muted)}
+  .field input,.field select{height:36px;border:1px solid var(--line);border-radius:6px;background:var(--field);color:var(--text);font:inherit;padding-inline:10px}
+  .field-row{display:grid;grid-template-columns:1fr 1fr;gap:10px}
+  .cond{display:grid;grid-template-columns:1.2fr .8fr 1fr;gap:8px;margin-block-end:8px}
+
+  .toast{position:fixed;inset-inline-end:20px;bottom:20px;z-index:30;background:var(--toast);color:var(--on-toast);border-radius:8px;padding-block:10px;padding-inline:14px;font-size:14px;font-weight:500;box-shadow:var(--shadow);opacity:0;transform:translateY(8px);transition:opacity .16s,transform .16s;pointer-events:none;max-width:min(420px,calc(100vw - 40px))}
+  .toast.show{opacity:1;transform:none}
+
+  .only-mobile{display:none}
+  .scrim{display:none}
+
+  @media (max-width:1180px){
+    .grid{grid-template-columns:repeat(2,minmax(0,1fr))}
+    .grid .tile[data-w="3"],.grid .tile[data-w="4"]{grid-column:span 2}
+  }
+  @media (max-width:900px){
+    .shell,.shell[data-collapsed="true"]{grid-template-columns:minmax(0,1fr)}
+    .side{position:fixed;inset-block:0;inset-inline-start:0;width:260px;height:100vh;z-index:15;transform:translateX(-102%);transition:transform .2s ease}
+    .shell.drawer-open .side{transform:none}
+    .shell.drawer-open .scrim{display:block;position:fixed;inset:0;background:var(--scrim);z-index:14}
+    .shell[data-collapsed="true"] .brand,.shell[data-collapsed="true"] .lbl,.shell[data-collapsed="true"] .count,.shell[data-collapsed="true"] .group{display:revert}
+    .shell[data-collapsed="true"] .item{justify-content:flex-start;padding-inline:10px}
+    .only-mobile{display:inline-grid}
+    .top,.statusline,.content{padding-inline:16px}
+    .st.tz{margin-inline-start:0}
+  }
+  @media (max-width:640px){
+    .grid{grid-template-columns:minmax(0,1fr)}
+    .grid .tile[data-w]{grid-column:span 1}
+    .search kbd{display:none}
+    .lang span.code{display:none}
+  }
+  @media (prefers-reduced-motion:reduce){.toast,.side{transition:none}}
+</style>
+
+<div class="app" id="app" data-appearance="dark" lang="de">
+  <div class="banner"><b>Mockup v2</b> · Beispieldaten von der Referenz-Box · Ausprobieren: <b>Anpassen</b>, <b>Lösen</b>, <b>Timer anlegen</b>, <b>Umbenennen</b>, Sprache und Darstellung oben rechts</div>
+
+  <div class="shell" id="shell" data-collapsed="false">
+    <aside class="side" id="side" aria-label="Navigation">
+      <div class="side-top">
+        <button class="iconbtn" id="collapseBtn" aria-label="Menü ein- oder ausklappen" title="Menü ein-/ausklappen"><svg class="ic" viewBox="0 0 24 24"><path d="M4 7h16M4 12h16M4 17h16"/></svg></button>
+        <span class="brand">DreamHub</span>
+      </div>
+      <nav class="nav">
+        <a class="item on" href="#" data-toast-key="go.dashboard" title="Dashboard"><svg class="ic" viewBox="0 0 24 24"><rect x="4" y="4" width="7" height="7" rx="1"/><rect x="13" y="4" width="7" height="4" rx="1"/><rect x="13" y="10" width="7" height="10" rx="1"/><rect x="4" y="13" width="7" height="7" rx="1"/></svg><span class="lbl" data-i18n="nav.dashboard">Dashboard</span></a>
+        <div class="group" data-i18n="nav.g.media">Medien</div>
+        <a class="item" href="#" data-toast-key="go.hub" title="Aufnahmen"><svg class="ic" viewBox="0 0 24 24"><rect x="4" y="5" width="16" height="14" rx="1.5"/><path d="M8 5v14M16 5v14M4 9.5h4M4 14.5h4M16 9.5h4M16 14.5h4"/></svg><span class="lbl" data-i18n="nav.recordings">Aufnahmen</span></a>
+        <a class="item" href="#" data-toast-key="go.hub" title="Serien"><svg class="ic" viewBox="0 0 24 24"><rect x="5" y="7" width="14" height="12" rx="1.5"/><path d="M8 4h8M9 11v4l3-2z"/></svg><span class="lbl" data-i18n="nav.series">Serien</span></a>
+        <div class="group" data-i18n="nav.g.program">Programm</div>
+        <a class="item" href="#" data-toast-key="go.hub" title="TV-Programm"><svg class="ic" viewBox="0 0 24 24"><rect x="4" y="5" width="16" height="14" rx="1.5"/><path d="M4 10h16M4 14.5h16M10 5v14"/></svg><span class="lbl" data-i18n="nav.guide">TV-Programm</span></a>
+        <a class="item" href="#" data-toast-key="go.hub" title="Timer"><svg class="ic" viewBox="0 0 24 24"><circle cx="12" cy="13" r="7"/><path d="M12 9.5V13l2.5 2M9.5 3.5h5"/></svg><span class="lbl" data-i18n="nav.timers">Timer</span><b class="count warn" id="navTimerCount">1</b></a>
+        <a class="item" href="#" data-toast-key="go.hub" title="Empfehlungen"><svg class="ic" viewBox="0 0 24 24"><path d="M12 4l2.2 4.6 5 .7-3.6 3.5.9 5-4.5-2.4-4.5 2.4.9-5L4.8 9.3l5-.7z"/></svg><span class="lbl" data-i18n="nav.recs">Empfehlungen</span><b class="count">2</b></a>
+        <div class="group" data-i18n="nav.g.device">Gerät</div>
+        <a class="item" href="#" data-toast-key="go.hub" title="System"><svg class="ic" viewBox="0 0 24 24"><rect x="4" y="6" width="16" height="10" rx="1.5"/><path d="M9 20h6M12 16v4"/></svg><span class="lbl" data-i18n="nav.system">System</span></a>
+      </nav>
+      <div class="side-bottom">
+        <a class="item" href="#" data-toast-key="go.admin" title="Admin"><svg class="ic" viewBox="0 0 24 24"><path d="M5 7l4 4-4 4M11 16h8"/></svg><span class="lbl" data-i18n="nav.admin">Admin</span></a>
+        <a class="item" href="#" data-toast-key="go.hub" title="Einstellungen"><svg class="ic" viewBox="0 0 24 24"><circle cx="12" cy="12" r="3"/><path d="M12 3.5v2.2M12 18.3v2.2M20.5 12h-2.2M5.7 12H3.5M18 6l-1.6 1.6M7.6 16.4 6 18M18 18l-1.6-1.6M7.6 7.6 6 6"/></svg><span class="lbl" data-i18n="nav.settings">Einstellungen</span></a>
+      </div>
+    </aside>
+    <div class="scrim" id="scrim"></div>
+
+    <div class="main">
+      <header class="top">
+        <button class="iconbtn only-mobile" id="drawerBtn" aria-label="Menü öffnen"><svg class="ic" viewBox="0 0 24 24"><path d="M4 7h16M4 12h16M4 17h16"/></svg></button>
+        <button class="search" id="searchBtn" data-toast-key="search"><svg class="ic" viewBox="0 0 24 24"><circle cx="11" cy="11" r="6.5"/><path d="m20 20-4.2-4.2"/></svg><span data-i18n="search">Suchen – Sendungen, Aufnahmen, Serien …</span><kbd>/</kbd></button>
+        <div class="top-right">
+          <button class="iconbtn" aria-label="Benachrichtigungen" data-toast-key="inbox"><svg class="ic" viewBox="0 0 24 24"><path d="M6 16V11a6 6 0 1 1 12 0v5l1.5 2h-15z"/><path d="M10 20.5a2.2 2.2 0 0 0 4 0"/></svg><b class="dotn">2</b></button>
+          <div class="menu-wrap">
+            <button class="lang" id="langBtn" aria-haspopup="menu" aria-expanded="false" aria-label="Sprache"><svg class="ic" viewBox="0 0 24 24"><circle cx="12" cy="12" r="8"/><path d="M4 12h16M12 4c2.5 2.6 2.5 13.4 0 16M12 4c-2.5 2.6-2.5 13.4 0 16"/></svg><span class="code" id="langCode">DE</span></button>
+            <div class="menu" id="langMenu" role="menu" hidden>
+              <button role="menuitemradio" data-lang="de" aria-checked="true">Deutsch</button>
+              <button role="menuitemradio" data-lang="it" aria-checked="false">Italiano</button>
+              <button role="menuitemradio" data-lang="en" aria-checked="false">English</button>
+            </div>
+          </div>
+          <div class="menu-wrap">
+            <button class="avatar" id="userBtn" aria-haspopup="menu" aria-expanded="false" aria-label="Benutzermenü">A</button>
+            <div class="menu" id="userMenu" role="menu" hidden>
+              <div class="menu-who"><strong>Admin</strong><span data-i18n="role.admin">Rolle: Administrator</span></div>
+              <div class="menu-label" data-i18n="menu.appearance">Darstellung</div>
+              <button role="menuitemradio" data-appearance="dark" aria-checked="true" data-i18n="ap.dark">Dunkel</button>
+              <button role="menuitemradio" data-appearance="light" aria-checked="false" data-i18n="ap.light">Hell</button>
+              <button role="menuitemradio" data-appearance="system" aria-checked="false" data-i18n="ap.system">Wie System</button>
+              <hr>
+              <button data-toast-key="go.hub" data-i18n="nav.settings">Einstellungen</button>
+            </div>
+          </div>
+        </div>
+      </header>
+
+      <div class="statusline">
+        <span class="st ok" data-i18n="st.connected">Box verbunden</span>
+        <span class="st warn">Platte 88 % belegt · 236 GB frei</span>
+        <span class="st warn" id="stConflict" data-i18n="st.conflict">1 Timer-Konflikt heute</span>
+        <span class="st tz" data-i18n="st.tz">Zeiten in Europe/Rome (Box)</span>
+      </div>
+
+      <main class="content">
+        <div class="pagehead">
+          <div><h1 data-i18n="nav.dashboard">Dashboard</h1><div class="date" id="dateLine">Mittwoch, 23. September · 20:07</div></div>
+          <button class="textbtn" id="editBtn"><svg class="ic" viewBox="0 0 24 24"><path d="M5 19h4l10-10-4-4L5 15z"/></svg><span id="editLbl" data-i18n="customize">Anpassen</span></button>
+        </div>
+
+        <div class="grid" id="grid">
+
+          <section class="tile is-warn" data-id="conflict" data-w="2">
+            <div class="tile-head"><h2 data-i18n="t.conflict">Timer-Konflikt</h2><span class="tile-meta" data-i18n="today">heute</span></div>
+            <div class="tile-body" id="conflictBody">
+              <div class="ctl" aria-hidden="true">
+                <div class="blk" style="top:0;inset-inline-start:12.5%;width:50%">Bauer sucht Frau International</div>
+                <div class="blk" style="top:28px;inset-inline-start:50%;width:37.5%">The Rookie</div>
+                <div class="ov" style="inset-inline-start:50%;width:12.5%"></div>
+                <div class="now" style="inset-inline-start:5.8%"></div>
+                <div class="axis"><span>20:00</span><span>20:30</span><span>21:00</span><span>21:30</span><span>22:00</span></div>
+              </div>
+              <div class="muted">Die Box hat nur einen Tuner. »The Rookie« (zdf_neo HD, 21:00) beginnt, bevor »Bauer sucht Frau« (RTL, bis 21:15) endet.</div>
+              <div><button class="primary" data-action="conflict">Lösen …</button></div>
+            </div>
+          </section>
+
+          <section class="tile" data-id="storage" data-w="1">
+            <div class="tile-head"><h2 data-i18n="t.storage">Speicher</h2><span class="tile-meta">/media/hdd</span></div>
+            <div class="tile-body">
+              <div class="big">88 %</div>
+              <div class="bar"><i style="width:88%"></i></div>
+              <div class="muted">236 GB frei von 1,9 TB</div>
+              <div><button class="textbtn" style="padding-inline:0" data-toast-key="go.hub">Große Aufnahmen anzeigen</button></div>
+            </div>
+          </section>
+
+          <section class="tile" data-id="box" data-w="1">
+            <div class="tile-head"><h2 data-i18n="t.box">Box</h2><span class="tile-meta">Dreambox One</span></div>
+            <div class="tile-body">
+              <dl class="kvs">
+                <dt>Tuner A</dt><dd>frei bis 20:15</dd>
+                <dt>Uhrzeit</dt><dd class="ok">synchron</dd>
+                <dt>WebControl</dt><dd>1.9.1</dd>
+                <dt>DreamHub</dt><dd>0.1.0</dd>
+              </dl>
+            </div>
+          </section>
+
+          <section class="tile" data-id="now" data-w="2">
+            <div class="tile-head"><h2 data-i18n="t.now">Läuft gerade</h2><span class="tile-meta" data-i18n="t.now.meta">Favoriten</span></div>
+            <div class="tile-body"><div class="rows">
+              <div class="r"><span class="picon">ARD</span><div class="main-col"><div class="t1">Tagesschau</div><div class="prog"><i style="width:47%"></i></div></div><span class="end">20:00–20:15</span></div>
+              <div class="r"><span class="picon">ZDF</span><div class="main-col"><div class="t1">Die Rosenheim-Cops</div><div class="prog"><i style="width:85%"></i></div></div><span class="end">19:25–20:15</span></div>
+              <div class="r"><span class="picon">ONE</span><div class="main-col"><div class="t1">UFOs (S01/E09)</div><div class="prog"><i style="width:27%"></i></div></div><span class="end">19:55–20:40</span></div>
+              <div class="r"><span class="picon">neo</span><div class="main-col"><div class="t1">Death in Paradise</div><div class="prog"><i style="width:62%"></i></div></div><span class="end">19:30–20:15</span></div>
+            </div></div>
+          </section>
+
+          <section class="tile" data-id="tonight" data-w="2">
+            <div class="tile-head"><h2 data-i18n="t.tonight">Heute Abend aufnehmen</h2><span class="tile-meta" id="timerCount">2 Timer</span></div>
+            <div class="tile-body"><div class="rows" id="timerRows">
+              <div class="r"><span class="time range">20:15–21:15</span><div class="main-col"><div class="t1">Bauer sucht Frau International</div><div class="t2">RTL Television</div></div><span class="end">in 8 min</span></div>
+              <div class="r" id="rookieRow"><span class="time range">21:00–21:45</span><div class="main-col"><div class="t1">The Rookie</div><div class="t2">zdf_neo HD</div></div><span class="end flag-warn">Konflikt</span></div>
+            </div></div>
+          </section>
+
+          <section class="tile" data-id="recs" data-w="2">
+            <div class="tile-head"><h2 data-i18n="t.recs">Empfehlungen</h2><span class="tile-meta" data-i18n="t.recs.meta">aus deinem Geschmack</span></div>
+            <div class="tile-body"><div class="rows">
+              <div class="r"><span class="thumb" style="background:#3B4A5C">K</span><div class="main-col"><div class="t1">Die Kanzlei (S01/E07) <span class="t3">· 21:45–22:30 · ONE HD</span></div><div class="t2">Du hast E01 bis E06 aufgenommen.</div></div><button class="act" data-action="timer" data-title="Die Kanzlei (S01/E07)" data-channel="ONE HD" data-start="1305" data-end="1350">Timer anlegen</button></div>
+              <div class="r"><span class="thumb" style="background:#4D4336">Z</span><div class="main-col"><div class="t1">Krieg der Zukunft <span class="t3">· 22:15–23:00 · ZDFinfo HD</span></div><div class="t2">Passt zu deinen Doku-Aufnahmen.</div></div><button class="act" data-action="timer" data-title="Krieg der Zukunft" data-channel="ZDFinfo HD" data-start="1335" data-end="1380">Timer anlegen</button></div>
+            </div></div>
+          </section>
+
+          <section class="tile" data-id="recent" data-w="2">
+            <div class="tile-head"><h2 data-i18n="t.recent">Neu aufgenommen</h2><span class="tile-meta">3</span></div>
+            <div class="tile-body"><div class="rows">
+              <div class="r"><span class="thumb" style="background:#34504A">U</span><div class="main-col"><div class="t1" id="renameTitle">UFOs (S01/E08)</div><div class="t2">ONE HD · heute 18:42 · 43 min</div></div><span class="end">2,1 GB<br><button class="act" data-action="rename">Umbenennen</button></span></div>
+              <div class="r"><span class="thumb" style="background:#503C45">B</span><div class="main-col"><div class="t1">Bauer sucht Frau International</div><div class="t2">RTL · 08.06. · Folge 7 · 103 min</div></div><span class="end">3,8 GB</span></div>
+              <div class="r"><span class="thumb" style="background:#3E4452">T</span><div class="main-col"><div class="t1">True Stories: Germanwings</div><div class="t2">RAS ORF1 HD · 27.03. · 44 min</div></div><span class="end">1,6 GB</span></div>
+            </div></div>
+          </section>
+
+          <section class="tile" data-id="cleanup" data-w="2">
+            <div class="tile-head"><h2>Aufräumen: alt und groß</h2><span class="tile-meta" data-i18n="custom">Eigene Ansicht</span></div>
+            <div class="tile-body">
+              <div class="muted">Aufnahmen · älter als 90 Tage · größer als 3 GB · sortiert nach Größe → <b style="color:var(--text)">12 Treffer, 48 GB</b></div>
+              <div class="rows">
+                <div class="r"><span class="time">4,4 GB</span><div class="main-col"><div class="t1">Angel Has Fallen</div><div class="t2">ORF1 HD · 23.04.2023</div></div><span class="end">3 Jahre</span></div>
+                <div class="r"><span class="time">3,8 GB</span><div class="main-col"><div class="t1">First Man – Aufbruch zum Mond</div><div class="t2">RAS SRF zwei HD · 09.04.2023</div></div><span class="end">3 Jahre</span></div>
+                <div class="r"><span class="time">3,8 GB</span><div class="main-col"><div class="t1">Yesterday</div><div class="t2">VOX · 01.01.2023</div></div><span class="end">3 Jahre</span></div>
+              </div>
+              <div><button class="textbtn" style="padding-inline:0" data-action="builder">Filter bearbeiten</button></div>
+            </div>
+          </section>
+
+          <section class="tile" data-id="series" data-w="2">
+            <div class="tile-head"><h2 data-i18n="t.series">Serien</h2><span class="tile-meta">SerienRecorder</span></div>
+            <div class="tile-body"><div class="rows">
+              <div class="r"><span class="thumb" style="background:#3B4A5C">K</span><div class="main-col"><div class="t1">Die Kanzlei</div><div class="t2">6 von 8 Folgen · E07 läuft heute 21:45</div></div><span class="end flag-warn">1 fehlt</span></div>
+              <div class="r"><span class="thumb" style="background:#355049">D</span><div class="main-col"><div class="t1">Death in Paradise</div><div class="t2">neue Folge morgen 20:15 · Timer gesetzt</div></div><span class="end" style="color:var(--ok)">vollständig</span></div>
+              <div class="r"><span class="thumb" style="background:#34504A">U</span><div class="main-col"><div class="t1">UFOs</div><div class="t2">S01/E08 heute aufgenommen</div></div><span class="end">8 Folgen</span></div>
+            </div></div>
+          </section>
+
+          <div class="addtile" id="addTile" hidden>
+            <h2 data-i18n="add.title">Kachel hinzufügen</h2>
+            <div id="hiddenList"></div>
+            <button data-action="builder">+ Eigene Ansicht mit Kriterien …</button>
+            <button data-toast-key="cover">+ Cover-Reihe (neue Aufnahmen)</button>
+            <div class="muted" data-i18n="add.hint">Ziehen zum Verschieben · Pfeile ändern die Reihenfolge · 1–4 legt die Breite fest</div>
+          </div>
+        </div>
+
+        <p class="footnote">Hinweis zum Mockup: Source Sans 3 kommt hier von Google Fonts. DreamHub selbst liefert die Schrift mit und lädt zur Laufzeit nichts von außen. Cover und Picons sind Platzhalter für die echten Bilder aus <code>/data/piconpool</code> und <code>SR_Cover</code>.</p>
+      </main>
+    </div>
+  </div>
+
+  <div class="backdrop" id="backdrop" hidden></div>
+  <div class="dialog" id="dialog" role="dialog" aria-modal="true" aria-labelledby="dlgTitle" hidden></div>
+  <div class="toast" id="toast" role="status" aria-live="polite"></div>
+</div>
+
+<script>
+(function(){
+  var app = document.getElementById('app'), shell = document.getElementById('shell'), grid = document.getElementById('grid');
+  function $(s, r){ return (r||document).querySelector(s); }
+  function $$(s, r){ return Array.prototype.slice.call((r||document).querySelectorAll(s)); }
+  function esc(s){ return String(s).replace(/[&<>"]/g, function(c){ return {'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]; }); }
+  function store(k, v){ try { if (v === undefined) return localStorage.getItem(k); localStorage.setItem(k, v); } catch(e){ return null; } }
+
+  /* ---------- i18n ---------- */
+  var I18N = {
+    de:{'nav.dashboard':'Dashboard','nav.g.media':'Medien','nav.recordings':'Aufnahmen','nav.series':'Serien','nav.g.program':'Programm','nav.guide':'TV-Programm','nav.timers':'Timer','nav.recs':'Empfehlungen','nav.g.device':'Gerät','nav.system':'System','nav.admin':'Admin','nav.settings':'Einstellungen','search':'Suchen – Sendungen, Aufnahmen, Serien …','customize':'Anpassen','done':'Fertig','today':'heute','t.conflict':'Timer-Konflikt','t.storage':'Speicher','t.box':'Box','t.now':'Läuft gerade','t.now.meta':'Favoriten','t.tonight':'Heute Abend aufnehmen','t.recs':'Empfehlungen','t.recs.meta':'aus deinem Geschmack','t.recent':'Neu aufgenommen','t.series':'Serien','custom':'Eigene Ansicht','st.connected':'Box verbunden','st.conflict':'1 Timer-Konflikt heute','st.noconflict':'Keine Konflikte','st.tz':'Zeiten in Europe/Rome (Box)','role.admin':'Rolle: Administrator','menu.appearance':'Darstellung','ap.dark':'Dunkel','ap.light':'Hell','ap.system':'Wie System','add.title':'Kachel hinzufügen','add.hint':'Ziehen zum Verschieben · Pfeile ändern die Reihenfolge · 1–4 legt die Breite fest','lang.toast':'Sprache: Deutsch'},
+    it:{'nav.dashboard':'Dashboard','nav.g.media':'Media','nav.recordings':'Registrazioni','nav.series':'Serie','nav.g.program':'Programmi','nav.guide':'Guida TV','nav.timers':'Timer','nav.recs':'Consigli','nav.g.device':'Dispositivo','nav.system':'Sistema','nav.admin':'Admin','nav.settings':'Impostazioni','search':'Cerca – programmi, registrazioni, serie …','customize':'Personalizza','done':'Fatto','today':'oggi','t.conflict':'Conflitto timer','t.storage':'Spazio','t.box':'Box','t.now':'In onda ora','t.now.meta':'Preferiti','t.tonight':'Da registrare stasera','t.recs':'Consigli','t.recs.meta':'in base ai tuoi gusti','t.recent':'Registrati di recente','t.series':'Serie','custom':'Vista personalizzata','st.connected':'Box connesso','st.conflict':'1 conflitto timer oggi','st.noconflict':'Nessun conflitto','st.tz':'Orari in Europe/Rome (box)','role.admin':'Ruolo: amministratore','menu.appearance':'Aspetto','ap.dark':'Scuro','ap.light':'Chiaro','ap.system':'Come il sistema','add.title':'Aggiungi riquadro','add.hint':'Trascina per spostare · frecce per l’ordine · 1–4 per la larghezza','lang.toast':'Lingua: italiano (nel mockup solo navigazione, titoli e data)'},
+    en:{'nav.dashboard':'Dashboard','nav.g.media':'Media','nav.recordings':'Recordings','nav.series':'Series','nav.g.program':'Program','nav.guide':'TV guide','nav.timers':'Timers','nav.recs':'Recommendations','nav.g.device':'Device','nav.system':'System','nav.admin':'Admin','nav.settings':'Settings','search':'Search – shows, recordings, series …','customize':'Customize','done':'Done','today':'today','t.conflict':'Timer conflict','t.storage':'Storage','t.box':'Box','t.now':'On now','t.now.meta':'Favorites','t.tonight':'Recording tonight','t.recs':'Recommendations','t.recs.meta':'based on your taste','t.recent':'Recently recorded','t.series':'Series','custom':'Custom view','st.connected':'Box connected','st.conflict':'1 timer conflict today','st.noconflict':'No conflicts','st.tz':'Times in Europe/Rome (box)','role.admin':'Role: administrator','menu.appearance':'Appearance','ap.dark':'Dark','ap.light':'Light','ap.system':'Follow system','add.title':'Add tile','add.hint':'Drag to move · arrows change the order · 1–4 sets the width','lang.toast':'Language: English (in the mockup only navigation, titles and date)'}
+  };
+  var lang = 'de', conflictResolved = false, editing = false;
+  var NOW = new Date('2026-09-23T18:07:00Z');
+  function t(k){ return (I18N[lang] && I18N[lang][k]) || I18N.en[k] || k; }
+  function applyLang(){
+    app.setAttribute('lang', lang);
+    $$('[data-i18n]').forEach(function(el){
+      var k = el.getAttribute('data-i18n');
+      if (k === 'st.conflict' && conflictResolved) k = 'st.noconflict';
+      el.textContent = t(k);
+    });
+    $('#editLbl').textContent = t(editing ? 'done' : 'customize');
+    $('#langCode').textContent = lang.toUpperCase();
+    $$('#langMenu [data-lang]').forEach(function(b){ b.setAttribute('aria-checked', String(b.dataset.lang === lang)); });
+    var d = new Intl.DateTimeFormat(lang, {weekday:'long', day:'numeric', month:'long', timeZone:'Europe/Rome'}).format(NOW);
+    var h = new Intl.DateTimeFormat(lang, {hour:'2-digit', minute:'2-digit', timeZone:'Europe/Rome'}).format(NOW);
+    $('#dateLine').textContent = d.charAt(0).toUpperCase() + d.slice(1) + ' · ' + h;
+  }
+
+  /* ---------- appearance ---------- */
+  var mq = window.matchMedia('(prefers-color-scheme: light)');
+  var appearance = store('dh2-appearance') || 'dark';
+  function applyAppearance(){
+    var resolved = appearance === 'system' ? (mq.matches ? 'light' : 'dark') : appearance;
+    app.setAttribute('data-appearance', resolved);
+    document.body.style.background = resolved === 'light' ? '#F2F3F5' : '#0F1215';
+    $$('#userMenu [data-appearance]').forEach(function(b){ b.setAttribute('aria-checked', String(b.dataset.appearance === appearance)); });
+  }
+  mq.addEventListener('change', function(){ if (appearance === 'system') applyAppearance(); });
+
+  /* ---------- toast ---------- */
+  var toastEl = $('#toast');
+  function toast(msg){
+    toastEl.textContent = msg; toastEl.classList.add('show');
+    clearTimeout(toastEl._h); toastEl._h = setTimeout(function(){ toastEl.classList.remove('show'); }, 3200);
+  }
+  var TOASTS = {
+    'go.dashboard':'Du bist auf dem Dashboard.',
+    'go.hub':'Mockup: nur das Dashboard ist ausgearbeitet.',
+    'go.admin':'AdminHub: Logs (DreamHub, enigma2), später Dienste und Terminal – nur für Admins.',
+    'search':'Globale Suche über alle Hubs – Taste /',
+    'inbox':'Postfach: »UFOs (S01/E08)« fertig aufgenommen · Timer-Konflikt um 21:00',
+    'cover':'Cover-Reihe: optionaler Kacheltyp im Plex-Stil, nicht im Standard-Layout.'
+  };
+
+  /* ---------- menus & sidebar ---------- */
+  function closeMenus(){ $$('.menu').forEach(function(m){ m.hidden = true; }); $$('[aria-haspopup]').forEach(function(b){ b.setAttribute('aria-expanded','false'); }); }
+  function toggleMenu(btn, menu){
+    var open = menu.hidden; closeMenus(); menu.hidden = !open; btn.setAttribute('aria-expanded', String(open));
+  }
+  $('#langBtn').addEventListener('click', function(e){ e.stopPropagation(); toggleMenu(this, $('#langMenu')); });
+  $('#userBtn').addEventListener('click', function(e){ e.stopPropagation(); toggleMenu(this, $('#userMenu')); });
+  $$('#langMenu [data-lang]').forEach(function(b){ b.addEventListener('click', function(){ lang = b.dataset.lang; applyLang(); closeMenus(); toast(t('lang.toast')); }); });
+  $$('#userMenu [data-appearance]').forEach(function(b){ b.addEventListener('click', function(){ appearance = b.dataset.appearance; store('dh2-appearance', appearance); applyAppearance(); closeMenus(); }); });
+
+  var collapsed = store('dh2-collapsed') === 'true';
+  shell.dataset.collapsed = String(collapsed);
+  $('#collapseBtn').addEventListener('click', function(){
+    if (window.matchMedia('(max-width:900px)').matches){ shell.classList.remove('drawer-open'); return; }
+    collapsed = !collapsed; shell.dataset.collapsed = String(collapsed); store('dh2-collapsed', String(collapsed));
+  });
+  $('#drawerBtn').addEventListener('click', function(){ shell.classList.add('drawer-open'); });
+  $('#scrim').addEventListener('click', function(){ shell.classList.remove('drawer-open'); });
+
+  /* ---------- dialog ---------- */
+  var dlg = $('#dialog'), backdrop = $('#backdrop'), pending = null, lastFocus = null;
+  function openDialog(html, p){
+    pending = p; lastFocus = document.activeElement;
+    dlg.innerHTML = html; dlg.hidden = false; backdrop.hidden = false;
+    var f = dlg.querySelector('[data-apply]') || dlg.querySelector('input,select,button'); if (f) f.focus();
+  }
+  function closeDialog(){ dlg.hidden = true; backdrop.hidden = true; pending = null; if (lastFocus) lastFocus.focus(); }
+  backdrop.addEventListener('click', closeDialog);
+  function actions(label){ return '<div class="dlg-actions"><button class="ghostbtn" data-close>Abbrechen</button><button class="primary" data-apply>'+label+'</button></div>'; }
+  var PREVIEW = '<div class="dlg-eyebrow">Vorschau · noch nichts geändert</div>';
+
+  var timers = [{title:'Bauer sucht Frau International', start:1215, end:1275}, {title:'The Rookie', start:1260, end:1305}];
+  function hm(m){ var h = Math.floor(m/60)%24, mm = m%60; return (h<10?'0':'')+h+':'+(mm<10?'0':'')+mm; }
+
+  function timerDialog(btn){
+    var s = +btn.dataset.start, e = +btn.dataset.end;
+    var clash = timers.filter(function(x){ return x.start < e && s < x.end; })[0];
+    openDialog(PREVIEW + '<h3 id="dlgTitle">Timer anlegen</h3><dl class="dkv">' +
+      '<dt>Sendung</dt><dd>'+esc(btn.dataset.title)+'</dd>' +
+      '<dt>Sender</dt><dd>'+esc(btn.dataset.channel)+'</dd>' +
+      '<dt>Zeit</dt><dd>Mi 23.09. · '+hm(s)+'–'+hm(e)+' (Europe/Rome)</dd>' +
+      '<dt>Vor-/Nachlauf</dt><dd>5 min / 10 min</dd>' +
+      '<dt>Tuner</dt>' + (clash ? '<dd class="warn">Überschneidet sich mit »'+esc(clash.title)+'« bis '+hm(clash.end)+'. Nur ein Tuner.</dd>' : '<dd class="ok">frei, kein Konflikt</dd>') +
+      '<dt>Ziel</dt><dd style="font-family:var(--mono);font-size:13px">/media/hdd/movie/</dd></dl>' +
+      '<p class="note">Die Empfehlung stammt von der KI. Angelegt wird erst mit deiner Bestätigung, und der Eintrag landet im Änderungsprotokoll.</p>' +
+      actions(clash ? 'Trotzdem anlegen' : 'Timer anlegen'), {type:'timer', btn:btn, s:s, e:e, title:btn.dataset.title, channel:btn.dataset.channel});
+  }
+  var OLD = '20260923 1759 - ONE HD - UFOs (S01_E08)', NEW = 'UFOs - S01E08';
+  function renameDialog(btn){
+    openDialog(PREVIEW + '<h3 id="dlgTitle">Aufnahme umbenennen</h3>' +
+      '<div class="diff"><div class="old"><small>Vorher</small>'+esc(OLD)+'.ts</div><div class="new"><small>Nachher</small>'+esc(NEW)+'.ts</div></div>' +
+      '<div class="muted" style="margin-top:12px">Betrifft alle sechs Dateien der Aufnahme:</div>' +
+      '<div class="files"><code>.ts</code><code>.ts.meta</code><code>.ts.ap</code><code>.ts.sc</code><code>.ts.cuts</code><code>.eit</code></div>' +
+      '<p class="note">Die Aufnahme wird gerade weder abgespielt noch aufgenommen. Die Änderung landet im Änderungsprotokoll und lässt sich rückgängig machen.</p>' +
+      actions('Umbenennen'), {type:'rename', btn:btn});
+  }
+  function conflictDialog(){
+    openDialog(PREVIEW + '<h3 id="dlgTitle">Timer-Konflikt lösen</h3>' +
+      '<p class="muted" style="margin:0 0 14px">»The Rookie« (21:00–21:45, zdf_neo HD) überschneidet sich mit »Bauer sucht Frau International« (bis 21:15). Die Box hat nur einen Tuner.</p>' +
+      '<label class="opt"><input type="radio" name="res" value="repeat" checked><div><strong>Wiederholung aufnehmen<em>Empfohlen</em></strong><span>The Rookie am Do 24.09. um 23:35 statt heute. Nichts fehlt.</span></div></label>' +
+      '<label class="opt"><input type="radio" name="res" value="later"><div><strong>The Rookie später starten</strong><span>21:15–21:45. Die ersten 15 Minuten fehlen.</span></div></label>' +
+      '<label class="opt"><input type="radio" name="res" value="earlier"><div><strong>Bauer sucht Frau früher beenden</strong><span>20:15–21:00. Die letzten 15 Minuten fehlen.</span></div></label>' +
+      actions('Übernehmen'), {type:'conflict'});
+  }
+  function builderDialog(){
+    openDialog('<div class="dlg-eyebrow">Eigene Kachel</div><h3 id="dlgTitle">Ansicht mit Kriterien</h3>' +
+      '<div class="field"><label for="bName">Name</label><input id="bName" value="Spielfilme heute Abend"></div>' +
+      '<div class="field-row"><div class="field"><label for="bSrc">Quelle</label><select id="bSrc"><option value="guide">TV-Programm</option><option value="rec">Aufnahmen</option><option value="timer">Timer</option></select></div>' +
+      '<div class="field"><label for="bView">Darstellung</label><select id="bView"><option>Liste</option><option>Zahl</option><option>Cover-Reihe</option></select></div></div>' +
+      '<div class="field"><label>Bedingungen</label>' +
+        '<div class="cond"><select aria-label="Feld"><option>Genre</option></select><select aria-label="Vergleich"><option>ist</option></select><select aria-label="Wert"><option>Spielfilm</option></select></div>' +
+        '<div class="cond"><select aria-label="Feld"><option>Beginn</option></select><select aria-label="Vergleich"><option>ab</option></select><select aria-label="Wert"><option>heute 20:15</option></select></div>' +
+        '<div class="cond"><select aria-label="Feld"><option>Sender</option></select><select aria-label="Vergleich"><option>in</option></select><select aria-label="Wert"><option>Favoriten</option></select></div>' +
+      '</div>' +
+      '<div class="field-row"><div class="field"><label for="bSort">Sortierung</label><select id="bSort"><option>Beginn</option><option>Bewertung</option></select></div><div class="field"><label for="bLim">Anzahl</label><select id="bLim"><option>5</option><option>10</option></select></div></div>' +
+      '<p class="note" style="margin-top:4px">Eine Kachel zeigt nur an und löst nie selbst etwas aus.</p>' +
+      actions('Kachel anlegen'), {type:'builder'});
+  }
+
+  var RES = {
+    repeat:{txt:'Wiederholung Do 24.09., 23:35 wird aufgenommen.', row:['Do 23:35–00:20','The Rookie','zdf_neo HD · Wiederholung'], toast:'Konflikt gelöst · Timer verschoben'},
+    later:{txt:'The Rookie startet um 21:15, die ersten 15 Minuten fehlen.', row:['21:15–21:45','The Rookie','zdf_neo HD · verkürzt'], toast:'Konflikt gelöst · Timer angepasst'},
+    earlier:{txt:'Bauer sucht Frau endet um 21:00.', row:['21:00–21:45','The Rookie','zdf_neo HD'], toast:'Konflikt gelöst · Timer angepasst'}
+  };
+  var customN = 0;
+  function apply(){
+    var p = pending; if (!p) return;
+    if (p.type === 'timer'){
+      timers.push({title:p.title, start:p.s, end:p.e});
+      p.btn.textContent = 'Timer gesetzt'; p.btn.classList.add('done'); p.btn.disabled = true;
+      var row = document.createElement('div'); row.className = 'r';
+      row.innerHTML = '<span class="time range">'+hm(p.s)+'–'+hm(p.e)+'</span><div class="main-col"><div class="t1">'+esc(p.title)+'</div><div class="t2">'+esc(p.channel)+' · aus Empfehlung</div></div><span class="end">neu</span>';
+      $('#timerRows').appendChild(row);
+      $('#timerCount').textContent = $$('#timerRows .r').length + ' Timer';
+      closeDialog(); toast('Timer angelegt · Rückgängig im Änderungsprotokoll');
+    } else if (p.type === 'rename'){
+      $('#renameTitle').textContent = NEW;
+      p.btn.textContent = 'Umbenannt'; p.btn.classList.add('done'); p.btn.disabled = true;
+      closeDialog(); toast('6 Dateien umbenannt · Rückgängig im Änderungsprotokoll');
+    } else if (p.type === 'conflict'){
+      var c = (dlg.querySelector('input[name=res]:checked') || {}).value || 'repeat', r = RES[c];
+      timers = timers.map(function(x){
+        if (c === 'repeat' && x.title === 'The Rookie') return null;
+        if (c === 'later' && x.title === 'The Rookie') return {title:x.title, start:1275, end:1305};
+        if (c === 'earlier' && x.title.indexOf('Bauer') === 0) return {title:x.title, start:1215, end:1260};
+        return x;
+      }).filter(Boolean);
+      conflictResolved = true;
+      var tile = $('[data-id="conflict"]'); tile.classList.remove('is-warn');
+      $('#conflictBody').innerHTML = '<div class="ok-state"><svg class="ic" viewBox="0 0 24 24"><path d="M5 12.5l4.5 4.5L19 7.5"/></svg>Keine Konflikte heute</div><div class="muted">'+esc(r.txt)+'</div>';
+      var st = $('#stConflict'); st.className = 'st ok'; st.textContent = t('st.noconflict');
+      var nc = $('#navTimerCount'); nc.classList.remove('warn');
+      $('#rookieRow').innerHTML = '<span class="time range">'+r.row[0]+'</span><div class="main-col"><div class="t1">'+r.row[1]+'</div><div class="t2">'+r.row[2]+'</div></div><span class="end">geplant</span>';
+      closeDialog(); toast(r.toast);
+    } else if (p.type === 'builder'){
+      customN++;
+      var name = ($('#bName').value || 'Eigene Ansicht').trim();
+      var sec = document.createElement('section'); sec.className = 'tile'; sec.dataset.id = 'custom' + customN; sec.dataset.w = '2';
+      sec.innerHTML = '<div class="tile-head"><h2>'+esc(name)+'</h2><span class="tile-meta" data-i18n="custom">'+esc(t('custom'))+'</span></div>' +
+        '<div class="tile-body"><div class="muted">TV-Programm · Genre Spielfilm · ab heute 20:15 · Favoriten → <b style="color:var(--text)">3 Treffer</b></div><div class="rows">' +
+        '<div class="r"><span class="time">20:15</span><div class="main-col"><div class="t1">Spielfilm (Beispiel)</div><div class="t2">Das Erste HD</div></div><span class="end">20:15–21:45</span></div>' +
+        '<div class="r"><span class="time">22:20</span><div class="main-col"><div class="t1">Spielfilm (Beispiel)</div><div class="t2">ZDF HD</div></div><span class="end">22:20–00:05</span></div></div></div>';
+      grid.insertBefore(sec, $('#addTile'));
+      decorate(sec);
+      sec.draggable = editing;
+      closeDialog(); toast('Kachel »'+name+'« angelegt');
+    }
+  }
+
+  /* ---------- edit mode ---------- */
+  function decorate(tile){
+    var head = tile.querySelector('.tile-head');
+    if (head.querySelector('.edit-ctl')) return;
+    var c = document.createElement('div'); c.className = 'edit-ctl';
+    c.innerHTML = '<button class="ectl" data-move="-1" aria-label="Nach vorn">←</button><button class="ectl" data-move="1" aria-label="Nach hinten">→</button><span class="wsep"></span>' +
+      [1,2,3,4].map(function(n){ return '<button class="ectl" data-width="'+n+'" aria-label="Breite '+n+'">'+n+'</button>'; }).join('') +
+      '<span class="wsep"></span><button class="ectl" data-hide aria-label="Ausblenden" title="Ausblenden"><svg class="ic" viewBox="0 0 24 24" style="width:16px;height:16px"><path d="M3 12s3.5-6 9-6 9 6 9 6-3.5 6-9 6-9-6-9-6z"/><path d="M4 4l16 16"/></svg></button>';
+    head.appendChild(c); syncWidth(tile);
+  }
+  function syncWidth(tile){ $$('[data-width]', tile).forEach(function(b){ b.setAttribute('aria-pressed', String(b.dataset.width === tile.dataset.w)); }); }
+  function tiles(){ return $$('#grid > .tile'); }
+  tiles().forEach(decorate);
+  var hidden = [];
+  function renderHidden(){
+    $('#hiddenList').innerHTML = hidden.map(function(h, i){ return '<button data-restore="'+i+'">+ '+esc(h.querySelector('h2').textContent)+' wieder einblenden</button>'; }).join('');
+  }
+  function setEditing(on){
+    editing = on; grid.classList.toggle('editing', on); $('#addTile').hidden = !on;
+    tiles().forEach(function(tl){ tl.draggable = on; });
+    $('#editLbl').textContent = t(on ? 'done' : 'customize');
+    if (!on) toast('Layout gespeichert');
+  }
+  $('#editBtn').addEventListener('click', function(){ setEditing(!editing); });
+
+  var dragging = null;
+  grid.addEventListener('dragstart', function(e){ var tl = e.target.closest('.tile'); if (!editing || !tl) return; dragging = tl; tl.classList.add('dragging'); e.dataTransfer.effectAllowed = 'move'; try { e.dataTransfer.setData('text/plain', tl.dataset.id); } catch(x){} });
+  grid.addEventListener('dragend', function(){ if (dragging) dragging.classList.remove('dragging'); dragging = null; $$('.drop-before').forEach(function(x){ x.classList.remove('drop-before'); }); });
+  grid.addEventListener('dragover', function(e){
+    if (!dragging) return; e.preventDefault();
+    var tl = e.target.closest('.tile'); $$('.drop-before').forEach(function(x){ x.classList.remove('drop-before'); });
+    if (tl && tl !== dragging) tl.classList.add('drop-before');
+  });
+  grid.addEventListener('drop', function(e){
+    if (!dragging) return; e.preventDefault();
+    var tl = e.target.closest('.tile');
+    grid.insertBefore(dragging, tl && tl !== dragging ? tl : $('#addTile'));
+  });
+
+  /* ---------- global click / keys ---------- */
+  document.addEventListener('click', function(e){
+    if (!e.target.closest('.menu-wrap')) closeMenus();
+    var el = e.target.closest('[data-action],[data-close],[data-apply],[data-toast-key],[data-move],[data-width],[data-hide],[data-restore]');
+    if (!el) return;
+    if (el.tagName === 'A') e.preventDefault();
+    if (el.hasAttribute('data-close')) return closeDialog();
+    if (el.hasAttribute('data-apply')) return apply();
+    if (el.hasAttribute('data-toast-key')) { shell.classList.remove('drawer-open'); return toast(TOASTS[el.dataset.toastKey]); }
+    var tile = el.closest('.tile');
+    if (el.hasAttribute('data-move') && tile){
+      var list = tiles(), i = list.indexOf(tile), j = i + (+el.dataset.move);
+      if (j < 0 || j >= list.length) return;
+      if (+el.dataset.move < 0) grid.insertBefore(tile, list[j]); else grid.insertBefore(list[j], tile);
+      el.focus(); return;
+    }
+    if (el.hasAttribute('data-width') && tile){ tile.dataset.w = el.dataset.width; syncWidth(tile); return; }
+    if (el.hasAttribute('data-hide') && tile){ hidden.push(tile); tile.remove(); renderHidden(); return; }
+    if (el.hasAttribute('data-restore')){ var h = hidden.splice(+el.dataset.restore, 1)[0]; grid.insertBefore(h, $('#addTile')); h.draggable = true; renderHidden(); return; }
+    var a = el.dataset.action;
+    if (a === 'timer') timerDialog(el);
+    else if (a === 'rename') renameDialog(el);
+    else if (a === 'conflict') conflictDialog();
+    else if (a === 'builder') builderDialog();
+  });
+
+  var gPressed = 0;
+  var JUMP = {d:'Dashboard', a:'Aufnahmen', s:'Serien', p:'TV-Programm', t:'Timer', e:'Empfehlungen'};
+  document.addEventListener('keydown', function(e){
+    if (e.key === 'Escape'){ if (!dlg.hidden) closeDialog(); closeMenus(); shell.classList.remove('drawer-open'); return; }
+    var typing = /INPUT|SELECT|TEXTAREA/.test((document.activeElement||{}).tagName || '');
+    if (typing || !dlg.hidden) return;
+    if (e.key === '/' || ((e.metaKey || e.ctrlKey) && e.key.toLowerCase() === 'k')){ e.preventDefault(); $('#searchBtn').focus(); toast(TOASTS.search); return; }
+    if (e.key === 'g'){ gPressed = Date.now(); return; }
+    if (gPressed && Date.now() - gPressed < 900 && JUMP[e.key]){ gPressed = 0; toast('g ' + e.key + ' → ' + JUMP[e.key]); }
+  });
+
+  applyAppearance(); applyLang();
+})();
+</script>

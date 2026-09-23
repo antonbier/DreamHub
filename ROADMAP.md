@@ -128,9 +128,11 @@ Releases: **Foundation** → **v1** → **v1.1** → **Later**. GitHub milestone
 ## Open items that need device access
 
 Tracked as GitHub issues with the `device-access` label:
-- Verify the SerienRecorder web interface API
-- Verify Enigma2 picks up recordings renamed outside Enigma2
-- Detect in-progress recording/playback before any file operation
-- Resolve the WebControl auth discrepancy (`ARCHITECTURE.md`)
-- Investigate the remaining GP4 plugins (`geminiserver`, `geminicomm`, `geministreamripper`)
-- Run the fixture-capture script
+- #10 Verify the SerienRecorder web interface API
+- #11 Verify Enigma2 picks up recordings renamed outside Enigma2
+- #12 Detect in-progress recording/playback before any file operation
+- #13 Resolve the WebControl auth discrepancy (`ARCHITECTURE.md`)
+- #14 Write and run the fixture-capture script
+- #15 Investigate the remaining GP4 plugins (`geminiserver`, `geminicomm`, `geministreamripper`)
+
+Design decision: #16 home page layout (timeline vs. tiles).

@@ -12,7 +12,10 @@ DreamHub is a **core** (home page, global search, notifications, settings, onboa
 - **DiscoveryHub** — AI recommendations, one tap to a timer
 - **SeriesHub** — SerienRecorder: what you have, what's missing, what's coming
 - **SystemHub** — device info, diagnostics, backup, change log
+- **AdminHub** — logs (incl. DreamHub's own), later service status and terminal — admins only
 - later: RadioHub, ChannelHub, ControlHub, StreamHub, AutomationHub
+
+The home page is a personal, customizable dashboard of tiles. Available in German, Italian and English, extensible by dropping in a locale file.
 
 Hubs get their data through **connectors** (WebControl, SerienRecorder, TMDB, OpenAI, later Plex/Jellyfin/Emby). The value is in how they connect: a recommendation becomes a timer, the timer becomes a recording, the recording gets a clean name — all in one place. Nothing is ever changed without showing you what will change first. See [CONCEPT.md](CONCEPT.md).
 

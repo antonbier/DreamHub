@@ -14,10 +14,33 @@ The most important rule in this document. DreamHub operates as root on a device 
 - **Delete means move to trash**, not hard delete.
 - **Never touch a file that's currently being recorded or played** — check timer state and the current service first.
 - **The AI only proposes.** A recommendation never creates a timer by itself.
+- **Dashboard tiles only show.** A tile never triggers an action on its own.
+- **The one exception is the terminal** (AdminHub, later): a shell can't preview its commands. It gets guardrails instead — off by default, can only be enabled while auth is on, admin role only, password re-entered before opening, a clear warning, session start/end recorded in the change log.
 
 ## Multilingual by construction
 
-Both surfaces (web UI and Enigma2 plugin) support multiple languages from the start, not as a bolt-on. See `PROJECT_PLAN.md` and `CLAUDE.md` for the concrete mechanism (i18n library for the web UI, gettext + `config.osd.language` for the plugin).
+Both surfaces (web UI and Enigma2 plugin) support multiple languages from the start, not as a bolt-on. Details in `CONCEPT.md`, "Internationalization". The non-negotiables:
+
+- No user-facing string is hardcoded — web UI strings come from locale files, plugin strings from gettext, server-generated messages (notifications, errors) are stored as a key plus parameters and rendered in the reader's language.
+- Dates, times, numbers, relative times and sorting always go through `Intl`, never hand-formatted.
+- Missing translations fall back to English.
+- **RTL-ready**: CSS uses logical properties (`margin-inline-start`, `inset-inline-end`, …), never physical left/right, so a right-to-left language later is a switch, not a rewrite.
+
+## UTC inside, local time only on screen
+
+Backend, database and API use UTC exclusively (Unix timestamps or RFC 3339 with `Z`). Conversion to a time zone happens only for display, in the frontend. Never derive a time from a recording's file name (local time without zone, ambiguous at DST changes); compute durations from timestamps, never wall-clock arithmetic. Details in `CONCEPT.md`, "Time zones".
+
+## Security in the LAN
+
+A LAN appliance is not automatically safe. Two attacks matter specifically for a browser-based tool on a home network:
+
+- **CSRF**: with Basic Auth, the browser sends credentials automatically, so a foreign web page could trigger requests to DreamHub in the background. Every mutating request must carry something a foreign page can't forge (a custom header or a CSRF token); CORS stays strict (no wildcard origins).
+- **DNS rebinding**: a malicious site can make the browser talk to a LAN IP under a foreign host name. DreamHub checks the `Host` header against known names/IPs of the box.
+- Anything proxied through DreamHub (e.g. the terminal later) sits behind DreamHub's own auth and these checks.
+
+## No external requests at runtime for the UI
+
+Fonts (Source Sans 3), icons and all JavaScript are bundled into the binary. The UI never loads assets from a CDN or Google Fonts: the box must work without internet, and a household tool shouldn't report each page view to third parties. External calls happen only where a connector explicitly needs them (TMDB, AI provider) and are listed in settings.
 
 ## Authentication: simple by default, pluggable for later
 
@@ -59,7 +82,7 @@ When a hub can't run fully, the user is never left guessing. Each hub is *availa
 
 ## Settings: one central menu, schema-driven, extended per hub
 
-One settings menu where *everything* can be seen and saved: general settings (language, auth, network, AI provider) first, then one section per hub.
+One settings menu where *everything* can be seen and saved: general settings (language, time zone, appearance, auth, network, AI provider) first, then one section per hub.
 
 - Each hub declares its settings as a schema (field, type, validation, secret or not). The core renders the UI from it — consistent everywhere, and every setting is automatically available through the API too.
 - Search within settings; "test connection" buttons for anything with credentials (e.g. validate an API key).
@@ -80,9 +103,9 @@ Covers things like the AI provider key, TMDB API key, webhook URLs, the API toke
 - Settings per provider: API key (secret), model, and a **daily usage limit** as a cost guard.
 - Send only what's needed (e.g. only the user-selected channels' EPG), nothing personal beyond that.
 
-## Profiles-ready, not profiles-built
+## Profiles, roles and dashboards: ready, not built
 
-Preferences and settings belong to a user in the data model from day one, and the API carries a user context — even though v1 has exactly one user and no profile switching in the UI. Keep this minimal: prepare the model, don't build profile features speculatively.
+Preferences, settings, language, time zone setting and dashboards belong to a user in the data model from day one; every user has a **role** (*admin* or *user*); a user can own **multiple dashboards**. The API carries a user context. v1 has exactly one user (an admin), one dashboard, and no switching UI for either. Keep this minimal: prepare the model, don't build profile features speculatively.
 
 ## Runtime capability detection, not hardcoded assumptions
 
@@ -94,7 +117,7 @@ Every existing plugin surveyed for this project (Bouqueteditor, WebAdmin's packa
 
 ## Resilience when external services are unavailable
 
-DiscoveryHub depends on an external AI API, and optional connectors (Plex/Jellyfin/Emby) depend on servers that may be off; the box's internet connection isn't guaranteed either. Any feature with an external dependency must fail visibly and locally — cache the last good result, show a clear "unavailable" state — rather than taking down unrelated parts of the UI when one external call fails.
+DiscoveryHub depends on an external AI API, and optional connectors (Plex/Jellyfin/Emby) depend on servers that may be off; the box's internet connection isn't guaranteed either. Any feature with an external dependency must fail visibly and locally — cache the last good result, show a clear "unavailable" state — rather than taking down unrelated parts of the UI when one external call fails. The same applies to the box itself: if WebControl is unreachable, the UI shows a clear banner ("Box not reachable, last connected 14:02"), never empty tiles or raw errors.
 
 ## Ship updates the platform's own way
 
@@ -103,6 +126,10 @@ The platform already has apt/dpkg with its own feed convention and a friendly "U
 ## Structured logging, no bespoke log management
 
 The platform already runs full systemd with journald (see `ARCHITECTURE.md`). Log to stdout/stderr in a structured (not free-text-spam) format and let `journalctl -u dreamhub` do the rest — don't build custom log rotation or file-based logging.
+
+- Every API request gets a **request ID**, logged with every related entry and returned in error responses, so an error shown in the UI can be found in the logs immediately.
+- Log fields include the hub/connector, so AdminHub can filter by them.
+- The log level is switchable at runtime from AdminHub; debug level reverts automatically after a set time.
 
 ## Testable without the physical device
 

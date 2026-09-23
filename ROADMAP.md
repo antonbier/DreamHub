@@ -28,12 +28,19 @@ Releases: **Foundation** → **v1** → **v1.1** → **Later**. GitHub milestone
 - [ ] Connector registry; WebControl as the first connector
 - [ ] Core event bus (hub events → notifications, later AutomationHub)
 - [ ] Preview-and-confirm mechanism for every change: `plan` → `apply` with plan ID, change log (see `PRINCIPLES.md`)
-- [ ] SQLite store under `/data/dreamhub/` (`internal/store` is scaffolded but empty); user-aware data model from day one (profiles-ready)
+- [ ] SQLite store under `/data/dreamhub/` (`internal/store` is scaffolded but empty); data model with users, **roles** (admin/user), per-user settings, and **multiple dashboards per user** from day one
 - [ ] Schema-driven central settings (API + UI), secrets masked
-- [ ] Web frontend (Vue.js + Tailwind) embedded via `go:embed`, i18n scaffolding with language selector. Responsive web app first — an installable PWA needs HTTPS (see "Later").
-- [ ] Home page (timeline or tiles — decided from the mockup), global search, notifications inbox, status strip
+- [ ] Web frontend (Vue.js + Tailwind) embedded via `go:embed`, desktop-first and responsive. Source Sans 3 and all assets bundled (no CDN/Google Fonts at runtime). Dark by default, light/system switchable. Not an installable PWA yet (needs HTTPS, see "Later").
+- [ ] Navigation: sidebar generated from hub registry (group + order), collapsible; drawer on mobile; no bottom tab bar
+- [ ] Dashboard (tiles, decided in #16): show/hide, drag-and-drop reorder, width 1–4 columns, per-user layout; custom tiles as saved views (source + filters + sort + limit + display) built on hub search providers
+- [ ] Global search (`/`, `Cmd/Ctrl+K`), notifications inbox (stored as key + params), status strip, box-unreachable banner, live updates via WebSocket
+- [ ] i18n: DE/IT/EN locale files, runtime drop-in locales from `/data/dreamhub/locales/`, English fallback, `Intl` for all formatting and sorting, RTL-ready CSS (logical properties), language switcher
+- [ ] Time zones: UTC everywhere internally; per-user display zone (box / browser / fixed) with hint; server time in `/api/v1/health` for the clock check; tests with fixed clock incl. DST days for `Europe/Rome`
+- [ ] Security: CSRF protection for mutating requests (custom header or token), strict CORS, `Host` header check against DNS rebinding
+- [ ] Request IDs in logs and error responses; runtime-switchable log level
+- [ ] Keyboard shortcuts (`/`, `g`+letter, arrows, `Esc`), accessible contrast and labels
 - [ ] Onboarding wizard
-- [ ] Diagnostics: hub status with reason and fix instructions
+- [ ] Diagnostics: hub status with reason and fix instructions; box clock check
 - [ ] mDNS advertisement via a service file in `/etc/avahi/services/` (`avahi-daemon` already runs and is used this way by an existing companion app — see `ARCHITECTURE.md`)
 - [ ] Fixture-capture script: run once with device access, save real responses from every relevant endpoint as test fixtures, so development can continue offline with real data
 
@@ -73,7 +80,15 @@ Releases: **Foundation** → **v1** → **v1.1** → **Later**. GitHub milestone
 - Use SerienRecorder's own web interface API (`config.plugins.serienRec.enableWebinterface=true`) rather than reading `SerienRecorder.db` directly while SerienRecorder may be writing to it. API needs verification on the device.
 
 ### SystemHub (basic)
-- Device info, diagnostics page (hub status), backup/restore of DreamHub's own state, change log, logs (journald).
+- For every user: device info, diagnostics page (hub status, clock check), backup/restore of DreamHub's own state (incl. dashboards), change log.
+
+### AdminHub (logs)
+- Admin role only; bottom of the navigation next to Settings.
+- Logs from journald: DreamHub itself (for debugging), enigma2, other services as needed. Live tail over WebSocket; filters for service, level, time range, hub/connector, text.
+- DreamHub log level switchable at runtime; debug reverts automatically.
+- Request IDs link UI errors to log entries.
+- List of enigma2 crash logs (`/media/hdd/enigma2_crash_*.log`).
+- Download for support with secrets removed.
 
 ### Global search
 - Every hub contributes a search provider; results grouped by hub. `EPGSearch` (native on-screen) is a reference for search/filter logic.
@@ -104,6 +119,9 @@ Releases: **Foundation** → **v1** → **v1.1** → **Later**. GitHub milestone
 ### MediaHub trimming
 - Lossless trimming via `ffmpeg -c copy` (cuts land on keyframe boundaries). `CutListEditor` is the on-screen reference for the `.ts.cuts` mechanism.
 
+### AdminHub service status
+- Status of enigma2, dreamhub, Samba and other units; restarting is a change and goes through preview-and-confirm.
+
 ## Later
 
 ### StreamHub
@@ -119,10 +137,15 @@ Releases: **Foundation** → **v1** → **v1.1** → **Later**. GitHub milestone
 - Separation: simple `scripts/` hooks vs. deeply integrated `plugins/` with their own settings.
 - WebAdmin already has a "User Scripts" feature (`/webadmin/web/scriptlist`) — decide whether to complement or supersede it.
 
+### AdminHub terminal
+- Proxy the existing `shellinaboxd` (`127.0.0.1:4200`, used by WebAdmin at `/webadmin/terminal/`) behind DreamHub's auth and CSRF protection — no terminal of our own.
+- Off by default; can only be enabled while auth is on; admin only; password re-entered before opening; warning; session start/end in the change log.
+
 ### Other
 - Plex / Jellyfin / Emby connectors (optional, cached last-known state, graceful degradation when the server is off)
 - More AI providers behind the same interface
-- Profile UI (multi-user)
+- Profile/role UI (multi-user), multiple dashboards UI
+- Additional languages, incl. RTL (the CSS is prepared for it)
 - Installable PWA — needs HTTPS, e.g. via a reverse proxy
 
 ## Open items that need device access
@@ -134,5 +157,7 @@ Tracked as GitHub issues with the `device-access` label:
 - #13 Resolve the WebControl auth discrepancy (`ARCHITECTURE.md`)
 - #14 Write and run the fixture-capture script
 - #15 Investigate the remaining GP4 plugins (`geminiserver`, `geminicomm`, `geministreamripper`)
+- #17 Check where Enigma2 stores its time zone and whether NTP is running
+- #18 Check whether WebAdmin's existing terminal (`/webadmin/terminal/`) requires a login — if not, anyone on the LAN/ZeroTier network has a root shell
 
-Design decision: #16 home page layout (timeline vs. tiles).
+Design decision #16 (home page): **tiles**, as a customizable dashboard — see `CONCEPT.md`.

@@ -36,6 +36,10 @@ DreamHub itself must support multiple languages at runtime:
 - **No live dependency on servers that aren't always on** (e.g. the Unraid server hosting Plex). Such connectors are optional, cache their last known state, and degrade gracefully.
 - **No software transcoding of live TV.** The Amlogic S922X has no hardware video encoder. See `ROADMAP.md`, StreamHub.
 - **Don't re-implement what Enigma2/WebControl already exposes.** Its `/web/*` API is confirmed OpenWebif-compatible (see `ARCHITECTURE.md` for endpoints and schemas); BouquetEditor and SerienRecorder have their own web APIs. Call these instead of re-parsing internal files or binary caches.
+- **UTC inside, local only on screen.** Never derive times from recording file names. See `PRINCIPLES.md`.
+- **No hardcoded user-facing strings, no physical left/right in CSS** (i18n and RTL-ready), all formatting via `Intl`.
+- **No external requests from the UI at runtime** — fonts (Source Sans 3), icons and JS are bundled.
+- **CSRF protection and `Host` header checks** on every mutating endpoint (LAN appliances are attack targets too).
 - **Existing on-screen plugins are references, not replacements.** `AdvancedMovieSelection`, `GraphMultiEPG`, `EPGSearch`, `TvSpielfilm`, `CutListEditor` are native TV-remote UIs — read them for approach (respect their CC BY-NC-SA license, don't copy code). The "GPT-Plugin" is a GUID Partition Table tool, not AI.
 
 ## Repo conventions

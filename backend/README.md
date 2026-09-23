@@ -38,6 +38,7 @@ Enabling auth without a username and password is rejected (it would lock everyon
 | Method | Path | Notes |
 |---|---|---|
 | GET | `/api/v1/health` | public; `status`, `version`, `time` (UTC) |
+| GET | `/api/v1/whoami` | protected; `{username, role}` — doubles as a credentials check, since the web UI's login screen has no browser-native prompt to rely on (only `/api/v1/*` sits behind auth, not the SPA shell) |
 | GET | `/api/v1/deviceinfo` | from WebControl |
 | GET | `/api/v1/movies` | from WebControl `/web/movielist` |
 | GET | `/api/v1/settings` | all sections with effective values; secrets masked, passwords never returned (`hasValue` only) |

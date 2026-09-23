@@ -211,6 +211,35 @@ func TestSettings_EnableAuthThenRequireCredentials(t *testing.T) {
 	}
 }
 
+func TestWhoami_DoublesAsACredentialsCheck(t *testing.T) {
+	e := newEnv(t)
+
+	resp, b := e.do(t, "GET", "/api/v1/whoami", "", nil)
+	if resp.StatusCode != http.StatusOK {
+		t.Fatalf("auth disabled: expected 200, got %d: %s", resp.StatusCode, b)
+	}
+	var who struct {
+		Username string `json:"username"`
+		Role     string `json:"role"`
+	}
+	json.Unmarshal(b, &who)
+	if who.Username == "" || who.Role != "admin" {
+		t.Errorf("unexpected whoami body: %+v", who)
+	}
+
+	e.do(t, "PATCH", "/api/v1/settings", `{"values":{"auth.enabled":true,"auth.username":"armin","auth.password":"correct horse"}}`, nil)
+
+	if resp, _ := e.do(t, "GET", "/api/v1/whoami", "", nil); resp.StatusCode != http.StatusUnauthorized {
+		t.Errorf("no credentials: expected 401, got %d", resp.StatusCode)
+	}
+	if resp, _ := e.do(t, "GET", "/api/v1/whoami", "", func(r *http.Request) { r.SetBasicAuth("armin", "wrong") }); resp.StatusCode != http.StatusUnauthorized {
+		t.Errorf("wrong password: expected 401, got %d", resp.StatusCode)
+	}
+	if resp, _ := e.do(t, "GET", "/api/v1/whoami", "", func(r *http.Request) { r.SetBasicAuth("armin", "correct horse") }); resp.StatusCode != http.StatusOK {
+		t.Errorf("correct credentials: expected 200, got %d", resp.StatusCode)
+	}
+}
+
 func TestSettings_PatchRejectsMalformedBody(t *testing.T) {
 	e := newEnv(t)
 	for _, body := range []string{`not json`, `{}`, `{"values":{},"extra":1}`} {

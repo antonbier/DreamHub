@@ -69,14 +69,76 @@
       "descriptive": "Beschreibend",
       "hub": "Hub-Namen"
     },
-    "settings": "Einstellungen"
+    "settings": "Einstellungen",
+    "signOut": "Abmelden"
   },
   "common": {
     "loading": "Wird geladen…",
     "retry": "Erneut versuchen",
-    "backendUnreachable": "DreamHub-Backend nicht erreichbar. Erneuter Versuch…",
-    "searchNotBuilt": "Die globale Suche ist noch nicht gebaut.",
-    "notificationsNotBuilt": "Benachrichtigungen sind noch nicht gebaut."
+    "backendUnreachable": "DreamHub-Backend nicht erreichbar. Erneuter Versuch…"
+  },
+  "login": {
+    "subtitle": "Dieses DreamHub erfordert ein Passwort.",
+    "username": "Benutzername",
+    "password": "Passwort",
+    "submit": "Anmelden",
+    "submitting": "Wird angemeldet…",
+    "errorWrong": "Benutzername oder Passwort falsch.",
+    "errorNetwork": "DreamHub-Backend nicht erreichbar. Erneut versuchen."
+  },
+  "notifications": {
+    "title": "Benachrichtigungen",
+    "allOk": "Nichts braucht Aufmerksamkeit.",
+    "clockSkew": "Die Uhr der Box geht etwa {minutes} Min. falsch."
+  },
+  "search": {
+    "noResults": "Keine Treffer.",
+    "hint": "↑↓ zum Navigieren · ↵ zum Öffnen · Esc zum Schließen"
+  },
+  "onboarding": {
+    "back": "Zurück",
+    "next": "Weiter",
+    "skip": "Überspringen",
+    "working": "Wird verarbeitet…",
+    "language": {
+      "title": "Sprache",
+      "subtitle": "Sprache der Weboberfläche wählen. Später jederzeit im Benutzermenü änderbar."
+    },
+    "auth": {
+      "title": "Anmeldung",
+      "subtitle": "Optional, aber empfohlen, wenn dieses DreamHub über das eigene LAN hinaus erreichbar ist (z. B. über ZeroTier)."
+    },
+    "device": {
+      "title": "Deine Dreambox",
+      "subtitle": "Eine kurze Prüfung, ob DreamHub die Box erreicht und ihre Uhr stimmt.",
+      "unreachable": "Die Box war nicht erreichbar. Die Einrichtung kann fortgesetzt und die Verbindung später in den Einstellungen behoben werden.",
+      "name": "Gerät",
+      "image": "Image",
+      "enigma": "Enigma2",
+      "tuners": "Tuner",
+      "clockUnknown": "Die Uhr der Box konnte nicht geprüft werden.",
+      "clockOk": "Die Uhr der Box stimmt mit diesem Browser überein.",
+      "clockOff": "Die Uhr der Box geht etwa {minutes} Min. falsch — Timer könnten zur falschen Zeit starten."
+    },
+    "hubs": {
+      "title": "Hubs",
+      "subtitle": "Auswählen, welche Hubs aktiv sein sollen. Später jederzeit in den Einstellungen änderbar."
+    },
+    "ai": {
+      "title": "KI-Empfehlungen",
+      "subtitle": "Empfehlungen brauchen einen OpenAI-API-Schlüssel. Ohne Schlüssel einfach überspringen und später nachtragen."
+    },
+    "channels": {
+      "title": "Sender",
+      "subtitle": "Welche Sender für Empfehlungen berücksichtigt werden sollen.",
+      "notBuilt": "Die Senderauswahl ist noch nicht gebaut (dafür wird ein späteres Release gebraucht) — bis dahin berücksichtigen Empfehlungen alle Sender."
+    },
+    "done": {
+      "title": "Fertig eingerichtet",
+      "subtitle": "QR-Code scannen, um DreamHub auf dem Handy zu öffnen, oder die Adresse unten als Lesezeichen speichern.",
+      "finish": "Fertig",
+      "qrAlt": "QR-Code, der zu diesem DreamHub führt"
+    }
   },
   "dashboard": {
     "title": "Startseite",
@@ -132,7 +194,8 @@
       "passwordPlaceholder": "Neues Passwort",
       "secretPlaceholder": "Neuer Schlüssel",
       "timezoneHint": "IANA-Zeitzonenname, z. B. „Europe/Rome“.",
-      "allowedHostsHint": "Kommagetrennte Hostnamen, zusätzlich zu IP-Adressen, localhost und *.local."
+      "allowedHostsHint": "Kommagetrennte Hostnamen, zusätzlich zu IP-Adressen, localhost und *.local.",
+      "runWizard": "Einrichtungsassistent starten"
     },
     "general": {
       "title": "Allgemein",

@@ -1,9 +1,8 @@
 <!--
-  Top bar — DESIGN.md, "Components: Top bar". Search and notifications are
-  placeholders (both are still-open Foundation items, see ROADMAP.md) shown
-  disabled with an explanatory tooltip rather than omitted, so the layout
-  matches the approved mockup and nothing looks silently missing. Language
-  and appearance are fully wired to GET/PATCH /api/v1/settings.
+  Top bar — DESIGN.md, "Components: Top bar". Search opens the global
+  command palette (SearchPalette.vue); notifications are the current-issues
+  inbox (NotificationsBell.vue) — see those files for what's real vs. still
+  open. Language and appearance are fully wired to GET/PATCH /api/v1/settings.
 -->
 <template>
   <header class="flex h-14 shrink-0 items-center gap-3 border-b border-line bg-bg px-4">
@@ -16,27 +15,19 @@
       <Icon name="menu" :size="18" />
     </button>
     <div class="flex flex-1 justify-center">
-      <label class="relative w-full max-w-[420px]">
+      <button
+        type="button"
+        class="relative w-full max-w-[420px] rounded border border-line bg-field py-1.5 ps-8 pe-3 text-start text-[13.5px] text-faint hover:border-line-soft"
+        @click="searchPalette?.show()"
+      >
         <Icon name="search" :size="16" class="pointer-events-none absolute start-2.5 top-1/2 -translate-y-1/2 text-faint" />
-        <input
-          type="search"
-          disabled
-          :title="t('common.searchNotBuilt')"
-          :placeholder="t('topbar.searchPlaceholder')"
-          class="w-full rounded border border-line bg-field py-1.5 ps-8 pe-3 text-[13.5px] text-muted placeholder:text-faint disabled:cursor-not-allowed"
-        />
-      </label>
+        {{ t('topbar.searchPlaceholder') }}
+        <span class="absolute end-2.5 top-1/2 -translate-y-1/2 text-[11px]">{{ shortcutHint }}</span>
+      </button>
+      <SearchPalette ref="searchPalette" />
     </div>
 
-    <button
-      type="button"
-      disabled
-      :title="t('common.notificationsNotBuilt')"
-      :aria-label="t('topbar.notifications')"
-      class="flex h-8 w-8 shrink-0 items-center justify-center rounded text-muted disabled:cursor-not-allowed disabled:opacity-50"
-    >
-      <Icon name="bell" :size="18" />
-    </button>
+    <NotificationsBell />
 
     <DropdownMenu>
       <template #trigger="{ open }">
@@ -123,23 +114,39 @@
         >
           {{ t('userMenu.settings') }}
         </RouterLink>
+        <button
+          v-if="authState.credentials"
+          type="button"
+          class="block w-full px-3 py-1.5 text-start text-[13.5px] text-muted hover:bg-tile-2 hover:text-text"
+          @click="logout()"
+        >
+          {{ t('userMenu.signOut') }}
+        </button>
       </template>
     </DropdownMenu>
   </header>
 </template>
 
 <script setup lang="ts">
+import { ref } from 'vue'
 import { RouterLink } from 'vue-router'
 import { useI18n } from 'vue-i18n'
 import Icon from './Icon.vue'
 import DropdownMenu from './DropdownMenu.vue'
+import SearchPalette from './SearchPalette.vue'
+import NotificationsBell from './NotificationsBell.vue'
 import { usePreferencesStore } from '@/stores/preferences'
 import { useUiStore } from '@/stores/ui'
+import { useAuth } from '@/composables/useAuth'
 import { LOCALE_NAMES, SUPPORTED_LOCALES } from '@/i18n'
 
 const { t } = useI18n()
 const preferences = usePreferencesStore()
 const ui = useUiStore()
+const { authState, logout } = useAuth()
+
+const searchPalette = ref<InstanceType<typeof SearchPalette> | null>(null)
+const shortcutHint = /Mac/.test(navigator.platform) ? '⌘K' : 'Ctrl+K'
 
 const appearanceOptions = [
   { value: 'dark' as const, icon: 'moon', label: 'userMenu.appearance.dark' },

@@ -69,14 +69,76 @@
       "descriptive": "Descrittive",
       "hub": "Nomi degli hub"
     },
-    "settings": "Impostazioni"
+    "settings": "Impostazioni",
+    "signOut": "Esci"
   },
   "common": {
     "loading": "Caricamento…",
     "retry": "Riprova",
-    "backendUnreachable": "Backend DreamHub non raggiungibile. Nuovo tentativo…",
-    "searchNotBuilt": "La ricerca globale non è ancora stata realizzata.",
-    "notificationsNotBuilt": "Le notifiche non sono ancora state realizzate."
+    "backendUnreachable": "Backend DreamHub non raggiungibile. Nuovo tentativo…"
+  },
+  "login": {
+    "subtitle": "Questo DreamHub richiede una password.",
+    "username": "Nome utente",
+    "password": "Password",
+    "submit": "Accedi",
+    "submitting": "Accesso in corso…",
+    "errorWrong": "Nome utente o password errati.",
+    "errorNetwork": "Backend DreamHub non raggiungibile. Riprova."
+  },
+  "notifications": {
+    "title": "Notifiche",
+    "allOk": "Nessuna attenzione richiesta.",
+    "clockSkew": "L'orologio del box è sfasato di circa {minutes} min."
+  },
+  "search": {
+    "noResults": "Nessun risultato.",
+    "hint": "↑↓ per navigare · ↵ per aprire · Esc per chiudere"
+  },
+  "onboarding": {
+    "back": "Indietro",
+    "next": "Avanti",
+    "skip": "Salta",
+    "working": "Elaborazione…",
+    "language": {
+      "title": "Lingua",
+      "subtitle": "Scegli la lingua dell'interfaccia web. Modificabile in qualsiasi momento dal menu utente."
+    },
+    "auth": {
+      "title": "Accesso",
+      "subtitle": "Facoltativo, ma consigliato se questo DreamHub è raggiungibile oltre la tua LAN (ad es. tramite ZeroTier)."
+    },
+    "device": {
+      "title": "Il tuo Dreambox",
+      "subtitle": "Una verifica rapida che DreamHub raggiunga il box e che il suo orologio sia corretto.",
+      "unreachable": "Impossibile raggiungere il box. Puoi continuare la configurazione e sistemare la connessione più tardi nelle impostazioni.",
+      "name": "Dispositivo",
+      "image": "Image",
+      "enigma": "Enigma2",
+      "tuners": "Tuner",
+      "clockUnknown": "Impossibile verificare l'orologio del box.",
+      "clockOk": "L'orologio del box corrisponde a questo browser.",
+      "clockOff": "L'orologio del box è sfasato di circa {minutes} min — i timer potrebbero partire all'ora sbagliata."
+    },
+    "hubs": {
+      "title": "Hub",
+      "subtitle": "Scegli quali hub attivare. Modificabile in qualsiasi momento nelle impostazioni."
+    },
+    "ai": {
+      "title": "Consigli IA",
+      "subtitle": "I consigli richiedono una chiave API OpenAI. Se non ne hai una, salta e aggiungila più tardi."
+    },
+    "channels": {
+      "title": "Canali",
+      "subtitle": "Quali canali considerare per i consigli.",
+      "notBuilt": "La selezione dei canali non è ancora stata realizzata (richiede ChannelHub, in un rilascio successivo) — fino ad allora i consigli considerano tutti i canali."
+    },
+    "done": {
+      "title": "Tutto pronto",
+      "subtitle": "Scansiona per aprire DreamHub sul telefono, oppure salva l'indirizzo qui sotto nei preferiti.",
+      "finish": "Fine",
+      "qrAlt": "Codice QR che porta a questo DreamHub"
+    }
   },
   "dashboard": {
     "title": "Home",
@@ -132,7 +194,8 @@
       "passwordPlaceholder": "Nuova password",
       "secretPlaceholder": "Nuova chiave",
       "timezoneHint": "Nome del fuso orario IANA, ad es. \"Europe/Rome\".",
-      "allowedHostsHint": "Nomi host separati da virgola, oltre a indirizzi IP, localhost e *.local."
+      "allowedHostsHint": "Nomi host separati da virgola, oltre a indirizzi IP, localhost e *.local.",
+      "runWizard": "Avvia la configurazione guidata"
     },
     "general": {
       "title": "Generale",

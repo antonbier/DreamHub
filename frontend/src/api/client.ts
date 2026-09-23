@@ -7,7 +7,12 @@
 // - Errors follow the backend's envelope: {"error": {code, message,
 //   requestId, details}}. ApiError carries the code (for the UI to
 //   translate) and requestId (for support/logs), never the English message.
-import type { DashboardLayout, HealthInfo, HubStatus, Navigation, SettingsView, Timer } from './types'
+// - When Basic Auth credentials are on hand (authState.ts, set by
+//   useAuth.ts's login()), every request carries them; a 401 from any
+//   endpoint means they're gone or wrong, so they're dropped and the app
+//   falls back to the login screen — see App.vue.
+import { authHeader, authState, clearCredentials } from './authState'
+import type { DashboardLayout, DeviceInfo, HealthInfo, HubStatus, Navigation, SettingsView, Timer, WhoAmI } from './types'
 
 export class ApiError extends Error {
   code: string
@@ -41,6 +46,8 @@ async function request<T>(method: string, path: string, body?: unknown): Promise
   if (body !== undefined) {
     headers['Content-Type'] = 'application/json'
   }
+  const auth = authHeader()
+  if (auth) headers['Authorization'] = auth
 
   let res: Response
   try {
@@ -66,6 +73,13 @@ async function request<T>(method: string, path: string, body?: unknown): Promise
     json = undefined
   }
 
+  if (res.status === 401) {
+    // Wrong, revoked or (for a request sent before any login) simply
+    // absent credentials — either way, the login screen decides next.
+    clearCredentials()
+    authState.authenticated = false
+  }
+
   if (!res.ok) {
     const envelope = (json as { error?: { code?: string; message?: string; details?: ApiError['details'] } })?.error
     throw new ApiError(
@@ -81,6 +95,8 @@ async function request<T>(method: string, path: string, body?: unknown): Promise
 
 export const api = {
   health: () => request<HealthInfo>('GET', '/api/v1/health'),
+  whoami: () => request<WhoAmI>('GET', '/api/v1/whoami'),
+  deviceInfo: () => request<DeviceInfo>('GET', '/api/v1/deviceinfo'),
   navigation: () => request<Navigation>('GET', '/api/v1/navigation'),
   settings: {
     get: () => request<SettingsView>('GET', '/api/v1/settings'),

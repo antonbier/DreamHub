@@ -58,6 +58,7 @@ func NewRouter(d Deps) http.Handler {
 	}
 
 	protected := http.NewServeMux()
+	protected.HandleFunc("GET /api/v1/whoami", handleWhoami(d))
 	protected.HandleFunc("GET /api/v1/deviceinfo", handleDeviceInfo(d))
 	protected.HandleFunc("GET /api/v1/movies", handleMovies(d))
 	protected.HandleFunc("GET /api/v1/settings", handleGetSettings(d))
@@ -124,6 +125,20 @@ func handleHealth(d Deps) http.HandlerFunc {
 			// Server time in UTC, so clients can warn when the box clock is off
 			// (CONCEPT.md, "Time zones").
 			"time": d.Now().UTC().Format(time.RFC3339),
+		})
+	}
+}
+
+// handleWhoami reports the current user. Protected (behind auth), so it
+// doubles as a credentials check: the web UI's login screen submits a
+// username/password as a Basic Auth header here and treats 200 as success,
+// 401 as a wrong password (see frontend/src/composables/useAuth.ts). v1 has
+// exactly one user, so this doesn't vary by who actually authenticated.
+func handleWhoami(d Deps) http.HandlerFunc {
+	return func(w http.ResponseWriter, r *http.Request) {
+		httpx.WriteJSON(w, http.StatusOK, map[string]string{
+			"username": d.User.Name,
+			"role":     string(d.User.Role),
 		})
 	}
 }

@@ -67,6 +67,26 @@ export interface HealthInfo {
   time: string // RFC3339, UTC
 }
 
+// GET /api/v1/whoami.
+export interface WhoAmI {
+  username: string
+  role: 'admin' | 'user'
+}
+
+// backend/internal/webcontrol.Frontend / .DeviceInfo.
+export interface Frontend {
+  name: string
+  model: string
+}
+
+export interface DeviceInfo {
+  enigmaVersion: string
+  imageVersion: string
+  webifVersion: string
+  deviceName: string
+  frontends: Frontend[]
+}
+
 // A field-level validation error from a rejected PATCH /api/v1/settings —
 // backend/internal/settings.FieldError.
 export interface FieldError {

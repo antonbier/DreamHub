@@ -69,14 +69,76 @@
       "descriptive": "Descriptive",
       "hub": "Hub names"
     },
-    "settings": "Settings"
+    "settings": "Settings",
+    "signOut": "Sign out"
   },
   "common": {
     "loading": "Loading…",
     "retry": "Retry",
-    "backendUnreachable": "Can't reach the DreamHub backend. Retrying…",
-    "searchNotBuilt": "Global search isn't built yet.",
-    "notificationsNotBuilt": "Notifications aren't built yet."
+    "backendUnreachable": "Can't reach the DreamHub backend. Retrying…"
+  },
+  "login": {
+    "subtitle": "This DreamHub requires a password.",
+    "username": "Username",
+    "password": "Password",
+    "submit": "Sign in",
+    "submitting": "Signing in…",
+    "errorWrong": "Wrong username or password.",
+    "errorNetwork": "Can't reach the DreamHub backend. Try again."
+  },
+  "notifications": {
+    "title": "Notifications",
+    "allOk": "Nothing needs attention.",
+    "clockSkew": "The box's clock is off by about {minutes} min."
+  },
+  "search": {
+    "noResults": "No matches.",
+    "hint": "↑↓ to navigate · ↵ to go · esc to close"
+  },
+  "onboarding": {
+    "back": "Back",
+    "next": "Next",
+    "skip": "Skip",
+    "working": "Working…",
+    "language": {
+      "title": "Language",
+      "subtitle": "Pick the language for the web UI. You can change this any time in the user menu."
+    },
+    "auth": {
+      "title": "Sign-in",
+      "subtitle": "Optional, but recommended if this DreamHub is reachable beyond your own LAN (e.g. over ZeroTier)."
+    },
+    "device": {
+      "title": "Your Dreambox",
+      "subtitle": "A quick check that DreamHub can reach the box and that its clock is right.",
+      "unreachable": "Could not reach the box. You can continue setup and fix the connection later in Settings.",
+      "name": "Device",
+      "image": "Image",
+      "enigma": "Enigma2",
+      "tuners": "Tuners",
+      "clockUnknown": "Could not check the box's clock.",
+      "clockOk": "The box's clock matches this browser.",
+      "clockOff": "The box's clock is off by about {minutes} min — timers may start at the wrong time."
+    },
+    "hubs": {
+      "title": "Hubs",
+      "subtitle": "Choose which hubs to enable. You can change this any time in Settings."
+    },
+    "ai": {
+      "title": "AI recommendations",
+      "subtitle": "DiscoveryHub needs an OpenAI API key. Skip this and add one later if you don't have one yet."
+    },
+    "channels": {
+      "title": "Channels",
+      "subtitle": "Which channels DiscoveryHub should consider for recommendations.",
+      "notBuilt": "Channel selection isn't built yet (it needs ChannelHub, a later release) — DiscoveryHub considers every channel until then."
+    },
+    "done": {
+      "title": "All set",
+      "subtitle": "Scan this to open DreamHub on your phone, or bookmark the address below.",
+      "finish": "Finish",
+      "qrAlt": "QR code linking to this DreamHub"
+    }
   },
   "dashboard": {
     "title": "Dashboard",
@@ -132,7 +194,8 @@
       "passwordPlaceholder": "New password",
       "secretPlaceholder": "New key",
       "timezoneHint": "IANA time zone name, e.g. \"Europe/Rome\".",
-      "allowedHostsHint": "Comma-separated host names, besides IP addresses, localhost and *.local."
+      "allowedHostsHint": "Comma-separated host names, besides IP addresses, localhost and *.local.",
+      "runWizard": "Run setup wizard"
     },
     "general": {
       "title": "General",

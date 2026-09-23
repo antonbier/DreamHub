@@ -6,7 +6,12 @@
 -->
 <template>
   <div class="mx-auto max-w-content p-6 below-md:p-4">
-    <h1 class="mb-4 text-[26px] font-bold">{{ t('settings.page.title') }}</h1>
+    <div class="mb-4 flex items-center">
+      <h1 class="text-[26px] font-bold">{{ t('settings.page.title') }}</h1>
+      <RouterLink to="/onboarding" class="ms-auto text-[13.5px] text-accent hover:underline">
+        {{ t('settings.page.runWizard') }}
+      </RouterLink>
+    </div>
 
     <p v-if="form.loading.value" class="text-[14px] text-muted">{{ t('common.loading') }}</p>
     <div v-else-if="form.loadFailed.value" class="rounded border border-line bg-tile p-5">
@@ -23,6 +28,7 @@
 
 <script setup lang="ts">
 import { onMounted } from 'vue'
+import { RouterLink } from 'vue-router'
 import { useI18n } from 'vue-i18n'
 import SettingsSectionCard from '@/components/settings/SettingsSectionCard.vue'
 import { useSettingsForm } from '@/composables/useSettingsForm'

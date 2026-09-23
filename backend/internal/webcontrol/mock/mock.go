@@ -1,8 +1,7 @@
 // Package mock implements webcontrol.Client against fixture data instead of
 // a real device, so the rest of DreamHub is buildable and testable without
 // a reachable Dreambox. See PRINCIPLES.md, "Mock-first development", and
-// ROADMAP.md Phase 0/1 — this is what made continuing today possible while
-// the reference device was offline.
+// ROADMAP.md, Foundation.
 //
 // Fixture values below are taken directly from the live responses recorded
 // in ARCHITECTURE.md, not invented, so behavior against the mock matches

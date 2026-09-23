@@ -1,24 +1,32 @@
 # DreamHub
 
-A modern all-in-one extension system for the **Dreambox One (DreamOS AIO, Amlogic S922X)**.
+One place for everything your **Dreambox One (DreamOS AIO)** does — recordings, timers, EPG, series, AI recommendations — in a modern web interface, running alongside the native WebControl rather than replacing it.
 
-Combines media management, EPG search, TV control and optional AI recommendations in a fast web interface — as a companion to the native WebControl (port 80), not a replacement for it.
+## What it is
+
+DreamHub is a **core** (home page, global search, notifications, settings, onboarding) with **hubs** plugged into it:
+
+- **MediaHub** — recordings, disk space, rename with preview, trash
+- **TimerHub** — timers, AutoTimer, conflict detection
+- **GuideHub** — EPG as a TV-guide grid
+- **DiscoveryHub** — AI recommendations, one tap to a timer
+- **SeriesHub** — SerienRecorder: what you have, what's missing, what's coming
+- **SystemHub** — device info, diagnostics, backup, change log
+- later: RadioHub, ChannelHub, ControlHub, StreamHub, AutomationHub
+
+Hubs get their data through **connectors** (WebControl, SerienRecorder, TMDB, OpenAI, later Plex/Jellyfin/Emby). The value is in how they connect: a recommendation becomes a timer, the timer becomes a recording, the recording gets a clean name — all in one place. Nothing is ever changed without showing you what will change first. See [CONCEPT.md](CONCEPT.md).
 
 ## Tech stack
 
-- **Backend:** Go, statically compiled for ARM64. Runs on port 8080. REST API + WebSockets.
-- **Frontend:** PWA (Vue.js + Tailwind), embedded into the Go binary via `go:embed`.
-- **TV client:** a minimal Enigma2 plugin (Python 2.7 — confirmed the only interpreter on-device), display-only, calls `127.0.0.1:8080`.
-- **Distribution (target):** an installable `.deb` package via its own apt feed (this DreamOS build is apt/dpkg-based) — not a manually placed binary.
-
-## Why this exists
-
-Generic "app-like" functionality (media browsing, dashboards) is already well covered by existing platforms and apps. The only thing worth building here is what **only the Dreambox can do**, because it's the only tuner in the setup: live TV, EPG, recordings, timers. The current native WebControl is functional but dated, both visually and functionally — DreamHub aims to replace that experience without touching the Enigma2 core itself.
+- **Backend:** Go, statically compiled for ARM64, runs as a systemd service on port 8080. REST API + WebSockets.
+- **Frontend:** responsive web app (Vue.js + Tailwind), embedded into the Go binary via `go:embed`.
+- **TV plugin:** a minimal Enigma2 plugin (Python 2.7) — a launcher with a QR code to open DreamHub on your phone.
+- **Distribution:** an installable `.deb` via its own apt feed.
 
 ## Status
 
-Early planning phase. See [PROJECT_PLAN.md](PROJECT_PLAN.md) for full context (including out-of-scope items and confirmed technical facts) and [ROADMAP.md](ROADMAP.md) for the phase breakdown.
+Planning is complete; the backend foundation has started. See [PROJECT_PLAN.md](PROJECT_PLAN.md) for context, [ROADMAP.md](ROADMAP.md) for progress, and [backend/README.md](backend/README.md) to run it locally (no Dreambox required — it defaults to a mock).
 
-## Out of scope
+## License
 
-See [PROJECT_PLAN.md](PROJECT_PLAN.md#2-out-of-scope) for the full list and reasoning. In short: no home automation, no generic infrastructure dashboards, no casting, no media browsing — anything not tied to the tuner itself.
+[CC BY-NC-SA 3.0](LICENSE), matching the convention of the Enigma2/DreamOS plugin community.

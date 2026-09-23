@@ -4,9 +4,17 @@ Instructions for any Claude Code (or other AI coding agent) instance working in 
 
 ## Start here
 
-Read [`PROJECT_PLAN.md`](PROJECT_PLAN.md) first — it has the full technical context: why this project exists, what's out of scope, and what's technically confirmed. Then [`ARCHITECTURE.md`](ARCHITECTURE.md) — a read-only inspection of a real reference device: the WebControl API, already-installed plugins that overlap with planned modules (check these before writing new code that duplicates them), process/service layout, config conventions. Then [`PRINCIPLES.md`](PRINCIPLES.md) — the engineering principles every module must follow (auth model, API-first, modularity, settings/secrets handling, and more) regardless of which phase is being built. Then [`ROADMAP.md`](ROADMAP.md) for the phase breakdown. `README.md` is just the one-paragraph pitch.
+Read in this order:
 
-**Do not re-propose items listed as out of scope in `PROJECT_PLAN.md`** without a genuinely new technical argument — they were already evaluated and turned down for stated reasons. Treat `PROJECT_PLAN.md` and `ROADMAP.md` as ground truth for prior decisions, not as suggestions to second-guess from scratch.
+1. [`PROJECT_PLAN.md`](PROJECT_PLAN.md) — why the project exists, what's out of scope, confirmed technical facts.
+2. [`CONCEPT.md`](CONCEPT.md) — the product: core (shell), hubs, connectors, the hub contract, release scope (v1 / v1.1 / later).
+3. [`PRINCIPLES.md`](PRINCIPLES.md) — how everything is built. Start with "Preview and confirm — no silent changes".
+4. [`ARCHITECTURE.md`](ARCHITECTURE.md) — a read-only inspection of the real reference device: WebControl API, installed plugins, process/service layout, config conventions, partition layout.
+5. [`ROADMAP.md`](ROADMAP.md) — technical notes per hub and what's done/open.
+
+`README.md` is the short pitch; `CHANGELOG.md` tracks releases; `backend/README.md` explains how to run and test the backend.
+
+**Do not re-propose items listed as out of scope in `PROJECT_PLAN.md`** without a genuinely new technical argument — they were evaluated and turned down for stated reasons. Treat these documents as ground truth for prior decisions, not as suggestions to second-guess from scratch.
 
 ## Language rule
 
@@ -17,19 +25,22 @@ Read [`PROJECT_PLAN.md`](PROJECT_PLAN.md) first — it has the full technical co
 
 DreamHub itself must support multiple languages at runtime:
 
-- **Web UI (PWA)**: a user-switchable language selector, independent of the OS. Use an i18n library (e.g. vue-i18n) with per-locale JSON translation strings.
-- **Enigma2 plugin**: must follow DreamOS's own configured system language automatically — no separate setting for the user to maintain. Read `config.osd.language.value` from Enigma2's config system and load matching gettext `.po`/`.mo` translations, the same mechanism other Enigma2 plugins use for their own localization. See the open spike issue for the exact loading convention to verify on-device.
+- **Web UI**: a user-switchable language selector, independent of the OS. Use an i18n library (e.g. vue-i18n) with per-locale JSON translation strings.
+- **Enigma2 plugin**: must follow DreamOS's own configured system language automatically — no separate setting for the user to maintain. Read `config.osd.language.value` (format `de_DE`) and load matching gettext `.po`/`.mo` translations, the same mechanism other Enigma2 plugins use (see `PROJECT_PLAN.md`).
 
 ## Architecture constraints (do not violate)
 
-- **Never modify the native WebControl** on port 80. It's Dreambox's own closed-source interface, not meant to be extended for license reasons. DreamHub runs alongside it (planned port 8080), it does not replace or patch it.
-- **No live dependency on the Unraid server.** It is not on 24/7. Any feature touching it must be an on-demand/batch action the user triggers when the server happens to be up — never something the core UI depends on being reachable.
-- **No software transcoding of live TV.** The Dreambox One's Amlogic S922X has no hardware video encoder (decode-only chip). CPU-side transcoding is too heavy for this box and is explicitly out of scope. See `PROJECT_PLAN.md`, Streaming Bridge section, for the chosen workaround.
-- **Don't re-implement what Enigma2/WebControl already exposes.** Its `/web/*` API is confirmed OpenWebif-compatible (movies, timers, EPG, device info, services — see `ARCHITECTURE.md` for the confirmed endpoint list and response schemas) and the `/bouqueteditor/*` plugin already handles bouquet editing. Call these instead of re-parsing internal files or binary caches, which are undocumented and can change between firmware builds.
-- **Check `ARCHITECTURE.md`'s installed-plugin table before building any module.** Several planned modules (grid EPG, EPG search, recordings browser, cut-list editing, even AI recommendations) may already overlap with a plugin that's already on the device.
+- **Preview and confirm, always.** No change to recordings, timers, bouquets or the system without showing exactly what will change and getting explicit confirmation. Mutating API operations are two-step (`plan` → `apply`). Nothing automatic in v1. See `PRINCIPLES.md`.
+- **Respect the core / hubs / connectors boundaries** (`CONCEPT.md`). Hubs reach data only through connectors, talk to other hubs only through the core API or events, and never import another hub's code.
+- **Never modify the native WebControl** on port 80. It's Dreambox's own closed-source interface. DreamHub runs alongside it (port 8080).
+- **No live dependency on servers that aren't always on** (e.g. the Unraid server hosting Plex). Such connectors are optional, cache their last known state, and degrade gracefully.
+- **No software transcoding of live TV.** The Amlogic S922X has no hardware video encoder. See `ROADMAP.md`, StreamHub.
+- **Don't re-implement what Enigma2/WebControl already exposes.** Its `/web/*` API is confirmed OpenWebif-compatible (see `ARCHITECTURE.md` for endpoints and schemas); BouquetEditor and SerienRecorder have their own web APIs. Call these instead of re-parsing internal files or binary caches.
+- **Existing on-screen plugins are references, not replacements.** `AdvancedMovieSelection`, `GraphMultiEPG`, `EPGSearch`, `TvSpielfilm`, `CutListEditor` are native TV-remote UIs — read them for approach (respect their CC BY-NC-SA license, don't copy code). The "GPT-Plugin" is a GUID Partition Table tool, not AI.
 
 ## Repo conventions
 
-- Phases are tracked as GitHub Milestones (Phase 0–8).
-- Open technical questions that must be resolved before their dependent phase starts are tracked as Issues labeled `spike`, all currently in the "Phase 0 — Spikes" milestone.
+- GitHub milestones: **Foundation**, **v1 — hubs**, **v1 — release & packaging**, **v1.1**, **Later** (matching `ROADMAP.md`). Phase 0 (spikes) is closed.
+- Issues labeled `device-access` need a reachable Dreambox; everything else should be doable against the mock (`backend/internal/webcontrol/mock`).
 - Project board (Kanban): https://github.com/users/antonbier/projects/1
+- When a new device fact is confirmed, update `ARCHITECTURE.md`; when a scope or architecture decision is made, update `PROJECT_PLAN.md`, `CONCEPT.md` or `PRINCIPLES.md`. Someone without access to the original planning conversation must be able to reconstruct every decision from these files.

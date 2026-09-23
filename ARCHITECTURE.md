@@ -2,6 +2,8 @@
 
 Findings from a read-only inspection of a reference Dreambox One (DreamOS AIO / "Gemini Project" GP4 build): the WebControl web interface with its network traffic observed, and direct on-device inspection (SSH, read-only — no writes, no service restarts, no installs). This is the ground truth for how the platform actually works; treat it as more authoritative than anything inferred from general Enigma2/OpenWebif knowledge elsewhere in this repo.
 
+> **Naming note.** This document was written while the roadmap was still organized as "Phase 0–8". The product has since been restructured into hubs (see `CONCEPT.md`). Mapping of the old names used below: Phase 1 → Foundation · Phase 2 / FilmHub → MediaHub · Phase 3 / AIO Search → global search · Phase 4 / TV Control → GuideHub, ChannelHub, ControlHub, SystemHub · Phase 5 / Streaming Bridge → StreamHub · Phase 6 / AI Discovery → DiscoveryHub · Phase 7 / Plugin & Script Hub → AutomationHub · Phase 8 → v1 release & packaging. The findings themselves are unaffected.
+
 ## System identity
 
 - Enigma2 version: `5.0.0r117-gutemine-2024-08-12`
@@ -76,7 +78,7 @@ Only read/list calls were observed (no add/move/remove button was clicked, to av
 
 ## Already-installed plugins — check before building
 
-`/usr/lib/enigma2/python/Plugins/Extensions/` on the reference box already contains a large set of plugins. Several overlap directly with planned DreamHub modules and **should be evaluated before writing new code that duplicates them**:
+`/usr/lib/enigma2/python/Plugins/Extensions/` on the reference box already contains a large set of plugins. Several overlap directly with planned DreamHub modules and **should be evaluated before writing new code that duplicates them**. (Resolved further down in "The other 'overlapping' plugins are native GUI, not web" and "'GPT-Plugin' is not an AI plugin" — the "Action needed" column below reflects the state before that investigation.)
 
 | Installed plugin | Overlaps with | Action needed |
 |---|---|---|

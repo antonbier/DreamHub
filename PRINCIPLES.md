@@ -1,10 +1,23 @@
 # Design Principles
 
-These are DreamHub's foundational engineering principles — decisions about *how* the system is built, independent of any single phase or module. Where a principle conflicts with something written in `ROADMAP.md` for a specific phase, this document wins; update the roadmap instead of quietly ignoring a principle.
+These are DreamHub's foundational engineering principles — decisions about *how* the system is built, independent of any single hub. Where a principle conflicts with something written in `ROADMAP.md` for a specific hub, this document wins; update the roadmap instead of quietly ignoring a principle.
+
+## Preview and confirm — no silent changes
+
+The most important rule in this document. DreamHub operates as root on a device holding a household's real recordings.
+
+- **In v1, changes happen only through the web UI.** Renaming, moving, deleting recordings, creating/deleting timers, editing bouquets, installing packages — all of it.
+- **Every change shows exactly what will change before it happens** (before → after, for every affected file or item) and **requires explicit user confirmation**.
+- **Nothing happens automatically in v1.** Automation is added later, deliberately and opt-in, through AutomationHub — which is one of the main reasons DreamHub is modular.
+- **The API enforces this, not just the UI.** Every mutating operation is two-step: `plan` returns the list of changes plus a plan ID; `apply` executes exactly that plan ID. No client — including a future mobile app — can skip the preview.
+- **Every applied change is recorded** in a change log (what, when, by whom), visible in SystemHub. This is the basis for undo.
+- **Delete means move to trash**, not hard delete.
+- **Never touch a file that's currently being recorded or played** — check timer state and the current service first.
+- **The AI only proposes.** A recommendation never creates a timer by itself.
 
 ## Multilingual by construction
 
-Both surfaces (web UI and Enigma2 plugin) support multiple languages from the start, not as a bolt-on. See `PROJECT_PLAN.md` and `CLAUDE.md` for the concrete mechanism (i18n library for the PWA, gettext + `config.osd.language` for the plugin).
+Both surfaces (web UI and Enigma2 plugin) support multiple languages from the start, not as a bolt-on. See `PROJECT_PLAN.md` and `CLAUDE.md` for the concrete mechanism (i18n library for the web UI, gettext + `config.osd.language` for the plugin).
 
 ## Authentication: simple by default, pluggable for later
 
@@ -15,7 +28,7 @@ Both surfaces (web UI and Enigma2 plugin) support multiple languages from the st
 
 ## API-first
 
-The REST API is the product; the PWA is just its first client. Concretely:
+The REST API is the product; the web UI is just its first client. Concretely:
 
 - Version the API from day one (`/api/v1/...`) so a future mobile app doesn't break when the API evolves.
 - No backend logic that only the web frontend can reach — if the web UI can do it, the API can do it, and the web UI calls the API like any other client would.
@@ -30,23 +43,46 @@ Prefer generic mechanisms that let DreamHub talk to *anything*, over building be
 - Where a standard format already fits, use it rather than inventing one (e.g. iCal for timers/schedules, M3U for channel/stream lists) — free interoperability with tools that already speak those formats.
 - Where DreamHub's API covers the same concepts WebControl's `/web/*` API does, there's no requirement to mirror its exact shape, but avoid gratuitously diverging in naming for no reason — familiarity helps anyone who already knows the Enigma2/OpenWebif ecosystem.
 
-## Fully modular — core vs. feature modules
+## Fully modular — core, hubs, connectors
 
-Mirrors a pattern this project already found and validated on the platform itself: Enigma2 core vs. Gemini's own closed `GP4/` layer vs. open community `Extensions/` (see `ARCHITECTURE.md`) — a clean separation between "the engine" and "swappable feature modules" is a proven pattern here, not a novel idea.
+Mirrors a pattern this project already found and validated on the platform itself: Enigma2 core vs. Gemini's own closed `GP4/` layer vs. open community `Extensions/` (see `ARCHITECTURE.md`) — a clean separation between "the engine" and swappable parts is a proven pattern here, not a novel idea. Full description in `CONCEPT.md`.
 
-- **Core**: auth, the API framework/router, settings storage, device-capability detection. Nothing feature-specific lives here.
-- **Modules**: FilmHub, AIO Search, TV Control, Streaming Bridge, AI Discovery, Plugin/Script Hub (the Phase 2–7 roadmap items) are each independent modules that register their own routes/settings with core at startup.
-- Each module must be **independently disableable** without breaking any other module. No module should directly import another module's internals — only core's shared interfaces.
-- The PWA frontend mirrors this: each module owns its own routed UI section, hidden entirely when its module is disabled.
-- The Settings UI is organized per module, not one undifferentiated form (see below).
+- **Core (shell)**: auth, API router, settings, event bus, notifications, global search, home page, onboarding, diagnostics, capability detection. Nothing hub-specific lives here.
+- **Hubs** (MediaHub, TimerHub, GuideHub, …) register with the core through the hub contract (routes, settings schema, search provider, home contributions, events, requirements).
+- **Connectors** (WebControl, SerienRecorder, TMDB, AI providers, later Plex/Jellyfin/Emby) are the only way hubs reach data or external services.
+- Each hub must be **independently disableable** without breaking any other hub. Hubs never import each other's code — they talk through the core API and core events.
+- The frontend mirrors this: each hub owns its own routed UI section, hidden entirely when the hub is disabled.
+
+## Hub status: always explain what's missing
+
+When a hub can't run fully, the user is never left guessing. Each hub is *available*, *degraded* or *unavailable* — and every non-available state comes with the reason and how to fix it ("SerienRecorder is not installed → install it from the Addon Manager under …"). Shown on the hub's placeholder, on SystemHub's diagnostics page, and in the onboarding wizard. A one-click fix (e.g. installing a package) is itself a change and follows preview-and-confirm.
+
+## Settings: one central menu, schema-driven, extended per hub
+
+One settings menu where *everything* can be seen and saved: general settings (language, auth, network, AI provider) first, then one section per hub.
+
+- Each hub declares its settings as a schema (field, type, validation, secret or not). The core renders the UI from it — consistent everywhere, and every setting is automatically available through the API too.
+- Search within settings; "test connection" buttons for anything with credentials (e.g. validate an API key).
+- An onboarding wizard on first start covers the essentials and can be re-run from settings (see `CONCEPT.md`).
 
 ## Settings & secrets, handled properly
 
-A single settings area in the web UI, organized per module, covering things like the LLM API key (Phase 6), TMDB API key (Phase 2/4), webhook URLs, the API token(s) from the auth section above.
+Covers things like the AI provider key, TMDB API key, webhook URLs, the API token(s) from the auth section above.
 
 - Secrets are never echoed back in full after saving — show a masked form (`sk-...ab12`) like every other product that stores API keys.
 - Stored with restrictive file permissions, readable only by the service's own user (root, realistically, since `enigma2` itself runs as root — but at least not world-readable).
 - Never logged, not even at debug level.
+
+## AI provider: a swappable connector
+
+- OpenAI is the first provider, but DreamHub talks to an **AI provider interface in the core**, never to a specific vendor's API from inside a hub. Other providers (Claude, Gemini, local models) plug into the same interface later.
+- Responses are requested as **structured JSON** in a fixed schema, so switching providers doesn't break parsing.
+- Settings per provider: API key (secret), model, and a **daily usage limit** as a cost guard.
+- Send only what's needed (e.g. only the user-selected channels' EPG), nothing personal beyond that.
+
+## Profiles-ready, not profiles-built
+
+Preferences and settings belong to a user in the data model from day one, and the API carries a user context — even though v1 has exactly one user and no profile switching in the UI. Keep this minimal: prepare the model, don't build profile features speculatively.
 
 ## Runtime capability detection, not hardcoded assumptions
 
@@ -58,7 +94,7 @@ Every existing plugin surveyed for this project (Bouqueteditor, WebAdmin's packa
 
 ## Resilience when external services are unavailable
 
-Phase 6 depends on an external LLM API; the box's internet connection isn't guaranteed. Any feature with an external dependency must fail visibly and locally — cache the last good result, show a clear "unavailable" state — rather than taking down unrelated parts of the UI when one external call fails.
+DiscoveryHub depends on an external AI API, and optional connectors (Plex/Jellyfin/Emby) depend on servers that may be off; the box's internet connection isn't guaranteed either. Any feature with an external dependency must fail visibly and locally — cache the last good result, show a clear "unavailable" state — rather than taking down unrelated parts of the UI when one external call fails.
 
 ## Ship updates the platform's own way
 
@@ -70,7 +106,7 @@ The platform already runs full systemd with journald (see `ARCHITECTURE.md`). Lo
 
 ## Testable without the physical device
 
-This exact session is the reason this principle exists: architecture work happened live against a reference device, and now that device is offline and unreachable. Ongoing development shouldn't have the same constraint. The WebControl API surface documented in `ARCHITECTURE.md` should be mockable, so core logic (FilmHub naming, search, etc.) has tests that run without a live Dreambox connected — device-dependent behavior gets verified separately, opportunistically, whenever access is available.
+This exact session is the reason this principle exists: architecture work happened live against a reference device, and now that device is offline and unreachable. Ongoing development shouldn't have the same constraint. The WebControl API surface documented in `ARCHITECTURE.md` should be mockable, so core logic (MediaHub naming, search, etc.) has tests that run without a live Dreambox connected — device-dependent behavior gets verified separately, opportunistically, whenever access is available.
 
 ## License: CC BY-NC-SA 3.0, matching the ecosystem
 
@@ -84,11 +120,11 @@ Location: under `/data/dreamhub/`, not the root partition. Root is a 2 GB slot s
 
 ## Consistent API error shape
 
-Every endpoint returns errors in the same JSON envelope (an error code plus a human-readable message, at minimum) rather than each module inventing its own shape as it's built. Decide the exact envelope once, in Phase 1, before any other module ships an endpoint.
+Every endpoint returns errors in the same JSON envelope (an error code plus a human-readable message, at minimum) rather than each module inventing its own shape as it's built. Defined once in the Foundation (`backend/internal/api/errors.go`: `{"error": {"code": ..., "message": ...}}`) — every hub uses it.
 
 ## Resource budget, stated up front
 
-Confirmed on the reference device: ~1.2 GB RAM available under normal load, **no swap at all** (see `ARCHITECTURE.md`). Target: the Go backend plus its embedded PWA assets should stay well under ~150–200 MB resident. This isn't a nice-to-have — it should actively shape implementation choices from the start: stream/parse XML responses rather than buffering them whole, paginate large lists (recordings, EPG) instead of loading everything into memory, avoid caching more than necessary given there's no swap to fall back on.
+Confirmed on the reference device: ~1.2 GB RAM available under normal load, **no swap at all** (see `ARCHITECTURE.md`). Target: the Go backend plus its embedded frontend assets should stay well under ~150–200 MB resident. This isn't a nice-to-have — it should actively shape implementation choices from the start: stream/parse XML responses rather than buffering them whole, paginate large lists (recordings, EPG) instead of loading everything into memory, avoid caching more than necessary given there's no swap to fall back on.
 
 ## Mock-first development
 
@@ -100,7 +136,7 @@ The Enigma2 plugin and the Go backend are separate deployable pieces (even if sh
 
 ## Semantic versioning + a changelog
 
-DreamHub releases follow SemVer (`MAJOR.MINOR.PATCH`), tracked in [`CHANGELOG.md`](CHANGELOG.md) (Keep a Changelog format). This is what makes the "Update available" flow in a WebAdmin-style UI (see Phase 8) mean anything concrete to the user, and gives a future contributor a fast way to see what changed between two versions without reading commit history.
+DreamHub releases follow SemVer (`MAJOR.MINOR.PATCH`), tracked in [`CHANGELOG.md`](CHANGELOG.md) (Keep a Changelog format). This is what makes the "Update available" flow in a WebAdmin-style UI (see `ROADMAP.md`, release & packaging) mean anything concrete to the user, and gives a future contributor a fast way to see what changed between two versions without reading commit history.
 
 ## Explicit hardware/support scope
 
@@ -108,7 +144,7 @@ DreamHub officially targets the **Dreambox One / DreamOS AIO** — the actual re
 
 ## Code style: idiomatic, not bikeshed
 
-Go code is `gofmt`-formatted, full stop, no style debates. The frontend follows whatever the chosen framework's standard linter/formatter defaults to (e.g. Prettier/ESLint defaults for Vue). Pick the tool once in Phase 1 and never revisit the question.
+Go code is `gofmt`-formatted, full stop, no style debates. The frontend follows whatever the chosen framework's standard linter/formatter defaults to (e.g. Prettier/ESLint defaults for Vue). Pick the tool once in the Foundation and never revisit the question.
 
 ## Definition of done
 

@@ -1,6 +1,6 @@
 // Package api implements DreamHub's REST API. Per PRINCIPLES.md's
 // "API-first" principle, every route lives under /api/v1 and is the same
-// API any future client (the PWA, a mobile app) would call — no
+// API any future client (the web UI, a mobile app) would call — no
 // web-UI-only backend logic.
 package api
 
@@ -20,13 +20,17 @@ const Version = "0.1.0-dev"
 
 // NewRouter builds the full /api/v1 handler tree.
 func NewRouter(wc webcontrol.Client, verifier auth.Verifier, logger *slog.Logger) http.Handler {
+	protected := http.NewServeMux()
+	protected.HandleFunc("GET /api/v1/deviceinfo", handleDeviceInfo(wc, logger))
+	protected.HandleFunc("GET /api/v1/movies", handleMovies(wc, logger))
+
 	mux := http.NewServeMux()
-
+	// Public on purpose: the Enigma2 plugin checks the backend version before
+	// it has any credentials, and must keep working when auth is enabled.
 	mux.HandleFunc("GET /api/v1/health", handleHealth)
-	mux.HandleFunc("GET /api/v1/deviceinfo", handleDeviceInfo(wc, logger))
-	mux.HandleFunc("GET /api/v1/movies", handleMovies(wc, logger))
+	mux.Handle("/api/v1/", auth.Middleware(verifier, protected))
 
-	return withLogging(logger, auth.Middleware(verifier, mux))
+	return withLogging(logger, mux)
 }
 
 func handleHealth(w http.ResponseWriter, r *http.Request) {

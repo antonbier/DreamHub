@@ -1,6 +1,6 @@
 # backend/
 
-Go server (ARM64, statically compiled). REST API on port 8080. Embeds the PWA frontend via `go:embed` once the frontend exists (Phase 1, see [../ROADMAP.md](../ROADMAP.md)).
+Go server (ARM64, statically compiled). REST API on port 8080. Will embed the web frontend via `go:embed` once it exists (Foundation, see [../ROADMAP.md](../ROADMAP.md)).
 
 ## Running locally
 

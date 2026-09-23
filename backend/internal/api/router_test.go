@@ -20,7 +20,12 @@ func discardLogger() *slog.Logger {
 
 func newTestServer(t *testing.T, authEnabled bool) *httptest.Server {
 	t.Helper()
-	verifier := auth.Credentials{Enabled: authEnabled, Username: "u", Password: "p"}
+	verifier := auth.Credentials{
+		Enabled:  authEnabled,
+		Username: "u",
+		Password: "p",
+		Tokens:   map[string]bool{"test-token": true},
+	}
 	handler := api.NewRouter(mock.Client{}, verifier, discardLogger())
 	return httptest.NewServer(handler)
 }
@@ -103,29 +108,51 @@ func TestMovies_UsesMock(t *testing.T) {
 	}
 }
 
-func TestAuth_RequiredWhenEnabled(t *testing.T) {
+func TestHealth_PublicWhenAuthEnabled(t *testing.T) {
 	srv := newTestServer(t, true)
 	defer srv.Close()
 
-	// No credentials at all -> 401.
 	resp, err := http.Get(srv.URL + "/api/v1/health")
 	if err != nil {
 		t.Fatal(err)
 	}
 	defer resp.Body.Close()
-	if resp.StatusCode != http.StatusUnauthorized {
-		t.Fatalf("expected 401 without credentials, got %d", resp.StatusCode)
+	if resp.StatusCode != http.StatusOK {
+		t.Fatalf("health must stay public so the TV plugin's version check works; got %d", resp.StatusCode)
+	}
+}
+
+func TestAuth_RequiredWhenEnabled(t *testing.T) {
+	srv := newTestServer(t, true)
+	defer srv.Close()
+
+	get := func(configure func(*http.Request)) int {
+		t.Helper()
+		req, _ := http.NewRequest(http.MethodGet, srv.URL+"/api/v1/deviceinfo", nil)
+		if configure != nil {
+			configure(req)
+		}
+		resp, err := http.DefaultClient.Do(req)
+		if err != nil {
+			t.Fatal(err)
+		}
+		defer resp.Body.Close()
+		return resp.StatusCode
 	}
 
-	// Correct Basic Auth -> 200.
-	req, _ := http.NewRequest(http.MethodGet, srv.URL+"/api/v1/health", nil)
-	req.SetBasicAuth("u", "p")
-	resp2, err := http.DefaultClient.Do(req)
-	if err != nil {
-		t.Fatal(err)
+	if code := get(nil); code != http.StatusUnauthorized {
+		t.Errorf("no credentials: expected 401, got %d", code)
 	}
-	defer resp2.Body.Close()
-	if resp2.StatusCode != http.StatusOK {
-		t.Fatalf("expected 200 with correct credentials, got %d", resp2.StatusCode)
+	if code := get(func(r *http.Request) { r.SetBasicAuth("u", "wrong") }); code != http.StatusUnauthorized {
+		t.Errorf("wrong password: expected 401, got %d", code)
+	}
+	if code := get(func(r *http.Request) { r.SetBasicAuth("u", "p") }); code != http.StatusOK {
+		t.Errorf("correct Basic Auth: expected 200, got %d", code)
+	}
+	if code := get(func(r *http.Request) { r.Header.Set("Authorization", "Bearer test-token") }); code != http.StatusOK {
+		t.Errorf("valid API token: expected 200, got %d", code)
+	}
+	if code := get(func(r *http.Request) { r.Header.Set("Authorization", "Bearer revoked") }); code != http.StatusUnauthorized {
+		t.Errorf("unknown API token: expected 401, got %d", code)
 	}
 }

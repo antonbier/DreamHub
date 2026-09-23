@@ -1,6 +1,6 @@
 // Command dreamhub is DreamHub's backend: a single static binary serving
-// the /api/v1 REST API (and, later, the embedded PWA — see ROADMAP.md
-// Phase 1). See ARCHITECTURE.md for why a static Go binary over systemd
+// the /api/v1 REST API (and, later, the embedded web frontend — see
+// ROADMAP.md, Foundation). See ARCHITECTURE.md for why a static Go binary over systemd
 // is the right shape for this platform, and PRINCIPLES.md for the
 // resource budget this is built to respect.
 package main

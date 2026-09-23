@@ -1,77 +1,136 @@
 # Roadmap
 
-## Phase 0 — Spikes (resolve before building)
+Organized by the hub structure described in [`CONCEPT.md`](CONCEPT.md). (Earlier versions of this file were organized as Phase 0–8; the technical notes from those phases have been moved into the matching sections below.)
 
-- [x] **Bouquet editing** — resolved: don't reimplement. A separate, existing Enigma2 webif plugin ("Bouqueteditor") already provides a complete bouquet editing UI. Link to or embed it; consider re-skinning later.
-- [x] **Hardware transcoding** — resolved: confirmed unavailable on this hardware.
-- [x] **ffmpeg availability** — resolved: available via the standard feed (package `ffmpeg`, apt/dpkg-based — this DreamOS build uses `apt`/`dpkg`, not opkg, confirmed on-device). Declare it as a dependency in DreamHub's own `.deb` rather than assuming it's preinstalled, so it's pulled in on any device.
-- [x] **Enigma2 language mechanism** — resolved: `PluginLanguageDomain`/`PluginLanguagePath` + `gettext.bindtextdomain()` + `language.addCallback()`, `.po`→`.mo` via `msgfmt`. Reference: [`opendreambox/enigma2-plugins`](https://github.com/opendreambox/enigma2-plugins), [`opendreambox/enigma2-po`](https://github.com/opendreambox/enigma2-po).
-- [ ] **List all recording sidecar files** — still open. Needs read-only `ls -la` on an existing recording under `/media/hdd/movie/` via Telnet/SSH on the actual device — not verifiable remotely.
+Releases: **Foundation** → **v1** → **v1.1** → **Later**. GitHub milestones mirror these.
 
-## Phase 1 — Base Engine
+## Phase 0 — Spikes (done)
 
-Go backend (port 8080) with a minimal embedded frontend. Filesystem scanner for `/media/hdd/movie/`, parses `.ts.meta`, exposes results via REST API. Also where PWA i18n scaffolding (language selector, translation file structure) gets set up — see multilingual requirement in `PROJECT_PLAN.md`.
+- [x] **Bouquet editing** — don't reimplement. The existing BouquetEditor webif plugin already provides a complete UI and its own API (`/bouqueteditor/*`, see `ARCHITECTURE.md`).
+- [x] **Hardware transcoding** — confirmed unavailable on this hardware.
+- [x] **ffmpeg availability** — available via the standard feed (package `ffmpeg`; the box uses `apt`/`dpkg`, not opkg). Declare it as a `.deb` dependency rather than assuming it's preinstalled.
+- [x] **Enigma2 language mechanism** — `PluginLanguageDomain`/`PluginLanguagePath` + `gettext.bindtextdomain()` + `language.addCallback()`, `.po`→`.mo` via `msgfmt`. Reference: [`opendreambox/enigma2-plugins`](https://github.com/opendreambox/enigma2-plugins), [`opendreambox/enigma2-po`](https://github.com/opendreambox/enigma2-po).
+- [x] **Recording sidecar files** — confirmed on-device: `.ts`, `.ts.meta`, `.ts.ap`, `.ts.sc`, `.ts.cuts`, `.eit`.
 
-Advertise the backend via mDNS/Bonjour (drop a service file into `/etc/avahi/services/`, `avahi-daemon` is already running and already used this way by an existing companion app — see `ARCHITECTURE.md`) so a phone/browser can find it without a manual IP entry.
+## Foundation — backend & core shell
 
-**Started** (built and tested against the mock WebControl client, without device access — see `backend/README.md`):
+**Done** (built and tested against the mock WebControl client, no device access — see `backend/README.md`):
 - [x] Go module, `/api/v1` router, JSON error envelope, structured logging (`internal/api`)
-- [x] Basic Auth + API token middleware, toggleable (`internal/auth`)
+- [x] Basic Auth + API token middleware, toggleable (`internal/auth`); `/api/v1/health` stays public so the TV plugin's version check works with auth enabled
 - [x] Environment-based config, mock/live mode switch (`internal/config`)
-- [x] WebControl client: real HTTP+XML implementation and the mock (fixtures from `ARCHITECTURE.md`) behind one interface (`internal/webcontrol`, `internal/webcontrol/mock`)
-- [x] `/api/v1/health`, `/api/v1/deviceinfo`, `/api/v1/movies` — first two live endpoints beyond health
-- [x] 4 passing tests, all running against the mock, no device required
-- [x] Confirmed cross-compiles to a static ARM64 Linux binary (`CGO_ENABLED=0 GOOS=linux GOARCH=arm64`), ~10 MB
+- [x] WebControl client: real HTTP+XML implementation and a mock (fixtures from `ARCHITECTURE.md`) behind one interface
+- [x] `/api/v1/health`, `/api/v1/deviceinfo`, `/api/v1/movies`
+- [x] Tests run entirely against the mock
+- [x] Cross-compiles to a static ARM64 Linux binary (`CGO_ENABLED=0 GOOS=linux GOARCH=arm64`), ~10 MB
 
-**Still open**: filesystem scanner for sidecar files, SQLite settings store (`internal/store` is scaffolded but empty), PWA frontend + `go:embed` wiring, i18n scaffolding, mDNS advertisement, Enigma2 plugin skeleton. Most of these need real device access to verify against `/media/hdd/movie/` and `/data/dreamhub/`.
+**Open**:
+- [ ] Hub registry implementing the hub contract (`CONCEPT.md`): routes, settings schema, search provider, home contributions, events, requirements → status
+- [ ] Connector registry; WebControl as the first connector
+- [ ] Core event bus (hub events → notifications, later AutomationHub)
+- [ ] Preview-and-confirm mechanism for every change: `plan` → `apply` with plan ID, change log (see `PRINCIPLES.md`)
+- [ ] SQLite store under `/data/dreamhub/` (`internal/store` is scaffolded but empty); user-aware data model from day one (profiles-ready)
+- [ ] Schema-driven central settings (API + UI), secrets masked
+- [ ] Web frontend (Vue.js + Tailwind) embedded via `go:embed`, i18n scaffolding with language selector. Responsive web app first — an installable PWA needs HTTPS (see "Later").
+- [ ] Home page (timeline or tiles — decided from the mockup), global search, notifications inbox, status strip
+- [ ] Onboarding wizard
+- [ ] Diagnostics: hub status with reason and fix instructions
+- [ ] mDNS advertisement via a service file in `/etc/avahi/services/` (`avahi-daemon` already runs and is used this way by an existing companion app — see `ARCHITECTURE.md`)
+- [ ] Fixture-capture script: run once with device access, save real responses from every relevant endpoint as test fixtures, so development can continue offline with real data
 
-## Phase 2 — FilmHub
+## v1 — hubs
 
-- Both `AdvancedMovieSelection` and `CutListEditor` are already installed and mature, but are **native on-screen (remote-control) plugins, not web-based** — they don't replace FilmHub's web UI, which is the actual point of this phase. Read `AdvancedMovieSelection`'s `Rename.py`/`SearchTMDb*.py` as a reference for the naming/TMDB-matching logic before writing DreamHub's own (note its CC BY-NC-SA license — reference only, don't copy the code directly). See `ARCHITECTURE.md`.
-- Listing should use `/web/movielist` (already-parsed title/description/length/filesize — see `ARCHITECTURE.md`) rather than hand-parsing `.ts.meta` for every recording.
-- Custom naming engine covering **all** sidecar files for actual `.ts`-based recordings: `.ts`, `.ts.meta`, `.ts.ap`, `.ts.sc`, `.ts.cuts`, `.eit` — confirmed on-device. (Note: any `.mkv` files sitting in `/media/hdd/movie/` are **not** Dreambox recordings — they were manually copied in separately. The scanner must distinguish real recordings from arbitrary other media sitting in the same folder, and only manage the former.)
-- Some recordings already have `.jpg`/`.basename.backdrop.jpg` cover art next to them (fetched by an existing plugin) — reuse/move these on rename too, don't assume they need re-fetching from TMDB.
+### MediaHub
+- Listing via `/web/movielist` (already-parsed title/description/length/filesize — see `ARCHITECTURE.md`) rather than hand-parsing `.ts.meta`.
+- Disk space overview (the reference device's disk is 88 % full — this is a real, recurring pain point).
+- Rename engine covering **all** sidecar files of a `.ts` recording: `.ts`, `.ts.meta`, `.ts.ap`, `.ts.sc`, `.ts.cuts`, `.eit`. Plus existing cover art (`.jpg`, `.backdrop.jpg`) — move it along, don't re-fetch from TMDB.
+- The scanner must distinguish real recordings from other media in the same folder: `.mkv` files in `/media/hdd/movie/` on the reference device were copied in manually and are **not** Dreambox recordings — leave them alone.
+- Every rename/delete goes through preview-and-confirm; delete means move to trash.
+- Never touch a file that is currently being recorded or played — check timer/current-service state first.
 - Bulk actions via a background queue.
-- Lossless trimmer via `ffmpeg -c copy` (note: cuts land on keyframe boundaries, not frame-exact).
-- `.ts.meta` is a plain-text file: line 1 service reference, line 2 title, line 3 title+description+genre, line 4 a unix timestamp — parse from here only where the API doesn't already provide the field.
+- `.ts.meta` format: line 1 service reference, line 2 title, line 3 title+description+genre, line 4 unix timestamp — parse only where the API doesn't already provide the field.
+- Reference implementation: `AdvancedMovieSelection` (`Rename.py`, `SearchTMDb*.py`) — native on-screen plugin, not web-based, CC BY-NC-SA licensed: read for approach, don't copy code.
+- Open (device access needed): does Enigma2's movie list pick up files renamed outside Enigma2 correctly? Probably yes (AdvancedMovieSelection reads the disk directly), but verify.
 
-## Phase 3 — AIO Universal Search
+### TimerHub
+- Timers via `/web/timerlist`; AutoTimer.
+- **Conflict detection is central**: the reference device has a single tuner, so overlapping timers are common.
+- Creating/deleting timers goes through preview-and-confirm, including when triggered from DiscoveryHub.
 
-- `EPGSearch` is already installed but is a **native on-screen plugin, not web-based** — worth reading as a reference for search/filter logic, doesn't replace this phase (see `ARCHITECTURE.md`).
-- Sources: `/web/movielist`, `/web/timerlist`, SeriesRecorder database (confirmed SQLite at `/etc/enigma2/SerienRecorder.db`).
-- EPG data should **not** come from parsing `epg.dat` directly (undocumented binary format, breaks across firmware updates) — use `/web/epgnownext`/`/web/getcurrent` (confirmed working, see `ARCHITECTURE.md`) instead.
+### GuideHub
+- Grid EPG ("TV-Zeitschrift") for the web UI.
+- EPG via `/web/epgnownext` / `/web/getcurrent`, **never** by parsing `epg.dat` (undocumented binary format).
+- Online enrichment (TMDB) **only** for movie/series genres.
+- `GraphMultiEPG` and `TvSpielfilm` are native on-screen references, not replacements.
 
-## Phase 4 — TV Control & WebAdmin (modernized facade)
+### DiscoveryHub
+- AI recommendations from the day's EPG, filtered to user-selected channels (for relevance; ~90k tokens/day for 30 channels is cents-level).
+- Uses the core AI connector — OpenAI first, swappable (see `PRINCIPLES.md`).
+- The AI only proposes. "Create timer" hands off to TimerHub with preview and confirmation.
+- No existing AI plugin on the box (the "GPT-Plugin" is a GUID Partition Table tool).
 
-- Rebuild existing WebControl functionality (OSD screenshot, system message, power menu, live metrics) with a modern UI — the logic already exists, this is purely a UI upgrade.
-- `GraphMultiEPG` (timeline grid) and `TvSpielfilm` (enriched program guide) are already installed but are **native on-screen plugins, not web-based** — they're a different surface (TV + remote) than DreamHub's browser/phone-based Grid-EPG, so this phase still has a real reason to exist. Worth reading their source as implementation references first (see `ARCHITECTURE.md`).
-- **Grid EPG ("TV guide" view)**: tabular multi-channel overview, for the web UI. Online/AI enrichment (TMDB or similar) **only** for movie/series genres — daily formats (news, magazines) get no useful match.
-- **Bouquet editor**: link to/embed the existing "Bouqueteditor" plugin rather than reimplementing (confirmed API surface in `ARCHITECTURE.md`). Re-skin its UI later if needed for visual consistency with the rest of DreamHub.
-- The Enigma2 plugin side of this phase must read and follow `config.osd.language` (confirmed format: `de_DE`-style locale, e.g. `config.osd.language=de_DE` — see `ARCHITECTURE.md`) — see multilingual requirement.
+### SeriesHub
+- Episodes on disk, missing episodes, upcoming episodes for series tracked in SerienRecorder.
+- Use SerienRecorder's own web interface API (`config.plugins.serienRec.enableWebinterface=true`) rather than reading `SerienRecorder.db` directly while SerienRecorder may be writing to it. API needs verification on the device.
 
-## Phase 5 — Live-Streaming Bridge
+### SystemHub (basic)
+- Device info, diagnostics page (hub status), backup/restore of DreamHub's own state, change log, logs (journald).
 
-- No software transcoding (the S922X has no hardware encoder — would be CPU-heavy).
-- Inline HTML5 player only for channels with AAC-compatible audio.
-- For all other channels (AC3 audio): fall back to **"open in VLC"** (`.m3u` link handed off to the native VLC app), since VLC brings its own audio decoders and sidesteps the browser's codec restriction (no AC3 in HTML5 `<video>`).
-- No in-page embedding via browser plugin — both the old NPAPI VLC plugin and Chrome's "VXG" are dead/deprecated.
+### Global search
+- Every hub contributes a search provider; results grouped by hub. `EPGSearch` (native on-screen) is a reference for search/filter logic.
 
-## Phase 6 — AI Discovery
+### Enigma2 TV plugin (launcher)
+- QR code to open DreamHub on a phone, backend status/version (via `/api/v1/health`), basic settings (auth on/off, port).
+- Python 2.7 (the only interpreter on the device). Language follows `config.osd.language` (format `de_DE`).
 
-- Resolved: `GPT-Plugin` was investigated and is unrelated — "GPT" stands for GUID Partition Table (a firmware backup/flash tool), not AI. There is no existing AI/EPG plugin on this box; this phase is genuinely new ground (see `ARCHITECTURE.md`).
-- Send the current day's EPG — filtered to the user's selected subset of channels in Settings, for recommendation relevance, not primarily cost — to an LLM API. Recommendation shown as an OSD on a remote button press.
-- Rough cost estimate: ~30 channels × ~20 programs/day × ~150 tokens ≈ 90k tokens/day — cents-level, not a real cost concern. The channel filter exists to improve recommendation quality, not to save money.
+## v1 — release & packaging
 
-## Phase 7 — Plugin & Script Hub
+- An installable **`.deb`** via DreamHub's own apt feed. The box uses `apt`/`dpkg`; users can add a feed through WebAdmin's "Upload new *-feed.list" page — no SSH required (see `ARCHITECTURE.md`). Platform feeds use `[trusted=yes]` (unsigned).
+- Declare real dependencies (e.g. `ffmpeg`) in the `.deb` control file.
+- The box runs full systemd: ship the backend as `dreamhub.service` (`Restart=on-failure`, `WantedBy=multi-user.target`). Use `/lib/systemd/system/enigma2.service` as the reference (see `ARCHITECTURE.md`).
+- Keep the installed footprint on the 2 GB root partition small; persistent data goes to `/data/dreamhub/`.
+- If GPL codecs are ever needed: bundle a self-contained ffmpeg like `ffmpeg-mp` does under `/data/mediaportal/extra/ffmpeg/`, never replace the system one.
 
-- No deep Enigma2 event hook (too much effort for v1).
-- Instead: the Go backend polls `/api/timerlist` every 30–60s and detects state changes itself (e.g. "recording finished") — good enough for script triggers.
-- Separation: `scripts/` (simple Bash/Python hooks) vs. `plugins/` (deeply integrated backend routes with their own settings tab).
+## v1.1
 
-## Phase 8 — Packaging
+### RadioHub
+- Radio services, now playing, radio timers. Browser playback belongs in StreamHub (radio often uses MP2 audio, which browsers don't play reliably).
 
-Target: an installable **`.deb`** package via its own apt feed/repository, instead of a binary manually placed over Telnet. This DreamOS build uses `apt`/`dpkg` (confirmed on-device — the "Packages" UI in the Addon Manager is apt-backed), not opkg. Risk from missing core firmware updates is already low, but proper packaging remains the goal for maintainability and future updates. Declare real package dependencies (e.g. `ffmpeg`) in the `.deb` control file rather than assuming they're preinstalled, so DreamHub installs cleanly on any device, not just a reference box that already happens to have them.
+### ChannelHub
+- Link to / embed the BouquetEditor plugin (`/bouqueteditor/*`); its write endpoints still need a write-permitted check on the device. Picons from `/data/piconpool`.
 
-The box runs **full systemd** (confirmed — `enigma2` itself runs as a `.service` unit, see `ARCHITECTURE.md`). Ship the Go backend as a `dreamhub.service` unit (`Restart=on-failure`, started via `WantedBy=multi-user.target`) inside the `.deb`, the same standard mechanism the platform already uses for its own core process — not a custom autostart script.
+### ControlHub
+- Web remote, message to TV (`/web/message`), OSD screenshot, power menu — the logic already exists in WebControl, this is a UI layer.
 
-If DreamHub ever needs GPL-licensed codecs (e.g. H.264 encoding via libx264) that the system `ffmpeg` doesn't have — see confirmed facts below — the existing `ffmpeg-mp` package on this box is a useful precedent: it ships its own fully self-contained ffmpeg build with its own libs under `/data/mediaportal/extra/ffmpeg/`, entirely separate from the system binary. Bundle rather than replace, the same way, if this is ever needed.
+### MediaHub trimming
+- Lossless trimming via `ffmpeg -c copy` (cuts land on keyframe boundaries). `CutListEditor` is the on-screen reference for the `.ts.cuts` mechanism.
+
+## Later
+
+### StreamHub
+- No software transcoding (no hardware encoder; CPU transcoding is too heavy).
+- Browsers don't play raw MPEG-TS natively — needs a library (e.g. mpegts.js) or a remux to HLS/fMP4. On top of that: AC3 audio isn't playable in HTML5 `<video>`, and some channels use HEVC, which browser support covers only partially.
+- Fallback for anything the browser can't play: "open in VLC" (`.m3u` link to the native app).
+- No browser-plugin embedding (NPAPI VLC and Chrome's "VXG" are dead).
+
+### AutomationHub
+- The only place where anything happens automatically — always opt-in.
+- Scripts, webhooks, external notification channels (push, Telegram, ntfy, message on the TV).
+- Detect state changes by polling `/web/timerlist` every 30–60 s instead of a deep Enigma2 hook.
+- Separation: simple `scripts/` hooks vs. deeply integrated `plugins/` with their own settings.
+- WebAdmin already has a "User Scripts" feature (`/webadmin/web/scriptlist`) — decide whether to complement or supersede it.
+
+### Other
+- Plex / Jellyfin / Emby connectors (optional, cached last-known state, graceful degradation when the server is off)
+- More AI providers behind the same interface
+- Profile UI (multi-user)
+- Installable PWA — needs HTTPS, e.g. via a reverse proxy
+
+## Open items that need device access
+
+Tracked as GitHub issues with the `device-access` label:
+- Verify the SerienRecorder web interface API
+- Verify Enigma2 picks up recordings renamed outside Enigma2
+- Detect in-progress recording/playback before any file operation
+- Resolve the WebControl auth discrepancy (`ARCHITECTURE.md`)
+- Investigate the remaining GP4 plugins (`geminiserver`, `geminicomm`, `geministreamripper`)
+- Run the fixture-capture script

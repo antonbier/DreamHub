@@ -1,0 +1,89 @@
+/* Bundled fonts (PRINCIPLES.md: no external requests at runtime). Source
+   Sans 3 covers Latin/Greek/Cyrillic/Vietnamese; a script-specific fallback
+   is added only when a language needing it is selected (CONCEPT.md,
+   Internationalization, "Fonts per script"). @import must precede every
+   other rule, including @tailwind, or PostCSS rejects it. */
+@import '@fontsource/source-sans-3/400.css';
+@import '@fontsource/source-sans-3/600.css';
+@import '@fontsource/source-sans-3/700.css';
+@import '@fontsource/source-code-pro/500.css';
+
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+/* Design tokens — see ../DESIGN.md, "Design tokens". Dark is the default
+   appearance; :root carries the dark values so an unstyled flash (before
+   preferences load) is already dark, matching the product default. */
+:root,
+:root[data-theme='dark'] {
+  --dh-bg: #0f1215;
+  --dh-side: #0b0d10;
+  --dh-tile: #161a1f;
+  --dh-tile-2: #1c2127;
+  --dh-field: #1a1f25;
+  --dh-line: #252b32;
+  --dh-line-soft: #1e2329;
+  --dh-text: #e6e9ec;
+  --dh-muted: #9ba4ae;
+  --dh-faint: #6c7580;
+  --dh-accent: #6aa6e8;
+  --dh-onair: #f2564a;
+  --dh-warn: #e0a23b;
+  --dh-ok: #4fbf7f;
+}
+
+:root[data-theme='light'] {
+  --dh-bg: #f2f3f5;
+  --dh-side: #fafbfc;
+  --dh-tile: #ffffff;
+  --dh-tile-2: #f4f6f8;
+  --dh-field: #eceff2;
+  --dh-line: #dce0e5;
+  --dh-line-soft: #eaedf0;
+  --dh-text: #15191d;
+  --dh-muted: #505a64;
+  --dh-faint: #7b858f;
+  --dh-accent: #1f64c8;
+  --dh-onair: #d23a2e;
+  --dh-warn: #b7730f;
+  --dh-ok: #2c8150;
+}
+
+* {
+  /* Logical properties only in component CSS below — RTL-ready
+     (CONCEPT.md, Internationalization). This just keeps box-sizing sane. */
+  box-sizing: border-box;
+}
+
+html,
+body,
+#app {
+  height: 100%;
+}
+
+body {
+  margin: 0;
+  background: var(--dh-bg);
+  color: var(--dh-text);
+  font-family: 'Source Sans 3', system-ui, sans-serif;
+  font-size: 15px;
+  line-height: 1.5;
+  font-variant-numeric: tabular-nums; /* times, sizes, counts (DESIGN.md) */
+}
+
+/* Focus is always visible (DESIGN.md, Interaction). */
+:focus-visible {
+  outline: 2px solid var(--dh-accent);
+  outline-offset: 2px;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.001ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.001ms !important;
+  }
+}

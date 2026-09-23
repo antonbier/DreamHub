@@ -1,0 +1,101 @@
+{
+  "app": {
+    "name": "DreamHub"
+  },
+  "nav": {
+    "dashboard": "Dashboard",
+    "settings": "Settings",
+    "group": {
+      "media": "Media",
+      "program": "Program",
+      "device": "Device"
+    }
+  },
+  "hub": {
+    "media": "Recordings",
+    "series": "Series",
+    "guide": "TV Guide",
+    "timer": "Timers",
+    "discovery": "Recommendations",
+    "system": "System",
+    "admin": "Admin"
+  },
+  "status": {
+    "available": "Available",
+    "degraded": "Degraded",
+    "unavailable": "Unavailable"
+  },
+  "problem": {
+    "connector": {
+      "unreachable": "{connector} isn't reachable",
+      "notConfigured": "{connector} isn't configured yet",
+      "notImplemented": "{connector} isn't implemented yet",
+      "unknown": "{connector} status is unknown"
+    },
+    "capability": {
+      "missing": "Missing on the device: {capability}"
+    },
+    "hub": {
+      "dependencyUnavailable": "{hub} isn't available"
+    }
+  },
+  "fix": {
+    "checkBoxConnection": "Check the connection to the box.",
+    "configureInSettings": "Configure it in Settings → {section}.",
+    "enableHub": "Enable {hub} in Settings.",
+    "capability": {
+      "journald": "journald isn't available on this machine."
+    }
+  },
+  "sidebar": {
+    "collapse": "Collapse sidebar",
+    "expand": "Expand sidebar"
+  },
+  "topbar": {
+    "searchPlaceholder": "Search recordings, timers, the guide…",
+    "notifications": "Notifications",
+    "language": "Language",
+    "userMenu": "User menu"
+  },
+  "userMenu": {
+    "appearance": {
+      "label": "Appearance",
+      "dark": "Dark",
+      "light": "Light",
+      "system": "Follow system"
+    },
+    "navLabels": {
+      "label": "Sidebar labels",
+      "descriptive": "Descriptive",
+      "hub": "Hub names"
+    },
+    "settings": "Settings"
+  },
+  "common": {
+    "loading": "Loading…",
+    "retry": "Retry",
+    "backendUnreachable": "Can't reach the DreamHub backend. Retrying…",
+    "searchNotBuilt": "Global search isn't built yet.",
+    "notificationsNotBuilt": "Notifications aren't built yet."
+  },
+  "dashboard": {
+    "title": "Dashboard",
+    "empty": {
+      "title": "No tiles yet",
+      "body": "The dashboard fills up as hubs are built: storage, conflicts, what's on now, upcoming timers, recommendations. Custom tiles and drag-and-drop layout are next."
+    }
+  },
+  "hubPlaceholder": {
+    "title": "{name} — coming soon",
+    "body": "This hub's screens haven't been built yet. The navigation, status and settings behind it are already live."
+  },
+  "settingsPlaceholder": {
+    "title": "Settings",
+    "body": "The full, schema-driven settings menu is next on the roadmap. Language and appearance already work — see the user menu, top right."
+  },
+  "notFound": {
+    "title": "Page not found",
+    "body": "This page doesn't exist.",
+    "backToDashboard": "Back to dashboard"
+  }
+}

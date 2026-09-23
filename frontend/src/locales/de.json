@@ -1,0 +1,101 @@
+{
+  "app": {
+    "name": "DreamHub"
+  },
+  "nav": {
+    "dashboard": "Startseite",
+    "settings": "Einstellungen",
+    "group": {
+      "media": "Medien",
+      "program": "Programm",
+      "device": "Gerät"
+    }
+  },
+  "hub": {
+    "media": "Aufnahmen",
+    "series": "Serien",
+    "guide": "TV-Programm",
+    "timer": "Timer",
+    "discovery": "Empfehlungen",
+    "system": "System",
+    "admin": "Admin"
+  },
+  "status": {
+    "available": "Verfügbar",
+    "degraded": "Eingeschränkt",
+    "unavailable": "Nicht verfügbar"
+  },
+  "problem": {
+    "connector": {
+      "unreachable": "{connector} ist nicht erreichbar",
+      "notConfigured": "{connector} ist noch nicht konfiguriert",
+      "notImplemented": "{connector} ist noch nicht implementiert",
+      "unknown": "Status von {connector} unbekannt"
+    },
+    "capability": {
+      "missing": "Fehlt auf dem Gerät: {capability}"
+    },
+    "hub": {
+      "dependencyUnavailable": "{hub} ist nicht verfügbar"
+    }
+  },
+  "fix": {
+    "checkBoxConnection": "Verbindung zur Box prüfen.",
+    "configureInSettings": "In den Einstellungen unter „{section}“ konfigurieren.",
+    "enableHub": "{hub} in den Einstellungen aktivieren.",
+    "capability": {
+      "journald": "journald ist auf diesem Rechner nicht verfügbar."
+    }
+  },
+  "sidebar": {
+    "collapse": "Seitenleiste einklappen",
+    "expand": "Seitenleiste ausklappen"
+  },
+  "topbar": {
+    "searchPlaceholder": "Aufnahmen, Timer, Programm durchsuchen…",
+    "notifications": "Benachrichtigungen",
+    "language": "Sprache",
+    "userMenu": "Benutzermenü"
+  },
+  "userMenu": {
+    "appearance": {
+      "label": "Darstellung",
+      "dark": "Dunkel",
+      "light": "Hell",
+      "system": "Systemeinstellung"
+    },
+    "navLabels": {
+      "label": "Beschriftung der Seitenleiste",
+      "descriptive": "Beschreibend",
+      "hub": "Hub-Namen"
+    },
+    "settings": "Einstellungen"
+  },
+  "common": {
+    "loading": "Wird geladen…",
+    "retry": "Erneut versuchen",
+    "backendUnreachable": "DreamHub-Backend nicht erreichbar. Erneuter Versuch…",
+    "searchNotBuilt": "Die globale Suche ist noch nicht gebaut.",
+    "notificationsNotBuilt": "Benachrichtigungen sind noch nicht gebaut."
+  },
+  "dashboard": {
+    "title": "Startseite",
+    "empty": {
+      "title": "Noch keine Kacheln",
+      "body": "Das Dashboard füllt sich, sobald die Hubs gebaut sind: Speicherplatz, Konflikte, was gerade läuft, anstehende Timer, Empfehlungen. Eigene Kacheln und frei anordenbares Layout folgen als Nächstes."
+    }
+  },
+  "hubPlaceholder": {
+    "title": "{name} — folgt in Kürze",
+    "body": "Die Ansichten dieses Hubs sind noch nicht gebaut. Navigation, Status und Einstellungen dahinter funktionieren bereits."
+  },
+  "settingsPlaceholder": {
+    "title": "Einstellungen",
+    "body": "Das vollständige, schema-basierte Einstellungsmenü folgt als Nächstes. Sprache und Darstellung funktionieren schon — siehe Benutzermenü oben rechts."
+  },
+  "notFound": {
+    "title": "Seite nicht gefunden",
+    "body": "Diese Seite gibt es nicht.",
+    "backToDashboard": "Zurück zur Startseite"
+  }
+}

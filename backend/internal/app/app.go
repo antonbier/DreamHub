@@ -37,6 +37,11 @@ type Options struct {
 	ConnectorTTL time.Duration
 	// Level is the runtime log level shared with the logger; nil creates one.
 	Level *logging.Level
+	// WebUI serves the embedded frontend (internal/webui) for every path
+	// the API router doesn't claim. Nil (the default, and what the tests
+	// use) means the handler answers /api/v1/* only, exactly as before the
+	// frontend existed.
+	WebUI http.Handler
 }
 
 // App is a wired DreamHub instance.
@@ -134,5 +139,11 @@ func New(ctx context.Context, o Options) (*App, error) {
 		Logger: o.Logger,
 		Now:    now,
 	})
+	if o.WebUI != nil {
+		outer := http.NewServeMux()
+		outer.Handle("/api/v1/", handler)
+		outer.Handle("/", o.WebUI)
+		handler = outer
+	}
 	return &App{Handler: handler, Store: st, Settings: svc, Connectors: conns, Hubs: hubs, Plans: plans, Level: level, User: user}, nil
 }

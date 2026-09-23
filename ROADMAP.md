@@ -38,22 +38,26 @@ Releases: **Foundation** → **v1** → **v1.1** → **Later**. GitHub milestone
 - [x] **3c** SystemHub change log endpoint `GET /api/v1/changes`
 - [x] **3c** Real-box writes (`/web/timeradd`) implemented but **disabled by default** until verified on the device (#14); opt in with `DREAMHUB_ENABLE_DEVICE_WRITES=1`
 
+- [x] **4** Frontend scaffold (Vue 3 + TypeScript + Tailwind, `frontend/`), built straight into `backend/internal/webui/dist` and served via `go:embed` with an SPA fallback for client-side routes (`internal/webui`); a tracked placeholder page keeps the backend buildable before the frontend is ever built
+- [x] **4** Core shell per `DESIGN.md`: design tokens as CSS custom properties (dark/light), Source Sans 3 + Source Code Pro bundled (no CDN), a self-drawn icon set, sidebar (collapsible on desktop, a drawer below 900px per the documented breakpoints), top bar (search and notifications shown as explained-not-built placeholders — both still open below)
+- [x] **4** Navigation: sidebar rendered entirely from `GET /api/v1/navigation` — hub status dots with translated problem/fix explanations on hover, unavailable hubs greyed out, descriptive/hub label switch
+- [x] **4** Dashboard route with the tokened 4/2/1-column responsive grid from `DESIGN.md` and an honest empty state (no fabricated tiles — the dashboards API is still open, see above); one placeholder route per hub showing its live status/problems
+- [x] **4** i18n: bundled `de`/`it`/`en` JSON locales (vue-i18n), English fallback, language switcher (names, not flags) wired to `PATCH /api/v1/settings`; runtime drop-in locales from `/data/dreamhub/locales/` is still open
+- [x] **4** Appearance (dark/light/system, system follows `prefers-color-scheme` live) and sidebar label mode wired to real settings, not local-only state
+
 **Open**:
 - [ ] Remaining parts of the hub contract, added as the hubs are built: search providers, tile types, events
 - [ ] Core event bus (hub events → notifications, later AutomationHub)
 - [ ] API tokens (generate/revoke in settings, stored hashed) — Basic Auth works, bearer tokens are rejected until then
 - [ ] Dashboards API (read/save layout) on top of the existing store methods
-- [ ] Settings UI rendered from the schema (frontend)
-- [ ] Web frontend (Vue.js + Tailwind) embedded via `go:embed`, desktop-first and responsive. Source Sans 3 and all assets bundled (no CDN/Google Fonts at runtime). Dark by default, light/system switchable. Not an installable PWA yet (needs HTTPS, see "Later").
-- [ ] Navigation: sidebar generated from hub registry (group + order), collapsible; drawer on mobile; no bottom tab bar; labels switchable between descriptive names and hub names
-- [ ] Implement the design foundations from `DESIGN.md` (tokens, components) — the approved mockup is `docs/design/mockup-dashboard-v2.html`
-- [ ] Dashboard (tiles, decided in #16): show/hide, drag-and-drop reorder, width 1–4 columns, per-user layout; custom tiles as saved views (source + filters + sort + limit + display) built on hub search providers
-- [ ] Global search (`/`, `Cmd/Ctrl+K`), notifications inbox (stored as key + params), status strip, box-unreachable banner, live updates via WebSocket
-- [ ] i18n: DE/IT/EN locale files, runtime drop-in locales from `/data/dreamhub/locales/`, English fallback, `Intl` for all formatting and sorting, RTL-ready CSS (logical properties), language switcher
-- [ ] Time zones: UTC everywhere internally (store already does this); per-user display zone setting exists (box / browser / fixed, validated IANA names) — display logic and hint are frontend work; tests with fixed clock incl. DST days for `Europe/Rome`
+- [ ] Settings UI rendered from the schema (frontend) — language/appearance/navLabels work from the user menu meanwhile; the general settings page itself is still a placeholder
+- [ ] Dashboard tiles (decided in #16): show/hide, drag-and-drop reorder, width 1–4 columns, per-user layout; custom tiles as saved views (source + filters + sort + limit + display) built on hub search providers — the grid and its responsive breakpoints are in place, the tiles themselves need the dashboards API and per-hub tile types above
+- [ ] Global search (`/`, `Cmd/Ctrl+K`), notifications inbox (stored as key + params), status strip, live updates via WebSocket — the top bar has explained placeholders for both already
+- [ ] Runtime drop-in locales from `/data/dreamhub/locales/`; `Intl`-based formatting for actual dates/times once hubs display any
+- [ ] Time zones: UTC everywhere internally and the per-user display zone setting exist; the display logic and hint are still open, and have no real times to show yet
 - [ ] Keyboard shortcuts (`/`, `g`+letter, arrows, `Esc`), accessible contrast and labels
 - [ ] Onboarding wizard
-- [ ] Diagnostics: hub status with reason and fix instructions; box clock check
+- [ ] Diagnostics: a dedicated page with reason and fix instructions across all hubs at once (each hub's own placeholder page already shows its own status this way); box clock check
 - [ ] mDNS advertisement via a service file in `/etc/avahi/services/` (`avahi-daemon` already runs and is used this way by an existing companion app — see `ARCHITECTURE.md`)
 - [ ] Capture real fixtures (#14): at the next device access, fetch every relevant endpoint directly over SSH/HTTP and save the responses as test fixtures, so development continues offline with real data
 

@@ -16,8 +16,19 @@ dreamhub-arm64
 # Node / Frontend
 node_modules/
 dist/
+*.tsbuildinfo
 .env
 .env.local
+
+# backend/internal/webui/dist is the frontend build's output directory
+# (frontend/vite.config.ts), embedded via go:embed — see backend/README.md.
+# A minimal placeholder index.html is tracked so the backend builds and
+# runs before the frontend is ever built; `npm run build` overwrites it
+# locally with the real page (don't commit that local change back) and
+# everything else in there (assets/, etc.) stays untracked.
+!/backend/internal/webui/dist/
+/backend/internal/webui/dist/*
+!/backend/internal/webui/dist/index.html
 
 # OS
 .DS_Store

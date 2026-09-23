@@ -1,0 +1,91 @@
+// Thin fetch wrapper for /api/v1 — see backend/README.md, "API so far".
+//
+// - Every mutating request carries the CSRF header the backend requires
+//   (X-DreamHub-Request); GET/HEAD don't need it.
+// - Same-origin only: the frontend is served by the same Go binary it talks
+//   to (go:embed), so no base URL or CORS handling is needed.
+// - Errors follow the backend's envelope: {"error": {code, message,
+//   requestId, details}}. ApiError carries the code (for the UI to
+//   translate) and requestId (for support/logs), never the English message.
+import type { HealthInfo, Navigation, SettingsView } from './types'
+
+export class ApiError extends Error {
+  code: string
+  status: number
+  requestId?: string
+  details?: Record<string, { code: string; params?: Record<string, unknown> }>
+
+  constructor(
+    status: number,
+    code: string,
+    message: string,
+    requestId?: string,
+    details?: Record<string, { code: string; params?: Record<string, unknown> }>,
+  ) {
+    super(message)
+    this.name = 'ApiError'
+    this.status = status
+    this.code = code
+    this.requestId = requestId
+    this.details = details
+  }
+}
+
+const CSRF_HEADER = 'X-DreamHub-Request'
+
+async function request<T>(method: string, path: string, body?: unknown): Promise<T> {
+  const headers: Record<string, string> = {}
+  if (method !== 'GET' && method !== 'HEAD') {
+    headers[CSRF_HEADER] = '1'
+  }
+  if (body !== undefined) {
+    headers['Content-Type'] = 'application/json'
+  }
+
+  let res: Response
+  try {
+    res = await fetch(path, {
+      method,
+      headers,
+      body: body !== undefined ? JSON.stringify(body) : undefined,
+    })
+  } catch (err) {
+    // Network failure (backend unreachable) — no HTTP response at all.
+    throw new ApiError(0, 'network_error', err instanceof Error ? err.message : String(err))
+  }
+
+  if (res.status === 204) {
+    return undefined as T
+  }
+
+  const requestId = res.headers.get('X-Request-ID') ?? undefined
+  let json: unknown
+  try {
+    json = await res.json()
+  } catch {
+    json = undefined
+  }
+
+  if (!res.ok) {
+    const envelope = (json as { error?: { code?: string; message?: string; details?: ApiError['details'] } })?.error
+    throw new ApiError(
+      res.status,
+      envelope?.code ?? 'unknown',
+      envelope?.message ?? res.statusText,
+      requestId,
+      envelope?.details,
+    )
+  }
+  return json as T
+}
+
+export const api = {
+  health: () => request<HealthInfo>('GET', '/api/v1/health'),
+  navigation: () => request<Navigation>('GET', '/api/v1/navigation'),
+  settings: {
+    get: () => request<SettingsView>('GET', '/api/v1/settings'),
+    // A null value resets that key to its default (backend/README.md).
+    update: (values: Record<string, unknown>) =>
+      request<SettingsView>('PATCH', '/api/v1/settings', { values }),
+  },
+}

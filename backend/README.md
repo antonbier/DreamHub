@@ -1,6 +1,6 @@
 # backend/
 
-Go server (ARM64, statically compiled). REST API on port 8080. Will embed the web frontend via `go:embed` once it exists (Foundation, see [../ROADMAP.md](../ROADMAP.md)).
+Go server (ARM64, statically compiled). REST API on port 8080, plus the web frontend embedded via `go:embed` (see [`internal/webui`](internal/webui) below).
 
 ## Running locally
 
@@ -61,6 +61,12 @@ On a real device, SeriesHub shows as unavailable until the SerienRecorder connec
 
 Errors always use `{"error": {"code": ..., "message": ..., "details": ...}}`. Codes are for clients to translate; `message` is an English developer hint.
 
+## Frontend
+
+`npm run build` in [`../frontend`](../frontend) builds straight into `internal/webui/dist` (see `frontend/vite.config.ts`). A minimal placeholder `index.html` is tracked there so `go build`/`go run`/`go test` all work without Node installed; building the real frontend overwrites that file locally (don't commit the overwrite — see `.gitignore`). `go run ./cmd/dreamhub` then serves it at `/` with an SPA fallback (`internal/webui/spa.go`): any path that isn't a real static file and doesn't look like an asset request (no dot in the last path segment) gets `index.html` instead, so vue-router's client-side routes work on a direct load or a refresh; a genuinely missing asset still 404s.
+
+For frontend development against a running backend, run `go run ./cmd/dreamhub` (port 8080) and `npm run dev` in `frontend/` (port 5173) separately — the dev server proxies `/api` to 8080 (see `frontend/vite.config.ts`) and gives you hot reload.
+
 ## Testing
 
 ```sh
@@ -97,5 +103,6 @@ Produces a static ARM64 Linux binary (~11 MB stripped, including the pure-Go SQL
 - `internal/settings/` — the settings schema (`schema.go`), the core sections (`core.go`: general, auth), and the service that validates, stores, masks and logs (`service.go`). Hubs and connectors will register their own sections.
 - `internal/webcontrol/` — the WebControl `/web/*` API client (real HTTP + XML parsing) and its `Client` interface.
 - `internal/webcontrol/mock/` — the mock implementation of that interface, used by default and by all tests. Stateful timers: two fixture timers that overlap (a real conflict on the single-tuner box), and `AddTimer` is visible in later `TimerList` calls.
+- `internal/webui/` — embeds the built frontend (`go:embed dist`) and serves it with an SPA fallback; see "Frontend" above.
 
 Run `go test -race ./...` before committing changes that touch concurrency (plans, connector cache, log level).

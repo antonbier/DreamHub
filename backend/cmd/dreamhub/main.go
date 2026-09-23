@@ -18,6 +18,7 @@ import (
 	"github.com/antonbier/DreamHub/backend/internal/logging"
 	"github.com/antonbier/DreamHub/backend/internal/webcontrol"
 	"github.com/antonbier/DreamHub/backend/internal/webcontrol/mock"
+	"github.com/antonbier/DreamHub/backend/internal/webui"
 )
 
 func main() {
@@ -51,6 +52,7 @@ func run(logger *slog.Logger, level *logging.Level) error {
 		LookPath:   exec.LookPath,
 		Logger:     logger,
 		Level:      level,
+		WebUI:      webui.Handler(),
 	})
 	if err != nil {
 		return err

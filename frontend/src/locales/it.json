@@ -1,0 +1,101 @@
+{
+  "app": {
+    "name": "DreamHub"
+  },
+  "nav": {
+    "dashboard": "Home",
+    "settings": "Impostazioni",
+    "group": {
+      "media": "Media",
+      "program": "Programma",
+      "device": "Dispositivo"
+    }
+  },
+  "hub": {
+    "media": "Registrazioni",
+    "series": "Serie",
+    "guide": "Guida TV",
+    "timer": "Timer",
+    "discovery": "Consigliati",
+    "system": "Sistema",
+    "admin": "Admin"
+  },
+  "status": {
+    "available": "Disponibile",
+    "degraded": "Limitato",
+    "unavailable": "Non disponibile"
+  },
+  "problem": {
+    "connector": {
+      "unreachable": "{connector} non è raggiungibile",
+      "notConfigured": "{connector} non è ancora configurato",
+      "notImplemented": "{connector} non è ancora implementato",
+      "unknown": "Stato di {connector} sconosciuto"
+    },
+    "capability": {
+      "missing": "Manca sul dispositivo: {capability}"
+    },
+    "hub": {
+      "dependencyUnavailable": "{hub} non è disponibile"
+    }
+  },
+  "fix": {
+    "checkBoxConnection": "Controlla la connessione al box.",
+    "configureInSettings": "Configuralo in Impostazioni → {section}.",
+    "enableHub": "Attiva {hub} nelle impostazioni.",
+    "capability": {
+      "journald": "journald non è disponibile su questa macchina."
+    }
+  },
+  "sidebar": {
+    "collapse": "Comprimi barra laterale",
+    "expand": "Espandi barra laterale"
+  },
+  "topbar": {
+    "searchPlaceholder": "Cerca registrazioni, timer, la guida…",
+    "notifications": "Notifiche",
+    "language": "Lingua",
+    "userMenu": "Menu utente"
+  },
+  "userMenu": {
+    "appearance": {
+      "label": "Aspetto",
+      "dark": "Scuro",
+      "light": "Chiaro",
+      "system": "Come il sistema"
+    },
+    "navLabels": {
+      "label": "Etichette barra laterale",
+      "descriptive": "Descrittive",
+      "hub": "Nomi degli hub"
+    },
+    "settings": "Impostazioni"
+  },
+  "common": {
+    "loading": "Caricamento…",
+    "retry": "Riprova",
+    "backendUnreachable": "Backend DreamHub non raggiungibile. Nuovo tentativo…",
+    "searchNotBuilt": "La ricerca globale non è ancora stata realizzata.",
+    "notificationsNotBuilt": "Le notifiche non sono ancora state realizzate."
+  },
+  "dashboard": {
+    "title": "Home",
+    "empty": {
+      "title": "Ancora nessuna scheda",
+      "body": "La dashboard si riempirà man mano che gli hub vengono costruiti: spazio disco, conflitti, cosa va in onda ora, prossimi timer, consigliati. Schede personalizzate e layout trascinabile sono i prossimi passi."
+    }
+  },
+  "hubPlaceholder": {
+    "title": "{name} — in arrivo",
+    "body": "Le schermate di questo hub non sono ancora state costruite. Navigazione, stato e impostazioni funzionano già."
+  },
+  "settingsPlaceholder": {
+    "title": "Impostazioni",
+    "body": "Il menu impostazioni completo, basato sullo schema, è il prossimo passo. Lingua e aspetto funzionano già — vedi il menu utente in alto a destra."
+  },
+  "notFound": {
+    "title": "Pagina non trovata",
+    "body": "Questa pagina non esiste.",
+    "backToDashboard": "Torna alla home"
+  }
+}

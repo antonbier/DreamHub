@@ -1,9 +1,10 @@
 // Package hub is the core's registry of hubs — the user-facing feature areas
-// (CONCEPT.md, "The hub contract"). This first version covers the parts of
-// the contract the shell needs: identity, navigation placement, required
-// role, requirements and the resulting status, and an enable switch per hub.
-// Routes, search providers, tile types and events are added to the contract
-// as the hubs themselves are built.
+// (CONCEPT.md, "The hub contract"): identity, navigation placement,
+// required role, requirements and the resulting status, an enable switch
+// per hub, and — as a hub registers one — a search provider (search.go)
+// and status-change events (watcher.go). Dashboard tile types contributed
+// per hub are not part of the contract yet (internal/dashboard still owns
+// a fixed catalog); that's added as more hubs have something to tile.
 package hub
 
 import (
@@ -63,14 +64,15 @@ type Capability struct {
 
 // Registry holds hub descriptors and capabilities.
 type Registry struct {
-	hubs []Descriptor
-	byID map[string]Descriptor
-	caps map[string]Capability
+	hubs   []Descriptor
+	byID   map[string]Descriptor
+	caps   map[string]Capability
+	search map[string]SearchProvider
 }
 
 // NewRegistry returns an empty registry.
 func NewRegistry() *Registry {
-	return &Registry{byID: map[string]Descriptor{}, caps: map[string]Capability{}}
+	return &Registry{byID: map[string]Descriptor{}, caps: map[string]Capability{}, search: map[string]SearchProvider{}}
 }
 
 // Add registers a hub.

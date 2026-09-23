@@ -89,7 +89,16 @@
   "notifications": {
     "title": "Benachrichtigungen",
     "allOk": "Nichts braucht Aufmerksamkeit.",
-    "clockSkew": "Die Uhr der Box geht etwa {minutes} Min. falsch."
+    "clockSkew": "Die Uhr der Box geht etwa {minutes} Min. falsch.",
+    "recent": "Letzte Aktivität"
+  },
+  "statusStrip": {
+    "connected": "Verbunden",
+    "unreachable": "Nicht erreichbar",
+    "clockOk": "Uhr stimmt",
+    "clockOff": "Uhr geht {minutes} Min. falsch",
+    "issueSingular": "1 Hub braucht Aufmerksamkeit",
+    "issuePlural": "{count} Hubs brauchen Aufmerksamkeit"
   },
   "search": {
     "noResults": "Keine Treffer.",
@@ -210,6 +219,19 @@
       "enabled": "Anmeldung erforderlich",
       "username": "Benutzername",
       "password": "Passwort"
+    },
+    "tokens": {
+      "title": "API-Token",
+      "subtitle": "Für App- und API-Clients — getrennt vom Anmeldepasswort oben und einzeln widerrufbar.",
+      "createdOnce": "Jetzt kopieren — wird nicht noch einmal angezeigt.",
+      "copy": "Kopieren",
+      "copied": "Kopiert",
+      "empty": "Noch keine Token.",
+      "createdAt": "Erstellt am {date}",
+      "revoke": "Widerrufen",
+      "confirmRevoke": "Bestätigen?",
+      "namePlaceholder": "Wofür? (z. B. „Mein Handy“)",
+      "create": "Erstellen"
     },
     "network": {
       "title": "Netzwerk",

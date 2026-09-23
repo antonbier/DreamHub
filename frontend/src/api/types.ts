@@ -141,3 +141,34 @@ export interface DashboardTile {
 export interface DashboardLayout {
   tiles: DashboardTile[]
 }
+
+// backend/internal/hub.SearchResult, from GET /api/v1/search.
+export interface SearchResult {
+  hubId: string
+  hubLabel: string
+  title: string
+  subtitle?: string
+  path: string
+}
+
+// backend/internal/apitoken.Token / .Created.
+export interface ApiToken {
+  id: number
+  name: string
+  createdAt: string // RFC3339, UTC
+}
+
+export interface CreatedApiToken extends ApiToken {
+  token: string // the plaintext secret — only ever present in the creation response
+}
+
+// backend/internal/hubs's changeView, from GET /api/v1/changes. userId is
+// absent for a system-detected entry (no user made it — e.g. hub.statusChanged).
+export interface ChangeEntry {
+  id: number
+  at: string // RFC3339, UTC
+  userId?: number
+  action: string
+  summary: string
+  detail: Record<string, unknown>
+}

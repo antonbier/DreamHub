@@ -1,10 +1,11 @@
 <!--
   Global search (CONCEPT.md, "Global search"): opened with `/` or
   Cmd/Ctrl+K (DESIGN.md, Interaction), closed with Escape or a backdrop
-  click. v1 searches pages — Dashboard, Settings, every hub the sidebar
-  shows — since no hub has a search provider yet (ROADMAP.md, hub
-  contract); once hubs contribute one, their results join this same list,
-  grouped by hub, per CONCEPT.md.
+  click. Two sources, merged into one list: the sidebar's own pages
+  (Dashboard, Settings, every hub) matched locally, and GET /api/v1/search
+  (debounced) for hub-contributed content — TimerHub is the first real
+  provider (ROADMAP.md, hub contract); more hubs join as they implement
+  hub.SearchProvider.
 -->
 <template>
   <div
@@ -24,7 +25,7 @@
         />
       </label>
       <ul v-if="results.length > 0" class="max-h-[320px] overflow-y-auto py-1.5">
-        <li v-for="(item, i) in results" :key="item.path">
+        <li v-for="(item, i) in results" :key="item.key">
           <button
             type="button"
             class="flex w-full items-center gap-2.5 px-3 py-2 text-start text-[14px]"
@@ -33,7 +34,10 @@
             @click="go(item)"
           >
             <Icon :name="item.icon" :size="16" />
-            {{ item.label }}
+            <span class="min-w-0 flex-1">
+              <span class="block truncate">{{ item.label }}</span>
+              <span v-if="item.subtitle" class="block truncate text-[12px] text-faint">{{ item.subtitle }}</span>
+            </span>
           </button>
         </li>
       </ul>
@@ -44,10 +48,11 @@
 </template>
 
 <script setup lang="ts">
-import { computed, nextTick, onBeforeUnmount, onMounted, ref } from 'vue'
+import { computed, nextTick, onBeforeUnmount, onMounted, ref, watch } from 'vue'
 import { useI18n } from 'vue-i18n'
 import { useRouter } from 'vue-router'
 import Icon from './Icon.vue'
+import { api } from '@/api/client'
 import { useNavigationStore } from '@/stores/navigation'
 
 const { t } = useI18n()
@@ -60,26 +65,57 @@ const active = ref(0)
 const inputEl = ref<HTMLInputElement | null>(null)
 
 interface ResultItem {
+  key: string
   path: string
   label: string
+  subtitle?: string
   icon: string
 }
 
 const allItems = computed<ResultItem[]>(
   () =>
-    navigation.navigation?.sections.flatMap((s) => s.items).map((i) => ({ path: i.path, label: t(i.label), icon: i.icon })) ??
-    [],
+    navigation.navigation?.sections
+      .flatMap((s) => s.items)
+      .map((i) => ({ key: `page:${i.path}`, path: i.path, label: t(i.label), icon: i.icon })) ?? [],
 )
+
+// Hub-contributed content (GET /api/v1/search) — debounced, and only while
+// the palette is open and there's something to search for.
+const hubResults = ref<ResultItem[]>([])
+let debounce: ReturnType<typeof setTimeout> | undefined
+watch(query, (q) => {
+  clearTimeout(debounce)
+  const trimmed = q.trim()
+  if (!open.value || trimmed === '') {
+    hubResults.value = []
+    return
+  }
+  debounce = setTimeout(async () => {
+    try {
+      const { results } = await api.search(trimmed)
+      hubResults.value = results.map((r) => ({
+        key: `hub:${r.hubId}:${r.path}:${r.title}`,
+        path: r.path,
+        label: r.title,
+        subtitle: [t(r.hubLabel), r.subtitle].filter(Boolean).join(' · '),
+        icon: navigation.navigation?.sections.flatMap((s) => s.items).find((i) => i.id === r.hubId)?.icon ?? 'search',
+      }))
+    } catch {
+      hubResults.value = []
+    }
+  }, 150)
+})
 
 const results = computed(() => {
   const q = query.value.trim().toLowerCase()
-  const items = q === '' ? allItems.value : allItems.value.filter((i) => i.label.toLowerCase().includes(q))
-  return items.slice(0, 8)
+  const pages = q === '' ? allItems.value : allItems.value.filter((i) => i.label.toLowerCase().includes(q))
+  return [...pages, ...hubResults.value].slice(0, 8)
 })
 
 function show() {
   open.value = true
   query.value = ''
+  hubResults.value = []
   active.value = 0
   void nextTick(() => inputEl.value?.focus())
 }

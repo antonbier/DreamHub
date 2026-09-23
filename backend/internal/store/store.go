@@ -108,6 +108,18 @@ var migrations = []string{
 	);
 	CREATE INDEX change_log_at ON change_log (at);
 	`,
+	`
+	-- API tokens (PRINCIPLES.md: "a separate, user-generatable API token,
+	-- not tied to the Basic Auth password"). Only the SHA-256 hash is
+	-- stored; the plaintext token is shown once, at creation.
+	CREATE TABLE api_tokens (
+		id         INTEGER PRIMARY KEY,
+		user_id    INTEGER NOT NULL REFERENCES users(id) ON DELETE CASCADE,
+		name       TEXT NOT NULL,
+		token_hash TEXT NOT NULL UNIQUE,
+		created_at TEXT NOT NULL
+	);
+	`,
 }
 
 func (s *Store) migrate(ctx context.Context) error {

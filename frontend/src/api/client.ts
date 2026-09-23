@@ -12,7 +12,20 @@
 //   endpoint means they're gone or wrong, so they're dropped and the app
 //   falls back to the login screen — see App.vue.
 import { authHeader, authState, clearCredentials } from './authState'
-import type { DashboardLayout, DeviceInfo, HealthInfo, HubStatus, Navigation, SettingsView, Timer, WhoAmI } from './types'
+import type {
+  ApiToken,
+  ChangeEntry,
+  CreatedApiToken,
+  DashboardLayout,
+  DeviceInfo,
+  HealthInfo,
+  HubStatus,
+  Navigation,
+  SearchResult,
+  SettingsView,
+  Timer,
+  WhoAmI,
+} from './types'
 
 export class ApiError extends Error {
   code: string
@@ -110,4 +123,12 @@ export const api = {
     get: () => request<DashboardLayout>('GET', '/api/v1/dashboard'),
     save: (layout: DashboardLayout) => request<DashboardLayout>('PUT', '/api/v1/dashboard', layout),
   },
+  search: (query: string) =>
+    request<{ results: SearchResult[] }>('GET', `/api/v1/search?q=${encodeURIComponent(query)}`),
+  tokens: {
+    list: () => request<{ tokens: ApiToken[] }>('GET', '/api/v1/tokens'),
+    create: (name: string) => request<CreatedApiToken>('POST', '/api/v1/tokens', { name }),
+    revoke: (id: number) => request<void>('DELETE', `/api/v1/tokens/${id}`),
+  },
+  changes: (limit = 20) => request<{ changes: ChangeEntry[] }>('GET', `/api/v1/changes?limit=${limit}`),
 }

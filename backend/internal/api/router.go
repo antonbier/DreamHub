@@ -9,8 +9,11 @@ import (
 	"errors"
 	"log/slog"
 	"net/http"
+	"strconv"
+	"strings"
 	"time"
 
+	"github.com/antonbier/DreamHub/backend/internal/apitoken"
 	"github.com/antonbier/DreamHub/backend/internal/auth"
 	"github.com/antonbier/DreamHub/backend/internal/connector"
 	"github.com/antonbier/DreamHub/backend/internal/dashboard"
@@ -43,7 +46,13 @@ type Deps struct {
 	Hubs       *hub.Registry
 	Plans      *plan.Service
 	Dashboard  *dashboard.Service
-	Mounts     []Mount
+	Tokens     *apitoken.Service
+	// Watcher notices a hub's status actually changing between requests and
+	// Store records that as a change-log event (hubStatuses) — see
+	// internal/hub/watcher.go's doc comment for what this is and isn't.
+	Watcher *hub.StatusWatcher
+	Store   *store.Store
+	Mounts  []Mount
 	// User is the current user. v1 has exactly one user (an admin); once
 	// profiles exist this comes from the authenticated request instead.
 	User   store.User
@@ -68,6 +77,10 @@ func NewRouter(d Deps) http.Handler {
 	protected.HandleFunc("GET /api/v1/connectors", handleConnectors(d))
 	protected.HandleFunc("GET /api/v1/dashboard", handleGetDashboard(d))
 	protected.HandleFunc("PUT /api/v1/dashboard", handlePutDashboard(d))
+	protected.HandleFunc("GET /api/v1/search", handleSearch(d))
+	protected.HandleFunc("GET /api/v1/tokens", handleListTokens(d))
+	protected.HandleFunc("POST /api/v1/tokens", handleCreateToken(d))
+	protected.HandleFunc("DELETE /api/v1/tokens/{id}", handleDeleteToken(d))
 	protected.HandleFunc("POST /api/v1/plans/{id}/apply", handleApplyPlan(d))
 	for _, m := range d.Mounts {
 		sub := http.NewServeMux()
@@ -213,7 +226,28 @@ func hubStatuses(d Deps, r *http.Request) ([]hub.Status, settings.Values, error)
 		return nil, nil, err
 	}
 	reports := d.Connectors.Reports(r.Context(), v, d.Settings.Version())
-	return d.Hubs.Statuses(v, reports), v, nil
+	statuses := d.Hubs.Statuses(v, reports)
+	recordStatusTransitions(d, r, statuses)
+	return statuses, v, nil
+}
+
+// recordStatusTransitions writes any hub status change (internal/hub's
+// StatusWatcher) to the change log, with no owning user — that's how a
+// system-detected event is told apart from one a user made (see
+// internal/store's ChangeEntry). Best-effort: a logging failure here must
+// never break the request that happened to notice the transition.
+func recordStatusTransitions(d Deps, r *http.Request, statuses []hub.Status) {
+	if d.Watcher == nil || d.Store == nil {
+		return
+	}
+	for _, t := range d.Watcher.Diff(statuses) {
+		detail, _ := json.Marshal(map[string]any{"hub": t.HubID, "from": t.From, "to": t.To})
+		if err := d.Store.AppendChange(r.Context(), store.ChangeEntry{
+			Action: "hub.statusChanged", Summary: t.Summary(), Detail: detail,
+		}); err != nil {
+			d.Logger.Error("recording hub status transition failed", "requestId", httpx.RequestID(r.Context()), "error", err)
+		}
+	}
 }
 
 func handleNavigation(d Deps) http.HandlerFunc {
@@ -295,6 +329,92 @@ func handlePutDashboard(d Deps) http.HandlerFunc {
 			return
 		}
 		httpx.WriteJSON(w, http.StatusOK, layout)
+	}
+}
+
+// handleSearch queries every registered hub search provider (internal/hub,
+// "The hub contract") for hubs the current user can currently see —
+// CONCEPT.md, "Global search". An empty or missing q returns no results
+// rather than erroring.
+func handleSearch(d Deps) http.HandlerFunc {
+	return func(w http.ResponseWriter, r *http.Request) {
+		q := strings.TrimSpace(r.URL.Query().Get("q"))
+		if q == "" {
+			httpx.WriteJSON(w, http.StatusOK, map[string]any{"results": []hub.SearchResult{}})
+			return
+		}
+		v, err := d.Settings.Values(r.Context(), d.User)
+		if err != nil {
+			d.Logger.Error("search failed", "requestId", httpx.RequestID(r.Context()), "error", err)
+			httpx.WriteError(w, r, http.StatusInternalServerError, "internal", "could not search")
+			return
+		}
+		reports := d.Connectors.Reports(r.Context(), v, d.Settings.Version())
+		results := d.Hubs.Search(r.Context(), v, reports, d.User.Role, q)
+		httpx.WriteJSON(w, http.StatusOK, map[string]any{"results": results})
+	}
+}
+
+// handleListTokens lists the current user's API tokens — never the secret
+// itself (internal/apitoken).
+func handleListTokens(d Deps) http.HandlerFunc {
+	return func(w http.ResponseWriter, r *http.Request) {
+		tokens, err := d.Tokens.List(r.Context(), d.User)
+		if err != nil {
+			d.Logger.Error("listing tokens failed", "requestId", httpx.RequestID(r.Context()), "error", err)
+			httpx.WriteError(w, r, http.StatusInternalServerError, "internal", "could not list tokens")
+			return
+		}
+		httpx.WriteJSON(w, http.StatusOK, map[string]any{"tokens": tokens})
+	}
+}
+
+// handleCreateToken generates a new API token and returns its secret once
+// (PRINCIPLES.md: a separate, revocable credential for app/API clients).
+func handleCreateToken(d Deps) http.HandlerFunc {
+	return func(w http.ResponseWriter, r *http.Request) {
+		var body struct {
+			Name string `json:"name"`
+		}
+		if err := httpx.DecodeJSON(r, &body); err != nil {
+			httpx.WriteError(w, r, http.StatusBadRequest, "invalid_body", `expected {"name": "..."}`)
+			return
+		}
+		created, err := d.Tokens.Create(r.Context(), d.User, body.Name)
+		if err != nil {
+			if errors.Is(err, apitoken.ErrNameRequired) {
+				httpx.WriteErrorDetails(w, r, http.StatusBadRequest, "validation_failed", "a name is required",
+					map[string]httpx.FieldError{"name": {Code: "required"}})
+				return
+			}
+			d.Logger.Error("creating token failed", "requestId", httpx.RequestID(r.Context()), "error", err)
+			httpx.WriteError(w, r, http.StatusInternalServerError, "internal", "could not create the token")
+			return
+		}
+		httpx.WriteJSON(w, http.StatusCreated, created)
+	}
+}
+
+// handleDeleteToken revokes a token; 404 if it doesn't exist or belongs to
+// another user (never distinguished in the response, so one user can't
+// probe another's token IDs).
+func handleDeleteToken(d Deps) http.HandlerFunc {
+	return func(w http.ResponseWriter, r *http.Request) {
+		id, err := strconv.ParseInt(r.PathValue("id"), 10, 64)
+		if err != nil {
+			httpx.WriteError(w, r, http.StatusBadRequest, "invalid_id", "id must be a number")
+			return
+		}
+		if err := d.Tokens.Revoke(r.Context(), d.User, id); err != nil {
+			if errors.Is(err, store.ErrNotFound) {
+				httpx.WriteError(w, r, http.StatusNotFound, "token_not_found", "no such token")
+				return
+			}
+			d.Logger.Error("revoking token failed", "requestId", httpx.RequestID(r.Context()), "error", err)
+			httpx.WriteError(w, r, http.StatusInternalServerError, "internal", "could not revoke the token")
+			return
+		}
+		w.WriteHeader(http.StatusNoContent)
 	}
 }
 

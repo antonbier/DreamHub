@@ -16,6 +16,7 @@ import (
 	"time"
 
 	"github.com/antonbier/DreamHub/backend/internal/httpx"
+	"github.com/antonbier/DreamHub/backend/internal/hub"
 	"github.com/antonbier/DreamHub/backend/internal/plan"
 	"github.com/antonbier/DreamHub/backend/internal/status"
 	"github.com/antonbier/DreamHub/backend/internal/webcontrol"
@@ -46,6 +47,24 @@ const (
 	CodeTimerConflict  = "timer.conflict"
 	CodeTimerDuplicate = "timer.duplicate"
 )
+
+// Search implements hub.SearchProvider: a case-insensitive substring match
+// over each timer's name and channel — TimerHub is the hub contract's first
+// real search provider (ROADMAP.md).
+func (h *Timer) Search(ctx context.Context, query string) ([]hub.SearchResult, error) {
+	timers, err := h.WC.TimerList(ctx)
+	if err != nil {
+		return nil, err
+	}
+	q := strings.ToLower(query)
+	var out []hub.SearchResult
+	for _, t := range timers {
+		if strings.Contains(strings.ToLower(t.Name), q) || strings.Contains(strings.ToLower(t.ServiceName), q) {
+			out = append(out, hub.SearchResult{Title: t.Name, Subtitle: t.ServiceName, Path: "/timers"})
+		}
+	}
+	return out, nil
+}
 
 func (h *Timer) list(w http.ResponseWriter, r *http.Request) {
 	timers, err := h.WC.TimerList(r.Context())

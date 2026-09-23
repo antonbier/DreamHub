@@ -1,6 +1,7 @@
 package auth
 
 import (
+	"context"
 	"net/http/httptest"
 	"testing"
 	"time"
@@ -12,10 +13,15 @@ type staticSource struct{ c Config }
 
 func (s *staticSource) AuthConfig() Config { return s.c }
 
+// staticTokens accepts exactly the tokens in the set.
+type staticTokens map[string]bool
+
+func (s staticTokens) Verify(_ context.Context, token string) bool { return s[token] }
+
 func TestSettingsVerifier(t *testing.T) {
 	hash, _ := bcrypt.GenerateFromPassword([]byte("correct horse"), bcrypt.MinCost)
 	src := &staticSource{c: Config{Enabled: false, Username: "armin", PasswordHash: string(hash), Version: 1}}
-	v := NewSettingsVerifier(src)
+	v := NewSettingsVerifier(src, staticTokens{"good-token": true})
 
 	req := func(user, pass string) bool {
 		r := httptest.NewRequest("GET", "/", nil)
@@ -37,6 +43,20 @@ func TestSettingsVerifier(t *testing.T) {
 		t.Fatal("correct credentials must be accepted")
 	}
 
+	bearer := func(token string) bool {
+		r := httptest.NewRequest("GET", "/", nil)
+		if token != "" {
+			r.Header.Set("Authorization", "Bearer "+token)
+		}
+		return v.Verify(r)
+	}
+	if !bearer("good-token") {
+		t.Fatal("a valid API token must be accepted")
+	}
+	if bearer("bad-token") {
+		t.Fatal("an unknown API token must be rejected")
+	}
+
 	// Cached success is dropped as soon as the config version changes.
 	src.c.Version = 2
 	src.c.PasswordHash = "$2a$04$invalidinvalidinvalidinvalidinvalidinvalidinvalidinv"
@@ -48,7 +68,7 @@ func TestSettingsVerifier(t *testing.T) {
 func TestSettingsVerifier_CacheExpires(t *testing.T) {
 	hash, _ := bcrypt.GenerateFromPassword([]byte("pw-12345"), bcrypt.MinCost)
 	src := &staticSource{c: Config{Enabled: true, Username: "a", PasswordHash: string(hash), Version: 1}}
-	v := NewSettingsVerifier(src)
+	v := NewSettingsVerifier(src, nil)
 	now := time.Date(2026, 9, 23, 18, 0, 0, 0, time.UTC)
 	v.now = func() time.Time { return now }
 

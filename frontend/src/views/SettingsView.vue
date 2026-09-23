@@ -21,7 +21,13 @@
       </button>
     </div>
     <div v-else class="flex flex-col gap-4">
-      <SettingsSectionCard v-for="section in form.sections.value" :key="section.id" :section="section" :form="form" />
+      <template v-for="section in form.sections.value" :key="section.id">
+        <SettingsSectionCard :section="section" :form="form" />
+        <!-- Not a schema field — tokens are a list of their own resources,
+             not a single setting — so this is placed by hand right after
+             Authentication rather than coming from the section loop. -->
+        <ApiTokensPanel v-if="section.id === 'auth'" />
+      </template>
     </div>
   </div>
 </template>
@@ -31,6 +37,7 @@ import { onMounted } from 'vue'
 import { RouterLink } from 'vue-router'
 import { useI18n } from 'vue-i18n'
 import SettingsSectionCard from '@/components/settings/SettingsSectionCard.vue'
+import ApiTokensPanel from '@/components/settings/ApiTokensPanel.vue'
 import { useSettingsForm } from '@/composables/useSettingsForm'
 
 const { t } = useI18n()

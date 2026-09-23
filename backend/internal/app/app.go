@@ -10,6 +10,7 @@ import (
 	"time"
 
 	"github.com/antonbier/DreamHub/backend/internal/api"
+	"github.com/antonbier/DreamHub/backend/internal/apitoken"
 	"github.com/antonbier/DreamHub/backend/internal/auth"
 	"github.com/antonbier/DreamHub/backend/internal/connector"
 	"github.com/antonbier/DreamHub/backend/internal/dashboard"
@@ -54,6 +55,7 @@ type App struct {
 	Hubs       *hub.Registry
 	Plans      *plan.Service
 	Dashboard  *dashboard.Service
+	Tokens     *apitoken.Service
 	Level      *logging.Level
 	User       store.User
 }
@@ -121,19 +123,28 @@ func New(ctx context.Context, o Options) (*App, error) {
 	}
 	plans := plan.NewService(st, now)
 	dash := dashboard.NewService(st)
+	tokens := apitoken.NewService(st, now)
+	watcher := hub.NewStatusWatcher()
 
 	timerHub := &hubs_.Timer{WC: o.WebControl, Plans: plans, Now: now}
 	systemHub := &hubs_.System{Store: st}
 	adminHub := &hubs_.Admin{Store: st, Level: level}
 
+	// TimerHub is the hub contract's first real search provider
+	// (internal/hub/search.go) — add more here as other hubs implement it.
+	hubs.AddSearchProvider(hub.IDTimer, timerHub)
+
 	handler := api.NewRouter(api.Deps{
 		WebControl: o.WebControl,
-		Verifier:   auth.NewSettingsVerifier(svc),
+		Verifier:   auth.NewSettingsVerifier(svc, tokens),
 		Settings:   svc,
 		Connectors: conns,
 		Hubs:       hubs,
 		Plans:      plans,
 		Dashboard:  dash,
+		Tokens:     tokens,
+		Watcher:    watcher,
+		Store:      st,
 		Mounts: []api.Mount{
 			{HubID: hub.IDTimer, Prefixes: []string{"/api/v1/timers"}, Register: timerHub.Mount},
 			{HubID: hub.IDSystem, Prefixes: []string{"/api/v1/changes"}, Register: systemHub.Mount},
@@ -149,5 +160,8 @@ func New(ctx context.Context, o Options) (*App, error) {
 		outer.Handle("/", o.WebUI)
 		handler = outer
 	}
-	return &App{Handler: handler, Store: st, Settings: svc, Connectors: conns, Hubs: hubs, Plans: plans, Dashboard: dash, Level: level, User: user}, nil
+	return &App{
+		Handler: handler, Store: st, Settings: svc, Connectors: conns, Hubs: hubs,
+		Plans: plans, Dashboard: dash, Tokens: tokens, Level: level, User: user,
+	}, nil
 }

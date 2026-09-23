@@ -7,6 +7,7 @@ import (
 	"log/slog"
 	"net/http"
 	"net/http/httptest"
+	"strconv"
 	"strings"
 	"testing"
 	"time"
@@ -306,6 +307,132 @@ func TestNavigation_ExplainsMissingConfigurationAndUpdatesImmediately(t *testing
 	}
 	if got := navItems(t, e)["discovery"].Status; got != "available" {
 		t.Errorf("DiscoveryHub must become available right after the key is saved (no waiting for the cache), got %s", got)
+	}
+
+	// The transition itself (unavailable -> available) must land in the
+	// change log — internal/hub's StatusWatcher, wired in hubStatuses().
+	_, b := e.do(t, "GET", "/api/v1/changes?limit=10", "", nil)
+	if !strings.Contains(string(b), `"action":"hub.statusChanged"`) || !strings.Contains(string(b), "DiscoveryHub became available") {
+		t.Errorf("expected a hub.statusChanged change log entry, got %s", b)
+	}
+}
+
+func TestSearch_FindsARealTimerByName(t *testing.T) {
+	e := newEnv(t)
+
+	resp, b := e.do(t, "GET", "/api/v1/search?q=Rookie", "", nil)
+	if resp.StatusCode != http.StatusOK {
+		t.Fatalf("expected 200, got %d: %s", resp.StatusCode, b)
+	}
+	var body struct {
+		Results []struct {
+			HubID    string `json:"hubId"`
+			HubLabel string `json:"hubLabel"`
+			Title    string `json:"title"`
+			Path     string `json:"path"`
+		} `json:"results"`
+	}
+	json.Unmarshal(b, &body)
+	if len(body.Results) != 1 || body.Results[0].Title != "The Rookie" || body.Results[0].HubID != "timer" || body.Results[0].Path != "/timers" {
+		t.Fatalf("expected exactly the mock's \"The Rookie\" timer, got %+v", body.Results)
+	}
+
+	// No query, no results — not an error.
+	_, b = e.do(t, "GET", "/api/v1/search", "", nil)
+	var empty struct {
+		Results []any `json:"results"`
+	}
+	json.Unmarshal(b, &empty)
+	if len(empty.Results) != 0 {
+		t.Errorf("expected no results for an empty query, got %+v", empty.Results)
+	}
+}
+
+func TestSearch_SkipsADisabledHub(t *testing.T) {
+	e := newEnv(t)
+	e.do(t, "PATCH", "/api/v1/settings", `{"values":{"hubs.timer.enabled":false}}`, nil)
+
+	_, b := e.do(t, "GET", "/api/v1/search?q=Rookie", "", nil)
+	var body struct {
+		Results []any `json:"results"`
+	}
+	json.Unmarshal(b, &body)
+	if len(body.Results) != 0 {
+		t.Errorf("a disabled hub's timers must not be searchable, got %+v", body.Results)
+	}
+}
+
+func TestTokens_CreateListRevoke(t *testing.T) {
+	e := newEnv(t)
+
+	resp, b := e.do(t, "POST", "/api/v1/tokens", `{"name":"My Phone"}`, nil)
+	if resp.StatusCode != http.StatusCreated {
+		t.Fatalf("expected 201, got %d: %s", resp.StatusCode, b)
+	}
+	var created struct {
+		ID    int64  `json:"id"`
+		Name  string `json:"name"`
+		Token string `json:"token"`
+	}
+	json.Unmarshal(b, &created)
+	if created.Name != "My Phone" || !strings.HasPrefix(created.Token, "dh_") {
+		t.Fatalf("unexpected creation response: %+v", created)
+	}
+
+	// The new token authenticates once auth is enabled.
+	e.do(t, "PATCH", "/api/v1/settings", `{"values":{"auth.enabled":true,"auth.username":"armin","auth.password":"correct horse"}}`, nil)
+	resp, _ = e.do(t, "GET", "/api/v1/whoami", "", func(r *http.Request) {
+		r.Header.Set("Authorization", "Bearer "+created.Token)
+	})
+	if resp.StatusCode != http.StatusOK {
+		t.Errorf("the created token must authenticate, got %d", resp.StatusCode)
+	}
+	resp, _ = e.do(t, "GET", "/api/v1/whoami", "", func(r *http.Request) {
+		r.Header.Set("Authorization", "Bearer dh_not-a-real-token")
+	})
+	if resp.StatusCode != http.StatusUnauthorized {
+		t.Errorf("an unknown token must be rejected, got %d", resp.StatusCode)
+	}
+	e.do(t, "PATCH", "/api/v1/settings", `{"values":{"auth.enabled":false}}`, func(r *http.Request) { r.SetBasicAuth("armin", "correct horse") })
+
+	_, b = e.do(t, "GET", "/api/v1/tokens", "", nil)
+	var list struct {
+		Tokens []struct {
+			ID   int64  `json:"id"`
+			Name string `json:"name"`
+		} `json:"tokens"`
+	}
+	json.Unmarshal(b, &list)
+	if len(list.Tokens) != 1 || list.Tokens[0].ID != created.ID {
+		t.Fatalf("expected the one created token, got %+v", list.Tokens)
+	}
+	if strings.Contains(string(b), created.Token) {
+		t.Error("the token list must never include the secret")
+	}
+
+	resp, _ = e.do(t, "DELETE", "/api/v1/tokens/"+strconv.FormatInt(created.ID, 10), "", nil)
+	if resp.StatusCode != http.StatusNoContent {
+		t.Errorf("expected 204, got %d", resp.StatusCode)
+	}
+	resp, _ = e.do(t, "DELETE", "/api/v1/tokens/"+strconv.FormatInt(created.ID, 10), "", nil)
+	if resp.StatusCode != http.StatusNotFound {
+		t.Errorf("revoking again: expected 404, got %d", resp.StatusCode)
+	}
+}
+
+func TestTokens_CreateRejectsEmptyName(t *testing.T) {
+	e := newEnv(t)
+	resp, _ := e.do(t, "POST", "/api/v1/tokens", `{"name":""}`, nil)
+	if resp.StatusCode != http.StatusBadRequest {
+		t.Errorf("expected 400, got %d", resp.StatusCode)
+	}
+}
+
+func TestTokens_CreateRequiresCSRFHeader(t *testing.T) {
+	e := newEnv(t)
+	resp, _ := e.do(t, "POST", "/api/v1/tokens", `{"name":"x"}`, func(r *http.Request) { r.Header.Del(httpx.CSRFHeader) })
+	if resp.StatusCode != http.StatusForbidden {
+		t.Errorf("expected 403, got %d", resp.StatusCode)
 	}
 }
 

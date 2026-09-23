@@ -14,13 +14,7 @@
     <AppSidebar :sections="navigation.navigation?.sections ?? fallbackSections" />
     <div class="flex min-w-0 flex-1 flex-col">
       <AppTopBar />
-      <div
-        v-if="!preferences.reachable || !navigation.reachable"
-        class="flex items-center gap-2 border-b border-line bg-field px-4 py-1.5 text-[13px] text-warn"
-      >
-        <Icon name="warning" :size="14" />
-        {{ t('common.backendUnreachable') }}
-      </div>
+      <StatusStrip />
       <main class="flex-1 overflow-y-auto">
         <RouterView />
       </main>
@@ -31,17 +25,15 @@
 <script setup lang="ts">
 import { onMounted, watch } from 'vue'
 import { RouterView } from 'vue-router'
-import { useI18n } from 'vue-i18n'
 import AppSidebar from './components/AppSidebar.vue'
 import AppTopBar from './components/AppTopBar.vue'
-import Icon from './components/Icon.vue'
+import StatusStrip from './components/StatusStrip.vue'
 import LoginScreen from './components/LoginScreen.vue'
 import { usePreferencesStore } from './stores/preferences'
 import { useNavigationStore } from './stores/navigation'
 import { useAuth } from './composables/useAuth'
 import type { NavSection } from './api/types'
 
-const { t } = useI18n()
 const preferences = usePreferencesStore()
 const navigation = useNavigationStore()
 const { authState, check } = useAuth()

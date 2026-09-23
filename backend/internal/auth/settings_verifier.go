@@ -1,6 +1,7 @@
 package auth
 
 import (
+	"context"
 	"crypto/sha256"
 	"crypto/subtle"
 	"encoding/hex"
@@ -35,20 +36,27 @@ type ConfigSource interface {
 // it on every request would noticeably slow the UI down.
 const cacheTTL = 10 * time.Minute
 
+// TokenVerifier checks a bearer API token (implemented by
+// internal/apitoken.Service).
+type TokenVerifier interface {
+	Verify(ctx context.Context, token string) bool
+}
+
 // SettingsVerifier verifies Basic Auth against the credentials configured in
-// settings. API tokens are not implemented yet; bearer requests are rejected
-// while auth is enabled.
+// settings, or a bearer token against tokens (internal/apitoken) — either
+// is accepted for any endpoint (PRINCIPLES.md).
 type SettingsVerifier struct {
-	src ConfigSource
-	now func() time.Time
+	src    ConfigSource
+	tokens TokenVerifier
+	now    func() time.Time
 
 	mu    sync.Mutex
 	cache map[string]time.Time
 }
 
-// NewSettingsVerifier returns a verifier backed by src.
-func NewSettingsVerifier(src ConfigSource) *SettingsVerifier {
-	return &SettingsVerifier{src: src, now: time.Now, cache: map[string]time.Time{}}
+// NewSettingsVerifier returns a verifier backed by src and tokens.
+func NewSettingsVerifier(src ConfigSource, tokens TokenVerifier) *SettingsVerifier {
+	return &SettingsVerifier{src: src, tokens: tokens, now: time.Now, cache: map[string]time.Time{}}
 }
 
 // Verify implements Verifier.
@@ -57,8 +65,8 @@ func (v *SettingsVerifier) Verify(r *http.Request) bool {
 	if !c.Enabled {
 		return true
 	}
-	if strings.HasPrefix(r.Header.Get("Authorization"), "Bearer ") {
-		return false
+	if tok, ok := strings.CutPrefix(r.Header.Get("Authorization"), "Bearer "); ok {
+		return v.tokens != nil && v.tokens.Verify(r.Context(), tok)
 	}
 	user, pass, ok := r.BasicAuth()
 	if !ok || c.PasswordHash == "" {

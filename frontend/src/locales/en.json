@@ -89,7 +89,16 @@
   "notifications": {
     "title": "Notifications",
     "allOk": "Nothing needs attention.",
-    "clockSkew": "The box's clock is off by about {minutes} min."
+    "clockSkew": "The box's clock is off by about {minutes} min.",
+    "recent": "Recent activity"
+  },
+  "statusStrip": {
+    "connected": "Connected",
+    "unreachable": "Unreachable",
+    "clockOk": "Clock OK",
+    "clockOff": "Clock off by {minutes} min",
+    "issueSingular": "1 hub needs attention",
+    "issuePlural": "{count} hubs need attention"
   },
   "search": {
     "noResults": "No matches.",
@@ -210,6 +219,19 @@
       "enabled": "Require sign-in",
       "username": "Username",
       "password": "Password"
+    },
+    "tokens": {
+      "title": "API tokens",
+      "subtitle": "For app and API clients — separate from the sign-in password above, and revocable on its own.",
+      "createdOnce": "Copy this now — it won't be shown again.",
+      "copy": "Copy",
+      "copied": "Copied",
+      "empty": "No tokens yet.",
+      "createdAt": "Created {date}",
+      "revoke": "Revoke",
+      "confirmRevoke": "Confirm?",
+      "namePlaceholder": "What's this for? (e.g. “My Phone”)",
+      "create": "Create"
     },
     "network": {
       "title": "Network",

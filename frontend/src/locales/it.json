@@ -89,7 +89,16 @@
   "notifications": {
     "title": "Notifiche",
     "allOk": "Nessuna attenzione richiesta.",
-    "clockSkew": "L'orologio del box è sfasato di circa {minutes} min."
+    "clockSkew": "L'orologio del box è sfasato di circa {minutes} min.",
+    "recent": "Attività recente"
+  },
+  "statusStrip": {
+    "connected": "Connesso",
+    "unreachable": "Non raggiungibile",
+    "clockOk": "Orologio corretto",
+    "clockOff": "Orologio sfasato di {minutes} min",
+    "issueSingular": "1 hub richiede attenzione",
+    "issuePlural": "{count} hub richiedono attenzione"
   },
   "search": {
     "noResults": "Nessun risultato.",
@@ -210,6 +219,19 @@
       "enabled": "Richiedi accesso",
       "username": "Nome utente",
       "password": "Password"
+    },
+    "tokens": {
+      "title": "Token API",
+      "subtitle": "Per client app e API — separati dalla password di accesso sopra, e revocabili singolarmente.",
+      "createdOnce": "Copialo ora — non verrà mostrato di nuovo.",
+      "copy": "Copia",
+      "copied": "Copiato",
+      "empty": "Ancora nessun token.",
+      "createdAt": "Creato il {date}",
+      "revoke": "Revoca",
+      "confirmRevoke": "Confermi?",
+      "namePlaceholder": "A cosa serve? (es. “Il mio telefono”)",
+      "create": "Crea"
     },
     "network": {
       "title": "Rete",

@@ -45,6 +45,8 @@ Enabling auth without a username and password is rejected (it would lock everyon
 | GET | `/api/v1/navigation` | the sidebar for the current user: sections (`main`, `media`, `program`, `device`, `bottom`), each hub with `name` (MediaHub…), `label` (i18n key), `status` and `problems`; disabled hubs and hubs the role can't see are omitted; `labels` is the user's `descriptive`/`hub` choice |
 | GET | `/api/v1/hubs` | diagnostics: every hub the user may see, including disabled ones, with status, problems and requirements |
 | GET | `/api/v1/connectors` | state of each connector (`ok`, `not_configured`, `unreachable`, `not_implemented`) with problem and fix; never contains secrets |
+| GET | `/api/v1/dashboard` | the current user's dashboard layout: `{"tiles": [{"type", "label", "width", "hidden"}, ...]}`, reconciled against the built-in tile catalog (`internal/dashboard`) — a type missing from the saved layout is appended with its default width, an unknown/removed type is dropped |
+| PUT | `/api/v1/dashboard` | saves the layout directly (no preview/apply — DreamHub's own state, not a device change; still recorded in the change log). Array order is display order. `400 invalid_tile` for an unknown type, a duplicate, or a width outside 1–4 |
 | POST | `/api/v1/plans/{id}/apply` | executes a previewed plan (second step of every change). `404 plan_not_found` (unknown, expired after 10 min, or already used), `403 plan_forbidden` (other user), `409 plan_stale` (state changed since the preview — nothing done), `409 writes_disabled` |
 | GET | `/api/v1/timers` | TimerHub: timers and the number of tuners |
 | POST | `/api/v1/timers/plan` | TimerHub: preview a new timer — `{serviceReference, serviceName, name, description?, begin, end, marginBefore?, marginAfter?}` (Unix seconds; margins in minutes, default 5/10). Returns a plan with the recording window and warnings (`timer.conflict` with the clashing timers and tuner count, `timer.duplicate`). Changes nothing |
@@ -95,6 +97,7 @@ Produces a static ARM64 Linux binary (~11 MB stripped, including the pure-Go SQL
 - `internal/api/` — the core `/api/v1` routes and the assembly of hub routes behind auth and each hub's enable switch.
 - `internal/httpx/` — shared HTTP conventions: error envelope, request IDs + request logging, user in context, body decoding, CSRF and Host-header middleware.
 - `internal/plan/` — preview-and-confirm: single-use, expiring, owner-bound plans with stale detection; applied plans go to the change log.
+- `internal/dashboard/` — the dashboard layout (`GET`/`PUT /api/v1/dashboard`): a fixed v1 catalog of built-in tile types (each backed by data an existing endpoint already provides, e.g. TimerHub for "upcoming timers"), reconciled on read/write so a removed type is dropped and a newly added one always shows up. Saved directly, no plan/apply — same exception as settings.
 - `internal/hubs/` — hub behavior (routes): TimerHub (timers, create via plan with conflict check), SystemHub (change log), AdminHub (log level).
 - `internal/logging/` — runtime log level with automatic revert from debug.
 - `internal/auth/` — auth middleware; `SettingsVerifier` checks Basic Auth against the credentials in settings (bcrypt, cached); `Credentials` is a static verifier for tests. API tokens are not implemented yet.

@@ -7,7 +7,7 @@
 // - Errors follow the backend's envelope: {"error": {code, message,
 //   requestId, details}}. ApiError carries the code (for the UI to
 //   translate) and requestId (for support/logs), never the English message.
-import type { HealthInfo, Navigation, SettingsView } from './types'
+import type { DashboardLayout, HealthInfo, HubStatus, Navigation, SettingsView, Timer } from './types'
 
 export class ApiError extends Error {
   code: string
@@ -87,5 +87,11 @@ export const api = {
     // A null value resets that key to its default (backend/README.md).
     update: (values: Record<string, unknown>) =>
       request<SettingsView>('PATCH', '/api/v1/settings', { values }),
+  },
+  hubs: () => request<{ hubs: HubStatus[] }>('GET', '/api/v1/hubs'),
+  timers: () => request<{ timers: Timer[]; tuners: number }>('GET', '/api/v1/timers'),
+  dashboard: {
+    get: () => request<DashboardLayout>('GET', '/api/v1/dashboard'),
+    save: (layout: DashboardLayout) => request<DashboardLayout>('PUT', '/api/v1/dashboard', layout),
   },
 }

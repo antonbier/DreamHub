@@ -66,3 +66,58 @@ export interface HealthInfo {
   version: string
   time: string // RFC3339, UTC
 }
+
+// A field-level validation error from a rejected PATCH /api/v1/settings —
+// backend/internal/settings.FieldError.
+export interface FieldError {
+  code: string
+  params?: Record<string, unknown>
+}
+
+// backend/internal/hub.Requirement.
+export interface Requirement {
+  connector?: string
+  capability?: string
+  hub?: string
+  optional?: boolean
+}
+
+// backend/internal/hub.Status — the diagnostics view from GET /api/v1/hubs
+// (every hub the user may see, including disabled ones).
+export interface HubStatus {
+  id: string
+  name: string
+  label: string
+  icon: string
+  path: string
+  group: string
+  role: 'admin' | 'user'
+  enabled: boolean
+  status: StatusLevel
+  problems: Problem[]
+  requires: Requirement[]
+}
+
+// backend/internal/webcontrol.Timer, as returned by GET /api/v1/timers.
+export interface Timer {
+  serviceReference: string
+  serviceName: string
+  name: string
+  description: string
+  begin: number // Unix seconds, UTC, includes margin
+  end: number
+  disabled: boolean
+  state: number
+}
+
+// backend/internal/dashboard.Tile / .Layout.
+export interface DashboardTile {
+  type: string
+  label: string
+  width: number
+  hidden: boolean
+}
+
+export interface DashboardLayout {
+  tiles: DashboardTile[]
+}

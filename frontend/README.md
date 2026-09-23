@@ -27,6 +27,8 @@ Type-checks (`vue-tsc -b`) and builds straight into `../backend/internal/webui/d
 - **Design tokens** are CSS custom properties in `src/style.css` (`--dh-*`), mapped into Tailwind's theme in `tailwind.config.js`. Appearance (dark/light/system) is applied as `data-theme` on `<html>` by `src/stores/preferences.ts`, not Tailwind's `dark:` media-query variant.
 - **Custom breakpoints** (`below-lg`/`below-md`/`below-sm`, i.e. `max-width` queries) match `../DESIGN.md`'s layout breakpoints exactly (1180/900/640px) — see `tailwind.config.js`. They replace Tailwind's default `sm`/`md`/`lg`/… scale on purpose, so a component doesn't reach for those by habit.
 - **A hub view without a backend implementation yet is a real placeholder, not a mock**: `HubView.vue` shows that hub's actual live status and problems from `GET /api/v1/navigation`, translated, with a fix hint — it just doesn't have the hub's own screens yet. Don't invent fake data to make a screen look more finished than the backend behind it.
+- **A section's settings label and its fields' labels collide as i18n keys** (`settings.general` vs. `settings.general.language`) — see `src/composables/useSettingsText.ts`'s comment before adding a section or changing how labels are looked up.
+- **Settings and the dashboard save directly** (no preview/apply — PRINCIPLES.md's exception for DreamHub's own state), but saving `general.language`/`appearance`/`navLabels` from the settings page must also update the live `preferences` store, or the UI would only pick up the change after a reload; see `SettingsSectionCard.vue`'s `syncPreferences`.
 
 ## Layout
 
@@ -35,9 +37,9 @@ Type-checks (`vue-tsc -b`) and builds straight into `../backend/internal/webui/d
 - `src/router/` — one route per hub path (mirrors `backend/internal/hub/v1.go`), `/` (dashboard) and `/settings`.
 - `src/stores/` — Pinia stores: `preferences` (language/appearance/navLabels, backed by `GET`/`PATCH /api/v1/settings`), `navigation` (sidebar contents), `ui` (transient state — currently just the mobile drawer's open/closed).
 - `src/api/` — a small typed fetch wrapper (`client.ts`, CSRF header on mutating requests, the backend's error envelope) and hand-written types mirroring the backend's JSON shapes (`types.ts`).
-- `src/composables/useProblem.ts` — translates `status.Problem` values (code + params, fix + params) into UI strings.
-- `src/components/` — `AppSidebar.vue`, `AppTopBar.vue`, `DropdownMenu.vue`, `Icon.vue` (a small self-drawn icon set — no icon font/CDN).
-- `src/views/` — `DashboardView.vue`, `HubView.vue` (the shared per-hub placeholder), `SettingsView.vue` (placeholder — the schema-driven settings UI is a separate open item, see `../ROADMAP.md`), `NotFoundView.vue`.
+- `src/composables/` — `useProblem.ts` (translates `status.Problem` values), `useSettingsText.ts` (section/field/option/error-code labels for the settings menu), `useSettingsForm.ts` (drafts, dirty tracking, per-section save against `GET`/`PATCH /api/v1/settings`), `useDashboard.ts` (loads and persists the dashboard layout against `GET`/`PUT /api/v1/dashboard`).
+- `src/components/` — `AppSidebar.vue`, `AppTopBar.vue`, `DropdownMenu.vue`, `Icon.vue` (a small self-drawn icon set — no icon font/CDN); `settings/` (`SettingsSectionCard.vue`, `SettingsFieldInput.vue` — the generic, schema-driven form); `dashboard/` (`DashboardTileFrame.vue` — chrome shared by every tile; `TimersUpcomingTile.vue`, `HubsStatusTile.vue` — the v1 built-in tiles, reusing `GET /api/v1/timers` and `GET /api/v1/hubs`).
+- `src/views/` — `DashboardView.vue` (tile grid, edit mode with native drag-and-drop reorder), `HubView.vue` (the shared per-hub placeholder), `SettingsView.vue` (renders every section `GET /api/v1/settings` returns — no per-field list to keep in sync here), `NotFoundView.vue`.
 - `src/locales/` — `de.json`, `it.json`, `en.json`.
 
 ## Known issue

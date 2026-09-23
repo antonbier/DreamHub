@@ -13,6 +13,7 @@ import (
 
 	"github.com/antonbier/DreamHub/backend/internal/auth"
 	"github.com/antonbier/DreamHub/backend/internal/connector"
+	"github.com/antonbier/DreamHub/backend/internal/dashboard"
 	"github.com/antonbier/DreamHub/backend/internal/httpx"
 	"github.com/antonbier/DreamHub/backend/internal/hub"
 	"github.com/antonbier/DreamHub/backend/internal/plan"
@@ -41,6 +42,7 @@ type Deps struct {
 	Connectors *connector.Registry
 	Hubs       *hub.Registry
 	Plans      *plan.Service
+	Dashboard  *dashboard.Service
 	Mounts     []Mount
 	// User is the current user. v1 has exactly one user (an admin); once
 	// profiles exist this comes from the authenticated request instead.
@@ -63,6 +65,8 @@ func NewRouter(d Deps) http.Handler {
 	protected.HandleFunc("GET /api/v1/navigation", handleNavigation(d))
 	protected.HandleFunc("GET /api/v1/hubs", handleHubs(d))
 	protected.HandleFunc("GET /api/v1/connectors", handleConnectors(d))
+	protected.HandleFunc("GET /api/v1/dashboard", handleGetDashboard(d))
+	protected.HandleFunc("PUT /api/v1/dashboard", handlePutDashboard(d))
 	protected.HandleFunc("POST /api/v1/plans/{id}/apply", handleApplyPlan(d))
 	for _, m := range d.Mounts {
 		sub := http.NewServeMux()
@@ -238,6 +242,44 @@ func handleConnectors(d Deps) http.HandlerFunc {
 			return
 		}
 		httpx.WriteJSON(w, http.StatusOK, map[string]any{"connectors": d.Connectors.SortedReports(r.Context(), v, d.Settings.Version())})
+	}
+}
+
+// handleGetDashboard returns the current user's dashboard layout,
+// reconciled against the built-in tile catalog (internal/dashboard).
+func handleGetDashboard(d Deps) http.HandlerFunc {
+	return func(w http.ResponseWriter, r *http.Request) {
+		layout, err := d.Dashboard.Get(r.Context(), d.User)
+		if err != nil {
+			d.Logger.Error("dashboard get failed", "requestId", httpx.RequestID(r.Context()), "error", err)
+			httpx.WriteError(w, r, http.StatusInternalServerError, "internal", "could not load the dashboard")
+			return
+		}
+		httpx.WriteJSON(w, http.StatusOK, layout)
+	}
+}
+
+// handlePutDashboard saves the dashboard layout directly — no
+// preview-and-confirm step, same exception as DreamHub's own settings
+// (PRINCIPLES.md): this changes the app's own state, not the device.
+func handlePutDashboard(d Deps) http.HandlerFunc {
+	return func(w http.ResponseWriter, r *http.Request) {
+		var body dashboard.Layout
+		if err := httpx.DecodeJSON(r, &body); err != nil {
+			httpx.WriteError(w, r, http.StatusBadRequest, "invalid_body", `expected {"tiles": [{"type", "width", "hidden"}, ...]}`)
+			return
+		}
+		layout, err := d.Dashboard.Save(r.Context(), d.User, body)
+		if err != nil {
+			if errors.Is(err, dashboard.ErrInvalidTile) {
+				httpx.WriteError(w, r, http.StatusBadRequest, "invalid_tile", err.Error())
+				return
+			}
+			d.Logger.Error("dashboard save failed", "requestId", httpx.RequestID(r.Context()), "error", err)
+			httpx.WriteError(w, r, http.StatusInternalServerError, "internal", "could not save the dashboard")
+			return
+		}
+		httpx.WriteJSON(w, http.StatusOK, layout)
 	}
 }
 

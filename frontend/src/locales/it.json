@@ -80,18 +80,115 @@
   },
   "dashboard": {
     "title": "Home",
+    "edit": "Modifica",
+    "done": "Fatto",
     "empty": {
       "title": "Ancora nessuna scheda",
-      "body": "La dashboard si riempirà man mano che gli hub vengono costruiti: spazio disco, conflitti, cosa va in onda ora, prossimi timer, consigliati. Schede personalizzate e layout trascinabile sono i prossimi passi."
+      "body": "La dashboard si riempirà man mano che gli hub vengono costruiti: spazio disco, conflitti, cosa va in onda ora, prossimi timer, consigliati. Le schede personalizzate sono il prossimo passo."
+    },
+    "allHidden": {
+      "title": "Niente da mostrare",
+      "body": "Tutte le schede sono nascoste. Attiva la modifica per farne tornare visibile una."
+    },
+    "loadFailed": "Impossibile caricare la dashboard.",
+    "tile": {
+      "timersUpcoming": "Prossimi timer",
+      "hubsStatus": "Richiede attenzione"
+    },
+    "tileFrame": {
+      "hide": "Nascondi",
+      "show": "Mostra",
+      "hidden": "Nascosta",
+      "widthDecrease": "Più stretta",
+      "widthIncrease": "Più larga",
+      "dragHandle": "Trascina per riordinare"
+    },
+    "timersTile": {
+      "empty": "Nessun timer in programma.",
+      "unavailable": "Timer non è disponibile."
+    },
+    "hubsTile": {
+      "allOk": "Tutti gli hub sono disponibili."
     }
   },
   "hubPlaceholder": {
     "title": "{name} — in arrivo",
     "body": "Le schermate di questo hub non sono ancora state costruite. Navigazione, stato e impostazioni funzionano già."
   },
-  "settingsPlaceholder": {
-    "title": "Impostazioni",
-    "body": "Il menu impostazioni completo, basato sullo schema, è il prossimo passo. Lingua e aspetto funzionano già — vedi il menu utente in alto a destra."
+  "settings": {
+    "page": {
+      "title": "Impostazioni",
+      "loadFailed": "Impossibile caricare le impostazioni.",
+      "save": "Salva",
+      "saving": "Salvataggio…",
+      "saved": "Salvato",
+      "unsavedChanges": "Modifiche non salvate",
+      "resetField": "Ripristina il valore predefinito",
+      "change": "Cambia",
+      "clear": "Rimuovi",
+      "cancel": "Annulla",
+      "notSet": "Non impostato",
+      "isSet": "Impostato",
+      "passwordPlaceholder": "Nuova password",
+      "secretPlaceholder": "Nuova chiave",
+      "timezoneHint": "Nome del fuso orario IANA, ad es. \"Europe/Rome\".",
+      "allowedHostsHint": "Nomi host separati da virgola, oltre a indirizzi IP, localhost e *.local."
+    },
+    "general": {
+      "title": "Generale",
+      "language": "Lingua",
+      "timezoneMode": "Fuso orario visualizzato",
+      "timezone": "Fuso orario",
+      "appearance": "Aspetto",
+      "navLabels": "Etichette barra laterale"
+    },
+    "auth": {
+      "title": "Accesso",
+      "enabled": "Richiedi accesso",
+      "username": "Nome utente",
+      "password": "Password"
+    },
+    "network": {
+      "title": "Rete",
+      "allowedHosts": "Nomi host aggiuntivi consentiti"
+    },
+    "tmdb": {
+      "title": "TMDB",
+      "apiKey": "Chiave API"
+    },
+    "ai": {
+      "title": "IA",
+      "provider": "Fornitore",
+      "openai": {
+        "apiKey": "Chiave API",
+        "model": "Modello"
+      },
+      "dailyLimit": "Limite giornaliero di richieste"
+    },
+    "hubs": {
+      "title": "Hub"
+    },
+    "option": {
+      "dark": "Scuro",
+      "light": "Chiaro",
+      "system": "Come il sistema",
+      "descriptive": "Descrittive",
+      "hub": "Nomi degli hub",
+      "box": "Come il box",
+      "browser": "Come questo browser",
+      "fixed": "Fisso",
+      "openai": "OpenAI"
+    },
+    "error": {
+      "required": "Questo campo è obbligatorio.",
+      "invalid_type": "Tipo di valore inatteso (atteso: {expected}).",
+      "invalid_option": "Deve essere uno tra: {options}.",
+      "out_of_range": "Deve essere tra {min} e {max}.",
+      "too_short": "Deve avere almeno {minLength} caratteri.",
+      "invalid_timezone": "Nome del fuso orario non valido (ad es. \"Europe/Rome\").",
+      "unknown": "Impostazione sconosciuta.",
+      "forbidden": "Solo un admin può modificarlo."
+    }
   },
   "notFound": {
     "title": "Pagina non trovata",

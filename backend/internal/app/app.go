@@ -12,6 +12,7 @@ import (
 	"github.com/antonbier/DreamHub/backend/internal/api"
 	"github.com/antonbier/DreamHub/backend/internal/auth"
 	"github.com/antonbier/DreamHub/backend/internal/connector"
+	"github.com/antonbier/DreamHub/backend/internal/dashboard"
 	"github.com/antonbier/DreamHub/backend/internal/hub"
 	hubs_ "github.com/antonbier/DreamHub/backend/internal/hubs"
 	"github.com/antonbier/DreamHub/backend/internal/logging"
@@ -52,6 +53,7 @@ type App struct {
 	Connectors *connector.Registry
 	Hubs       *hub.Registry
 	Plans      *plan.Service
+	Dashboard  *dashboard.Service
 	Level      *logging.Level
 	User       store.User
 }
@@ -118,6 +120,7 @@ func New(ctx context.Context, o Options) (*App, error) {
 		level = logging.NewLevel(now)
 	}
 	plans := plan.NewService(st, now)
+	dash := dashboard.NewService(st)
 
 	timerHub := &hubs_.Timer{WC: o.WebControl, Plans: plans, Now: now}
 	systemHub := &hubs_.System{Store: st}
@@ -130,6 +133,7 @@ func New(ctx context.Context, o Options) (*App, error) {
 		Connectors: conns,
 		Hubs:       hubs,
 		Plans:      plans,
+		Dashboard:  dash,
 		Mounts: []api.Mount{
 			{HubID: hub.IDTimer, Prefixes: []string{"/api/v1/timers"}, Register: timerHub.Mount},
 			{HubID: hub.IDSystem, Prefixes: []string{"/api/v1/changes"}, Register: systemHub.Mount},
@@ -145,5 +149,5 @@ func New(ctx context.Context, o Options) (*App, error) {
 		outer.Handle("/", o.WebUI)
 		handler = outer
 	}
-	return &App{Handler: handler, Store: st, Settings: svc, Connectors: conns, Hubs: hubs, Plans: plans, Level: level, User: user}, nil
+	return &App{Handler: handler, Store: st, Settings: svc, Connectors: conns, Hubs: hubs, Plans: plans, Dashboard: dash, Level: level, User: user}, nil
 }

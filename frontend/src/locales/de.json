@@ -80,18 +80,115 @@
   },
   "dashboard": {
     "title": "Startseite",
+    "edit": "Bearbeiten",
+    "done": "Fertig",
     "empty": {
       "title": "Noch keine Kacheln",
-      "body": "Das Dashboard füllt sich, sobald die Hubs gebaut sind: Speicherplatz, Konflikte, was gerade läuft, anstehende Timer, Empfehlungen. Eigene Kacheln und frei anordenbares Layout folgen als Nächstes."
+      "body": "Das Dashboard füllt sich, sobald die Hubs gebaut sind: Speicherplatz, Konflikte, was gerade läuft, anstehende Timer, Empfehlungen. Eigene Kacheln folgen als Nächstes."
+    },
+    "allHidden": {
+      "title": "Nichts anzuzeigen",
+      "body": "Alle Kacheln sind ausgeblendet. Im Bearbeiten-Modus lässt sich eine wieder einblenden."
+    },
+    "loadFailed": "Dashboard konnte nicht geladen werden.",
+    "tile": {
+      "timersUpcoming": "Anstehende Timer",
+      "hubsStatus": "Braucht Aufmerksamkeit"
+    },
+    "tileFrame": {
+      "hide": "Ausblenden",
+      "show": "Einblenden",
+      "hidden": "Ausgeblendet",
+      "widthDecrease": "Schmaler",
+      "widthIncrease": "Breiter",
+      "dragHandle": "Zum Umsortieren ziehen"
+    },
+    "timersTile": {
+      "empty": "Keine anstehenden Timer.",
+      "unavailable": "Timer ist nicht verfügbar."
+    },
+    "hubsTile": {
+      "allOk": "Alle Hubs sind verfügbar."
     }
   },
   "hubPlaceholder": {
     "title": "{name} — folgt in Kürze",
     "body": "Die Ansichten dieses Hubs sind noch nicht gebaut. Navigation, Status und Einstellungen dahinter funktionieren bereits."
   },
-  "settingsPlaceholder": {
-    "title": "Einstellungen",
-    "body": "Das vollständige, schema-basierte Einstellungsmenü folgt als Nächstes. Sprache und Darstellung funktionieren schon — siehe Benutzermenü oben rechts."
+  "settings": {
+    "page": {
+      "title": "Einstellungen",
+      "loadFailed": "Einstellungen konnten nicht geladen werden.",
+      "save": "Speichern",
+      "saving": "Wird gespeichert…",
+      "saved": "Gespeichert",
+      "unsavedChanges": "Ungespeicherte Änderungen",
+      "resetField": "Auf Standard zurücksetzen",
+      "change": "Ändern",
+      "clear": "Entfernen",
+      "cancel": "Abbrechen",
+      "notSet": "Nicht gesetzt",
+      "isSet": "Gesetzt",
+      "passwordPlaceholder": "Neues Passwort",
+      "secretPlaceholder": "Neuer Schlüssel",
+      "timezoneHint": "IANA-Zeitzonenname, z. B. „Europe/Rome“.",
+      "allowedHostsHint": "Kommagetrennte Hostnamen, zusätzlich zu IP-Adressen, localhost und *.local."
+    },
+    "general": {
+      "title": "Allgemein",
+      "language": "Sprache",
+      "timezoneMode": "Angezeigte Zeitzone",
+      "timezone": "Zeitzone",
+      "appearance": "Darstellung",
+      "navLabels": "Beschriftung der Seitenleiste"
+    },
+    "auth": {
+      "title": "Anmeldung",
+      "enabled": "Anmeldung erforderlich",
+      "username": "Benutzername",
+      "password": "Passwort"
+    },
+    "network": {
+      "title": "Netzwerk",
+      "allowedHosts": "Zusätzlich erlaubte Hostnamen"
+    },
+    "tmdb": {
+      "title": "TMDB",
+      "apiKey": "API-Schlüssel"
+    },
+    "ai": {
+      "title": "KI",
+      "provider": "Anbieter",
+      "openai": {
+        "apiKey": "API-Schlüssel",
+        "model": "Modell"
+      },
+      "dailyLimit": "Tägliches Anfragelimit"
+    },
+    "hubs": {
+      "title": "Hubs"
+    },
+    "option": {
+      "dark": "Dunkel",
+      "light": "Hell",
+      "system": "Systemeinstellung",
+      "descriptive": "Beschreibend",
+      "hub": "Hub-Namen",
+      "box": "Wie die Box",
+      "browser": "Wie dieser Browser",
+      "fixed": "Fest",
+      "openai": "OpenAI"
+    },
+    "error": {
+      "required": "Dieses Feld ist erforderlich.",
+      "invalid_type": "Unerwarteter Werttyp (erwartet: {expected}).",
+      "invalid_option": "Muss einer von diesen sein: {options}.",
+      "out_of_range": "Muss zwischen {min} und {max} liegen.",
+      "too_short": "Muss mindestens {minLength} Zeichen lang sein.",
+      "invalid_timezone": "Kein gültiger Zeitzonenname (z. B. „Europe/Rome“).",
+      "unknown": "Unbekannte Einstellung.",
+      "forbidden": "Nur ein Admin kann das ändern."
+    }
   },
   "notFound": {
     "title": "Seite nicht gefunden",

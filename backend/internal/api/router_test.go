@@ -309,6 +309,81 @@ func TestNavigation_DisabledHubDisappears(t *testing.T) {
 	}
 }
 
+func TestDashboard_GetReturnsTheFullCatalogByDefault(t *testing.T) {
+	e := newEnv(t)
+	resp, b := e.do(t, "GET", "/api/v1/dashboard", "", nil)
+	if resp.StatusCode != http.StatusOK {
+		t.Fatalf("expected 200, got %d: %s", resp.StatusCode, b)
+	}
+	var body struct {
+		Tiles []struct {
+			Type   string `json:"type"`
+			Label  string `json:"label"`
+			Width  int    `json:"width"`
+			Hidden bool   `json:"hidden"`
+		} `json:"tiles"`
+	}
+	json.Unmarshal(b, &body)
+	if len(body.Tiles) != 2 {
+		t.Fatalf("expected the 2 built-in tiles on a fresh install, got %+v", body.Tiles)
+	}
+	for _, tile := range body.Tiles {
+		if tile.Hidden || tile.Label == "" || tile.Width < 1 || tile.Width > 4 {
+			t.Errorf("unexpected default tile: %+v", tile)
+		}
+	}
+}
+
+func TestDashboard_PutRoundTripsAndIsLogged(t *testing.T) {
+	e := newEnv(t)
+	resp, b := e.do(t, "PUT", "/api/v1/dashboard",
+		`{"tiles":[{"type":"hubs.status","width":1,"hidden":true},{"type":"timers.upcoming","width":4,"hidden":false}]}`, nil)
+	if resp.StatusCode != http.StatusOK {
+		t.Fatalf("expected 200, got %d: %s", resp.StatusCode, b)
+	}
+	_, b = e.do(t, "GET", "/api/v1/dashboard", "", nil)
+	var body struct {
+		Tiles []struct {
+			Type   string `json:"type"`
+			Width  int    `json:"width"`
+			Hidden bool   `json:"hidden"`
+		} `json:"tiles"`
+	}
+	json.Unmarshal(b, &body)
+	if len(body.Tiles) != 2 || body.Tiles[0].Type != "hubs.status" || !body.Tiles[0].Hidden || body.Tiles[0].Width != 1 {
+		t.Fatalf("order/width/hidden not preserved: %+v", body.Tiles)
+	}
+
+	_, b = e.do(t, "GET", "/api/v1/changes?limit=1", "", nil)
+	if !strings.Contains(string(b), "dashboard.update") {
+		t.Errorf("expected the dashboard change to be logged, got %s", b)
+	}
+}
+
+func TestDashboard_PutRejectsUnknownTileType(t *testing.T) {
+	e := newEnv(t)
+	resp, b := e.do(t, "PUT", "/api/v1/dashboard", `{"tiles":[{"type":"made.up","width":2}]}`, nil)
+	if resp.StatusCode != http.StatusBadRequest {
+		t.Fatalf("expected 400, got %d: %s", resp.StatusCode, b)
+	}
+}
+
+func TestDashboard_PutRejectsWidthOutOfRange(t *testing.T) {
+	e := newEnv(t)
+	resp, b := e.do(t, "PUT", "/api/v1/dashboard", `{"tiles":[{"type":"timers.upcoming","width":9}]}`, nil)
+	if resp.StatusCode != http.StatusBadRequest {
+		t.Fatalf("expected 400, got %d: %s", resp.StatusCode, b)
+	}
+}
+
+func TestDashboard_PutRequiresCSRFHeader(t *testing.T) {
+	e := newEnv(t)
+	resp, _ := e.do(t, "PUT", "/api/v1/dashboard", `{"tiles":[]}`, func(r *http.Request) { r.Header.Del(httpx.CSRFHeader) })
+	if resp.StatusCode != http.StatusForbidden {
+		t.Fatalf("expected 403 without the CSRF header, got %d", resp.StatusCode)
+	}
+}
+
 func TestConnectors_NeverLeakSecrets(t *testing.T) {
 	e := newEnv(t)
 	e.do(t, "PATCH", "/api/v1/settings", `{"values":{"ai.openai.apiKey":"sk-supersecret-9876","tmdb.apiKey":"tmdb-secret-5555"}}`, nil)

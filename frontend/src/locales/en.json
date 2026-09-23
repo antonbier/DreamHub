@@ -80,18 +80,115 @@
   },
   "dashboard": {
     "title": "Dashboard",
+    "edit": "Edit",
+    "done": "Done",
     "empty": {
       "title": "No tiles yet",
-      "body": "The dashboard fills up as hubs are built: storage, conflicts, what's on now, upcoming timers, recommendations. Custom tiles and drag-and-drop layout are next."
+      "body": "The dashboard fills up as hubs are built: storage, conflicts, what's on now, upcoming timers, recommendations. Custom tiles are next."
+    },
+    "allHidden": {
+      "title": "Nothing to show",
+      "body": "Every tile is hidden. Turn editing on to bring one back."
+    },
+    "loadFailed": "Couldn't load the dashboard.",
+    "tile": {
+      "timersUpcoming": "Upcoming timers",
+      "hubsStatus": "Needs attention"
+    },
+    "tileFrame": {
+      "hide": "Hide",
+      "show": "Show",
+      "hidden": "Hidden",
+      "widthDecrease": "Narrower",
+      "widthIncrease": "Wider",
+      "dragHandle": "Drag to reorder"
+    },
+    "timersTile": {
+      "empty": "No upcoming timers.",
+      "unavailable": "TimerHub isn't available."
+    },
+    "hubsTile": {
+      "allOk": "All hubs are available."
     }
   },
   "hubPlaceholder": {
     "title": "{name} — coming soon",
     "body": "This hub's screens haven't been built yet. The navigation, status and settings behind it are already live."
   },
-  "settingsPlaceholder": {
-    "title": "Settings",
-    "body": "The full, schema-driven settings menu is next on the roadmap. Language and appearance already work — see the user menu, top right."
+  "settings": {
+    "page": {
+      "title": "Settings",
+      "loadFailed": "Couldn't load settings.",
+      "save": "Save",
+      "saving": "Saving…",
+      "saved": "Saved",
+      "unsavedChanges": "Unsaved changes",
+      "resetField": "Reset to default",
+      "change": "Change",
+      "clear": "Clear",
+      "cancel": "Cancel",
+      "notSet": "Not set",
+      "isSet": "Set",
+      "passwordPlaceholder": "New password",
+      "secretPlaceholder": "New key",
+      "timezoneHint": "IANA time zone name, e.g. \"Europe/Rome\".",
+      "allowedHostsHint": "Comma-separated host names, besides IP addresses, localhost and *.local."
+    },
+    "general": {
+      "title": "General",
+      "language": "Language",
+      "timezoneMode": "Display time zone",
+      "timezone": "Time zone",
+      "appearance": "Appearance",
+      "navLabels": "Sidebar labels"
+    },
+    "auth": {
+      "title": "Authentication",
+      "enabled": "Require sign-in",
+      "username": "Username",
+      "password": "Password"
+    },
+    "network": {
+      "title": "Network",
+      "allowedHosts": "Additional allowed host names"
+    },
+    "tmdb": {
+      "title": "TMDB",
+      "apiKey": "API key"
+    },
+    "ai": {
+      "title": "AI",
+      "provider": "Provider",
+      "openai": {
+        "apiKey": "API key",
+        "model": "Model"
+      },
+      "dailyLimit": "Daily request limit"
+    },
+    "hubs": {
+      "title": "Hubs"
+    },
+    "option": {
+      "dark": "Dark",
+      "light": "Light",
+      "system": "Follow system",
+      "descriptive": "Descriptive",
+      "hub": "Hub names",
+      "box": "Same as the box",
+      "browser": "Same as this browser",
+      "fixed": "Fixed",
+      "openai": "OpenAI"
+    },
+    "error": {
+      "required": "This field is required.",
+      "invalid_type": "Unexpected value type (expected {expected}).",
+      "invalid_option": "Must be one of: {options}.",
+      "out_of_range": "Must be between {min} and {max}.",
+      "too_short": "Must be at least {minLength} characters.",
+      "invalid_timezone": "Not a valid time zone name (e.g. \"Europe/Rome\").",
+      "unknown": "Unknown setting.",
+      "forbidden": "Only an admin can change this."
+    }
   },
   "notFound": {
     "title": "Page not found",

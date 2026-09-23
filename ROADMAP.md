@@ -27,9 +27,12 @@ Releases: **Foundation** → **v1** → **v1.1** → **Later**. GitHub milestone
 - [x] **3a** Auth configured through settings instead of env vars; Basic Auth verified with bcrypt, successful checks cached 10 min (bcrypt is slow on the box's ARM cores), cache invalidated on any auth change
 - [x] **3a** `/api/v1/health` reports server time in UTC (for the clock check)
 
+- [x] **3b** Connector registry (`internal/connector`): WebControl (real check via `deviceinfo`), SerienRecorder (OK in mock mode, honestly "not implemented" on a real device until #10), OpenAI and TMDB (own settings sections for their keys; "not configured" until a key is set). Reports cached 30 s, recomputed immediately when settings change; checks time out after 2 s
+- [x] **3b** Hub registry (`internal/hub`) with the v1 hub descriptors: name, descriptive label, icon, path, group + order, minimum role, requirements (connector / capability / other hub, required or optional) → status *available / degraded / unavailable* with problem and fix codes; one enable switch per hub in settings. `GET /api/v1/navigation` (sidebar per user: role filter, disabled hubs hidden, empty groups omitted, labels mode), `GET /api/v1/hubs` (diagnostics incl. disabled hubs), `GET /api/v1/connectors`
+- [x] **3b** Shared wiring in `internal/app`, used by `cmd/dreamhub` and the API tests alike
+
 **Open**:
-- [ ] **3b** Hub registry implementing the hub contract (`CONCEPT.md`): routes, settings schema, search provider, tile types, events, requirements → status; `/api/v1/navigation`
-- [ ] **3b** Connector registry; WebControl as the first connector
+- [ ] Remaining parts of the hub contract, added as the hubs are built: routes per hub, search providers, tile types, events
 - [ ] **3c** Preview-and-confirm mechanism for every change: `plan` → `apply` with plan ID, written to the change log (see `PRINCIPLES.md`)
 - [ ] Core event bus (hub events → notifications, later AutomationHub)
 - [ ] API tokens (generate/revoke in settings, stored hashed) — Basic Auth works, bearer tokens are rejected until then

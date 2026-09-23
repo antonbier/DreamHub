@@ -12,7 +12,7 @@ import (
 	"time"
 
 	"github.com/antonbier/DreamHub/backend/internal/api"
-	"github.com/antonbier/DreamHub/backend/internal/auth"
+	"github.com/antonbier/DreamHub/backend/internal/app"
 	"github.com/antonbier/DreamHub/backend/internal/settings"
 	"github.com/antonbier/DreamHub/backend/internal/store"
 	"github.com/antonbier/DreamHub/backend/internal/webcontrol/mock"
@@ -28,42 +28,25 @@ type env struct {
 	svc   *settings.Service
 }
 
-// newEnv builds the full router against the mock WebControl client and a
-// real SQLite store in a temp dir. Auth comes from settings, like in
-// production.
+// newEnv builds the application exactly as production does (internal/app),
+// against the mock WebControl client and a real SQLite store in a temp dir.
 func newEnv(t *testing.T) *env {
 	t.Helper()
-	ctx := context.Background()
-	st, err := store.Open(t.TempDir())
-	if err != nil {
-		t.Fatal(err)
-	}
-	t.Cleanup(func() { st.Close() })
-	user, err := st.EnsureDefaultUser(ctx)
-	if err != nil {
-		t.Fatal(err)
-	}
-	reg := settings.NewRegistry()
-	for _, s := range settings.CoreSections() {
-		if err := reg.Register(s); err != nil {
-			t.Fatal(err)
-		}
-	}
-	svc, err := settings.NewService(ctx, st, reg)
-	if err != nil {
-		t.Fatal(err)
-	}
-	h := api.NewRouter(api.Deps{
+	a, err := app.New(context.Background(), app.Options{
+		DataDir:    t.TempDir(),
 		WebControl: mock.Client{},
-		Verifier:   auth.NewSettingsVerifier(svc),
-		Settings:   svc,
-		User:       user,
+		Mock:       true,
+		LookPath:   func(string) (string, error) { return "/usr/bin/journalctl", nil },
 		Logger:     discardLogger(),
 		Now:        func() time.Time { return fixedNow },
 	})
-	srv := httptest.NewServer(h)
+	if err != nil {
+		t.Fatal(err)
+	}
+	t.Cleanup(func() { a.Store.Close() })
+	srv := httptest.NewServer(a.Handler)
 	t.Cleanup(srv.Close)
-	return &env{srv: srv, store: st, svc: svc}
+	return &env{srv: srv, store: a.Store, svc: a.Settings}
 }
 
 func (e *env) do(t *testing.T, method, path, body string, configure func(*http.Request)) (*http.Response, []byte) {
@@ -148,8 +131,12 @@ func TestSettings_GetReturnsCoreSections(t *testing.T) {
 	if err := json.Unmarshal(b, &body); err != nil {
 		t.Fatal(err)
 	}
-	if len(body.Sections) != 2 || body.Sections[0].ID != "general" || body.Sections[1].ID != "auth" {
-		t.Fatalf("expected general and auth sections, got %s", b)
+	var ids []string
+	for _, s := range body.Sections {
+		ids = append(ids, s.ID)
+	}
+	if strings.Join(ids, ",") != "general,auth,ai,tmdb,hubs" {
+		t.Fatalf("expected core, connector and hub sections in order, got %v", ids)
 	}
 	if v := body.Sections[0].Fields[0]; v.Key != settings.KeyLanguage || v.Value != "en" {
 		t.Errorf("expected default language en, got %+v", v)
@@ -220,6 +207,120 @@ func TestSettings_PatchRejectsMalformedBody(t *testing.T) {
 	for _, body := range []string{`not json`, `{}`, `{"values":{},"extra":1}`} {
 		if resp, _ := e.do(t, "PATCH", "/api/v1/settings", body, nil); resp.StatusCode != http.StatusBadRequest {
 			t.Errorf("body %q: expected 400, got %d", body, resp.StatusCode)
+		}
+	}
+}
+
+type navItem struct {
+	ID       string `json:"id"`
+	Kind     string `json:"kind"`
+	Name     string `json:"name"`
+	Status   string `json:"status"`
+	Problems []struct {
+		Code      string         `json:"code"`
+		Fix       string         `json:"fix"`
+		FixParams map[string]any `json:"fixParams"`
+	} `json:"problems"`
+}
+
+func navItems(t *testing.T, e *env) map[string]navItem {
+	t.Helper()
+	resp, b := e.do(t, "GET", "/api/v1/navigation", "", nil)
+	if resp.StatusCode != http.StatusOK {
+		t.Fatalf("navigation: expected 200, got %d: %s", resp.StatusCode, b)
+	}
+	var nav struct {
+		Labels   string `json:"labels"`
+		Sections []struct {
+			ID    string    `json:"id"`
+			Items []navItem `json:"items"`
+		} `json:"sections"`
+	}
+	if err := json.Unmarshal(b, &nav); err != nil {
+		t.Fatal(err)
+	}
+	out := map[string]navItem{}
+	for _, s := range nav.Sections {
+		for _, it := range s.Items {
+			out[it.ID] = it
+		}
+	}
+	return out
+}
+
+func TestNavigation_ExplainsMissingConfigurationAndUpdatesImmediately(t *testing.T) {
+	e := newEnv(t)
+	items := navItems(t, e)
+
+	if items["dashboard"].Kind != "core" || items["settings"].Kind != "core" {
+		t.Errorf("dashboard and settings must be core entries: %+v", items)
+	}
+	if items["media"].Status != "degraded" || items["media"].Name != "MediaHub" {
+		t.Errorf("without a TMDB key MediaHub is degraded, got %+v", items["media"])
+	}
+	d := items["discovery"]
+	if d.Status != "unavailable" || len(d.Problems) == 0 || d.Problems[0].Code != "connector.notConfigured" || d.Problems[0].FixParams["section"] != "ai" {
+		t.Fatalf("without an AI key DiscoveryHub is unavailable with a fix pointing to the AI settings, got %+v", d)
+	}
+
+	if resp, b := e.do(t, "PATCH", "/api/v1/settings", `{"values":{"ai.openai.apiKey":"sk-test-1234"}}`, nil); resp.StatusCode != http.StatusOK {
+		t.Fatalf("setting the key: %d %s", resp.StatusCode, b)
+	}
+	if got := navItems(t, e)["discovery"].Status; got != "available" {
+		t.Errorf("DiscoveryHub must become available right after the key is saved (no waiting for the cache), got %s", got)
+	}
+}
+
+func TestNavigation_DisabledHubDisappears(t *testing.T) {
+	e := newEnv(t)
+	e.do(t, "PATCH", "/api/v1/settings", `{"values":{"hubs.series.enabled":false}}`, nil)
+	if _, ok := navItems(t, e)["series"]; ok {
+		t.Error("a disabled hub must not appear in the navigation")
+	}
+	// ...but it still shows up in diagnostics, marked as disabled.
+	_, b := e.do(t, "GET", "/api/v1/hubs", "", nil)
+	var body struct {
+		Hubs []struct {
+			ID      string `json:"id"`
+			Enabled bool   `json:"enabled"`
+		} `json:"hubs"`
+	}
+	json.Unmarshal(b, &body)
+	found := false
+	for _, h := range body.Hubs {
+		if h.ID == "series" {
+			found = true
+			if h.Enabled {
+				t.Error("series must be reported as disabled")
+			}
+		}
+	}
+	if !found {
+		t.Error("diagnostics must list disabled hubs too")
+	}
+}
+
+func TestConnectors_NeverLeakSecrets(t *testing.T) {
+	e := newEnv(t)
+	e.do(t, "PATCH", "/api/v1/settings", `{"values":{"ai.openai.apiKey":"sk-supersecret-9876","tmdb.apiKey":"tmdb-secret-5555"}}`, nil)
+	for _, path := range []string{"/api/v1/connectors", "/api/v1/hubs", "/api/v1/navigation", "/api/v1/settings"} {
+		_, b := e.do(t, "GET", path, "", nil)
+		if strings.Contains(string(b), "supersecret") || strings.Contains(string(b), "tmdb-secret") {
+			t.Errorf("%s leaks a secret: %s", path, b)
+		}
+	}
+	_, b := e.do(t, "GET", "/api/v1/connectors", "", nil)
+	var body struct {
+		Connectors []struct{ ID, State string } `json:"connectors"`
+	}
+	json.Unmarshal(b, &body)
+	states := map[string]string{}
+	for _, c := range body.Connectors {
+		states[c.ID] = c.State
+	}
+	for _, id := range []string{"webcontrol", "serienrecorder", "openai", "tmdb"} {
+		if states[id] != "ok" {
+			t.Errorf("mock mode with keys set: %s should be ok, got %q", id, states[id])
 		}
 	}
 }

@@ -10,12 +10,11 @@ import (
 	"log/slog"
 	"net/http"
 	"os"
+	"os/exec"
 
 	"github.com/antonbier/DreamHub/backend/internal/api"
-	"github.com/antonbier/DreamHub/backend/internal/auth"
+	"github.com/antonbier/DreamHub/backend/internal/app"
 	"github.com/antonbier/DreamHub/backend/internal/config"
-	"github.com/antonbier/DreamHub/backend/internal/settings"
-	"github.com/antonbier/DreamHub/backend/internal/store"
 	"github.com/antonbier/DreamHub/backend/internal/webcontrol"
 	"github.com/antonbier/DreamHub/backend/internal/webcontrol/mock"
 )
@@ -29,7 +28,6 @@ func main() {
 }
 
 func run(logger *slog.Logger) error {
-	ctx := context.Background()
 	cfg := config.Load()
 
 	var wc webcontrol.Client
@@ -42,35 +40,18 @@ func run(logger *slog.Logger) error {
 		logger.Info("webcontrol client mode", "mode", "mock")
 	}
 
-	st, err := store.Open(cfg.DataDir)
-	if err != nil {
-		return err
-	}
-	defer st.Close()
-	user, err := st.EnsureDefaultUser(ctx)
-	if err != nil {
-		return err
-	}
-
-	reg := settings.NewRegistry()
-	for _, sec := range settings.CoreSections() {
-		if err := reg.Register(sec); err != nil {
-			return err
-		}
-	}
-	svc, err := settings.NewService(ctx, st, reg)
-	if err != nil {
-		return err
-	}
-
-	handler := api.NewRouter(api.Deps{
+	a, err := app.New(context.Background(), app.Options{
+		DataDir:    cfg.DataDir,
 		WebControl: wc,
-		Verifier:   auth.NewSettingsVerifier(svc),
-		Settings:   svc,
-		User:       user,
+		Mock:       cfg.Mode == config.ModeMock,
+		LookPath:   exec.LookPath,
 		Logger:     logger,
 	})
+	if err != nil {
+		return err
+	}
+	defer a.Store.Close()
 
 	logger.Info("dreamhub starting", "version", api.Version, "addr", cfg.ListenAddr, "dataDir", cfg.DataDir)
-	return http.ListenAndServe(cfg.ListenAddr, handler)
+	return http.ListenAndServe(cfg.ListenAddr, a.Handler)
 }

@@ -36,6 +36,13 @@ Enabling auth without a username and password is rejected (it would lock everyon
 | GET | `/api/v1/movies` | from WebControl `/web/movielist` |
 | GET | `/api/v1/settings` | all sections with effective values; secrets masked, passwords never returned (`hasValue` only) |
 | PATCH | `/api/v1/settings` | `{"values": {"<key>": <value or null>}}` — `null` resets to default. All-or-nothing; on failure `400 validation_failed` with a code per field in `error.details` |
+| GET | `/api/v1/navigation` | the sidebar for the current user: sections (`main`, `media`, `program`, `device`, `bottom`), each hub with `name` (MediaHub…), `label` (i18n key), `status` and `problems`; disabled hubs and hubs the role can't see are omitted; `labels` is the user's `descriptive`/`hub` choice |
+| GET | `/api/v1/hubs` | diagnostics: every hub the user may see, including disabled ones, with status, problems and requirements |
+| GET | `/api/v1/connectors` | state of each connector (`ok`, `not_configured`, `unreachable`, `not_implemented`) with problem and fix; never contains secrets |
+
+Problems are `{"code", "params", "fix", "fixParams"}` — all i18n keys plus parameters for the frontend to translate (e.g. `connector.notConfigured` with fix `fix.configureInSettings` and `{"section": "ai"}`).
+
+On a real device, SeriesHub shows as unavailable until the SerienRecorder connector is implemented (#10); in mock mode it's available.
 
 Errors always use `{"error": {"code": ..., "message": ..., "details": ...}}`. Codes are for clients to translate; `message` is an English developer hint.
 
@@ -59,7 +66,11 @@ Produces a static ARM64 Linux binary (~11 MB stripped, including the pure-Go SQL
 
 ## Layout
 
-- `cmd/dreamhub/` — entrypoint: config → store → settings → auth → webcontrol client (mock or live) → API router.
+- `cmd/dreamhub/` — entrypoint: reads config, picks the WebControl client (mock or live), starts the app.
+- `internal/app/` — the wiring: store → connectors → hubs → settings schema (core + connector sections + hub switches) → auth → API router. Used by `cmd/dreamhub` and the API tests, so tests run the production wiring.
+- `internal/connector/` — connector registry with cached, time-limited checks, and the built-in connectors (WebControl, SerienRecorder, OpenAI, TMDB).
+- `internal/hub/` — hub registry: descriptors, requirements, status evaluation, navigation. `v1.go` declares the v1 hubs and device capabilities.
+- `internal/status/` — the shared "available / degraded / unavailable" levels and problem/fix codes.
 - `internal/api/` — the `/api/v1` REST router and the shared JSON error envelope.
 - `internal/auth/` — auth middleware; `SettingsVerifier` checks Basic Auth against the credentials in settings (bcrypt, cached); `Credentials` is a static verifier for tests. API tokens are not implemented yet.
 - `internal/config/` — environment-based configuration.

@@ -12,6 +12,8 @@ import (
 	"time"
 
 	"github.com/antonbier/DreamHub/backend/internal/auth"
+	"github.com/antonbier/DreamHub/backend/internal/connector"
+	"github.com/antonbier/DreamHub/backend/internal/hub"
 	"github.com/antonbier/DreamHub/backend/internal/settings"
 	"github.com/antonbier/DreamHub/backend/internal/store"
 	"github.com/antonbier/DreamHub/backend/internal/webcontrol"
@@ -29,6 +31,8 @@ type Deps struct {
 	WebControl webcontrol.Client
 	Verifier   auth.Verifier
 	Settings   *settings.Service
+	Connectors *connector.Registry
+	Hubs       *hub.Registry
 	// User is the current user. v1 has exactly one user (an admin); once
 	// profiles exist this comes from the authenticated request instead.
 	User   store.User
@@ -48,6 +52,11 @@ func NewRouter(d Deps) http.Handler {
 	if d.Settings != nil {
 		protected.HandleFunc("GET /api/v1/settings", handleGetSettings(d))
 		protected.HandleFunc("PATCH /api/v1/settings", handlePatchSettings(d))
+	}
+	if d.Settings != nil && d.Connectors != nil && d.Hubs != nil {
+		protected.HandleFunc("GET /api/v1/navigation", handleNavigation(d))
+		protected.HandleFunc("GET /api/v1/hubs", handleHubs(d))
+		protected.HandleFunc("GET /api/v1/connectors", handleConnectors(d))
 	}
 
 	mux := http.NewServeMux()
@@ -133,6 +142,60 @@ func handlePatchSettings(d Deps) http.HandlerFunc {
 			return
 		}
 		writeJSON(w, http.StatusOK, map[string]any{"sections": view})
+	}
+}
+
+// hubStatuses evaluates every hub for the current user.
+func hubStatuses(d Deps, r *http.Request) ([]hub.Status, settings.Values, error) {
+	v, err := d.Settings.Values(r.Context(), d.User)
+	if err != nil {
+		return nil, nil, err
+	}
+	reports := d.Connectors.Reports(r.Context(), v, d.Settings.Version())
+	return d.Hubs.Statuses(v, reports), v, nil
+}
+
+func handleNavigation(d Deps) http.HandlerFunc {
+	return func(w http.ResponseWriter, r *http.Request) {
+		statuses, v, err := hubStatuses(d, r)
+		if err != nil {
+			d.Logger.Error("navigation failed", "error", err)
+			writeError(w, http.StatusInternalServerError, "internal", "could not build navigation")
+			return
+		}
+		writeJSON(w, http.StatusOK, d.Hubs.Navigation(statuses, d.User.Role, v.String(settings.KeyNavLabels)))
+	}
+}
+
+// handleHubs is the diagnostics view: every hub the user may see, including
+// disabled ones, with status, problems and requirements.
+func handleHubs(d Deps) http.HandlerFunc {
+	return func(w http.ResponseWriter, r *http.Request) {
+		statuses, _, err := hubStatuses(d, r)
+		if err != nil {
+			d.Logger.Error("hub status failed", "error", err)
+			writeError(w, http.StatusInternalServerError, "internal", "could not evaluate hubs")
+			return
+		}
+		visible := make([]hub.Status, 0, len(statuses))
+		for _, s := range statuses {
+			if hub.Visible(s.Role, d.User.Role) {
+				visible = append(visible, s)
+			}
+		}
+		writeJSON(w, http.StatusOK, map[string]any{"hubs": visible})
+	}
+}
+
+func handleConnectors(d Deps) http.HandlerFunc {
+	return func(w http.ResponseWriter, r *http.Request) {
+		v, err := d.Settings.Values(r.Context(), d.User)
+		if err != nil {
+			d.Logger.Error("connector status failed", "error", err)
+			writeError(w, http.StatusInternalServerError, "internal", "could not evaluate connectors")
+			return
+		}
+		writeJSON(w, http.StatusOK, map[string]any{"connectors": d.Connectors.SortedReports(r.Context(), v, d.Settings.Version())})
 	}
 }
 

@@ -37,6 +37,27 @@ type Service struct {
 
 	mu       sync.RWMutex
 	authConf auth.Config
+	version  uint64
+}
+
+// Version increases with every successful update, so caches derived from
+// settings (e.g. connector states) know when to recompute.
+func (s *Service) Version() uint64 {
+	s.mu.RLock()
+	defer s.mu.RUnlock()
+	return s.version
+}
+
+// Values returns a user's effective values (their own plus global ones),
+// including unmasked secrets. For use inside the core only — never send the
+// result to a client; use View for that.
+func (s *Service) Values(ctx context.Context, u store.User) (Values, error) {
+	stored, err := s.stored(ctx, u)
+	if err != nil {
+		return nil, err
+	}
+	v, _ := s.effective(stored, u)
+	return v, nil
 }
 
 // NewService returns a Service and loads the current auth configuration.
@@ -288,6 +309,9 @@ func (s *Service) Update(ctx context.Context, u store.User, raw map[string]json.
 	if err := s.store.WriteSettings(ctx, writes, entry); err != nil {
 		return err
 	}
+	s.mu.Lock()
+	s.version++
+	s.mu.Unlock()
 	return s.reloadAuth(ctx)
 }
 

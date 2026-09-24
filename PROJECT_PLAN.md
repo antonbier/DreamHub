@@ -64,6 +64,8 @@ See [`CONCEPT.md`](CONCEPT.md) for the hub list and release scope (v1 / v1.1 / l
 
 ## 7. Current status
 
-Phase 0 spikes are resolved. The backend foundation has started (Go scaffold, API, auth, mock/live WebControl client, tests — see `backend/README.md`). Next: a home page mockup (timeline vs. tiles) to decide the UX direction before building the frontend.
+Phase 0 spikes are resolved. The Foundation (core + shell) is largely built: the Go backend (API, SQLite-backed settings/dashboards/change log, auth incl. revocable API tokens, connector and hub registries) and the Vue frontend (sidebar, dashboard tiles, the schema-driven settings menu, global search, notifications, an onboarding wizard, the status strip) both work end to end against the mock WebControl client — see `ROADMAP.md`'s Foundation section for the itemized list and `backend/README.md`/`frontend/README.md` to run it locally. TimerHub is the first real hub built on top of that; MediaHub, GuideHub, DiscoveryHub, SeriesHub and the rest of AdminHub are next (`ROADMAP.md`, "v1 — hubs").
+
+The reference Dreambox is currently unreachable, so anything needing real device access (captured fixtures, verifying the SerienRecorder/EPG endpoints, real-box timer writes — see `ARCHITECTURE.md`'s open questions and the `device-access`-labeled issues) is paused, not abandoned; everything else is built mock-first per `PRINCIPLES.md` and doesn't wait on it.
 
 Project board: https://github.com/users/antonbier/projects/1

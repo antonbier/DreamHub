@@ -92,7 +92,7 @@ When testing a running server by hand, prefer a built binary over `go run`: `go 
 CGO_ENABLED=0 GOOS=linux GOARCH=arm64 go build -ldflags="-s -w" -o dreamhub-arm64 ./cmd/dreamhub
 ```
 
-Produces a static ARM64 Linux binary (~11 MB stripped, including the pure-Go SQLite driver) — no libc/runtime dependencies on the target device.
+Produces a static ARM64 Linux binary (~12–13 MB stripped, including the pure-Go SQLite driver and the embedded frontend) — no libc/runtime dependencies on the target device.
 
 ## Layout
 
@@ -111,7 +111,7 @@ Produces a static ARM64 Linux binary (~11 MB stripped, including the pure-Go SQL
 - `internal/apitoken/` — API tokens: generate (returns the secret once), list, revoke, verify (SHA-256 lookup — no per-request password hashing like Basic Auth's bcrypt, since a random token doesn't need that). `GET`/`POST /api/v1/tokens`, `DELETE /api/v1/tokens/{id}`.
 - `internal/config/` — environment-based configuration.
 - `internal/store/` — SQLite: users and roles, settings (global and per user), dashboards (multiple per user in the model), change log, API tokens (hash only). Migrations are appended to `migrations` in `store.go` and never edited once applied.
-- `internal/settings/` — the settings schema (`schema.go`), the core sections (`core.go`: general, auth), and the service that validates, stores, masks and logs (`service.go`). Hubs and connectors will register their own sections.
+- `internal/settings/` — the settings schema (`schema.go`), the core sections (`core.go`: general, auth, network), and the service that validates, stores, masks and logs (`service.go`). Hubs and connectors register their own sections alongside these (see `internal/app`'s wiring).
 - `internal/webcontrol/` — the WebControl `/web/*` API client (real HTTP + XML parsing) and its `Client` interface.
 - `internal/webcontrol/mock/` — the mock implementation of that interface, used by default and by all tests. Stateful timers: two fixture timers that overlap (a real conflict on the single-tuner box), and `AddTimer` is visible in later `TimerList` calls.
 - `internal/webui/` — embeds the built frontend (`go:embed dist`) and serves it with an SPA fallback; see "Frontend" above.

@@ -10,10 +10,10 @@ Read in this order:
 2. [`CONCEPT.md`](CONCEPT.md) — the product: core (shell), hubs, connectors, the hub contract, release scope (v1 / v1.1 / later).
 3. [`PRINCIPLES.md`](PRINCIPLES.md) — how everything is built. Start with "Preview and confirm — no silent changes".
 4. [`ARCHITECTURE.md`](ARCHITECTURE.md) — a read-only inspection of the real reference device: WebControl API, installed plugins, process/service layout, config conventions, partition layout.
-5. [`ROADMAP.md`](ROADMAP.md) — technical notes per hub and what's done/open.
-6. [`DESIGN.md`](DESIGN.md) — before touching the frontend: tokens, type, layout, components, and the approved mockup in `docs/design/`.
+5. [`ROADMAP.md`](ROADMAP.md) — technical notes per hub and what's done/open. This is the authoritative build-status list — check it before assuming something is or isn't built yet; the other docs describe the target design, not current status.
+6. [`DESIGN.md`](DESIGN.md) — before touching the frontend: tokens, type, layout, components (including screens built after the original mockup — search palette, login, settings, onboarding), and the approved mockup in `docs/design/`.
 
-`README.md` is the short pitch; `CHANGELOG.md` tracks releases; `backend/README.md` explains how to run and test the backend.
+`README.md` is the short pitch; `CHANGELOG.md` tracks releases; [`backend/README.md`](backend/README.md) and [`frontend/README.md`](frontend/README.md) explain how to run and test each half, and list the actual file layout — read the relevant one before adding a file so it lands in the right place and follows the existing conventions.
 
 **Do not re-propose items listed as out of scope in `PROJECT_PLAN.md`** without a genuinely new technical argument — they were evaluated and turned down for stated reasons. Treat these documents as ground truth for prior decisions, not as suggestions to second-guess from scratch.
 

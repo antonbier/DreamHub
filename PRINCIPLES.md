@@ -148,7 +148,7 @@ Location: under `/data/dreamhub/`, not the root partition. Root is a 2 GB slot s
 
 ## Consistent API error shape
 
-Every endpoint returns errors in the same JSON envelope (an error code plus a human-readable message, at minimum) rather than each module inventing its own shape as it's built. Defined once in the Foundation (`backend/internal/api/errors.go`: `{"error": {"code": ..., "message": ...}}`) — every hub uses it.
+Every endpoint returns errors in the same JSON envelope (an error code plus a human-readable message, at minimum) rather than each module inventing its own shape as it's built. Defined once in the Foundation (`backend/internal/httpx`: `ErrorBody`, `WriteError` — `{"error": {"code": ..., "message": ..., "requestId": ..., "details": ...}}`) — every hub uses it.
 
 ## Resource budget, stated up front
 

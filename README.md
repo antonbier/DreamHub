@@ -28,7 +28,9 @@ Hubs get their data through **connectors** (WebControl, SerienRecorder, TMDB, Op
 
 ## Status
 
-Planning is complete; the backend foundation has started. See [PROJECT_PLAN.md](PROJECT_PLAN.md) for context, [ROADMAP.md](ROADMAP.md) for progress, and [backend/README.md](backend/README.md) to run it locally (no Dreambox required — it defaults to a mock).
+Pre-release, but the core shell is real and running, not just planned: REST API, SQLite-backed settings/dashboards/change log, auth (Basic Auth + revocable API tokens), the full web UI (sidebar, dashboard tiles, schema-driven settings, global search, notifications, onboarding wizard, status strip), and TimerHub as the first working hub, all buildable and testable against a mock — no Dreambox required. See [ROADMAP.md](ROADMAP.md) for exactly what's done and what's open under **Foundation**, [PROJECT_PLAN.md](PROJECT_PLAN.md) for why the project exists, and [backend/README.md](backend/README.md) / [frontend/README.md](frontend/README.md) to run it locally.
+
+Still open before v1: MediaHub, GuideHub, DiscoveryHub, SeriesHub and the rest of AdminHub (see "v1 — hubs" in `ROADMAP.md`), plus anything in the Foundation's "Open" list that needs real device access (`ARCHITECTURE.md`'s open questions) — the reference Dreambox isn't reachable at the moment, so that work is paused, not forgotten.
 
 ## License
 

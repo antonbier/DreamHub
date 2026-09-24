@@ -2,6 +2,7 @@ package serienrecorder
 
 import (
 	"context"
+	"errors"
 	"net/http"
 	"net/http/httptest"
 	"testing"
@@ -74,5 +75,30 @@ func TestMarkers_SurfacesTheAPIsHTMLErrorPage(t *testing.T) {
 
 	if _, err := NewHTTPClient(srv.URL).Markers(context.Background()); err == nil {
 		t.Fatal("expected an error for a non-JSON response")
+	}
+}
+
+func TestClient_NotInstalledAndUnauthorized(t *testing.T) {
+	srv := httptest.NewServer(http.NotFoundHandler())
+	defer srv.Close()
+	if _, err := NewHTTPClient(srv.URL).Info(context.Background()); !errors.Is(err, ErrNotInstalled) {
+		t.Errorf("404: want ErrNotInstalled, got %v", err)
+	}
+
+	auth := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		if u, p, ok := r.BasicAuth(); !ok || u != "root" || p != "pw" {
+			w.WriteHeader(http.StatusUnauthorized)
+			return
+		}
+		w.Write([]byte(`{"payload": {"apiVersion": "2.12"}, "status": true}`))
+	}))
+	defer auth.Close()
+	c := NewHTTPClient(auth.URL)
+	if _, err := c.Info(context.Background()); !errors.Is(err, ErrUnauthorized) {
+		t.Errorf("401: want ErrUnauthorized, got %v", err)
+	}
+	c.Credentials = func() (string, string) { return "root", "pw" }
+	if info, err := c.Info(context.Background()); err != nil || info.APIVersion != "2.12" {
+		t.Errorf("with credentials: %+v, %v", info, err)
 	}
 }

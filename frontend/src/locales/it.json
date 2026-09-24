@@ -31,7 +31,9 @@
       "unreachable": "{connector} non è raggiungibile",
       "notConfigured": "{connector} non è ancora configurato",
       "notImplemented": "{connector} non è ancora implementato",
-      "unknown": "Stato di {connector} sconosciuto"
+      "unknown": "Stato di {connector} sconosciuto",
+      "authRequired": "{connector} richiede una password",
+      "notInstalled": "{connector} non è installato sul box"
     },
     "capability": {
       "missing": "Manca sul dispositivo: {capability}"
@@ -40,8 +42,9 @@
       "dependencyUnavailable": "{hub} non è disponibile"
     },
     "timer": {
-      "conflict": "In conflitto con un'altra registrazione — solo {tuners} tuner disponibili.",
-      "duplicate": "Esiste già un timer per \"{name}\" esattamente a quest'ora."
+      "conflict": "Probabile conflitto con un'altra registrazione (tuner: {tuners}). Il box verifica di nuovo al salvataggio.",
+      "duplicate": "Esiste già un timer su questo canale che inizia alla stessa ora (\"{name}\"). Il box ignorerebbe questo.",
+      "deleteRunning": "\"{name}\" è in registrazione. Eliminare il timer interrompe la registrazione."
     }
   },
   "fix": {
@@ -50,7 +53,8 @@
     "enableHub": "Attiva {hub} nelle impostazioni.",
     "capability": {
       "journald": "journald non è disponibile su questa macchina."
-    }
+    },
+    "installPlugin": "Facoltativo: installa {plugin} dall'Addon Manager del box per usare questa funzione."
   },
   "sidebar": {
     "collapse": "Comprimi barra laterale",
@@ -259,9 +263,14 @@
       "plan_stale": "Qualcosa è cambiato dall'anteprima — riprova.",
       "plan_not_found": "Questa anteprima è scaduta — riprova.",
       "plan_forbidden": "Questa anteprima appartiene a qualcun altro.",
-      "writes_disabled": "Le modifiche al box sono disattivate finché l'accesso in scrittura non è verificato sul dispositivo.",
-      "apply_failed": "Impossibile creare il timer.",
-      "validation_failed": "I dati del timer non sono validi."
+      "writes_disabled": "Le modifiche al box sono disattivate in questa installazione (DREAMHUB_ENABLE_DEVICE_WRITES=0).",
+      "apply_failed": "Impossibile applicare la modifica.",
+      "validation_failed": "I dati del timer non sono validi.",
+      "box_rejected": "Il box ha rifiutato la modifica; non è cambiato nulla.",
+      "timer_not_created": "Il box non ha creato il timer — di solito ne esiste già uno sullo stesso canale con lo stesso orario di inizio.",
+      "timer_not_deleted": "Il box non ha eliminato il timer.",
+      "timer_not_found": "Questo timer non esiste più.",
+      "webcontrol_unauthorized": "Il box richiede una password. Impostala in Impostazioni → WebControl."
     }
   },
   "settings": {
@@ -351,6 +360,11 @@
       "invalid_timezone": "Nome del fuso orario non valido (ad es. \"Europe/Rome\").",
       "unknown": "Impostazione sconosciuta.",
       "forbidden": "Solo un admin può modificarlo."
+    },
+    "webcontrol": {
+      "title": "WebControl",
+      "username": "Nome utente del box (solo se il box richiede una password)",
+      "password": "Password del box"
     }
   },
   "notFound": {

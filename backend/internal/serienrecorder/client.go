@@ -9,6 +9,7 @@ package serienrecorder
 import (
 	"context"
 	"encoding/json"
+	"errors"
 	"fmt"
 	"io"
 	"net/http"
@@ -66,7 +67,20 @@ type Client interface {
 type HTTPClient struct {
 	BaseURL string
 	HTTP    *http.Client
+	// Credentials, if set, supplies Basic Auth — the API sits behind
+	// WebControl's own auth, so it's the same login (connector settings,
+	// "webcontrol").
+	Credentials func() (user, password string)
 }
+
+// ErrNotInstalled means the box answered, but has no SerienRecorder API:
+// the plugin isn't installed (or its web interface is switched off). An
+// optional plugin missing is a normal state, not a broken connection.
+var ErrNotInstalled = errors.New("serienrecorder: API not found on the box (plugin not installed or web interface disabled)")
+
+// ErrUnauthorized means WebControl, which the API sits behind, asked for
+// credentials.
+var ErrUnauthorized = errors.New("serienrecorder: credentials required or rejected")
 
 // NewHTTPClient returns an HTTPClient with the same timeout convention as
 // webcontrol.NewHTTPClient (see its comment).
@@ -120,12 +134,23 @@ func (c *HTTPClient) getJSON(ctx context.Context, path string, v any) error {
 	if err != nil {
 		return fmt.Errorf("serienrecorder: building request for %s: %w", path, err)
 	}
+	if c.Credentials != nil {
+		if user, pass := c.Credentials(); user != "" {
+			req.SetBasicAuth(user, pass)
+		}
+	}
 	resp, err := c.HTTP.Do(req)
 	if err != nil {
 		return fmt.Errorf("serienrecorder: calling %s: %w", path, err)
 	}
 	defer resp.Body.Close()
 
+	switch resp.StatusCode {
+	case http.StatusNotFound:
+		return ErrNotInstalled
+	case http.StatusUnauthorized:
+		return ErrUnauthorized
+	}
 	if resp.StatusCode != http.StatusOK {
 		return fmt.Errorf("serienrecorder: %s returned status %d", path, resp.StatusCode)
 	}

@@ -3,6 +3,9 @@ package connector
 import (
 	"context"
 	"errors"
+	"fmt"
+	"net/http"
+	"net/http/httptest"
 	"sync/atomic"
 	"testing"
 	"time"
@@ -49,28 +52,37 @@ func TestReports_CachedAndInvalidatedBySettingsVersion(t *testing.T) {
 	}
 }
 
-type failingClient struct{}
+type failingClient struct{ err error }
 
-func (failingClient) DeviceInfo(context.Context) (*webcontrol.DeviceInfo, error) {
-	return nil, errors.New("connection refused")
+func (f failingClient) DeviceInfo(context.Context) (*webcontrol.DeviceInfo, error) {
+	return nil, f.fail()
 }
-func (failingClient) MovieList(context.Context) ([]webcontrol.Movie, error) {
-	return nil, errors.New("connection refused")
+func (f failingClient) MovieList(context.Context) ([]webcontrol.Movie, error) {
+	return nil, f.fail()
 }
-func (failingClient) TimerList(context.Context) ([]webcontrol.Timer, error) {
-	return nil, errors.New("connection refused")
+func (f failingClient) TimerList(context.Context) ([]webcontrol.Timer, error) {
+	return nil, f.fail()
 }
-func (failingClient) AddTimer(context.Context, webcontrol.NewTimer) error {
+func (f failingClient) AddTimer(context.Context, webcontrol.NewTimer) error {
+	return f.fail()
+}
+func (f failingClient) DeleteTimer(context.Context, webcontrol.TimerRef) error {
+	return f.fail()
+}
+func (f failingClient) fail() error {
+	if f.err != nil {
+		return f.err
+	}
 	return errors.New("connection refused")
 }
-func (failingClient) Bouquets(context.Context) ([]webcontrol.Service, error) {
-	return nil, errors.New("connection refused")
+func (f failingClient) Bouquets(context.Context) ([]webcontrol.Service, error) {
+	return nil, f.fail()
 }
-func (failingClient) Services(context.Context, string) ([]webcontrol.Service, error) {
-	return nil, errors.New("connection refused")
+func (f failingClient) Services(context.Context, string) ([]webcontrol.Service, error) {
+	return nil, f.fail()
 }
-func (failingClient) EPGMulti(context.Context, string, int64, int64) ([]webcontrol.EPGEvent, error) {
-	return nil, errors.New("connection refused")
+func (f failingClient) EPGMulti(context.Context, string, int64, int64) ([]webcontrol.EPGEvent, error) {
+	return nil, f.fail()
 }
 
 func TestWebControl(t *testing.T) {
@@ -81,6 +93,13 @@ func TestWebControl(t *testing.T) {
 	rep := WebControl{Client: failingClient{}}.Check(ctx, nil)
 	if rep.State != Unreachable || rep.Problem == nil || rep.Problem.Code != status.CodeConnectorUnreachable || rep.Problem.Fix != status.FixCheckBoxConnection {
 		t.Errorf("unreachable box must report a problem with a fix, got %+v", rep)
+	}
+
+	// WebControl asking for a password (localauth=true on the box) is a
+	// different problem with a different fix than an unreachable box.
+	rep = WebControl{Client: failingClient{err: fmt.Errorf("x: %w", webcontrol.ErrUnauthorized)}}.Check(ctx, nil)
+	if rep.State != NotConfigured || rep.Problem == nil || rep.Problem.Code != status.CodeConnectorAuthRequired || rep.Problem.Fix != status.FixConfigureInSettings || rep.Problem.FixParams["section"] != "webcontrol" {
+		t.Errorf("a 401 from WebControl must point at the credentials setting, got %+v", rep)
 	}
 }
 
@@ -127,5 +146,16 @@ func TestSerienRecorder_RealReachabilityCheck(t *testing.T) {
 	rep := (SerienRecorder{Client: failingSeriesClient{}}).Check(ctx, nil)
 	if rep.State != Unreachable || rep.Problem == nil || rep.Problem.Code != status.CodeConnectorUnreachable || rep.Problem.Fix != status.FixCheckBoxConnection {
 		t.Errorf("unreachable API must report a problem with a fix, got %+v", rep)
+	}
+}
+
+// An optional plugin that isn't installed is a normal state with its own
+// explanation, never "check the connection" (docs/V1_PLAN.md, rule 1).
+func TestSerienRecorder_NotInstalled(t *testing.T) {
+	srv := httptest.NewServer(http.NotFoundHandler())
+	defer srv.Close()
+	rep := (SerienRecorder{Client: serienrecorder.NewHTTPClient(srv.URL)}).Check(context.Background(), nil)
+	if rep.State != NotInstalled || rep.Problem == nil || rep.Problem.Code != status.CodeConnectorNotInstalled || rep.Problem.Fix != status.FixInstallPlugin {
+		t.Errorf("a missing SerienRecorder must report not_installed with an install hint, got %+v", rep)
 	}
 }

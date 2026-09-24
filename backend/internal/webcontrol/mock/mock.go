@@ -149,9 +149,18 @@ func (c *Client) EPGMulti(ctx context.Context, bouquetRef string, start, end int
 	return out, nil
 }
 
+// AddTimer behaves like the real box (ARCHITECTURE.md, "Timer write
+// endpoints"), including its quirk of reporting success for a timer it
+// silently drops because one with the same service and begin already
+// exists — so callers' verify-after-write logic is exercised in tests too.
 func (c *Client) AddTimer(ctx context.Context, t webcontrol.NewTimer) error {
 	c.mu.Lock()
 	defer c.mu.Unlock()
+	for _, existing := range c.timers {
+		if existing.ServiceReference == t.ServiceReference && existing.Begin == t.Begin {
+			return nil
+		}
+	}
 	c.timers = append(c.timers, webcontrol.Timer{
 		ServiceReference: t.ServiceReference,
 		Name:             t.Name,
@@ -160,4 +169,18 @@ func (c *Client) AddTimer(ctx context.Context, t webcontrol.NewTimer) error {
 		End:              t.End,
 	})
 	return nil
+}
+
+// DeleteTimer matches exactly like the real box and answers the same way
+// when nothing matches.
+func (c *Client) DeleteTimer(ctx context.Context, ref webcontrol.TimerRef) error {
+	c.mu.Lock()
+	defer c.mu.Unlock()
+	for i, t := range c.timers {
+		if t.ServiceReference == ref.ServiceReference && t.Begin == ref.Begin && t.End == ref.End {
+			c.timers = append(c.timers[:i], c.timers[i+1:]...)
+			return nil
+		}
+	}
+	return &webcontrol.RejectedError{Op: "timerdelete", Text: "No matching Timer found"}
 }

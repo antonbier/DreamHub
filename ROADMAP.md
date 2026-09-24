@@ -36,7 +36,7 @@ Releases: **Foundation** → **v1** → **v1.1** → **Later**. GitHub milestone
 - [x] **3c** Security: CSRF (`X-DreamHub-Request` header required on mutating requests, foreign `Origin` rejected, no CORS headers), `Host` header check against DNS rebinding (IPs, `localhost`, `*.local`, plus `network.allowedHosts`)
 - [x] **3c** Request IDs in every response header, error body and log line; runtime-switchable log level (AdminHub, admin only, debug reverts automatically)
 - [x] **3c** SystemHub change log endpoint `GET /api/v1/changes`
-- [x] **3c** Real-box writes (`/web/timeradd`) implemented but **disabled by default** until verified on the device (#14); opt in with `DREAMHUB_ENABLE_DEVICE_WRITES=1`
+- [x] **3c** Real-box writes (`/web/timeradd`) — verified live 2026-09-24 and **on by default** since (`DREAMHUB_ENABLE_DEVICE_WRITES=0` turns them off); see the v1 WP1 entry under TimerHub
 
 - [x] **4** Frontend scaffold (Vue 3 + TypeScript + Tailwind, `frontend/`), built straight into `backend/internal/webui/dist` and served via `go:embed` with an SPA fallback for client-side routes (`internal/webui`); a tracked placeholder page keeps the backend buildable before the frontend is ever built
 - [x] **4** Core shell per `DESIGN.md`: design tokens as CSS custom properties (dark/light), Source Sans 3 + Source Code Pro bundled (no CDN), a self-drawn icon set, sidebar (collapsible on desktop, a drawer below 900px per the documented breakpoints), top bar (search and notifications shown as explained-not-built placeholders — both still open below)
@@ -91,6 +91,20 @@ Releases: **Foundation** → **v1** → **v1.1** → **Later**. GitHub milestone
 - [ ] Reference implementation: `AdvancedMovieSelection` (`Rename.py`, `SearchTMDb*.py`) — native on-screen plugin, not web-based, CC BY-NC-SA licensed: read for approach, don't copy code
 
 ### TimerHub
+
+**Done** (v1 plan WP1, `docs/V1_PLAN.md`):
+- [x] `/web/timeradd` and `/web/timerdelete` verified live on the reference box (create + delete, reverted, `timers.xml` byte-identical afterwards — `ARCHITECTURE.md`)
+- [x] WebControl client: every write a form-encoded `POST` with every parameter, `DeleteTimer`, `sessionid` retry on `412` (boxes with `extended_security`), optional Basic Auth from Settings → WebControl, `ErrUnauthorized` → connector problem `connector.authRequired`
+- [x] Apply verifies against `/web/timerlist` (the box reports a silently dropped duplicate as success); the box's refusal surfaces as `box_rejected` with its own text
+- [x] Duplicate warning follows the box's rule (same channel + same begin)
+- [x] Conflict estimate is transponder- and delivery-system-aware (`internal/tuner`: one tuner records every channel of a transponder; satellite/cable/terrestrial matched to each frontend's capabilities), with test boxes for a triple-tuner, an FBC and a mixed sat/cable setup — layers 1–2 of the tuner proposal in `docs/V1_PLAN.md`
+- [x] Delete via preview-and-confirm: `POST /api/v1/timers/delete/plan`, warning when the timer is recording right now
+
+**Open**:
+- [ ] TimerHub screen, create from GuideHub, AutoTimer (optional plugin) — WP3
+- [ ] Exact conflict dry run through DreamHub's own Enigma2 plugin (D7) — WP8
+
+Notes:
 - Timers via `/web/timerlist`; AutoTimer.
 - **Conflict detection is central**: the reference device has a single tuner, so overlapping timers are common.
 - Creating/deleting timers goes through preview-and-confirm, including when triggered from DiscoveryHub.
@@ -132,6 +146,7 @@ Releases: **Foundation** → **v1** → **v1.1** → **Later**. GitHub milestone
 - [x] A link to SerienRecorder's own web GUI (`/serienrecorderui/`, confirmed no `X-Frame-Options`/CSP blocking it) rather than rebuilding marker/timer/settings editing DreamHub doesn't need to duplicate (`PRINCIPLES.md`): "Open in new tab" always works; "Show here" embeds it in an iframe, lazy-mounted only when toggled on. Verified live against the reference device — the real SerienRecorder app loads and is fully usable. Only resolves correctly when DreamHub is deployed on the box itself (same host as WebControl, just port 80 vs. 8080), not in local dev against a different device
 
 **Open**:
+- [x] SerienRecorder not installed → connector state `not_installed` with an install hint instead of "unreachable" (v1 plan rule 1: optional plugins never break DreamHub)
 - [ ] Episodes on disk, missing episodes — needs cross-referencing recordings (`/web/movielist`, MediaHub) against tracked series/seasons; not attempted yet, deliberately scoped out of this pass
 - [ ] Per-series upcoming broadcasts beyond what's already timered (`/serienrecorderapi/transmissions?wlid=&fsid=&filterMode=`, confirmed live) — useful for a series detail view, not built
 

@@ -33,6 +33,27 @@ var (
 	ErrStale    = errors.New("plan: state changed since the preview")
 )
 
+// Failure is an Execute error a hub wants the client to see with a stable,
+// translatable code — e.g. the box refusing a timer, or a write the box
+// claimed to make but didn't. Anything else from Execute is reported as a
+// generic "apply_failed".
+type Failure struct {
+	Status  int    // HTTP status
+	Code    string // error code (i18n key for the client)
+	Message string // English developer hint
+	Details any
+	Err     error // underlying cause, for logs
+}
+
+func (f *Failure) Error() string {
+	if f.Err != nil {
+		return "plan: " + f.Code + ": " + f.Err.Error()
+	}
+	return "plan: " + f.Code
+}
+
+func (f *Failure) Unwrap() error { return f.Err }
+
 // Change is one item of a preview: what kind of change, and the state before
 // and after (nil when not applicable).
 type Change struct {

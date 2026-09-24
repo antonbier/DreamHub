@@ -2,6 +2,7 @@ package connector
 
 import (
 	"context"
+	"errors"
 
 	"github.com/antonbier/DreamHub/backend/internal/serienrecorder"
 	"github.com/antonbier/DreamHub/backend/internal/settings"
@@ -24,6 +25,13 @@ const (
 	KeyOpenAIAPIKey = "ai.openai.apiKey"
 	KeyOpenAIModel  = "ai.openai.model"
 	KeyAIDailyLimit = "ai.dailyLimit"
+
+	// Optional credentials for WebControl (and every plugin API behind it,
+	// e.g. SerienRecorder's). Only needed when the box enforces auth for
+	// DreamHub's requests — see ARCHITECTURE.md, "WebControl auth for a
+	// backend on the box itself".
+	KeyWebControlUsername = "webcontrol.username"
+	KeyWebControlPassword = "webcontrol.password"
 )
 
 // --- WebControl -----------------------------------------------------------
@@ -31,11 +39,24 @@ const (
 // WebControl is the connector to the box's own `/web/*` API.
 type WebControl struct{ Client webcontrol.Client }
 
-func (WebControl) ID() string                   { return IDWebControl }
-func (WebControl) Name() string                 { return "WebControl" }
-func (WebControl) Settings() []settings.Section { return nil }
+func (WebControl) ID() string   { return IDWebControl }
+func (WebControl) Name() string { return "WebControl" }
+func (WebControl) Settings() []settings.Section {
+	return []settings.Section{{
+		ID:    "webcontrol",
+		Label: "settings.webcontrol",
+		Fields: []settings.Field{
+			// The box's own login (usually root). Stored as a secret, not a
+			// bcrypt hash: DreamHub has to send it, not verify it.
+			{Key: KeyWebControlUsername, Type: settings.TypeString, Scope: settings.ScopeGlobal, Label: "settings.webcontrol.username", Default: ""},
+			{Key: KeyWebControlPassword, Type: settings.TypeSecret, Scope: settings.ScopeGlobal, Label: "settings.webcontrol.password"},
+		},
+	}}
+}
 func (w WebControl) Check(ctx context.Context, _ settings.Values) Report {
-	if _, err := w.Client.DeviceInfo(ctx); err != nil {
+	if _, err := w.Client.DeviceInfo(ctx); errors.Is(err, webcontrol.ErrUnauthorized) {
+		return authRequired("WebControl")
+	} else if err != nil {
 		return Report{State: Unreachable, Problem: &status.Problem{
 			Code:   status.CodeConnectorUnreachable,
 			Params: map[string]any{"connector": "WebControl"},
@@ -63,7 +84,16 @@ func (s SerienRecorder) Check(ctx context.Context, _ settings.Values) Report {
 	if s.Mock {
 		return Report{State: OK}
 	}
-	if _, err := s.Client.Info(ctx); err != nil {
+	if _, err := s.Client.Info(ctx); errors.Is(err, serienrecorder.ErrNotInstalled) {
+		return Report{State: NotInstalled, Problem: &status.Problem{
+			Code:      status.CodeConnectorNotInstalled,
+			Params:    map[string]any{"connector": "SerienRecorder"},
+			Fix:       status.FixInstallPlugin,
+			FixParams: map[string]any{"plugin": "SerienRecorder"},
+		}}
+	} else if errors.Is(err, serienrecorder.ErrUnauthorized) {
+		return authRequired("SerienRecorder")
+	} else if err != nil {
 		return Report{State: Unreachable, Problem: &status.Problem{
 			Code:   status.CodeConnectorUnreachable,
 			Params: map[string]any{"connector": "SerienRecorder"},
@@ -125,6 +155,17 @@ func (OpenAI) Check(_ context.Context, v settings.Values) Report {
 		return notConfigured("OpenAI", "ai")
 	}
 	return Report{State: OK}
+}
+
+// authRequired means the box asked for credentials DreamHub doesn't have or
+// that are wrong.
+func authRequired(name string) Report {
+	return Report{State: NotConfigured, Problem: &status.Problem{
+		Code:      status.CodeConnectorAuthRequired,
+		Params:    map[string]any{"connector": name},
+		Fix:       status.FixConfigureInSettings,
+		FixParams: map[string]any{"section": "webcontrol"},
+	}}
 }
 
 func notConfigured(name, section string) Report {

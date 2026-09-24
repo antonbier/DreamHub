@@ -38,9 +38,12 @@ type Config struct {
 	DataDir string
 
 	// EnableDeviceWrites allows write operations against a real box (e.g.
-	// creating timers). Off by default: no write endpoint was observed during
-	// the read-only inspection, so they stay disabled until verified (#14).
-	// Has no effect in mock mode, where writes always work.
+	// creating timers). On by default since the timer write endpoints were
+	// verified live on the reference device (ARCHITECTURE.md, "Timer write
+	// endpoints"); DREAMHUB_ENABLE_DEVICE_WRITES=0 switches them off, e.g.
+	// for a read-only trial run. Every write still goes through
+	// preview-and-confirm. Has no effect in mock mode, where writes always
+	// work.
 	EnableDeviceWrites bool
 }
 
@@ -59,7 +62,7 @@ func Load() Config {
 		WebControlURL: getEnv("DREAMHUB_WEBCONTROL_URL", "http://127.0.0.1"),
 		DataDir:       getEnv("DREAMHUB_DATA_DIR", defaultDataDir),
 
-		EnableDeviceWrites: getEnv("DREAMHUB_ENABLE_DEVICE_WRITES", "") == "1",
+		EnableDeviceWrites: getEnv("DREAMHUB_ENABLE_DEVICE_WRITES", "1") != "0",
 	}
 }
 

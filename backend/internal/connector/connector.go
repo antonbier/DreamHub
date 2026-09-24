@@ -22,6 +22,10 @@ const (
 	NotConfigured  State = "not_configured"
 	Unreachable    State = "unreachable"
 	NotImplemented State = "not_implemented"
+	// NotInstalled: an optional plugin the connector talks to isn't on the
+	// box. A normal state, not an error — see PRINCIPLES.md, "Runtime
+	// capability detection".
+	NotInstalled State = "not_installed"
 )
 
 // Report is the result of checking a connector. It never contains secrets.

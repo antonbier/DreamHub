@@ -433,6 +433,7 @@ func handleDeleteToken(d Deps) http.HandlerFunc {
 func handleApplyPlan(d Deps) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		res, err := d.Plans.Apply(r.Context(), d.User, r.PathValue("id"))
+		var failure *plan.Failure
 		switch {
 		case err == nil:
 			httpx.WriteJSON(w, http.StatusOK, res)
@@ -443,7 +444,12 @@ func handleApplyPlan(d Deps) http.HandlerFunc {
 		case errors.Is(err, plan.ErrStale):
 			httpx.WriteError(w, r, http.StatusConflict, "plan_stale", "the state changed since the preview; nothing was done, preview again")
 		case errors.Is(err, webcontrol.ErrWritesDisabled):
-			httpx.WriteError(w, r, http.StatusConflict, "writes_disabled", "changes to the box are disabled until the write endpoints are verified on the device")
+			httpx.WriteError(w, r, http.StatusConflict, "writes_disabled", "changes to the box are disabled (DREAMHUB_ENABLE_DEVICE_WRITES=0)")
+		case errors.As(err, &failure):
+			d.Logger.Warn("plan apply refused", "requestId", httpx.RequestID(r.Context()), "code", failure.Code, "error", err)
+			httpx.WriteErrorDetails(w, r, failure.Status, failure.Code, failure.Message, failure.Details)
+		case errors.Is(err, webcontrol.ErrUnauthorized):
+			httpx.WriteError(w, r, http.StatusBadGateway, "webcontrol_unauthorized", "WebControl asked for credentials; set them in Settings → WebControl")
 		default:
 			d.Logger.Error("plan apply failed", "requestId", httpx.RequestID(r.Context()), "error", err)
 			httpx.WriteError(w, r, http.StatusBadGateway, "apply_failed", "the change could not be applied")

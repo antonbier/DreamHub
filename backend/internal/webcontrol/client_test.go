@@ -5,6 +5,7 @@ import (
 	"errors"
 	"net/http"
 	"net/http/httptest"
+	"net/url"
 	"os"
 	"testing"
 )
@@ -55,22 +56,116 @@ func TestAddTimer_DisabledByDefault(t *testing.T) {
 	}
 }
 
-func TestAddTimer_WhenEnabled(t *testing.T) {
-	var query map[string][]string
+const okResult = `<e2simplexmlresult><e2state>True</e2state><e2statetext>ok</e2statetext></e2simplexmlresult>`
+
+func TestAddTimer_PostsEveryParameter(t *testing.T) {
+	var method string
+	var form url.Values
 	srv := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-		query = r.URL.Query()
-		w.Write([]byte(`<e2simplexmlresult><e2state>True</e2state><e2statetext>Timer added</e2statetext></e2simplexmlresult>`))
+		method = r.Method
+		r.ParseForm()
+		form = r.PostForm
+		w.Write([]byte(okResult))
 	}))
 	defer srv.Close()
 
 	c := NewHTTPClient(srv.URL)
 	c.AllowWrites = true
-	err := c.AddTimer(context.Background(), NewTimer{ServiceReference: "1:0:19:1:1:1:C00000:0:0:0:", Name: "Die Kanzlei", Begin: 100, End: 200})
+	err := c.AddTimer(context.Background(), NewTimer{ServiceReference: "1:0:19:1:1:1:C00000:0:0:0:", Name: "Die Kanzlei", Begin: 100, End: 200, EventID: 4711})
 	if err != nil {
 		t.Fatal(err)
 	}
-	if query["sRef"][0] != "1:0:19:1:1:1:C00000:0:0:0:" || query["begin"][0] != "100" || query["end"][0] != "200" || query["name"][0] != "Die Kanzlei" {
-		t.Errorf("unexpected timeradd parameters: %v", query)
+	// POST, because the timer screens refuse GET with anti_hijack on; and
+	// every parameter present (even empty ones), because a missing one
+	// reaches the plugin as None and crashes it (ARCHITECTURE.md).
+	if method != http.MethodPost {
+		t.Errorf("timeradd must be a POST, got %s", method)
+	}
+	for _, k := range []string{"sRef", "begin", "end", "name", "description", "repeated", "dirname", "tags", "eit", "disabled", "justplay", "afterevent"} {
+		if _, ok := form[k]; !ok {
+			t.Errorf("parameter %q missing from timeradd", k)
+		}
+	}
+	if form.Get("sRef") != "1:0:19:1:1:1:C00000:0:0:0:" || form.Get("begin") != "100" || form.Get("end") != "200" || form.Get("name") != "Die Kanzlei" || form.Get("eit") != "4711" {
+		t.Errorf("unexpected timeradd parameters: %v", form)
+	}
+}
+
+func TestDeleteTimer_PostsExactReference(t *testing.T) {
+	var path string
+	var form url.Values
+	srv := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		path = r.URL.Path
+		r.ParseForm()
+		form = r.PostForm
+		w.Write([]byte(okResult))
+	}))
+	defer srv.Close()
+
+	c := NewHTTPClient(srv.URL)
+	c.AllowWrites = true
+	if err := c.DeleteTimer(context.Background(), TimerRef{ServiceReference: "1:0:1:2EE3:441:1:C00000:0:0:0:", Begin: 10, End: 20}); err != nil {
+		t.Fatal(err)
+	}
+	if path != "/web/timerdelete" || form.Get("sRef") != "1:0:1:2EE3:441:1:C00000:0:0:0:" || form.Get("begin") != "10" || form.Get("end") != "20" {
+		t.Errorf("unexpected timerdelete request: %s %v", path, form)
+	}
+}
+
+func TestDeleteTimer_DisabledByDefault(t *testing.T) {
+	err := NewHTTPClient("http://127.0.0.1:1").DeleteTimer(context.Background(), TimerRef{})
+	if !errors.Is(err, ErrWritesDisabled) {
+		t.Fatalf("want ErrWritesDisabled, got %v", err)
+	}
+}
+
+func TestClient_SendsCredentialsAndReportsUnauthorized(t *testing.T) {
+	srv := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		if u, p, ok := r.BasicAuth(); !ok || u != "root" || p != "secret" {
+			w.WriteHeader(http.StatusUnauthorized)
+			return
+		}
+		w.Write([]byte(timerListXML))
+	}))
+	defer srv.Close()
+
+	c := NewHTTPClient(srv.URL)
+	if _, err := c.TimerList(context.Background()); !errors.Is(err, ErrUnauthorized) {
+		t.Fatalf("without credentials: want ErrUnauthorized, got %v", err)
+	}
+	c.Credentials = func() (string, string) { return "root", "secret" }
+	if _, err := c.TimerList(context.Background()); err != nil {
+		t.Fatalf("with credentials: %v", err)
+	}
+}
+
+func TestClient_RetriesWithSessionOn412(t *testing.T) {
+	// With extended_security on, the box answers 412 until the request
+	// carries the sessionid from /web/session (ARCHITECTURE.md).
+	sessionCalls := 0
+	srv := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		r.ParseForm()
+		if r.URL.Path == "/web/session" {
+			sessionCalls++
+			w.Write([]byte(`<?xml version="1.0" encoding="UTF-8"?><e2sessionid>abc123</e2sessionid>`))
+			return
+		}
+		if r.Form.Get("sessionid") != "abc123" {
+			w.WriteHeader(http.StatusPreconditionFailed)
+			return
+		}
+		w.Write([]byte(timerListXML))
+	}))
+	defer srv.Close()
+
+	c := NewHTTPClient(srv.URL)
+	for i := 0; i < 2; i++ {
+		if _, err := c.TimerList(context.Background()); err != nil {
+			t.Fatalf("call %d: %v", i, err)
+		}
+	}
+	if sessionCalls != 1 {
+		t.Errorf("the session should be fetched once and reused, fetched %d times", sessionCalls)
 	}
 }
 
@@ -132,7 +227,9 @@ func TestAddTimer_BoxRejects(t *testing.T) {
 	defer srv.Close()
 	c := NewHTTPClient(srv.URL)
 	c.AllowWrites = true
-	if err := c.AddTimer(context.Background(), NewTimer{}); err == nil {
-		t.Fatal("a rejection by the box must surface as an error")
+	err := c.AddTimer(context.Background(), NewTimer{})
+	var rej *RejectedError
+	if !errors.As(err, &rej) || rej.Text != "Conflicting timer" {
+		t.Fatalf("a rejection by the box must surface as a RejectedError with its text, got %v", err)
 	}
 }

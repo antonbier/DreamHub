@@ -31,7 +31,9 @@
       "unreachable": "{connector} isn't reachable",
       "notConfigured": "{connector} isn't configured yet",
       "notImplemented": "{connector} isn't implemented yet",
-      "unknown": "{connector} status is unknown"
+      "unknown": "{connector} status is unknown",
+      "authRequired": "{connector} asks for a password",
+      "notInstalled": "{connector} isn't installed on the box"
     },
     "capability": {
       "missing": "Missing on the device: {capability}"
@@ -40,8 +42,9 @@
       "dependencyUnavailable": "{hub} isn't available"
     },
     "timer": {
-      "conflict": "Conflicts with another recording — only {tuners} tuner(s) available.",
-      "duplicate": "A timer for \"{name}\" at this exact time already exists."
+      "conflict": "Likely conflicts with another recording (tuners: {tuners}). The box checks again when saving.",
+      "duplicate": "A timer on this channel starting at the same time already exists (“{name}”). The box would ignore this one.",
+      "deleteRunning": "“{name}” is recording right now. Deleting the timer stops the recording."
     }
   },
   "fix": {
@@ -50,7 +53,8 @@
     "enableHub": "Enable {hub} in Settings.",
     "capability": {
       "journald": "journald isn't available on this machine."
-    }
+    },
+    "installPlugin": "Optional: install {plugin} from the box's Addon Manager to use this."
   },
   "sidebar": {
     "collapse": "Collapse sidebar",
@@ -259,9 +263,14 @@
       "plan_stale": "Something changed since the preview — try again.",
       "plan_not_found": "This preview expired — try again.",
       "plan_forbidden": "This preview belongs to someone else.",
-      "writes_disabled": "Changes to the box are disabled until write access is verified on the device.",
-      "apply_failed": "The timer could not be created.",
-      "validation_failed": "The timer details are invalid."
+      "writes_disabled": "Changes to the box are switched off on this installation (DREAMHUB_ENABLE_DEVICE_WRITES=0).",
+      "apply_failed": "The change could not be applied.",
+      "validation_failed": "The timer details are invalid.",
+      "box_rejected": "The box refused the change; nothing was changed.",
+      "timer_not_created": "The box didn't create the timer — usually one on the same channel with the same start already exists.",
+      "timer_not_deleted": "The box didn't delete the timer.",
+      "timer_not_found": "This timer no longer exists.",
+      "webcontrol_unauthorized": "The box asks for a password. Set it in Settings → WebControl."
     }
   },
   "settings": {
@@ -351,6 +360,11 @@
       "invalid_timezone": "Not a valid time zone name (e.g. \"Europe/Rome\").",
       "unknown": "Unknown setting.",
       "forbidden": "Only an admin can change this."
+    },
+    "webcontrol": {
+      "title": "WebControl",
+      "username": "Box user name (only if the box asks for a password)",
+      "password": "Box password"
     }
   },
   "notFound": {

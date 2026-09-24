@@ -79,6 +79,15 @@ func run(logger *slog.Logger, level *logging.Level) error {
 	}
 	defer a.Store.Close()
 
+	// The box login lives in settings, which only exist once the app is
+	// built — so the live clients get it late, per request.
+	if c, ok := wc.(*webcontrol.HTTPClient); ok {
+		c.Credentials = a.BoxCredentials
+	}
+	if c, ok := sr.(*serienrecorder.HTTPClient); ok {
+		c.Credentials = a.BoxCredentials
+	}
+
 	logger.Info("dreamhub starting", "version", api.Version, "addr", cfg.ListenAddr, "dataDir", cfg.DataDir)
 	return http.ListenAndServe(cfg.ListenAddr, a.Handler)
 }

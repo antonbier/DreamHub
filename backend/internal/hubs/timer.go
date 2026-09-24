@@ -19,6 +19,7 @@ import (
 	"github.com/antonbier/DreamHub/backend/internal/hub"
 	"github.com/antonbier/DreamHub/backend/internal/plan"
 	"github.com/antonbier/DreamHub/backend/internal/status"
+	"github.com/antonbier/DreamHub/backend/internal/tuner"
 	"github.com/antonbier/DreamHub/backend/internal/webcontrol"
 )
 
@@ -33,6 +34,7 @@ type Timer struct {
 func (h *Timer) Mount(mux *http.ServeMux) {
 	mux.HandleFunc("GET /api/v1/timers", h.list)
 	mux.HandleFunc("POST /api/v1/timers/plan", h.planCreate)
+	mux.HandleFunc("POST /api/v1/timers/delete/plan", h.planDelete)
 }
 
 // Margin defaults and limits, in minutes (the mockup's "5 / 10 min").
@@ -46,6 +48,21 @@ const (
 const (
 	CodeTimerConflict  = "timer.conflict"
 	CodeTimerDuplicate = "timer.duplicate"
+	// CodeTimerDeleteRunning warns that deleting stops a recording in
+	// progress — the box aborts a running timer on delete (ARCHITECTURE.md).
+	CodeTimerDeleteRunning = "timer.deleteRunning"
+)
+
+// Apply failure codes (plan.Failure), i18n keys under "error".
+const (
+	// The box refused the change; details carry its own (translated) text.
+	CodeBoxRejected = "box_rejected"
+	// The box said yes, but the timer list says otherwise — typically a
+	// timer on the same channel with the same start already existed, which
+	// the box drops silently while reporting success.
+	CodeTimerNotCreated = "timer_not_created"
+	CodeTimerNotDeleted = "timer_not_deleted"
+	CodeTimerNotFound   = "timer_not_found"
 )
 
 // Search implements hub.SearchProvider: a case-insensitive substring match
@@ -87,6 +104,9 @@ type createRequest struct {
 	End          int64 `json:"end"`
 	MarginBefore *int  `json:"marginBefore"`
 	MarginAfter  *int  `json:"marginAfter"`
+	// EventID is the EPG event being recorded, if known (e.g. from the
+	// guide) — passed on so the box links the timer to it.
+	EventID int64 `json:"eventId"`
 }
 
 // TimerPreview is how a new timer appears in a plan.
@@ -151,42 +171,47 @@ func fingerprint(timers []webcontrol.Timer) string {
 	return hex.EncodeToString(sum[:])
 }
 
-func active(t webcontrol.Timer) bool { return !t.Disabled && t.State != 3 }
+// occupiesTuner reports whether a timer will (still) need a tuner.
+func occupiesTuner(t webcontrol.Timer) bool { return !t.Disabled && t.State != webcontrol.TimerEnded }
 
-// conflicts returns the active timers overlapping [begin, end) if recording
-// them together with the new timer would need more tuners than the box has.
-func conflicts(timers []webcontrol.Timer, begin, end int64, tuners int) []webcontrol.Timer {
-	var overlapping []webcontrol.Timer
+// conflicts returns the timers that, together with a new recording of
+// serviceRef from begin to end, likely need more tuners than the box has —
+// transponder- and delivery-system-aware (internal/tuner). An estimate:
+// the box runs its own exact check on apply.
+func conflicts(timers []webcontrol.Timer, info *webcontrol.DeviceInfo, serviceRef string, begin, end int64) []webcontrol.Timer {
+	var candidates []webcontrol.Timer
+	var bookings []tuner.Booking
 	for _, t := range timers {
-		if active(t) && t.Begin < end && begin < t.End {
-			overlapping = append(overlapping, t)
+		if occupiesTuner(t) {
+			candidates = append(candidates, t)
+			bookings = append(bookings, tuner.Booking{ServiceReference: t.ServiceReference, Begin: t.Begin, End: t.End})
 		}
 	}
-	// Peak concurrency within the new timer's window: sweep over the
-	// overlapping timers' starts and ends.
-	type ev struct {
-		at    int64
-		delta int
+	var out []webcontrol.Timer
+	for _, i := range tuner.Conflicts(tuner.Frontends(info), bookings, tuner.Booking{ServiceReference: serviceRef, Begin: begin, End: end}) {
+		out = append(out, candidates[i])
 	}
-	var evs []ev
-	for _, t := range overlapping {
-		evs = append(evs, ev{max(t.Begin, begin), +1}, ev{min(t.End, end), -1})
-	}
-	sort.Slice(evs, func(i, j int) bool {
-		if evs[i].at != evs[j].at {
-			return evs[i].at < evs[j].at
+	return out
+}
+
+// findTimer returns the timer the box would match for ref.
+func findTimer(timers []webcontrol.Timer, ref webcontrol.TimerRef) (webcontrol.Timer, bool) {
+	for _, t := range timers {
+		if t.ServiceReference == ref.ServiceReference && t.Begin == ref.Begin && t.End == ref.End {
+			return t, true
 		}
-		return evs[i].delta < evs[j].delta // ends before starts at the same instant
-	})
-	peak, cur := 0, 0
-	for _, e := range evs {
-		cur += e.delta
-		peak = max(peak, cur)
 	}
-	if peak+1 > tuners {
-		return overlapping
+	return webcontrol.Timer{}, false
+}
+
+// boxFailure turns a write error into a plan.Failure where there's
+// something specific to tell the user.
+func boxFailure(err error) error {
+	var rej *webcontrol.RejectedError
+	if errors.As(err, &rej) {
+		return &plan.Failure{Status: http.StatusConflict, Code: CodeBoxRejected, Message: "the box refused the change; nothing was changed", Details: map[string]any{"boxText": rej.Text}, Err: err}
 	}
-	return nil
+	return err
 }
 
 func (h *Timer) planCreate(w http.ResponseWriter, r *http.Request) {
@@ -223,17 +248,20 @@ func (h *Timer) planCreate(w http.ResponseWriter, r *http.Request) {
 	}
 
 	var warnings []status.Problem
+	// The box's own duplicate rule: same channel, same begin — end doesn't
+	// matter. It drops such a timer silently (ARCHITECTURE.md).
 	for _, t := range timers {
-		if t.ServiceReference == p.ServiceReference && t.Begin == p.RecordBegin && t.End == p.RecordEnd {
+		if t.Begin == p.RecordBegin && tuner.SameService(t.ServiceReference, p.ServiceReference) {
 			warnings = append(warnings, status.Problem{Code: CodeTimerDuplicate, Params: map[string]any{"name": t.Name}})
 		}
 	}
-	if clash := conflicts(timers, p.RecordBegin, p.RecordEnd, info.Tuners()); len(clash) > 0 {
+	if clash := conflicts(timers, info, p.ServiceReference, p.RecordBegin, p.RecordEnd); len(clash) > 0 {
 		with := make([]map[string]any, 0, len(clash))
 		for _, t := range clash {
 			with = append(with, map[string]any{"name": t.Name, "serviceName": t.ServiceName, "begin": t.Begin, "end": t.End})
 		}
-		warnings = append(warnings, status.Problem{Code: CodeTimerConflict, Params: map[string]any{"with": with, "tuners": info.Tuners()}})
+		// "estimate": the box runs its own, exact check on apply.
+		warnings = append(warnings, status.Problem{Code: CodeTimerConflict, Params: map[string]any{"with": with, "tuners": info.Tuners(), "estimate": true}})
 	}
 
 	pl := h.Plans.Create(user, plan.Draft{
@@ -251,10 +279,86 @@ func (h *Timer) planCreate(w http.ResponseWriter, r *http.Request) {
 			return fingerprint(now), nil
 		},
 		Execute: func(ctx context.Context) error {
-			return h.WC.AddTimer(ctx, webcontrol.NewTimer{
+			if err := h.WC.AddTimer(ctx, webcontrol.NewTimer{
 				ServiceReference: p.ServiceReference, Name: p.Name, Description: p.Description,
-				Begin: p.RecordBegin, End: p.RecordEnd,
-			})
+				Begin: p.RecordBegin, End: p.RecordEnd, EventID: req.EventID,
+			}); err != nil {
+				return boxFailure(err)
+			}
+			// Verify, don't trust: the box reports success for a timer it
+			// silently dropped (ARCHITECTURE.md).
+			after, err := h.WC.TimerList(ctx)
+			if err != nil {
+				return err
+			}
+			if _, ok := findTimer(after, webcontrol.TimerRef{ServiceReference: p.ServiceReference, Begin: p.RecordBegin, End: p.RecordEnd}); !ok {
+				return &plan.Failure{Status: http.StatusConflict, Code: CodeTimerNotCreated, Message: "the box reported success, but the timer isn't in its list — usually one on the same channel with the same start already exists"}
+			}
+			return nil
+		},
+	})
+	httpx.WriteJSON(w, http.StatusOK, map[string]any{"plan": pl})
+}
+
+type deleteRequest struct {
+	ServiceReference string `json:"serviceReference"`
+	Begin            int64  `json:"begin"`
+	End              int64  `json:"end"`
+}
+
+// planDelete previews deleting a timer, identified exactly as
+// GET /api/v1/timers lists it (the box matches service reference, begin
+// and end verbatim).
+func (h *Timer) planDelete(w http.ResponseWriter, r *http.Request) {
+	user, _ := httpx.User(r.Context())
+	var req deleteRequest
+	if err := httpx.DecodeJSON(r, &req); err != nil || req.ServiceReference == "" || req.Begin <= 0 || req.End <= 0 {
+		httpx.WriteError(w, r, http.StatusBadRequest, "invalid_body", `expected {"serviceReference", "begin", "end"} as listed by GET /api/v1/timers`)
+		return
+	}
+	ctx := r.Context()
+	timers, err := h.WC.TimerList(ctx)
+	if err != nil {
+		httpx.WriteError(w, r, http.StatusBadGateway, "webcontrol_unavailable", "could not reach WebControl")
+		return
+	}
+	ref := webcontrol.TimerRef{ServiceReference: req.ServiceReference, Begin: req.Begin, End: req.End}
+	t, ok := findTimer(timers, ref)
+	if !ok {
+		httpx.WriteError(w, r, http.StatusNotFound, CodeTimerNotFound, "no timer with this service reference, begin and end")
+		return
+	}
+
+	var warnings []status.Problem
+	if t.Active() {
+		warnings = append(warnings, status.Problem{Code: CodeTimerDeleteRunning, Params: map[string]any{"name": t.Name}})
+	}
+	pl := h.Plans.Create(user, plan.Draft{
+		Action:      "timer.delete",
+		Changes:     []plan.Change{{Type: "timer.delete", Before: t}},
+		Warnings:    warnings,
+		Summary:     "Deleted timer: " + t.Name + " (" + t.ServiceName + ")",
+		Detail:      t,
+		Fingerprint: fingerprint(timers),
+		Current: func(ctx context.Context) (string, error) {
+			now, err := h.WC.TimerList(ctx)
+			if err != nil {
+				return "", err
+			}
+			return fingerprint(now), nil
+		},
+		Execute: func(ctx context.Context) error {
+			if err := h.WC.DeleteTimer(ctx, ref); err != nil {
+				return boxFailure(err)
+			}
+			after, err := h.WC.TimerList(ctx)
+			if err != nil {
+				return err
+			}
+			if _, still := findTimer(after, ref); still {
+				return &plan.Failure{Status: http.StatusConflict, Code: CodeTimerNotDeleted, Message: "the box reported success, but the timer is still in its list"}
+			}
+			return nil
 		},
 	})
 	httpx.WriteJSON(w, http.StatusOK, map[string]any{"plan": pl})

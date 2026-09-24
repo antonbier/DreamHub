@@ -301,3 +301,114 @@ func TestRequestID_InHeaderAndErrorBody(t *testing.T) {
 		t.Errorf("every request needs its own ID, got %q and %q", headerID, id2)
 	}
 }
+
+func timerBodyRef(ref, name string, begin, end int64, before, after int) string {
+	return fmt.Sprintf(`{"serviceReference":%q,"serviceName":"x","name":%q,"begin":%d,"end":%d,"marginBefore":%d,"marginAfter":%d}`, ref, name, begin, end, before, after)
+}
+
+// The mock's "Bauer sucht Frau International" timer (RTL, 20:15–21:15).
+const rtlRef = "1:0:19:2EE3:441:1:C00000:0:0:0:"
+
+func deleteBody(ref string, begin, end int64) string {
+	return fmt.Sprintf(`{"serviceReference":%q,"begin":%d,"end":%d}`, ref, begin, end)
+}
+
+func TestTimerDelete_PreviewThenApply(t *testing.T) {
+	e := newEnv(t)
+	resp, b := e.do(t, "POST", "/api/v1/timers/delete/plan", deleteBody(rtlRef, ev(20, 15), ev(21, 15)), nil)
+	if resp.StatusCode != http.StatusOK {
+		t.Fatalf("plan: expected 200, got %d: %s", resp.StatusCode, b)
+	}
+	var p planResp
+	json.Unmarshal(b, &p)
+	if p.Plan.Action != "timer.delete" || len(p.Plan.Warnings) != 0 {
+		t.Fatalf("expected a clean timer.delete plan, got %s", b)
+	}
+	if n := e.timerCount(t); n != 2 {
+		t.Fatal("a preview must not change anything")
+	}
+	if resp, b := e.do(t, "POST", "/api/v1/plans/"+p.Plan.ID+"/apply", "", nil); resp.StatusCode != http.StatusOK {
+		t.Fatalf("apply: expected 200, got %d: %s", resp.StatusCode, b)
+	}
+	if n := e.timerCount(t); n != 1 {
+		t.Fatalf("expected the timer to be gone, got %d timers", n)
+	}
+	_, b = e.do(t, "GET", "/api/v1/changes", "", nil)
+	if !strings.Contains(string(b), "timer.delete") {
+		t.Error("the deletion must be in the change log")
+	}
+}
+
+func TestTimerDelete_UnknownTimer(t *testing.T) {
+	e := newEnv(t)
+	// Same timer, end off by one second: the box matches exactly, so must we.
+	resp, b := e.do(t, "POST", "/api/v1/timers/delete/plan", deleteBody(rtlRef, ev(20, 15), ev(21, 15)+1), nil)
+	if code, _, _ := errCode(t, b); resp.StatusCode != http.StatusNotFound || code != "timer_not_found" {
+		t.Fatalf("expected 404 timer_not_found, got %d %s", resp.StatusCode, b)
+	}
+}
+
+// recordingBox reports the first fixture timer as recording right now.
+type recordingBox struct{ *mock.Client }
+
+func (b recordingBox) TimerList(ctx context.Context) ([]webcontrol.Timer, error) {
+	timers, err := b.Client.TimerList(ctx)
+	if len(timers) > 0 {
+		timers[0].State = webcontrol.TimerRunning
+	}
+	return timers, err
+}
+
+func TestTimerDelete_RunningTimerWarnsItStopsTheRecording(t *testing.T) {
+	e := newEnvWith(t, recordingBox{mock.New()})
+	_, b := e.do(t, "POST", "/api/v1/timers/delete/plan", deleteBody(rtlRef, ev(20, 15), ev(21, 15)), nil)
+	var p planResp
+	json.Unmarshal(b, &p)
+	if len(p.Plan.Warnings) != 1 || p.Plan.Warnings[0].Code != "timer.deleteRunning" {
+		t.Fatalf("deleting a running timer aborts the recording; the preview must say so, got %s", b)
+	}
+}
+
+func TestTimerPlan_DuplicateDroppedByTheBoxIsReported(t *testing.T) {
+	e := newEnv(t)
+	// Same channel, same recording start as the existing RTL timer (20:20
+	// minus 5 min lead-in = 20:15), different end. The box drops this
+	// silently and still says "added" (ARCHITECTURE.md).
+	p := e.planTimer(t, timerBodyRef(rtlRef, "Bauer sucht Frau (again)", ev(20, 20), ev(21, 30), 5, 0))
+	if len(p.Plan.Warnings) == 0 || p.Plan.Warnings[0].Code != "timer.duplicate" {
+		t.Fatalf("expected the box's duplicate rule (same channel + begin) to warn, got %+v", p.Plan.Warnings)
+	}
+	resp, b := e.do(t, "POST", "/api/v1/plans/"+p.Plan.ID+"/apply", "", nil)
+	if code, _, _ := errCode(t, b); resp.StatusCode != http.StatusConflict || code != "timer_not_created" {
+		t.Fatalf("a timer the box dropped must not be reported as created: got %d %s", resp.StatusCode, b)
+	}
+	_, b = e.do(t, "GET", "/api/v1/changes", "", nil)
+	if strings.Contains(string(b), "timer.create") {
+		t.Error("nothing may be logged when the change didn't happen")
+	}
+}
+
+func TestTimerPlan_SameTransponderIsNoConflict(t *testing.T) {
+	e := newEnv(t)
+	// VOX shares RTL's transponder: the single tuner records both.
+	vox := "1:0:19:2F1C:441:1:C00000:0:0:0:"
+	p := e.planTimer(t, timerBodyRef(vox, "Das perfekte Dinner", ev(20, 30), ev(21, 0), 0, 0))
+	if len(p.Plan.Warnings) != 0 {
+		t.Fatalf("same transponder must not be a conflict, got %+v", p.Plan.Warnings)
+	}
+}
+
+type rejectingBox struct{ *mock.Client }
+
+func (rejectingBox) AddTimer(context.Context, webcontrol.NewTimer) error {
+	return &webcontrol.RejectedError{Op: "timeradd", Text: "Timer-Konflikt erkannt! / The Rookie"}
+}
+
+func TestTimerPlan_BoxRefusalIsShownWithItsText(t *testing.T) {
+	e := newEnvWith(t, rejectingBox{mock.New()})
+	p := e.planTimer(t, timerBody("Die Kanzlei (S01/E07)", ev(21, 45), ev(22, 30), 0, 0))
+	resp, b := e.do(t, "POST", "/api/v1/plans/"+p.Plan.ID+"/apply", "", nil)
+	if resp.StatusCode != http.StatusConflict || !strings.Contains(string(b), `"box_rejected"`) || !strings.Contains(string(b), "The Rookie") {
+		t.Fatalf("expected 409 box_rejected carrying the box's text, got %d %s", resp.StatusCode, b)
+	}
+}

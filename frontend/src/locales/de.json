@@ -31,7 +31,9 @@
       "unreachable": "{connector} ist nicht erreichbar",
       "notConfigured": "{connector} ist noch nicht konfiguriert",
       "notImplemented": "{connector} ist noch nicht implementiert",
-      "unknown": "Status von {connector} unbekannt"
+      "unknown": "Status von {connector} unbekannt",
+      "authRequired": "{connector} verlangt ein Passwort",
+      "notInstalled": "{connector} ist auf der Box nicht installiert"
     },
     "capability": {
       "missing": "Fehlt auf dem Gerät: {capability}"
@@ -40,8 +42,9 @@
       "dependencyUnavailable": "{hub} ist nicht verfügbar"
     },
     "timer": {
-      "conflict": "Kollidiert mit einer anderen Aufnahme — nur {tuners} Tuner verfügbar.",
-      "duplicate": "Ein Timer für „{name}“ zu genau dieser Zeit existiert bereits."
+      "conflict": "Kollidiert wahrscheinlich mit einer anderen Aufnahme (Tuner: {tuners}). Die Box prüft beim Speichern erneut.",
+      "duplicate": "Auf diesem Sender beginnt bereits ein Timer zur selben Zeit („{name}“). Die Box würde diesen hier ignorieren.",
+      "deleteRunning": "„{name}“ wird gerade aufgenommen. Löschen des Timers beendet die Aufnahme."
     }
   },
   "fix": {
@@ -50,7 +53,8 @@
     "enableHub": "{hub} in den Einstellungen aktivieren.",
     "capability": {
       "journald": "journald ist auf diesem Rechner nicht verfügbar."
-    }
+    },
+    "installPlugin": "Optional: {plugin} über den Addon-Manager der Box installieren, um das zu nutzen."
   },
   "sidebar": {
     "collapse": "Seitenleiste einklappen",
@@ -259,9 +263,14 @@
       "plan_stale": "Seit der Vorschau hat sich etwas geändert — bitte erneut versuchen.",
       "plan_not_found": "Diese Vorschau ist abgelaufen — bitte erneut versuchen.",
       "plan_forbidden": "Diese Vorschau gehört jemand anderem.",
-      "writes_disabled": "Änderungen an der Box sind deaktiviert, bis Schreibzugriff auf dem Gerät bestätigt ist.",
-      "apply_failed": "Der Timer konnte nicht angelegt werden.",
-      "validation_failed": "Die Timer-Angaben sind ungültig."
+      "writes_disabled": "Änderungen an der Box sind in dieser Installation abgeschaltet (DREAMHUB_ENABLE_DEVICE_WRITES=0).",
+      "apply_failed": "Die Änderung konnte nicht durchgeführt werden.",
+      "validation_failed": "Die Timer-Angaben sind ungültig.",
+      "box_rejected": "Die Box hat die Änderung abgelehnt; nichts wurde geändert.",
+      "timer_not_created": "Die Box hat den Timer nicht angelegt — meist existiert schon einer auf demselben Sender mit derselben Startzeit.",
+      "timer_not_deleted": "Die Box hat den Timer nicht gelöscht.",
+      "timer_not_found": "Diesen Timer gibt es nicht mehr.",
+      "webcontrol_unauthorized": "Die Box verlangt ein Passwort. In den Einstellungen unter „WebControl“ eintragen."
     }
   },
   "settings": {
@@ -351,6 +360,11 @@
       "invalid_timezone": "Kein gültiger Zeitzonenname (z. B. „Europe/Rome“).",
       "unknown": "Unbekannte Einstellung.",
       "forbidden": "Nur ein Admin kann das ändern."
+    },
+    "webcontrol": {
+      "title": "WebControl",
+      "username": "Benutzername der Box (nur nötig, wenn die Box ein Passwort verlangt)",
+      "password": "Passwort der Box"
     }
   },
   "notFound": {

@@ -6,6 +6,15 @@ Format follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/); version
 
 ## [Unreleased]
 
+### Added / changed (v1 plan, phase A — WP1: correct box writes)
+- Timer writes verified live on the reference box and **enabled by default** in live mode (`DREAMHUB_ENABLE_DEVICE_WRITES=0` switches them off). Writes are form-encoded `POST`s with every parameter. Boxes with the WebInterface's default `anti_hijack` refuse `GET`, and a missing parameter crashes the plugin.
+- Every apply is verified against `/web/timerlist`, because the box reports a silently dropped duplicate as success (`409 timer_not_created`). A refusal by the box, e.g. its own tuner conflict check, comes back as `409 box_rejected` with the box's text.
+- Delete timers through preview-and-confirm (`POST /api/v1/timers/delete/plan`). The preview warns when the timer is recording right now, since deleting it stops the recording.
+- Conflict warnings are now a transponder- and delivery-system-aware estimate (`internal/tuner`), and multi-tuner, FBC and mixed sat/cable boxes are covered by tests. On a single tuner, two channels on the same transponder are no longer flagged. The duplicate warning follows the box's own rule (same channel, same start).
+- Optional box login (Settings → WebControl) for boxes that enforce auth for DreamHub. It's used for SerienRecorder's API too. A `401` shows as "asks for a password" instead of "unreachable".
+- A SerienRecorder that isn't installed now shows as `not_installed` with an install hint instead of a connection problem. Optional plugins never break DreamHub (`docs/V1_PLAN.md`).
+- `docs/V1_PLAN.md`: the plan for v1 (work packages, open decisions, the tuner proposal).
+
 ### Added (DiscoveryHub, Diagnostics, time zones, keyboard shortcuts, step 10)
 - DiscoveryHub: AI recommendations from a chosen bouquet's EPG (`GET /api/v1/discovery/status`, `POST /api/v1/discovery/recommendations`). New `internal/ai` package (real OpenAI client + mock) — grounded in real EPG data by index, not free-text, so the model can't hallucinate a service reference that would create a timer for the wrong program. Daily budget (`ai.dailyLimit`) now actually enforced via a new `ai_usage` store table (previously an unenforced setting). "Create timer" is a plain call to TimerHub's own plan/apply endpoints — DreamHub's first real preview-and-confirm UI, showing conflict/duplicate warnings before confirming. Nothing calls the AI automatically; generating is always an explicit, budget-visible click.
 - Diagnostics page (`/diagnostics`): every hub the user may see, including disabled ones, grouped by Unavailable/Degraded/Disabled/Available with the same translated problem/fix text as everywhere else — no new backend, `GET /api/v1/hubs` already existed for exactly this.

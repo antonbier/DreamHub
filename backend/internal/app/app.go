@@ -7,6 +7,7 @@ import (
 	"context"
 	"log/slog"
 	"net/http"
+	"sync"
 	"time"
 
 	"github.com/antonbier/DreamHub/backend/internal/ai"
@@ -66,6 +67,30 @@ type App struct {
 	Tokens     *apitoken.Service
 	Level      *logging.Level
 	User       store.User
+
+	credMu      sync.Mutex
+	credLoaded  bool
+	credVersion uint64
+	credUser    string
+	credPass    string
+}
+
+// BoxCredentials returns the WebControl login configured in settings
+// (connector "webcontrol"), or empty strings. Cached per settings version,
+// since the WebControl/SerienRecorder clients ask on every request.
+func (a *App) BoxCredentials() (user, password string) {
+	version := a.Settings.Version()
+	a.credMu.Lock()
+	defer a.credMu.Unlock()
+	if !a.credLoaded || a.credVersion != version {
+		v, err := a.Settings.Values(context.Background(), a.User)
+		if err != nil {
+			return a.credUser, a.credPass // keep the last known login
+		}
+		a.credUser, a.credPass = v.String(connector.KeyWebControlUsername), v.String(connector.KeyWebControlPassword)
+		a.credLoaded, a.credVersion = true, version
+	}
+	return a.credUser, a.credPass
 }
 
 // New builds the application. Close the returned App's Store when done.

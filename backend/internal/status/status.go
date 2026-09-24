@@ -28,10 +28,13 @@ const (
 	CodeConnectorNotConfigured   = "connector.notConfigured"
 	CodeConnectorNotImplemented  = "connector.notImplemented"
 	CodeConnectorUnknown         = "connector.unknown"
+	CodeConnectorAuthRequired    = "connector.authRequired"
+	CodeConnectorNotInstalled    = "connector.notInstalled"
 	CodeCapabilityMissing        = "capability.missing"
 	CodeHubDependencyUnavailable = "hub.dependencyUnavailable"
 
 	FixCheckBoxConnection  = "fix.checkBoxConnection"
 	FixConfigureInSettings = "fix.configureInSettings"
 	FixEnableHub           = "fix.enableHub"
+	FixInstallPlugin       = "fix.installPlugin"
 )

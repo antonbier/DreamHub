@@ -29,7 +29,9 @@ curl -X PATCH http://127.0.0.1:8080/api/v1/settings -H 'X-DreamHub-Request: 1' \
 
 **Host names**: requests addressed by IP, `localhost` or `*.local` are accepted; any other host name (DNS-rebinding protection) only if listed in the setting `network.allowedHosts` (comma-separated). Otherwise: `421 host_not_allowed`.
 
-**Writes to a real box are off by default.** Creating a timer uses the OpenWebif-style `/web/timeradd`, which wasn't observed during the read-only inspection. In live mode it's refused (`409 writes_disabled`) unless `DREAMHUB_ENABLE_DEVICE_WRITES=1` is set — do that only after verifying the endpoint on the device (#14). In mock mode writes always work.
+**Writes to a real box are on by default** since the timer write endpoints (`/web/timeradd`, `/web/timerdelete`) were verified live on the reference device (`ARCHITECTURE.md`, "Timer write endpoints"). Set `DREAMHUB_ENABLE_DEVICE_WRITES=0` for a read-only run; applying a plan then answers `409 writes_disabled`. Every write still goes through preview-and-confirm, is sent as a form-encoded `POST` with every parameter, and is **verified against `/web/timerlist` afterwards**, because the box reports success for a timer it silently dropped as a duplicate.
+
+**Box login**: if the box enforces auth for DreamHub's requests (`localauth=true` together with `streamauth=true`, see `ARCHITECTURE.md`), set Settings → WebControl (`webcontrol.username`, `webcontrol.password`). The same login is used for SerienRecorder's API, which sits behind WebControl. Without it the WebControl connector reports `connector.authRequired`.
 
 Enabling auth without a username and password is rejected (it would lock everyone out). `/api/v1/health` always stays public.
 
@@ -54,7 +56,8 @@ Enabling auth without a username and password is rejected (it would lock everyon
 | DELETE | `/api/v1/tokens/{id}` | revokes a token; `404 token_not_found` if it doesn't exist or belongs to another user (not distinguished, so one user can't probe another's IDs) |
 | POST | `/api/v1/plans/{id}/apply` | executes a previewed plan (second step of every change). `404 plan_not_found` (unknown, expired after 10 min, or already used), `403 plan_forbidden` (other user), `409 plan_stale` (state changed since the preview — nothing done), `409 writes_disabled` |
 | GET | `/api/v1/timers` | TimerHub: timers and the number of tuners |
-| POST | `/api/v1/timers/plan` | TimerHub: preview a new timer — `{serviceReference, serviceName, name, description?, begin, end, marginBefore?, marginAfter?}` (Unix seconds; margins in minutes, default 5/10). Returns a plan with the recording window and warnings (`timer.conflict` with the clashing timers and tuner count, `timer.duplicate`). Changes nothing |
+| POST | `/api/v1/timers/plan` | TimerHub: preview a new timer — `{serviceReference, serviceName, name, description?, begin, end, marginBefore?, marginAfter?, eventId?}` (Unix seconds; margins in minutes, default 5/10). Returns a plan with the recording window and warnings: `timer.conflict` (an **estimate**, transponder- and delivery-system-aware via `internal/tuner`; the box checks exactly on apply) and `timer.duplicate` (the box's own rule: same channel, same begin). Changes nothing. Apply can fail with `409 box_rejected` (the box refused, `details.boxText` is its own translated message) or `409 timer_not_created` (the box said yes but the timer isn't there) |
+| POST | `/api/v1/timers/delete/plan` | TimerHub: preview deleting a timer — `{serviceReference, begin, end}` exactly as `GET /api/v1/timers` lists it (`404 timer_not_found` otherwise). Warns `timer.deleteRunning` when the timer is recording right now: the box aborts the recording on delete |
 | GET | `/api/v1/changes?limit=` | SystemHub: change log, newest first. Includes system-detected entries (no `userId`) alongside user actions — currently just `hub.statusChanged` when a hub's status actually transitions (`internal/hub/watcher.go`), noticed the next time navigation/hub status happens to be computed, not via a background poller |
 | GET/PUT | `/api/v1/admin/log-level` | AdminHub (admin only): `{"level": "debug", "minutes": 60}` — debug reverts to info automatically |
 
@@ -66,7 +69,7 @@ Every response carries an `X-Request-ID` header; error bodies repeat it as `erro
 
 Problems are `{"code", "params", "fix", "fixParams"}` — all i18n keys plus parameters for the frontend to translate (e.g. `connector.notConfigured` with fix `fix.configureInSettings` and `{"section": "ai"}`).
 
-On a real device, SeriesHub shows as unavailable until the SerienRecorder connector is implemented (#10); in mock mode it's available.
+Connector states are `ok`, `not_configured`, `unreachable`, `not_implemented` and `not_installed`. The last one is for optional plugins: SerienRecorder's API answering `404` means the plugin isn't installed, which is a normal state (`connector.notInstalled`, fix `fix.installPlugin`), not a connection problem. SeriesHub then shows as unavailable with that explanation.
 
 Errors always use `{"error": {"code": ..., "message": ..., "details": ...}}`. Codes are for clients to translate; `message` is an English developer hint.
 

@@ -11,7 +11,14 @@
   relative to the visible window. The "now" line is a single absolutely
   positioned element on the outer wrapper, offset past the name column via
   calc() — see NAME_COL_REM — so it lines up with the timeline areas
-  without fighting CSS grid auto-placement.
+  without fighting CSS grid auto-placement. Positions use inset-inline-start,
+  not left, so the time axis flips with the text direction (PRINCIPLES.md).
+
+  Clicking a programme opens a small panel with its details and "Record",
+  which goes through TimerHub's own plan/apply (CONCEPT.md: hubs talk
+  through the core API) with the EPG event id, so the box links the timer to
+  the programme. ?at=<unix seconds> (global search results) opens the grid
+  at that time.
 -->
 <template>
   <div class="mx-auto max-w-content p-6 below-md:p-4">
@@ -56,11 +63,51 @@
         <span class="text-[13px] text-muted">{{ windowLabel }}</span>
       </div>
 
+      <div v-if="selected" class="mt-4 rounded border border-line bg-tile p-4">
+        <div class="flex items-start gap-3">
+          <div class="min-w-0 flex-1">
+            <span class="block text-[15.5px] font-semibold text-text">{{ selected.title }}</span>
+            <span class="block text-[13px] text-muted">{{ selected.serviceName }} · {{ eventTimeRange(selected) }}</span>
+            <span v-if="selected.description" class="mt-1 block text-[13.5px] text-text">{{ selected.description }}</span>
+          </div>
+          <button type="button" class="shrink-0 rounded px-2 py-1 text-[13px] text-muted hover:bg-tile-2" @click="closeSelected">
+            {{ t('plan.close') }}
+          </button>
+        </div>
+        <div class="mt-3">
+          <p v-if="record.status === 'created'" class="text-[13.5px] text-ok" role="status">{{ t('guide.timerCreated') }}</p>
+          <PlanPreview
+            v-else-if="record.plan"
+            :plan="record.plan"
+            :confirm-label="t('guide.confirmRecord')"
+            :busy="record.status === 'applying'"
+            :error="record.error"
+            @confirm="confirmRecord"
+            @cancel="record = { status: 'idle' }"
+          >
+            {{ t('guide.recordPreview', { name: selected.title, channel: selected.serviceName, when: recordWindow }) }}
+          </PlanPreview>
+          <template v-else>
+            <button
+              v-if="!selectedEnded"
+              type="button"
+              class="rounded bg-accent px-3 py-1.5 text-[13px] font-semibold text-bg disabled:opacity-60"
+              :disabled="record.status === 'loading' || !canRecord"
+              :title="canRecord ? undefined : t('guide.timerHubUnavailable')"
+              @click="previewRecord"
+            >
+              {{ t('guide.record') }}
+            </button>
+            <p v-if="record.error" class="mt-2 text-[12.5px] text-warn">{{ record.error }}</p>
+          </template>
+        </div>
+      </div>
+
       <p v-if="loading" class="mt-5 text-[14px] text-muted">{{ t('common.loading') }}</p>
       <p v-else-if="loadFailed" class="mt-5 text-[14px] text-muted">{{ t('common.backendUnreachable') }}</p>
       <p v-else-if="channels.length === 0" class="mt-5 text-[14px] text-muted">{{ t('guide.empty') }}</p>
       <div v-else class="relative mt-5">
-        <div v-if="nowPercent !== null" class="absolute top-0 bottom-0 w-px bg-warn" :style="{ left: nowLeftStyle }" />
+        <div v-if="nowPercent !== null" class="absolute top-0 bottom-0 w-px bg-warn" :style="{ insetInlineStart: nowLeftStyle }" />
 
         <div class="flex">
           <div class="w-28 shrink-0" />
@@ -68,8 +115,8 @@
             <span
               v-for="m in hourMarks"
               :key="m.label"
-              class="absolute -translate-x-1/2 whitespace-nowrap text-[11px] text-faint"
-              :style="{ left: m.leftPercent + '%' }"
+              class="absolute -translate-x-1/2 whitespace-nowrap text-[11px] text-faint rtl:translate-x-1/2"
+              :style="{ insetInlineStart: m.leftPercent + '%' }"
             >
               {{ m.label }}
             </span>
@@ -79,15 +126,18 @@
         <div v-for="ch in channels" :key="ch.serviceReference" class="flex">
           <div class="w-28 shrink-0 truncate py-1 pe-2 text-[13px] font-semibold text-text">{{ ch.serviceName }}</div>
           <div class="relative h-11 flex-1 border-b border-line-soft">
-            <div
+            <button
               v-for="(e, i) in ch.events"
               :key="i"
-              class="absolute top-1 bottom-1 overflow-hidden text-ellipsis whitespace-nowrap rounded bg-tile px-1.5 py-1 text-[12px] text-text"
+              type="button"
+              class="absolute top-1 bottom-1 overflow-hidden text-ellipsis whitespace-nowrap rounded px-1.5 py-1 text-start text-[12px] text-text hover:bg-tile-2"
+              :class="isSelected(e) ? 'bg-tile-2 ring-1 ring-accent' : 'bg-tile'"
               :style="eventStyle(e)"
               :title="e.title"
+              @click="select(e)"
             >
               {{ e.title }}
-            </div>
+            </button>
           </div>
         </div>
       </div>
@@ -98,12 +148,15 @@
 <script setup lang="ts">
 import { computed, onMounted, ref, watch } from 'vue'
 import { useI18n } from 'vue-i18n'
+import { useRoute } from 'vue-router'
 import { api } from '@/api/client'
 import Icon from '@/components/Icon.vue'
+import PlanPreview from '@/components/PlanPreview.vue'
+import { usePlanError } from '@/composables/usePlanError'
 import { useNavigationStore } from '@/stores/navigation'
 import { useProblem } from '@/composables/useProblem'
 import { useDisplayTimeZone } from '@/composables/useDisplayTimeZone'
-import type { Bouquet, ChannelSchedule, EPGEvent } from '@/api/types'
+import type { Bouquet, ChannelSchedule, EPGEvent, Plan } from '@/api/types'
 
 // Matches the w-28 (7rem) name-column class on every row and header below —
 // keep both in sync if either changes.
@@ -156,7 +209,77 @@ function eventStyle(e: EPGEvent) {
   const clampedEnd = Math.min(e.start + e.duration, windowEnd.value)
   const left = ((clampedStart - windowStart.value) / total) * 100
   const width = Math.max(((clampedEnd - clampedStart) / total) * 100, 1)
-  return { left: left + '%', width: width + '%' }
+  return { insetInlineStart: left + '%', width: width + '%' }
+}
+
+// --- selected programme → record (TimerHub's plan/apply) ------------------
+
+const route = useRoute()
+const { planErrorMessage } = usePlanError()
+
+// Recording needs TimerHub; GuideHub itself works without it.
+const canRecord = computed(() => navigation.navigation?.sections.flatMap((s) => s.items).find((i) => i.id === 'timer')?.status !== 'unavailable')
+
+const selected = ref<EPGEvent | null>(null)
+type RecordState = { status: 'idle' | 'loading' | 'previewing' | 'applying' | 'created'; plan?: Plan; error?: string }
+const record = ref<RecordState>({ status: 'idle' })
+
+const selectedEnded = computed(() => (selected.value ? selected.value.start + selected.value.duration <= Date.now() / 1000 : false))
+
+function isSelected(e: EPGEvent): boolean {
+  return selected.value !== null && selected.value.id === e.id && selected.value.serviceReference === e.serviceReference
+}
+
+function eventTimeRange(e: EPGEvent): string {
+  return `${formatHour(e.start)} – ${formatHour(e.start + e.duration)}`
+}
+
+// The recording window as planned (margins included), from the plan itself.
+const recordWindow = computed(() => {
+  const after = record.value.plan?.changes[0]?.after as { recordBegin?: number; recordEnd?: number } | undefined
+  return after?.recordBegin && after?.recordEnd ? `${formatHour(after.recordBegin)} – ${formatHour(after.recordEnd)}` : ''
+})
+
+function select(e: EPGEvent) {
+  selected.value = e
+  record.value = { status: 'idle' }
+}
+function closeSelected() {
+  selected.value = null
+  record.value = { status: 'idle' }
+}
+
+async function previewRecord() {
+  const e = selected.value
+  if (!e) return
+  record.value = { status: 'loading' }
+  try {
+    const res = await api.timerPlan({
+      serviceReference: e.serviceReference,
+      serviceName: e.serviceName,
+      name: e.title,
+      description: e.description,
+      begin: e.start,
+      end: e.start + e.duration,
+      eventId: e.id,
+    })
+    if (selected.value === e) record.value = { status: 'previewing', plan: res.plan }
+  } catch (err) {
+    if (selected.value === e) record.value = { status: 'idle', error: planErrorMessage(err) }
+  }
+}
+
+async function confirmRecord() {
+  const plan = record.value.plan
+  if (!plan) return
+  record.value = { status: 'applying', plan }
+  try {
+    await api.plans.apply(plan.id)
+    record.value = { status: 'created' }
+  } catch (err) {
+    // The plan is used up either way; "Record" starts a fresh preview.
+    record.value = { status: 'idle', error: planErrorMessage(err) }
+  }
 }
 
 function shiftWindow(hours: number) {
@@ -191,7 +314,18 @@ async function loadGrid() {
 
 watch([selectedBouquet, windowStart], loadGrid)
 
+// A search result while already on /guide only changes the query.
+watch(
+  () => route.query.at,
+  (value) => {
+    const at = Number(value)
+    if (Number.isFinite(at) && at > 0) windowStart.value = Math.floor(at / 3600) * 3600
+  },
+)
+
 onMounted(async () => {
+  const at = Number(route.query.at)
+  if (Number.isFinite(at) && at > 0) windowStart.value = Math.floor(at / 3600) * 3600
   try {
     const res = await api.guide.bouquets()
     bouquets.value = res.bouquets

@@ -15,6 +15,14 @@ Format follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/); version
 - A SerienRecorder that isn't installed now shows as `not_installed` with an install hint instead of a connection problem. Optional plugins never break DreamHub (`docs/V1_PLAN.md`).
 - `docs/V1_PLAN.md`: the plan for v1 (work packages, open decisions, the tuner proposal).
 
+### Added (v1 plan, WP3: TimerHub)
+- TimerHub screen: timers by day, state, source (SerienRecorder/AutoTimer, from the box's tags), a likely-conflict marker, and deleting through preview-and-confirm.
+- Record a programme straight from the TV guide grid. The preview shows the recording window including margins.
+- GuideHub search: global search finds programmes through the box's own EPG search, and a result opens the grid at that time.
+- AutoTimer (optional plugin), read-only: its rules, its own dry run, and a link to its editor. Without the plugin TimerHub stays fully available.
+- Dashboard tile "Conflicts". A shared inline preview component (`PlanPreview.vue`). A refusal by the box now shows the box's own reason everywhere, DiscoveryHub included.
+- GuideHub's timeline positions use logical properties (RTL-ready).
+
 ### Fixed (v1 plan, phase A — WP2: first run on the box)
 - GuideHub's grid shipped the whole EPG (~25 days, about 2 MB per page): `/web/epgmulti`'s `endTime` is a duration in minutes, not an end timestamp. Now 52 KB and 0.1 s for a 4-hour page.
 - DreamHub's data directory and SQLite's `-wal`/`-shm` files were world-readable. It now sets umask `077` at startup.

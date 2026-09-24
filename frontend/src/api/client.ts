@@ -14,6 +14,8 @@
 import { authHeader, authState, clearCredentials } from './authState'
 import type {
   ApiToken,
+  AutoTimers,
+  SimulatedTimer,
   Bouquet,
   ChangeEntry,
   ChannelSchedule,
@@ -141,7 +143,19 @@ export const api = {
     end: number
     marginBefore?: number
     marginAfter?: number
+    // The EPG event being recorded, when known (GuideHub) — the box links
+    // the timer to it.
+    eventId?: number
   }) => request<{ plan: Plan }>('POST', '/api/v1/timers/plan', req),
+  // Identify the timer exactly as GET /api/v1/timers lists it.
+  timerDeletePlan: (t: { serviceReference: string; begin: number; end: number }) =>
+    request<{ plan: Plan }>('POST', '/api/v1/timers/delete/plan', {
+      serviceReference: t.serviceReference,
+      begin: t.begin,
+      end: t.end,
+    }),
+  autoTimers: () => request<AutoTimers>('GET', '/api/v1/timers/autotimers'),
+  autoTimerSimulate: () => request<{ timers: SimulatedTimer[] }>('GET', '/api/v1/timers/autotimers/simulate'),
   plans: {
     // backend/internal/plan.Result.
     apply: (id: string) => request<{ planId: string; action: string }>('POST', `/api/v1/plans/${encodeURIComponent(id)}/apply`),

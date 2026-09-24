@@ -175,7 +175,8 @@
       "timersUpcoming": "Anstehende Timer",
       "hubsStatus": "Braucht Aufmerksamkeit",
       "mediaDiskSpace": "Speicherplatz",
-      "seriesUpcoming": "Anstehende Folgen"
+      "seriesUpcoming": "Anstehende Folgen",
+      "timersConflicts": "Konflikte"
     },
     "tileFrame": {
       "hide": "Ausblenden",
@@ -199,6 +200,10 @@
     "seriesTile": {
       "empty": "Keine anstehenden Folgen.",
       "unavailable": "Serien ist nicht verfügbar."
+    },
+    "conflictsTile": {
+      "none": "Keine Tuner-Konflikte in Sicht.",
+      "open": "In Timern lösen"
     }
   },
   "hubPlaceholder": {
@@ -212,7 +217,12 @@
   },
   "guide": {
     "empty": "Keine Sender in diesem Bouquet.",
-    "now": "Jetzt"
+    "now": "Jetzt",
+    "record": "Aufnehmen",
+    "confirmRecord": "Timer anlegen",
+    "recordPreview": "Ein Timer für „{name}“ auf {channel} wird angelegt, Aufnahme {when}.",
+    "timerCreated": "Timer angelegt.",
+    "timerHubUnavailable": "Aufnehmen braucht TimerHub, der nicht verfügbar ist."
   },
   "series": {
     "tracked": "Verfolgte Serien",
@@ -270,7 +280,8 @@
       "timer_not_created": "Die Box hat den Timer nicht angelegt — meist existiert schon einer auf demselben Sender mit derselben Startzeit.",
       "timer_not_deleted": "Die Box hat den Timer nicht gelöscht.",
       "timer_not_found": "Diesen Timer gibt es nicht mehr.",
-      "webcontrol_unauthorized": "Die Box verlangt ein Passwort. In den Einstellungen unter „WebControl“ eintragen."
+      "webcontrol_unauthorized": "Die Box verlangt ein Passwort. In den Einstellungen unter „WebControl“ eintragen.",
+      "boxSays": "Die Box meldet: „{text}“"
     }
   },
   "settings": {
@@ -371,5 +382,51 @@
     "title": "Seite nicht gefunden",
     "body": "Diese Seite gibt es nicht.",
     "backToDashboard": "Zurück zur Startseite"
+  },
+  "plan": {
+    "eyebrow": "Vorschau · noch nichts geändert",
+    "cancel": "Abbrechen",
+    "applying": "Wird ausgeführt…",
+    "close": "Schließen"
+  },
+  "timers": {
+    "tuners": "{count} Tuner | {count} Tuner",
+    "empty": "Keine anstehenden Timer.",
+    "today": "Heute",
+    "tomorrow": "Morgen",
+    "showFinished": "Abgeschlossene Timer anzeigen ({count})",
+    "hideFinished": "Abgeschlossene Timer ausblenden",
+    "deleted": "„{name}“ gelöscht.",
+    "delete": "Löschen",
+    "confirmDelete": "Timer löschen",
+    "deletePreview": "Der Timer „{name}“ ({channel}, {when}) wird auf der Box gelöscht.",
+    "zap": "nur umschalten",
+    "repeating": "wiederholend",
+    "likelyConflict": "wahrscheinlich Tuner-Konflikt",
+    "source": {
+      "serienrecorder": "SerienRecorder",
+      "autotimer": "AutoTimer"
+    },
+    "state": {
+      "scheduled": "Geplant",
+      "preparing": "Startet",
+      "recording": "Nimmt auf",
+      "done": "Fertig",
+      "disabled": "Deaktiviert"
+    },
+    "autoTimer": {
+      "title": "AutoTimer",
+      "simulate": "Probelauf",
+      "simulating": "Läuft…",
+      "openEditor": "AutoTimer-Editor öffnen",
+      "notInstalled": "Das AutoTimer-Plugin ist auf dieser Box nicht installiert. Kein Problem — es ist optional (Addon-Manager).",
+      "none": "Keine AutoTimer eingerichtet.",
+      "unavailable": "Das AutoTimer-Plugin hat nicht geantwortet.",
+      "match": "sucht „{match}“",
+      "enabled": "An",
+      "disabled": "Aus",
+      "simulateEyebrow": "Probelauf · diese Timer würden angelegt, nichts wurde geändert",
+      "simulateNone": "Die AutoTimer würden gerade keine neuen Timer anlegen."
+    }
   }
 }

@@ -15,6 +15,7 @@ import (
 	"strings"
 	"time"
 
+	"github.com/antonbier/DreamHub/backend/internal/autotimer"
 	"github.com/antonbier/DreamHub/backend/internal/httpx"
 	"github.com/antonbier/DreamHub/backend/internal/hub"
 	"github.com/antonbier/DreamHub/backend/internal/plan"
@@ -23,11 +24,16 @@ import (
 	"github.com/antonbier/DreamHub/backend/internal/webcontrol"
 )
 
-// Timer is TimerHub: listing timers and creating them via preview-and-confirm.
+// Timer is TimerHub: listing timers, creating and deleting them via
+// preview-and-confirm, and a read-only view of the optional AutoTimer
+// plugin.
 type Timer struct {
 	WC    webcontrol.Client
 	Plans *plan.Service
 	Now   func() time.Time
+	// AT is the AutoTimer plugin's API; nil or "not installed" just hides
+	// that section (the plugin is optional, docs/V1_PLAN.md rule 1).
+	AT autotimer.Client
 }
 
 // Mount registers TimerHub's routes.
@@ -35,7 +41,13 @@ func (h *Timer) Mount(mux *http.ServeMux) {
 	mux.HandleFunc("GET /api/v1/timers", h.list)
 	mux.HandleFunc("POST /api/v1/timers/plan", h.planCreate)
 	mux.HandleFunc("POST /api/v1/timers/delete/plan", h.planDelete)
+	mux.HandleFunc("GET /api/v1/timers/autotimers", h.autoTimers)
+	mux.HandleFunc("GET /api/v1/timers/autotimers/simulate", h.autoTimerSimulate)
 }
+
+// AutoTimerEditorPath is the AutoTimer plugin's own web GUI on the box
+// (WebControl's port 80), linked rather than rebuilt — decision D3.
+const AutoTimerEditorPath = "/autotimereditor/"
 
 // Margin defaults and limits, in minutes (the mockup's "5 / 10 min").
 const (
@@ -83,6 +95,58 @@ func (h *Timer) Search(ctx context.Context, query string) ([]hub.SearchResult, e
 	return out, nil
 }
 
+// Timer sources, derived from the tags the box reports.
+const (
+	SourceSerienRecorder = "serienrecorder"
+	SourceAutoTimer      = "autotimer"
+)
+
+// TimerView is a timer as TimerHub lists it: the box's fields plus what
+// DreamHub derives — who created it, and whether it likely clashes with
+// another timer on this box's tuners (an estimate, like the plan warning).
+type TimerView struct {
+	webcontrol.Timer
+	Source   string `json:"source,omitempty"`
+	Conflict bool   `json:"conflict"`
+}
+
+// timerSource reads the creator from the tags: SerienRecorder always tags
+// its timers "SerienRecorder" (live fixture); AutoTimer tags them
+// "AutoTimer" when its add_autotimer_to_tags option is on (plugin source).
+// Anything else is unknown — not necessarily manual.
+func timerSource(tags string) string {
+	for _, tag := range strings.Fields(tags) {
+		switch tag {
+		case "SerienRecorder":
+			return SourceSerienRecorder
+		case "AutoTimer":
+			return SourceAutoTimer
+		}
+	}
+	return ""
+}
+
+// timerViews marks every pending timer that likely conflicts with the
+// others (internal/tuner).
+func timerViews(timers []webcontrol.Timer, info *webcontrol.DeviceInfo) []TimerView {
+	frontends := tuner.Frontends(info)
+	out := make([]TimerView, len(timers))
+	for i, t := range timers {
+		out[i] = TimerView{Timer: t, Source: timerSource(t.Tags)}
+		if !occupiesTuner(t) || t.JustPlay {
+			continue
+		}
+		var others []tuner.Booking
+		for j, o := range timers {
+			if j != i && occupiesTuner(o) && !o.JustPlay {
+				others = append(others, tuner.Booking{ServiceReference: o.ServiceReference, Begin: o.Begin, End: o.End})
+			}
+		}
+		out[i].Conflict = len(tuner.Conflicts(frontends, others, tuner.Booking{ServiceReference: t.ServiceReference, Begin: t.Begin, End: t.End})) > 0
+	}
+	return out
+}
+
 func (h *Timer) list(w http.ResponseWriter, r *http.Request) {
 	timers, err := h.WC.TimerList(r.Context())
 	if err != nil {
@@ -90,7 +154,46 @@ func (h *Timer) list(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 	info, _ := h.WC.DeviceInfo(r.Context())
-	httpx.WriteJSON(w, http.StatusOK, map[string]any{"timers": timers, "tuners": info.Tuners()})
+	httpx.WriteJSON(w, http.StatusOK, map[string]any{"timers": timerViews(timers, info), "tuners": info.Tuners()})
+}
+
+// autoTimers lists the AutoTimer plugin's configuration. A box without the
+// plugin is a normal answer ({"installed": false}), not an error.
+func (h *Timer) autoTimers(w http.ResponseWriter, r *http.Request) {
+	if h.AT == nil {
+		httpx.WriteJSON(w, http.StatusOK, map[string]any{"installed": false})
+		return
+	}
+	list, err := h.AT.List(r.Context())
+	switch {
+	case errors.Is(err, autotimer.ErrNotInstalled):
+		httpx.WriteJSON(w, http.StatusOK, map[string]any{"installed": false})
+	case errors.Is(err, autotimer.ErrUnauthorized):
+		httpx.WriteError(w, r, http.StatusBadGateway, "webcontrol_unauthorized", "the box asks for credentials; set them in Settings → WebControl")
+	case err != nil:
+		httpx.WriteError(w, r, http.StatusBadGateway, "autotimer_unavailable", "could not read the AutoTimer configuration")
+	default:
+		httpx.WriteJSON(w, http.StatusOK, map[string]any{"installed": true, "autoTimers": list, "editorPath": AutoTimerEditorPath})
+	}
+}
+
+// autoTimerSimulate is the plugin's own dry run: the timers the AutoTimers
+// would create now. Read-only on the box (parseEPG(simulateOnly=True)), so
+// no plan is needed.
+func (h *Timer) autoTimerSimulate(w http.ResponseWriter, r *http.Request) {
+	if h.AT == nil {
+		httpx.WriteError(w, r, http.StatusNotFound, "autotimer_not_installed", "the AutoTimer plugin isn't installed on the box")
+		return
+	}
+	sim, err := h.AT.Simulate(r.Context())
+	switch {
+	case errors.Is(err, autotimer.ErrNotInstalled):
+		httpx.WriteError(w, r, http.StatusNotFound, "autotimer_not_installed", "the AutoTimer plugin isn't installed on the box")
+	case err != nil:
+		httpx.WriteError(w, r, http.StatusBadGateway, "autotimer_unavailable", "could not run the AutoTimer dry run")
+	default:
+		httpx.WriteJSON(w, http.StatusOK, map[string]any{"timers": sim})
+	}
 }
 
 type createRequest struct {

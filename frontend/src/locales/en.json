@@ -175,7 +175,8 @@
       "timersUpcoming": "Upcoming timers",
       "hubsStatus": "Needs attention",
       "mediaDiskSpace": "Disk space",
-      "seriesUpcoming": "Upcoming episodes"
+      "seriesUpcoming": "Upcoming episodes",
+      "timersConflicts": "Conflicts"
     },
     "tileFrame": {
       "hide": "Hide",
@@ -199,6 +200,10 @@
     "seriesTile": {
       "empty": "No upcoming episodes.",
       "unavailable": "SeriesHub isn't available."
+    },
+    "conflictsTile": {
+      "none": "No tuner conflicts ahead.",
+      "open": "Resolve in Timers"
     }
   },
   "hubPlaceholder": {
@@ -212,7 +217,12 @@
   },
   "guide": {
     "empty": "No channels in this bouquet.",
-    "now": "Now"
+    "now": "Now",
+    "record": "Record",
+    "confirmRecord": "Create timer",
+    "recordPreview": "A timer for “{name}” on {channel} will be created, recording {when}.",
+    "timerCreated": "Timer created.",
+    "timerHubUnavailable": "Recording needs TimerHub, which isn't available."
   },
   "series": {
     "tracked": "Tracked series",
@@ -270,7 +280,8 @@
       "timer_not_created": "The box didn't create the timer — usually one on the same channel with the same start already exists.",
       "timer_not_deleted": "The box didn't delete the timer.",
       "timer_not_found": "This timer no longer exists.",
-      "webcontrol_unauthorized": "The box asks for a password. Set it in Settings → WebControl."
+      "webcontrol_unauthorized": "The box asks for a password. Set it in Settings → WebControl.",
+      "boxSays": "The box says: “{text}”"
     }
   },
   "settings": {
@@ -371,5 +382,51 @@
     "title": "Page not found",
     "body": "This page doesn't exist.",
     "backToDashboard": "Back to dashboard"
+  },
+  "plan": {
+    "eyebrow": "Preview · nothing changed yet",
+    "cancel": "Cancel",
+    "applying": "Applying…",
+    "close": "Close"
+  },
+  "timers": {
+    "tuners": "{count} tuner | {count} tuners",
+    "empty": "No upcoming timers.",
+    "today": "Today",
+    "tomorrow": "Tomorrow",
+    "showFinished": "Show finished timers ({count})",
+    "hideFinished": "Hide finished timers",
+    "deleted": "Deleted “{name}”.",
+    "delete": "Delete",
+    "confirmDelete": "Delete timer",
+    "deletePreview": "The timer “{name}” ({channel}, {when}) will be deleted on the box.",
+    "zap": "switch channel only",
+    "repeating": "repeating",
+    "likelyConflict": "likely tuner conflict",
+    "source": {
+      "serienrecorder": "SerienRecorder",
+      "autotimer": "AutoTimer"
+    },
+    "state": {
+      "scheduled": "Scheduled",
+      "preparing": "Starting",
+      "recording": "Recording",
+      "done": "Done",
+      "disabled": "Disabled"
+    },
+    "autoTimer": {
+      "title": "AutoTimer",
+      "simulate": "Dry run",
+      "simulating": "Running…",
+      "openEditor": "Open AutoTimer editor",
+      "notInstalled": "The AutoTimer plugin isn't installed on this box. That's fine — it's optional (Addon Manager).",
+      "none": "No AutoTimers configured.",
+      "unavailable": "The AutoTimer plugin didn't answer.",
+      "match": "matches “{match}”",
+      "enabled": "On",
+      "disabled": "Off",
+      "simulateEyebrow": "Dry run · these timers would be created, nothing was changed",
+      "simulateNone": "The AutoTimers would create no new timers right now."
+    }
   }
 }

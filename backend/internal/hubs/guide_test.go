@@ -28,3 +28,11 @@ func TestGroupByChannel(t *testing.T) {
 		t.Errorf("channel 1: %+v", got[1])
 	}
 }
+
+func TestTimerSource(t *testing.T) {
+	for tags, want := range map[string]string{"SerienRecorder": SourceSerienRecorder, "AutoTimer Krimi": SourceAutoTimer, "": "", "Krimi": ""} {
+		if got := timerSource(tags); got != want {
+			t.Errorf("timerSource(%q) = %q, want %q", tags, got, want)
+		}
+	}
+}

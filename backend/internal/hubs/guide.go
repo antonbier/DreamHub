@@ -1,8 +1,13 @@
 package hubs
 
 import (
+	"context"
 	"net/http"
+	"sort"
 	"strconv"
+	"time"
+
+	"github.com/antonbier/DreamHub/backend/internal/hub"
 
 	"github.com/antonbier/DreamHub/backend/internal/httpx"
 	"github.com/antonbier/DreamHub/backend/internal/webcontrol"
@@ -12,7 +17,38 @@ import (
 // window — several events per channel, not just now/next, so the frontend
 // can render an actual schedule grid (switchable bouquet and window).
 type Guide struct {
-	WC webcontrol.Client
+	WC  webcontrol.Client
+	Now func() time.Time
+}
+
+// maxGuideResults caps the search provider's answer; the palette shows a
+// handful per hub anyway.
+const maxGuideResults = 10
+
+// Search implements hub.SearchProvider over the box's own EPG title search
+// (/web/epgsearch), upcoming and running programmes only, soonest first.
+// A result links into the grid at that programme's start (?at=).
+func (h *Guide) Search(ctx context.Context, query string) ([]hub.SearchResult, error) {
+	events, err := h.WC.EPGSearch(ctx, query)
+	if err != nil {
+		return nil, err
+	}
+	now := h.Now().Unix()
+	upcoming := events[:0]
+	for _, e := range events {
+		if e.Start+e.Duration > now {
+			upcoming = append(upcoming, e)
+		}
+	}
+	sort.SliceStable(upcoming, func(i, j int) bool { return upcoming[i].Start < upcoming[j].Start })
+	if len(upcoming) > maxGuideResults {
+		upcoming = upcoming[:maxGuideResults]
+	}
+	out := make([]hub.SearchResult, 0, len(upcoming))
+	for _, e := range upcoming {
+		out = append(out, hub.SearchResult{Title: e.Title, Subtitle: e.ServiceName, Path: "/guide?at=" + strconv.FormatInt(e.Start, 10)})
+	}
+	return out, nil
 }
 
 // Mount registers GuideHub's routes.

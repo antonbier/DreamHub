@@ -3,6 +3,8 @@ package api_test
 import (
 	"context"
 	"encoding/json"
+	"github.com/antonbier/DreamHub/backend/internal/autotimer"
+	atmock "github.com/antonbier/DreamHub/backend/internal/autotimer/mock"
 	"io"
 	"log/slog"
 	"net/http"
@@ -39,10 +41,15 @@ type env struct {
 func newEnv(t *testing.T) *env { return newEnvWith(t, mock.New()) }
 
 func newEnvWith(t *testing.T, wc webcontrol.Client) *env {
+	return newEnvWithAutoTimer(t, wc, atmock.New())
+}
+
+func newEnvWithAutoTimer(t *testing.T, wc webcontrol.Client, at autotimer.Client) *env {
 	t.Helper()
 	a, err := app.New(context.Background(), app.Options{
 		DataDir:    t.TempDir(),
 		WebControl: wc,
+		AutoTimer:  at,
 		Series:     srmock.New(),
 		AI:         aimock.New(),
 		Mock:       true,
@@ -579,8 +586,19 @@ func TestSearch_FindsARealTimerByName(t *testing.T) {
 		} `json:"results"`
 	}
 	json.Unmarshal(b, &body)
-	if len(body.Results) != 1 || body.Results[0].Title != "The Rookie" || body.Results[0].HubID != "timer" || body.Results[0].Path != "/timers" {
-		t.Fatalf("expected exactly the mock's \"The Rookie\" timer, got %+v", body.Results)
+	// GuideHub contributes the EPG's matching programmes too; the timer
+	// must be among the results, from TimerHub, linking to /timers.
+	var timerHits int
+	for _, r := range body.Results {
+		if r.HubID == "timer" {
+			timerHits++
+			if r.Title != "The Rookie" || r.Path != "/timers" {
+				t.Errorf("unexpected timer result: %+v", r)
+			}
+		}
+	}
+	if timerHits != 1 {
+		t.Fatalf("expected exactly the mock's \"The Rookie\" timer from TimerHub, got %+v", body.Results)
 	}
 
 	// No query, no results — not an error.
@@ -600,11 +618,15 @@ func TestSearch_SkipsADisabledHub(t *testing.T) {
 
 	_, b := e.do(t, "GET", "/api/v1/search?q=Rookie", "", nil)
 	var body struct {
-		Results []any `json:"results"`
+		Results []struct {
+			HubID string `json:"hubId"`
+		} `json:"results"`
 	}
 	json.Unmarshal(b, &body)
-	if len(body.Results) != 0 {
-		t.Errorf("a disabled hub's timers must not be searchable, got %+v", body.Results)
+	for _, r := range body.Results {
+		if r.HubID == "timer" {
+			t.Errorf("a disabled hub's timers must not be searchable, got %+v", body.Results)
+		}
 	}
 }
 
@@ -726,8 +748,8 @@ func TestDashboard_GetReturnsTheFullCatalogByDefault(t *testing.T) {
 		} `json:"tiles"`
 	}
 	json.Unmarshal(b, &body)
-	if len(body.Tiles) != 4 {
-		t.Fatalf("expected the 3 built-in tiles on a fresh install, got %+v", body.Tiles)
+	if len(body.Tiles) != 5 {
+		t.Fatalf("expected the 5 built-in tiles on a fresh install, got %+v", body.Tiles)
 	}
 	for _, tile := range body.Tiles {
 		if tile.Hidden || tile.Label == "" || tile.Width < 1 || tile.Width > 4 {
@@ -752,7 +774,7 @@ func TestDashboard_PutRoundTripsAndIsLogged(t *testing.T) {
 		} `json:"tiles"`
 	}
 	json.Unmarshal(b, &body)
-	if len(body.Tiles) != 4 || body.Tiles[0].Type != "hubs.status" || !body.Tiles[0].Hidden || body.Tiles[0].Width != 1 {
+	if len(body.Tiles) != 5 || body.Tiles[0].Type != "hubs.status" || !body.Tiles[0].Hidden || body.Tiles[0].Width != 1 {
 		t.Fatalf("order/width/hidden not preserved: %+v", body.Tiles)
 	}
 

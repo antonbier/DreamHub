@@ -4,6 +4,7 @@ import (
 	"context"
 	"errors"
 
+	"github.com/antonbier/DreamHub/backend/internal/autotimer"
 	"github.com/antonbier/DreamHub/backend/internal/serienrecorder"
 	"github.com/antonbier/DreamHub/backend/internal/settings"
 	"github.com/antonbier/DreamHub/backend/internal/status"
@@ -12,6 +13,7 @@ import (
 
 // IDs of the built-in connectors.
 const (
+	IDAutoTimer      = "autotimer"
 	IDWebControl     = "webcontrol"
 	IDSerienRecorder = "serienrecorder"
 	IDTMDB           = "tmdb"
@@ -85,12 +87,7 @@ func (s SerienRecorder) Check(ctx context.Context, _ settings.Values) Report {
 		return Report{State: OK}
 	}
 	if _, err := s.Client.Info(ctx); errors.Is(err, serienrecorder.ErrNotInstalled) {
-		return Report{State: NotInstalled, Problem: &status.Problem{
-			Code:      status.CodeConnectorNotInstalled,
-			Params:    map[string]any{"connector": "SerienRecorder"},
-			Fix:       status.FixInstallPlugin,
-			FixParams: map[string]any{"plugin": "SerienRecorder"},
-		}}
+		return notInstalled("SerienRecorder")
 	} else if errors.Is(err, serienrecorder.ErrUnauthorized) {
 		return authRequired("SerienRecorder")
 	} else if err != nil {
@@ -101,6 +98,46 @@ func (s SerienRecorder) Check(ctx context.Context, _ settings.Values) Report {
 		}}
 	}
 	return Report{State: OK}
+}
+
+// --- AutoTimer ------------------------------------------------------------
+
+// AutoTimer is the optional AutoTimer plugin's web API. No hub *requires*
+// it: TimerHub just shows or hides its AutoTimer section, so a box without
+// the plugin (a normal setup) doesn't get a permanent "degraded" warning.
+// The state still shows up under Diagnostics/connectors.
+type AutoTimer struct{ Client autotimer.Client }
+
+func (AutoTimer) ID() string                   { return IDAutoTimer }
+func (AutoTimer) Name() string                 { return "AutoTimer" }
+func (AutoTimer) Settings() []settings.Section { return nil }
+func (a AutoTimer) Check(ctx context.Context, _ settings.Values) Report {
+	if a.Client == nil {
+		return notInstalled("AutoTimer")
+	}
+	_, err := a.Client.List(ctx)
+	switch {
+	case errors.Is(err, autotimer.ErrNotInstalled):
+		return notInstalled("AutoTimer")
+	case errors.Is(err, autotimer.ErrUnauthorized):
+		return authRequired("AutoTimer")
+	case err != nil:
+		return Report{State: Unreachable, Problem: &status.Problem{
+			Code:   status.CodeConnectorUnreachable,
+			Params: map[string]any{"connector": "AutoTimer"},
+			Fix:    status.FixCheckBoxConnection,
+		}}
+	}
+	return Report{State: OK}
+}
+
+func notInstalled(plugin string) Report {
+	return Report{State: NotInstalled, Problem: &status.Problem{
+		Code:      status.CodeConnectorNotInstalled,
+		Params:    map[string]any{"connector": plugin},
+		Fix:       status.FixInstallPlugin,
+		FixParams: map[string]any{"plugin": plugin},
+	}}
 }
 
 // --- TMDB -----------------------------------------------------------------

@@ -11,6 +11,7 @@ package mock
 
 import (
 	"context"
+	"strings"
 	"sync"
 	"time"
 
@@ -143,6 +144,17 @@ func (c *Client) EPGMulti(ctx context.Context, bouquetRef string, start, end int
 	var out []webcontrol.EPGEvent
 	for _, e := range epgSchedule() {
 		if e.Start >= start && e.Start < end {
+			out = append(out, e)
+		}
+	}
+	return out, nil
+}
+
+func (c *Client) EPGSearch(ctx context.Context, query string) ([]webcontrol.EPGEvent, error) {
+	q := strings.ToLower(query)
+	var out []webcontrol.EPGEvent
+	for _, e := range epgSchedule() {
+		if strings.Contains(strings.ToLower(e.Title), q) {
 			out = append(out, e)
 		}
 	}

@@ -69,6 +69,9 @@ func (f failingClient) AddTimer(context.Context, webcontrol.NewTimer) error {
 func (f failingClient) DeleteTimer(context.Context, webcontrol.TimerRef) error {
 	return f.fail()
 }
+func (f failingClient) EPGSearch(context.Context, string) ([]webcontrol.EPGEvent, error) {
+	return nil, f.fail()
+}
 func (f failingClient) fail() error {
 	if f.err != nil {
 		return f.err

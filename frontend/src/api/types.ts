@@ -122,7 +122,8 @@ export interface HubStatus {
   requires: Requirement[]
 }
 
-// backend/internal/webcontrol.Timer, as returned by GET /api/v1/timers.
+// backend/internal/hubs.TimerView (webcontrol.Timer plus what TimerHub
+// derives), as returned by GET /api/v1/timers.
 export interface Timer {
   serviceReference: string
   serviceName: string
@@ -131,7 +132,40 @@ export interface Timer {
   begin: number // Unix seconds, UTC, includes margin
   end: number
   disabled: boolean
+  // Enigma2's timer state: 0 waiting, 1 about to start, 2 recording, 3 ended
+  // (a disabled timer is reported as 3).
   state: number
+  justPlay: boolean
+  eventId: number
+  tags: string
+  repeated: number
+  // Who created it, read from its tags; absent when unknown.
+  source?: 'serienrecorder' | 'autotimer'
+  // Likely clashes with another timer on this box's tuners (an estimate —
+  // the box has the final word when a timer is saved).
+  conflict: boolean
+}
+
+// backend/internal/autotimer — the optional AutoTimer plugin, read-only.
+export interface AutoTimerService {
+  serviceReference: string
+  serviceName: string
+}
+export interface AutoTimer {
+  id: number
+  name: string
+  match: string
+  enabled: boolean
+  services: AutoTimerService[]
+}
+export type AutoTimers = { installed: false } | { installed: true; autoTimers: AutoTimer[]; editorPath: string }
+export interface SimulatedTimer {
+  serviceReference: string
+  serviceName: string
+  name: string
+  begin: number
+  end: number
+  autoTimerName: string
 }
 
 // backend/internal/hubs.MovieView, as returned by GET /api/v1/media/movies.

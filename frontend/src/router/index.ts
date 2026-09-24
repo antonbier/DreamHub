@@ -51,13 +51,18 @@ const router = createRouter({
       component: () => import('@/views/DiscoveryHubView.vue'),
     },
     {
+      path: '/timers',
+      name: 'timers',
+      component: () => import('@/views/TimerHubView.vue'),
+    },
+    {
       path: '/diagnostics',
       name: 'diagnostics',
       component: () => import('@/views/DiagnosticsView.vue'),
     },
     {
-      // TimerHub, SystemHub, AdminHub — one placeholder route per hub path.
-      path: '/:hub(timers|system|admin)',
+      // SystemHub, AdminHub — one placeholder route per hub path.
+      path: '/:hub(system|admin)',
       name: 'hub',
       component: () => import('@/views/HubView.vue'),
       props: true,

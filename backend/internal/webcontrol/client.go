@@ -100,6 +100,30 @@ type EPGEvent struct {
 	ServiceName      string `xml:"e2eventservicename" json:"serviceName"`
 }
 
+// EPGSearch finds EPG events whose title contains query, via
+// /web/epgsearch — the box's own title search across every service it has
+// EPG for (at most 256 results, past events included). Events of services
+// the box can't name (reference "-1:…", name "<n/a>") are dropped: they
+// can't be recorded or shown meaningfully.
+func (c *HTTPClient) EPGSearch(ctx context.Context, query string) ([]EPGEvent, error) {
+	body, err := c.do(ctx, http.MethodPost, "/web/epgsearch", url.Values{"search": {query}})
+	if err != nil {
+		return nil, err
+	}
+	defer body.Close()
+	var list epgEventList
+	if err := decodeXML(body, "/web/epgsearch", &list); err != nil {
+		return nil, err
+	}
+	out := list.Events[:0]
+	for _, e := range list.Events {
+		if !strings.HasPrefix(e.ServiceReference, "-1:") {
+			out = append(out, e)
+		}
+	}
+	return out, nil
+}
+
 type epgEventList struct {
 	XMLName xml.Name   `xml:"e2eventlist"`
 	Events  []EPGEvent `xml:"e2event"`
@@ -116,6 +140,15 @@ type Timer struct {
 	Begin            int64  `xml:"e2timebegin" json:"begin"` // Unix seconds, incl. margin
 	End              int64  `xml:"e2timeend" json:"end"`     // Unix seconds, incl. margin
 	Disabled         bool   `xml:"e2disabled" json:"disabled"`
+	// JustPlay marks a zap timer: it switches channel, records nothing.
+	JustPlay bool `xml:"e2justplay" json:"justPlay"`
+	// EventID links the timer to its EPG event (0 if none).
+	EventID int64 `xml:"e2eit" json:"eventId"`
+	// Tags are space-separated; SerienRecorder tags its own timers
+	// "SerienRecorder" (confirmed in the live fixture).
+	Tags string `xml:"e2tags" json:"tags"`
+	// Repeated is a weekday bitmask (bit 0 = Monday); 0 for one-off timers.
+	Repeated int `xml:"e2repeated" json:"repeated"`
 	// State is Enigma2's timer state (timer.py, confirmed on the device):
 	// 0 waiting, 1 prepared (about to start), 2 running, 3 ended. A
 	// disabled timer is reported as 3.
@@ -182,6 +215,8 @@ type Client interface {
 	// seconds) for every channel in a bouquet — the data source for
 	// GuideHub's timeline grid.
 	EPGMulti(ctx context.Context, bouquetRef string, start, end int64) ([]EPGEvent, error)
+	// EPGSearch finds EPG events by title substring (the box's own search).
+	EPGSearch(ctx context.Context, query string) ([]EPGEvent, error)
 }
 
 // ErrWritesDisabled is returned by the real client's write operations until

@@ -61,7 +61,7 @@ Order matters where noted. Everything else can run in parallel.
 - Without this, MediaHub's file operations can't be tested for real: they need local access to `/media/hdd`.
 - Result: a short "how to run a dev build on the box" section in `backend/README.md`.
 
-### WP3 — TimerHub complete *(after WP1)*
+### WP3 — TimerHub complete *(done 2026-09-24 except D5; see ROADMAP.md, TimerHub)*
 - `TimerHubView.vue`: timers grouped by day, status (waiting / preparing / recording / done / disabled), conflict highlighting, source hint where detectable (e.g. SerienRecorder).
 - Delete with preview. A running timer shows an explicit "this stops the recording in progress" warning.
 - Create from GuideHub: click an EPG event → the existing plan/apply flow (send `eit` so the box links the EPG event).

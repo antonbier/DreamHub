@@ -7,6 +7,8 @@ package main
 
 import (
 	"context"
+	"github.com/antonbier/DreamHub/backend/internal/autotimer"
+	atmock "github.com/antonbier/DreamHub/backend/internal/autotimer/mock"
 	"log/slog"
 	"net/http"
 	"os"
@@ -41,6 +43,7 @@ func run(logger *slog.Logger, level *logging.Level) error {
 	var wc webcontrol.Client
 	var sr serienrecorder.Client
 	var aiClient ai.Client
+	var at autotimer.Client
 	switch cfg.Mode {
 	case config.ModeLive:
 		c := webcontrol.NewHTTPClient(cfg.WebControlURL)
@@ -49,6 +52,7 @@ func run(logger *slog.Logger, level *logging.Level) error {
 		// SerienRecorder's API lives on the same device, same host/port,
 		// just a different path (ARCHITECTURE.md, issue #10).
 		sr = serienrecorder.NewHTTPClient(cfg.WebControlURL)
+		at = autotimer.NewHTTPClient(cfg.WebControlURL)
 		// The AI provider is a separate, unrelated external service (not on
 		// the device), but follows the same single mock/live switch as
 		// everything else, per PRINCIPLES.md's "Mock-first development".
@@ -60,6 +64,7 @@ func run(logger *slog.Logger, level *logging.Level) error {
 	default:
 		wc = mock.New()
 		sr = srmock.New()
+		at = atmock.New()
 		aiClient = aimock.New()
 		logger.Info("webcontrol client mode", "mode", "mock")
 	}
@@ -68,6 +73,7 @@ func run(logger *slog.Logger, level *logging.Level) error {
 		DataDir:    cfg.DataDir,
 		WebControl: wc,
 		Series:     sr,
+		AutoTimer:  at,
 		AI:         aiClient,
 		Mock:       cfg.Mode == config.ModeMock,
 		LookPath:   exec.LookPath,
@@ -86,6 +92,9 @@ func run(logger *slog.Logger, level *logging.Level) error {
 		c.Credentials = a.BoxCredentials
 	}
 	if c, ok := sr.(*serienrecorder.HTTPClient); ok {
+		c.Credentials = a.BoxCredentials
+	}
+	if c, ok := at.(*autotimer.HTTPClient); ok {
 		c.Credentials = a.BoxCredentials
 	}
 

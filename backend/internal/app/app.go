@@ -14,6 +14,7 @@ import (
 	"github.com/antonbier/DreamHub/backend/internal/api"
 	"github.com/antonbier/DreamHub/backend/internal/apitoken"
 	"github.com/antonbier/DreamHub/backend/internal/auth"
+	"github.com/antonbier/DreamHub/backend/internal/autotimer"
 	"github.com/antonbier/DreamHub/backend/internal/connector"
 	"github.com/antonbier/DreamHub/backend/internal/dashboard"
 	"github.com/antonbier/DreamHub/backend/internal/hub"
@@ -36,6 +37,9 @@ type Options struct {
 	Series serienrecorder.Client
 	// AI is DiscoveryHub's recommendation client (internal/ai).
 	AI ai.Client
+	// AutoTimer is the optional AutoTimer plugin's API (internal/autotimer);
+	// nil behaves like a box without the plugin.
+	AutoTimer autotimer.Client
 	// Mock is true when running against the mock WebControl/Series clients;
 	// the SerienRecorder connector then reports OK without a real check.
 	Mock bool
@@ -112,6 +116,7 @@ func New(ctx context.Context, o Options) (*App, error) {
 	conns := connector.NewRegistry(o.ConnectorTTL)
 	conns.Add(connector.WebControl{Client: o.WebControl})
 	conns.Add(connector.SerienRecorder{Client: o.Series, Mock: o.Mock})
+	conns.Add(connector.AutoTimer{Client: o.AutoTimer})
 	conns.Add(connector.OpenAI{})
 	conns.Add(connector.TMDB{})
 
@@ -159,9 +164,9 @@ func New(ctx context.Context, o Options) (*App, error) {
 	tokens := apitoken.NewService(st, now)
 	watcher := hub.NewStatusWatcher()
 
-	timerHub := &hubs_.Timer{WC: o.WebControl, Plans: plans, Now: now}
+	timerHub := &hubs_.Timer{WC: o.WebControl, Plans: plans, Now: now, AT: o.AutoTimer}
 	mediaHub := &hubs_.Media{WC: o.WebControl}
-	guideHub := &hubs_.Guide{WC: o.WebControl}
+	guideHub := &hubs_.Guide{WC: o.WebControl, Now: now}
 	seriesHub := &hubs_.Series{SR: o.Series}
 	discoveryHub := &hubs_.Discovery{WC: o.WebControl, AI: o.AI, Store: st, Settings: svc, Now: now}
 	systemHub := &hubs_.System{Store: st}
@@ -172,6 +177,7 @@ func New(ctx context.Context, o Options) (*App, error) {
 	hubs.AddSearchProvider(hub.IDTimer, timerHub)
 	hubs.AddSearchProvider(hub.IDMedia, mediaHub)
 	hubs.AddSearchProvider(hub.IDSeries, seriesHub)
+	hubs.AddSearchProvider(hub.IDGuide, guideHub)
 
 	handler := api.NewRouter(api.Deps{
 		WebControl: o.WebControl,

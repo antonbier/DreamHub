@@ -46,6 +46,8 @@ var catalog = []tileType{
 	{ID: "hubs.status", Label: "dashboard.tile.hubsStatus", DefaultWidth: 2},
 	{ID: "media.diskSpace", Label: "dashboard.tile.mediaDiskSpace", DefaultWidth: 1},
 	{ID: "series.upcoming", Label: "dashboard.tile.seriesUpcoming", DefaultWidth: 2},
+	// Backed by GET /api/v1/timers' per-timer conflict estimate.
+	{ID: "timers.conflicts", Label: "dashboard.tile.timersConflicts", DefaultWidth: 2},
 }
 
 func catalogIndex() map[string]tileType {

@@ -60,7 +60,7 @@ Releases: **Foundation** → **v1** → **v1.1** → **Later**. GitHub milestone
 - [x] **7** Status strip (`StatusStrip.vue`, DESIGN.md): connected, clock skew, hub issue count as small dotted items, plus the browser's own time zone right-aligned in faint (the per-user display-zone *preference* is still open, below). Replaces the earlier ad hoc "backend unreachable" banner
 
 **Open**:
-- [ ] Remaining parts of the hub contract: search providers now cover TimerHub, MediaHub and SeriesHub (GuideHub still open — see its own section), events still just TimerHub-triggered status changes — extend both to the rest of the hubs as they're built; custom/criteria-based tile types (CONCEPT.md: source + filters + sort + limit + display, reusing a hub's search provider — the dashboard's tile *mechanics* are ready for this, only the hub-contributed catalog entries are missing)
+- [ ] Remaining parts of the hub contract: search providers now cover TimerHub, MediaHub, SeriesHub and GuideHub, events still just TimerHub-triggered status changes — extend both to the rest of the hubs as they're built; custom/criteria-based tile types (CONCEPT.md: source + filters + sort + limit + display, reusing a hub's search provider — the dashboard's tile *mechanics* are ready for this, only the hub-contributed catalog entries are missing)
 - [ ] Core event bus (hub events → notifications, later AutomationHub) — the change log now carries one real system-detected event type (`hub.statusChanged`); a proper bus covering every hub action, with persistence designed for it rather than piggybacked on the change log, is still open
 - [ ] Live updates via WebSocket
 - [ ] Runtime drop-in locales from `/data/dreamhub/locales/`
@@ -100,8 +100,16 @@ Releases: **Foundation** → **v1** → **v1.1** → **Later**. GitHub milestone
 - [x] Conflict estimate is transponder- and delivery-system-aware (`internal/tuner`: one tuner records every channel of a transponder; satellite/cable/terrestrial matched to each frontend's capabilities), with test boxes for a triple-tuner, an FBC and a mixed sat/cable setup — layers 1–2 of the tuner proposal in `docs/V1_PLAN.md`
 - [x] Delete via preview-and-confirm: `POST /api/v1/timers/delete/plan`, warning when the timer is recording right now
 
+**Done** (v1 plan WP3):
+- [x] TimerHub screen (`TimerHubView.vue`): upcoming timers grouped by day in the display time zone, finished ones folded away; state (scheduled / starting / recording / done / disabled), source read from the box's tags (SerienRecorder; AutoTimer when it tags), likely-conflict marker per timer (`GET /api/v1/timers` now returns `source` and `conflict`), tuner count
+- [x] Delete from the list via preview-and-confirm (`PlanPreview.vue`, the shared inline preview), incl. the "stops the recording in progress" warning
+- [x] Record from GuideHub: click a programme → details → preview → create, passing the EPG event id so the box links the timer to it
+- [x] AutoTimer (optional plugin, decision D3): read-only list, the plugin's own dry run (`GET /api/v1/timers/autotimers[/simulate]`), a link to its editor (`/autotimereditor/`). A box without the plugin gets one quiet line, and TimerHub stays *available* (the AutoTimer connector reports `not_installed` under Diagnostics only)
+- [x] Dashboard tile "Conflicts" (`timers.conflicts`)
+- [x] Verified live against the reference box (read-only test instance): all 7 real timers recognized as SerienRecorder's, no false conflicts, AutoTimer detected with no rules configured
+
 **Open**:
-- [ ] TimerHub screen, create from GuideHub, AutoTimer (optional plugin) — WP3
+- [ ] Disable/enable a timer (decision D5 — `timerchange` has a buggy conflict path on the box)
 - [ ] Exact conflict dry run through DreamHub's own Enigma2 plugin (D7) — WP8
 
 Notes:
@@ -119,7 +127,8 @@ Notes:
 **Open**:
 - [ ] EPG via `/web/getcurrent` for the currently-tuned service specifically (the grid already covers the general case)
 - [ ] Online enrichment (TMDB) **only** for movie/series genres
-- [ ] A GuideHub search provider (channel/programme name) — not built yet, unlike MediaHub/SeriesHub/TimerHub
+- [x] GuideHub search provider over the box's own EPG title search (`/web/epgsearch`): upcoming and running programmes only, soonest first, unnamed services (`-1:…`, `<n/a>`) dropped; a result opens the grid at that programme (`/guide?at=`)
+- [x] Record a programme from the grid (via TimerHub's plan/apply, see TimerHub)
 - [ ] `GraphMultiEPG` and `TvSpielfilm` are native on-screen references, not replacements
 
 ### DiscoveryHub

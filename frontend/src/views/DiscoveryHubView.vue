@@ -102,12 +102,14 @@ import Icon from '@/components/Icon.vue'
 import { useNavigationStore } from '@/stores/navigation'
 import { useProblem } from '@/composables/useProblem'
 import { useDisplayTimeZone } from '@/composables/useDisplayTimeZone'
+import { usePlanError } from '@/composables/usePlanError'
 import type { Bouquet, DiscoveryStatus, Plan, Recommendation } from '@/api/types'
 
 const { t, locale } = useI18n()
 const navigation = useNavigationStore()
 const { describe, describeFix } = useProblem()
 const { timeZone } = useDisplayTimeZone()
+const { planErrorMessage } = usePlanError()
 
 const item = computed(() => navigation.navigation?.sections.flatMap((s) => s.items).find((i) => i.path === '/discovery'))
 // TimerHub is an optional requirement (CONCEPT.md); DiscoveryHub itself can
@@ -174,8 +176,7 @@ async function previewTimer(i: number, rec: Recommendation) {
     })
     timerState[i] = { status: 'previewing', plan: res.plan }
   } catch (err) {
-    const code = err instanceof ApiError ? err.code : 'network_error'
-    timerState[i] = { status: 'error', error: translateOrRaw(`error.plan.${code}`, code) }
+    timerState[i] = { status: 'error', error: planErrorMessage(err) }
   }
 }
 
@@ -186,8 +187,7 @@ async function confirmTimer(i: number) {
     await api.plans.apply(plan.id)
     timerState[i] = { status: 'created' }
   } catch (err) {
-    const code = err instanceof ApiError ? err.code : 'network_error'
-    timerState[i] = { status: 'error', error: translateOrRaw(`error.plan.${code}`, code) }
+    timerState[i] = { status: 'error', error: planErrorMessage(err) }
   }
 }
 

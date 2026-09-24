@@ -4,6 +4,7 @@ import (
 	"context"
 	"encoding/json"
 	"fmt"
+	atmock "github.com/antonbier/DreamHub/backend/internal/autotimer/mock"
 	"net/http"
 	"strings"
 	"testing"
@@ -410,5 +411,58 @@ func TestTimerPlan_BoxRefusalIsShownWithItsText(t *testing.T) {
 	resp, b := e.do(t, "POST", "/api/v1/plans/"+p.Plan.ID+"/apply", "", nil)
 	if resp.StatusCode != http.StatusConflict || !strings.Contains(string(b), `"box_rejected"`) || !strings.Contains(string(b), "The Rookie") {
 		t.Fatalf("expected 409 box_rejected carrying the box's text, got %d %s", resp.StatusCode, b)
+	}
+}
+
+func TestTimers_ListMarksConflictsAndSource(t *testing.T) {
+	e := newEnv(t)
+	_, b := e.do(t, "GET", "/api/v1/timers", "", nil)
+	var body struct {
+		Timers []struct {
+			Name     string `json:"name"`
+			Conflict bool   `json:"conflict"`
+			Source   string `json:"source"`
+		} `json:"timers"`
+	}
+	json.Unmarshal(b, &body)
+	// The mock's two timers overlap 21:00–21:15 on different transponders
+	// of a single-tuner box: both are marked.
+	if len(body.Timers) != 2 || !body.Timers[0].Conflict || !body.Timers[1].Conflict {
+		t.Fatalf("expected both overlapping fixture timers marked as conflicting, got %s", b)
+	}
+}
+
+func TestAutoTimers_InstalledAndNot(t *testing.T) {
+	e := newEnv(t)
+	_, b := e.do(t, "GET", "/api/v1/timers/autotimers", "", nil)
+	if !strings.Contains(string(b), `"installed":true`) || !strings.Contains(string(b), `"Tatort"`) || !strings.Contains(string(b), `/autotimereditor/`) {
+		t.Fatalf("expected the mock's AutoTimer and the editor link, got %s", b)
+	}
+	if resp, b := e.do(t, "GET", "/api/v1/timers/autotimers/simulate", "", nil); resp.StatusCode != http.StatusOK {
+		t.Fatalf("simulate: expected 200, got %d %s", resp.StatusCode, b)
+	}
+
+	// No plugin on the box: a normal answer, TimerHub stays available.
+	e = newEnvWithAutoTimer(t, mock.New(), &atmock.Client{NotInstalled: true})
+	resp, b := e.do(t, "GET", "/api/v1/timers/autotimers", "", nil)
+	if resp.StatusCode != http.StatusOK || !strings.Contains(string(b), `"installed":false`) {
+		t.Fatalf("a missing AutoTimer plugin must be a plain installed:false, got %d %s", resp.StatusCode, b)
+	}
+	_, b = e.do(t, "GET", "/api/v1/hubs", "", nil)
+	var hubs struct {
+		Hubs []struct {
+			ID     string `json:"id"`
+			Status string `json:"status"`
+		} `json:"hubs"`
+	}
+	json.Unmarshal(b, &hubs)
+	for _, h := range hubs.Hubs {
+		if h.ID == "timer" && h.Status != "available" {
+			t.Errorf("TimerHub must stay available without the optional AutoTimer plugin, got %s", h.Status)
+		}
+	}
+	_, b = e.do(t, "GET", "/api/v1/connectors", "", nil)
+	if !strings.Contains(string(b), `"not_installed"`) {
+		t.Errorf("the AutoTimer connector should report not_installed, got %s", b)
 	}
 }

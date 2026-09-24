@@ -68,7 +68,7 @@ Releases: **Foundation** → **v1** → **v1.1** → **Later**. GitHub milestone
 - [ ] Keyboard shortcuts beyond search (`g`+letter, arrows), accessible contrast and labels audit
 - [ ] Diagnostics: a dedicated page with reason and fix instructions across all hubs at once (each hub's own placeholder page, the notifications bell and now the status strip already show a version of this per hub or in aggregate)
 - [ ] mDNS advertisement via a service file in `/etc/avahi/services/` (`avahi-daemon` already runs and is used this way by an existing companion app — see `ARCHITECTURE.md`)
-- [ ] Capture real fixtures (#14): at the next device access, fetch every relevant endpoint directly over SSH/HTTP and save the responses as test fixtures, so development continues offline with real data
+- [x] Capture real fixtures (#14): done 2026-09-24, see `backend/testdata/fixtures/` and `ARCHITECTURE.md`
 
 ## v1 — hubs
 
@@ -177,13 +177,13 @@ Releases: **Foundation** → **v1** → **v1.1** → **Later**. GitHub milestone
 ## Open items that need device access
 
 Tracked as GitHub issues with the `device-access` label:
-- #10 Verify the SerienRecorder web interface API
-- #11 Verify Enigma2 picks up recordings renamed outside Enigma2
-- #12 Detect in-progress recording/playback before any file operation
-- #13 Resolve the WebControl auth discrepancy (`ARCHITECTURE.md`)
-- #14 Capture real API responses as test fixtures (done directly on the device, no script needed)
-- #15 Investigate the remaining GP4 plugins (`geminiserver`, `geminicomm`, `geministreamripper`)
-- #17 Check where Enigma2 stores its time zone and whether NTP is running
-- #18 Check whether WebAdmin's existing terminal (`/webadmin/terminal/`) requires a login — if not, anyone on the LAN/ZeroTier network has a root shell
+- [x] #10 Verify the SerienRecorder web interface API — resolved 2026-09-24: reachable, JSON, `/serienrecorderapi/*` (`ARCHITECTURE.md`)
+- [ ] #11 Verify Enigma2 picks up recordings renamed outside Enigma2 — still open; needs an actual rename against a real recording, deliberately not done without explicit go-ahead (destructive-ish on the reference device's real data)
+- [x] #12 Detect in-progress recording/playback before any file operation — resolved 2026-09-24: no dedicated "is recording" endpoint exists; cross-reference `/web/timerlist` (`e2timebegin`/`e2timeend`/`e2disabled`) against the current time, already sufficient with data DreamHub already fetches
+- [x] #13 Resolve the WebControl auth discrepancy — resolved 2026-09-24: `config.plugins.Webinterface.localauth=false` bypasses auth for any LAN/private-range client regardless of `http.auth` (`ARCHITECTURE.md`)
+- [x] #14 Capture real API responses as test fixtures — done 2026-09-24 directly on the device (`backend/testdata/fixtures/`)
+- [x] #15 Investigate the remaining GP4 plugins (`geminiserver`, `geminicomm`, `geministreamripper`) — investigated 2026-09-24: all closed `.pyo`/`.so`, same as other GP4 plugins; file/folder names suggest `geminiserver` is the on-screen config UI for the web server ports, `geminicomm` a native media-center suite (movie/sound/pic player, file browser), `geministreamripper` an internet stream recorder with its own web UI — inferred from naming only, no readable source
+- [x] #17 Check where Enigma2 stores its time zone and whether NTP is running — resolved 2026-09-24: `config.timezone.zone` (IANA name, e.g. `Europe/Berlin`); no NTP daemon found, clock is accurate regardless, likely synced from DVB broadcast time (`ARCHITECTURE.md`)
+- [x] #18 Check whether WebAdmin's existing terminal (`/webadmin/terminal/`) requires a login — resolved 2026-09-24, and it's a real finding: the page itself is reachable from any LAN client with zero credentials (same `localauth=false` bypass as #13); the shell prompt inside still requires valid OS credentials, so it's exposure of a login prompt, not an open root shell (`ARCHITECTURE.md`)
 
 Design decision #16 (home page): **tiles**, as a customizable dashboard — see `CONCEPT.md`.

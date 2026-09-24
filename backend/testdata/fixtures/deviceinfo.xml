@@ -1,0 +1,50 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<e2deviceinfo>
+	<e2enigmaversion>5.0.0r117-gutemine-2024-08-12</e2enigmaversion>
+	<e2imageversion>Experimental 2023-04-24</e2imageversion>
+	<e2webifversion>1.9.1</e2webifversion>
+	<e2fpversion>1.15</e2fpversion>
+	<e2devicename>one</e2devicename>
+
+	<e2frontends>
+		<e2frontend>
+			<e2name>Tuner A</e2name>
+			<e2model> Si2169D (DVB-S2 / DVB-C / DVB-T2)</e2model>
+		</e2frontend>
+	</e2frontends>
+
+	<e2network>
+		<e2interface>
+			<e2name>zt5u424jk3</e2name>
+			<e2mac>2E:6E:99:BB:0F:EC</e2mac>
+			<e2dhcp>dhcp</e2dhcp>
+			<e2ip>169.254.217.74</e2ip>
+			<e2gateway>0.0.0.0</e2gateway>
+			<e2netmask>255.255.0.0</e2netmask>
+			<e2method6>off</e2method6>
+			<e2ip6>::</e2ip6>
+			<e2gateway6>::</e2gateway6>
+			<e2netmask6>64</e2netmask6>
+		</e2interface>
+		<e2interface>
+			<e2name>eth0</e2name>
+			<e2mac>00:09:34:4B:2A:4C</e2mac>
+			<e2dhcp>dhcp</e2dhcp>
+			<e2ip>192.168.1.43</e2ip>
+			<e2gateway>192.168.1.1</e2gateway>
+			<e2netmask>255.255.255.0</e2netmask>
+			<e2method6>auto</e2method6>
+			<e2ip6>fdb2:f390:d6f6:0:209:34ff:fe4b:2a4c</e2ip6>
+			<e2gateway6>::</e2gateway6>
+			<e2netmask6>64</e2netmask6>
+		</e2interface>
+	</e2network>
+
+	<e2hdds>
+		<e2hdd>
+			<e2model>ST2000LM 015-2E8174</e2model>
+			<e2capacity>2 TB</e2capacity>
+			<e2free>263.947 GB</e2free>
+		</e2hdd>
+	</e2hdds>
+</e2deviceinfo>

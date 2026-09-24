@@ -1,0 +1,199 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<e2timerlist>
+	<e2timer>
+		<e2servicereference>1:0:1:2EE3:441:1:C00000:0:0:0:</e2servicereference>
+		<e2servicename>RTL Television</e2servicename>
+		<e2eit>47779</e2eit>
+		<e2name>Gute Zeiten, schlechte Zeiten - S00E8615 - Fehler der Vergangenheit</e2name>
+		<e2description>S00E8615 - Fehler der Vergangenheit</e2description>
+		<e2descriptionextended>Katrin wird zugetragen, dass gegen Matilda möglicherweise eine Anzeige wegen Bedrohung erstattet werden soll. Trotz unschlagbarer Konditionen steht es für Alicia nicht zur Debatte, in Ninas Wohnung zu ziehen.</e2descriptionextended>
+		<e2disabled>0</e2disabled>
+		<e2timebegin>1790319120</e2timebegin>
+		<e2timeend>1790321520</e2timeend>
+		<e2duration>2400</e2duration>
+		<e2startprepare>1790319100</e2startprepare>
+		<e2justplay>0</e2justplay>
+		<e2afterevent>3</e2afterevent>
+		<e2location>/media/hdd/movie/Gute Zeiten, schlechte Zeiten (1992)/Season 0/</e2location>
+		<e2tags>SerienRecorder</e2tags>
+		<e2logentries>[(1790231614, 15, 'record time changed, start prepare is now: Fri Sep 25 08:51:40 2026')]</e2logentries>
+		<e2filename></e2filename>
+		<e2backoff>0</e2backoff>
+		<e2nextactivation></e2nextactivation>
+		<e2firsttryprepare>True</e2firsttryprepare>
+		<e2state>0</e2state>
+		<e2repeated>0</e2repeated>
+		<e2dontsave>0</e2dontsave>
+		<e2cancled>False</e2cancled>
+		<e2toggledisabled>1</e2toggledisabled>
+		<e2toggledisabledimg>off</e2toggledisabledimg>
+	</e2timer>
+	<e2timer>
+		<e2servicereference>1:0:1:2EE3:441:1:C00000:0:0:0:</e2servicereference>
+		<e2servicename>RTL Television</e2servicename>
+		<e2eit>47792</e2eit>
+		<e2name>Gute Zeiten, schlechte Zeiten - S00E8616 - Echte Reue?</e2name>
+		<e2description>S00E8616 - Echte Reue?</e2description>
+		<e2descriptionextended>Matilda macht sich große Sorgen, dass sich Katrin manipulieren lässt. Johanna wird klar, dass Jonas in den letzten Wochen zu kurz gekommen ist und arrangiert ein Date, das jedoch abrupt endet.</e2descriptionextended>
+		<e2disabled>0</e2disabled>
+		<e2timebegin>1790357520</e2timebegin>
+		<e2timeend>1790360220</e2timeend>
+		<e2duration>2700</e2duration>
+		<e2startprepare>1790357500</e2startprepare>
+		<e2justplay>0</e2justplay>
+		<e2afterevent>3</e2afterevent>
+		<e2location>/media/hdd/movie/Gute Zeiten, schlechte Zeiten (1992)/Season 0/</e2location>
+		<e2tags>SerienRecorder</e2tags>
+		<e2logentries>[(1790231614, 15, 'record time changed, start prepare is now: Fri Sep 25 19:31:40 2026')]</e2logentries>
+		<e2filename></e2filename>
+		<e2backoff>0</e2backoff>
+		<e2nextactivation></e2nextactivation>
+		<e2firsttryprepare>True</e2firsttryprepare>
+		<e2state>0</e2state>
+		<e2repeated>0</e2repeated>
+		<e2dontsave>0</e2dontsave>
+		<e2cancled>False</e2cancled>
+		<e2toggledisabled>1</e2toggledisabled>
+		<e2toggledisabledimg>off</e2toggledisabledimg>
+	</e2timer>
+	<e2timer>
+		<e2servicereference>1:0:1:2EE3:441:1:C00000:0:0:0:</e2servicereference>
+		<e2servicename>RTL Television</e2servicename>
+		<e2eit>47941</e2eit>
+		<e2name>Gute Zeiten, schlechte Zeiten - S00E8617 - Kleiner Kratzer mit Folgen...</e2name>
+		<e2description>S00E8617 - Kleiner Kratzer mit Folgen...</e2description>
+		<e2descriptionextended>Jonas will verhindern, dass sein und Johannas Missgeschick auffliegt, und beseitigt Spuren. Matilda bleibt misstrauisch, während Erik fürchtet, sie könnte sich verrennen. Katrin entdeckt keine Bedrohung und zweifelt an Matildas Vermutungen.</e2descriptionextended>
+		<e2disabled>0</e2disabled>
+		<e2timebegin>1790616720</e2timebegin>
+		<e2timeend>1790619420</e2timeend>
+		<e2duration>2700</e2duration>
+		<e2startprepare>1790616700</e2startprepare>
+		<e2justplay>0</e2justplay>
+		<e2afterevent>3</e2afterevent>
+		<e2location>/media/hdd/movie/Gute Zeiten, schlechte Zeiten (1992)/Season 0/</e2location>
+		<e2tags>SerienRecorder</e2tags>
+		<e2logentries>[(1790231614, 15, 'record time changed, start prepare is now: Mon Sep 28 19:31:40 2026')]</e2logentries>
+		<e2filename></e2filename>
+		<e2backoff>0</e2backoff>
+		<e2nextactivation></e2nextactivation>
+		<e2firsttryprepare>True</e2firsttryprepare>
+		<e2state>0</e2state>
+		<e2repeated>0</e2repeated>
+		<e2dontsave>0</e2dontsave>
+		<e2cancled>False</e2cancled>
+		<e2toggledisabled>1</e2toggledisabled>
+		<e2toggledisabledimg>off</e2toggledisabledimg>
+	</e2timer>
+	<e2timer>
+		<e2servicereference>1:0:1:2EE3:441:1:C00000:0:0:0:</e2servicereference>
+		<e2servicename>RTL Television</e2servicename>
+		<e2eit>0</e2eit>
+		<e2name>Gute Zeiten, schlechte Zeiten - S00E8618 - Ein Sturm zieht auf</e2name>
+		<e2description>S00E8618 - Ein Sturm zieht auf</e2description>
+		<e2descriptionextended>N/A</e2descriptionextended>
+		<e2disabled>0</e2disabled>
+		<e2timebegin>1790703120</e2timebegin>
+		<e2timeend>1790705820</e2timeend>
+		<e2duration>2700</e2duration>
+		<e2startprepare>1790703100</e2startprepare>
+		<e2justplay>0</e2justplay>
+		<e2afterevent>3</e2afterevent>
+		<e2location>/media/hdd/movie/Gute Zeiten, schlechte Zeiten (1992)/Season 0/</e2location>
+		<e2tags>SerienRecorder</e2tags>
+		<e2logentries>[(1790231614, 15, 'record time changed, start prepare is now: Tue Sep 29 19:31:40 2026')]</e2logentries>
+		<e2filename></e2filename>
+		<e2backoff>0</e2backoff>
+		<e2nextactivation></e2nextactivation>
+		<e2firsttryprepare>True</e2firsttryprepare>
+		<e2state>0</e2state>
+		<e2repeated>0</e2repeated>
+		<e2dontsave>0</e2dontsave>
+		<e2cancled>False</e2cancled>
+		<e2toggledisabled>1</e2toggledisabled>
+		<e2toggledisabledimg>off</e2toggledisabledimg>
+	</e2timer>
+	<e2timer>
+		<e2servicereference>1:0:1:2EE3:441:1:C00000:0:0:0:</e2servicereference>
+		<e2servicename>RTL Television</e2servicename>
+		<e2eit>47770</e2eit>
+		<e2name>Gute Zeiten, schlechte Zeiten - S00E8612 - Ungeheuerlicher Verdacht</e2name>
+		<e2description>S00E8612 - Ungeheuerlicher Verdacht</e2description>
+		<e2descriptionextended>N/A</e2descriptionextended>
+		<e2disabled>0</e2disabled>
+		<e2timebegin>1790011920</e2timebegin>
+		<e2timeend>1790014620</e2timeend>
+		<e2duration>2700</e2duration>
+		<e2startprepare>1790011900</e2startprepare>
+		<e2justplay>0</e2justplay>
+		<e2afterevent>3</e2afterevent>
+		<e2location>/media/hdd/movie/Gute Zeiten, schlechte Zeiten (1992)/Season 0/</e2location>
+		<e2tags>SerienRecorder</e2tags>
+		<e2logentries>[(1790231614, 15, 'record time changed, start prepare is now: Mon Sep 21 19:31:40 2026')]</e2logentries>
+		<e2filename></e2filename>
+		<e2backoff>0</e2backoff>
+		<e2nextactivation></e2nextactivation>
+		<e2firsttryprepare>True</e2firsttryprepare>
+		<e2state>3</e2state>
+		<e2repeated>0</e2repeated>
+		<e2dontsave>0</e2dontsave>
+		<e2cancled>False</e2cancled>
+		<e2toggledisabled>1</e2toggledisabled>
+		<e2toggledisabledimg>off</e2toggledisabledimg>
+	</e2timer>
+	<e2timer>
+		<e2servicereference>1:0:1:2EE3:441:1:C00000:0:0:0:</e2servicereference>
+		<e2servicename>RTL Television</e2servicename>
+		<e2eit>47659</e2eit>
+		<e2name>Gute Zeiten, schlechte Zeiten - S00E8613 - (K)Ein Abschied</e2name>
+		<e2description>S00E8613 - (K)Ein Abschied</e2description>
+		<e2descriptionextended>Während Toni alles gut vorbereitet, hadert Erik mit einer Aussprache. Derweil wird Katrin ein düsteres Familiengeheimnis anvertraut, um einen Verdacht zu erklären. Nihat plant, sich aus Johannas Projekt zurückzuziehen.</e2descriptionextended>
+		<e2disabled>0</e2disabled>
+		<e2timebegin>1790098320</e2timebegin>
+		<e2timeend>1790101020</e2timeend>
+		<e2duration>2700</e2duration>
+		<e2startprepare>1790098300</e2startprepare>
+		<e2justplay>0</e2justplay>
+		<e2afterevent>3</e2afterevent>
+		<e2location>/media/hdd/movie/Gute Zeiten, schlechte Zeiten (1992)/Season 0/</e2location>
+		<e2tags>SerienRecorder</e2tags>
+		<e2logentries>[(1790231614, 15, 'record time changed, start prepare is now: Tue Sep 22 19:31:40 2026')]</e2logentries>
+		<e2filename></e2filename>
+		<e2backoff>0</e2backoff>
+		<e2nextactivation></e2nextactivation>
+		<e2firsttryprepare>True</e2firsttryprepare>
+		<e2state>3</e2state>
+		<e2repeated>0</e2repeated>
+		<e2dontsave>0</e2dontsave>
+		<e2cancled>False</e2cancled>
+		<e2toggledisabled>1</e2toggledisabled>
+		<e2toggledisabledimg>off</e2toggledisabledimg>
+	</e2timer>
+	<e2timer>
+		<e2servicereference>1:0:1:2EE3:441:1:C00000:0:0:0:</e2servicereference>
+		<e2servicename>RTL Television</e2servicename>
+		<e2eit>47699</e2eit>
+		<e2name>Gute Zeiten, schlechte Zeiten - S00E8614 - Hirngespinst</e2name>
+		<e2description>S00E8614 - Hirngespinst</e2description>
+		<e2descriptionextended>Jonas platzt vor Johanna mit seiner Eifersucht heraus. Kann sie ihm glaubhaft seine Zweifel nehmen? Michi ist ein super Beziehungsberater. So gut, dass er seinen Mitbewohner direkt wieder verliert.</e2descriptionextended>
+		<e2disabled>0</e2disabled>
+		<e2timebegin>1790184720</e2timebegin>
+		<e2timeend>1790187420</e2timeend>
+		<e2duration>2700</e2duration>
+		<e2startprepare>1790184700</e2startprepare>
+		<e2justplay>0</e2justplay>
+		<e2afterevent>3</e2afterevent>
+		<e2location>/media/hdd/movie/Gute Zeiten, schlechte Zeiten (1992)/Season 0/</e2location>
+		<e2tags>SerienRecorder</e2tags>
+		<e2logentries>[(1790231614, 15, 'record time changed, start prepare is now: Wed Sep 23 19:31:40 2026')]</e2logentries>
+		<e2filename></e2filename>
+		<e2backoff>0</e2backoff>
+		<e2nextactivation></e2nextactivation>
+		<e2firsttryprepare>True</e2firsttryprepare>
+		<e2state>3</e2state>
+		<e2repeated>0</e2repeated>
+		<e2dontsave>0</e2dontsave>
+		<e2cancled>False</e2cancled>
+		<e2toggledisabled>1</e2toggledisabled>
+		<e2toggledisabledimg>off</e2toggledisabledimg>
+	</e2timer>
+</e2timerlist>

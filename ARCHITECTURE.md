@@ -34,7 +34,7 @@ Confirmed endpoints (all `POST`, all return XML), observed from normal WebContro
 | `/web/getcurrlocation`, `/web/getlocations` | recording folder locations | |
 | `/web/getservices`, `/web/subservices` | bouquet/service tree | |
 | `/web/getcurrent` | now/next EPG for the current service | |
-| `/web/epgnownext` | now/next EPG, service list view | |
+| `/web/epgnownext` | now/next EPG, service list view | takes `bRef` (bouquet reference), not `sRef` — see below |
 | `/web/powerstate` | standby/power state | |
 | `/web/movielist` | **recordings list, already parsed** — see schema below | |
 | `/web/gettags` | recording tags | |
@@ -217,11 +217,37 @@ Worth being explicit about this, since it shows up repeatedly across this invest
 
 Treat it the same way as the other already-installed plugins in this document: a separate, mature, actively-maintained system solving overlapping problems (media streaming/aggregation) for the native on-screen surface — not something DreamHub needs to integrate with for its current scope, but worth knowing it exists so it isn't mistaken for a DreamHub concern or for a core OS component.
 
-## Open question: WebControl's own auth doesn't seem to be enforced
+## Resolved: WebControl auth discrepancy (#13) — `localauth=false` disables it for LAN clients
 
-`/etc/enigma2/settings` shows `config.plugins.Webinterface.http.auth=true` and `https.auth=true` — WebControl is configured to require authentication. But every request made during this investigation (via `curl` from the box itself, **and** via a normal browser session from an external machine) returned data successfully with no credentials ever supplied and no auth challenge observed. No separate username/password key was found in `/etc/enigma2/settings` either (`localauth=false`, `extended_security=false`, `anti_hijack=false`, `streamauth=false` are all explicitly off, which may be part of the explanation, but doesn't fully account for `http.auth=true` having no visible effect).
+Confirmed live from a second machine (this Mac, `192.168.1.x`, not the box itself, no session/cookie/credentials ever sent): `curl http://192.168.1.43/web/deviceinfo` returns `200` with full data, no `WWW-Authenticate` challenge. `config.plugins.Webinterface.http.auth=true` is set, but `config.plugins.Webinterface.localauth=false` is also set — this is the explanation. `localauth` is OpenWebif's own toggle for whether auth is *also* enforced for clients on private/RFC1918 address ranges; when it's `false` (the default the reference box ships with), any client whose source IP is in a private range (`10.0.0.0/8`, `172.16.0.0/12`, `192.168.0.0/16`, `127.0.0.0/8`) bypasses the Basic Auth check entirely, regardless of `http.auth`/`https.auth`. `http.auth=true` still matters for anything reaching the box from outside the LAN (e.g. a port forward or the ZeroTier network, depending on how ZeroTier's address range is treated).
 
-Not resolved — flagging honestly rather than guessing at a mechanism this session didn't actually verify. **Don't assume WebControl's `/web/*` API is always open on every device** just because it behaved that way here; the setting says it shouldn't be. If DreamHub's own backend ever proxies or depends on WebControl's API working unauthenticated, that assumption should be re-verified per device rather than taken as a given from this one inspection.
+**Practical implication for DreamHub**: don't rely on the device's own `http.auth` to protect `/web/*` for LAN clients — with `localauth=false` (likely the common default), any device on the same LAN/VLAN can call the full read (and, unverified, write) API with zero credentials. This is a property of the box, not something DreamHub's own auth layer touches — DreamHub's Basic Auth/API tokens protect DreamHub's *own* API on :8080, not WebControl's on :80. Users who care about this should be told to set `localauth=true` on the device (native WebControl setting) if they want its API locked down even on their own LAN.
+
+## Resolved: WebAdmin terminal reachability (#18) — page loads without auth, shell login still required
+
+Confirmed live from the same external machine: `curl http://192.168.1.43/webadmin/terminal/` returns `200` with the ShellInABox HTML/JS page (title "Shell In A Box"), no auth challenge — same `localauth=false` LAN-bypass as above, since WebAdmin sits behind the same WebControl auth gate. This means anyone on the LAN can reach the *terminal emulator page* without any DreamHub or WebControl credentials. It does **not** mean an instant root shell: ShellInABox itself still presents a normal Linux login prompt inside that terminal (username/password), so an attacker still needs valid OS credentials (e.g. the box's root password) to actually get a shell — the exposure is that the attack surface (a login prompt reachable pre-auth) exists at all for anyone on the LAN, which it shouldn't given `http.auth=true` is configured. Same fix as above: `localauth=true` on the device.
+
+## Resolved: SerienRecorder web interface API (#10) — reachable, JSON, path is `/serienrecorderapi/*`
+
+`config.plugins.serienRec.enableWebinterface=true` is set. The plugin's own registration code (`SerienRecorderResource.py`, `addWebInterface()`) registers two separate external children with WebControl's Toplevel dispatcher: `serienrecorderapi` (the JSON API, `e2hasgui=False`) and `serienrecorderui` (`e2hasgui=True`, `SerienRecorder` web GUI) — both listed live in `GET /web/external`. Unlike everything else in this document, **this API returns JSON, not XML** (a genuine exception worth remembering). Confirmed working, e.g. `GET /serienrecorderapi/info`:
+
+```json
+{"payload": {"apiVersion": "2.12", "channelListeUpToDate": false, "dbVersion": "4.6.0", "image": "5.0.0r117-gutemine-2024-08-12 / Experimental 2023-04-24", "markerLastUpdate": 1778697811, "srVersion": "4.8.0-beta", "stbType": "one"}, "status": true}
+```
+
+Other confirmed live children from `getApiList()` in the same file (full list, most look relevant to SeriesHub): `markers`, `changemarkerstatus`, `setmarkerchannels`, `markerseasonsettings`, `markersettings`, `createmarker`, `deletemarker`, `updatemarkers`, `settings`, `cover`, `picon`, `tvdbcover(s)`, `settvdbid`, `searchtvdbid`, `transmissions`, `searchseries`, `activechannels`, `channels`, `timer`, `markertimer`, `addtimers`, `removetimer`, `removetimerbyseason`, `createtimer`, `seriesinfo`, `autocheck`, `log`, `info`, `getChangelog`, `checkforupdate`, `installupdate` — all under `/serienrecorderapi/<name>`. Same `localauth=false` LAN-bypass as WebControl itself applies here too (confirmed no auth prompt). SeriesHub (`ROADMAP.md`) should use `markers` (tracked series), `timer`/`markertimer` (upcoming), and `transmissions` (episodes on disk) as its primary data source instead of reading `SerienRecorder.db` directly, per the original plan.
+
+## `epgnownext` takes `bRef` (bouquet reference), not `sRef`
+
+Corrects an assumption in the earlier endpoint table below: `GET /web/epgnownext?sRef=<service ref>` returns an XML-wrapped `Processing Failed` HTML error, even for a real, currently-playing service reference. The endpoint actually wants `bRef=<bouquet reference>` (the same string `/web/getservices` returns for a bouquet, e.g. `1:7:1:0:0:0:0:0:0:0:FROM BOUQUET "userbouquet.favourites.tv" ORDER BY bouquet`) and returns now/next for every service in that bouquet in one call — matching the "service list view" description already in the table below. Fixed, real response saved as a fixture (`backend/testdata/fixtures/epgnownext.xml`).
+
+## Resolved: device time zone and clock source (#17)
+
+`/etc/enigma2/settings` stores `config.timezone.zone=Europe/Berlin` (an IANA zone name, not just the `de_DE`-style locale used for `config.osd.language`) and `config.timezone.version=2`. The box's local time (`CEST`, UTC+2) matched this Mac's wall-clock time exactly when checked live, confirming the clock is accurate. No NTP daemon, `timedatectl`, or root crontab entry was found on the box — the actual sync mechanism wasn't identified in this pass (Enigma2 boxes commonly derive time from the DVB broadcast stream's TDT/TOT table rather than NTP, which would explain the absence of any NTP-related process or config; not directly confirmed here). Good enough to unblock UTC-storage/local-display work either way: read `config.timezone.zone` for the IANA name DreamHub needs for display formatting, and trust the box's system clock.
+
+## Real API fixtures captured (#14)
+
+Live responses for every endpoint in the table below, plus `epgnownext` (corrected, see above) and five `serienrecorderapi` endpoints, are saved verbatim under `backend/testdata/fixtures/` (`*.xml` for `/web/*`, `serienrecorder/*.json` for the SerienRecorder API) — captured directly from the reference device on 2026-09-24. `backend/internal/webcontrol/mock` can be extended to load these instead of (or alongside) its current hand-written fixtures for more realistic tests.
 
 ## Three plugin tiers, not two
 

@@ -1,0 +1,2177 @@
+{
+    "payload": [
+        {
+            "alternative": {
+                "serviceRef": "",
+                "stbChannel": null
+            },
+            "enabled": 0,
+            "standard": {
+                "serviceRef": "",
+                "stbChannel": null
+            },
+            "webChannel": "13th Street"
+        },
+        {
+            "alternative": {
+                "serviceRef": "",
+                "stbChannel": null
+            },
+            "enabled": 0,
+            "standard": {
+                "serviceRef": "",
+                "stbChannel": null
+            },
+            "webChannel": "3+"
+        },
+        {
+            "alternative": {
+                "serviceRef": "",
+                "stbChannel": null
+            },
+            "enabled": 1,
+            "standard": {
+                "serviceRef": "1:0:19:2B8E:3F2:1:C00000:0:0:0:",
+                "stbChannel": "3sat HD"
+            },
+            "webChannel": "3sat"
+        },
+        {
+            "alternative": {
+                "serviceRef": "",
+                "stbChannel": null
+            },
+            "enabled": 0,
+            "standard": {
+                "serviceRef": "",
+                "stbChannel": null
+            },
+            "webChannel": "4+"
+        },
+        {
+            "alternative": {
+                "serviceRef": "",
+                "stbChannel": null
+            },
+            "enabled": 0,
+            "standard": {
+                "serviceRef": "",
+                "stbChannel": null
+            },
+            "webChannel": "5+"
+        },
+        {
+            "alternative": {
+                "serviceRef": "",
+                "stbChannel": null
+            },
+            "enabled": 0,
+            "standard": {
+                "serviceRef": "",
+                "stbChannel": null
+            },
+            "webChannel": "6+"
+        },
+        {
+            "alternative": {
+                "serviceRef": "",
+                "stbChannel": null
+            },
+            "enabled": 0,
+            "standard": {
+                "serviceRef": "",
+                "stbChannel": null
+            },
+            "webChannel": "ALEX Berlin"
+        },
+        {
+            "alternative": {
+                "serviceRef": "",
+                "stbChannel": null
+            },
+            "enabled": 0,
+            "standard": {
+                "serviceRef": "",
+                "stbChannel": null
+            },
+            "webChannel": "Animal Planet"
+        },
+        {
+            "alternative": {
+                "serviceRef": "",
+                "stbChannel": null
+            },
+            "enabled": 0,
+            "standard": {
+                "serviceRef": "",
+                "stbChannel": null
+            },
+            "webChannel": "Anixe HD Serie"
+        },
+        {
+            "alternative": {
+                "serviceRef": "",
+                "stbChannel": null
+            },
+            "enabled": 1,
+            "standard": {
+                "serviceRef": "1:0:1:2FC:5:85:C00000:0:0:0:",
+                "stbChannel": null
+            },
+            "webChannel": "Anixe+"
+        },
+        {
+            "alternative": {
+                "serviceRef": "",
+                "stbChannel": null
+            },
+            "enabled": 1,
+            "standard": {
+                "serviceRef": "1:0:19:2889:40F:1:C00000:0:0:0:",
+                "stbChannel": "ARD alpha HD"
+            },
+            "webChannel": "ARD alpha"
+        },
+        {
+            "alternative": {
+                "serviceRef": "",
+                "stbChannel": null
+            },
+            "enabled": 1,
+            "standard": {
+                "serviceRef": "1:0:19:283E:3FB:1:C00000:0:0:0:",
+                "stbChannel": "arte HD"
+            },
+            "webChannel": "arte"
+        },
+        {
+            "alternative": {
+                "serviceRef": "",
+                "stbChannel": null
+            },
+            "enabled": 0,
+            "standard": {
+                "serviceRef": "1:0:19:33AC:3EB:1:C00000:0:0:0:",
+                "stbChannel": null
+            },
+            "webChannel": "ATV"
+        },
+        {
+            "alternative": {
+                "serviceRef": "",
+                "stbChannel": null
+            },
+            "enabled": 0,
+            "standard": {
+                "serviceRef": "1:0:1:33A7:3EB:1:C00000:0:0:0:",
+                "stbChannel": "ATV2 HD"
+            },
+            "webChannel": "ATV2"
+        },
+        {
+            "alternative": {
+                "serviceRef": "",
+                "stbChannel": null
+            },
+            "enabled": 0,
+            "standard": {
+                "serviceRef": "",
+                "stbChannel": null
+            },
+            "webChannel": "auto motor und sport Channel"
+        },
+        {
+            "alternative": {
+                "serviceRef": "",
+                "stbChannel": null
+            },
+            "enabled": 0,
+            "standard": {
+                "serviceRef": "",
+                "stbChannel": null
+            },
+            "webChannel": "AXN Black"
+        },
+        {
+            "alternative": {
+                "serviceRef": "",
+                "stbChannel": null
+            },
+            "enabled": 0,
+            "standard": {
+                "serviceRef": "",
+                "stbChannel": null
+            },
+            "webChannel": "AXN White"
+        },
+        {
+            "alternative": {
+                "serviceRef": "",
+                "stbChannel": null
+            },
+            "enabled": 0,
+            "standard": {
+                "serviceRef": "",
+                "stbChannel": null
+            },
+            "webChannel": "BBC World News"
+        },
+        {
+            "alternative": {
+                "serviceRef": "",
+                "stbChannel": null
+            },
+            "enabled": 0,
+            "standard": {
+                "serviceRef": "",
+                "stbChannel": null
+            },
+            "webChannel": "Beate-Uhse.tv"
+        },
+        {
+            "alternative": {
+                "serviceRef": "",
+                "stbChannel": null
+            },
+            "enabled": 0,
+            "standard": {
+                "serviceRef": "",
+                "stbChannel": null
+            },
+            "webChannel": "Bergblick"
+        },
+        {
+            "alternative": {
+                "serviceRef": "",
+                "stbChannel": null
+            },
+            "enabled": 0,
+            "standard": {
+                "serviceRef": "",
+                "stbChannel": null
+            },
+            "webChannel": "Bibel TV"
+        },
+        {
+            "alternative": {
+                "serviceRef": "",
+                "stbChannel": null
+            },
+            "enabled": 0,
+            "standard": {
+                "serviceRef": "",
+                "stbChannel": null
+            },
+            "webChannel": "BonGusto"
+        },
+        {
+            "alternative": {
+                "serviceRef": "",
+                "stbChannel": null
+            },
+            "enabled": 0,
+            "standard": {
+                "serviceRef": "",
+                "stbChannel": null
+            },
+            "webChannel": "BR"
+        },
+        {
+            "alternative": {
+                "serviceRef": "",
+                "stbChannel": null
+            },
+            "enabled": 0,
+            "standard": {
+                "serviceRef": "",
+                "stbChannel": null
+            },
+            "webChannel": "Canal+ First"
+        },
+        {
+            "alternative": {
+                "serviceRef": "",
+                "stbChannel": null
+            },
+            "enabled": 0,
+            "standard": {
+                "serviceRef": "",
+                "stbChannel": null
+            },
+            "webChannel": "Cartoon Network"
+        },
+        {
+            "alternative": {
+                "serviceRef": "",
+                "stbChannel": null
+            },
+            "enabled": 0,
+            "standard": {
+                "serviceRef": "",
+                "stbChannel": null
+            },
+            "webChannel": "Cartoonito"
+        },
+        {
+            "alternative": {
+                "serviceRef": "",
+                "stbChannel": null
+            },
+            "enabled": 0,
+            "standard": {
+                "serviceRef": "",
+                "stbChannel": null
+            },
+            "webChannel": "CNBC Europe"
+        },
+        {
+            "alternative": {
+                "serviceRef": "",
+                "stbChannel": null
+            },
+            "enabled": 0,
+            "standard": {
+                "serviceRef": "",
+                "stbChannel": null
+            },
+            "webChannel": "CNN International"
+        },
+        {
+            "alternative": {
+                "serviceRef": "",
+                "stbChannel": null
+            },
+            "enabled": 0,
+            "standard": {
+                "serviceRef": "",
+                "stbChannel": null
+            },
+            "webChannel": "Comedy Central"
+        },
+        {
+            "alternative": {
+                "serviceRef": "",
+                "stbChannel": null
+            },
+            "enabled": 0,
+            "standard": {
+                "serviceRef": "",
+                "stbChannel": null
+            },
+            "webChannel": "Comedy Central+1"
+        },
+        {
+            "alternative": {
+                "serviceRef": "",
+                "stbChannel": null
+            },
+            "enabled": 0,
+            "standard": {
+                "serviceRef": "",
+                "stbChannel": null
+            },
+            "webChannel": "Crime + Investigation"
+        },
+        {
+            "alternative": {
+                "serviceRef": "",
+                "stbChannel": null
+            },
+            "enabled": 0,
+            "standard": {
+                "serviceRef": "",
+                "stbChannel": null
+            },
+            "webChannel": "Crime Time"
+        },
+        {
+            "alternative": {
+                "serviceRef": "",
+                "stbChannel": null
+            },
+            "enabled": 0,
+            "standard": {
+                "serviceRef": "",
+                "stbChannel": null
+            },
+            "webChannel": "Curiosity Channel"
+        },
+        {
+            "alternative": {
+                "serviceRef": "",
+                "stbChannel": null
+            },
+            "enabled": 1,
+            "standard": {
+                "serviceRef": "1:0:19:283D:3FB:1:C00000:0:0:0:",
+                "stbChannel": "Das Erste HD"
+            },
+            "webChannel": "Das Erste"
+        },
+        {
+            "alternative": {
+                "serviceRef": "",
+                "stbChannel": null
+            },
+            "enabled": 0,
+            "standard": {
+                "serviceRef": "",
+                "stbChannel": null
+            },
+            "webChannel": "DAZN 1"
+        },
+        {
+            "alternative": {
+                "serviceRef": "",
+                "stbChannel": null
+            },
+            "enabled": 0,
+            "standard": {
+                "serviceRef": "",
+                "stbChannel": null
+            },
+            "webChannel": "DAZN 2"
+        },
+        {
+            "alternative": {
+                "serviceRef": "",
+                "stbChannel": null
+            },
+            "enabled": 1,
+            "standard": {
+                "serviceRef": "1:0:1:41:7:85:C00000:0:0:0:",
+                "stbChannel": "DELUXE MUSIC"
+            },
+            "webChannel": "Deluxe Music"
+        },
+        {
+            "alternative": {
+                "serviceRef": "",
+                "stbChannel": null
+            },
+            "enabled": 1,
+            "standard": {
+                "serviceRef": "1:0:19:1332:3EF:1:C00000:0:0:0:",
+                "stbChannel": "DF1 HD"
+            },
+            "webChannel": "DF1"
+        },
+        {
+            "alternative": {
+                "serviceRef": "",
+                "stbChannel": null
+            },
+            "enabled": 0,
+            "standard": {
+                "serviceRef": "",
+                "stbChannel": null
+            },
+            "webChannel": "DFB.TV"
+        },
+        {
+            "alternative": {
+                "serviceRef": "",
+                "stbChannel": null
+            },
+            "enabled": 0,
+            "standard": {
+                "serviceRef": "",
+                "stbChannel": null
+            },
+            "webChannel": "Discovery Channel"
+        },
+        {
+            "alternative": {
+                "serviceRef": "",
+                "stbChannel": null
+            },
+            "enabled": 1,
+            "standard": {
+                "serviceRef": "1:0:1:701:5:85:C00000:0:0:0:",
+                "stbChannel": "Disney Channel"
+            },
+            "webChannel": "Disney Channel"
+        },
+        {
+            "alternative": {
+                "serviceRef": "",
+                "stbChannel": null
+            },
+            "enabled": 1,
+            "standard": {
+                "serviceRef": "1:0:1:3F:21:85:C00000:0:0:0:",
+                "stbChannel": "DMAX"
+            },
+            "webChannel": "DMAX"
+        },
+        {
+            "alternative": {
+                "serviceRef": "",
+                "stbChannel": null
+            },
+            "enabled": 1,
+            "standard": {
+                "serviceRef": "1:0:1:308:5:85:C00000:0:0:0:",
+                "stbChannel": "DMF"
+            },
+            "webChannel": "DMF"
+        },
+        {
+            "alternative": {
+                "serviceRef": "",
+                "stbChannel": null
+            },
+            "enabled": 0,
+            "standard": {
+                "serviceRef": "",
+                "stbChannel": null
+            },
+            "webChannel": "Dokusat"
+        },
+        {
+            "alternative": {
+                "serviceRef": "",
+                "stbChannel": null
+            },
+            "enabled": 0,
+            "standard": {
+                "serviceRef": "",
+                "stbChannel": null
+            },
+            "webChannel": "Eurosport 1"
+        },
+        {
+            "alternative": {
+                "serviceRef": "",
+                "stbChannel": null
+            },
+            "enabled": 0,
+            "standard": {
+                "serviceRef": "",
+                "stbChannel": null
+            },
+            "webChannel": "Filmgold"
+        },
+        {
+            "alternative": {
+                "serviceRef": "",
+                "stbChannel": null
+            },
+            "enabled": 0,
+            "standard": {
+                "serviceRef": "",
+                "stbChannel": null
+            },
+            "webChannel": "Fix und Foxi"
+        },
+        {
+            "alternative": {
+                "serviceRef": "",
+                "stbChannel": null
+            },
+            "enabled": 0,
+            "standard": {
+                "serviceRef": "",
+                "stbChannel": null
+            },
+            "webChannel": "Fussball.TV 1"
+        },
+        {
+            "alternative": {
+                "serviceRef": "",
+                "stbChannel": null
+            },
+            "enabled": 0,
+            "standard": {
+                "serviceRef": "",
+                "stbChannel": null
+            },
+            "webChannel": "Fussball.TV 2"
+        },
+        {
+            "alternative": {
+                "serviceRef": "",
+                "stbChannel": null
+            },
+            "enabled": 0,
+            "standard": {
+                "serviceRef": "",
+                "stbChannel": null
+            },
+            "webChannel": "Fussball.TV 3"
+        },
+        {
+            "alternative": {
+                "serviceRef": "",
+                "stbChannel": null
+            },
+            "enabled": 0,
+            "standard": {
+                "serviceRef": "",
+                "stbChannel": null
+            },
+            "webChannel": "GEO Television"
+        },
+        {
+            "alternative": {
+                "serviceRef": "",
+                "stbChannel": null
+            },
+            "enabled": 0,
+            "standard": {
+                "serviceRef": "",
+                "stbChannel": null
+            },
+            "webChannel": "Heimatkanal"
+        },
+        {
+            "alternative": {
+                "serviceRef": "",
+                "stbChannel": null
+            },
+            "enabled": 0,
+            "standard": {
+                "serviceRef": "",
+                "stbChannel": null
+            },
+            "webChannel": "HGTV"
+        },
+        {
+            "alternative": {
+                "serviceRef": "",
+                "stbChannel": null
+            },
+            "enabled": 0,
+            "standard": {
+                "serviceRef": "",
+                "stbChannel": null
+            },
+            "webChannel": "hr-fernsehen"
+        },
+        {
+            "alternative": {
+                "serviceRef": "",
+                "stbChannel": null
+            },
+            "enabled": 0,
+            "standard": {
+                "serviceRef": "",
+                "stbChannel": null
+            },
+            "webChannel": "Inplus"
+        },
+        {
+            "alternative": {
+                "serviceRef": "",
+                "stbChannel": null
+            },
+            "enabled": 1,
+            "standard": {
+                "serviceRef": "1:0:1:445E:453:1:C00000:0:0:0:",
+                "stbChannel": "kabel eins"
+            },
+            "webChannel": "Kabel Eins"
+        },
+        {
+            "alternative": {
+                "serviceRef": "",
+                "stbChannel": null
+            },
+            "enabled": 0,
+            "standard": {
+                "serviceRef": "",
+                "stbChannel": null
+            },
+            "webChannel": "Kabel Eins Classics"
+        },
+        {
+            "alternative": {
+                "serviceRef": "",
+                "stbChannel": null
+            },
+            "enabled": 1,
+            "standard": {
+                "serviceRef": "1:0:1:4465:453:1:C00000:0:0:0:",
+                "stbChannel": "kabel eins Doku"
+            },
+            "webChannel": "Kabel Eins Doku"
+        },
+        {
+            "alternative": {
+                "serviceRef": "",
+                "stbChannel": null
+            },
+            "enabled": 1,
+            "standard": {
+                "serviceRef": "1:0:19:2B98:3F2:1:C00000:0:0:0:",
+                "stbChannel": "KiKA HD"
+            },
+            "webChannel": "KiKA"
+        },
+        {
+            "alternative": {
+                "serviceRef": "",
+                "stbChannel": null
+            },
+            "enabled": 0,
+            "standard": {
+                "serviceRef": "",
+                "stbChannel": null
+            },
+            "webChannel": "KinoweltTV"
+        },
+        {
+            "alternative": {
+                "serviceRef": "",
+                "stbChannel": null
+            },
+            "enabled": 0,
+            "standard": {
+                "serviceRef": "",
+                "stbChannel": null
+            },
+            "webChannel": "KultKrimi"
+        },
+        {
+            "alternative": {
+                "serviceRef": "",
+                "stbChannel": null
+            },
+            "enabled": 0,
+            "standard": {
+                "serviceRef": "",
+                "stbChannel": null
+            },
+            "webChannel": "Lilo TV"
+        },
+        {
+            "alternative": {
+                "serviceRef": "",
+                "stbChannel": null
+            },
+            "enabled": 0,
+            "standard": {
+                "serviceRef": "",
+                "stbChannel": null
+            },
+            "webChannel": "Lust Pur"
+        },
+        {
+            "alternative": {
+                "serviceRef": "",
+                "stbChannel": null
+            },
+            "enabled": 0,
+            "standard": {
+                "serviceRef": "",
+                "stbChannel": null
+            },
+            "webChannel": "Marco Polo TV"
+        },
+        {
+            "alternative": {
+                "serviceRef": "",
+                "stbChannel": null
+            },
+            "enabled": 0,
+            "standard": {
+                "serviceRef": "",
+                "stbChannel": null
+            },
+            "webChannel": "MDR"
+        },
+        {
+            "alternative": {
+                "serviceRef": "",
+                "stbChannel": null
+            },
+            "enabled": 0,
+            "standard": {
+                "serviceRef": "",
+                "stbChannel": null
+            },
+            "webChannel": "Melodie TV"
+        },
+        {
+            "alternative": {
+                "serviceRef": "",
+                "stbChannel": null
+            },
+            "enabled": 0,
+            "standard": {
+                "serviceRef": "",
+                "stbChannel": null
+            },
+            "webChannel": "Moments"
+        },
+        {
+            "alternative": {
+                "serviceRef": "",
+                "stbChannel": null
+            },
+            "enabled": 0,
+            "standard": {
+                "serviceRef": "",
+                "stbChannel": null
+            },
+            "webChannel": "More Than Sports TV"
+        },
+        {
+            "alternative": {
+                "serviceRef": "",
+                "stbChannel": null
+            },
+            "enabled": 0,
+            "standard": {
+                "serviceRef": "",
+                "stbChannel": null
+            },
+            "webChannel": "Motorvision+"
+        },
+        {
+            "alternative": {
+                "serviceRef": "",
+                "stbChannel": null
+            },
+            "enabled": 0,
+            "standard": {
+                "serviceRef": "",
+                "stbChannel": null
+            },
+            "webChannel": "MTV"
+        },
+        {
+            "alternative": {
+                "serviceRef": "",
+                "stbChannel": null
+            },
+            "enabled": 0,
+            "standard": {
+                "serviceRef": "",
+                "stbChannel": null
+            },
+            "webChannel": "n-tv Austria"
+        },
+        {
+            "alternative": {
+                "serviceRef": "",
+                "stbChannel": null
+            },
+            "enabled": 1,
+            "standard": {
+                "serviceRef": "1:0:1:30:5:85:C00000:0:0:0:",
+                "stbChannel": "N24 DOKU"
+            },
+            "webChannel": "N24 Doku"
+        },
+        {
+            "alternative": {
+                "serviceRef": "",
+                "stbChannel": null
+            },
+            "enabled": 0,
+            "standard": {
+                "serviceRef": "",
+                "stbChannel": null
+            },
+            "webChannel": "National Geographic"
+        },
+        {
+            "alternative": {
+                "serviceRef": "",
+                "stbChannel": null
+            },
+            "enabled": 0,
+            "standard": {
+                "serviceRef": "",
+                "stbChannel": null
+            },
+            "webChannel": "National Geographic WILD"
+        },
+        {
+            "alternative": {
+                "serviceRef": "",
+                "stbChannel": null
+            },
+            "enabled": 0,
+            "standard": {
+                "serviceRef": "",
+                "stbChannel": null
+            },
+            "webChannel": "NDR"
+        },
+        {
+            "alternative": {
+                "serviceRef": "",
+                "stbChannel": null
+            },
+            "enabled": 0,
+            "standard": {
+                "serviceRef": "",
+                "stbChannel": null
+            },
+            "webChannel": "Nickelodeon"
+        },
+        {
+            "alternative": {
+                "serviceRef": "",
+                "stbChannel": null
+            },
+            "enabled": 0,
+            "standard": {
+                "serviceRef": "",
+                "stbChannel": null
+            },
+            "webChannel": "Nickelodeon Schweiz/7+"
+        },
+        {
+            "alternative": {
+                "serviceRef": "",
+                "stbChannel": null
+            },
+            "enabled": 0,
+            "standard": {
+                "serviceRef": "",
+                "stbChannel": null
+            },
+            "webChannel": "nickjr."
+        },
+        {
+            "alternative": {
+                "serviceRef": "",
+                "stbChannel": null
+            },
+            "enabled": 0,
+            "standard": {
+                "serviceRef": "",
+                "stbChannel": null
+            },
+            "webChannel": "Nicktoons"
+        },
+        {
+            "alternative": {
+                "serviceRef": "",
+                "stbChannel": null
+            },
+            "enabled": 1,
+            "standard": {
+                "serviceRef": "1:0:1:2F1D:441:1:C00000:0:0:0:",
+                "stbChannel": "NITRO"
+            },
+            "webChannel": "Nitro"
+        },
+        {
+            "alternative": {
+                "serviceRef": "",
+                "stbChannel": null
+            },
+            "enabled": 0,
+            "standard": {
+                "serviceRef": "",
+                "stbChannel": null
+            },
+            "webChannel": "NOW!"
+        },
+        {
+            "alternative": {
+                "serviceRef": "",
+                "stbChannel": null
+            },
+            "enabled": 1,
+            "standard": {
+                "serviceRef": "1:0:1:2F3A:441:1:C00000:0:0:0:",
+                "stbChannel": "ntv"
+            },
+            "webChannel": "ntv"
+        },
+        {
+            "alternative": {
+                "serviceRef": "",
+                "stbChannel": null
+            },
+            "enabled": 1,
+            "standard": {
+                "serviceRef": "1:0:19:2888:40F:1:C00000:0:0:0:",
+                "stbChannel": "ONE HD"
+            },
+            "webChannel": "One"
+        },
+        {
+            "alternative": {
+                "serviceRef": "",
+                "stbChannel": null
+            },
+            "enabled": 1,
+            "standard": {
+                "serviceRef": "1:0:19:14:280E:217C:EEEE01DC:0:0:0:",
+                "stbChannel": "RAS ORF1 HD"
+            },
+            "webChannel": "ORF 1"
+        },
+        {
+            "alternative": {
+                "serviceRef": "",
+                "stbChannel": null
+            },
+            "enabled": 1,
+            "standard": {
+                "serviceRef": "1:0:19:15:280E:217C:EEEE01DC:0:0:0:",
+                "stbChannel": "RAS ORF2T HD"
+            },
+            "webChannel": "ORF 2"
+        },
+        {
+            "alternative": {
+                "serviceRef": "",
+                "stbChannel": null
+            },
+            "enabled": 1,
+            "standard": {
+                "serviceRef": "1:0:19:33FC:3ED:1:C00000:0:0:0:",
+                "stbChannel": "ORF III HD"
+            },
+            "webChannel": "ORF III"
+        },
+        {
+            "alternative": {
+                "serviceRef": "",
+                "stbChannel": null
+            },
+            "enabled": 0,
+            "standard": {
+                "serviceRef": "",
+                "stbChannel": null
+            },
+            "webChannel": "OUTtv"
+        },
+        {
+            "alternative": {
+                "serviceRef": "",
+                "stbChannel": null
+            },
+            "enabled": 1,
+            "standard": {
+                "serviceRef": "1:0:19:285B:401:1:C00000:0:0:0:",
+                "stbChannel": "phoenix HD"
+            },
+            "webChannel": "Phoenix"
+        },
+        {
+            "alternative": {
+                "serviceRef": "",
+                "stbChannel": null
+            },
+            "enabled": 0,
+            "standard": {
+                "serviceRef": "",
+                "stbChannel": null
+            },
+            "webChannel": "Pluto TV Star Trek"
+        },
+        {
+            "alternative": {
+                "serviceRef": "",
+                "stbChannel": null
+            },
+            "enabled": 0,
+            "standard": {
+                "serviceRef": "",
+                "stbChannel": null
+            },
+            "webChannel": "Prime"
+        },
+        {
+            "alternative": {
+                "serviceRef": "",
+                "stbChannel": null
+            },
+            "enabled": 1,
+            "standard": {
+                "serviceRef": "1:0:1:445D:453:1:C00000:0:0:0:",
+                "stbChannel": "ProSieben"
+            },
+            "webChannel": "ProSieben"
+        },
+        {
+            "alternative": {
+                "serviceRef": "",
+                "stbChannel": null
+            },
+            "enabled": 0,
+            "standard": {
+                "serviceRef": "",
+                "stbChannel": null
+            },
+            "webChannel": "ProSieben Fun"
+        },
+        {
+            "alternative": {
+                "serviceRef": "",
+                "stbChannel": null
+            },
+            "enabled": 0,
+            "standard": {
+                "serviceRef": "",
+                "stbChannel": null
+            },
+            "webChannel": "ProSieben MAXX"
+        },
+        {
+            "alternative": {
+                "serviceRef": "",
+                "stbChannel": null
+            },
+            "enabled": 0,
+            "standard": {
+                "serviceRef": "",
+                "stbChannel": null
+            },
+            "webChannel": "Puls 4"
+        },
+        {
+            "alternative": {
+                "serviceRef": "",
+                "stbChannel": null
+            },
+            "enabled": 0,
+            "standard": {
+                "serviceRef": "",
+                "stbChannel": null
+            },
+            "webChannel": "Puls 8"
+        },
+        {
+            "alternative": {
+                "serviceRef": "",
+                "stbChannel": null
+            },
+            "enabled": 0,
+            "standard": {
+                "serviceRef": "",
+                "stbChannel": null
+            },
+            "webChannel": "RB"
+        },
+        {
+            "alternative": {
+                "serviceRef": "",
+                "stbChannel": null
+            },
+            "enabled": 0,
+            "standard": {
+                "serviceRef": "",
+                "stbChannel": null
+            },
+            "webChannel": "rbb"
+        },
+        {
+            "alternative": {
+                "serviceRef": "",
+                "stbChannel": null
+            },
+            "enabled": 0,
+            "standard": {
+                "serviceRef": "",
+                "stbChannel": null
+            },
+            "webChannel": "RiC"
+        },
+        {
+            "alternative": {
+                "serviceRef": "",
+                "stbChannel": null
+            },
+            "enabled": 0,
+            "standard": {
+                "serviceRef": "",
+                "stbChannel": null
+            },
+            "webChannel": "Rocket Beans TV"
+        },
+        {
+            "alternative": {
+                "serviceRef": "",
+                "stbChannel": null
+            },
+            "enabled": 0,
+            "standard": {
+                "serviceRef": "",
+                "stbChannel": null
+            },
+            "webChannel": "Romance TV"
+        },
+        {
+            "alternative": {
+                "serviceRef": "",
+                "stbChannel": null
+            },
+            "enabled": 1,
+            "standard": {
+                "serviceRef": "1:0:1:2EE3:441:1:C00000:0:0:0:",
+                "stbChannel": "RTL Television"
+            },
+            "webChannel": "RTL"
+        },
+        {
+            "alternative": {
+                "serviceRef": "",
+                "stbChannel": null
+            },
+            "enabled": 0,
+            "standard": {
+                "serviceRef": "",
+                "stbChannel": null
+            },
+            "webChannel": "RTL Crime"
+        },
+        {
+            "alternative": {
+                "serviceRef": "",
+                "stbChannel": null
+            },
+            "enabled": 0,
+            "standard": {
+                "serviceRef": "",
+                "stbChannel": null
+            },
+            "webChannel": "RTL Living"
+        },
+        {
+            "alternative": {
+                "serviceRef": "",
+                "stbChannel": null
+            },
+            "enabled": 0,
+            "standard": {
+                "serviceRef": "",
+                "stbChannel": null
+            },
+            "webChannel": "RTL Passion"
+        },
+        {
+            "alternative": {
+                "serviceRef": "",
+                "stbChannel": null
+            },
+            "enabled": 1,
+            "standard": {
+                "serviceRef": "1:0:1:2EF4:441:1:C00000:0:0:0:",
+                "stbChannel": "RTLZWEI"
+            },
+            "webChannel": "RTL Zwei"
+        },
+        {
+            "alternative": {
+                "serviceRef": "",
+                "stbChannel": null
+            },
+            "enabled": 1,
+            "standard": {
+                "serviceRef": "1:0:1:2F30:441:1:C00000:0:0:0:",
+                "stbChannel": "RTLup"
+            },
+            "webChannel": "RTLup"
+        },
+        {
+            "alternative": {
+                "serviceRef": "",
+                "stbChannel": null
+            },
+            "enabled": 0,
+            "standard": {
+                "serviceRef": "",
+                "stbChannel": null
+            },
+            "webChannel": "S1"
+        },
+        {
+            "alternative": {
+                "serviceRef": "",
+                "stbChannel": null
+            },
+            "enabled": 1,
+            "standard": {
+                "serviceRef": "1:0:1:445C:453:1:C00000:0:0:0:",
+                "stbChannel": "SAT.1"
+            },
+            "webChannel": "Sat.1"
+        },
+        {
+            "alternative": {
+                "serviceRef": "",
+                "stbChannel": null
+            },
+            "enabled": 0,
+            "standard": {
+                "serviceRef": "",
+                "stbChannel": null
+            },
+            "webChannel": "Sat.1 emotions"
+        },
+        {
+            "alternative": {
+                "serviceRef": "",
+                "stbChannel": null
+            },
+            "enabled": 1,
+            "standard": {
+                "serviceRef": "1:0:1:4460:453:1:C00000:0:0:0:",
+                "stbChannel": "SAT.1 Gold"
+            },
+            "webChannel": "Sat.1 Gold"
+        },
+        {
+            "alternative": {
+                "serviceRef": "",
+                "stbChannel": null
+            },
+            "enabled": 0,
+            "standard": {
+                "serviceRef": "",
+                "stbChannel": null
+            },
+            "webChannel": "Sat.1 Schweiz"
+        },
+        {
+            "alternative": {
+                "serviceRef": "",
+                "stbChannel": null
+            },
+            "enabled": 0,
+            "standard": {
+                "serviceRef": "",
+                "stbChannel": null
+            },
+            "webChannel": "Schlager Deluxe"
+        },
+        {
+            "alternative": {
+                "serviceRef": "",
+                "stbChannel": null
+            },
+            "enabled": 0,
+            "standard": {
+                "serviceRef": "",
+                "stbChannel": null
+            },
+            "webChannel": "Serien+"
+        },
+        {
+            "alternative": {
+                "serviceRef": "",
+                "stbChannel": null
+            },
+            "enabled": 0,
+            "standard": {
+                "serviceRef": "",
+                "stbChannel": null
+            },
+            "webChannel": "ServusTV"
+        },
+        {
+            "alternative": {
+                "serviceRef": "",
+                "stbChannel": null
+            },
+            "enabled": 0,
+            "standard": {
+                "serviceRef": "",
+                "stbChannel": null
+            },
+            "webChannel": "Silverline"
+        },
+        {
+            "alternative": {
+                "serviceRef": "",
+                "stbChannel": null
+            },
+            "enabled": 1,
+            "standard": {
+                "serviceRef": "1:0:1:308:5:85:C00000:0:0:0:",
+                "stbChannel": "DMF"
+            },
+            "webChannel": "sixx"
+        },
+        {
+            "alternative": {
+                "serviceRef": "",
+                "stbChannel": null
+            },
+            "enabled": 0,
+            "standard": {
+                "serviceRef": "",
+                "stbChannel": null
+            },
+            "webChannel": "Sky Atlantic"
+        },
+        {
+            "alternative": {
+                "serviceRef": "",
+                "stbChannel": null
+            },
+            "enabled": 0,
+            "standard": {
+                "serviceRef": "",
+                "stbChannel": null
+            },
+            "webChannel": "Sky Cinema Action"
+        },
+        {
+            "alternative": {
+                "serviceRef": "",
+                "stbChannel": null
+            },
+            "enabled": 0,
+            "standard": {
+                "serviceRef": "",
+                "stbChannel": null
+            },
+            "webChannel": "Sky Cinema Action HD +24"
+        },
+        {
+            "alternative": {
+                "serviceRef": "",
+                "stbChannel": null
+            },
+            "enabled": 0,
+            "standard": {
+                "serviceRef": "",
+                "stbChannel": null
+            },
+            "webChannel": "Sky Cinema Blockbuster"
+        },
+        {
+            "alternative": {
+                "serviceRef": "",
+                "stbChannel": null
+            },
+            "enabled": 0,
+            "standard": {
+                "serviceRef": "",
+                "stbChannel": null
+            },
+            "webChannel": "Sky Cinema Blockbuster HD +24"
+        },
+        {
+            "alternative": {
+                "serviceRef": "",
+                "stbChannel": null
+            },
+            "enabled": 0,
+            "standard": {
+                "serviceRef": "",
+                "stbChannel": null
+            },
+            "webChannel": "Sky Cinema Classics"
+        },
+        {
+            "alternative": {
+                "serviceRef": "",
+                "stbChannel": null
+            },
+            "enabled": 0,
+            "standard": {
+                "serviceRef": "",
+                "stbChannel": null
+            },
+            "webChannel": "Sky Cinema Classics HD +24"
+        },
+        {
+            "alternative": {
+                "serviceRef": "",
+                "stbChannel": null
+            },
+            "enabled": 0,
+            "standard": {
+                "serviceRef": "",
+                "stbChannel": null
+            },
+            "webChannel": "Sky Cinema Feelgood"
+        },
+        {
+            "alternative": {
+                "serviceRef": "",
+                "stbChannel": null
+            },
+            "enabled": 0,
+            "standard": {
+                "serviceRef": "",
+                "stbChannel": null
+            },
+            "webChannel": "Sky Cinema Feelgood HD +24"
+        },
+        {
+            "alternative": {
+                "serviceRef": "",
+                "stbChannel": null
+            },
+            "enabled": 0,
+            "standard": {
+                "serviceRef": "",
+                "stbChannel": null
+            },
+            "webChannel": "Sky Cinema Premiere"
+        },
+        {
+            "alternative": {
+                "serviceRef": "",
+                "stbChannel": null
+            },
+            "enabled": 0,
+            "standard": {
+                "serviceRef": "",
+                "stbChannel": null
+            },
+            "webChannel": "Sky Cinema Premiere HD +24"
+        },
+        {
+            "alternative": {
+                "serviceRef": "",
+                "stbChannel": null
+            },
+            "enabled": 0,
+            "standard": {
+                "serviceRef": "",
+                "stbChannel": null
+            },
+            "webChannel": "Sky Crime"
+        },
+        {
+            "alternative": {
+                "serviceRef": "",
+                "stbChannel": null
+            },
+            "enabled": 0,
+            "standard": {
+                "serviceRef": "",
+                "stbChannel": null
+            },
+            "webChannel": "Sky Documentaries"
+        },
+        {
+            "alternative": {
+                "serviceRef": "",
+                "stbChannel": null
+            },
+            "enabled": 0,
+            "standard": {
+                "serviceRef": "",
+                "stbChannel": null
+            },
+            "webChannel": "Sky Krimi"
+        },
+        {
+            "alternative": {
+                "serviceRef": "",
+                "stbChannel": null
+            },
+            "enabled": 0,
+            "standard": {
+                "serviceRef": "",
+                "stbChannel": null
+            },
+            "webChannel": "Sky Nature"
+        },
+        {
+            "alternative": {
+                "serviceRef": "",
+                "stbChannel": null
+            },
+            "enabled": 0,
+            "standard": {
+                "serviceRef": "",
+                "stbChannel": null
+            },
+            "webChannel": "Sky One"
+        },
+        {
+            "alternative": {
+                "serviceRef": "",
+                "stbChannel": null
+            },
+            "enabled": 0,
+            "standard": {
+                "serviceRef": "",
+                "stbChannel": null
+            },
+            "webChannel": "Sky Sci-Fi"
+        },
+        {
+            "alternative": {
+                "serviceRef": "",
+                "stbChannel": null
+            },
+            "enabled": 0,
+            "standard": {
+                "serviceRef": "",
+                "stbChannel": null
+            },
+            "webChannel": "Sky Showcase HD"
+        },
+        {
+            "alternative": {
+                "serviceRef": "",
+                "stbChannel": null
+            },
+            "enabled": 0,
+            "standard": {
+                "serviceRef": "",
+                "stbChannel": null
+            },
+            "webChannel": "Sky Sport 1"
+        },
+        {
+            "alternative": {
+                "serviceRef": "",
+                "stbChannel": null
+            },
+            "enabled": 0,
+            "standard": {
+                "serviceRef": "",
+                "stbChannel": null
+            },
+            "webChannel": "Sky Sport 2"
+        },
+        {
+            "alternative": {
+                "serviceRef": "",
+                "stbChannel": null
+            },
+            "enabled": 0,
+            "standard": {
+                "serviceRef": "",
+                "stbChannel": null
+            },
+            "webChannel": "Sky Sport Austria"
+        },
+        {
+            "alternative": {
+                "serviceRef": "",
+                "stbChannel": null
+            },
+            "enabled": 0,
+            "standard": {
+                "serviceRef": "",
+                "stbChannel": null
+            },
+            "webChannel": "Sky Sport Bundesliga 1"
+        },
+        {
+            "alternative": {
+                "serviceRef": "",
+                "stbChannel": null
+            },
+            "enabled": 0,
+            "standard": {
+                "serviceRef": "",
+                "stbChannel": null
+            },
+            "webChannel": "Sky Sport Bundesliga HD"
+        },
+        {
+            "alternative": {
+                "serviceRef": "",
+                "stbChannel": null
+            },
+            "enabled": 0,
+            "standard": {
+                "serviceRef": "",
+                "stbChannel": null
+            },
+            "webChannel": "Sky Sport F1"
+        },
+        {
+            "alternative": {
+                "serviceRef": "",
+                "stbChannel": null
+            },
+            "enabled": 0,
+            "standard": {
+                "serviceRef": "",
+                "stbChannel": null
+            },
+            "webChannel": "Sky Sport Mix HD"
+        },
+        {
+            "alternative": {
+                "serviceRef": "",
+                "stbChannel": null
+            },
+            "enabled": 0,
+            "standard": {
+                "serviceRef": "",
+                "stbChannel": null
+            },
+            "webChannel": "Sky Sport News"
+        },
+        {
+            "alternative": {
+                "serviceRef": "",
+                "stbChannel": null
+            },
+            "enabled": 0,
+            "standard": {
+                "serviceRef": "",
+                "stbChannel": null
+            },
+            "webChannel": "Sky Sport Top Event"
+        },
+        {
+            "alternative": {
+                "serviceRef": "",
+                "stbChannel": null
+            },
+            "enabled": 0,
+            "standard": {
+                "serviceRef": "",
+                "stbChannel": null
+            },
+            "webChannel": "Sky Sport UHD"
+        },
+        {
+            "alternative": {
+                "serviceRef": "",
+                "stbChannel": null
+            },
+            "enabled": 0,
+            "standard": {
+                "serviceRef": "",
+                "stbChannel": null
+            },
+            "webChannel": "Spiegel Geschichte"
+        },
+        {
+            "alternative": {
+                "serviceRef": "",
+                "stbChannel": null
+            },
+            "enabled": 0,
+            "standard": {
+                "serviceRef": "",
+                "stbChannel": null
+            },
+            "webChannel": "Sport1"
+        },
+        {
+            "alternative": {
+                "serviceRef": "",
+                "stbChannel": null
+            },
+            "enabled": 0,
+            "standard": {
+                "serviceRef": "",
+                "stbChannel": null
+            },
+            "webChannel": "Sportdigital Fu\u00dfball"
+        },
+        {
+            "alternative": {
+                "serviceRef": "",
+                "stbChannel": null
+            },
+            "enabled": 0,
+            "standard": {
+                "serviceRef": "",
+                "stbChannel": null
+            },
+            "webChannel": "SR"
+        },
+        {
+            "alternative": {
+                "serviceRef": "",
+                "stbChannel": null
+            },
+            "enabled": 1,
+            "standard": {
+                "serviceRef": "1:0:19:1F:280D:217C:EEEE0244:0:0:0:",
+                "stbChannel": "RAS SRF 1 HD"
+            },
+            "webChannel": "SRF 1"
+        },
+        {
+            "alternative": {
+                "serviceRef": "",
+                "stbChannel": null
+            },
+            "enabled": 1,
+            "standard": {
+                "serviceRef": "1:0:19:20:280D:217C:EEEE0244:0:0:0:",
+                "stbChannel": "RAS SRF zwei HD"
+            },
+            "webChannel": "SRF zwei"
+        },
+        {
+            "alternative": {
+                "serviceRef": "",
+                "stbChannel": null
+            },
+            "enabled": 0,
+            "standard": {
+                "serviceRef": "",
+                "stbChannel": null
+            },
+            "webChannel": "Star TV"
+        },
+        {
+            "alternative": {
+                "serviceRef": "",
+                "stbChannel": null
+            },
+            "enabled": 1,
+            "standard": {
+                "serviceRef": "1:0:1:708F:443:1:C00000:0:0:0:",
+                "stbChannel": "SUPER RTL A"
+            },
+            "webChannel": "Super RTL"
+        },
+        {
+            "alternative": {
+                "serviceRef": "",
+                "stbChannel": null
+            },
+            "enabled": 0,
+            "standard": {
+                "serviceRef": "",
+                "stbChannel": null
+            },
+            "webChannel": "Swiss 1"
+        },
+        {
+            "alternative": {
+                "serviceRef": "",
+                "stbChannel": null
+            },
+            "enabled": 0,
+            "standard": {
+                "serviceRef": "",
+                "stbChannel": null
+            },
+            "webChannel": "SWR"
+        },
+        {
+            "alternative": {
+                "serviceRef": "",
+                "stbChannel": null
+            },
+            "enabled": 0,
+            "standard": {
+                "serviceRef": "",
+                "stbChannel": null
+            },
+            "webChannel": "SWR RP"
+        },
+        {
+            "alternative": {
+                "serviceRef": "",
+                "stbChannel": null
+            },
+            "enabled": 0,
+            "standard": {
+                "serviceRef": "",
+                "stbChannel": null
+            },
+            "webChannel": "tagesschau24"
+        },
+        {
+            "alternative": {
+                "serviceRef": "",
+                "stbChannel": null
+            },
+            "enabled": 1,
+            "standard": {
+                "serviceRef": "1:0:1:33:21:85:C00000:0:0:0:",
+                "stbChannel": "TELE 5"
+            },
+            "webChannel": "Tele 5"
+        },
+        {
+            "alternative": {
+                "serviceRef": "",
+                "stbChannel": null
+            },
+            "enabled": 0,
+            "standard": {
+                "serviceRef": "",
+                "stbChannel": null
+            },
+            "webChannel": "Telegold"
+        },
+        {
+            "alternative": {
+                "serviceRef": "",
+                "stbChannel": null
+            },
+            "enabled": 0,
+            "standard": {
+                "serviceRef": "",
+                "stbChannel": null
+            },
+            "webChannel": "Telenovela ZDF"
+        },
+        {
+            "alternative": {
+                "serviceRef": "",
+                "stbChannel": null
+            },
+            "enabled": 0,
+            "standard": {
+                "serviceRef": "",
+                "stbChannel": null
+            },
+            "webChannel": "The History Channel"
+        },
+        {
+            "alternative": {
+                "serviceRef": "",
+                "stbChannel": null
+            },
+            "enabled": 0,
+            "standard": {
+                "serviceRef": "",
+                "stbChannel": null
+            },
+            "webChannel": "TLC"
+        },
+        {
+            "alternative": {
+                "serviceRef": "",
+                "stbChannel": null
+            },
+            "enabled": 0,
+            "standard": {
+                "serviceRef": "",
+                "stbChannel": null
+            },
+            "webChannel": "TOGGO plus"
+        },
+        {
+            "alternative": {
+                "serviceRef": "",
+                "stbChannel": null
+            },
+            "enabled": 0,
+            "standard": {
+                "serviceRef": "",
+                "stbChannel": null
+            },
+            "webChannel": "Top Serien"
+        },
+        {
+            "alternative": {
+                "serviceRef": "",
+                "stbChannel": null
+            },
+            "enabled": 0,
+            "standard": {
+                "serviceRef": "",
+                "stbChannel": null
+            },
+            "webChannel": "TV24"
+        },
+        {
+            "alternative": {
+                "serviceRef": "",
+                "stbChannel": null
+            },
+            "enabled": 0,
+            "standard": {
+                "serviceRef": "",
+                "stbChannel": null
+            },
+            "webChannel": "TV25"
+        },
+        {
+            "alternative": {
+                "serviceRef": "",
+                "stbChannel": null
+            },
+            "enabled": 0,
+            "standard": {
+                "serviceRef": "",
+                "stbChannel": null
+            },
+            "webChannel": "TV5 Monde"
+        },
+        {
+            "alternative": {
+                "serviceRef": "",
+                "stbChannel": null
+            },
+            "enabled": 0,
+            "standard": {
+                "serviceRef": "",
+                "stbChannel": null
+            },
+            "webChannel": "Universal TV"
+        },
+        {
+            "alternative": {
+                "serviceRef": "",
+                "stbChannel": null
+            },
+            "enabled": 0,
+            "standard": {
+                "serviceRef": "",
+                "stbChannel": null
+            },
+            "webChannel": "Volksmusik.TV"
+        },
+        {
+            "alternative": {
+                "serviceRef": "",
+                "stbChannel": null
+            },
+            "enabled": 1,
+            "standard": {
+                "serviceRef": "1:0:1:2F1C:441:1:C00000:0:0:0:",
+                "stbChannel": "VOX"
+            },
+            "webChannel": "VOX"
+        },
+        {
+            "alternative": {
+                "serviceRef": "",
+                "stbChannel": null
+            },
+            "enabled": 1,
+            "standard": {
+                "serviceRef": "1:0:1:7094:443:1:C00000:0:0:0:",
+                "stbChannel": "VOXup"
+            },
+            "webChannel": "VOXup"
+        },
+        {
+            "alternative": {
+                "serviceRef": "",
+                "stbChannel": null
+            },
+            "enabled": 0,
+            "standard": {
+                "serviceRef": "",
+                "stbChannel": null
+            },
+            "webChannel": "Warner TV Comedy"
+        },
+        {
+            "alternative": {
+                "serviceRef": "",
+                "stbChannel": null
+            },
+            "enabled": 0,
+            "standard": {
+                "serviceRef": "",
+                "stbChannel": null
+            },
+            "webChannel": "Warner TV Film"
+        },
+        {
+            "alternative": {
+                "serviceRef": "",
+                "stbChannel": null
+            },
+            "enabled": 0,
+            "standard": {
+                "serviceRef": "",
+                "stbChannel": null
+            },
+            "webChannel": "Warner TV Serie"
+        },
+        {
+            "alternative": {
+                "serviceRef": "",
+                "stbChannel": null
+            },
+            "enabled": 0,
+            "standard": {
+                "serviceRef": "",
+                "stbChannel": null
+            },
+            "webChannel": "WDR"
+        },
+        {
+            "alternative": {
+                "serviceRef": "",
+                "stbChannel": null
+            },
+            "enabled": 0,
+            "standard": {
+                "serviceRef": "",
+                "stbChannel": null
+            },
+            "webChannel": "wedotv Movies"
+        },
+        {
+            "alternative": {
+                "serviceRef": "",
+                "stbChannel": null
+            },
+            "enabled": 1,
+            "standard": {
+                "serviceRef": "1:0:1:445F:453:1:C00000:0:0:0:",
+                "stbChannel": "WELT"
+            },
+            "webChannel": "WELT"
+        },
+        {
+            "alternative": {
+                "serviceRef": "",
+                "stbChannel": null
+            },
+            "enabled": 0,
+            "standard": {
+                "serviceRef": "",
+                "stbChannel": null
+            },
+            "webChannel": "Welt der Wunder TV"
+        },
+        {
+            "alternative": {
+                "serviceRef": "",
+                "stbChannel": null
+            },
+            "enabled": 1,
+            "standard": {
+                "serviceRef": "1:0:19:2B66:3F3:1:C00000:0:0:0:",
+                "stbChannel": "ZDF HD"
+            },
+            "webChannel": "ZDF"
+        },
+        {
+            "alternative": {
+                "serviceRef": "",
+                "stbChannel": null
+            },
+            "enabled": 1,
+            "standard": {
+                "serviceRef": "1:0:19:2BA2:3F2:1:C00000:0:0:0:",
+                "stbChannel": "ZDFinfo HD"
+            },
+            "webChannel": "ZDFinfo"
+        },
+        {
+            "alternative": {
+                "serviceRef": "",
+                "stbChannel": null
+            },
+            "enabled": 1,
+            "standard": {
+                "serviceRef": "1:0:19:2B7A:3F3:1:C00000:0:0:0:",
+                "stbChannel": "zdf_neo HD"
+            },
+            "webChannel": "ZDFneo"
+        },
+        {
+            "alternative": {
+                "serviceRef": "",
+                "stbChannel": null
+            },
+            "enabled": 0,
+            "standard": {
+                "serviceRef": "",
+                "stbChannel": null
+            },
+            "webChannel": "Zee One"
+        }
+    ],
+    "status": true
+}

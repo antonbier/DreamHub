@@ -1,0 +1,12 @@
+{
+    "payload": {
+        "apiVersion": "2.12",
+        "channelListeUpToDate": false,
+        "dbVersion": "4.6.0",
+        "image": "5.0.0r117-gutemine-2024-08-12 / Experimental 2023-04-24",
+        "markerLastUpdate": 1778697811,
+        "srVersion": "4.8.0-beta",
+        "stbType": "one"
+    },
+    "status": true
+}

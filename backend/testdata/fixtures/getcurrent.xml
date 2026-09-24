@@ -1,0 +1,56 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<e2currentserviceinformation>
+	<e2service>
+		<e2servicereference>1:0:19:14:280E:217C:EEEE01DC:0:0:0:</e2servicereference>
+		<e2servicename>RAS ORF1 HD</e2servicename>
+		<e2providername>RAS</e2providername>
+		<e2videowidth>1280</e2videowidth>
+		<e2videoheight>720</e2videoheight>
+		<e2servicevideosize>1280x720</e2servicevideosize>
+		<e2iswidescreen></e2iswidescreen>
+		<e2apid>2002</e2apid>
+		<e2vpid>2001</e2vpid>
+		<e2pcrpid>2001</e2pcrpid>
+		<e2pmtpid>2000</e2pmtpid>
+		<e2txtpid>2005</e2txtpid>
+		<e2tsid>10254</e2tsid>
+		<e2onid>8572</e2onid>
+		<e2sid>20</e2sid>
+	</e2service>
+	<e2eventlist>
+		<e2event>
+			<e2eventservicereference>1:0:19:14:280E:217C:EEEE01DC:0:0:0:</e2eventservicereference>
+			<e2eventservicename>RAS ORF1 HD</e2eventservicename>
+			<e2eventprovidername>RAS</e2eventprovidername>
+			<e2eventid>20427</e2eventid>
+			<e2eventname>WaPo Bodensee</e2eventname>
+			<e2eventtitle>WaPo Bodensee</e2eventtitle>
+			<e2eventdescription>Tod und Wahrheit</e2eventdescription>
+			<e2eventstart>1790231091</e2eventstart>
+			<e2eventduration>2928</e2eventduration>
+			<e2eventremaining>1309</e2eventremaining>
+			<e2eventcurrenttime>1790232710.75</e2eventcurrenttime>
+			<e2eventdescriptionextended>keine erweiterte Sendungsinfo</e2eventdescriptionextended>
+		</e2event>
+		<e2event>
+			<e2eventservicereference>1:0:19:14:280E:217C:EEEE01DC:0:0:0:</e2eventservicereference>
+			<e2eventservicename>RAS ORF1 HD</e2eventservicename>
+			<e2eventprovidername>RAS</e2eventprovidername>
+			<e2eventid>20428</e2eventid>
+			<e2eventname>Smart10 - Das Quiz mit den zehn Möglichkeiten</e2eventname>
+			<e2eventtitle>Smart10 - Das Quiz mit den zehn Möglichkeiten</e2eventtitle>
+			<e2eventdescription></e2eventdescription>
+			<e2eventstart>1790234019</e2eventstart>
+			<e2eventduration>2708</e2eventduration>
+			<e2eventremaining>2708</e2eventremaining>
+			<e2eventcurrenttime>1790232710.75</e2eventcurrenttime>
+			<e2eventdescriptionextended>keine erweiterte Sendungsinfo</e2eventdescriptionextended>
+		</e2event>
+	</e2eventlist>
+	<e2volume>
+		<e2result>True</e2result>
+		<e2resulttext>State</e2resulttext>
+		<e2current>100</e2current>
+		<e2ismuted>False</e2ismuted>
+	</e2volume>
+</e2currentserviceinformation>

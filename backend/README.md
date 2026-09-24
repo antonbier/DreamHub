@@ -35,6 +35,20 @@ curl -X PATCH http://127.0.0.1:8080/api/v1/settings -H 'X-DreamHub-Request: 1' \
 
 Enabling auth without a username and password is rejected (it would lock everyone out). `/api/v1/health` always stays public.
 
+## Trying a build on the box
+
+Without packaging (until WP9), a dev build can be tried on a real box by hand. Build with the frontend embedded, copy it to `/tmp` (RAM-backed, gone after a reboot), and run it next to WebControl:
+
+```sh
+(cd ../frontend && npm run build)
+CGO_ENABLED=0 GOOS=linux GOARCH=arm64 go build -trimpath -ldflags="-s -w" -o dreamhub-arm64 ./cmd/dreamhub
+git checkout internal/webui/dist/index.html   # don't commit the built index
+ssh root@<box> 'mkdir -p /tmp/dreamhub-test && cat > /tmp/dreamhub-test/dreamhub && chmod 755 /tmp/dreamhub-test/dreamhub' < dreamhub-arm64
+ssh root@<box> 'cd /tmp/dreamhub-test && DREAMHUB_MODE=live DREAMHUB_LISTEN_ADDR=:8090 DREAMHUB_DATA_DIR=/tmp/dreamhub-test/data DREAMHUB_ENABLE_DEVICE_WRITES=0 nohup ./dreamhub > log.jsonl 2>&1 &'
+```
+
+Then open `http://<box>:8090`. Stop with `kill $(pidof dreamhub)` and remove `/tmp/dreamhub-test`. Leave out `DREAMHUB_ENABLE_DEVICE_WRITES=0` only when you mean to change things on the box.
+
 ## API so far
 
 | Method | Path | Notes |

@@ -311,6 +311,23 @@ Read for approach only (CC BY-NC-SA, no code copied):
 
 No `/var/log/journal`; `journald.conf` sets `RuntimeMaxUse=64M`, `ForwardToSyslog=yes`. The journal lives in RAM (~16 MB at inspection) and **is lost on every reboot**. Early boot entries carry a 1970 timestamp (before the clock is set). AdminHub has to say "since last boot" and can't promise history. enigma2's own log lines are in the journal (`journalctl -u enigma2`). One enigma2 crash log exists: `/media/hdd/enigma2_crash_1774122941.log` (the name carries a Unix timestamp).
 
+## `epgmulti`'s `endTime` is minutes, not a timestamp
+
+Found running DreamHub on the box (2026-09-24) and confirmed from the plugin source (`WebComponents/Sources/EPG.py`, `getEPGofBouquet(…, multi=True)`): `/web/epgmulti?bRef=&time=&endTime=` hands `endTime` unchanged to `epgcache.lookupEvent` as the `(service, type, begin, minutes)` tuple's last element, so it's a **duration in minutes**. An end timestamp reads as "millions of minutes" and returns the whole EPG. Live, one bouquet of 30 channels: `endTime=<now+1h as timestamp>` → 9,843 events, 6.2 MB, about 25 days; `endTime=60` → 80 events, 66 KB; `endTime=240` → 247 events. The response also includes the event already running at `time`, which can start hours earlier. Corrects the earlier note in `ROADMAP.md` that the endpoint "takes a time window" as start/end timestamps.
+
+## enigma2 answers WebControl requests one at a time
+
+The web server runs inside the single `enigma2` process (see "Process architecture"), and requests queue behind each other. Under a deliberate load test (60 parallel DreamHub requests, each fanning out to WebControl) `/web/timerlist` took up to 5.8 s, and one `/web/deviceinfo` hit DreamHub's 5-second client timeout. In normal use (one request at a time) the same calls take 10–60 ms, `/web/movielist` about 3.5 s. Consequences: DreamHub must never fan out many parallel requests to the box. Anything polling (WP7 live updates) should coalesce concurrent identical requests and cache briefly, and `/web/movielist` is expensive enough to cache.
+
+## DreamHub itself on the box (v1 plan WP2, 2026-09-24)
+
+The static ARM64 binary (12.9 MB, frontend embedded) was run by hand from `/tmp` on the reference box with the owner's approval: live mode against `http://127.0.0.1`, port 8090, data in `/tmp`, device writes off. Results:
+
+- Starts in about 20 ms and detects `Europe/Berlin` from `/etc/localtime`. Every read endpoint answers `200`, the UI and client-side routes load, and the WebControl and SerienRecorder connectors are `ok`.
+- **Memory: about 11 MB RSS idle, 21 MB peak** under 60 parallel requests (after the `epgmulti` fix; 40 MB before, while shipping the whole EPG), far under the 150–200 MB budget. The box had about 1.2 GB available throughout.
+- `/tmp` is a RAM-backed `tmpfs` (989 MB), fine for a trial but not for data. `/data` is a 7.6 GB ext4 partition, 43 % used.
+- The default umask `022` made DreamHub's data directory and SQLite's `-wal`/`-shm` files world-readable. DreamHub now sets umask `077` at startup. A `/data/dreamhub/` from an earlier manual test run (11:16–11:48 that day) still has the old modes and was left untouched.
+
 ## Real API fixtures captured (#14)
 
 Live responses for every endpoint in the table below, plus `epgnownext` (corrected, see above) and five `serienrecorderapi` endpoints, are saved verbatim under `backend/testdata/fixtures/` (`*.xml` for `/web/*`, `serienrecorder/*.json` for the SerienRecorder API) — captured directly from the reference device on 2026-09-24. `backend/internal/webcontrol/mock` can be extended to load these instead of (or alongside) its current hand-written fixtures for more realistic tests.

@@ -35,6 +35,7 @@ func main() {
 }
 
 func run(logger *slog.Logger, level *logging.Level) error {
+	restrictFileModes()
 	cfg := config.Load()
 
 	var wc webcontrol.Client

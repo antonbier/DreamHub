@@ -233,3 +233,20 @@ func TestAddTimer_BoxRejects(t *testing.T) {
 		t.Fatalf("a rejection by the box must surface as a RejectedError with its text, got %v", err)
 	}
 }
+
+func TestEPGMulti_SendsEndTimeAsMinutes(t *testing.T) {
+	var got url.Values
+	srv := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		got = r.URL.Query()
+		w.Write([]byte(`<e2eventlist></e2eventlist>`))
+	}))
+	defer srv.Close()
+	// A 4-hour window must reach the box as endTime=240 (minutes), not as
+	// an end timestamp — which the box reads as "the whole EPG".
+	if _, err := NewHTTPClient(srv.URL).EPGMulti(context.Background(), "bouquet", 1000, 1000+4*3600); err != nil {
+		t.Fatal(err)
+	}
+	if got.Get("time") != "1000" || got.Get("endTime") != "240" {
+		t.Errorf("want time=1000 endTime=240, got %v", got)
+	}
+}

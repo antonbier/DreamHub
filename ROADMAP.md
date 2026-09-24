@@ -112,7 +112,7 @@ Notes:
 ### GuideHub
 
 **Done**:
-- [x] A real TV-magazine-style timeline grid ("TV-Zeitschrift"), not just now/next: `GET /api/v1/guide/bouquets` (`/web/getservices`) and `GET /api/v1/guide/grid?bouquet=&start=&end=` (`/web/epgmulti?bRef=&time=&endTime=`, confirmed live — takes a time window and returns every event per channel, chronologically — see `ARCHITECTURE.md`), grouped server-side (`internal/hubs/guide.go`'s `groupByChannel`) into one schedule per channel
+- [x] A real TV-magazine-style timeline grid ("TV-Zeitschrift"), not just now/next: `GET /api/v1/guide/bouquets` (`/web/getservices`) and `GET /api/v1/guide/grid?bouquet=&start=&end=` (`/web/epgmulti?bRef=&time=&endTime=`: `endTime` is a **duration in minutes**, corrected 2026-09-24 after the grid was found shipping the whole EPG, about 2 MB per page — see `ARCHITECTURE.md`), grouped server-side (`internal/hubs/guide.go`'s `groupByChannel`) into one schedule per channel
 - [x] `GuideHubView.vue`: a proportional timeline (event blocks positioned by percentage of the visible window, a "now" line, an hour ruler), switchable bouquet (selector hidden when there's only one, as on the reference device) and switchable time window (◀ / Now / ▶, `WINDOW_HOURS = 4` per page). Verified live against the reference device across two real bouquets ("Free TV", "neu (TV)") with real, correctly-positioned programming
 - [x] Corrected an earlier assumption: `/web/epgnownext` (now/next only) has been fully replaced by `/web/epgmulti` (a genuine time window) — one real endpoint, not two overlapping ones
 

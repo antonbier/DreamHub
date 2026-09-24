@@ -55,7 +55,8 @@ Order matters where noted. Everything else can run in parallel.
 - Optional WebControl credentials in settings + a "WebControl needs a password" diagnostic on `401` (needed once a user sets `localauth=true`, see `ARCHITECTURE.md`).
 - Enable device writes by default in live mode now that they're verified. Keep a setting to switch them off.
 
-### WP2 — Run DreamHub on the box *(early; unlocks every live test after it)*
+### WP2 — Run DreamHub on the box *(done 2026-09-24, see `ARCHITECTURE.md`, "DreamHub itself on the box")*
+- Result: 11 MB idle / 21 MB peak, every read endpoint and the UI work live. Found and fixed: `epgmulti`'s `endTime` is minutes (the grid shipped the whole EPG), and world-readable data files (umask). Learned: enigma2 serializes WebControl requests, which feeds into WP7.
 - Copy the ARM64 binary to `/tmp` on the reference box by hand (owner approval) and run it on a spare port against `127.0.0.1`. Measure RSS against the 150–200 MB budget, and check `/data` autofs, file permissions and `/etc/localtime`.
 - Without this, MediaHub's file operations can't be tested for real: they need local access to `/media/hdd`.
 - Result: a short "how to run a dev build on the box" section in `backend/README.md`.
@@ -85,6 +86,7 @@ Order matters where noted. Everything else can run in parallel.
 - enigma2 crash logs list + view, support download with secrets removed.
 
 ### WP7 — Core leftovers for v1
+- Never fan out parallel requests to the box (enigma2 serializes them, see `ARCHITECTURE.md`): coalesce identical in-flight requests, short caches, `/web/movielist` cached.
 - WebSocket + a minimal event bus. Events come from polling `/web/timerlist`/`movielist` (detection, not automation): `recording.started/finished`, `timer.conflict`, disk above 90 %. Persisted notifications (key + params), inbox in the bell.
 - Custom/criteria tiles on top of the search providers (the mechanics exist).
 - Runtime drop-in locales from `/data/dreamhub/locales/`, accessibility pass, complete Italian strings.

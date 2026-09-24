@@ -311,10 +311,16 @@ func (c *HTTPClient) Services(ctx context.Context, bouquetRef string) ([]Service
 
 func (c *HTTPClient) EPGMulti(ctx context.Context, bouquetRef string, start, end int64) ([]EPGEvent, error) {
 	var list epgEventList
+	// Despite its name, endTime is a duration in minutes: the plugin hands
+	// it to epgcache.lookupEvent as the (service, type, begin, minutes)
+	// tuple's last element. An end timestamp there reads as "millions of
+	// minutes" and returns the whole EPG (~25 days, megabytes) — confirmed
+	// live 2026-09-24 (ARCHITECTURE.md, "epgmulti's endTime is minutes").
+	minutes := (end - start + 59) / 60
 	q := url.Values{
 		"bRef":    {bouquetRef},
 		"time":    {strconv.FormatInt(start, 10)},
-		"endTime": {strconv.FormatInt(end, 10)},
+		"endTime": {strconv.FormatInt(minutes, 10)},
 	}
 	if err := c.getXML(ctx, "/web/epgmulti?"+q.Encode(), &list); err != nil {
 		return nil, err

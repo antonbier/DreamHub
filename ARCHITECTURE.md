@@ -58,7 +58,7 @@ Confirmed endpoints (all `POST`, all return XML), observed from normal WebContro
 </e2movie>
 ```
 
-**Impact on the roadmap**: FilmHub (Phase 2) and AIO Search (Phase 3) should use `/web/movielist`, `/web/timerlist`, `/web/getservices`, `/web/epgnownext` as their primary data source for *listing/searching*. Direct filesystem/`.ts.meta` access is still needed for *file operations* (rename, move, trim), since the API doesn't do that — but no need to parse `.ts.meta` by hand just to build a browsable list.
+**Impact on the roadmap**: FilmHub (Phase 2) and AIO Search (Phase 3) should use `/web/movielist`, `/web/timerlist`, `/web/getservices`, `/web/epgnownext` as their primary data source for *listing/searching*. Direct filesystem/`.ts.meta` access is still needed for *renaming* and *trimming*, since the API doesn't do that (it does have `moviedelete`/`moviemove`, but neither fits DreamHub's rules — see "Recording file operations in WebControl" below) — but no need to parse `.ts.meta` by hand just to build a browsable list.
 
 ## The `/bouqueteditor/*` plugin API
 
@@ -249,6 +249,68 @@ Corrects an assumption in the earlier endpoint table below: `GET /web/epgnownext
 
 Tested live and reverted immediately, 2026-09-24: renamed all 8 files of a real recording ("Crazy Rich", `.ts` + `.ts.ap` + `.ts.cuts` + `.ts.meta` + `.ts.sc` + `.eit` + `.jpg` + `.backdrop.jpg`) via SSH (`mv`, same base name → new base name + suffix preserved, done in one pass so no window with a half-renamed set), then re-fetched `GET /web/movielist`. Enigma2 picked it up correctly and immediately, no rescan/restart needed: `e2title` ("Crazy Rich") and `e2descriptionextended` came from `.ts.meta`, unaffected by the filename change; `e2filename`/`e2servicereference` updated to the new name; `e2filesize` unchanged. Renamed back to the original name immediately after, confirmed via `movielist` again that the device was left exactly as found. **Conclusion: MediaHub's planned rename engine (`ROADMAP.md`) is safe as designed** — renaming the full sidecar set outside Enigma2 while it's not recording/playing that file is picked up correctly on next listing; no special handling needed beyond the "never touch a file currently being recorded/played" check already planned (#12, resolved above).
 
+## Timer write endpoints: `/web/timeradd`, `/web/timerdelete` (confirmed live)
+
+Confirmed 2026-09-24 by reading the WebInterface plugin's own readable Python source on the device (`/usr/lib/enigma2/python/Plugins/Extensions/WebInterface/`: screen definitions in `web/timeradd.xml`, `web/timerdelete.xml`, implementation in `WebComponents/Sources/Timer.py`, request handling in `webif.py` and `plugin.py`), plus WebControl's own JavaScript (`web-data/statics.js`, `handler.js`, `helpers.js`).
+
+**Exercised live the same day, with the owner's approval, and reverted**: a disabled 5-minute test timer (RTL Television, `POST`, form-encoded, all required fields, a non-ASCII name) was created with `/web/timeradd` (`e2state=True`), appeared in `/web/timerlist` and in `/etc/enigma2/timers.xml` immediately, and was then removed with `/web/timerdelete` using the exact `sRef`/`begin`/`end` from the list (`e2state=True`). Afterwards the timer list was identical to before and `timers.xml` had the same md5 checksum as before the test. Also observed: a disabled timer is reported with `e2state=3` (ended) in the list, and `e2location` reads `None` when no `dirname` is given (the box's default path is used).
+
+Both endpoints exist, alongside `timerchange`, `timeraddbyeventid`, `timerlistwrite`, `timercleanup` and `recordnow`. Both return `<e2simplexmlresult><e2state>True|False</e2state><e2statetext>…</e2statetext></e2simplexmlresult>`.
+
+| Endpoint | Parameters (exactly the ones the screen accepts) |
+|---|---|
+| `/web/timeradd` | `sRef, begin, end, name, description` (required), `repeated, dirname, tags, eit, disabled, justplay, afterevent` (optional) |
+| `/web/timerdelete` | `sRef, begin, end` (all required) |
+| `/web/timeraddbyeventid` | `sRef, eventid` (required), `justplay, dirname, tags` (optional) — the box computes begin/end from its EPG **and adds its own margins** (`config.recording.margin_before/after`) |
+
+Behavior that matters for DreamHub:
+
+- **Use `POST`, form-encoded.** Every timer screen is declared `allow_GET=False`. That is only enforced when `config.plugins.Webinterface.anti_hijack=true`, which is the plugin's default; the reference box has it set to `false`, so a `GET` happens to work there. A `GET` with arguments on a default-config box returns `405`. WebControl's own UI always uses `POST`.
+- **Send every required parameter, even when it's empty.** Missing parameters arrive as `None`, not as absent keys (`OneTimeElement.handleCommand` in `webif.py`), so the plugin's own "Missing Parameter" checks never fire. A missing `description`, `begin` or `end` makes the plugin throw instead of returning a clean error.
+- **`sessionid`** is only checked when `config.plugins.Webinterface.extended_security=true` (it's `false` on the reference box). The token comes from `/web/session` and is tied to client IP plus User-Agent. WebControl's UI always sends it, so DreamHub can do the same for robustness.
+- `begin`/`end` are Unix seconds. `begin` in the past is rejected unless the timer is already running (`begin < now < end`). `/web/timeradd` applies **no** margins, since `applyMargin` isn't in the screen's parameter list. DreamHub adds its own, which is consistent with `NewTimer`.
+- `afterevent`: `0` nothing, `1` standby, `2` deep standby; anything else means `3` (auto). `disabled`/`justplay`: only `"1"` switches them on. `dirname` defaults to the box's preferred timer path.
+- **The box does its own conflict check** (`TimerSanityCheck`, tuner-aware): on a conflict it returns `e2state=False`, `"Conflicting Timer(s) detected! / <name> / …"` and adds nothing. This runs in addition to DreamHub's own plan-time check, not instead of it.
+- **Duplicate timers are silently dropped but reported as success.** If a timer with the same `begin` on the same service already exists, `RecordTimer.record()` ignores the new one and returns `None`, and `timeradd` says `"Timer '…' added"`. DreamHub must verify via `/web/timerlist` after applying, not trust `e2state` alone.
+- **Persistence is immediate**: `record()` and `removeEntry()` both call `saveTimer()` (`/etc/enigma2/timers.xml`). `config.plugins.Webinterface.autowritetimer` (`false` on the box) doesn't matter.
+- **`timerdelete` matches exactly**: the service-reference string and integer `begin`/`end` have to match an entry in `timer_list` or `processed_timers`. Use the values from `/web/timerlist` verbatim. Otherwise it returns `"No matching Timer found"`. **Deleting a running timer aborts the recording in progress** (`entry.abort()`), so the preview has to say so.
+- **`timerchange` has a bug in its conflict path**: it mutates the in-memory timer first, then references an undefined variable (`entry`) when resolving conflicts. The resulting exception is caught and reported as a failure, but the timer stays modified in memory. DreamHub shouldn't build on `timerchange` without testing that path.
+- Strings in results are translated into the box's OSD language (`_()`), so match on `e2state`, never on `e2statetext`.
+
+## Recording file operations in WebControl (`moviedelete`, `moviemove`)
+
+Corrects the earlier assumption (this document and `ROADMAP.md`) that WebControl has no file-operation endpoints. Confirmed 2026-09-24 from the plugin source (`web/moviedelete.xml`, `web/moviemove.xml`, `WebComponents/Sources/Movie.py`), read only, nothing called:
+
+- **`/web/moviedelete?sRef=`** — a **hard delete** (`offlineOperations().deleteFromDisk(0)`), no trash. Violates "delete means move to trash" (`PRINCIPLES.md`); DreamHub must not use it.
+- **`/web/moviemove?sRef=&dirname=&force=&background=`** — moves to another *folder* with the *same* base name (no rename). It uses `os.rename`, so it only works within one filesystem, and it has no rollback: a failure halfway leaves a split set. Suffixes it carries for `.ts`: `.ts.meta .ts.cuts .ts.ap .ts.sc .eit .ts .jpg`. **It leaves `.backdrop.jpg` behind.** DreamHub's own file component is still the right tool.
+- **Security note about the box itself:** `MovieWebScreen` is declared `allow_GET=True`, so `moviedelete` accepts a plain `GET` even when `anti_hijack` is on. With `localauth=false`, any web page opened on a LAN device could delete a recording through an image tag, provided it knows the exact file path. The timer endpoints are reachable through a cross-site form `POST` the same way. Nothing DreamHub can fix. The mitigation is `localauth=true` (see below).
+
+## WebControl auth for a backend on the box itself
+
+From `plugin.py` (`HTTPAuthResource.isAuthenticated`): requests from `127.0.0.1`/`::1` skip auth when `config.plugins.Webinterface.streamauth=false` (the reference box's setting). Requests from any configured local network skip it when `localauth=false`. So a user who hardens the box with `localauth=true` keeps DreamHub (calling `127.0.0.1`) working **only as long as `streamauth=false`**. DreamHub therefore needs optional WebControl credentials in its settings and a clear "WebControl requires a password" diagnostic on `401`.
+
+## Timer states and "is it recording right now"
+
+`timer.py`: `StateWaiting=0`, `StatePrepared=1`, `StateRunning=2`, `StateEnded=3`, reported as `e2state` in `/web/timerlist`. A disabled timer is reported as `3`. A timer in state `1`/`2` that isn't `justplay` is about to record or recording, and its target file must not be touched. Recordings started on the remote ("instant record") are timers too (`dontSave=True`) and show up the same way. Playback of a recording is a separate case (`/web/getcurrent`), not covered by the timer list.
+
+## AutoTimer web API (`/autotimer`)
+
+The AutoTimer plugin registers two WebControl children: `/autotimer` (API, XML) and `/autotimereditor` (its own web GUI, like SerienRecorder's). API children: `GET /autotimer` (full XML config, list), `parse` (**runs all AutoTimers and creates timers**), `simulate` (**dry run**, returns `<e2simulatedtimer>` entries with the timers `parse` *would* create, changes nothing), `test`, `edit` (add/edit, many query parameters), `remove?id=`, `get`/`set` (plugin settings), `add_xmltimer`/`upload_xmlconfiguration` (POST). `simulate` → `parse` maps naturally onto plan → apply, but `parse` runs every AutoTimer, not one. The reference box has **no AutoTimers configured** (empty `<autotimer version="8">`); SerienRecorder does that job there. The plugin is optional; DreamHub must work without it.
+
+## BouquetEditor write endpoints (`/bouqueteditor/web/*`)
+
+Closes the open follow-up below; read from `WebBouquetEditor/web/*.xml` only, nothing called. Parameters: `addbouquet(name,mode)`, `removebouquet(sBouquetRef,mode)`, `movebouquet(sBouquetRef,mode,position)`, `addservicetobouquet(sBouquetRef,sRef,sRefBefore,Name,Url)`, `removeservice(sBouquetRef,sRef)`, `moveservice(sBouquetRef,sRef,mode,position)`, `renameservice(sBouquetRef,sRef,sRefBefore,newName,mode,oldsRef)`, `addmarkertobouquet(sBouquetRef,Name,sRefBefore)`, `addprovidertobouquetlist(sProviderRef,mode)`, `addservicetoalternative(sBouquetRef,sCurrentRef,sRef,mode)`, `removealternativeservices(sBouquetRef,sRef)`, `togglelock(sRef,password)`, `backup(Filename)`, `restore(Filename)`. Only relevant for ChannelHub (v1.1), which still links/embeds the plugin's own UI first.
+
+## AdvancedMovieSelection: rename approach and trash convention
+
+Read for approach only (CC BY-NC-SA, no code copied):
+- **Rename** (`Rename.py`): title/description are rewritten in lines 2–3 of `.ts.meta`, the rest kept. The file rename globs `<dir>/<basename>*` and replaces the base name in every match, so `.backdrop.jpg` and any other sidecar are carried along. There's no rollback and no in-use check. DreamHub wants the same "all files sharing the base name" rule, plus an explicit preview, a collision check, rollback and the in-use check.
+- **Trash** (`Source/Trashcan.py`): deleting renames **only the main file** to `<name>.ts.trash` in place. The sidecars stay, and Enigma2's movie list no longer shows the file. Restore removes the suffix. Emptying deletes the main file plus sidecars. On the reference box: `use_wastebasket=true`, `auto_empty_wastebasket=14` (days, run at 04:00). No `.trash` files existed at inspection time. The old `/media/hdd/movie/trashcan/` folder is empty (2023). If DreamHub uses the same convention, the TV wastebasket and DreamHub see the same trash. AMS is optional, so DreamHub has to implement the convention (list/restore/empty) itself, and AMS's auto-empty is only a bonus.
+
+## journald is volatile
+
+No `/var/log/journal`; `journald.conf` sets `RuntimeMaxUse=64M`, `ForwardToSyslog=yes`. The journal lives in RAM (~16 MB at inspection) and **is lost on every reboot**. Early boot entries carry a 1970 timestamp (before the clock is set). AdminHub has to say "since last boot" and can't promise history. enigma2's own log lines are in the journal (`journalctl -u enigma2`). One enigma2 crash log exists: `/media/hdd/enigma2_crash_1774122941.log` (the name carries a Unix timestamp).
+
 ## Real API fixtures captured (#14)
 
 Live responses for every endpoint in the table below, plus `epgnownext` (corrected, see above) and five `serienrecorderapi` endpoints, are saved verbatim under `backend/testdata/fixtures/` (`*.xml` for `/web/*`, `serienrecorder/*.json` for the SerienRecorder API) — captured directly from the reference device on 2026-09-24. `backend/internal/webcontrol/mock` can be extended to load these instead of (or alongside) its current hand-written fixtures for more realistic tests.
@@ -307,5 +369,5 @@ Confirmed present: `curl`, `wget`, `python` (2.7), `tar`, `unzip`, `sed`, `awk`.
 
 ## Open follow-ups
 
-- Write-permitted pass needed to confirm the `/bouqueteditor/` plugin's actual write endpoints (add/reorder/remove service) — not captured here since only read/list actions were performed.
+- `/bouqueteditor/` write endpoints: parameters now known from source (see above); behavior still unexercised.
 - `AdvancedMovieSelection`'s `Rename.py` and `SearchTMDb*.py` are worth a closer read (not just the file list) before starting Phase 2 — this session only confirmed their existence and rough purpose, not their actual logic.

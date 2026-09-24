@@ -70,11 +70,6 @@ type Movie struct {
 	FileSize         int64  `xml:"e2filesize" json:"fileSize"`
 }
 
-type movieList struct {
-	XMLName xml.Name `xml:"e2movielist"`
-	Movies  []Movie  `xml:"e2movie"`
-}
-
 // Service is one bouquet or channel entry from /web/getservices (see
 // ARCHITECTURE.md). With no query string it lists bouquets; with
 // ?sRef=<bouquet reference> it lists the channels inside that bouquet —
@@ -191,11 +186,41 @@ func (c *HTTPClient) DeviceInfo(ctx context.Context) (*DeviceInfo, error) {
 }
 
 func (c *HTTPClient) MovieList(ctx context.Context) ([]Movie, error) {
-	var list movieList
-	if err := c.getXML(ctx, "/web/movielist", &list); err != nil {
+	body, err := c.get(ctx, "/web/movielist")
+	if err != nil {
 		return nil, err
 	}
-	return list.Movies, nil
+	defer body.Close()
+	return decodeMovieList(body), nil
+}
+
+// decodeMovieList tolerates a malformed/truncated tail — confirmed live on
+// the reference device 2026-09-24 (see testdata/fixtures/movielist_malformed.xml):
+// /web/movielist can end mid-response with an internal "Processing Failed"
+// HTML fragment instead of a properly closed </e2movielist>, rather than
+// returning an error status — apparently triggered by one specific
+// recording's own metadata confusing WebControl's own response generation,
+// not anything malformed in the request. Decoding each <e2movie> one at a
+// time and keeping whatever parsed successfully before the first decode
+// error means one broken entry doesn't take down the whole list.
+func decodeMovieList(r io.Reader) []Movie {
+	dec := xml.NewDecoder(r)
+	var movies []Movie
+	for {
+		tok, err := dec.Token()
+		if err != nil {
+			return movies
+		}
+		se, ok := tok.(xml.StartElement)
+		if !ok || se.Name.Local != "e2movie" {
+			continue
+		}
+		var m Movie
+		if dec.DecodeElement(&m, &se) != nil {
+			return movies
+		}
+		movies = append(movies, m)
+	}
 }
 
 func (c *HTTPClient) TimerList(ctx context.Context) ([]Timer, error) {
@@ -288,26 +313,37 @@ func ParseSize(s string) (int64, bool) {
 	return int64(n * sizeUnits[m[2]]), true
 }
 
-func (c *HTTPClient) getXML(ctx context.Context, path string, v any) error {
+// get issues a GET and returns the response body for the caller to read and
+// close — the shared HTTP mechanics behind both getXML and MovieList's own
+// tolerant decoding.
+func (c *HTTPClient) get(ctx context.Context, path string) (io.ReadCloser, error) {
 	req, err := http.NewRequestWithContext(ctx, http.MethodGet, c.BaseURL+path, nil)
 	if err != nil {
-		return fmt.Errorf("webcontrol: building request for %s: %w", path, err)
+		return nil, fmt.Errorf("webcontrol: building request for %s: %w", path, err)
 	}
 	resp, err := c.HTTP.Do(req)
 	if err != nil {
-		return fmt.Errorf("webcontrol: calling %s: %w", path, err)
+		return nil, fmt.Errorf("webcontrol: calling %s: %w", path, err)
 	}
-	defer resp.Body.Close()
-
 	if resp.StatusCode != http.StatusOK {
-		return fmt.Errorf("webcontrol: %s returned status %d", path, resp.StatusCode)
+		resp.Body.Close()
+		return nil, fmt.Errorf("webcontrol: %s returned status %d", path, resp.StatusCode)
 	}
+	return resp.Body, nil
+}
 
-	body, err := io.ReadAll(resp.Body)
+func (c *HTTPClient) getXML(ctx context.Context, path string, v any) error {
+	body, err := c.get(ctx, path)
+	if err != nil {
+		return err
+	}
+	defer body.Close()
+
+	data, err := io.ReadAll(body)
 	if err != nil {
 		return fmt.Errorf("webcontrol: reading %s response: %w", path, err)
 	}
-	if err := xml.Unmarshal(body, v); err != nil {
+	if err := xml.Unmarshal(data, v); err != nil {
 		return fmt.Errorf("webcontrol: parsing %s response: %w", path, err)
 	}
 	return nil

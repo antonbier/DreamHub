@@ -5,6 +5,7 @@ import (
 	"errors"
 	"net/http"
 	"net/http/httptest"
+	"os"
 	"testing"
 )
 
@@ -90,6 +91,36 @@ func TestParseSize(t *testing.T) {
 		got, ok := ParseSize(c.in)
 		if ok != c.ok || (ok && got != c.want) {
 			t.Errorf("ParseSize(%q) = %d, %v; want %d, %v", c.in, got, ok, c.want, c.ok)
+		}
+	}
+}
+
+func TestMovieList_ToleratesAMalformedTail(t *testing.T) {
+	// Real, confirmed-live response, 2026-09-24 (ARCHITECTURE.md): the
+	// reference device's own /web/movielist ended mid-document with an
+	// internal "Processing Failed" HTML fragment instead of a properly
+	// closed </e2movielist> — not a request-side problem, WebControl's own
+	// bug. Losing every recording over one broken entry near the end would
+	// be worse than returning the ones that parsed fine.
+	fixture, err := os.ReadFile("../../testdata/fixtures/movielist_malformed.xml")
+	if err != nil {
+		t.Fatal(err)
+	}
+	srv := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		w.Write(fixture)
+	}))
+	defer srv.Close()
+
+	movies, err := NewHTTPClient(srv.URL).MovieList(context.Background())
+	if err != nil {
+		t.Fatalf("a malformed tail must not surface as an error: %v", err)
+	}
+	if len(movies) == 0 {
+		t.Fatal("expected at least the movies that parsed before the malformed tail")
+	}
+	for _, m := range movies {
+		if m.Title == "" {
+			t.Errorf("a partially-decoded movie shouldn't appear in the result: %+v", m)
 		}
 	}
 }

@@ -1,0 +1,17 @@
+{
+  "version": "0.0.1",
+  "configurations": [
+    {
+      "name": "dreamhub-backend",
+      "runtimeExecutable": "go",
+      "runtimeArgs": ["-C", "backend", "run", "./cmd/dreamhub"],
+      "port": 8080
+    },
+    {
+      "name": "dreamhub-frontend",
+      "runtimeExecutable": "npm",
+      "runtimeArgs": ["--prefix", "frontend", "run", "dev"],
+      "port": 5173
+    }
+  ]
+}

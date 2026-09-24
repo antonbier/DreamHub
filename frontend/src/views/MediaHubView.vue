@@ -14,6 +14,13 @@
       <h1 class="text-[26px] font-bold">{{ t(item ? item.label : 'hub.media') }}</h1>
     </div>
 
+    <!--
+      The status banner and the real content below are independent, not
+      mutually exclusive: MediaHub's only optional requirement is TMDB
+      (future enrichment), so "degraded" still means the recordings list and
+      disk usage work fine — only "unavailable" (WebControl itself missing)
+      means there's nothing real to show.
+    -->
     <div v-if="item && item.status && item.status !== 'available'" class="mt-4 rounded border border-line bg-tile p-4">
       <div class="mb-1.5 flex items-center gap-2 text-[13.5px] font-semibold">
         <span class="h-1.5 w-1.5 rounded-full" :class="item.status === 'degraded' ? 'bg-warn' : 'bg-faint'" />
@@ -27,7 +34,7 @@
       </ul>
     </div>
 
-    <template v-else>
+    <template v-if="!item || item.status !== 'unavailable'">
       <section v-if="disks.length > 0" class="mt-5 flex flex-col gap-3 rounded border border-line bg-tile p-4">
         <div v-for="(disk, i) in disks" :key="i">
           <div class="mb-1 flex items-baseline justify-between gap-2 text-[13px]">

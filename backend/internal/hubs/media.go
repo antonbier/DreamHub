@@ -3,25 +3,39 @@ package hubs
 import (
 	"context"
 	"net/http"
+	"path"
+	"sort"
 	"strings"
 
 	"github.com/antonbier/DreamHub/backend/internal/httpx"
 	"github.com/antonbier/DreamHub/backend/internal/hub"
+	"github.com/antonbier/DreamHub/backend/internal/plan"
+	"github.com/antonbier/DreamHub/backend/internal/recfs"
 	"github.com/antonbier/DreamHub/backend/internal/webcontrol"
 )
 
-// Media is MediaHub: listing recordings and the disk-space overview.
-// Rename/delete (ROADMAP.md, "MediaHub") aren't built yet — WebControl's API
-// has no file-operation endpoints (ARCHITECTURE.md), so those need their own
-// filesystem-backed component, still to be designed.
+// Media is MediaHub: browsing recordings folder by folder, the disk-space
+// overview, and file operations (rename, trash, restore, empty — see
+// media_files.go and internal/recfs).
 type Media struct {
-	WC webcontrol.Client
+	WC    webcontrol.Client
+	Plans *plan.Service
+	// FS is the file system the recordings live on: the real one on the box,
+	// the mock's in-memory one in mock mode. File operations are only
+	// offered when the box's recording folders exist on it
+	// (recfs.Available) — off the box they're unavailable, not broken.
+	FS recfs.FS
 }
 
 // Mount registers MediaHub's routes.
 func (h *Media) Mount(mux *http.ServeMux) {
 	mux.HandleFunc("GET /api/v1/media/movies", h.list)
 	mux.HandleFunc("GET /api/v1/media/disk", h.disk)
+	mux.HandleFunc("POST /api/v1/media/rename/plan", h.planRename)
+	mux.HandleFunc("POST /api/v1/media/trash/plan", h.planTrash)
+	mux.HandleFunc("GET /api/v1/media/trash", h.trashList)
+	mux.HandleFunc("POST /api/v1/media/trash/restore/plan", h.planRestore)
+	mux.HandleFunc("POST /api/v1/media/trash/empty/plan", h.planEmpty)
 }
 
 // isRecording reports whether a movielist entry is an actual Dreambox
@@ -58,17 +72,74 @@ func (h *Media) Search(ctx context.Context, query string) ([]hub.SearchResult, e
 	return out, nil
 }
 
+// folderView is one subfolder in a listing.
+type folderView struct {
+	Path string `json:"path"` // absolute, trailing slash
+	Name string `json:"name"`
+}
+
+// list answers one folder: ?dir= (a recording folder or anything below
+// one), default the box's first recording folder. Folder by folder rather
+// than the whole tree: walking every folder through WebControl takes ~40 s
+// on the reference box (173 folders) and blocks enigma2 meanwhile
+// (ARCHITECTURE.md).
 func (h *Media) list(w http.ResponseWriter, r *http.Request) {
-	movies, err := h.WC.MovieList(r.Context())
+	ctx := r.Context()
+	roots, err := h.roots(ctx)
+	if err != nil || len(roots) == 0 {
+		httpx.WriteError(w, r, http.StatusBadGateway, "webcontrol_unavailable", "could not reach WebControl")
+		return
+	}
+	root := path.Clean(roots[0])
+	dir := root
+	if q := r.URL.Query().Get("dir"); q != "" {
+		dir = path.Clean("/" + strings.TrimLeft(q, "/"))
+		if !insideOrAt(dir, roots) {
+			httpx.WriteError(w, r, http.StatusBadRequest, recfs.ErrOutsideFolders.Error(), "not a recording folder")
+			return
+		}
+	}
+	folder, err := h.WC.MovieDir(ctx, dir+"/")
 	if err != nil {
 		httpx.WriteError(w, r, http.StatusBadGateway, "webcontrol_unavailable", "could not reach WebControl")
 		return
 	}
-	views := make([]MovieView, len(movies))
-	for i, m := range movies {
+	views := make([]MovieView, len(folder.Movies))
+	for i, m := range folder.Movies {
 		views[i] = MovieView{Movie: m, IsRecording: isRecording(m.Filename)}
 	}
-	httpx.WriteJSON(w, http.StatusOK, map[string]any{"movies": views})
+	subfolders := make([]folderView, 0, len(folder.Subfolders))
+	for _, sf := range folder.Subfolders {
+		name := path.Base(path.Clean(sf))
+		// The old AMS trash folder isn't a place recordings live.
+		if name == "trashcan" && path.Dir(path.Clean(sf)) == root {
+			continue
+		}
+		subfolders = append(subfolders, folderView{Path: path.Clean(sf) + "/", Name: name})
+	}
+	sort.Slice(subfolders, func(i, j int) bool { return strings.ToLower(subfolders[i].Name) < strings.ToLower(subfolders[j].Name) })
+	out := map[string]any{
+		"dir":        dir + "/",
+		"root":       root + "/",
+		"subfolders": subfolders,
+		"movies":     views,
+		"fileOps":    h.fileOps(roots),
+	}
+	if dir != root {
+		out["parent"] = path.Dir(dir) + "/"
+	}
+	httpx.WriteJSON(w, http.StatusOK, out)
+}
+
+// insideOrAt reports whether dir is one of the roots or below one.
+func insideOrAt(dir string, roots []string) bool {
+	for _, r := range roots {
+		r = path.Clean("/" + strings.TrimLeft(r, "/"))
+		if dir == r || strings.HasPrefix(dir, r+"/") {
+			return true
+		}
+	}
+	return false
 }
 
 // Disk is one storage device's usage, as MediaHub reports it.

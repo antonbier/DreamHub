@@ -5,6 +5,7 @@ import (
 	"encoding/json"
 	"github.com/antonbier/DreamHub/backend/internal/autotimer"
 	atmock "github.com/antonbier/DreamHub/backend/internal/autotimer/mock"
+	"github.com/antonbier/DreamHub/backend/internal/recfs"
 	"io"
 	"log/slog"
 	"net/http"
@@ -46,16 +47,27 @@ func newEnvWith(t *testing.T, wc webcontrol.Client) *env {
 
 func newEnvWithAutoTimer(t *testing.T, wc webcontrol.Client, at autotimer.Client) *env {
 	t.Helper()
+	// Recordings live in the mock box's in-memory FS, as in mock mode.
+	var recFS recfs.FS
+	if m, ok := wc.(*mock.Client); ok {
+		recFS = m.FS
+	}
+	return newEnvWithOptions(t, wc, at, recFS)
+}
+
+func newEnvWithOptions(t *testing.T, wc webcontrol.Client, at autotimer.Client, recFS recfs.FS) *env {
+	t.Helper()
 	a, err := app.New(context.Background(), app.Options{
-		DataDir:    t.TempDir(),
-		WebControl: wc,
-		AutoTimer:  at,
-		Series:     srmock.New(),
-		AI:         aimock.New(),
-		Mock:       true,
-		LookPath:   func(string) (string, error) { return "/usr/bin/journalctl", nil },
-		Logger:     discardLogger(),
-		Now:        func() time.Time { return fixedNow },
+		DataDir:      t.TempDir(),
+		WebControl:   wc,
+		AutoTimer:    at,
+		RecordingsFS: recFS,
+		Series:       srmock.New(),
+		AI:           aimock.New(),
+		Mock:         true,
+		LookPath:     func(string) (string, error) { return "/usr/bin/journalctl", nil },
+		Logger:       discardLogger(),
+		Now:          func() time.Time { return fixedNow },
 	})
 	if err != nil {
 		t.Fatal(err)

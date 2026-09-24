@@ -149,6 +149,9 @@ type Timer struct {
 	Tags string `xml:"e2tags" json:"tags"`
 	// Repeated is a weekday bitmask (bit 0 = Monday); 0 for one-off timers.
 	Repeated int `xml:"e2repeated" json:"repeated"`
+	// Filename is the file a running timer records into (empty before it
+	// starts) — how MediaHub knows a recording is still being written.
+	Filename string `xml:"e2filename" json:"filename"`
 	// State is Enigma2's timer state (timer.py, confirmed on the device):
 	// 0 waiting, 1 prepared (about to start), 2 running, 3 ended. A
 	// disabled timer is reported as 3.
@@ -217,6 +220,21 @@ type Client interface {
 	EPGMulti(ctx context.Context, bouquetRef string, start, end int64) ([]EPGEvent, error)
 	// EPGSearch finds EPG events by title substring (the box's own search).
 	EPGSearch(ctx context.Context, query string) ([]EPGEvent, error)
+	// Locations lists the box's recording folders (/web/getlocations).
+	Locations(ctx context.Context) ([]string, error)
+	// MovieDir lists one recording folder: its recordings and its direct
+	// subfolders (/web/movielist?dirname=).
+	MovieDir(ctx context.Context, dir string) (MovieFolder, error)
+	// CurrentServiceReference is what the box is playing right now — a
+	// channel, or a recording (its reference then carries the file path).
+	CurrentServiceReference(ctx context.Context) (string, error)
+}
+
+// MovieFolder is one folder of recordings as /web/movielist?dirname=
+// reports it.
+type MovieFolder struct {
+	Movies     []Movie  `json:"movies"`
+	Subfolders []string `json:"subfolders"` // absolute, with a trailing slash
 }
 
 // ErrWritesDisabled is returned by the real client's write operations until
@@ -316,6 +334,93 @@ func decodeMovieList(r io.Reader) []Movie {
 			return movies
 		}
 		movies = append(movies, m)
+	}
+}
+
+// Locations lists the recording folders configured on the box.
+func (c *HTTPClient) Locations(ctx context.Context) ([]string, error) {
+	var res struct {
+		Locations []string `xml:"e2location"`
+	}
+	if err := c.getXML(ctx, "/web/getlocations", &res); err != nil {
+		return nil, err
+	}
+	var out []string
+	for _, l := range res.Locations {
+		if l = strings.TrimSpace(l); l != "" {
+			out = append(out, l)
+		}
+	}
+	return out, nil
+}
+
+// MovieDir lists one folder. dirname must always be given explicitly: without
+// it the box still lists the default folder's recordings but crashes on the
+// subfolder part ("Processing Failed" — pathExists(None) in the plugin,
+// confirmed live 2026-09-24, ARCHITECTURE.md), which is why MovieList only
+// ever saw the top folder.
+func (c *HTTPClient) MovieDir(ctx context.Context, dir string) (MovieFolder, error) {
+	body, err := c.do(ctx, http.MethodPost, "/web/movielist", url.Values{"dirname": {dir}})
+	if err != nil {
+		return MovieFolder{}, err
+	}
+	defer body.Close()
+	return decodeMovieFolder(body), nil
+}
+
+// decodeMovieFolder reads <e2movie> entries and <e2location> subfolders,
+// keeping whatever parsed before a malformed tail (see decodeMovieList).
+func decodeMovieFolder(r io.Reader) MovieFolder {
+	dec := xml.NewDecoder(r)
+	f := MovieFolder{Movies: []Movie{}, Subfolders: []string{}}
+	for {
+		tok, err := dec.Token()
+		if err != nil {
+			return f
+		}
+		se, ok := tok.(xml.StartElement)
+		if !ok {
+			continue
+		}
+		switch se.Name.Local {
+		case "e2movie":
+			var m Movie
+			if dec.DecodeElement(&m, &se) != nil {
+				return f
+			}
+			f.Movies = append(f.Movies, m)
+		case "e2location":
+			var loc string
+			if dec.DecodeElement(&loc, &se) != nil {
+				return f
+			}
+			if loc = strings.TrimSpace(loc); loc != "" {
+				f.Subfolders = append(f.Subfolders, loc)
+			}
+		}
+	}
+}
+
+// CurrentServiceReference reads /web/getcurrent's service reference.
+func (c *HTTPClient) CurrentServiceReference(ctx context.Context) (string, error) {
+	body, err := c.get(ctx, "/web/getcurrent")
+	if err != nil {
+		return "", err
+	}
+	defer body.Close()
+	dec := xml.NewDecoder(body)
+	for {
+		tok, err := dec.Token()
+		if err != nil {
+			return "", fmt.Errorf("webcontrol: no service in /web/getcurrent: %w", err)
+		}
+		if se, ok := tok.(xml.StartElement); ok && se.Name.Local == "e2servicereference" {
+			var ref string
+			if err := dec.DecodeElement(&ref, &se); err != nil {
+				return "", err
+			}
+			return strings.TrimSpace(ref), nil
+		}
 	}
 }
 

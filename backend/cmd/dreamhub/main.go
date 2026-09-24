@@ -9,6 +9,7 @@ import (
 	"context"
 	"github.com/antonbier/DreamHub/backend/internal/autotimer"
 	atmock "github.com/antonbier/DreamHub/backend/internal/autotimer/mock"
+	"github.com/antonbier/DreamHub/backend/internal/recfs"
 	"log/slog"
 	"net/http"
 	"os"
@@ -44,6 +45,7 @@ func run(logger *slog.Logger, level *logging.Level) error {
 	var sr serienrecorder.Client
 	var aiClient ai.Client
 	var at autotimer.Client
+	var recFS recfs.FS
 	switch cfg.Mode {
 	case config.ModeLive:
 		c := webcontrol.NewHTTPClient(cfg.WebControlURL)
@@ -53,6 +55,10 @@ func run(logger *slog.Logger, level *logging.Level) error {
 		// just a different path (ARCHITECTURE.md, issue #10).
 		sr = serienrecorder.NewHTTPClient(cfg.WebControlURL)
 		at = autotimer.NewHTTPClient(cfg.WebControlURL)
+		// The real file system. MediaHub only offers file operations when
+		// the box's recording folders actually exist on it, i.e. when
+		// DreamHub runs on the box (recfs.Available).
+		recFS = recfs.OS{}
 		// The AI provider is a separate, unrelated external service (not on
 		// the device), but follows the same single mock/live switch as
 		// everything else, per PRINCIPLES.md's "Mock-first development".
@@ -62,7 +68,9 @@ func run(logger *slog.Logger, level *logging.Level) error {
 		aiClient = ai.NewOpenAIClient()
 		logger.Info("webcontrol client mode", "mode", "live", "url", cfg.WebControlURL, "deviceWrites", cfg.EnableDeviceWrites)
 	default:
-		wc = mock.New()
+		m := mock.New()
+		wc = m
+		recFS = m.FS
 		sr = srmock.New()
 		at = atmock.New()
 		aiClient = aimock.New()
@@ -70,16 +78,17 @@ func run(logger *slog.Logger, level *logging.Level) error {
 	}
 
 	a, err := app.New(context.Background(), app.Options{
-		DataDir:    cfg.DataDir,
-		WebControl: wc,
-		Series:     sr,
-		AutoTimer:  at,
-		AI:         aiClient,
-		Mock:       cfg.Mode == config.ModeMock,
-		LookPath:   exec.LookPath,
-		Logger:     logger,
-		Level:      level,
-		WebUI:      webui.Handler(),
+		DataDir:      cfg.DataDir,
+		WebControl:   wc,
+		Series:       sr,
+		AutoTimer:    at,
+		RecordingsFS: recFS,
+		AI:           aiClient,
+		Mock:         cfg.Mode == config.ModeMock,
+		LookPath:     exec.LookPath,
+		Logger:       logger,
+		Level:        level,
+		WebUI:        webui.Handler(),
 	})
 	if err != nil {
 		return err

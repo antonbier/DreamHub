@@ -11,6 +11,7 @@ package mock
 
 import (
 	"context"
+	"github.com/antonbier/DreamHub/backend/internal/recfs"
 	"strings"
 	"sync"
 	"time"
@@ -19,10 +20,46 @@ import (
 )
 
 // Client is a webcontrol.Client backed by in-memory fixture data. Timers
-// are stateful, so AddTimer is visible in later TimerList calls.
+// are stateful, so AddTimer is visible in later TimerList calls, and the
+// recordings live in FS — the same in-memory file system MediaHub's file
+// operations work on in mock mode, so a rename shows up in the next
+// listing exactly as on a real box (ARCHITECTURE.md, #11).
 type Client struct {
 	mu     sync.Mutex
 	timers []webcontrol.Timer
+	// FS holds the recordings (see Root).
+	FS *recfs.Mem
+	// Playing is what /web/getcurrent reports; a recording's reference
+	// ("1:0:0:0:0:0:0:0:0:0:/path.ts") marks that file as in use.
+	Playing string
+}
+
+// Root is the mock box's recording folder.
+const Root = "/media/hdd/movie/"
+
+// recordingFixtures is the mock box's disk: a recording with its full
+// sidecar set (the #11 live test's set), a manually copied non-recording,
+// a SerienRecorder-style subfolder and one recording already in the trash
+// (AdvancedMovieSelection's ".ts.trash" convention).
+func recordingFixtures() map[string]string {
+	bauer := Root + "20260608 2048 - RTL Television - Bauer sucht Frau International"
+	tatort := Root + "Tatort/20260920 2015 - Das Erste HD - Tatort_ Borowski und das Haus am Meer"
+	old := Root + "20250101 2015 - ZDF - Alte Doku"
+	return map[string]string{
+		bauer + ".ts":             "recording",
+		bauer + ".ts.meta":        "1:0:19:2EE3:441:1:C00000:0:0:0:\nBauer sucht Frau International\nFolge 7\n1780944521\n",
+		bauer + ".ts.ap":          "ap",
+		bauer + ".ts.sc":          "sc",
+		bauer + ".ts.cuts":        "cuts",
+		bauer + ".eit":            "eit",
+		bauer + ".jpg":            "cover",
+		Root + "Oskars Kleid.mkv": "not a recording",
+		tatort + ".ts":            "recording",
+		tatort + ".ts.meta":       "1:0:19:283D:3FB:1:C00000:0:0:0:\nTatort: Borowski und das Haus am Meer\n\n1790021700\n",
+		tatort + ".eit":           "eit",
+		old + ".ts.trash":         "recording",
+		old + ".ts.meta":          "1:0:19:2B66:3F2:1:C00000:0:0:0:\nAlte Doku\n\n1735758900\n",
+	}
 }
 
 var _ webcontrol.Client = (*Client)(nil)
@@ -36,7 +73,7 @@ func at(h, m int) int64 {
 
 // New returns a mock with the fixture timers.
 func New() *Client {
-	return &Client{timers: []webcontrol.Timer{
+	return &Client{FS: recfs.NewMem(recordingFixtures()), timers: []webcontrol.Timer{
 		{
 			ServiceReference: "1:0:19:2EE3:441:1:C00000:0:0:0:",
 			ServiceName:      "RTL Television",
@@ -159,6 +196,52 @@ func (c *Client) EPGSearch(ctx context.Context, query string) ([]webcontrol.EPGE
 		}
 	}
 	return out, nil
+}
+
+func (c *Client) Locations(ctx context.Context) ([]string, error) {
+	return []string{Root}, nil
+}
+
+// MovieDir lists a folder of FS like /web/movielist?dirname= does: .ts and
+// other media files (not sidecars, not trashed recordings), plus the direct
+// subfolders. Titles come from .ts.meta, as on the box.
+func (c *Client) MovieDir(ctx context.Context, dir string) (webcontrol.MovieFolder, error) {
+	f := webcontrol.MovieFolder{Movies: []webcontrol.Movie{}, Subfolders: []string{}}
+	entries, err := c.FS.ReadDir(dir)
+	if err != nil {
+		return f, nil // the box answers an empty list for a missing folder
+	}
+	base := strings.TrimSuffix(dir, "/") + "/"
+	for _, e := range entries {
+		full := base + e.Name()
+		if e.IsDir() {
+			f.Subfolders = append(f.Subfolders, full+"/")
+			continue
+		}
+		if !strings.HasSuffix(e.Name(), ".ts") && !strings.HasSuffix(e.Name(), ".mkv") {
+			continue
+		}
+		m := webcontrol.Movie{
+			ServiceReference: "1:0:0:0:0:0:0:0:0:0:" + full,
+			Title:            e.Name(),
+			Filename:         "/" + full,
+			FileSize:         c.FS.Size(full),
+		}
+		if title := recfs.MetaTitle(c.FS, full); title != "" {
+			m.Title = title
+		}
+		f.Movies = append(f.Movies, m)
+	}
+	return f, nil
+}
+
+func (c *Client) CurrentServiceReference(ctx context.Context) (string, error) {
+	c.mu.Lock()
+	defer c.mu.Unlock()
+	if c.Playing != "" {
+		return c.Playing, nil
+	}
+	return "1:0:19:2EE3:441:1:C00000:0:0:0:", nil // RTL, live TV
 }
 
 // AddTimer behaves like the real box (ARCHITECTURE.md, "Timer write

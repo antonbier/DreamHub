@@ -5,6 +5,7 @@ package app
 
 import (
 	"context"
+	"github.com/antonbier/DreamHub/backend/internal/recfs"
 	"log/slog"
 	"net/http"
 	"sync"
@@ -37,6 +38,9 @@ type Options struct {
 	Series serienrecorder.Client
 	// AI is DiscoveryHub's recommendation client (internal/ai).
 	AI ai.Client
+	// RecordingsFS is where MediaHub's file operations act: recfs.OS{} on
+	// the box, the mock's in-memory FS in mock mode, nil to disable them.
+	RecordingsFS recfs.FS
 	// AutoTimer is the optional AutoTimer plugin's API (internal/autotimer);
 	// nil behaves like a box without the plugin.
 	AutoTimer autotimer.Client
@@ -165,7 +169,7 @@ func New(ctx context.Context, o Options) (*App, error) {
 	watcher := hub.NewStatusWatcher()
 
 	timerHub := &hubs_.Timer{WC: o.WebControl, Plans: plans, Now: now, AT: o.AutoTimer}
-	mediaHub := &hubs_.Media{WC: o.WebControl}
+	mediaHub := &hubs_.Media{WC: o.WebControl, Plans: plans, FS: o.RecordingsFS}
 	guideHub := &hubs_.Guide{WC: o.WebControl, Now: now}
 	seriesHub := &hubs_.Series{SR: o.Series}
 	discoveryHub := &hubs_.Discovery{WC: o.WebControl, AI: o.AI, Store: st, Settings: svc, Now: now}

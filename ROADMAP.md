@@ -82,7 +82,7 @@ Releases: **Foundation** → **v1** → **v1.1** → **Later**. GitHub milestone
 - Bulk actions via a background queue.
 - `.ts.meta` format: line 1 service reference, line 2 title, line 3 title+description+genre, line 4 unix timestamp — parse only where the API doesn't already provide the field.
 - Reference implementation: `AdvancedMovieSelection` (`Rename.py`, `SearchTMDb*.py`) — native on-screen plugin, not web-based, CC BY-NC-SA licensed: read for approach, don't copy code.
-- Open (device access needed): does Enigma2's movie list pick up files renamed outside Enigma2 correctly? Probably yes (AdvancedMovieSelection reads the disk directly), but verify.
+- Confirmed 2026-09-24 (#11): Enigma2's movie list picks up files renamed outside Enigma2 correctly, no rescan needed — see `ARCHITECTURE.md`.
 
 ### TimerHub
 - Timers via `/web/timerlist`; AutoTimer.
@@ -178,7 +178,7 @@ Releases: **Foundation** → **v1** → **v1.1** → **Later**. GitHub milestone
 
 Tracked as GitHub issues with the `device-access` label:
 - [x] #10 Verify the SerienRecorder web interface API — resolved 2026-09-24: reachable, JSON, `/serienrecorderapi/*` (`ARCHITECTURE.md`)
-- [ ] #11 Verify Enigma2 picks up recordings renamed outside Enigma2 — still open; needs an actual rename against a real recording, deliberately not done without explicit go-ahead (destructive-ish on the reference device's real data)
+- [x] #11 Verify Enigma2 picks up recordings renamed outside Enigma2 — resolved 2026-09-24: tested live against a real recording (all 8 sidecar files), reverted immediately after; picked up correctly with no rescan needed (`ARCHITECTURE.md`)
 - [x] #12 Detect in-progress recording/playback before any file operation — resolved 2026-09-24: no dedicated "is recording" endpoint exists; cross-reference `/web/timerlist` (`e2timebegin`/`e2timeend`/`e2disabled`) against the current time, already sufficient with data DreamHub already fetches
 - [x] #13 Resolve the WebControl auth discrepancy — resolved 2026-09-24: `config.plugins.Webinterface.localauth=false` bypasses auth for any LAN/private-range client regardless of `http.auth` (`ARCHITECTURE.md`)
 - [x] #14 Capture real API responses as test fixtures — done 2026-09-24 directly on the device (`backend/testdata/fixtures/`)

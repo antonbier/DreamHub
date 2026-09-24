@@ -60,7 +60,7 @@ Releases: **Foundation** → **v1** → **v1.1** → **Later**. GitHub milestone
 - [x] **7** Status strip (`StatusStrip.vue`, DESIGN.md): connected, clock skew, hub issue count as small dotted items, plus the browser's own time zone right-aligned in faint (the per-user display-zone *preference* is still open, below). Replaces the earlier ad hoc "backend unreachable" banner
 
 **Open**:
-- [ ] Remaining parts of the hub contract: search providers now cover TimerHub and MediaHub, events still just TimerHub-triggered status changes — extend both to the rest of the hubs as they're built; custom/criteria-based tile types (CONCEPT.md: source + filters + sort + limit + display, reusing a hub's search provider — the dashboard's tile *mechanics* are ready for this, only the hub-contributed catalog entries are missing)
+- [ ] Remaining parts of the hub contract: search providers now cover TimerHub, MediaHub and SeriesHub (GuideHub still open — see its own section), events still just TimerHub-triggered status changes — extend both to the rest of the hubs as they're built; custom/criteria-based tile types (CONCEPT.md: source + filters + sort + limit + display, reusing a hub's search provider — the dashboard's tile *mechanics* are ready for this, only the hub-contributed catalog entries are missing)
 - [ ] Core event bus (hub events → notifications, later AutomationHub) — the change log now carries one real system-detected event type (`hub.statusChanged`); a proper bus covering every hub action, with persistence designed for it rather than piggybacked on the change log, is still open
 - [ ] Live updates via WebSocket
 - [ ] Runtime drop-in locales from `/data/dreamhub/locales/`; `Intl`-based formatting for actual dates/times once hubs display any (the dashboard's timers tile already uses `Intl` for its own time column, per-user display zone still open below)
@@ -96,10 +96,16 @@ Releases: **Foundation** → **v1** → **v1.1** → **Later**. GitHub milestone
 - Creating/deleting timers goes through preview-and-confirm, including when triggered from DiscoveryHub.
 
 ### GuideHub
-- Grid EPG ("TV-Zeitschrift") for the web UI.
-- EPG via `/web/epgnownext` / `/web/getcurrent`, **never** by parsing `epg.dat` (undocumented binary format).
-- Online enrichment (TMDB) **only** for movie/series genres.
-- `GraphMultiEPG` and `TvSpielfilm` are native on-screen references, not replacements.
+
+**Done**:
+- [x] Now/next per channel for a chosen bouquet, `GET /api/v1/guide/bouquets` (`/web/getservices`) and `GET /api/v1/guide/now?bouquet=` (`/web/epgnownext?bRef=`, confirmed live to need `bRef` not `sRef` — see `ARCHITECTURE.md`), grouped server-side (`internal/hubs/guide.go`'s `groupNowNext`) into one entry per channel; `GuideHubView.vue` with a bouquet selector (hidden when there's only one, as on the reference device)
+
+**Open**:
+- [ ] Grid EPG ("TV-Zeitschrift") — a real timeline view, not just now/next; the now/next data above is exactly what such a grid would build on
+- [ ] EPG via `/web/getcurrent` for the currently-tuned service specifically (now/next per bouquet already covers the general case)
+- [ ] Online enrichment (TMDB) **only** for movie/series genres
+- [ ] A GuideHub search provider (channel/programme name) — not built yet, unlike MediaHub/SeriesHub/TimerHub
+- [ ] `GraphMultiEPG` and `TvSpielfilm` are native on-screen references, not replacements
 
 ### DiscoveryHub
 - AI recommendations from the day's EPG, filtered to user-selected channels (for relevance; ~90k tokens/day for 30 channels is cents-level).
@@ -108,8 +114,16 @@ Releases: **Foundation** → **v1** → **v1.1** → **Later**. GitHub milestone
 - No existing AI plugin on the box (the "GPT-Plugin" is a GUID Partition Table tool).
 
 ### SeriesHub
-- Episodes on disk, missing episodes, upcoming episodes for series tracked in SerienRecorder.
-- Use SerienRecorder's own web interface API (`config.plugins.serienRec.enableWebinterface=true`) rather than reading `SerienRecorder.db` directly while SerienRecorder may be writing to it. API needs verification on the device.
+
+**Done**:
+- [x] SerienRecorder's own web interface API confirmed reachable and wired up (`internal/serienrecorder`, real HTTP+JSON client and mock, per `PRINCIPLES.md`'s "Mock-first development") rather than reading `SerienRecorder.db` directly while SerienRecorder may be writing to it — resolved #10, see `ARCHITECTURE.md`
+- [x] Tracked series (`GET /api/v1/series/markers` → `/serienrecorderapi/markers`) and upcoming episodes (`GET /api/v1/series/upcoming` → `/serienrecorderapi/timer?remaining=1`), `SeriesHubView.vue`
+- [x] SeriesHub is a search provider (tracked series' names); a dashboard tile shows upcoming episodes (`series.upcoming`, `SeriesUpcomingTile.vue`)
+- [x] The SerienRecorder connector does a real reachability check (`/serienrecorderapi/info`) instead of unconditionally reporting "not implemented" on a real device — the honest placeholder from before #10 was resolved
+
+**Open**:
+- [ ] Episodes on disk, missing episodes — needs cross-referencing recordings (`/web/movielist`, MediaHub) against tracked series/seasons; not attempted yet, deliberately scoped out of this pass
+- [ ] Per-series upcoming broadcasts beyond what's already timered (`/serienrecorderapi/transmissions?wlid=&fsid=&filterMode=`, confirmed live) — useful for a series detail view, not built
 
 ### SystemHub (basic)
 - For every user: device info, diagnostics page (hub status, clock check), backup/restore of DreamHub's own state (incl. dashboards), change log.

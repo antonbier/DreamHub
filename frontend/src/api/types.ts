@@ -152,6 +152,58 @@ export interface Disk {
   usedPercent?: number
 }
 
+// backend/internal/webcontrol.Service, as returned by
+// GET /api/v1/guide/bouquets and used as ChannelEvents.serviceReference.
+export interface Bouquet {
+  serviceReference: string
+  serviceName: string
+}
+
+// backend/internal/webcontrol.EPGEvent, embedded in ChannelEvents.
+export interface EPGEvent {
+  id: number
+  start: number // Unix seconds, UTC
+  duration: number // seconds
+  title: string
+  description: string
+  serviceReference: string
+  serviceName: string
+}
+
+// backend/internal/hubs.ChannelEvents, as returned by GET /api/v1/guide/now.
+export interface ChannelEvents {
+  serviceReference: string
+  serviceName: string
+  now?: EPGEvent
+  next?: EPGEvent
+}
+
+// backend/internal/serienrecorder.Marker, as returned by
+// GET /api/v1/series/markers.
+export interface SeriesMarker {
+  id: number
+  name: string
+  fsid: string
+  wlid: string
+  active: boolean
+  info: string
+  channels: string
+  numberOfRecords: number
+}
+
+// backend/internal/serienrecorder.UpcomingEpisode, as returned by
+// GET /api/v1/series/upcoming.
+export interface UpcomingEpisode {
+  series: string
+  title: string
+  channel: string
+  serviceReference: string
+  season: string
+  episode: string
+  startTime: number // Unix seconds, UTC
+  fsID: string
+}
+
 // backend/internal/dashboard.Tile / .Layout.
 export interface DashboardTile {
   type: string

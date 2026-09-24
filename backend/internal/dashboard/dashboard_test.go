@@ -51,7 +51,7 @@ func TestSave_RoundTripsOrderWidthAndHidden(t *testing.T) {
 	if err != nil {
 		t.Fatal(err)
 	}
-	if len(saved.Tiles) != 3 || saved.Tiles[0].Type != "hubs.status" || saved.Tiles[1].Type != "timers.upcoming" {
+	if len(saved.Tiles) != 4 || saved.Tiles[0].Type != "hubs.status" || saved.Tiles[1].Type != "timers.upcoming" {
 		t.Fatalf("order not preserved: %+v", saved.Tiles)
 	}
 	if !saved.Tiles[0].Hidden || saved.Tiles[0].Width != 4 {
@@ -62,7 +62,7 @@ func TestSave_RoundTripsOrderWidthAndHidden(t *testing.T) {
 	if err != nil {
 		t.Fatal(err)
 	}
-	if len(got.Tiles) != 3 || got.Tiles[0].Type != "hubs.status" || !got.Tiles[0].Hidden || got.Tiles[0].Width != 4 {
+	if len(got.Tiles) != 4 || got.Tiles[0].Type != "hubs.status" || !got.Tiles[0].Hidden || got.Tiles[0].Width != 4 {
 		t.Fatalf("Get after Save = %+v", got.Tiles)
 	}
 }

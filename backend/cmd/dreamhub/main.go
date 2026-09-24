@@ -16,6 +16,8 @@ import (
 	"github.com/antonbier/DreamHub/backend/internal/app"
 	"github.com/antonbier/DreamHub/backend/internal/config"
 	"github.com/antonbier/DreamHub/backend/internal/logging"
+	"github.com/antonbier/DreamHub/backend/internal/serienrecorder"
+	srmock "github.com/antonbier/DreamHub/backend/internal/serienrecorder/mock"
 	"github.com/antonbier/DreamHub/backend/internal/webcontrol"
 	"github.com/antonbier/DreamHub/backend/internal/webcontrol/mock"
 	"github.com/antonbier/DreamHub/backend/internal/webui"
@@ -34,20 +36,26 @@ func run(logger *slog.Logger, level *logging.Level) error {
 	cfg := config.Load()
 
 	var wc webcontrol.Client
+	var sr serienrecorder.Client
 	switch cfg.Mode {
 	case config.ModeLive:
 		c := webcontrol.NewHTTPClient(cfg.WebControlURL)
 		c.AllowWrites = cfg.EnableDeviceWrites
 		wc = c
+		// SerienRecorder's API lives on the same device, same host/port,
+		// just a different path (ARCHITECTURE.md, issue #10).
+		sr = serienrecorder.NewHTTPClient(cfg.WebControlURL)
 		logger.Info("webcontrol client mode", "mode", "live", "url", cfg.WebControlURL, "deviceWrites", cfg.EnableDeviceWrites)
 	default:
 		wc = mock.New()
+		sr = srmock.New()
 		logger.Info("webcontrol client mode", "mode", "mock")
 	}
 
 	a, err := app.New(context.Background(), app.Options{
 		DataDir:    cfg.DataDir,
 		WebControl: wc,
+		Series:     sr,
 		Mock:       cfg.Mode == config.ModeMock,
 		LookPath:   exec.LookPath,
 		Logger:     logger,

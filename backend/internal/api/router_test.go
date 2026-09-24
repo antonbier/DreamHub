@@ -7,6 +7,7 @@ import (
 	"log/slog"
 	"net/http"
 	"net/http/httptest"
+	"net/url"
 	"strconv"
 	"strings"
 	"testing"
@@ -15,6 +16,7 @@ import (
 	"github.com/antonbier/DreamHub/backend/internal/api"
 	"github.com/antonbier/DreamHub/backend/internal/app"
 	"github.com/antonbier/DreamHub/backend/internal/httpx"
+	srmock "github.com/antonbier/DreamHub/backend/internal/serienrecorder/mock"
 	"github.com/antonbier/DreamHub/backend/internal/settings"
 	"github.com/antonbier/DreamHub/backend/internal/store"
 	"github.com/antonbier/DreamHub/backend/internal/webcontrol"
@@ -40,6 +42,7 @@ func newEnvWith(t *testing.T, wc webcontrol.Client) *env {
 	a, err := app.New(context.Background(), app.Options{
 		DataDir:    t.TempDir(),
 		WebControl: wc,
+		Series:     srmock.New(),
 		Mock:       true,
 		LookPath:   func(string) (string, error) { return "/usr/bin/journalctl", nil },
 		Logger:     discardLogger(),
@@ -174,6 +177,103 @@ func TestSearch_FindsARealMovieByTitle(t *testing.T) {
 	json.Unmarshal(b, &body)
 	if len(body.Results) != 1 || body.Results[0].Title != "Oskars Kleid.mkv" || body.Results[0].HubID != "media" || body.Results[0].Path != "/media" {
 		t.Fatalf("expected exactly the mock's non-recording file, got %+v", body.Results)
+	}
+}
+
+func TestGuide_BouquetsAndNowNext(t *testing.T) {
+	e := newEnv(t)
+
+	_, b := e.do(t, "GET", "/api/v1/guide/bouquets", "", nil)
+	var bouquets struct {
+		Bouquets []struct {
+			ServiceReference string `json:"serviceReference"`
+			ServiceName      string `json:"serviceName"`
+		} `json:"bouquets"`
+	}
+	json.Unmarshal(b, &bouquets)
+	if len(bouquets.Bouquets) != 1 || bouquets.Bouquets[0].ServiceName != "Free TV" {
+		t.Fatalf("unexpected bouquets: %+v", bouquets.Bouquets)
+	}
+
+	resp, b := e.do(t, "GET", "/api/v1/guide/now?bouquet="+url.QueryEscape(bouquets.Bouquets[0].ServiceReference), "", nil)
+	if resp.StatusCode != http.StatusOK {
+		t.Fatalf("expected 200, got %d: %s", resp.StatusCode, b)
+	}
+	var now struct {
+		Channels []struct {
+			ServiceName string `json:"serviceName"`
+			Now         *struct {
+				Title string `json:"title"`
+			} `json:"now"`
+			Next *struct {
+				Title string `json:"title"`
+			} `json:"next"`
+		} `json:"channels"`
+	}
+	json.Unmarshal(b, &now)
+	// The mock's 4 flat events (2 per channel) must group into 2 channels,
+	// each with a distinct now and next (not both pointing at the first event).
+	if len(now.Channels) != 2 {
+		t.Fatalf("expected 2 channels, got %+v", now.Channels)
+	}
+	for _, ch := range now.Channels {
+		if ch.Now == nil || ch.Next == nil || ch.Now.Title == ch.Next.Title {
+			t.Errorf("channel %q: now/next not both populated and distinct: %+v", ch.ServiceName, ch)
+		}
+	}
+
+	resp, _ = e.do(t, "GET", "/api/v1/guide/now", "", nil)
+	if resp.StatusCode != http.StatusBadRequest {
+		t.Errorf("expected 400 without a bouquet, got %d", resp.StatusCode)
+	}
+}
+
+func TestSeries_MarkersAndUpcoming(t *testing.T) {
+	e := newEnv(t)
+
+	_, b := e.do(t, "GET", "/api/v1/series/markers", "", nil)
+	var markers struct {
+		Markers []struct {
+			Name string `json:"name"`
+		} `json:"markers"`
+	}
+	json.Unmarshal(b, &markers)
+	if len(markers.Markers) != 2 || markers.Markers[0].Name != "And Just Like That..." {
+		t.Fatalf("unexpected markers: %+v", markers.Markers)
+	}
+
+	resp, b := e.do(t, "GET", "/api/v1/series/upcoming", "", nil)
+	if resp.StatusCode != http.StatusOK {
+		t.Fatalf("expected 200, got %d: %s", resp.StatusCode, b)
+	}
+	var upcoming struct {
+		Episodes []struct {
+			Series string `json:"series"`
+			Title  string `json:"title"`
+		} `json:"episodes"`
+	}
+	json.Unmarshal(b, &upcoming)
+	if len(upcoming.Episodes) != 2 || upcoming.Episodes[0].Series != "Gute Zeiten, schlechte Zeiten" {
+		t.Fatalf("unexpected upcoming episodes: %+v", upcoming.Episodes)
+	}
+}
+
+func TestSearch_FindsARealSeriesByName(t *testing.T) {
+	e := newEnv(t)
+	resp, b := e.do(t, "GET", "/api/v1/search?q=Verr%C3%A4ter", "", nil)
+	if resp.StatusCode != http.StatusOK {
+		t.Fatalf("expected 200, got %d: %s", resp.StatusCode, b)
+	}
+	var body struct {
+		Results []struct {
+			HubID string `json:"hubId"`
+			Title string `json:"title"`
+			Path  string `json:"path"`
+		} `json:"results"`
+	}
+	json.Unmarshal(b, &body)
+	if len(body.Results) != 1 || body.Results[0].HubID != "series" || body.Results[0].Path != "/series" {
+		t.Fatalf("expected exactly the mock's tracked series, got %+v", body.Results)
 	}
 }
 
@@ -534,7 +634,7 @@ func TestDashboard_GetReturnsTheFullCatalogByDefault(t *testing.T) {
 		} `json:"tiles"`
 	}
 	json.Unmarshal(b, &body)
-	if len(body.Tiles) != 3 {
+	if len(body.Tiles) != 4 {
 		t.Fatalf("expected the 3 built-in tiles on a fresh install, got %+v", body.Tiles)
 	}
 	for _, tile := range body.Tiles {
@@ -560,7 +660,7 @@ func TestDashboard_PutRoundTripsAndIsLogged(t *testing.T) {
 		} `json:"tiles"`
 	}
 	json.Unmarshal(b, &body)
-	if len(body.Tiles) != 3 || body.Tiles[0].Type != "hubs.status" || !body.Tiles[0].Hidden || body.Tiles[0].Width != 1 {
+	if len(body.Tiles) != 4 || body.Tiles[0].Type != "hubs.status" || !body.Tiles[0].Hidden || body.Tiles[0].Width != 1 {
 		t.Fatalf("order/width/hidden not preserved: %+v", body.Tiles)
 	}
 

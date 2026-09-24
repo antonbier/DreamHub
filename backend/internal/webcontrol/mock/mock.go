@@ -99,6 +99,32 @@ func (c *Client) TimerList(ctx context.Context) ([]webcontrol.Timer, error) {
 	return out, nil
 }
 
+// Real bouquet/channel references captured live 2026-09-24 (ARCHITECTURE.md).
+var favouritesTV = webcontrol.Service{
+	ServiceReference: `1:7:1:0:0:0:0:0:0:0:FROM BOUQUET "userbouquet.favourites.tv" ORDER BY bouquet`,
+	ServiceName:      "Free TV",
+}
+
+func (*Client) Bouquets(ctx context.Context) ([]webcontrol.Service, error) {
+	return []webcontrol.Service{favouritesTV}, nil
+}
+
+func (*Client) Services(ctx context.Context, bouquetRef string) ([]webcontrol.Service, error) {
+	return []webcontrol.Service{
+		{ServiceReference: "1:0:19:2EE3:441:1:C00000:0:0:0:", ServiceName: "RTL Television"},
+		{ServiceReference: "1:0:19:2B7A:3F3:1:C00000:0:0:0:", ServiceName: "zdf_neo HD"},
+	}, nil
+}
+
+func (c *Client) EPGNowNext(ctx context.Context, bouquetRef string) ([]webcontrol.EPGEvent, error) {
+	return []webcontrol.EPGEvent{
+		{ID: 1, Start: at(19, 40), Duration: 35 * 60, Title: "RTL Aktuell", ServiceReference: "1:0:19:2EE3:441:1:C00000:0:0:0:", ServiceName: "RTL Television"},
+		{ID: 2, Start: at(20, 15), Duration: 60 * 60, Title: "Bauer sucht Frau International", ServiceReference: "1:0:19:2EE3:441:1:C00000:0:0:0:", ServiceName: "RTL Television"},
+		{ID: 3, Start: at(19, 45), Duration: 75 * 60, Title: "heute-show", ServiceReference: "1:0:19:2B7A:3F3:1:C00000:0:0:0:", ServiceName: "zdf_neo HD"},
+		{ID: 4, Start: at(21, 0), Duration: 45 * 60, Title: "The Rookie", ServiceReference: "1:0:19:2B7A:3F3:1:C00000:0:0:0:", ServiceName: "zdf_neo HD"},
+	}, nil
+}
+
 func (c *Client) AddTimer(ctx context.Context, t webcontrol.NewTimer) error {
 	c.mu.Lock()
 	defer c.mu.Unlock()

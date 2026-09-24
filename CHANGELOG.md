@@ -6,6 +6,11 @@ Format follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/); version
 
 ## [Unreleased]
 
+### Added (GuideHub and SeriesHub, step 9)
+- GuideHub: now/next per channel for a chosen bouquet (`GET /api/v1/guide/bouquets`, `GET /api/v1/guide/now`), grouped server-side from `/web/epgnownext`'s flat event list. `GuideHubView.vue` with a bouquet selector. A full timeline grid EPG is still open — this is the real data any such grid would build on.
+- SeriesHub: a new `internal/serienrecorder` package (real HTTP+JSON client and mock, mirroring `internal/webcontrol`'s pattern) talks to SerienRecorder's own API, confirmed reachable in the previous device-access session (#10). Tracked series and upcoming episodes (`GET /api/v1/series/markers`, `GET /api/v1/series/upcoming`), `SeriesHubView.vue`. The SerienRecorder connector now does a real reachability check instead of unconditionally reporting "not implemented" on a real device.
+- Both hubs are search providers; a new dashboard tile shows upcoming episodes (`series.upcoming`).
+
 ### Added (MediaHub read-only screen, device-access investigation, step 8)
 - Device access session 2026-09-24: the reference Dreambox came back online after an extended gap. Captured real `/web/*` and SerienRecorder API responses as test fixtures (`backend/testdata/fixtures/`); resolved all remaining `device-access`-labeled roadmap items (#10–#18) — see `ARCHITECTURE.md` and GitHub issue #19 for details.
 - MediaHub, first real screens (`GET /api/v1/media/movies`, `GET /api/v1/media/disk`, `MediaHubView.vue`): recordings list with real vs. manually-copied media distinguished (`isRecording`), disk usage overview (WebControl's human-formatted HDD sizes parsed into a percentage via `webcontrol.ParseSize`). Read-only — rename/delete need their own preview-and-confirm design (`ROADMAP.md`).

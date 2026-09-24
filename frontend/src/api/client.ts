@@ -14,7 +14,9 @@
 import { authHeader, authState, clearCredentials } from './authState'
 import type {
   ApiToken,
+  Bouquet,
   ChangeEntry,
+  ChannelEvents,
   CreatedApiToken,
   DashboardLayout,
   DeviceInfo,
@@ -24,8 +26,10 @@ import type {
   Movie,
   Navigation,
   SearchResult,
+  SeriesMarker,
   SettingsView,
   Timer,
+  UpcomingEpisode,
   WhoAmI,
 } from './types'
 
@@ -124,6 +128,15 @@ export const api = {
   media: {
     movies: () => request<{ movies: Movie[] }>('GET', '/api/v1/media/movies'),
     disk: () => request<{ disks: Disk[] }>('GET', '/api/v1/media/disk'),
+  },
+  guide: {
+    bouquets: () => request<{ bouquets: Bouquet[] }>('GET', '/api/v1/guide/bouquets'),
+    now: (bouquet: string) =>
+      request<{ channels: ChannelEvents[] }>('GET', `/api/v1/guide/now?bouquet=${encodeURIComponent(bouquet)}`),
+  },
+  series: {
+    markers: () => request<{ markers: SeriesMarker[] }>('GET', '/api/v1/series/markers'),
+    upcoming: () => request<{ episodes: UpcomingEpisode[] }>('GET', '/api/v1/series/upcoming'),
   },
   dashboard: {
     get: () => request<DashboardLayout>('GET', '/api/v1/dashboard'),

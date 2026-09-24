@@ -75,6 +75,39 @@ type movieList struct {
 	Movies  []Movie  `xml:"e2movie"`
 }
 
+// Service is one bouquet or channel entry from /web/getservices (see
+// ARCHITECTURE.md). With no query string it lists bouquets; with
+// ?sRef=<bouquet reference> it lists the channels inside that bouquet —
+// confirmed live 2026-09-24, same schema either way.
+type Service struct {
+	ServiceReference string `xml:"e2servicereference" json:"serviceReference"`
+	ServiceName      string `xml:"e2servicename" json:"serviceName"`
+}
+
+type serviceList struct {
+	XMLName  xml.Name  `xml:"e2servicelist"`
+	Services []Service `xml:"e2service"`
+}
+
+// EPGEvent is one <e2event> from /web/epgnownext (see ARCHITECTURE.md: the
+// endpoint takes bRef, a bouquet reference, not sRef — confirmed live
+// 2026-09-24 — and returns two events, now and next, per channel in that
+// bouquet).
+type EPGEvent struct {
+	ID               int64  `xml:"e2eventid" json:"id"`
+	Start            int64  `xml:"e2eventstart" json:"start"` // Unix seconds, UTC
+	Duration         int64  `xml:"e2eventduration" json:"duration"`
+	Title            string `xml:"e2eventtitle" json:"title"`
+	Description      string `xml:"e2eventdescription" json:"description"`
+	ServiceReference string `xml:"e2eventservicereference" json:"serviceReference"`
+	ServiceName      string `xml:"e2eventservicename" json:"serviceName"`
+}
+
+type epgEventList struct {
+	XMLName xml.Name   `xml:"e2eventlist"`
+	Events  []EPGEvent `xml:"e2event"`
+}
+
 // Timer mirrors one <e2timer> of /web/timerlist. Field names confirmed
 // against a real live response 2026-09-24 (issue #14); see
 // backend/testdata/fixtures/timerlist.xml.
@@ -112,6 +145,13 @@ type Client interface {
 	MovieList(ctx context.Context) ([]Movie, error)
 	TimerList(ctx context.Context) ([]Timer, error)
 	AddTimer(ctx context.Context, t NewTimer) error
+	// Bouquets lists the box's bouquets (GuideHub's channel groups).
+	Bouquets(ctx context.Context) ([]Service, error)
+	// Services lists the channels inside a bouquet (bouquetRef, as returned
+	// by Bouquets).
+	Services(ctx context.Context, bouquetRef string) ([]Service, error)
+	// EPGNowNext returns now/next events for every channel in a bouquet.
+	EPGNowNext(ctx context.Context, bouquetRef string) ([]EPGEvent, error)
 }
 
 // ErrWritesDisabled is returned by the real client's write operations until
@@ -161,6 +201,32 @@ func (c *HTTPClient) TimerList(ctx context.Context) ([]Timer, error) {
 		return nil, err
 	}
 	return list.Timers, nil
+}
+
+func (c *HTTPClient) Bouquets(ctx context.Context) ([]Service, error) {
+	var list serviceList
+	if err := c.getXML(ctx, "/web/getservices", &list); err != nil {
+		return nil, err
+	}
+	return list.Services, nil
+}
+
+func (c *HTTPClient) Services(ctx context.Context, bouquetRef string) ([]Service, error) {
+	var list serviceList
+	q := url.Values{"sRef": {bouquetRef}}
+	if err := c.getXML(ctx, "/web/getservices?"+q.Encode(), &list); err != nil {
+		return nil, err
+	}
+	return list.Services, nil
+}
+
+func (c *HTTPClient) EPGNowNext(ctx context.Context, bouquetRef string) ([]EPGEvent, error) {
+	var list epgEventList
+	q := url.Values{"bRef": {bouquetRef}}
+	if err := c.getXML(ctx, "/web/epgnownext?"+q.Encode(), &list); err != nil {
+		return nil, err
+	}
+	return list.Events, nil
 }
 
 type simpleResult struct {

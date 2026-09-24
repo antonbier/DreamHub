@@ -165,7 +165,8 @@
     "tile": {
       "timersUpcoming": "Upcoming timers",
       "hubsStatus": "Needs attention",
-      "mediaDiskSpace": "Disk space"
+      "mediaDiskSpace": "Disk space",
+      "seriesUpcoming": "Upcoming episodes"
     },
     "tileFrame": {
       "hide": "Hide",
@@ -185,6 +186,10 @@
     "mediaDiskTile": {
       "empty": "No storage information.",
       "unavailable": "MediaHub isn't available."
+    },
+    "seriesTile": {
+      "empty": "No upcoming episodes.",
+      "unavailable": "SeriesHub isn't available."
     }
   },
   "hubPlaceholder": {
@@ -195,6 +200,20 @@
     "diskFree": "{free} free of {capacity}",
     "empty": "No recordings.",
     "notARecording": "Not a Dreambox recording"
+  },
+  "guide": {
+    "empty": "No channels in this bouquet.",
+    "noEvent": "No programme information",
+    "until": "until {time}",
+    "next": "Next at {time}: {title}"
+  },
+  "series": {
+    "tracked": "Tracked series",
+    "trackedEmpty": "No series tracked yet.",
+    "inactive": "Inactive",
+    "upcoming": "Upcoming episodes",
+    "upcomingEmpty": "No upcoming episodes.",
+    "episode": "S{season}E{episode} — {title}"
   },
   "settings": {
     "page": {

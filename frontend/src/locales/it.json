@@ -165,7 +165,8 @@
     "tile": {
       "timersUpcoming": "Prossimi timer",
       "hubsStatus": "Richiede attenzione",
-      "mediaDiskSpace": "Spazio su disco"
+      "mediaDiskSpace": "Spazio su disco",
+      "seriesUpcoming": "Prossimi episodi"
     },
     "tileFrame": {
       "hide": "Nascondi",
@@ -185,6 +186,10 @@
     "mediaDiskTile": {
       "empty": "Nessuna informazione sullo spazio.",
       "unavailable": "Registrazioni non è disponibile."
+    },
+    "seriesTile": {
+      "empty": "Nessun episodio in programma.",
+      "unavailable": "Serie non è disponibile."
     }
   },
   "hubPlaceholder": {
@@ -195,6 +200,20 @@
     "diskFree": "{free} liberi su {capacity}",
     "empty": "Nessuna registrazione.",
     "notARecording": "Non è una registrazione Dreambox"
+  },
+  "guide": {
+    "empty": "Nessun canale in questo bouquet.",
+    "noEvent": "Nessuna informazione sul programma",
+    "until": "fino alle {time}",
+    "next": "Alle {time}: {title}"
+  },
+  "series": {
+    "tracked": "Serie seguite",
+    "trackedEmpty": "Nessuna serie seguita ancora.",
+    "inactive": "Inattiva",
+    "upcoming": "Prossimi episodi",
+    "upcomingEmpty": "Nessun episodio in programma.",
+    "episode": "S{season}E{episode} — {title}"
   },
   "settings": {
     "page": {

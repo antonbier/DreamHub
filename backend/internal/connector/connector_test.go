@@ -7,6 +7,8 @@ import (
 	"testing"
 	"time"
 
+	"github.com/antonbier/DreamHub/backend/internal/serienrecorder"
+	srmock "github.com/antonbier/DreamHub/backend/internal/serienrecorder/mock"
 	"github.com/antonbier/DreamHub/backend/internal/settings"
 	"github.com/antonbier/DreamHub/backend/internal/status"
 	"github.com/antonbier/DreamHub/backend/internal/webcontrol"
@@ -61,6 +63,15 @@ func (failingClient) TimerList(context.Context) ([]webcontrol.Timer, error) {
 func (failingClient) AddTimer(context.Context, webcontrol.NewTimer) error {
 	return errors.New("connection refused")
 }
+func (failingClient) Bouquets(context.Context) ([]webcontrol.Service, error) {
+	return nil, errors.New("connection refused")
+}
+func (failingClient) Services(context.Context, string) ([]webcontrol.Service, error) {
+	return nil, errors.New("connection refused")
+}
+func (failingClient) EPGNowNext(context.Context, string) ([]webcontrol.EPGEvent, error) {
+	return nil, errors.New("connection refused")
+}
 
 func TestWebControl(t *testing.T) {
 	ctx := context.Background()
@@ -93,12 +104,28 @@ func TestKeyedConnectors(t *testing.T) {
 	}
 }
 
-func TestSerienRecorder_HonestOnRealDevice(t *testing.T) {
+type failingSeriesClient struct{}
+
+func (failingSeriesClient) Info(context.Context) (*serienrecorder.Info, error) {
+	return nil, errors.New("connection refused")
+}
+func (failingSeriesClient) Markers(context.Context) ([]serienrecorder.Marker, error) {
+	return nil, errors.New("connection refused")
+}
+func (failingSeriesClient) UpcomingEpisodes(context.Context) ([]serienrecorder.UpcomingEpisode, error) {
+	return nil, errors.New("connection refused")
+}
+
+func TestSerienRecorder_RealReachabilityCheck(t *testing.T) {
 	ctx := context.Background()
 	if rep := (SerienRecorder{Mock: true}).Check(ctx, nil); rep.State != OK {
 		t.Errorf("mock mode: expected ok, got %+v", rep)
 	}
-	if rep := (SerienRecorder{}).Check(ctx, nil); rep.State != NotImplemented {
-		t.Errorf("live mode: must say not implemented until #10 is done, got %+v", rep)
+	if rep := (SerienRecorder{Client: srmock.New()}).Check(ctx, nil); rep.State != OK {
+		t.Errorf("live mode with a reachable API: expected ok, got %+v", rep)
+	}
+	rep := (SerienRecorder{Client: failingSeriesClient{}}).Check(ctx, nil)
+	if rep.State != Unreachable || rep.Problem == nil || rep.Problem.Code != status.CodeConnectorUnreachable || rep.Problem.Fix != status.FixCheckBoxConnection {
+		t.Errorf("unreachable API must report a problem with a fix, got %+v", rep)
 	}
 }

@@ -1,0 +1,60 @@
+package hubs
+
+import (
+	"context"
+	"net/http"
+	"strings"
+
+	"github.com/antonbier/DreamHub/backend/internal/httpx"
+	"github.com/antonbier/DreamHub/backend/internal/hub"
+	"github.com/antonbier/DreamHub/backend/internal/serienrecorder"
+)
+
+// Series is SeriesHub: series tracked in SerienRecorder and their upcoming
+// episodes. Episodes-on-disk/missing-episodes cross-referencing against
+// recordings is still open (ROADMAP.md) — this uses only what
+// SerienRecorder's own API already provides.
+type Series struct {
+	SR serienrecorder.Client
+}
+
+// Mount registers SeriesHub's routes.
+func (h *Series) Mount(mux *http.ServeMux) {
+	mux.HandleFunc("GET /api/v1/series/markers", h.markers)
+	mux.HandleFunc("GET /api/v1/series/upcoming", h.upcoming)
+}
+
+// Search implements hub.SearchProvider: a case-insensitive substring match
+// over each tracked series' name.
+func (h *Series) Search(ctx context.Context, query string) ([]hub.SearchResult, error) {
+	markers, err := h.SR.Markers(ctx)
+	if err != nil {
+		return nil, err
+	}
+	q := strings.ToLower(query)
+	var out []hub.SearchResult
+	for _, m := range markers {
+		if strings.Contains(strings.ToLower(m.Name), q) {
+			out = append(out, hub.SearchResult{Title: m.Name, Subtitle: m.Info, Path: "/series"})
+		}
+	}
+	return out, nil
+}
+
+func (h *Series) markers(w http.ResponseWriter, r *http.Request) {
+	markers, err := h.SR.Markers(r.Context())
+	if err != nil {
+		httpx.WriteError(w, r, http.StatusBadGateway, "serienrecorder_unavailable", "could not reach SerienRecorder")
+		return
+	}
+	httpx.WriteJSON(w, http.StatusOK, map[string]any{"markers": markers})
+}
+
+func (h *Series) upcoming(w http.ResponseWriter, r *http.Request) {
+	episodes, err := h.SR.UpcomingEpisodes(r.Context())
+	if err != nil {
+		httpx.WriteError(w, r, http.StatusBadGateway, "serienrecorder_unavailable", "could not reach SerienRecorder")
+		return
+	}
+	httpx.WriteJSON(w, http.StatusOK, map[string]any{"episodes": episodes})
+}

@@ -3,6 +3,7 @@ package connector
 import (
 	"context"
 
+	"github.com/antonbier/DreamHub/backend/internal/serienrecorder"
 	"github.com/antonbier/DreamHub/backend/internal/settings"
 	"github.com/antonbier/DreamHub/backend/internal/status"
 	"github.com/antonbier/DreamHub/backend/internal/webcontrol"
@@ -46,23 +47,30 @@ func (w WebControl) Check(ctx context.Context, _ settings.Values) Report {
 
 // --- SerienRecorder -------------------------------------------------------
 
-// SerienRecorder will talk to SerienRecorder's own web interface API, which
-// still needs to be verified on the device (issue #10). In mock mode it
-// reports OK so the rest of the UI can be built; on a real device it says
-// honestly that it isn't implemented yet.
-type SerienRecorder struct{ Mock bool }
+// SerienRecorder talks to SerienRecorder's own web interface API
+// (internal/serienrecorder), confirmed reachable live 2026-09-24 (issue
+// #10, ARCHITECTURE.md) — a real reachability check, the same shape as
+// WebControl's, not the placeholder "not implemented" this used to be.
+type SerienRecorder struct {
+	Client serienrecorder.Client
+	Mock   bool
+}
 
 func (SerienRecorder) ID() string                   { return IDSerienRecorder }
 func (SerienRecorder) Name() string                 { return "SerienRecorder" }
 func (SerienRecorder) Settings() []settings.Section { return nil }
-func (s SerienRecorder) Check(context.Context, settings.Values) Report {
+func (s SerienRecorder) Check(ctx context.Context, _ settings.Values) Report {
 	if s.Mock {
 		return Report{State: OK}
 	}
-	return Report{State: NotImplemented, Problem: &status.Problem{
-		Code:   status.CodeConnectorNotImplemented,
-		Params: map[string]any{"connector": "SerienRecorder"},
-	}}
+	if _, err := s.Client.Info(ctx); err != nil {
+		return Report{State: Unreachable, Problem: &status.Problem{
+			Code:   status.CodeConnectorUnreachable,
+			Params: map[string]any{"connector": "SerienRecorder"},
+			Fix:    status.FixCheckBoxConnection,
+		}}
+	}
+	return Report{State: OK}
 }
 
 // --- TMDB -----------------------------------------------------------------

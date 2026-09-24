@@ -18,6 +18,7 @@ import (
 	hubs_ "github.com/antonbier/DreamHub/backend/internal/hubs"
 	"github.com/antonbier/DreamHub/backend/internal/logging"
 	"github.com/antonbier/DreamHub/backend/internal/plan"
+	"github.com/antonbier/DreamHub/backend/internal/serienrecorder"
 	"github.com/antonbier/DreamHub/backend/internal/settings"
 	"github.com/antonbier/DreamHub/backend/internal/store"
 	"github.com/antonbier/DreamHub/backend/internal/webcontrol"
@@ -27,8 +28,12 @@ import (
 type Options struct {
 	DataDir    string
 	WebControl webcontrol.Client
-	// Mock is true when running against the mock WebControl client; the
-	// SerienRecorder connector then reports OK instead of "not implemented".
+	// Series is the SerienRecorder API client (internal/serienrecorder),
+	// used by SeriesHub and the SerienRecorder connector's reachability
+	// check. Required whenever Mock is false.
+	Series serienrecorder.Client
+	// Mock is true when running against the mock WebControl/Series clients;
+	// the SerienRecorder connector then reports OK without a real check.
 	Mock bool
 	// LookPath finds binaries for capability checks (exec.LookPath).
 	LookPath func(string) (string, error)
@@ -78,7 +83,7 @@ func New(ctx context.Context, o Options) (*App, error) {
 
 	conns := connector.NewRegistry(o.ConnectorTTL)
 	conns.Add(connector.WebControl{Client: o.WebControl})
-	conns.Add(connector.SerienRecorder{Mock: o.Mock})
+	conns.Add(connector.SerienRecorder{Client: o.Series, Mock: o.Mock})
 	conns.Add(connector.OpenAI{})
 	conns.Add(connector.TMDB{})
 
@@ -128,6 +133,8 @@ func New(ctx context.Context, o Options) (*App, error) {
 
 	timerHub := &hubs_.Timer{WC: o.WebControl, Plans: plans, Now: now}
 	mediaHub := &hubs_.Media{WC: o.WebControl}
+	guideHub := &hubs_.Guide{WC: o.WebControl}
+	seriesHub := &hubs_.Series{SR: o.Series}
 	systemHub := &hubs_.System{Store: st}
 	adminHub := &hubs_.Admin{Store: st, Level: level}
 
@@ -135,6 +142,7 @@ func New(ctx context.Context, o Options) (*App, error) {
 	// (internal/hub/search.go) — add more here as other hubs implement it.
 	hubs.AddSearchProvider(hub.IDTimer, timerHub)
 	hubs.AddSearchProvider(hub.IDMedia, mediaHub)
+	hubs.AddSearchProvider(hub.IDSeries, seriesHub)
 
 	handler := api.NewRouter(api.Deps{
 		WebControl: o.WebControl,
@@ -150,6 +158,8 @@ func New(ctx context.Context, o Options) (*App, error) {
 		Mounts: []api.Mount{
 			{HubID: hub.IDTimer, Prefixes: []string{"/api/v1/timers"}, Register: timerHub.Mount},
 			{HubID: hub.IDMedia, Prefixes: []string{"/api/v1/media"}, Register: mediaHub.Mount},
+			{HubID: hub.IDGuide, Prefixes: []string{"/api/v1/guide"}, Register: guideHub.Mount},
+			{HubID: hub.IDSeries, Prefixes: []string{"/api/v1/series"}, Register: seriesHub.Mount},
 			{HubID: hub.IDSystem, Prefixes: []string{"/api/v1/changes"}, Register: systemHub.Mount},
 			{HubID: hub.IDAdmin, Prefixes: []string{"/api/v1/admin"}, Register: adminHub.Mount},
 		},

@@ -164,7 +164,8 @@
     "loadFailed": "Couldn't load the dashboard.",
     "tile": {
       "timersUpcoming": "Upcoming timers",
-      "hubsStatus": "Needs attention"
+      "hubsStatus": "Needs attention",
+      "mediaDiskSpace": "Disk space"
     },
     "tileFrame": {
       "hide": "Hide",
@@ -180,11 +181,20 @@
     },
     "hubsTile": {
       "allOk": "All hubs are available."
+    },
+    "mediaDiskTile": {
+      "empty": "No storage information.",
+      "unavailable": "MediaHub isn't available."
     }
   },
   "hubPlaceholder": {
     "title": "{name} — coming soon",
     "body": "This hub's screens haven't been built yet. The navigation, status and settings behind it are already live."
+  },
+  "media": {
+    "diskFree": "{free} free of {capacity}",
+    "empty": "No recordings.",
+    "notARecording": "Not a Dreambox recording"
   },
   "settings": {
     "page": {

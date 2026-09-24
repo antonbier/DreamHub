@@ -164,7 +164,8 @@
     "loadFailed": "Impossibile caricare la dashboard.",
     "tile": {
       "timersUpcoming": "Prossimi timer",
-      "hubsStatus": "Richiede attenzione"
+      "hubsStatus": "Richiede attenzione",
+      "mediaDiskSpace": "Spazio su disco"
     },
     "tileFrame": {
       "hide": "Nascondi",
@@ -180,11 +181,20 @@
     },
     "hubsTile": {
       "allOk": "Tutti gli hub sono disponibili."
+    },
+    "mediaDiskTile": {
+      "empty": "Nessuna informazione sullo spazio.",
+      "unavailable": "Registrazioni non è disponibile."
     }
   },
   "hubPlaceholder": {
     "title": "{name} — in arrivo",
     "body": "Le schermate di questo hub non sono ancora state costruite. Navigazione, stato e impostazioni funzionano già."
+  },
+  "media": {
+    "diskFree": "{free} liberi su {capacity}",
+    "empty": "Nessuna registrazione.",
+    "notARecording": "Non è una registrazione Dreambox"
   },
   "settings": {
     "page": {

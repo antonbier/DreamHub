@@ -69,7 +69,6 @@ func NewRouter(d Deps) http.Handler {
 	protected := http.NewServeMux()
 	protected.HandleFunc("GET /api/v1/whoami", handleWhoami(d))
 	protected.HandleFunc("GET /api/v1/deviceinfo", handleDeviceInfo(d))
-	protected.HandleFunc("GET /api/v1/movies", handleMovies(d))
 	protected.HandleFunc("GET /api/v1/settings", handleGetSettings(d))
 	protected.HandleFunc("PATCH /api/v1/settings", handlePatchSettings(d))
 	protected.HandleFunc("GET /api/v1/navigation", handleNavigation(d))
@@ -165,18 +164,6 @@ func handleDeviceInfo(d Deps) http.HandlerFunc {
 			return
 		}
 		httpx.WriteJSON(w, http.StatusOK, info)
-	}
-}
-
-func handleMovies(d Deps) http.HandlerFunc {
-	return func(w http.ResponseWriter, r *http.Request) {
-		movies, err := d.WebControl.MovieList(r.Context())
-		if err != nil {
-			d.Logger.Error("movielist failed", "requestId", httpx.RequestID(r.Context()), "error", err)
-			httpx.WriteError(w, r, http.StatusBadGateway, "webcontrol_unavailable", "could not reach WebControl")
-			return
-		}
-		httpx.WriteJSON(w, http.StatusOK, movies)
 	}
 }
 

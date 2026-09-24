@@ -60,7 +60,7 @@ Releases: **Foundation** → **v1** → **v1.1** → **Later**. GitHub milestone
 - [x] **7** Status strip (`StatusStrip.vue`, DESIGN.md): connected, clock skew, hub issue count as small dotted items, plus the browser's own time zone right-aligned in faint (the per-user display-zone *preference* is still open, below). Replaces the earlier ad hoc "backend unreachable" banner
 
 **Open**:
-- [ ] Remaining parts of the hub contract: search providers and events exist now (above) for one hub each — extend to the rest as they're built; custom/criteria-based tile types (CONCEPT.md: source + filters + sort + limit + display, reusing a hub's search provider — the dashboard's tile *mechanics* are ready for this, only the hub-contributed catalog entries are missing)
+- [ ] Remaining parts of the hub contract: search providers now cover TimerHub and MediaHub, events still just TimerHub-triggered status changes — extend both to the rest of the hubs as they're built; custom/criteria-based tile types (CONCEPT.md: source + filters + sort + limit + display, reusing a hub's search provider — the dashboard's tile *mechanics* are ready for this, only the hub-contributed catalog entries are missing)
 - [ ] Core event bus (hub events → notifications, later AutomationHub) — the change log now carries one real system-detected event type (`hub.statusChanged`); a proper bus covering every hub action, with persistence designed for it rather than piggybacked on the change log, is still open
 - [ ] Live updates via WebSocket
 - [ ] Runtime drop-in locales from `/data/dreamhub/locales/`; `Intl`-based formatting for actual dates/times once hubs display any (the dashboard's timers tile already uses `Intl` for its own time column, per-user display zone still open below)
@@ -73,16 +73,22 @@ Releases: **Foundation** → **v1** → **v1.1** → **Later**. GitHub milestone
 ## v1 — hubs
 
 ### MediaHub
-- Listing via `/web/movielist` (already-parsed title/description/length/filesize — see `ARCHITECTURE.md`) rather than hand-parsing `.ts.meta`.
-- Disk space overview (the reference device's disk is 88 % full — this is a real, recurring pain point).
-- Rename engine covering **all** sidecar files of a `.ts` recording: `.ts`, `.ts.meta`, `.ts.ap`, `.ts.sc`, `.ts.cuts`, `.eit`. Plus existing cover art (`.jpg`, `.backdrop.jpg`) — move it along, don't re-fetch from TMDB.
-- The scanner must distinguish real recordings from other media in the same folder: `.mkv` files in `/media/hdd/movie/` on the reference device were copied in manually and are **not** Dreambox recordings — leave them alone.
-- Every rename/delete goes through preview-and-confirm; delete means move to trash.
-- Never touch a file that is currently being recorded or played — check timer/current-service state first.
-- Bulk actions via a background queue.
-- `.ts.meta` format: line 1 service reference, line 2 title, line 3 title+description+genre, line 4 unix timestamp — parse only where the API doesn't already provide the field.
-- Reference implementation: `AdvancedMovieSelection` (`Rename.py`, `SearchTMDb*.py`) — native on-screen plugin, not web-based, CC BY-NC-SA licensed: read for approach, don't copy code.
-- Confirmed 2026-09-24 (#11): Enigma2's movie list picks up files renamed outside Enigma2 correctly, no rescan needed — see `ARCHITECTURE.md`.
+
+**Done**:
+- [x] Listing via `/web/movielist` (already-parsed title/description/length/filesize — see `ARCHITECTURE.md`), `GET /api/v1/media/movies` (`internal/hubs/media.go`)
+- [x] The scanner distinguishes real recordings from other media in the same folder (`isRecording`, by file extension — confirmed live against a real `.mkv` file manually copied into `/media/hdd/movie/` on the reference device, see `ARCHITECTURE.md`): the frontend (`MediaHubView.vue`) shows non-recordings dimmed and labeled, doesn't touch them
+- [x] Disk space overview, `GET /api/v1/media/disk` (the reference device's disk is close to full — a real, recurring pain point): WebControl's HDD fields are human-formatted strings (`"2 TB"`), parsed into a usage percentage by `webcontrol.ParseSize`
+- [x] MediaHub is the hub contract's second search provider (after TimerHub) — recording titles are searchable from `SearchPalette.vue`
+- [x] Dashboard tile: disk usage (`media.diskSpace`, `MediaDiskSpaceTile.vue`)
+- [x] Confirmed 2026-09-24 (#11): Enigma2's movie list picks up files renamed outside Enigma2 correctly, no rescan needed — see `ARCHITECTURE.md`
+
+**Open**:
+- [ ] Rename engine covering **all** sidecar files of a `.ts` recording: `.ts`, `.ts.meta`, `.ts.ap`, `.ts.sc`, `.ts.cuts`, `.eit`. Plus existing cover art (`.jpg`, `.backdrop.jpg`) — move it along, don't re-fetch from TMDB. WebControl's API has no file-operation endpoints (`ARCHITECTURE.md`), so this needs its own filesystem-backed component (real: direct `os.Rename` — the backend runs on-device with local access to `/media/hdd`, per `PROJECT_PLAN.md`'s packaging plan, no SSH needed in production; mock: in-memory, per `PRINCIPLES.md`'s "Mock-first development")
+- [ ] Every rename/delete goes through preview-and-confirm (`internal/plan`, same pattern as TimerHub's `planCreate`); delete means move to trash
+- [ ] Never touch a file that is currently being recorded or played — cross-reference `/web/timerlist` against the current time (already resolved conceptually, #12; not yet wired into a mutating MediaHub endpoint since none exist yet)
+- [ ] Bulk actions via a background queue
+- [ ] `.ts.meta` format: line 1 service reference, line 2 title, line 3 title+description+genre, line 4 unix timestamp — parse only where the API doesn't already provide the field (not needed yet — `/web/movielist` already covers everything the current read-only screen shows)
+- [ ] Reference implementation: `AdvancedMovieSelection` (`Rename.py`, `SearchTMDb*.py`) — native on-screen plugin, not web-based, CC BY-NC-SA licensed: read for approach, don't copy code
 
 ### TimerHub
 - Timers via `/web/timerlist`; AutoTimer.

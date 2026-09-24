@@ -12,7 +12,9 @@ import (
 	"io"
 	"net/http"
 	"net/url"
+	"regexp"
 	"strconv"
+	"strings"
 	"time"
 )
 
@@ -26,12 +28,24 @@ type DeviceInfo struct {
 	WebifVersion  string     `xml:"e2webifversion" json:"webifVersion"`
 	DeviceName    string     `xml:"e2devicename" json:"deviceName"`
 	Frontends     []Frontend `xml:"e2frontends>e2frontend" json:"frontends"`
+	HDDs          []HDD      `xml:"e2hdds>e2hdd" json:"hdds"`
 }
 
 // Frontend is one tuner.
 type Frontend struct {
 	Name  string `xml:"e2name" json:"name"`
 	Model string `xml:"e2model" json:"model"`
+}
+
+// HDD is one storage device from /web/deviceinfo. Capacity and Free are
+// human-formatted strings as WebControl reports them (e.g. "2 TB",
+// "263.947 GB") — there's no machine-readable byte count in this endpoint
+// (confirmed live, ARCHITECTURE.md). See ParseSize for turning these into a
+// usage percentage.
+type HDD struct {
+	Model    string `xml:"e2model" json:"model"`
+	Capacity string `xml:"e2capacity" json:"capacity"`
+	Free     string `xml:"e2free" json:"free"`
 }
 
 // Tuners returns the number of tuners, at least 1.
@@ -61,10 +75,9 @@ type movieList struct {
 	Movies  []Movie  `xml:"e2movie"`
 }
 
-// Timer mirrors one <e2timer> of /web/timerlist. The endpoint was observed
-// during the inspection, but its response body wasn't captured — field names
-// follow the OpenWebif schema the rest of the API matches, and need
-// confirming against real fixtures (issue #14).
+// Timer mirrors one <e2timer> of /web/timerlist. Field names confirmed
+// against a real live response 2026-09-24 (issue #14); see
+// backend/testdata/fixtures/timerlist.xml.
 type Timer struct {
 	ServiceReference string `xml:"e2servicereference" json:"serviceReference"`
 	ServiceName      string `xml:"e2servicename" json:"serviceName"`
@@ -181,6 +194,25 @@ func (c *HTTPClient) AddTimer(ctx context.Context, t NewTimer) error {
 		return fmt.Errorf("webcontrol: timeradd rejected: %s", res.StateText)
 	}
 	return nil
+}
+
+var sizeRe = regexp.MustCompile(`^([\d.]+)\s*([KMGT]?B)$`)
+var sizeUnits = map[string]float64{"B": 1, "KB": 1 << 10, "MB": 1 << 20, "GB": 1 << 30, "TB": 1 << 40}
+
+// ParseSize turns a human-formatted size like "2 TB" or "263.947 GB" (the
+// only form /web/deviceinfo's HDD fields come in — see HDD) into a byte
+// count. Precision is limited by the source string's own rounding; good
+// enough for a usage percentage, not for exact byte accounting.
+func ParseSize(s string) (int64, bool) {
+	m := sizeRe.FindStringSubmatch(strings.ToUpper(strings.TrimSpace(s)))
+	if m == nil {
+		return 0, false
+	}
+	n, err := strconv.ParseFloat(m[1], 64)
+	if err != nil {
+		return 0, false
+	}
+	return int64(n * sizeUnits[m[2]]), true
 }
 
 func (c *HTTPClient) getXML(ctx context.Context, path string, v any) error {

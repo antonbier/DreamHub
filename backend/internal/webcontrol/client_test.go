@@ -73,6 +73,27 @@ func TestAddTimer_WhenEnabled(t *testing.T) {
 	}
 }
 
+func TestParseSize(t *testing.T) {
+	var gib float64 = 1 << 30
+	cases := []struct {
+		in   string
+		want int64
+		ok   bool
+	}{
+		{"2 TB", 2 << 40, true},
+		{"263.947 GB", int64(263.947 * gib), true},
+		{"1MB", 1 << 20, true},
+		{"", 0, false},
+		{"unknown", 0, false},
+	}
+	for _, c := range cases {
+		got, ok := ParseSize(c.in)
+		if ok != c.ok || (ok && got != c.want) {
+			t.Errorf("ParseSize(%q) = %d, %v; want %d, %v", c.in, got, ok, c.want, c.ok)
+		}
+	}
+}
+
 func TestAddTimer_BoxRejects(t *testing.T) {
 	srv := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		w.Write([]byte(`<e2simplexmlresult><e2state>False</e2state><e2statetext>Conflicting timer</e2statetext></e2simplexmlresult>`))

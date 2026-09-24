@@ -60,6 +60,10 @@ func (*Client) DeviceInfo(ctx context.Context) (*webcontrol.DeviceInfo, error) {
 		WebifVersion:  "1.9.1",
 		DeviceName:    "one",
 		Frontends:     []webcontrol.Frontend{{Name: "Tuner A", Model: " Si2169D (DVB-S2 / DVB-C / DVB-T2)"}},
+		// Real capture, 2026-09-24 (ARCHITECTURE.md, #14): the reference
+		// device's disk really is close to full — a genuine, recurring pain
+		// point MediaHub's disk-space overview exists to surface.
+		HDDs: []webcontrol.HDD{{Model: "ST2000LM 015-2E8174", Capacity: "2 TB", Free: "263.947 GB"}},
 	}, nil
 }
 
@@ -74,6 +78,15 @@ func (*Client) MovieList(ctx context.Context) ([]webcontrol.Movie, error) {
 			Length:           "103:16",
 			Filename:         `//media/hdd/movie/20260608 2048 - RTL Television - Bauer sucht Frau International.ts`,
 			FileSize:         3802689536,
+		},
+		// A manually-copied, non-recording file in the same folder (real,
+		// confirmed live, ARCHITECTURE.md's MediaHub note): the scanner must
+		// leave these alone rather than treating them as recordings.
+		{
+			ServiceReference: `1:0:0:0:0:0:0:0:0:0:/media/hdd/movie/Oskars Kleid.mkv`,
+			Title:            "Oskars Kleid.mkv",
+			Filename:         `//media/hdd/movie/Oskars Kleid.mkv`,
+			FileSize:         1200000000,
 		},
 	}, nil
 }

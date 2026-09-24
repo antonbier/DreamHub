@@ -1,8 +1,9 @@
 // Routes mirror the hub paths declared in backend/internal/hub/v1.go
 // (Descriptor.Path) and the core routes in Navigation() (dashboard,
-// settings). Each hub route renders HubView, a placeholder until that
+// settings). Most hub routes render HubView, a placeholder until that
 // hub's own screens are built (ROADMAP.md, "v1 — hubs") — the plumbing
-// behind it (navigation, status, settings) is already live.
+// behind it (navigation, status, settings) is already live. MediaHub is
+// the first hub with a real screen (MediaHubView).
 import { createRouter, createWebHistory } from 'vue-router'
 import { isOnboardingComplete } from '@/lib/onboarding'
 
@@ -25,9 +26,16 @@ const router = createRouter({
       component: () => import('@/views/OnboardingView.vue'),
     },
     {
-      // MediaHub, SeriesHub, GuideHub, TimerHub, DiscoveryHub, SystemHub,
-      // AdminHub — one placeholder route per hub path.
-      path: '/:hub(media|series|guide|timers|discovery|system|admin)',
+      // MediaHub has its own real screen (ROADMAP.md, "v1 — hubs");
+      // the rest still render the shared placeholder below.
+      path: '/media',
+      name: 'media',
+      component: () => import('@/views/MediaHubView.vue'),
+    },
+    {
+      // SeriesHub, GuideHub, TimerHub, DiscoveryHub, SystemHub, AdminHub —
+      // one placeholder route per hub path.
+      path: '/:hub(series|guide|timers|discovery|system|admin)',
       name: 'hub',
       component: () => import('@/views/HubView.vue'),
       props: true,

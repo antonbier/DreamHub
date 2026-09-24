@@ -6,6 +6,12 @@ Format follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/); version
 
 ## [Unreleased]
 
+### Added (MediaHub read-only screen, device-access investigation, step 8)
+- Device access session 2026-09-24: the reference Dreambox came back online after an extended gap. Captured real `/web/*` and SerienRecorder API responses as test fixtures (`backend/testdata/fixtures/`); resolved all remaining `device-access`-labeled roadmap items (#10–#18) — see `ARCHITECTURE.md` and GitHub issue #19 for details.
+- MediaHub, first real screens (`GET /api/v1/media/movies`, `GET /api/v1/media/disk`, `MediaHubView.vue`): recordings list with real vs. manually-copied media distinguished (`isRecording`), disk usage overview (WebControl's human-formatted HDD sizes parsed into a percentage via `webcontrol.ParseSize`). Read-only — rename/delete need their own preview-and-confirm design (`ROADMAP.md`).
+- MediaHub is the hub contract's second search provider (after TimerHub); a new dashboard tile shows disk usage.
+- Confirmed live against the reference device (#11): Enigma2 picks up recordings renamed outside Enigma2 correctly.
+
 ### Added (API tokens, hub contract, status strip, step 7)
 - API tokens: generate (secret shown once), list, revoke (`internal/apitoken`, `GET`/`POST /api/v1/tokens`, `DELETE /api/v1/tokens/{id}`). `Authorization: Bearer dh_...` now works as an alternative to Basic Auth on any endpoint. Managed from Settings → Authentication.
 - Hub contract, first real implementations: search providers (`internal/hub/search.go` — TimerHub is the first) power real hub-content results in the search palette; status-change events (`internal/hub/watcher.go`) write a `hub.statusChanged` entry to the change log whenever a hub's level actually transitions, surfaced as "Recent activity" in the notifications bell.

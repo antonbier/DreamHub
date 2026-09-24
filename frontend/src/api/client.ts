@@ -18,8 +18,10 @@ import type {
   CreatedApiToken,
   DashboardLayout,
   DeviceInfo,
+  Disk,
   HealthInfo,
   HubStatus,
+  Movie,
   Navigation,
   SearchResult,
   SettingsView,
@@ -119,6 +121,10 @@ export const api = {
   },
   hubs: () => request<{ hubs: HubStatus[] }>('GET', '/api/v1/hubs'),
   timers: () => request<{ timers: Timer[]; tuners: number }>('GET', '/api/v1/timers'),
+  media: {
+    movies: () => request<{ movies: Movie[] }>('GET', '/api/v1/media/movies'),
+    disk: () => request<{ disks: Disk[] }>('GET', '/api/v1/media/disk'),
+  },
   dashboard: {
     get: () => request<DashboardLayout>('GET', '/api/v1/dashboard'),
     save: (layout: DashboardLayout) => request<DashboardLayout>('PUT', '/api/v1/dashboard', layout),

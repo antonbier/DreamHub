@@ -164,7 +164,8 @@
     "loadFailed": "Dashboard konnte nicht geladen werden.",
     "tile": {
       "timersUpcoming": "Anstehende Timer",
-      "hubsStatus": "Braucht Aufmerksamkeit"
+      "hubsStatus": "Braucht Aufmerksamkeit",
+      "mediaDiskSpace": "Speicherplatz"
     },
     "tileFrame": {
       "hide": "Ausblenden",
@@ -180,11 +181,20 @@
     },
     "hubsTile": {
       "allOk": "Alle Hubs sind verfügbar."
+    },
+    "mediaDiskTile": {
+      "empty": "Keine Speicherinformationen.",
+      "unavailable": "Aufnahmen ist nicht verfügbar."
     }
   },
   "hubPlaceholder": {
     "title": "{name} — folgt in Kürze",
     "body": "Die Ansichten dieses Hubs sind noch nicht gebaut. Navigation, Status und Einstellungen dahinter funktionieren bereits."
+  },
+  "media": {
+    "diskFree": "{free} frei von {capacity}",
+    "empty": "Keine Aufnahmen.",
+    "notARecording": "Keine Dreambox-Aufnahme"
   },
   "settings": {
     "page": {

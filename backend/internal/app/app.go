@@ -127,12 +127,14 @@ func New(ctx context.Context, o Options) (*App, error) {
 	watcher := hub.NewStatusWatcher()
 
 	timerHub := &hubs_.Timer{WC: o.WebControl, Plans: plans, Now: now}
+	mediaHub := &hubs_.Media{WC: o.WebControl}
 	systemHub := &hubs_.System{Store: st}
 	adminHub := &hubs_.Admin{Store: st, Level: level}
 
 	// TimerHub is the hub contract's first real search provider
 	// (internal/hub/search.go) — add more here as other hubs implement it.
 	hubs.AddSearchProvider(hub.IDTimer, timerHub)
+	hubs.AddSearchProvider(hub.IDMedia, mediaHub)
 
 	handler := api.NewRouter(api.Deps{
 		WebControl: o.WebControl,
@@ -147,6 +149,7 @@ func New(ctx context.Context, o Options) (*App, error) {
 		Store:      st,
 		Mounts: []api.Mount{
 			{HubID: hub.IDTimer, Prefixes: []string{"/api/v1/timers"}, Register: timerHub.Mount},
+			{HubID: hub.IDMedia, Prefixes: []string{"/api/v1/media"}, Register: mediaHub.Mount},
 			{HubID: hub.IDSystem, Prefixes: []string{"/api/v1/changes"}, Register: systemHub.Mount},
 			{HubID: hub.IDAdmin, Prefixes: []string{"/api/v1/admin"}, Register: adminHub.Mount},
 		},

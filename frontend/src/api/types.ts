@@ -130,6 +130,28 @@ export interface Timer {
   state: number
 }
 
+// backend/internal/hubs.MovieView, as returned by GET /api/v1/media/movies.
+export interface Movie {
+  serviceReference: string
+  title: string
+  description: string
+  descriptionExtended: string
+  serviceName: string
+  time: number // Unix seconds, UTC
+  length: string // MM:SS, as WebControl reports it
+  filename: string
+  fileSize: number
+  isRecording: boolean
+}
+
+// backend/internal/hubs.Disk, as returned by GET /api/v1/media/disk.
+export interface Disk {
+  model: string
+  capacityText: string
+  freeText: string
+  usedPercent?: number
+}
+
 // backend/internal/dashboard.Tile / .Layout.
 export interface DashboardTile {
   type: string

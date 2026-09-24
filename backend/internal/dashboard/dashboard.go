@@ -44,6 +44,7 @@ type tileType struct {
 var catalog = []tileType{
 	{ID: "timers.upcoming", Label: "dashboard.tile.timersUpcoming", DefaultWidth: 2},
 	{ID: "hubs.status", Label: "dashboard.tile.hubsStatus", DefaultWidth: 2},
+	{ID: "media.diskSpace", Label: "dashboard.tile.mediaDiskSpace", DefaultWidth: 1},
 }
 
 func catalogIndex() map[string]tileType {

@@ -111,15 +111,69 @@ func TestDeviceInfo_UsesMock(t *testing.T) {
 	}
 }
 
-func TestMovies_UsesMock(t *testing.T) {
+func TestMedia_MoviesDistinguishesRecordingsFromOtherMedia(t *testing.T) {
 	e := newEnv(t)
-	_, b := e.do(t, "GET", "/api/v1/movies", "", nil)
-	var movies []struct {
-		Title string `json:"title"`
+	_, b := e.do(t, "GET", "/api/v1/media/movies", "", nil)
+	var body struct {
+		Movies []struct {
+			Title       string `json:"title"`
+			IsRecording bool   `json:"isRecording"`
+		} `json:"movies"`
 	}
-	json.Unmarshal(b, &movies)
-	if len(movies) != 1 || movies[0].Title != "Bauer sucht Frau International" {
-		t.Errorf("unexpected movies: %s", b)
+	json.Unmarshal(b, &body)
+	if len(body.Movies) != 2 {
+		t.Fatalf("expected 2 mock movies, got %+v", body.Movies)
+	}
+	if body.Movies[0].Title != "Bauer sucht Frau International" || !body.Movies[0].IsRecording {
+		t.Errorf("expected the .ts recording to be flagged isRecording: %+v", body.Movies[0])
+	}
+	if body.Movies[1].Title != "Oskars Kleid.mkv" || body.Movies[1].IsRecording {
+		t.Errorf("a manually-copied .mkv must not be flagged isRecording: %+v", body.Movies[1])
+	}
+}
+
+func TestMedia_DiskReportsUsagePercent(t *testing.T) {
+	e := newEnv(t)
+	resp, b := e.do(t, "GET", "/api/v1/media/disk", "", nil)
+	if resp.StatusCode != http.StatusOK {
+		t.Fatalf("expected 200, got %d: %s", resp.StatusCode, b)
+	}
+	var body struct {
+		Disks []struct {
+			Model        string   `json:"model"`
+			CapacityText string   `json:"capacityText"`
+			FreeText     string   `json:"freeText"`
+			UsedPercent  *float64 `json:"usedPercent"`
+		} `json:"disks"`
+	}
+	json.Unmarshal(b, &body)
+	if len(body.Disks) != 1 || body.Disks[0].CapacityText != "2 TB" || body.Disks[0].UsedPercent == nil {
+		t.Fatalf("unexpected disks: %+v", body.Disks)
+	}
+	if pct := *body.Disks[0].UsedPercent; pct < 85 || pct > 90 {
+		t.Errorf("expected ~87%% used (2 TB capacity, 263.947 GB free, matching the real device), got %.1f%%", pct)
+	}
+}
+
+func TestSearch_FindsARealMovieByTitle(t *testing.T) {
+	e := newEnv(t)
+	// "Oskars Kleid" is unique to the mock's non-recording .mkv file — unlike
+	// the mock's recorded movie, whose title happens to also match a mock
+	// timer, this query isolates MediaHub's own search provider.
+	resp, b := e.do(t, "GET", "/api/v1/search?q=Oskars", "", nil)
+	if resp.StatusCode != http.StatusOK {
+		t.Fatalf("expected 200, got %d: %s", resp.StatusCode, b)
+	}
+	var body struct {
+		Results []struct {
+			HubID string `json:"hubId"`
+			Title string `json:"title"`
+			Path  string `json:"path"`
+		} `json:"results"`
+	}
+	json.Unmarshal(b, &body)
+	if len(body.Results) != 1 || body.Results[0].Title != "Oskars Kleid.mkv" || body.Results[0].HubID != "media" || body.Results[0].Path != "/media" {
+		t.Fatalf("expected exactly the mock's non-recording file, got %+v", body.Results)
 	}
 }
 
@@ -480,8 +534,8 @@ func TestDashboard_GetReturnsTheFullCatalogByDefault(t *testing.T) {
 		} `json:"tiles"`
 	}
 	json.Unmarshal(b, &body)
-	if len(body.Tiles) != 2 {
-		t.Fatalf("expected the 2 built-in tiles on a fresh install, got %+v", body.Tiles)
+	if len(body.Tiles) != 3 {
+		t.Fatalf("expected the 3 built-in tiles on a fresh install, got %+v", body.Tiles)
 	}
 	for _, tile := range body.Tiles {
 		if tile.Hidden || tile.Label == "" || tile.Width < 1 || tile.Width > 4 {
@@ -506,7 +560,7 @@ func TestDashboard_PutRoundTripsAndIsLogged(t *testing.T) {
 		} `json:"tiles"`
 	}
 	json.Unmarshal(b, &body)
-	if len(body.Tiles) != 2 || body.Tiles[0].Type != "hubs.status" || !body.Tiles[0].Hidden || body.Tiles[0].Width != 1 {
+	if len(body.Tiles) != 3 || body.Tiles[0].Type != "hubs.status" || !body.Tiles[0].Hidden || body.Tiles[0].Width != 1 {
 		t.Fatalf("order/width/hidden not preserved: %+v", body.Tiles)
 	}
 

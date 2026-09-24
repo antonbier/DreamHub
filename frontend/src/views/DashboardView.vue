@@ -53,6 +53,7 @@
         >
           <TimersUpcomingTile v-if="tile.type === 'timers.upcoming'" />
           <HubsStatusTile v-else-if="tile.type === 'hubs.status'" />
+          <MediaDiskSpaceTile v-else-if="tile.type === 'media.diskSpace'" />
         </DashboardTileFrame>
       </div>
     </div>
@@ -65,6 +66,7 @@ import { useI18n } from 'vue-i18n'
 import DashboardTileFrame from '@/components/dashboard/DashboardTileFrame.vue'
 import TimersUpcomingTile from '@/components/dashboard/TimersUpcomingTile.vue'
 import HubsStatusTile from '@/components/dashboard/HubsStatusTile.vue'
+import MediaDiskSpaceTile from '@/components/dashboard/MediaDiskSpaceTile.vue'
 import { useDashboard } from '@/composables/useDashboard'
 
 // DESIGN.md, "Dashboard grid": spans 3-4 collapse to 2 columns below 1180px,

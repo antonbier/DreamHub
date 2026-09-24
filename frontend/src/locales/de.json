@@ -203,9 +203,7 @@
   },
   "guide": {
     "empty": "Keine Sender in diesem Bouquet.",
-    "noEvent": "Keine Programminformation",
-    "until": "bis {time}",
-    "next": "Danach um {time}: {title}"
+    "now": "Jetzt"
   },
   "series": {
     "tracked": "Verfolgte Serien",
@@ -213,7 +211,14 @@
     "inactive": "Inaktiv",
     "upcoming": "Anstehende Folgen",
     "upcomingEmpty": "Keine anstehenden Folgen.",
-    "episode": "S{season}E{episode} — {title}"
+    "episode": "S{season}E{episode} — {title}",
+    "webInterface": {
+      "title": "SerienRecorder",
+      "body": "Marker, Staffeln und Einstellungen im eigenen Webinterface von SerienRecorder verwalten — DreamHub baut das nicht nach.",
+      "show": "Hier anzeigen",
+      "hide": "Ausblenden",
+      "openTab": "In neuem Tab öffnen"
+    }
   },
   "settings": {
     "page": {

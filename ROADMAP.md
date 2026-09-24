@@ -98,11 +98,12 @@ Releases: **Foundation** → **v1** → **v1.1** → **Later**. GitHub milestone
 ### GuideHub
 
 **Done**:
-- [x] Now/next per channel for a chosen bouquet, `GET /api/v1/guide/bouquets` (`/web/getservices`) and `GET /api/v1/guide/now?bouquet=` (`/web/epgnownext?bRef=`, confirmed live to need `bRef` not `sRef` — see `ARCHITECTURE.md`), grouped server-side (`internal/hubs/guide.go`'s `groupNowNext`) into one entry per channel; `GuideHubView.vue` with a bouquet selector (hidden when there's only one, as on the reference device)
+- [x] A real TV-magazine-style timeline grid ("TV-Zeitschrift"), not just now/next: `GET /api/v1/guide/bouquets` (`/web/getservices`) and `GET /api/v1/guide/grid?bouquet=&start=&end=` (`/web/epgmulti?bRef=&time=&endTime=`, confirmed live — takes a time window and returns every event per channel, chronologically — see `ARCHITECTURE.md`), grouped server-side (`internal/hubs/guide.go`'s `groupByChannel`) into one schedule per channel
+- [x] `GuideHubView.vue`: a proportional timeline (event blocks positioned by percentage of the visible window, a "now" line, an hour ruler), switchable bouquet (selector hidden when there's only one, as on the reference device) and switchable time window (◀ / Now / ▶, `WINDOW_HOURS = 4` per page). Verified live against the reference device across two real bouquets ("Free TV", "neu (TV)") with real, correctly-positioned programming
+- [x] Corrected an earlier assumption: `/web/epgnownext` (now/next only) has been fully replaced by `/web/epgmulti` (a genuine time window) — one real endpoint, not two overlapping ones
 
 **Open**:
-- [ ] Grid EPG ("TV-Zeitschrift") — a real timeline view, not just now/next; the now/next data above is exactly what such a grid would build on
-- [ ] EPG via `/web/getcurrent` for the currently-tuned service specifically (now/next per bouquet already covers the general case)
+- [ ] EPG via `/web/getcurrent` for the currently-tuned service specifically (the grid already covers the general case)
 - [ ] Online enrichment (TMDB) **only** for movie/series genres
 - [ ] A GuideHub search provider (channel/programme name) — not built yet, unlike MediaHub/SeriesHub/TimerHub
 - [ ] `GraphMultiEPG` and `TvSpielfilm` are native on-screen references, not replacements
@@ -120,6 +121,7 @@ Releases: **Foundation** → **v1** → **v1.1** → **Later**. GitHub milestone
 - [x] Tracked series (`GET /api/v1/series/markers` → `/serienrecorderapi/markers`) and upcoming episodes (`GET /api/v1/series/upcoming` → `/serienrecorderapi/timer?remaining=1`), `SeriesHubView.vue`
 - [x] SeriesHub is a search provider (tracked series' names); a dashboard tile shows upcoming episodes (`series.upcoming`, `SeriesUpcomingTile.vue`)
 - [x] The SerienRecorder connector does a real reachability check (`/serienrecorderapi/info`) instead of unconditionally reporting "not implemented" on a real device — the honest placeholder from before #10 was resolved
+- [x] A link to SerienRecorder's own web GUI (`/serienrecorderui/`, confirmed no `X-Frame-Options`/CSP blocking it) rather than rebuilding marker/timer/settings editing DreamHub doesn't need to duplicate (`PRINCIPLES.md`): "Open in new tab" always works; "Show here" embeds it in an iframe, lazy-mounted only when toggled on. Verified live against the reference device — the real SerienRecorder app loads and is fully usable. Only resolves correctly when DreamHub is deployed on the box itself (same host as WebControl, just port 80 vs. 8080), not in local dev against a different device
 
 **Open**:
 - [ ] Episodes on disk, missing episodes — needs cross-referencing recordings (`/web/movielist`, MediaHub) against tracked series/seasons; not attempted yet, deliberately scoped out of this pass

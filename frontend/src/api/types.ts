@@ -153,13 +153,13 @@ export interface Disk {
 }
 
 // backend/internal/webcontrol.Service, as returned by
-// GET /api/v1/guide/bouquets and used as ChannelEvents.serviceReference.
+// GET /api/v1/guide/bouquets and used as ChannelSchedule.serviceReference.
 export interface Bouquet {
   serviceReference: string
   serviceName: string
 }
 
-// backend/internal/webcontrol.EPGEvent, embedded in ChannelEvents.
+// backend/internal/webcontrol.EPGEvent, embedded in ChannelSchedule.
 export interface EPGEvent {
   id: number
   start: number // Unix seconds, UTC
@@ -170,12 +170,12 @@ export interface EPGEvent {
   serviceName: string
 }
 
-// backend/internal/hubs.ChannelEvents, as returned by GET /api/v1/guide/now.
-export interface ChannelEvents {
+// backend/internal/hubs.ChannelSchedule, as returned by GET /api/v1/guide/grid:
+// every event in the requested window, in chronological order.
+export interface ChannelSchedule {
   serviceReference: string
   serviceName: string
-  now?: EPGEvent
-  next?: EPGEvent
+  events: EPGEvent[]
 }
 
 // backend/internal/serienrecorder.Marker, as returned by

@@ -180,7 +180,7 @@ func TestSearch_FindsARealMovieByTitle(t *testing.T) {
 	}
 }
 
-func TestGuide_BouquetsAndNowNext(t *testing.T) {
+func TestGuide_BouquetsAndGrid(t *testing.T) {
 	e := newEnv(t)
 
 	_, b := e.do(t, "GET", "/api/v1/guide/bouquets", "", nil)
@@ -194,37 +194,49 @@ func TestGuide_BouquetsAndNowNext(t *testing.T) {
 	if len(bouquets.Bouquets) != 1 || bouquets.Bouquets[0].ServiceName != "Free TV" {
 		t.Fatalf("unexpected bouquets: %+v", bouquets.Bouquets)
 	}
+	bRef := bouquets.Bouquets[0].ServiceReference
 
-	resp, b := e.do(t, "GET", "/api/v1/guide/now?bouquet="+url.QueryEscape(bouquets.Bouquets[0].ServiceReference), "", nil)
+	// A 3-hour window covering the mock's evening schedule (mock.Evening,
+	// 19:00-22:00 local) should return several events per channel, in order,
+	// not just now/next.
+	windowStart := mock.Evening.Add(19 * time.Hour).Unix()
+	windowEnd := mock.Evening.Add(22 * time.Hour).Unix()
+	q := url.Values{
+		"bouquet": {bRef},
+		"start":   {strconv.FormatInt(windowStart, 10)},
+		"end":     {strconv.FormatInt(windowEnd, 10)},
+	}
+	resp, b := e.do(t, "GET", "/api/v1/guide/grid?"+q.Encode(), "", nil)
 	if resp.StatusCode != http.StatusOK {
 		t.Fatalf("expected 200, got %d: %s", resp.StatusCode, b)
 	}
-	var now struct {
+	var grid struct {
 		Channels []struct {
 			ServiceName string `json:"serviceName"`
-			Now         *struct {
+			Events      []struct {
 				Title string `json:"title"`
-			} `json:"now"`
-			Next *struct {
-				Title string `json:"title"`
-			} `json:"next"`
+			} `json:"events"`
 		} `json:"channels"`
 	}
-	json.Unmarshal(b, &now)
-	// The mock's 4 flat events (2 per channel) must group into 2 channels,
-	// each with a distinct now and next (not both pointing at the first event).
-	if len(now.Channels) != 2 {
-		t.Fatalf("expected 2 channels, got %+v", now.Channels)
+	json.Unmarshal(b, &grid)
+	if len(grid.Channels) != 2 {
+		t.Fatalf("expected 2 channels, got %+v", grid.Channels)
 	}
-	for _, ch := range now.Channels {
-		if ch.Now == nil || ch.Next == nil || ch.Now.Title == ch.Next.Title {
-			t.Errorf("channel %q: now/next not both populated and distinct: %+v", ch.ServiceName, ch)
+	for _, ch := range grid.Channels {
+		if len(ch.Events) < 2 {
+			t.Errorf("channel %q: expected several events in a 3-hour window, got %+v", ch.ServiceName, ch.Events)
 		}
 	}
 
-	resp, _ = e.do(t, "GET", "/api/v1/guide/now", "", nil)
-	if resp.StatusCode != http.StatusBadRequest {
-		t.Errorf("expected 400 without a bouquet, got %d", resp.StatusCode)
+	for _, missing := range []string{
+		"start=" + strconv.FormatInt(windowStart, 10) + "&end=" + strconv.FormatInt(windowEnd, 10), // no bouquet
+		"bouquet=" + url.QueryEscape(bRef) + "&end=" + strconv.FormatInt(windowEnd, 10),            // no start
+		"bouquet=" + url.QueryEscape(bRef) + "&start=" + strconv.FormatInt(windowStart, 10),        // no end
+	} {
+		resp, _ := e.do(t, "GET", "/api/v1/guide/grid?"+missing, "", nil)
+		if resp.StatusCode != http.StatusBadRequest {
+			t.Errorf("expected 400 for %q, got %d", missing, resp.StatusCode)
+		}
 	}
 }
 

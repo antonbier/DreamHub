@@ -69,7 +69,7 @@ func (failingClient) Bouquets(context.Context) ([]webcontrol.Service, error) {
 func (failingClient) Services(context.Context, string) ([]webcontrol.Service, error) {
 	return nil, errors.New("connection refused")
 }
-func (failingClient) EPGNowNext(context.Context, string) ([]webcontrol.EPGEvent, error) {
+func (failingClient) EPGMulti(context.Context, string, int64, int64) ([]webcontrol.EPGEvent, error) {
 	return nil, errors.New("connection refused")
 }
 

@@ -203,9 +203,7 @@
   },
   "guide": {
     "empty": "No channels in this bouquet.",
-    "noEvent": "No programme information",
-    "until": "until {time}",
-    "next": "Next at {time}: {title}"
+    "now": "Now"
   },
   "series": {
     "tracked": "Tracked series",
@@ -213,7 +211,14 @@
     "inactive": "Inactive",
     "upcoming": "Upcoming episodes",
     "upcomingEmpty": "No upcoming episodes.",
-    "episode": "S{season}E{episode} — {title}"
+    "episode": "S{season}E{episode} — {title}",
+    "webInterface": {
+      "title": "SerienRecorder",
+      "body": "Manage markers, seasons and settings in SerienRecorder's own web interface — DreamHub doesn't rebuild it.",
+      "show": "Show here",
+      "hide": "Hide",
+      "openTab": "Open in new tab"
+    }
   },
   "settings": {
     "page": {

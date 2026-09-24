@@ -89,10 +89,11 @@ type serviceList struct {
 	Services []Service `xml:"e2service"`
 }
 
-// EPGEvent is one <e2event> from /web/epgnownext (see ARCHITECTURE.md: the
-// endpoint takes bRef, a bouquet reference, not sRef — confirmed live
-// 2026-09-24 — and returns two events, now and next, per channel in that
-// bouquet).
+// EPGEvent is one <e2event> from /web/epgmulti (see ARCHITECTURE.md: the
+// endpoint takes bRef, a bouquet reference, plus a time/endTime window in
+// Unix seconds, and returns every event starting in that window for every
+// channel in the bouquet, in chronological order per channel — confirmed
+// live 2026-09-24).
 type EPGEvent struct {
 	ID               int64  `xml:"e2eventid" json:"id"`
 	Start            int64  `xml:"e2eventstart" json:"start"` // Unix seconds, UTC
@@ -150,8 +151,10 @@ type Client interface {
 	// Services lists the channels inside a bouquet (bouquetRef, as returned
 	// by Bouquets).
 	Services(ctx context.Context, bouquetRef string) ([]Service, error)
-	// EPGNowNext returns now/next events for every channel in a bouquet.
-	EPGNowNext(ctx context.Context, bouquetRef string) ([]EPGEvent, error)
+	// EPGMulti returns every event starting within [start, end) (Unix
+	// seconds) for every channel in a bouquet — the data source for
+	// GuideHub's timeline grid.
+	EPGMulti(ctx context.Context, bouquetRef string, start, end int64) ([]EPGEvent, error)
 }
 
 // ErrWritesDisabled is returned by the real client's write operations until
@@ -220,10 +223,14 @@ func (c *HTTPClient) Services(ctx context.Context, bouquetRef string) ([]Service
 	return list.Services, nil
 }
 
-func (c *HTTPClient) EPGNowNext(ctx context.Context, bouquetRef string) ([]EPGEvent, error) {
+func (c *HTTPClient) EPGMulti(ctx context.Context, bouquetRef string, start, end int64) ([]EPGEvent, error) {
 	var list epgEventList
-	q := url.Values{"bRef": {bouquetRef}}
-	if err := c.getXML(ctx, "/web/epgnownext?"+q.Encode(), &list); err != nil {
+	q := url.Values{
+		"bRef":    {bouquetRef},
+		"time":    {strconv.FormatInt(start, 10)},
+		"endTime": {strconv.FormatInt(end, 10)},
+	}
+	if err := c.getXML(ctx, "/web/epgmulti?"+q.Encode(), &list); err != nil {
 		return nil, err
 	}
 	return list.Events, nil

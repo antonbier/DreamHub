@@ -16,7 +16,7 @@ import type {
   ApiToken,
   Bouquet,
   ChangeEntry,
-  ChannelEvents,
+  ChannelSchedule,
   CreatedApiToken,
   DashboardLayout,
   DeviceInfo,
@@ -131,8 +131,11 @@ export const api = {
   },
   guide: {
     bouquets: () => request<{ bouquets: Bouquet[] }>('GET', '/api/v1/guide/bouquets'),
-    now: (bouquet: string) =>
-      request<{ channels: ChannelEvents[] }>('GET', `/api/v1/guide/now?bouquet=${encodeURIComponent(bouquet)}`),
+    grid: (bouquet: string, start: number, end: number) =>
+      request<{ channels: ChannelSchedule[] }>(
+        'GET',
+        `/api/v1/guide/grid?bouquet=${encodeURIComponent(bouquet)}&start=${start}&end=${end}`,
+      ),
   },
   series: {
     markers: () => request<{ markers: SeriesMarker[] }>('GET', '/api/v1/series/markers'),

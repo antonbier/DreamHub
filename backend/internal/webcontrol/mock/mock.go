@@ -116,13 +116,37 @@ func (*Client) Services(ctx context.Context, bouquetRef string) ([]webcontrol.Se
 	}, nil
 }
 
-func (c *Client) EPGNowNext(ctx context.Context, bouquetRef string) ([]webcontrol.EPGEvent, error) {
+// epgSchedule is a full evening's worth of events for the mock's 2
+// channels, so switching the guide's time window actually shows different
+// programming — not just the 2 events an earlier now/next-only mock had.
+// "Bauer sucht Frau International" and "The Rookie" deliberately match the
+// two fixture timers above (same channel, same times): the guide and
+// TimerHub tell a consistent story about the same evening.
+func epgSchedule() []webcontrol.EPGEvent {
+	rtl := webcontrol.Service{ServiceReference: "1:0:19:2EE3:441:1:C00000:0:0:0:", ServiceName: "RTL Television"}
+	zdfneo := webcontrol.Service{ServiceReference: "1:0:19:2B7A:3F3:1:C00000:0:0:0:", ServiceName: "zdf_neo HD"}
 	return []webcontrol.EPGEvent{
-		{ID: 1, Start: at(19, 40), Duration: 35 * 60, Title: "RTL Aktuell", ServiceReference: "1:0:19:2EE3:441:1:C00000:0:0:0:", ServiceName: "RTL Television"},
-		{ID: 2, Start: at(20, 15), Duration: 60 * 60, Title: "Bauer sucht Frau International", ServiceReference: "1:0:19:2EE3:441:1:C00000:0:0:0:", ServiceName: "RTL Television"},
-		{ID: 3, Start: at(19, 45), Duration: 75 * 60, Title: "heute-show", ServiceReference: "1:0:19:2B7A:3F3:1:C00000:0:0:0:", ServiceName: "zdf_neo HD"},
-		{ID: 4, Start: at(21, 0), Duration: 45 * 60, Title: "The Rookie", ServiceReference: "1:0:19:2B7A:3F3:1:C00000:0:0:0:", ServiceName: "zdf_neo HD"},
-	}, nil
+		{ID: 1, Start: at(19, 5), Duration: 35 * 60, Title: "Explosiv – Das Magazin", ServiceReference: rtl.ServiceReference, ServiceName: rtl.ServiceName},
+		{ID: 2, Start: at(19, 40), Duration: 35 * 60, Title: "RTL Aktuell", ServiceReference: rtl.ServiceReference, ServiceName: rtl.ServiceName},
+		{ID: 3, Start: at(20, 15), Duration: 60 * 60, Title: "Bauer sucht Frau International", ServiceReference: rtl.ServiceReference, ServiceName: rtl.ServiceName},
+		{ID: 4, Start: at(21, 15), Duration: 60 * 60, Title: "Undercover Boss", ServiceReference: rtl.ServiceReference, ServiceName: rtl.ServiceName},
+		{ID: 5, Start: at(22, 15), Duration: 60 * 60, Title: "stern TV", ServiceReference: rtl.ServiceReference, ServiceName: rtl.ServiceName},
+		{ID: 6, Start: at(18, 30), Duration: 75 * 60, Title: "Notruf Hafenkante", ServiceReference: zdfneo.ServiceReference, ServiceName: zdfneo.ServiceName},
+		{ID: 7, Start: at(19, 45), Duration: 75 * 60, Title: "heute-show", ServiceReference: zdfneo.ServiceReference, ServiceName: zdfneo.ServiceName},
+		{ID: 8, Start: at(21, 0), Duration: 45 * 60, Title: "The Rookie", ServiceReference: zdfneo.ServiceReference, ServiceName: zdfneo.ServiceName},
+		{ID: 9, Start: at(21, 45), Duration: 45 * 60, Title: "The Rookie: Feds", ServiceReference: zdfneo.ServiceReference, ServiceName: zdfneo.ServiceName},
+		{ID: 10, Start: at(22, 30), Duration: 60 * 60, Title: "Bones", ServiceReference: zdfneo.ServiceReference, ServiceName: zdfneo.ServiceName},
+	}
+}
+
+func (c *Client) EPGMulti(ctx context.Context, bouquetRef string, start, end int64) ([]webcontrol.EPGEvent, error) {
+	var out []webcontrol.EPGEvent
+	for _, e := range epgSchedule() {
+		if e.Start >= start && e.Start < end {
+			out = append(out, e)
+		}
+	}
+	return out, nil
 }
 
 func (c *Client) AddTimer(ctx context.Context, t webcontrol.NewTimer) error {

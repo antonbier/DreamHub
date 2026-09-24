@@ -26,6 +26,32 @@
     </div>
 
     <template v-if="!item || item.status !== 'unavailable'">
+      <section class="mt-5 flex flex-wrap items-center justify-between gap-3 rounded border border-line bg-tile p-4">
+        <div>
+          <h2 class="text-[14px] font-semibold text-text">{{ t('series.webInterface.title') }}</h2>
+          <p class="mt-0.5 text-[12.5px] text-muted">{{ t('series.webInterface.body') }}</p>
+        </div>
+        <div class="flex shrink-0 gap-2">
+          <button type="button" class="rounded border border-line px-3 py-1.5 text-[13px] text-text hover:bg-field" @click="showEmbed = !showEmbed">
+            {{ showEmbed ? t('series.webInterface.hide') : t('series.webInterface.show') }}
+          </button>
+          <a
+            :href="serienRecorderUrl"
+            target="_blank"
+            rel="noopener"
+            class="rounded bg-accent px-3 py-1.5 text-[13px] font-semibold text-bg"
+          >
+            {{ t('series.webInterface.openTab') }}
+          </a>
+        </div>
+      </section>
+      <iframe
+        v-if="showEmbed"
+        :src="serienRecorderUrl"
+        :title="t('series.webInterface.title')"
+        class="mt-3 h-[600px] w-full rounded border border-line"
+      />
+
       <p v-if="loading" class="mt-5 text-[14px] text-muted">{{ t('common.loading') }}</p>
       <p v-else-if="loadFailed" class="mt-5 text-[14px] text-muted">{{ t('common.backendUnreachable') }}</p>
       <template v-else>
@@ -87,6 +113,16 @@ const markers = ref<SeriesMarker[]>([])
 const upcoming = ref<UpcomingEpisode[]>([])
 const loading = ref(true)
 const loadFailed = ref(false)
+const showEmbed = ref(false)
+
+// SerienRecorder's own web GUI (confirmed reachable, no X-Frame-Options/CSP
+// that would block embedding — ARCHITECTURE.md, #10) lives on the same
+// device, same host, just WebControl's port (80) rather than DreamHub's
+// (8080) — this only resolves correctly when DreamHub is actually deployed
+// on the box itself (PROJECT_PLAN.md's packaging plan), not in local dev
+// against a different device. DreamHub deliberately doesn't rebuild
+// SerienRecorder's own UI (PRINCIPLES.md) — this just gets the user to it.
+const serienRecorderUrl = computed(() => `${window.location.protocol}//${window.location.hostname}/serienrecorderui/`)
 
 function formatTime(unixSeconds: number): string {
   return new Intl.DateTimeFormat(locale.value, {

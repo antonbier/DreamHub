@@ -65,6 +65,10 @@ export interface HealthInfo {
   status: string
   version: string
   time: string // RFC3339, UTC
+  // The box's own IANA zone (e.g. "Europe/Berlin"), derived from
+  // /etc/localtime; empty if it couldn't be resolved. Backs the per-user
+  // "box" display-zone mode (ROADMAP.md, "Time zones").
+  serverTimeZone: string
 }
 
 // GET /api/v1/whoami.
@@ -202,6 +206,40 @@ export interface UpcomingEpisode {
   episode: string
   startTime: number // Unix seconds, UTC
   fsID: string
+}
+
+// backend/internal/ai.Recommendation, as returned by
+// POST /api/v1/discovery/recommendations.
+export interface Recommendation {
+  title: string
+  serviceReference: string
+  serviceName: string
+  start: number // Unix seconds, UTC
+  duration: number // seconds
+  reason: string
+}
+
+// GET /api/v1/discovery/status and the same fields on the POST response.
+export interface DiscoveryStatus {
+  usedToday: number
+  dailyLimit: number
+}
+
+// backend/internal/plan.Change / .Plan — a previewed change, returned by
+// POST /api/v1/timers/plan and applied by POST /api/v1/plans/{id}/apply
+// (PRINCIPLES.md, "Preview and confirm").
+export interface PlanChange {
+  type: string
+  before?: unknown
+  after?: unknown
+}
+export interface Plan {
+  id: string
+  action: string
+  createdAt: string
+  expiresAt: string
+  changes: PlanChange[]
+  warnings: Problem[]
 }
 
 // backend/internal/dashboard.Tile / .Layout.

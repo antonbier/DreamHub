@@ -3,7 +3,9 @@
 // settings). Most hub routes render HubView, a placeholder until that
 // hub's own screens are built (ROADMAP.md, "v1 — hubs") — the plumbing
 // behind it (navigation, status, settings) is already live. MediaHub,
-// GuideHub and SeriesHub have real screens so far.
+// GuideHub, SeriesHub and DiscoveryHub have real screens so far.
+// /diagnostics is a core route, not a hub — see Navigation() in
+// backend/internal/hub/hub.go.
 import { createRouter, createWebHistory } from 'vue-router'
 import { isOnboardingComplete } from '@/lib/onboarding'
 
@@ -44,9 +46,18 @@ const router = createRouter({
       component: () => import('@/views/SeriesHubView.vue'),
     },
     {
-      // TimerHub, DiscoveryHub, SystemHub, AdminHub — one placeholder
-      // route per hub path.
-      path: '/:hub(timers|discovery|system|admin)',
+      path: '/discovery',
+      name: 'discovery',
+      component: () => import('@/views/DiscoveryHubView.vue'),
+    },
+    {
+      path: '/diagnostics',
+      name: 'diagnostics',
+      component: () => import('@/views/DiagnosticsView.vue'),
+    },
+    {
+      // TimerHub, SystemHub, AdminHub — one placeholder route per hub path.
+      path: '/:hub(timers|system|admin)',
       name: 'hub',
       component: () => import('@/views/HubView.vue'),
       props: true,

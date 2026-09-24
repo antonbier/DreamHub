@@ -21,10 +21,13 @@ import type {
   DashboardLayout,
   DeviceInfo,
   Disk,
+  DiscoveryStatus,
   HealthInfo,
   HubStatus,
   Movie,
   Navigation,
+  Plan,
+  Recommendation,
   SearchResult,
   SeriesMarker,
   SettingsView,
@@ -125,6 +128,24 @@ export const api = {
   },
   hubs: () => request<{ hubs: HubStatus[] }>('GET', '/api/v1/hubs'),
   timers: () => request<{ timers: Timer[]; tuners: number }>('GET', '/api/v1/timers'),
+  // backend/internal/hubs.createRequest (internal/hubs/timer.go) — used
+  // directly by TimerHub's own future UI and by DiscoveryHub's "create
+  // timer from a recommendation" hand-off (CONCEPT.md: DiscoveryHub calls
+  // TimerHub's API, not its Go code).
+  timerPlan: (req: {
+    serviceReference: string
+    serviceName: string
+    name: string
+    description?: string
+    begin: number
+    end: number
+    marginBefore?: number
+    marginAfter?: number
+  }) => request<{ plan: Plan }>('POST', '/api/v1/timers/plan', req),
+  plans: {
+    // backend/internal/plan.Result.
+    apply: (id: string) => request<{ planId: string; action: string }>('POST', `/api/v1/plans/${encodeURIComponent(id)}/apply`),
+  },
   media: {
     movies: () => request<{ movies: Movie[] }>('GET', '/api/v1/media/movies'),
     disk: () => request<{ disks: Disk[] }>('GET', '/api/v1/media/disk'),
@@ -140,6 +161,11 @@ export const api = {
   series: {
     markers: () => request<{ markers: SeriesMarker[] }>('GET', '/api/v1/series/markers'),
     upcoming: () => request<{ episodes: UpcomingEpisode[] }>('GET', '/api/v1/series/upcoming'),
+  },
+  discovery: {
+    status: () => request<DiscoveryStatus>('GET', '/api/v1/discovery/status'),
+    generate: (bouquet: string) =>
+      request<DiscoveryStatus & { recommendations: Recommendation[] }>('POST', '/api/v1/discovery/recommendations', { bouquet }),
   },
   dashboard: {
     get: () => request<DashboardLayout>('GET', '/api/v1/dashboard'),

@@ -102,6 +102,7 @@ import { api } from '@/api/client'
 import Icon from '@/components/Icon.vue'
 import { useNavigationStore } from '@/stores/navigation'
 import { useProblem } from '@/composables/useProblem'
+import { useDisplayTimeZone } from '@/composables/useDisplayTimeZone'
 import type { Bouquet, ChannelSchedule, EPGEvent } from '@/api/types'
 
 // Matches the w-28 (7rem) name-column class on every row and header below —
@@ -112,6 +113,7 @@ const WINDOW_HOURS = 4
 const { t, locale } = useI18n()
 const navigation = useNavigationStore()
 const { describe, describeFix } = useProblem()
+const { timeZone } = useDisplayTimeZone()
 
 const item = computed(() => navigation.navigation?.sections.flatMap((s) => s.items).find((i) => i.path === '/guide'))
 
@@ -125,7 +127,9 @@ const loadFailed = ref(false)
 const windowEnd = computed(() => windowStart.value + WINDOW_HOURS * 3600)
 
 function formatHour(unixSeconds: number): string {
-  return new Intl.DateTimeFormat(locale.value, { hour: '2-digit', minute: '2-digit', hourCycle: 'h23' }).format(unixSeconds * 1000)
+  return new Intl.DateTimeFormat(locale.value, { hour: '2-digit', minute: '2-digit', hourCycle: 'h23', timeZone: timeZone.value }).format(
+    unixSeconds * 1000,
+  )
 }
 
 const windowLabel = computed(() => `${formatHour(windowStart.value)} – ${formatHour(windowEnd.value)}`)

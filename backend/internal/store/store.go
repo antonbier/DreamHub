@@ -120,6 +120,15 @@ var migrations = []string{
 		created_at TEXT NOT NULL
 	);
 	`,
+	`
+	-- DiscoveryHub's daily AI call budget (ROADMAP.md: "ai.dailyLimit" is a
+	-- cost guard) — one row per UTC calendar date, incremented before each
+	-- real AI call so a hung/slow response can't be retried past the limit.
+	CREATE TABLE ai_usage (
+		date  TEXT PRIMARY KEY,
+		count INTEGER NOT NULL DEFAULT 0
+	);
+	`,
 }
 
 func (s *Store) migrate(ctx context.Context) error {

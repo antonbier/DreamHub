@@ -12,6 +12,8 @@ import (
 	"os"
 	"os/exec"
 
+	"github.com/antonbier/DreamHub/backend/internal/ai"
+	aimock "github.com/antonbier/DreamHub/backend/internal/ai/mock"
 	"github.com/antonbier/DreamHub/backend/internal/api"
 	"github.com/antonbier/DreamHub/backend/internal/app"
 	"github.com/antonbier/DreamHub/backend/internal/config"
@@ -37,6 +39,7 @@ func run(logger *slog.Logger, level *logging.Level) error {
 
 	var wc webcontrol.Client
 	var sr serienrecorder.Client
+	var aiClient ai.Client
 	switch cfg.Mode {
 	case config.ModeLive:
 		c := webcontrol.NewHTTPClient(cfg.WebControlURL)
@@ -45,10 +48,18 @@ func run(logger *slog.Logger, level *logging.Level) error {
 		// SerienRecorder's API lives on the same device, same host/port,
 		// just a different path (ARCHITECTURE.md, issue #10).
 		sr = serienrecorder.NewHTTPClient(cfg.WebControlURL)
+		// The AI provider is a separate, unrelated external service (not on
+		// the device), but follows the same single mock/live switch as
+		// everything else, per PRINCIPLES.md's "Mock-first development".
+		// It still won't be called without a real API key configured in
+		// Settings (connector.OpenAI's Check, and ai.OpenAIClient's own
+		// ErrNotConfigured).
+		aiClient = ai.NewOpenAIClient()
 		logger.Info("webcontrol client mode", "mode", "live", "url", cfg.WebControlURL, "deviceWrites", cfg.EnableDeviceWrites)
 	default:
 		wc = mock.New()
 		sr = srmock.New()
+		aiClient = aimock.New()
 		logger.Info("webcontrol client mode", "mode", "mock")
 	}
 
@@ -56,6 +67,7 @@ func run(logger *slog.Logger, level *logging.Level) error {
 		DataDir:    cfg.DataDir,
 		WebControl: wc,
 		Series:     sr,
+		AI:         aiClient,
 		Mock:       cfg.Mode == config.ModeMock,
 		LookPath:   exec.LookPath,
 		Logger:     logger,

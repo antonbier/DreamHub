@@ -32,11 +32,13 @@ import LoginScreen from './components/LoginScreen.vue'
 import { usePreferencesStore } from './stores/preferences'
 import { useNavigationStore } from './stores/navigation'
 import { useAuth } from './composables/useAuth'
+import { useGlobalShortcuts } from './composables/useGlobalShortcuts'
 import type { NavSection } from './api/types'
 
 const preferences = usePreferencesStore()
 const navigation = useNavigationStore()
 const { authState, check } = useAuth()
+useGlobalShortcuts()
 
 // Shown only while the backend has never answered yet, so the sidebar
 // isn't just empty — Dashboard and Settings always exist.

@@ -9,6 +9,7 @@ import (
 	"net/http"
 	"time"
 
+	"github.com/antonbier/DreamHub/backend/internal/ai"
 	"github.com/antonbier/DreamHub/backend/internal/api"
 	"github.com/antonbier/DreamHub/backend/internal/apitoken"
 	"github.com/antonbier/DreamHub/backend/internal/auth"
@@ -32,6 +33,8 @@ type Options struct {
 	// used by SeriesHub and the SerienRecorder connector's reachability
 	// check. Required whenever Mock is false.
 	Series serienrecorder.Client
+	// AI is DiscoveryHub's recommendation client (internal/ai).
+	AI ai.Client
 	// Mock is true when running against the mock WebControl/Series clients;
 	// the SerienRecorder connector then reports OK without a real check.
 	Mock bool
@@ -135,6 +138,7 @@ func New(ctx context.Context, o Options) (*App, error) {
 	mediaHub := &hubs_.Media{WC: o.WebControl}
 	guideHub := &hubs_.Guide{WC: o.WebControl}
 	seriesHub := &hubs_.Series{SR: o.Series}
+	discoveryHub := &hubs_.Discovery{WC: o.WebControl, AI: o.AI, Store: st, Settings: svc, Now: now}
 	systemHub := &hubs_.System{Store: st}
 	adminHub := &hubs_.Admin{Store: st, Level: level}
 
@@ -160,6 +164,7 @@ func New(ctx context.Context, o Options) (*App, error) {
 			{HubID: hub.IDMedia, Prefixes: []string{"/api/v1/media"}, Register: mediaHub.Mount},
 			{HubID: hub.IDGuide, Prefixes: []string{"/api/v1/guide"}, Register: guideHub.Mount},
 			{HubID: hub.IDSeries, Prefixes: []string{"/api/v1/series"}, Register: seriesHub.Mount},
+			{HubID: hub.IDDiscovery, Prefixes: []string{"/api/v1/discovery"}, Register: discoveryHub.Mount},
 			{HubID: hub.IDSystem, Prefixes: []string{"/api/v1/changes"}, Register: systemHub.Mount},
 			{HubID: hub.IDAdmin, Prefixes: []string{"/api/v1/admin"}, Register: adminHub.Mount},
 		},

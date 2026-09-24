@@ -13,10 +13,13 @@ import { i18n, isSupportedLocale, type Locale } from '@/i18n'
 
 export type Appearance = 'dark' | 'light' | 'system'
 export type NavLabels = 'descriptive' | 'hub'
+export type TimezoneMode = 'box' | 'browser' | 'fixed'
 
 const KEY_LANGUAGE = 'general.language'
 const KEY_APPEARANCE = 'general.appearance'
 const KEY_NAV_LABELS = 'general.navLabels'
+const KEY_TIMEZONE_MODE = 'general.timezoneMode'
+const KEY_TIMEZONE = 'general.timezone'
 
 function applyTheme(appearance: Appearance) {
   const resolved =
@@ -35,6 +38,8 @@ export const usePreferencesStore = defineStore('preferences', {
     language: 'en' as Locale,
     appearance: 'dark' as Appearance,
     navLabels: 'descriptive' as NavLabels,
+    timezoneMode: 'box' as TimezoneMode,
+    timezone: '',
     loaded: false,
     reachable: true,
   }),
@@ -58,6 +63,12 @@ export const usePreferencesStore = defineStore('preferences', {
         if (navLabels === 'descriptive' || navLabels === 'hub') {
           this.navLabels = navLabels
         }
+        const timezoneMode = value(KEY_TIMEZONE_MODE)
+        if (timezoneMode === 'box' || timezoneMode === 'browser' || timezoneMode === 'fixed') {
+          this.timezoneMode = timezoneMode
+        }
+        const timezone = value(KEY_TIMEZONE)
+        if (typeof timezone === 'string') this.timezone = timezone
         this.reachable = true
       } catch (err) {
         // Network error (no HTTP response at all) means the backend isn't

@@ -27,16 +27,19 @@
 </template>
 
 <script setup lang="ts">
-import { onMounted } from 'vue'
+import { computed, onMounted } from 'vue'
 import { useI18n } from 'vue-i18n'
 import { useDeviceStatus } from '@/composables/useDeviceStatus'
+import { useDisplayTimeZone } from '@/composables/useDisplayTimeZone'
 
 const { t } = useI18n()
 const status = useDeviceStatus()
+const { timeZone: displayTimeZone } = useDisplayTimeZone()
 onMounted(status.checkClock)
 
-// The per-user display time zone setting is a separate, still-open item
-// (ROADMAP.md) — this is honestly the browser's own zone, not that
-// preference.
-const timeZone = Intl.DateTimeFormat().resolvedOptions().timeZone
+// The effective display zone (general.timezoneMode/general.timezone) when
+// resolved, falling back to the browser's own — resolvedOptions() always
+// returns a concrete IANA name even when Intl's `timeZone` option was
+// undefined, so this line is honest either way.
+const timeZone = computed(() => Intl.DateTimeFormat(undefined, { timeZone: displayTimeZone.value }).resolvedOptions().timeZone)
 </script>

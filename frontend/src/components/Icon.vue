@@ -43,6 +43,8 @@ const ICONS: Record<string, string> = {
     '<rect x="3" y="4" width="18" height="6" rx="1.5"/><rect x="3" y="14" width="18" height="6" rx="1.5"/><path d="M7 7h.01M7 17h.01"/>',
   admin:
     '<path d="M12 3l7 3v5c0 4.8-3 8.4-7 10-4-1.6-7-5.2-7-10V6l7-3z"/><path d="M9 12.2l2 2 4-4.2"/>',
+  diagnostics:
+    '<rect x="3" y="4" width="18" height="16" rx="2"/><path d="M6 13h2.7l1.3-3.5 2.4 7 1.3-3.5H18"/>',
   search: '<circle cx="10.5" cy="10.5" r="6.5"/><path d="M20 20l-4.8-4.8"/>',
   bell: '<path d="M6 10a6 6 0 0 1 12 0c0 4 1.5 5.5 1.5 5.5h-15S6 14 6 10z"/><path d="M9.5 18.5a2.5 2.5 0 0 0 5 0"/>',
   globe:

@@ -1,0 +1,180 @@
+package ai
+
+import (
+	"bytes"
+	"context"
+	"encoding/json"
+	"errors"
+	"fmt"
+	"io"
+	"net/http"
+	"time"
+)
+
+// ErrNotConfigured is returned when no API key was supplied.
+var ErrNotConfigured = errors.New("ai: no API key configured")
+
+// maxItems caps the candidate list sent to the model — a full day across
+// 30 channels can be several hundred events; DiscoveryHub already narrows
+// to a bouquet and a time window, this is a last-resort ceiling.
+const maxItems = 300
+
+// maxPicks caps how many recommendations a single response can return,
+// regardless of what the model claims.
+const maxPicks = 8
+
+const defaultModel = "gpt-4o-mini"
+
+const systemPrompt = `You are DreamHub's TV recommendation assistant. You will receive a numbered, JSON-encoded list of upcoming broadcasts (today's EPG for the user's selected channels). Recommend up to 8 broadcasts genuinely worth watching or recording, favoring variety over repeats of the same show. Respond with ONLY a JSON object of this exact shape: {"picks":[{"index":<integer index from the list>,"reason":"<one short sentence, same language as the titles>"}]}. Only use indices that appear in the given list. If nothing stands out, return {"picks":[]}.`
+
+// OpenAIClient calls OpenAI's chat completions API.
+type OpenAIClient struct {
+	HTTP    *http.Client
+	BaseURL string // overridable in tests; defaults to the real API
+}
+
+// NewOpenAIClient returns an OpenAIClient with a generous timeout — a
+// completion can take several seconds.
+func NewOpenAIClient() *OpenAIClient {
+	return &OpenAIClient{HTTP: &http.Client{Timeout: 30 * time.Second}, BaseURL: "https://api.openai.com"}
+}
+
+type promptItem struct {
+	Index           int    `json:"index"`
+	Title           string `json:"title"`
+	Description     string `json:"description,omitempty"`
+	Channel         string `json:"channel"`
+	StartUTC        string `json:"startUtc"`
+	DurationMinutes int64  `json:"durationMinutes"`
+}
+
+type pick struct {
+	Index  int    `json:"index"`
+	Reason string `json:"reason"`
+}
+
+type picksResponse struct {
+	Picks []pick `json:"picks"`
+}
+
+type chatRequest struct {
+	Model          string             `json:"model"`
+	Messages       []chatMessage      `json:"messages"`
+	ResponseFormat chatResponseFormat `json:"response_format"`
+	MaxTokens      int                `json:"max_tokens"`
+}
+
+type chatMessage struct {
+	Role    string `json:"role"`
+	Content string `json:"content"`
+}
+
+type chatResponseFormat struct {
+	Type string `json:"type"`
+}
+
+type chatResponse struct {
+	Choices []struct {
+		Message chatMessage `json:"message"`
+	} `json:"choices"`
+	Error *struct {
+		Message string `json:"message"`
+	} `json:"error"`
+}
+
+func (c *OpenAIClient) Recommend(ctx context.Context, apiKey, model string, items []EPGItem) ([]Recommendation, error) {
+	if apiKey == "" {
+		return nil, ErrNotConfigured
+	}
+	if len(items) == 0 {
+		return nil, nil
+	}
+	if len(items) > maxItems {
+		items = items[:maxItems]
+	}
+	if model == "" {
+		model = defaultModel
+	}
+
+	prompts := make([]promptItem, len(items))
+	for i, it := range items {
+		prompts[i] = promptItem{
+			Index: i, Title: it.Title, Description: truncate(it.Description, 200), Channel: it.ServiceName,
+			StartUTC: time.Unix(it.Start, 0).UTC().Format(time.RFC3339), DurationMinutes: it.Duration / 60,
+		}
+	}
+	userContent, err := json.Marshal(prompts)
+	if err != nil {
+		return nil, fmt.Errorf("ai: encoding candidate list: %w", err)
+	}
+
+	body, err := json.Marshal(chatRequest{
+		Model: model,
+		Messages: []chatMessage{
+			{Role: "system", Content: systemPrompt},
+			{Role: "user", Content: string(userContent)},
+		},
+		ResponseFormat: chatResponseFormat{Type: "json_object"},
+		MaxTokens:      600,
+	})
+	if err != nil {
+		return nil, fmt.Errorf("ai: encoding request: %w", err)
+	}
+
+	req, err := http.NewRequestWithContext(ctx, http.MethodPost, c.BaseURL+"/v1/chat/completions", bytes.NewReader(body))
+	if err != nil {
+		return nil, fmt.Errorf("ai: building request: %w", err)
+	}
+	req.Header.Set("Content-Type", "application/json")
+	req.Header.Set("Authorization", "Bearer "+apiKey)
+
+	resp, err := c.HTTP.Do(req)
+	if err != nil {
+		return nil, fmt.Errorf("ai: calling OpenAI: %w", err)
+	}
+	defer resp.Body.Close()
+	respBody, err := io.ReadAll(resp.Body)
+	if err != nil {
+		return nil, fmt.Errorf("ai: reading OpenAI response: %w", err)
+	}
+
+	var chat chatResponse
+	if err := json.Unmarshal(respBody, &chat); err != nil {
+		return nil, fmt.Errorf("ai: parsing OpenAI response: %w", err)
+	}
+	if chat.Error != nil {
+		return nil, fmt.Errorf("ai: OpenAI rejected the request: %s", chat.Error.Message)
+	}
+	if len(chat.Choices) == 0 {
+		return nil, fmt.Errorf("ai: OpenAI returned no choices")
+	}
+
+	var picks picksResponse
+	if err := json.Unmarshal([]byte(chat.Choices[0].Message.Content), &picks); err != nil {
+		return nil, fmt.Errorf("ai: parsing recommendation JSON: %w", err)
+	}
+
+	out := make([]Recommendation, 0, min(len(picks.Picks), maxPicks))
+	for _, p := range picks.Picks {
+		if len(out) >= maxPicks {
+			break
+		}
+		if p.Index < 0 || p.Index >= len(items) {
+			continue // grounding: never trust an out-of-range index
+		}
+		it := items[p.Index]
+		out = append(out, Recommendation{
+			Title: it.Title, ServiceReference: it.ServiceReference, ServiceName: it.ServiceName,
+			Start: it.Start, Duration: it.Duration, Reason: p.Reason,
+		})
+	}
+	return out, nil
+}
+
+func truncate(s string, n int) string {
+	r := []rune(s)
+	if len(r) <= n {
+		return s
+	}
+	return string(r[:n])
+}

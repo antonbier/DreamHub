@@ -64,9 +64,11 @@
 import { onMounted, ref } from 'vue'
 import { useI18n } from 'vue-i18n'
 import { api } from '@/api/client'
+import { useDisplayTimeZone } from '@/composables/useDisplayTimeZone'
 import type { ApiToken, CreatedApiToken } from '@/api/types'
 
 const { t, locale } = useI18n()
+const { timeZone } = useDisplayTimeZone()
 const tokens = ref<ApiToken[]>([])
 const loading = ref(true)
 const newName = ref('')
@@ -77,7 +79,7 @@ const copied = ref(false)
 const confirmingId = ref<number | null>(null)
 
 function formatDate(iso: string): string {
-  return new Intl.DateTimeFormat(locale.value, { dateStyle: 'medium' }).format(new Date(iso))
+  return new Intl.DateTimeFormat(locale.value, { dateStyle: 'medium', timeZone: timeZone.value }).format(new Date(iso))
 }
 
 async function load() {

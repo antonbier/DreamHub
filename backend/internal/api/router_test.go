@@ -13,6 +13,7 @@ import (
 	"testing"
 	"time"
 
+	aimock "github.com/antonbier/DreamHub/backend/internal/ai/mock"
 	"github.com/antonbier/DreamHub/backend/internal/api"
 	"github.com/antonbier/DreamHub/backend/internal/app"
 	"github.com/antonbier/DreamHub/backend/internal/httpx"
@@ -43,6 +44,7 @@ func newEnvWith(t *testing.T, wc webcontrol.Client) *env {
 		DataDir:    t.TempDir(),
 		WebControl: wc,
 		Series:     srmock.New(),
+		AI:         aimock.New(),
 		Mock:       true,
 		LookPath:   func(string) (string, error) { return "/usr/bin/journalctl", nil },
 		Logger:     discardLogger(),
@@ -286,6 +288,84 @@ func TestSearch_FindsARealSeriesByName(t *testing.T) {
 	json.Unmarshal(b, &body)
 	if len(body.Results) != 1 || body.Results[0].HubID != "series" || body.Results[0].Path != "/series" {
 		t.Fatalf("expected exactly the mock's tracked series, got %+v", body.Results)
+	}
+}
+
+func TestDiscovery_StatusReportsUsageAndLimit(t *testing.T) {
+	e := newEnv(t)
+	resp, b := e.do(t, "GET", "/api/v1/discovery/status", "", nil)
+	if resp.StatusCode != http.StatusOK {
+		t.Fatalf("expected 200, got %d: %s", resp.StatusCode, b)
+	}
+	var body struct {
+		UsedToday  int   `json:"usedToday"`
+		DailyLimit int64 `json:"dailyLimit"`
+	}
+	json.Unmarshal(b, &body)
+	if body.UsedToday != 0 || body.DailyLimit != 200 {
+		t.Errorf("expected 0 used of the default 200/day, got %+v", body)
+	}
+}
+
+func TestDiscovery_GenerateRequiresAnAPIKey(t *testing.T) {
+	e := newEnv(t)
+	resp, b := e.do(t, "POST", "/api/v1/discovery/recommendations", `{"bouquet":"any"}`, nil)
+	if resp.StatusCode != http.StatusConflict {
+		t.Fatalf("expected 409 without an API key configured, got %d: %s", resp.StatusCode, b)
+	}
+}
+
+func TestDiscovery_GenerateReturnsGroundedRecommendationsAndSpendsBudget(t *testing.T) {
+	e := newEnv(t)
+	e.do(t, "PATCH", "/api/v1/settings", `{"values":{"ai.openai.apiKey":"sk-test-1234"}}`, nil)
+
+	bRef := `1:7:1:0:0:0:0:0:0:0:FROM BOUQUET "userbouquet.favourites.tv" ORDER BY bouquet`
+	body := `{"bouquet":` + strconv.Quote(bRef) + `}`
+	resp, b := e.do(t, "POST", "/api/v1/discovery/recommendations", body, nil)
+	if resp.StatusCode != http.StatusOK {
+		t.Fatalf("expected 200, got %d: %s", resp.StatusCode, b)
+	}
+	var out struct {
+		Recommendations []struct {
+			Title            string `json:"title"`
+			ServiceReference string `json:"serviceReference"`
+			Reason           string `json:"reason"`
+		} `json:"recommendations"`
+		UsedToday  int   `json:"usedToday"`
+		DailyLimit int64 `json:"dailyLimit"`
+	}
+	json.Unmarshal(b, &out)
+	if len(out.Recommendations) == 0 {
+		t.Fatalf("expected at least one recommendation from the mock's evening schedule, got %+v", out)
+	}
+	for _, r := range out.Recommendations {
+		if r.Title == "" || r.ServiceReference == "" || r.Reason == "" {
+			t.Errorf("every recommendation must be grounded in a real event: %+v", r)
+		}
+	}
+	if out.UsedToday != 1 {
+		t.Errorf("expected usedToday=1 after one call, got %d", out.UsedToday)
+	}
+
+	_, b = e.do(t, "GET", "/api/v1/discovery/status", "", nil)
+	var status struct {
+		UsedToday int `json:"usedToday"`
+	}
+	json.Unmarshal(b, &status)
+	if status.UsedToday != 1 {
+		t.Errorf("expected status to reflect the spent budget, got %+v", status)
+	}
+}
+
+func TestDiscovery_GenerateRespectsTheDailyLimit(t *testing.T) {
+	e := newEnv(t)
+	e.do(t, "PATCH", "/api/v1/settings", `{"values":{"ai.openai.apiKey":"sk-test-1234","ai.dailyLimit":0}}`, nil)
+
+	bRef := `1:7:1:0:0:0:0:0:0:0:FROM BOUQUET "userbouquet.favourites.tv" ORDER BY bouquet`
+	body := `{"bouquet":` + strconv.Quote(bRef) + `}`
+	resp, b := e.do(t, "POST", "/api/v1/discovery/recommendations", body, nil)
+	if resp.StatusCode != http.StatusTooManyRequests {
+		t.Fatalf("expected 429 with a 0/day limit, got %d: %s", resp.StatusCode, b)
 	}
 }
 

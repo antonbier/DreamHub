@@ -282,6 +282,7 @@ func (r *Registry) Navigation(statuses []Status, role store.Role, labels string)
 			sec.Items = append(sec.Items, item)
 		}
 		if g == GroupBottom {
+			sec.Items = append(sec.Items, NavItem{ID: "diagnostics", Kind: "core", Label: "nav.diagnostics", Icon: "diagnostics", Path: "/diagnostics"})
 			sec.Items = append(sec.Items, NavItem{ID: "settings", Kind: "core", Label: "nav.settings", Icon: "settings", Path: "/settings"})
 		}
 		if len(sec.Items) > 0 {

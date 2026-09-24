@@ -4,6 +4,7 @@
   },
   "nav": {
     "dashboard": "Startseite",
+    "diagnostics": "Diagnose",
     "settings": "Einstellungen",
     "group": {
       "media": "Medien",
@@ -37,6 +38,10 @@
     },
     "hub": {
       "dependencyUnavailable": "{hub} ist nicht verfügbar"
+    },
+    "timer": {
+      "conflict": "Kollidiert mit einer anderen Aufnahme — nur {tuners} Tuner verfügbar.",
+      "duplicate": "Ein Timer für „{name}“ zu genau dieser Zeit existiert bereits."
     }
   },
   "fix": {
@@ -218,6 +223,45 @@
       "show": "Hier anzeigen",
       "hide": "Ausblenden",
       "openTab": "In neuem Tab öffnen"
+    }
+  },
+  "discovery": {
+    "generate": "Empfehlungen generieren",
+    "generating": "Generiere…",
+    "budget": "{used} / {limit} heute genutzt",
+    "empty": "Bouquet wählen und Empfehlungen aus dessen EPG generieren.",
+    "noPicks": "Für dieses Bouquet gab es gerade nichts Passendes.",
+    "createTimer": "Timer anlegen",
+    "timerHubUnavailable": "Timer ist nicht verfügbar.",
+    "confirm": "Bestätigen",
+    "cancel": "Abbrechen",
+    "created": "Timer angelegt"
+  },
+  "diagnostics": {
+    "title": "Diagnose",
+    "groupEmpty": "Keine.",
+    "disabled": "(deaktiviert)",
+    "group": {
+      "unavailable": "Nicht verfügbar",
+      "degraded": "Eingeschränkt",
+      "disabled": "Deaktiviert",
+      "available": "Verfügbar"
+    }
+  },
+  "error": {
+    "discovery": {
+      "ai_not_configured": "Zuerst einen OpenAI-API-Schlüssel in den Einstellungen hinterlegen.",
+      "ai_budget_exceeded": "Das heutige KI-Empfehlungsbudget ist aufgebraucht.",
+      "ai_unavailable": "Gerade keine Empfehlungen möglich.",
+      "webcontrol_unavailable": "WebControl nicht erreichbar."
+    },
+    "plan": {
+      "plan_stale": "Seit der Vorschau hat sich etwas geändert — bitte erneut versuchen.",
+      "plan_not_found": "Diese Vorschau ist abgelaufen — bitte erneut versuchen.",
+      "plan_forbidden": "Diese Vorschau gehört jemand anderem.",
+      "writes_disabled": "Änderungen an der Box sind deaktiviert, bis Schreibzugriff auf dem Gerät bestätigt ist.",
+      "apply_failed": "Der Timer konnte nicht angelegt werden.",
+      "validation_failed": "Die Timer-Angaben sind ungültig."
     }
   },
   "settings": {

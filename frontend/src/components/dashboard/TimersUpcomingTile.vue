@@ -28,11 +28,13 @@
 import { computed, onMounted, ref } from 'vue'
 import { useI18n } from 'vue-i18n'
 import { api } from '@/api/client'
+import { useDisplayTimeZone } from '@/composables/useDisplayTimeZone'
 import type { Timer } from '@/api/types'
 
 const MAX_ROWS = 5
 
 const { t, locale } = useI18n()
+const { timeZone } = useDisplayTimeZone()
 const timers = ref<Timer[]>([])
 const loading = ref(true)
 const unavailable = ref(false)
@@ -46,7 +48,7 @@ const upcoming = computed(() => {
 })
 
 function formatTime(unixSeconds: number): string {
-  return new Intl.DateTimeFormat(locale.value, { hour: '2-digit', minute: '2-digit' }).format(unixSeconds * 1000)
+  return new Intl.DateTimeFormat(locale.value, { hour: '2-digit', minute: '2-digit', timeZone: timeZone.value }).format(unixSeconds * 1000)
 }
 
 onMounted(async () => {

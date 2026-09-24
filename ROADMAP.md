@@ -63,10 +63,10 @@ Releases: **Foundation** → **v1** → **v1.1** → **Later**. GitHub milestone
 - [ ] Remaining parts of the hub contract: search providers now cover TimerHub, MediaHub and SeriesHub (GuideHub still open — see its own section), events still just TimerHub-triggered status changes — extend both to the rest of the hubs as they're built; custom/criteria-based tile types (CONCEPT.md: source + filters + sort + limit + display, reusing a hub's search provider — the dashboard's tile *mechanics* are ready for this, only the hub-contributed catalog entries are missing)
 - [ ] Core event bus (hub events → notifications, later AutomationHub) — the change log now carries one real system-detected event type (`hub.statusChanged`); a proper bus covering every hub action, with persistence designed for it rather than piggybacked on the change log, is still open
 - [ ] Live updates via WebSocket
-- [ ] Runtime drop-in locales from `/data/dreamhub/locales/`; `Intl`-based formatting for actual dates/times once hubs display any (the dashboard's timers tile already uses `Intl` for its own time column, per-user display zone still open below)
-- [ ] Time zones: UTC everywhere internally and the per-user display zone setting exist; the display logic and hint are still open — the timers tile, onboarding's clock check and the status strip all use the browser's own zone directly rather than the (not yet built) display-zone preference
-- [ ] Keyboard shortcuts beyond search (`g`+letter, arrows), accessible contrast and labels audit
-- [ ] Diagnostics: a dedicated page with reason and fix instructions across all hubs at once (each hub's own placeholder page, the notifications bell and now the status strip already show a version of this per hub or in aggregate)
+- [ ] Runtime drop-in locales from `/data/dreamhub/locales/`
+- [x] Time zones: the per-user display zone setting (`general.timezoneMode`: box/browser/fixed, `general.timezone`) already existed but nothing consumed it — resolved via a new `useDisplayTimeZone.ts` composable (mode 'fixed' → the configured IANA zone; mode 'box' → the device's own zone; mode 'browser', the previous behavior, or an unresolved 'box' → Intl's runtime default). "Box" needed a new data source: WebControl's API has no timezone field (confirmed, ARCHITECTURE.md), so `GET /api/v1/health` now also reports `serverTimeZone`, read from the `/etc/localtime` symlink target (the one place this is derivable without SSH — works on Linux and macOS, useful for local dev too). Wired into every place that formats a time: the timers/series dashboard tiles, MediaHub/SeriesHub/GuideHub/DiscoveryHub screens, API tokens, and the status strip (which now shows the *effective* zone, not just the browser's)
+- [x] Keyboard shortcuts beyond search: `g` + letter global navigation (`useGlobalShortcuts.ts`, mounted once in `App.vue`, same "not while typing" guard as the search palette's own Cmd/Ctrl+K) — `g d` dashboard, `g m` recordings, `g s` series, `g g` guide, `g t` timers, `g r` recommendations, `g y` system, `g a` admin, `g ,` settings. Accessible contrast and labels audit still open
+- [x] Diagnostics: a dedicated page (`/diagnostics`, `DiagnosticsView.vue`) grouping every hub the user may see — including disabled ones — into Unavailable/Degraded/Disabled/Available, each with the same translated problem/fix text as everywhere else. No new backend needed: `GET /api/v1/hubs`'s own doc comment already called it "the diagnostics view". A core nav entry next to Settings (`internal/hub/hub.go`'s `Navigation()`), not a hub itself
 - [ ] mDNS advertisement via a service file in `/etc/avahi/services/` (`avahi-daemon` already runs and is used this way by an existing companion app — see `ARCHITECTURE.md`)
 - [x] Capture real fixtures (#14): done 2026-09-24, see `backend/testdata/fixtures/` and `ARCHITECTURE.md`
 
@@ -109,10 +109,18 @@ Releases: **Foundation** → **v1** → **v1.1** → **Later**. GitHub milestone
 - [ ] `GraphMultiEPG` and `TvSpielfilm` are native on-screen references, not replacements
 
 ### DiscoveryHub
-- AI recommendations from the day's EPG, filtered to user-selected channels (for relevance; ~90k tokens/day for 30 channels is cents-level).
-- Uses the core AI connector — OpenAI first, swappable (see `PRINCIPLES.md`).
-- The AI only proposes. "Create timer" hands off to TimerHub with preview and confirmation.
-- No existing AI plugin on the box (the "GPT-Plugin" is a GUID Partition Table tool).
+
+**Done**:
+- [x] AI recommendations from a chosen bouquet's EPG (`GET /api/v1/discovery/status`, `POST /api/v1/discovery/recommendations`), filtered by picking a bouquet (reuses GuideHub's `/api/v1/guide/bouquets`) rather than an individual-channel multi-select — a bouquet is already the platform's own "channels I care about" grouping, so this needed no new settings-framework field type
+- [x] New `internal/ai` package (real `OpenAIClient` + mock, mirroring `internal/webcontrol`'s pattern, per `PRINCIPLES.md`'s "Mock-first development"). **Grounding, not generation**: the model is given a numbered candidate list and asked to return picks by *index* plus a reason; DiscoveryHub builds each `Recommendation` from its own `EPGItem` data at that index, never from fields the model could hallucinate (a wrong service reference would create a real timer for the wrong program) — out-of-range indices are silently dropped, covered by a unit test
+- [x] Daily AI call budget actually enforced (`ai.dailyLimit`, previously an unenforced settings field): `internal/store`'s new `ai_usage` table, one row per UTC date, incremented *before* the real call (a slow/failed call still counts, so a retry-happy client can't exceed the cap); `0/day` works as a full off switch
+- [x] "Create timer" is a plain frontend call to TimerHub's own `POST /api/v1/timers/plan` + `POST /api/v1/plans/{id}/apply` (CONCEPT.md: "When DiscoveryHub creates a timer, it calls TimerHub's API" — not a new backend endpoint); `DiscoveryHubView.vue` shows the plan's warnings (conflict/duplicate) before confirming, DreamHub's very first real preview-and-confirm UI
+- [x] Nothing calls the AI automatically — every real call costs money, so "Generate recommendations" is always an explicit click, never on page load or a background refresh
+- [x] The OpenAI connector's `Check` was already settings-only (API-key presence); left as-is deliberately — a network round-trip to a paid API just to show a status dot isn't worth it, unlike WebControl/SerienRecorder's real reachability pings to a local, free LAN device
+
+**Open**:
+- [ ] Swapping to a different AI provider (the interface is provider-agnostic already, only `OpenAIClient` exists)
+- [ ] Per-user channel-level filtering finer than a whole bouquet, if a bouquet ever proves too coarse in practice
 
 ### SeriesHub
 

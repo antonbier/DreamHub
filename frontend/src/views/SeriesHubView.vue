@@ -101,11 +101,13 @@ import { api } from '@/api/client'
 import Icon from '@/components/Icon.vue'
 import { useNavigationStore } from '@/stores/navigation'
 import { useProblem } from '@/composables/useProblem'
+import { useDisplayTimeZone } from '@/composables/useDisplayTimeZone'
 import type { SeriesMarker, UpcomingEpisode } from '@/api/types'
 
 const { t, locale } = useI18n()
 const navigation = useNavigationStore()
 const { describe, describeFix } = useProblem()
+const { timeZone } = useDisplayTimeZone()
 
 const item = computed(() => navigation.navigation?.sections.flatMap((s) => s.items).find((i) => i.path === '/series'))
 
@@ -131,6 +133,7 @@ function formatTime(unixSeconds: number): string {
     hour: '2-digit',
     minute: '2-digit',
     hourCycle: 'h23',
+    timeZone: timeZone.value,
   }).format(unixSeconds * 1000)
 }
 

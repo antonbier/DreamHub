@@ -112,5 +112,10 @@ function syncPreferences(saved: SettingSection) {
 
   const navLabels = value('general.navLabels')
   if (navLabels === 'descriptive' || navLabels === 'hub') preferences.navLabels = navLabels
+
+  const timezoneMode = value('general.timezoneMode')
+  if (timezoneMode === 'box' || timezoneMode === 'browser' || timezoneMode === 'fixed') preferences.timezoneMode = timezoneMode
+  const timezone = value('general.timezone')
+  if (typeof timezone === 'string') preferences.timezone = timezone
 }
 </script>

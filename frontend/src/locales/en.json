@@ -4,6 +4,7 @@
   },
   "nav": {
     "dashboard": "Dashboard",
+    "diagnostics": "Diagnostics",
     "settings": "Settings",
     "group": {
       "media": "Media",
@@ -37,6 +38,10 @@
     },
     "hub": {
       "dependencyUnavailable": "{hub} isn't available"
+    },
+    "timer": {
+      "conflict": "Conflicts with another recording — only {tuners} tuner(s) available.",
+      "duplicate": "A timer for \"{name}\" at this exact time already exists."
     }
   },
   "fix": {
@@ -218,6 +223,45 @@
       "show": "Show here",
       "hide": "Hide",
       "openTab": "Open in new tab"
+    }
+  },
+  "discovery": {
+    "generate": "Generate recommendations",
+    "generating": "Generating…",
+    "budget": "{used} / {limit} used today",
+    "empty": "Pick a bouquet and generate recommendations from its EPG.",
+    "noPicks": "Nothing stood out for this bouquet right now.",
+    "createTimer": "Create timer",
+    "timerHubUnavailable": "Timers isn't available.",
+    "confirm": "Confirm",
+    "cancel": "Cancel",
+    "created": "Timer created"
+  },
+  "diagnostics": {
+    "title": "Diagnostics",
+    "groupEmpty": "None.",
+    "disabled": "(disabled)",
+    "group": {
+      "unavailable": "Unavailable",
+      "degraded": "Degraded",
+      "disabled": "Disabled",
+      "available": "Available"
+    }
+  },
+  "error": {
+    "discovery": {
+      "ai_not_configured": "Configure an OpenAI API key in Settings first.",
+      "ai_budget_exceeded": "Today's AI recommendation budget is used up.",
+      "ai_unavailable": "Could not get recommendations right now.",
+      "webcontrol_unavailable": "Could not reach WebControl."
+    },
+    "plan": {
+      "plan_stale": "Something changed since the preview — try again.",
+      "plan_not_found": "This preview expired — try again.",
+      "plan_forbidden": "This preview belongs to someone else.",
+      "writes_disabled": "Changes to the box are disabled until write access is verified on the device.",
+      "apply_failed": "The timer could not be created.",
+      "validation_failed": "The timer details are invalid."
     }
   },
   "settings": {

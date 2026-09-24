@@ -4,6 +4,7 @@
   },
   "nav": {
     "dashboard": "Home",
+    "diagnostics": "Diagnostica",
     "settings": "Impostazioni",
     "group": {
       "media": "Media",
@@ -37,6 +38,10 @@
     },
     "hub": {
       "dependencyUnavailable": "{hub} non è disponibile"
+    },
+    "timer": {
+      "conflict": "In conflitto con un'altra registrazione — solo {tuners} tuner disponibili.",
+      "duplicate": "Esiste già un timer per \"{name}\" esattamente a quest'ora."
     }
   },
   "fix": {
@@ -218,6 +223,45 @@
       "show": "Mostra qui",
       "hide": "Nascondi",
       "openTab": "Apri in nuova scheda"
+    }
+  },
+  "discovery": {
+    "generate": "Genera consigli",
+    "generating": "Generazione…",
+    "budget": "{used} / {limit} usati oggi",
+    "empty": "Scegli un bouquet e genera consigli dalla sua guida TV.",
+    "noPicks": "Nessun consiglio per questo bouquet al momento.",
+    "createTimer": "Crea timer",
+    "timerHubUnavailable": "Timer non è disponibile.",
+    "confirm": "Conferma",
+    "cancel": "Annulla",
+    "created": "Timer creato"
+  },
+  "diagnostics": {
+    "title": "Diagnostica",
+    "groupEmpty": "Nessuno.",
+    "disabled": "(disattivato)",
+    "group": {
+      "unavailable": "Non disponibile",
+      "degraded": "Limitato",
+      "disabled": "Disattivato",
+      "available": "Disponibile"
+    }
+  },
+  "error": {
+    "discovery": {
+      "ai_not_configured": "Configura prima una chiave API OpenAI nelle Impostazioni.",
+      "ai_budget_exceeded": "Il budget di consigli AI di oggi è esaurito.",
+      "ai_unavailable": "Al momento non è possibile ottenere consigli.",
+      "webcontrol_unavailable": "Impossibile raggiungere WebControl."
+    },
+    "plan": {
+      "plan_stale": "Qualcosa è cambiato dall'anteprima — riprova.",
+      "plan_not_found": "Questa anteprima è scaduta — riprova.",
+      "plan_forbidden": "Questa anteprima appartiene a qualcun altro.",
+      "writes_disabled": "Le modifiche al box sono disattivate finché l'accesso in scrittura non è verificato sul dispositivo.",
+      "apply_failed": "Impossibile creare il timer.",
+      "validation_failed": "I dati del timer non sono validi."
     }
   },
   "settings": {

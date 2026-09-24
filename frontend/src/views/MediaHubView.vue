@@ -82,11 +82,13 @@ import { api } from '@/api/client'
 import Icon from '@/components/Icon.vue'
 import { useNavigationStore } from '@/stores/navigation'
 import { useProblem } from '@/composables/useProblem'
+import { useDisplayTimeZone } from '@/composables/useDisplayTimeZone'
 import type { Disk, Movie } from '@/api/types'
 
 const { t, locale } = useI18n()
 const navigation = useNavigationStore()
 const { describe, describeFix } = useProblem()
+const { timeZone } = useDisplayTimeZone()
 
 const item = computed(() => navigation.navigation?.sections.flatMap((s) => s.items).find((i) => i.path === '/media'))
 
@@ -96,7 +98,9 @@ const loading = ref(true)
 const loadFailed = ref(false)
 
 function formatTime(unixSeconds: number): string {
-  return new Intl.DateTimeFormat(locale.value, { dateStyle: 'medium', timeStyle: 'short' }).format(unixSeconds * 1000)
+  return new Intl.DateTimeFormat(locale.value, { dateStyle: 'medium', timeStyle: 'short', timeZone: timeZone.value }).format(
+    unixSeconds * 1000,
+  )
 }
 
 // Binary units (GiB, not GB) since fileSize is an exact byte count from the

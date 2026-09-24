@@ -9,6 +9,7 @@ import (
 	"errors"
 	"log/slog"
 	"net/http"
+	"os"
 	"strconv"
 	"strings"
 	"time"
@@ -129,6 +130,27 @@ func hubEnabledGuard(d Deps, hubID string, next http.Handler) http.Handler {
 	})
 }
 
+// serverTimeZone reports the box's own configured IANA zone (e.g.
+// "Europe/Berlin"), for the per-user "box" display-zone mode (ROADMAP.md,
+// "Time zones") — WebControl's API has no timezone field (confirmed,
+// ARCHITECTURE.md), but /etc/localtime is a symlink to
+// .../zoneinfo/<Area>/<City> on every Linux distribution (and macOS, useful
+// for local dev) — that symlink target is the one place this is actually
+// derivable without SSH. Empty on any error; callers fall back to the
+// browser's own zone.
+func serverTimeZone() string {
+	target, err := os.Readlink("/etc/localtime")
+	if err != nil {
+		return ""
+	}
+	const marker = "zoneinfo/"
+	i := strings.LastIndex(target, marker)
+	if i < 0 {
+		return ""
+	}
+	return target[i+len(marker):]
+}
+
 func handleHealth(d Deps) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		httpx.WriteJSON(w, http.StatusOK, map[string]string{
@@ -136,7 +158,8 @@ func handleHealth(d Deps) http.HandlerFunc {
 			"version": Version,
 			// Server time in UTC, so clients can warn when the box clock is off
 			// (CONCEPT.md, "Time zones").
-			"time": d.Now().UTC().Format(time.RFC3339),
+			"time":           d.Now().UTC().Format(time.RFC3339),
+			"serverTimeZone": serverTimeZone(),
 		})
 	}
 }

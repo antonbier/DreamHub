@@ -92,7 +92,7 @@ Order matters where noted. Everything else can run in parallel.
 - Custom/criteria tiles on top of the search providers (the mechanics exist).
 - Runtime drop-in locales from `/data/dreamhub/locales/`, accessibility pass, complete Italian strings.
 
-### WP8 — TV launcher plugin *(visually confirmed live on the reference box 2026-09-25 — screen renders, backend calls land, gettext translates; one bug found and fixed but not yet re-verified — see ROADMAP.md, "Enigma2 TV plugin")*
+### WP8 — TV launcher plugin *(fully confirmed live on the reference box 2026-09-25 — screen renders, backend calls land, gettext translates, status text shows correctly after fixing a real unicode/setText bug found via live logging — see ROADMAP.md, "Enigma2 TV plugin")*
 - If D7 goes ahead: the `/dreamhub/timercheck` dry-run adapter lives here.
 - [x] Python 2.7, gettext DE/IT/EN via `config.osd.language`.
 - [x] The QR code is rendered **by the backend** (`/api/v1/qr.png`, local-only), so the plugin needs no QR library and holds no logic.

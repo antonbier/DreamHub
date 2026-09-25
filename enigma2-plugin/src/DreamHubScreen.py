@@ -42,6 +42,22 @@ def _log(message):
         pass  # logging is best-effort; must never itself break the screen
 
 
+# Root cause found live, 2026-09-25 (the failure the logging above was
+# added to catch): eLabel's SWIG-wrapped setText() takes a C++
+# std::string, and raises "TypeError: argument 2 of type 'std::string
+# const &'" if handed a Python `unicode` object instead of `str` --
+# json.loads() always returns `unicode` for JSON strings in Python 2, and
+# "%s" % a_unicode_value silently promotes the whole formatted string to
+# `unicode` too. gettext's own dgettext() already returns plain `str`
+# (encoded per the .mo file), which is why the *static* messages
+# (healthFailed's, the hint/key labels) never hit this — only text built
+# from the backend's JSON did. Route every dynamic setText() through this.
+def _toStr(value):
+    if isinstance(value, unicode):  # noqa: F821 -- Python 2 builtin
+        return value.encode("utf-8")
+    return value
+
+
 class DreamHubScreen(Screen):
     skin = """
     <screen name="DreamHubScreen" position="center,center" size="560,420" title="DreamHub">
@@ -90,9 +106,9 @@ class DreamHubScreen(Screen):
             self.healthFailed(None)
             return
         if version != PluginVersion:
-            self["status"].setText(_("Backend running (v%s)\nThis plugin is v%s — versions differ, some things may not match.") % (version, PluginVersion))
+            self["status"].setText(_toStr(_("Backend running (v%s)\nThis plugin is v%s — versions differ, some things may not match.") % (version, PluginVersion)))
         else:
-            self["status"].setText(_("Backend running (v%s)") % version)
+            self["status"].setText(_toStr(_("Backend running (v%s)") % version))
 
     def healthFailed(self, failure):
         _log("healthFailed: %r" % (failure,))

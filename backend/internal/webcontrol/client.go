@@ -246,6 +246,14 @@ type Client interface {
 	// CurrentServiceReference is what the box is playing right now — a
 	// channel, or a recording (its reference then carries the file path).
 	CurrentServiceReference(ctx context.Context) (string, error)
+	// Zap switches the live channel (ControlHub, GuideHub's "switch now").
+	Zap(ctx context.Context, serviceReference string) error
+	// SendKey simulates a remote-control keypress (ControlHub).
+	SendKey(ctx context.Context, code int) error
+	// Screenshot grabs the box's current screen as a PNG (ControlHub).
+	Screenshot(ctx context.Context) ([]byte, error)
+	// InStandby reports whether the box is in standby (ControlHub).
+	InStandby(ctx context.Context) (bool, error)
 }
 
 // MovieFolder is one folder of recordings as /web/movielist?dirname=
@@ -569,6 +577,102 @@ func (c *HTTPClient) simpleWrite(ctx context.Context, op string, form url.Values
 		return &RejectedError{Op: op, Text: strings.TrimSpace(res.StateText)}
 	}
 	return nil
+}
+
+// remoteControlResult is /web/remotecontrol's own response shape — a
+// different schema from simpleResult (e2result/e2resulttext, not
+// e2state/e2statetext), confirmed live 2026-09-25 (ARCHITECTURE.md, "Real
+// screenshot and remote-control endpoints").
+type remoteControlResult struct {
+	XMLName    xml.Name `xml:"e2remotecontrol"`
+	Result     bool     `xml:"e2result"`
+	ResultText string   `xml:"e2resulttext"`
+}
+
+// Zap switches the live channel via /web/zap (confirmed live 2026-09-25).
+// Unlike the timer endpoints, zap.xml accepts GET (no anti_hijack
+// restriction). Gated by AllowWrites like every other change to the box:
+// ControlHub's whole point is controlling the live device, so the same
+// read-only-trial switch applies even though switching channels is
+// instantly reversible.
+func (c *HTTPClient) Zap(ctx context.Context, serviceReference string) error {
+	if !c.AllowWrites {
+		return ErrWritesDisabled
+	}
+	body, err := c.get(ctx, "/web/zap?sRef="+url.QueryEscape(serviceReference))
+	if err != nil {
+		return err
+	}
+	defer body.Close()
+	var res simpleResult
+	if err := decodeXML(body, "/web/zap", &res); err != nil {
+		return err
+	}
+	if !res.State {
+		return &RejectedError{Op: "zap", Text: strings.TrimSpace(res.StateText)}
+	}
+	return nil
+}
+
+// SendKey simulates a remote-control keypress via /web/remotecontrol
+// (confirmed live 2026-09-25) — standard Linux input-event codes (KEY_OK =
+// 352, KEY_EXIT = 174, KEY_MENU = 139, the arrow/color/power keys — see
+// ARCHITECTURE.md for the full confirmed table). A key the box's current
+// screen doesn't handle still answers success; the box just shows a brief
+// "blocked" icon and ignores it, not an error here. Gated by AllowWrites,
+// same reasoning as Zap.
+func (c *HTTPClient) SendKey(ctx context.Context, code int) error {
+	if !c.AllowWrites {
+		return ErrWritesDisabled
+	}
+	body, err := c.get(ctx, "/web/remotecontrol?command="+strconv.Itoa(code))
+	if err != nil {
+		return err
+	}
+	defer body.Close()
+	var res remoteControlResult
+	if err := decodeXML(body, "/web/remotecontrol", &res); err != nil {
+		return err
+	}
+	if !res.Result {
+		return &RejectedError{Op: "remotecontrol", Text: strings.TrimSpace(res.ResultText)}
+	}
+	return nil
+}
+
+// Screenshot grabs the box's current screen as a PNG via /screenshot
+// (confirmed live 2026-09-25) — a top-level path, not under /web/, served
+// natively by ePixmap (no external binary dependency, unlike the
+// unrelated /grab, which needs a separate "aio-grab" package that isn't
+// installed on the reference box). osd=1&video=1 composites the GUI
+// overlay with whatever's playing — what's actually visible on the TV.
+// Read-only: not gated by AllowWrites.
+func (c *HTTPClient) Screenshot(ctx context.Context) ([]byte, error) {
+	body, err := c.get(ctx, "/screenshot?format=png&osd=1&video=1")
+	if err != nil {
+		return nil, err
+	}
+	defer body.Close()
+	return io.ReadAll(body)
+}
+
+// powerState is /web/powerstate's response shape.
+type powerState struct {
+	XMLName   xml.Name `xml:"e2powerstate"`
+	InStandby bool     `xml:"e2instandby"`
+}
+
+// InStandby reports whether the box is currently in standby via
+// /web/powerstate (confirmed live 2026-09-25) — ControlHub checks this
+// before assuming a blank screenshot means something's wrong: the
+// reference box was found in standby mid-session, where every simulated
+// key is silently ignored except power.
+func (c *HTTPClient) InStandby(ctx context.Context) (bool, error) {
+	var res powerState
+	if err := c.getXML(ctx, "/web/powerstate", &res); err != nil {
+		return false, err
+	}
+	return res.InStandby, nil
 }
 
 var sizeRe = regexp.MustCompile(`^([\d.]+)\s*([KMGT]?B)$`)

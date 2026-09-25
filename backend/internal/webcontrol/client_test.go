@@ -326,3 +326,78 @@ func TestGet_CoalescesConcurrentIdenticalRequests(t *testing.T) {
 		t.Errorf("expected exactly 1 request to the box for %d concurrent identical callers, got %d", callers, got)
 	}
 }
+
+func TestZap_SendsSRefAndParsesRejection(t *testing.T) {
+	var gotQuery string
+	srv := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		gotQuery = r.URL.RawQuery
+		w.Write([]byte(`<e2simplexmlresult><e2state>False</e2state><e2statetext>kein Dienst</e2statetext></e2simplexmlresult>`))
+	}))
+	defer srv.Close()
+	c := NewHTTPClient(srv.URL)
+	c.AllowWrites = true
+
+	err := c.Zap(context.Background(), "1:0:19:2EE3:441:1:C00000:0:0:0:")
+	var rej *RejectedError
+	if !errors.As(err, &rej) || rej.Text != "kein Dienst" {
+		t.Fatalf("expected a RejectedError with the box's text, got %v", err)
+	}
+	if gotQuery != "sRef=1%3A0%3A19%3A2EE3%3A441%3A1%3AC00000%3A0%3A0%3A0%3A" {
+		t.Errorf("unexpected query: %s", gotQuery)
+	}
+}
+
+func TestZap_RefusedWhenWritesDisabled(t *testing.T) {
+	c := NewHTTPClient("http://127.0.0.1:1")
+	if err := c.Zap(context.Background(), "x"); err != ErrWritesDisabled {
+		t.Errorf("expected ErrWritesDisabled, got %v", err)
+	}
+}
+
+func TestSendKey_ParsesRemoteControlSchema(t *testing.T) {
+	srv := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		if r.URL.Query().Get("command") != "352" {
+			t.Errorf("expected command=352, got %s", r.URL.RawQuery)
+		}
+		w.Write([]byte(`<e2remotecontrol><e2result>True</e2result><e2resulttext>FB Befehl '352' wurde abgesetzt</e2resulttext></e2remotecontrol>`))
+	}))
+	defer srv.Close()
+	c := NewHTTPClient(srv.URL)
+	c.AllowWrites = true
+	if err := c.SendKey(context.Background(), 352); err != nil {
+		t.Fatalf("expected success, got %v", err)
+	}
+}
+
+func TestScreenshot_ReturnsBody(t *testing.T) {
+	srv := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		if r.URL.Path != "/screenshot" {
+			t.Errorf("expected /screenshot, got %s", r.URL.Path)
+		}
+		w.Write([]byte("not-really-a-png-but-thats-fine-here"))
+	}))
+	defer srv.Close()
+	c := NewHTTPClient(srv.URL)
+	img, err := c.Screenshot(context.Background())
+	if err != nil {
+		t.Fatal(err)
+	}
+	if string(img) != "not-really-a-png-but-thats-fine-here" {
+		t.Errorf("unexpected body: %s", img)
+	}
+}
+
+func TestInStandby_ParsesPowerState(t *testing.T) {
+	srv := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		w.Write([]byte(`<e2powerstate><e2instandby>true</e2instandby></e2powerstate>`))
+	}))
+	defer srv.Close()
+	c := NewHTTPClient(srv.URL)
+	standby, err := c.InStandby(context.Background())
+	if err != nil {
+		t.Fatal(err)
+	}
+	if !standby {
+		t.Error("expected InStandby to report true")
+	}
+}

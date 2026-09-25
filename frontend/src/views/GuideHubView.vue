@@ -88,17 +88,29 @@
             {{ t('guide.recordPreview', { name: selected.title, channel: selected.serviceName, when: recordWindow }) }}
           </PlanPreview>
           <template v-else>
-            <button
-              v-if="!selectedEnded"
-              type="button"
-              class="rounded bg-accent px-3 py-1.5 text-[13px] font-semibold text-bg disabled:opacity-60"
-              :disabled="record.status === 'loading' || !canRecord"
-              :title="canRecord ? undefined : t('guide.timerHubUnavailable')"
-              @click="previewRecord"
-            >
-              {{ t('guide.record') }}
-            </button>
+            <div class="flex flex-wrap items-center gap-2">
+              <button
+                v-if="!selectedEnded"
+                type="button"
+                class="rounded bg-accent px-3 py-1.5 text-[13px] font-semibold text-bg disabled:opacity-60"
+                :disabled="record.status === 'loading' || !canRecord"
+                :title="canRecord ? undefined : t('guide.timerHubUnavailable')"
+                @click="previewRecord"
+              >
+                {{ t('guide.record') }}
+              </button>
+              <button
+                v-if="selectedLive"
+                type="button"
+                class="rounded border border-line px-3 py-1.5 text-[13px] text-text hover:bg-field disabled:opacity-60"
+                :disabled="zapping"
+                @click="zapToSelected"
+              >
+                {{ zapped ? t('guide.switchedNow') : t('guide.switchNow') }}
+              </button>
+            </div>
             <p v-if="record.error" class="mt-2 text-[12.5px] text-warn">{{ record.error }}</p>
+            <p v-if="zapError" class="mt-2 text-[12.5px] text-warn">{{ zapError }}</p>
           </template>
         </div>
       </div>
@@ -225,6 +237,31 @@ type RecordState = { status: 'idle' | 'loading' | 'previewing' | 'applying' | 'c
 const record = ref<RecordState>({ status: 'idle' })
 
 const selectedEnded = computed(() => (selected.value ? selected.value.start + selected.value.duration <= Date.now() / 1000 : false))
+// "Switch now" only makes sense for a programme actually airing right now
+// (ControlHub's zap, pulled forward from v1.1 — docs/V1_PLAN.md).
+const selectedLive = computed(() => {
+  const e = selected.value
+  if (!e) return false
+  const now = Date.now() / 1000
+  return e.start <= now && now < e.start + e.duration
+})
+const zapping = ref(false)
+const zapError = ref('')
+const zapped = ref(false)
+async function zapToSelected() {
+  const e = selected.value
+  if (!e) return
+  zapping.value = true
+  zapError.value = ''
+  try {
+    await api.control.zap(e.serviceReference)
+    zapped.value = true
+  } catch (err) {
+    zapError.value = planErrorMessage(err)
+  } finally {
+    zapping.value = false
+  }
+}
 
 function isSelected(e: EPGEvent): boolean {
   return selected.value !== null && selected.value.id === e.id && selected.value.serviceReference === e.serviceReference
@@ -243,6 +280,8 @@ const recordWindow = computed(() => {
 function select(e: EPGEvent) {
   selected.value = e
   record.value = { status: 'idle' }
+  zapped.value = false
+  zapError.value = ''
 }
 function closeSelected() {
   selected.value = null

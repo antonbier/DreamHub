@@ -196,6 +196,7 @@ func New(ctx context.Context, o Options) (*App, error) {
 	discoveryHub := &hubs_.Discovery{WC: o.WebControl, AI: o.AI, Store: st, Settings: svc, Now: now}
 	systemHub := &hubs_.System{Store: st, Settings: svc, Dashboard: dash, Plans: plans, Now: now}
 	adminHub := &hubs_.Admin{Store: st, Level: level, Logs: o.Logs, FS: o.RecordingsFS}
+	controlHub := &hubs_.Control{WC: o.WebControl}
 
 	// TimerHub is the hub contract's first real search provider
 	// (internal/hub/search.go) — add more here as other hubs implement it.
@@ -224,6 +225,7 @@ func New(ctx context.Context, o Options) (*App, error) {
 			{HubID: hub.IDDiscovery, Prefixes: []string{"/api/v1/discovery"}, Register: discoveryHub.Mount},
 			{HubID: hub.IDSystem, Prefixes: []string{"/api/v1/changes", "/api/v1/system"}, Register: systemHub.Mount},
 			{HubID: hub.IDAdmin, Prefixes: []string{"/api/v1/admin"}, Register: adminHub.Mount},
+			{HubID: hub.IDControl, Prefixes: []string{"/api/v1/control"}, Register: controlHub.Mount},
 		},
 		User:   user,
 		Logger: o.Logger,

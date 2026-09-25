@@ -19,7 +19,8 @@
     "timer": "Timer",
     "discovery": "Empfehlungen",
     "system": "System",
-    "admin": "Admin"
+    "admin": "Admin",
+    "control": "Fernsteuerung"
   },
   "status": {
     "available": "Verfügbar",
@@ -282,6 +283,8 @@
     "empty": "Keine Sender in diesem Bouquet.",
     "now": "Jetzt",
     "record": "Aufnehmen",
+    "switchNow": "Jetzt umschalten",
+    "switchedNow": "Umgeschaltet.",
     "confirmRecord": "Timer anlegen",
     "recordPreview": "Ein Timer für „{name}“ auf {channel} wird angelegt, Aufnahme {when}.",
     "timerCreated": "Timer angelegt.",
@@ -550,6 +553,34 @@
       "empty": "Keine Absturzprotokolle.",
       "view": "Ansehen",
       "close": "Schließen"
+    }
+  },
+  "control": {
+    "standby": {
+      "banner": "Die Box ist im Standby.",
+      "wake": "Aufwecken"
+    },
+    "screenshot": {
+      "title": "Bildschirm",
+      "refresh": "Aktualisieren",
+      "auto": "Automatisch aktualisieren"
+    },
+    "pad": {
+      "title": "Fernbedienung"
+    },
+    "keys": {
+      "up": "Hoch",
+      "down": "Runter",
+      "left": "Links",
+      "right": "Rechts",
+      "ok": "OK",
+      "exit": "Zurück",
+      "menu": "Menü",
+      "red": "Rot",
+      "green": "Grün",
+      "yellow": "Gelb",
+      "blue": "Blau",
+      "power": "Ein/Aus"
     }
   },
   "system": {

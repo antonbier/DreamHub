@@ -19,7 +19,8 @@
     "timer": "Timer",
     "discovery": "Consigliati",
     "system": "Sistema",
-    "admin": "Admin"
+    "admin": "Admin",
+    "control": "Telecomando"
   },
   "status": {
     "available": "Disponibile",
@@ -282,6 +283,8 @@
     "empty": "Nessun canale in questo bouquet.",
     "now": "Ora",
     "record": "Registra",
+    "switchNow": "Passa ora",
+    "switchedNow": "Passato.",
     "confirmRecord": "Crea timer",
     "recordPreview": "Verrà creato un timer per \"{name}\" su {channel}, registrazione {when}.",
     "timerCreated": "Timer creato.",
@@ -550,6 +553,34 @@
       "empty": "Nessun log di crash.",
       "view": "Visualizza",
       "close": "Chiudi"
+    }
+  },
+  "control": {
+    "standby": {
+      "banner": "Il box è in standby.",
+      "wake": "Riattiva"
+    },
+    "screenshot": {
+      "title": "Schermo",
+      "refresh": "Aggiorna",
+      "auto": "Aggiornamento automatico"
+    },
+    "pad": {
+      "title": "Telecomando"
+    },
+    "keys": {
+      "up": "Su",
+      "down": "Giù",
+      "left": "Sinistra",
+      "right": "Destra",
+      "ok": "OK",
+      "exit": "Esci",
+      "menu": "Menu",
+      "red": "Rosso",
+      "green": "Verde",
+      "yellow": "Giallo",
+      "blue": "Blu",
+      "power": "Accensione"
     }
   },
   "system": {

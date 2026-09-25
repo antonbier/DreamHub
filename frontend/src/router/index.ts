@@ -67,6 +67,11 @@ const router = createRouter({
       component: () => import('@/views/AdminHubView.vue'),
     },
     {
+      path: '/control',
+      name: 'control',
+      component: () => import('@/views/ControlHubView.vue'),
+    },
+    {
       path: '/:pathMatch(.*)*',
       name: 'not-found',
       component: () => import('@/views/NotFoundView.vue'),

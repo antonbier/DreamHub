@@ -166,6 +166,7 @@ func TestNavigation_OmitsEmptyGroups(t *testing.T) {
 	r := v1Registry(t, true)
 	v := allEnabled(r)
 	v[EnabledKey(IDSystem)] = false
+	v[EnabledKey(IDControl)] = false
 	for _, s := range r.Navigation(r.Statuses(v, allOK()), store.RoleAdmin, "descriptive").Sections {
 		if s.ID == string(GroupDevice) {
 			t.Fatal("device group has no enabled hub and must be omitted")

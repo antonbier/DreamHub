@@ -26,6 +26,7 @@ Plan for getting from today's state to a released **DreamHub 1.0.0**. It builds 
 | D5 | **Enable/disable a timer** in v1? `timerchange` has a buggy conflict path. | Disabling only (can never conflict). Re-enabling goes through delete + add with a full preview, or waits for v1.1. |
 | D7 | **Exact conflict dry run** via DreamHub's own plugin (see "Tuners")? | Yes, but after layer 2. Build it with the TV plugin (WP8). Until then the transponder-aware estimate plus the box's verdict are enough. |
 | D6 | **Release gate**: how long to dogfood on the reference box before 1.0.0? | Two weeks on the box with no data-affecting bug. |
+| D8 | **Pull ControlHub into v1**, or leave it for v1.1 as originally scoped (`CONCEPT.md`)? | **Pulled into v1** (decided 2026-09-25): verifying WP8's Enigma2 plugin needed a real screenshot/remote-control loop anyway (discovered `/screenshot`, `/web/remotecontrol`, `/web/zap`, `/web/powerstate` — see `ARCHITECTURE.md`), and GuideHub's "switch to this channel now" needs it too. Scoped to what's already confirmed working: screenshot, remote pad, power, zap. "Message to TV" (`/web/message`) stays v1.1 — not yet researched. |
 
 ## Tuners: beyond the single-tuner reference box
 
@@ -91,7 +92,7 @@ Order matters where noted. Everything else can run in parallel.
 - Custom/criteria tiles on top of the search providers (the mechanics exist).
 - Runtime drop-in locales from `/data/dreamhub/locales/`, accessibility pass, complete Italian strings.
 
-### WP8 — TV launcher plugin *(installed on the reference box 2026-09-25, enigma2 restarted cleanly — see ROADMAP.md, "Enigma2 TV plugin" for exactly what was and wasn't confirmed)*
+### WP8 — TV launcher plugin *(visually confirmed live on the reference box 2026-09-25 — screen renders, backend calls land, gettext translates; one bug found and fixed but not yet re-verified — see ROADMAP.md, "Enigma2 TV plugin")*
 - If D7 goes ahead: the `/dreamhub/timercheck` dry-run adapter lives here.
 - [x] Python 2.7, gettext DE/IT/EN via `config.osd.language`.
 - [x] The QR code is rendered **by the backend** (`/api/v1/qr.png`, local-only), so the plugin needs no QR library and holds no logic.

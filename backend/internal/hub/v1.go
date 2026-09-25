@@ -15,13 +15,19 @@ const (
 	IDSeries    = "series"
 	IDSystem    = "system"
 	IDAdmin     = "admin"
+	IDControl   = "control"
 )
 
 // CapJournald is the capability to read logs via journalctl (AdminHub).
 const CapJournald = "journald"
 
-// V1 returns the descriptors of the hubs planned for v1. The v1.1 hubs
-// (RadioHub, ChannelHub, ControlHub) are added when they're built.
+// V1 returns the descriptors of the hubs planned for v1. ControlHub was
+// originally scoped for v1.1 (CONCEPT.md) but pulled forward: verifying
+// WP8's Enigma2 plugin needed a real screenshot/remote-control loop
+// anyway (ARCHITECTURE.md, "Real screenshot and remote-control
+// endpoints"), and GuideHub's "switch to this channel now" needs it too.
+// The remaining v1.1 hubs (RadioHub, ChannelHub) are added when they're
+// built.
 func V1() []Descriptor {
 	wc := Requirement{Connector: connector.IDWebControl}
 	return []Descriptor{
@@ -38,6 +44,8 @@ func V1() []Descriptor {
 		{ID: IDDiscovery, Name: "DiscoveryHub", Label: "hub.discovery", Icon: "recommendations", Path: "/discovery", Group: GroupProgram, Order: 30,
 			Requires: []Requirement{wc, {Connector: connector.IDOpenAI}, {Hub: IDTimer, Optional: true}}},
 		{ID: IDSystem, Name: "SystemHub", Label: "hub.system", Icon: "system", Path: "/system", Group: GroupDevice, Order: 10,
+			Requires: []Requirement{wc}},
+		{ID: IDControl, Name: "ControlHub", Label: "hub.control", Icon: "control", Path: "/control", Group: GroupDevice, Order: 20,
 			Requires: []Requirement{wc}},
 		{ID: IDAdmin, Name: "AdminHub", Label: "hub.admin", Icon: "admin", Path: "/admin", Group: GroupBottom, Order: 10,
 			Role: store.RoleAdmin, Requires: []Requirement{{Capability: CapJournald}}},

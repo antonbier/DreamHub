@@ -59,6 +59,8 @@ const ICONS: Record<string, string> = {
   warning: '<path d="M12 4l9 16H3l9-16z"/><path d="M12 10v4M12 17h.01"/>',
   close: '<path d="M6 6l12 12M18 6L6 18"/>',
   menu: '<path d="M4 6h16M4 12h16M4 18h16"/>',
+  control:
+    '<rect x="7" y="2.5" width="10" height="19" rx="3"/><circle cx="12" cy="7.2" r="1.4"/><path d="M9.3 11.5h5.4M9.3 14.5h5.4M9.3 17.5h5.4"/>',
 }
 
 const markup = computed(() => ICONS[props.name] ?? ICONS.dashboard)

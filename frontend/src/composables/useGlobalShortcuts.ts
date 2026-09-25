@@ -17,6 +17,7 @@ const ROUTES: Record<string, string> = {
   r: '/discovery', // Recommendations
   y: '/system', // System
   a: '/admin', // Admin
+  c: '/control', // Control (remote)
   ',': '/settings', // Settings
 }
 

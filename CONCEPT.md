@@ -53,9 +53,9 @@ From the requirements the core derives each hub's **status**: *available*, *degr
 | **SeriesHub** | SerienRecorder: episodes on disk, missing episodes, upcoming | v1 (basic) |
 | **SystemHub** | Device info, diagnostics, backup/restore, change log — for every user | v1 (basic) |
 | **AdminHub** | Logs (v1), service status, terminal (later) — admin role only | v1 (logs) |
+| **ControlHub** | Web remote, screenshot, power | v1 — pulled forward from v1.1: verifying the Enigma2 plugin (WP8) needed a real screenshot/remote-control loop anyway, and GuideHub's "switch to this channel now" needs it too (`docs/V1_PLAN.md`) |
 | **RadioHub** | Radio services, now playing, radio timers | v1.1 |
 | **ChannelHub** | Bouquets (link/embed the existing BouquetEditor plugin), picons | v1.1 |
-| **ControlHub** | Web remote, message to TV, screenshot, power | v1.1 |
 | **StreamHub** | Live TV / radio in the browser | later |
 | **AutomationHub** | Scripts, webhooks, automations — the only place anything happens automatically | later |
 
@@ -206,6 +206,6 @@ DreamHub is a tool for getting things done, not a media center for browsing. Ple
 
 ## Release scope summary
 
-- **v1**: the complete core (dashboard with customizable and custom tiles, navigation, global search, notifications inbox, settings, onboarding, diagnostics, auth, i18n DE/IT/EN, time zone handling, profile- and role-ready data model) + MediaHub, TimerHub, GuideHub, DiscoveryHub, SeriesHub (basic), SystemHub (basic), AdminHub (logs) + the TV launcher plugin + `.deb` packaging.
-- **v1.1**: RadioHub, ChannelHub, ControlHub, MediaHub trimming, AdminHub service status.
+- **v1**: the complete core (dashboard with customizable and custom tiles, navigation, global search, notifications inbox, settings, onboarding, diagnostics, auth, i18n DE/IT/EN, time zone handling, profile- and role-ready data model) + MediaHub, TimerHub, GuideHub, DiscoveryHub, SeriesHub (basic), SystemHub (basic), AdminHub (logs), ControlHub (remote, screenshot, power — pulled forward from v1.1) + the TV launcher plugin + `.deb` packaging.
+- **v1.1**: RadioHub, ChannelHub, MediaHub trimming, AdminHub service status, ControlHub's "message to TV" (`/web/message`, not yet built).
 - **Later**: StreamHub, AutomationHub, AdminHub terminal, external notification channels, Plex/Jellyfin/Emby connectors, more AI providers, profile/role UI, multiple dashboards UI, installable PWA (needs HTTPS — e.g. via a reverse proxy), additional languages incl. RTL.

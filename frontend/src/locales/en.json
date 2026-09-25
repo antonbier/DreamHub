@@ -19,7 +19,8 @@
     "timer": "Timers",
     "discovery": "Recommendations",
     "system": "System",
-    "admin": "Admin"
+    "admin": "Admin",
+    "control": "Remote"
   },
   "status": {
     "available": "Available",
@@ -282,6 +283,8 @@
     "empty": "No channels in this bouquet.",
     "now": "Now",
     "record": "Record",
+    "switchNow": "Switch now",
+    "switchedNow": "Switched.",
     "confirmRecord": "Create timer",
     "recordPreview": "A timer for “{name}” on {channel} will be created, recording {when}.",
     "timerCreated": "Timer created.",
@@ -550,6 +553,34 @@
       "empty": "No crash logs.",
       "view": "View",
       "close": "Close"
+    }
+  },
+  "control": {
+    "standby": {
+      "banner": "The box is in standby.",
+      "wake": "Wake up"
+    },
+    "screenshot": {
+      "title": "Screen",
+      "refresh": "Refresh",
+      "auto": "Auto-refresh"
+    },
+    "pad": {
+      "title": "Remote"
+    },
+    "keys": {
+      "up": "Up",
+      "down": "Down",
+      "left": "Left",
+      "right": "Right",
+      "ok": "OK",
+      "exit": "Exit",
+      "menu": "Menu",
+      "red": "Red",
+      "green": "Green",
+      "yellow": "Yellow",
+      "blue": "Blue",
+      "power": "Power"
     }
   },
   "system": {

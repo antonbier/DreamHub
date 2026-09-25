@@ -10,12 +10,15 @@
 package mock
 
 import (
+	"bytes"
 	"context"
-	"github.com/antonbier/DreamHub/backend/internal/recfs"
+	"image"
+	"image/png"
 	"strings"
 	"sync"
 	"time"
 
+	"github.com/antonbier/DreamHub/backend/internal/recfs"
 	"github.com/antonbier/DreamHub/backend/internal/webcontrol"
 )
 
@@ -32,6 +35,12 @@ type Client struct {
 	// Playing is what /web/getcurrent reports; a recording's reference
 	// ("1:0:0:0:0:0:0:0:0:0:/path.ts") marks that file as in use.
 	Playing string
+	// Standby is what InStandby reports (ControlHub).
+	Standby bool
+	// LastZapped and LastKey record the most recent ControlHub action, for
+	// tests to assert on.
+	LastZapped string
+	LastKey    int
 }
 
 // Root is the mock box's recording folder.
@@ -242,6 +251,39 @@ func (c *Client) CurrentServiceReference(ctx context.Context) (string, error) {
 		return c.Playing, nil
 	}
 	return "1:0:19:2EE3:441:1:C00000:0:0:0:", nil // RTL, live TV
+}
+
+// Zap records the requested channel as playing, like a real zap would.
+func (c *Client) Zap(ctx context.Context, serviceReference string) error {
+	c.mu.Lock()
+	defer c.mu.Unlock()
+	c.LastZapped = serviceReference
+	c.Playing = serviceReference
+	return nil
+}
+
+// SendKey just records the code; the mock has no screen state to change.
+func (c *Client) SendKey(ctx context.Context, code int) error {
+	c.mu.Lock()
+	defer c.mu.Unlock()
+	c.LastKey = code
+	return nil
+}
+
+// Screenshot returns a minimal valid 1x1 PNG — enough for ControlHub's
+// screen to render an <img>, without needing a real Enigma2 GUI.
+func (c *Client) Screenshot(ctx context.Context) ([]byte, error) {
+	var buf bytes.Buffer
+	if err := png.Encode(&buf, image.NewRGBA(image.Rect(0, 0, 1, 1))); err != nil {
+		return nil, err
+	}
+	return buf.Bytes(), nil
+}
+
+func (c *Client) InStandby(ctx context.Context) (bool, error) {
+	c.mu.Lock()
+	defer c.mu.Unlock()
+	return c.Standby, nil
 }
 
 // AddTimer behaves like the real box (ARCHITECTURE.md, "Timer write

@@ -244,4 +244,12 @@ export const api = {
     list: (limit = 20) => request<{ notifications: Notification[]; unread: number }>('GET', `/api/v1/notifications?limit=${limit}`),
     markRead: () => request<{ unread: number }>('POST', '/api/v1/notifications/read'),
   },
+  control: {
+    // A plain path, not a fetch() call — the screenshot is rendered
+    // directly as <img :src>, with a cache-busting query param.
+    screenshotPath: () => `/api/v1/control/screenshot?t=${Date.now()}`,
+    power: () => request<{ inStandby: boolean }>('GET', '/api/v1/control/power'),
+    sendKey: (code: number) => request<{ sent: number }>('POST', '/api/v1/control/key', { code }),
+    zap: (serviceReference: string) => request<{ zapped: string }>('POST', '/api/v1/control/zap', { serviceReference }),
+  },
 }

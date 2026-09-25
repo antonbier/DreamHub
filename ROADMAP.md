@@ -67,7 +67,7 @@ Releases: **Foundation** → **v1** → **v1.1** → **Later**. GitHub milestone
 - [ ] Timer-conflict detection in the event bus (a background "a new conflict appeared" notification) — needs the same tuner-aware estimate (`internal/tuner`) TimerHub's screen already uses, wired into the poller without duplicating it; not attempted this pass
 - [ ] Custom/criteria-based dashboard tiles, runtime drop-in locales (`/data/dreamhub/locales/`), a full accessibility pass and complete Italian strings are all still open
 - [x] Time zones: the per-user display zone setting (`general.timezoneMode`: box/browser/fixed, `general.timezone`) already existed but nothing consumed it — resolved via a new `useDisplayTimeZone.ts` composable (mode 'fixed' → the configured IANA zone; mode 'box' → the device's own zone; mode 'browser', the previous behavior, or an unresolved 'box' → Intl's runtime default). "Box" needed a new data source: WebControl's API has no timezone field (confirmed, ARCHITECTURE.md), so `GET /api/v1/health` now also reports `serverTimeZone`, read from the `/etc/localtime` symlink target (the one place this is derivable without SSH — works on Linux and macOS, useful for local dev too). Wired into every place that formats a time: the timers/series dashboard tiles, MediaHub/SeriesHub/GuideHub/DiscoveryHub screens, API tokens, and the status strip (which now shows the *effective* zone, not just the browser's)
-- [x] Keyboard shortcuts beyond search: `g` + letter global navigation (`useGlobalShortcuts.ts`, mounted once in `App.vue`, same "not while typing" guard as the search palette's own Cmd/Ctrl+K) — `g d` dashboard, `g m` recordings, `g s` series, `g g` guide, `g t` timers, `g r` recommendations, `g y` system, `g a` admin, `g ,` settings. Accessible contrast and labels audit still open
+- [x] Keyboard shortcuts beyond search: `g` + letter global navigation (`useGlobalShortcuts.ts`, mounted once in `App.vue`, same "not while typing" guard as the search palette's own Cmd/Ctrl+K) — `g d` dashboard, `g m` recordings, `g s` series, `g g` guide, `g t` timers, `g r` recommendations, `g y` system, `g c` control, `g a` admin, `g ,` settings. Accessible contrast and labels audit still open
 - [x] Diagnostics: grouping every hub the user may see — including disabled ones — into Unavailable/Degraded/Disabled/Available, each with the same translated problem/fix text as everywhere else. No new backend needed: `GET /api/v1/hubs`'s own doc comment already called it "the diagnostics view". Originally its own core nav entry (`/diagnostics`, `DiagnosticsView.vue`); folded into SystemHub as a tab in WP6 (see SystemHub, below) since `CONCEPT.md` already described it as "a diagnostics page in SystemHub" — `/diagnostics` now redirects to `/system?tab=diagnostics`
 - [ ] mDNS advertisement via a service file in `/etc/avahi/services/` (`avahi-daemon` already runs and is used this way by an existing companion app — see `ARCHITECTURE.md`)
 - [x] Capture real fixtures (#14): done 2026-09-24, see `backend/testdata/fixtures/` and `ARCHITECTURE.md`
@@ -146,6 +146,7 @@ Notes:
 - [ ] Online enrichment (TMDB) **only** for movie/series genres
 - [x] GuideHub search provider over the box's own EPG title search (`/web/epgsearch`): upcoming and running programmes only, soonest first, unnamed services (`-1:…`, `<n/a>`) dropped; a result opens the grid at that programme (`/guide?at=`)
 - [x] Record a programme from the grid (via TimerHub's plan/apply, see TimerHub)
+- [x] "Switch now" on a programme actually airing right now — a direct call to ControlHub's zap (`/web/zap?sRef=`, confirmed live 2026-09-25), not preview-and-confirm (switching channels isn't a durable mutation the way creating a timer is)
 - [ ] `GraphMultiEPG` and `TvSpielfilm` are native on-screen references, not replacements
 
 ### DiscoveryHub
@@ -187,6 +188,21 @@ Notes:
 **Open**:
 - [ ] Filtering the change log by user (v1 has exactly one user; revisit once profiles exist)
 
+### ControlHub
+
+Pulled forward from v1.1 (`CONCEPT.md`, `docs/V1_PLAN.md`): verifying the Enigma2 plugin (WP8) needed a real screenshot/remote-control loop anyway, and GuideHub's "switch to this channel now" needs it too.
+
+**Done** — confirmed live 2026-09-25 while verifying WP8 (`ARCHITECTURE.md`, "Real screenshot and remote-control endpoints"):
+- [x] `webcontrol.Client` gains `Screenshot` (`GET /screenshot?format=png&osd=1&video=1` — a top-level path, not under `/web/`, native `ePixmap` capture, no external binary), `SendKey` (`GET /web/remotecontrol?command=`, standard Linux input-event codes), `Zap` (`GET /web/zap?sRef=`) and `InStandby` (`GET /web/powerstate`)
+- [x] `GET /api/v1/control/screenshot`, `GET /api/v1/control/power`, `POST /api/v1/control/key`, `POST /api/v1/control/zap` (`internal/hubs/control.go`) — every action direct and immediate, not preview-and-confirm: PRINCIPLES.md's rule is about durable data mutations with real consequences, and a virtual remote is inherently a live, instantly-reversible input device the same way a physical one (or WebControl's own native remote page, which DreamHub deliberately doesn't reimplement) is
+- [x] `Zap`/`SendKey` gated by `AllowWrites` like every other change to the box, for consistency with the read-only-trial switch even though channel-switching is trivially reversible; `Screenshot`/`InStandby` are read-only and always available
+- [x] `ControlHubView.vue`: a live screenshot (manual refresh + optional auto-refresh every 4s), a standby banner with a wake button, and a virtual remote pad (arrows/OK, exit, menu, four color keys, power)
+- [x] GuideHub's "switch now" button on a programme airing right now, calling ControlHub's zap directly (CONCEPT.md: a hub calls another hub's own API, not new backend logic)
+
+**Open**:
+- [ ] "Message to TV" (`/web/message`) — v1.1, not yet researched or built
+- [ ] A numeric keypad on the remote (channel-number entry) — the arrow/OK/color/power set covers navigation; not attempted yet
+
 ### AdminHub
 
 **Done** (v1 plan WP6, `docs/V1_PLAN.md`):
@@ -209,9 +225,11 @@ Notes:
 - [x] Python 2.7 targeted specifically (the only interpreter on the device, confirmed `PROJECT_PLAN.md`); every module's syntax confirmed via `py_compile` against the reference box's own `/usr/bin/python2` (2.7.13) — genuinely on-device, not just locally
 - [x] Language follows `config.osd.language` (format `de_DE`) via gettext, the confirmed on-device convention (`PROJECT_PLAN.md`): `PluginLanguageDomain`/`PluginLanguagePath`, `bindtextdomain()`, re-run on every `language.addCallback()`. `.po` sources for `de` and `it` committed (`en` is gettext's own source text); both validated with `msgfmt -c` — no missing/malformed entries
 - [x] **Installed on the reference box 2026-09-25** (with approval) into `/usr/lib/enigma2/python/Plugins/Extensions/DreamHub/`, then `systemctl restart enigma2`: the service came back `active (running)` within 15s, `journalctl -u enigma2 -b` has no traceback or error mentioning DreamHub anywhere in the full boot log, the pre-existing crash log (`enigma2_crash_1774122941.log`) is untouched (no new crash), and Python left behind compiled `.pyo` files for all five plugin modules next to the sources — evidence Enigma2's own boot-time plugin scan actually imported and compiled them for real, not just that they parse. This is real confirmation that `plugin.py`'s `Plugins()` registration and `__init__.py`'s gettext/config setup — the code that runs unconditionally at boot for every installed Extensions plugin — work correctly on-device
+- [x] **Visually confirmed live, 2026-09-25** (with approval — the box was in standby; woke it, drove it via `/web/remotecontrol` key simulation and confirmed every step with a real screenshot via the WebInterface plugin's own `/screenshot` endpoint, discovered mid-session: `WebChilds/Screenshot.py`, native `ePixmap` capture, not the unrelated external-binary `/grab`, which really is unimplemented on this box). `DreamHub` shows correctly in Enigma2's standard Plugin Browser (`Screens.Screen` reports its own registered description, "DreamHub auf dem Handy öffnen", correctly gettext-translated to German) — it does *not* appear in this image's custom "Gemini BluePanel" quick-launcher, which turned out to use its own separate, manually-curated category list rather than the standard plugin registry; not a DreamHub bug, and not worth chasing further for a launcher plugin. Opening it renders the actual screen — title, QR code, Schließen/Einstellungen buttons — and the backend's own request log shows the real `GET /api/v1/health` and `GET /api/v1/qr.png` calls landing at the exact moment the screen opened
+- [x] **Found and fixed live**: the status text showed "backend not reachable" even though the backend log proved the request succeeded (200). Standalone reproduction of the exact same `getPage()` + `json.loads()` call against the same URL, run via `python2 -c` on the box, worked perfectly — so something about running inside the real Enigma2/Twisted process (heavily loaded with third-party plugins) behaves differently in a way that wasn't pinned down. The real bug: `gotHealth`'s bare `except Exception: self.healthFailed(None)` silently swallowed whatever the actual error was, with no way to diagnose it after the fact. Fixed to log the exception to `/tmp/dreamhub-plugin.log` and fall back to a regex-extracted version number so the screen still shows something useful even if `json.loads` itself turns out to be the failing part — not yet re-verified live (needs one more install + `enigma2` restart)
 
 **Open**:
-- [ ] Visual/interactive confirmation of the launcher screen itself (the QR code actually renders, the status text updates, the buttons respond) — `DreamHubScreen.py`/`DreamHubSetup.py` are only imported lazily when a user actually opens the plugin from a menu, so the boot-time check above doesn't exercise them. The reference box's WebControl has no screenshot endpoint (`/web/grab` → `404`, unlike some OpenWebif builds) to confirm this remotely, and driving `/web/remotecontrol`'s blind key-simulation through this box's custom skin/menu structure without being able to see the result was judged too likely to leave the box in an unexpected state for a benefit that's really "look at the TV" — genuinely needs someone at the box, or a screen-grab capability added first
+- [ ] Re-verify the health-check logging fix live (one more install + restart) — the underlying cause is logged now but not yet actually seen
 - [ ] A real plugin icon (`PluginDescriptor` currently omits `icon=`, so Enigma2 shows its default) — not something to fabricate blindly, tracked for WP10 polish
 - [ ] The `/dreamhub/timercheck` dry-run adapter (decision D7, if it goes ahead)
 
@@ -239,8 +257,8 @@ Notes:
 ### ChannelHub
 - Link to / embed the BouquetEditor plugin (`/bouqueteditor/*`); its write endpoints still need a write-permitted check on the device. Picons from `/data/piconpool`.
 
-### ControlHub
-- Web remote, message to TV (`/web/message`), OSD screenshot, power menu — the logic already exists in WebControl, this is a UI layer.
+### ControlHub: "message to TV"
+- `/web/message` — not yet researched or built. The rest of ControlHub (remote, screenshot, power) was pulled forward into v1; see the v1 section above.
 
 ### MediaHub trimming
 - Lossless trimming via `ffmpeg -c copy` (cuts land on keyframe boundaries). `CutListEditor` is the on-screen reference for the `.ts.cuts` mechanism.

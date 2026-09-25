@@ -88,6 +88,7 @@ Releases: **Foundation** → **v1** → **v1.1** → **Later**. GitHub milestone
 - [x] `internal/recfs`: which files belong to a recording, rename with rollback, trash in AdvancedMovieSelection's `.ts.trash` convention (works without AMS), restore, empty. Paths are confined to the recording folders. In-memory FS for the mock
 - [x] Rename, trash (single and bulk), restore and delete-for-good, each as preview-and-confirm. Refused while the file is being recorded or played, checked again at apply. Stale previews rejected
 - [x] File operations only when DreamHub runs on the box, and switched off together with device writes (`DREAMHUB_ENABLE_DEVICE_WRITES=0`)
+- [x] Verified live 2026-09-25 on the reference box: rename there and back, trash and restore of a real recording; file list byte-identical afterwards (`ARCHITECTURE.md`)
 - [x] MediaHub screen: folder breadcrumbs, recordings with inline rename (every file before → after), selection for bulk trash, trash tab with total size. Sizes are now decimal (GB) per `CONCEPT.md`
 
 **Open**:

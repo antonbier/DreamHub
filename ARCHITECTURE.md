@@ -339,7 +339,7 @@ Confirmed 2026-09-24 against the reference box and its plugin source (`web/movie
 
 ## MediaHub file operations on the box (v1 plan WP4)
 
-Previewed live 2026-09-24 on the read-only test instance, with nothing applied. A rename preview of a real SerienRecorder recording listed all 8 of its files, including `.backdrop.jpg` and the SerienRecorder cover. Applying was refused (`writes_disabled`), and the recording folders' file list was unchanged afterwards (same checksum). The rules are in `backend/internal/recfs`. No `.ts.trash` files existed on the box. The old `/media/hdd/movie/trashcan/` folder from 2023 is hidden in MediaHub's folder list.
+**Exercised live 2026-09-25 with the owner's approval, and reverted.** Through DreamHub's own API on the box (test instance, writes on), a recorded GZSZ episode (8 files, 1.46 GB) was renamed to "DreamHub Schreibtest" and back, moved to the trash and restored. Each step was previewed and applied. enigma2's `/web/movielist` showed each new state immediately. Afterwards the file list of `/media/hdd/movie` (6,191 files, names and sizes) had the same checksum as before, and the change log held the four entries. Earlier, 2026-09-24, previewed on the read-only test instance with nothing applied: A rename preview of a real SerienRecorder recording listed all 8 of its files, including `.backdrop.jpg` and the SerienRecorder cover. Applying was refused (`writes_disabled`), and the recording folders' file list was unchanged afterwards (same checksum). The rules are in `backend/internal/recfs`. No `.ts.trash` files existed on the box. The old `/media/hdd/movie/trashcan/` folder from 2023 is hidden in MediaHub's folder list.
 
 ## Real API fixtures captured (#14)
 

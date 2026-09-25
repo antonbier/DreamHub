@@ -6,6 +6,7 @@ import (
 	"github.com/antonbier/DreamHub/backend/internal/autotimer"
 	atmock "github.com/antonbier/DreamHub/backend/internal/autotimer/mock"
 	"github.com/antonbier/DreamHub/backend/internal/recfs"
+	tmdbmock "github.com/antonbier/DreamHub/backend/internal/tmdb/mock"
 	"io"
 	"log/slog"
 	"net/http"
@@ -67,6 +68,7 @@ func newEnvFull(t *testing.T, wc webcontrol.Client, at autotimer.Client, recFS r
 	t.Helper()
 	a, err := app.New(context.Background(), app.Options{
 		ReadOnlyFiles: readOnly,
+		TMDB:          tmdbmock.New(),
 		DataDir:       t.TempDir(),
 		WebControl:    wc,
 		AutoTimer:     at,

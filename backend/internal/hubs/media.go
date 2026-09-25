@@ -6,11 +6,16 @@ import (
 	"path"
 	"sort"
 	"strings"
+	"time"
 
+	"github.com/antonbier/DreamHub/backend/internal/ai"
 	"github.com/antonbier/DreamHub/backend/internal/httpx"
 	"github.com/antonbier/DreamHub/backend/internal/hub"
 	"github.com/antonbier/DreamHub/backend/internal/plan"
 	"github.com/antonbier/DreamHub/backend/internal/recfs"
+	"github.com/antonbier/DreamHub/backend/internal/settings"
+	"github.com/antonbier/DreamHub/backend/internal/store"
+	"github.com/antonbier/DreamHub/backend/internal/tmdb"
 	"github.com/antonbier/DreamHub/backend/internal/webcontrol"
 )
 
@@ -29,6 +34,15 @@ type Media struct {
 	// switch as WebControl writes (DREAMHUB_ENABLE_DEVICE_WRITES=0), so a
 	// read-only trial run on a real box can't touch recordings either.
 	ReadOnly bool
+
+	// Name suggestions (media_suggest.go): settings for the keys and the
+	// language, the store for the AI budget, and the two optional
+	// external sources.
+	Settings *settings.Service
+	Store    *store.Store
+	AI       ai.Client
+	TMDB     tmdb.Client
+	Now      func() time.Time
 }
 
 // Mount registers MediaHub's routes.
@@ -36,6 +50,7 @@ func (h *Media) Mount(mux *http.ServeMux) {
 	mux.HandleFunc("GET /api/v1/media/movies", h.list)
 	mux.HandleFunc("GET /api/v1/media/disk", h.disk)
 	mux.HandleFunc("POST /api/v1/media/rename/plan", h.planRename)
+	mux.HandleFunc("POST /api/v1/media/rename/suggest", h.suggest)
 	mux.HandleFunc("POST /api/v1/media/trash/plan", h.planTrash)
 	mux.HandleFunc("GET /api/v1/media/trash", h.trashList)
 	mux.HandleFunc("POST /api/v1/media/trash/restore/plan", h.planRestore)

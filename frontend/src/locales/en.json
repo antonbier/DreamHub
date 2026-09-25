@@ -249,7 +249,25 @@
     "restorePreview": "The recording goes back to its folder under its old name.",
     "deletePreview": "{count} recording ({files} files, {size}) will be deleted for good. This can't be undone. | {count} recordings ({files} files, {size}) will be deleted for good. This can't be undone.",
     "restored": "Restored.",
-    "deleted": "Deleted {count} recording for good. | Deleted {count} recordings for good."
+    "deleted": "Deleted {count} recording for good. | Deleted {count} recordings for good.",
+    "suggest": {
+      "label": "Suggest:",
+      "asking": "Asking…",
+      "none": "No suggestion found.",
+      "source": {
+        "metadata": "From the recording",
+        "tmdb": "TMDB",
+        "ai": "AI"
+      },
+      "kind": {
+        "movie": "film",
+        "tv": "series"
+      },
+      "needsKey": {
+        "tmdb": "Needs a TMDB API key (Settings → TMDB).",
+        "ai": "Needs an OpenAI API key (Settings → AI). Each suggestion counts against the daily AI limit."
+      }
+    }
   },
   "guide": {
     "empty": "No channels in this bouquet.",
@@ -330,7 +348,13 @@
       "media_in_use": "The recording is in use right now.",
       "media_in_use_recording": "The recording is still being recorded. Try again once it's finished.",
       "media_in_use_playing": "The recording is playing on the TV right now. Stop playback first.",
-      "file_ops_unavailable": "Renaming and the trash are available when DreamHub runs on the box itself."
+      "file_ops_unavailable": "Renaming and the trash are available when DreamHub runs on the box itself.",
+      "tmdb_not_configured": "Set a TMDB API key in Settings first.",
+      "tmdb_unauthorized": "TMDB rejected the API key.",
+      "tmdb_unavailable": "TMDB can't be reached right now.",
+      "ai_not_configured": "Set an OpenAI API key in Settings first.",
+      "ai_budget_exceeded": "Today's AI limit is used up.",
+      "ai_unavailable": "The AI didn't give a usable answer."
     }
   },
   "settings": {

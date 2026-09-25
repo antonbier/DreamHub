@@ -249,7 +249,25 @@
     "restorePreview": "La registrazione torna nella sua cartella con il vecchio nome.",
     "deletePreview": "{count} registrazione ({files} file, {size}) verrà eliminata definitivamente. Non si può annullare. | {count} registrazioni ({files} file, {size}) verranno eliminate definitivamente. Non si può annullare.",
     "restored": "Ripristinata.",
-    "deleted": "{count} registrazione eliminata definitivamente. | {count} registrazioni eliminate definitivamente."
+    "deleted": "{count} registrazione eliminata definitivamente. | {count} registrazioni eliminate definitivamente.",
+    "suggest": {
+      "label": "Suggerimento:",
+      "asking": "Richiesta…",
+      "none": "Nessun suggerimento trovato.",
+      "source": {
+        "metadata": "Dalla registrazione",
+        "tmdb": "TMDB",
+        "ai": "IA"
+      },
+      "kind": {
+        "movie": "film",
+        "tv": "serie"
+      },
+      "needsKey": {
+        "tmdb": "Serve una chiave API TMDB (Impostazioni → TMDB).",
+        "ai": "Serve una chiave API OpenAI (Impostazioni → IA). Ogni suggerimento conta nel limite IA giornaliero."
+      }
+    }
   },
   "guide": {
     "empty": "Nessun canale in questo bouquet.",
@@ -330,7 +348,13 @@
       "media_in_use": "La registrazione è in uso.",
       "media_in_use_recording": "La registrazione è ancora in corso. Riprova quando è finita.",
       "media_in_use_playing": "La registrazione è in riproduzione sul televisore. Interrompi prima la riproduzione.",
-      "file_ops_unavailable": "Rinominare e il cestino sono disponibili quando DreamHub gira sul box stesso."
+      "file_ops_unavailable": "Rinominare e il cestino sono disponibili quando DreamHub gira sul box stesso.",
+      "tmdb_not_configured": "Imposta prima una chiave API TMDB nelle impostazioni.",
+      "tmdb_unauthorized": "TMDB ha rifiutato la chiave API.",
+      "tmdb_unavailable": "TMDB al momento non è raggiungibile.",
+      "ai_not_configured": "Imposta prima una chiave API OpenAI nelle impostazioni.",
+      "ai_budget_exceeded": "Il limite IA di oggi è esaurito.",
+      "ai_unavailable": "L'IA non ha dato una risposta utilizzabile."
     }
   },
   "settings": {

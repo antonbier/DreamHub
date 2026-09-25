@@ -21,6 +21,8 @@ Format follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/); version
 - Rename a recording: every file shown before → after, all or nothing. Move to trash, single or bulk, in AdvancedMovieSelection's `.ts.trash` convention, so it's the same trash the TV shows; it works without AMS too. Restore, and delete for good with the total size named.
 - Nothing is touched while it's being recorded or played; this is checked at preview and again at apply. File operations only run when DreamHub is on the box, and `DREAMHUB_ENABLE_DEVICE_WRITES=0` switches them off too.
 - Sizes are shown in decimal units (GB), as Enigma2 reports them.
+- Name suggestions for renaming, from three sources: the recording's own data (always), TMDB (with a key, in the UI language, episode titles for series) and the AI (with a key, counts against the daily AI limit). DreamHub always builds the name itself (`Title - S01E07 - Episode` / `Title (Year)`, SMB-safe); the AI never writes a file name.
+- Verified live on the reference box (approved, reverted): rename and back, trash and restore of a real recording; file list byte-identical afterwards.
 
 ### Added (v1 plan, WP3: TimerHub)
 - TimerHub screen: timers by day, state, source (SerienRecorder/AutoTimer, from the box's tags), a likely-conflict marker, and deleting through preview-and-confirm.

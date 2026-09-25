@@ -1,6 +1,8 @@
 package ai
 
 import (
+	"github.com/antonbier/DreamHub/backend/internal/naming"
+
 	"bytes"
 	"context"
 	"encoding/json"
@@ -92,9 +94,6 @@ func (c *OpenAIClient) Recommend(ctx context.Context, apiKey, model string, item
 	if len(items) > maxItems {
 		items = items[:maxItems]
 	}
-	if model == "" {
-		model = defaultModel
-	}
 
 	prompts := make([]promptItem, len(items))
 	for i, it := range items {
@@ -107,50 +106,13 @@ func (c *OpenAIClient) Recommend(ctx context.Context, apiKey, model string, item
 	if err != nil {
 		return nil, fmt.Errorf("ai: encoding candidate list: %w", err)
 	}
-
-	body, err := json.Marshal(chatRequest{
-		Model: model,
-		Messages: []chatMessage{
-			{Role: "system", Content: systemPrompt},
-			{Role: "user", Content: string(userContent)},
-		},
-		ResponseFormat: chatResponseFormat{Type: "json_object"},
-		MaxTokens:      600,
-	})
+	content, err := c.chat(ctx, apiKey, model, systemPrompt, string(userContent), 600)
 	if err != nil {
-		return nil, fmt.Errorf("ai: encoding request: %w", err)
-	}
-
-	req, err := http.NewRequestWithContext(ctx, http.MethodPost, c.BaseURL+"/v1/chat/completions", bytes.NewReader(body))
-	if err != nil {
-		return nil, fmt.Errorf("ai: building request: %w", err)
-	}
-	req.Header.Set("Content-Type", "application/json")
-	req.Header.Set("Authorization", "Bearer "+apiKey)
-
-	resp, err := c.HTTP.Do(req)
-	if err != nil {
-		return nil, fmt.Errorf("ai: calling OpenAI: %w", err)
-	}
-	defer resp.Body.Close()
-	respBody, err := io.ReadAll(resp.Body)
-	if err != nil {
-		return nil, fmt.Errorf("ai: reading OpenAI response: %w", err)
-	}
-
-	var chat chatResponse
-	if err := json.Unmarshal(respBody, &chat); err != nil {
-		return nil, fmt.Errorf("ai: parsing OpenAI response: %w", err)
-	}
-	if chat.Error != nil {
-		return nil, fmt.Errorf("ai: OpenAI rejected the request: %s", chat.Error.Message)
-	}
-	if len(chat.Choices) == 0 {
-		return nil, fmt.Errorf("ai: OpenAI returned no choices")
+		return nil, err
 	}
 
 	var picks picksResponse
-	if err := json.Unmarshal([]byte(chat.Choices[0].Message.Content), &picks); err != nil {
+	if err := json.Unmarshal([]byte(content), &picks); err != nil {
 		return nil, fmt.Errorf("ai: parsing recommendation JSON: %w", err)
 	}
 
@@ -169,6 +131,78 @@ func (c *OpenAIClient) Recommend(ctx context.Context, apiKey, model string, item
 		})
 	}
 	return out, nil
+}
+
+// ErrInvalidAnswer means the model's answer didn't pass validation — it's
+// dropped, never used half-way.
+var ErrInvalidAnswer = errors.New("ai: the answer didn't pass validation")
+
+const namePrompt = `You are DreamHub's recording-naming assistant. You receive one TV recording's real metadata as JSON (file name, broadcast title, description, channel, folder). Work out what it is and respond with ONLY a JSON object of this exact shape: {"title":"<series or film title>","year":<release year of a film, or 0>,"season":<season number or 0>,"episode":<episode number or 0>,"episodeTitle":"<episode title or empty>"}. Use the language and spelling of the metadata; don't translate titles. Only fill in what the metadata supports; use 0 or "" when unsure. For a series episode, leave "year" at 0.`
+
+func (c *OpenAIClient) SuggestName(ctx context.Context, apiKey, model string, in NameInput) (naming.Fields, error) {
+	if apiKey == "" {
+		return naming.Fields{}, ErrNotConfigured
+	}
+	in.Description = truncate(in.Description, 600)
+	userContent, err := json.Marshal(in)
+	if err != nil {
+		return naming.Fields{}, err
+	}
+	content, err := c.chat(ctx, apiKey, model, namePrompt, string(userContent), 200)
+	if err != nil {
+		return naming.Fields{}, err
+	}
+	var f naming.Fields
+	if err := json.Unmarshal([]byte(content), &f); err != nil || !f.Valid() {
+		return naming.Fields{}, ErrInvalidAnswer
+	}
+	return f, nil
+}
+
+// chat runs one JSON-mode chat completion and returns the message content.
+func (c *OpenAIClient) chat(ctx context.Context, apiKey, model, system, user string, maxTokens int) (string, error) {
+	if model == "" {
+		model = defaultModel
+	}
+	body, err := json.Marshal(chatRequest{
+		Model: model,
+		Messages: []chatMessage{
+			{Role: "system", Content: system},
+			{Role: "user", Content: user},
+		},
+		ResponseFormat: chatResponseFormat{Type: "json_object"},
+		MaxTokens:      maxTokens,
+	})
+	if err != nil {
+		return "", fmt.Errorf("ai: encoding request: %w", err)
+	}
+	req, err := http.NewRequestWithContext(ctx, http.MethodPost, c.BaseURL+"/v1/chat/completions", bytes.NewReader(body))
+	if err != nil {
+		return "", fmt.Errorf("ai: building request: %w", err)
+	}
+	req.Header.Set("Content-Type", "application/json")
+	req.Header.Set("Authorization", "Bearer "+apiKey)
+
+	resp, err := c.HTTP.Do(req)
+	if err != nil {
+		return "", fmt.Errorf("ai: calling OpenAI: %w", err)
+	}
+	defer resp.Body.Close()
+	respBody, err := io.ReadAll(resp.Body)
+	if err != nil {
+		return "", fmt.Errorf("ai: reading OpenAI response: %w", err)
+	}
+	var chat chatResponse
+	if err := json.Unmarshal(respBody, &chat); err != nil {
+		return "", fmt.Errorf("ai: parsing OpenAI response: %w", err)
+	}
+	if chat.Error != nil {
+		return "", fmt.Errorf("ai: OpenAI rejected the request: %s", chat.Error.Message)
+	}
+	if len(chat.Choices) == 0 {
+		return "", fmt.Errorf("ai: OpenAI returned no choices")
+	}
+	return chat.Choices[0].Message.Content, nil
 }
 
 func truncate(s string, n int) string {

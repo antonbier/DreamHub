@@ -71,6 +71,39 @@
           {{ t('media.previewRename') }}
         </button>
         <p v-if="state.error" class="basis-full text-[12.5px] text-warn">{{ state.error }}</p>
+
+        <!-- Name suggestions: each fills the box; the rename still goes
+             through the preview. -->
+        <div class="flex basis-full flex-wrap items-center gap-1 text-[13px]">
+          <span class="me-1 text-faint">{{ t('media.suggest.label') }}</span>
+          <button
+            v-for="src in sourceList"
+            :key="src.id"
+            type="button"
+            class="rounded px-2 py-1 text-accent hover:bg-tile-2 disabled:text-faint disabled:hover:bg-transparent"
+            :disabled="!src.enabled || !!state.suggesting"
+            :title="src.enabled ? undefined : t(`media.suggest.needsKey.${src.id}`)"
+            @click="emit('suggest', src.id)"
+          >
+            {{ state.suggesting === src.id ? t('media.suggest.asking') : t(`media.suggest.source.${src.id}`) }}
+          </button>
+        </div>
+        <p v-if="state.suggestError" class="basis-full text-[12.5px] text-warn">{{ state.suggestError }}</p>
+        <p v-else-if="state.suggestions && state.suggestions.length === 0" class="basis-full text-[12.5px] text-faint">{{ t('media.suggest.none') }}</p>
+        <ul v-else-if="state.suggestions" class="flex basis-full flex-col">
+          <li v-for="(sg, i) in state.suggestions" :key="i">
+            <button
+              type="button"
+              class="flex w-full items-baseline gap-2 rounded px-2 py-1 text-start hover:bg-tile-2"
+              @click="useSuggestion(sg.name)"
+            >
+              <span class="min-w-0 flex-1 truncate font-mono text-[13px] text-text">{{ sg.name }}</span>
+              <span class="shrink-0 text-[12px] text-faint">
+                {{ t(`media.suggest.source.${sg.source}`) }}<template v-if="sg.kind"> · {{ t(`media.suggest.kind.${sg.kind}`) }}</template>
+              </span>
+            </button>
+          </li>
+        </ul>
       </form>
 
       <p v-else-if="state.busy && !state.plan" class="text-[13px] text-faint">{{ t('common.loading') }}</p>
@@ -106,12 +139,13 @@
 </template>
 
 <script setup lang="ts">
-import { nextTick, ref, watch } from 'vue'
+import { computed, nextTick, ref, watch } from 'vue'
 import { useI18n } from 'vue-i18n'
 import PlanPreview from '@/components/PlanPreview.vue'
 import { formatBytes } from '@/lib/format'
 import type { Movie } from '@/api/types'
-import type { RowState } from './types'
+import type { RowState, SuggestSources } from './types'
+import type { SuggestionSource } from '@/api/types'
 
 const props = defineProps<{
   movie: Movie
@@ -121,12 +155,15 @@ const props = defineProps<{
   selectable: boolean
   selected: boolean
   state: RowState | null
+  // Which name-suggestion sources are set up.
+  sources: SuggestSources
 }>()
 const emit = defineEmits<{
   toggle: []
   rename: []
   trash: []
   previewRename: [newName: string]
+  suggest: [source: SuggestionSource]
   confirm: []
   cancel: []
 }>()
@@ -149,6 +186,17 @@ watch(
     nameInput.value?.select()
   },
 )
+
+const sourceList = computed<{ id: SuggestionSource; enabled: boolean }[]>(() => [
+  { id: 'metadata', enabled: true },
+  { id: 'tmdb', enabled: props.sources.tmdb },
+  { id: 'ai', enabled: props.sources.ai },
+])
+
+function useSuggestion(name: string) {
+  draft.value = name
+  nameInput.value?.focus()
+}
 
 function fileName(p: unknown): string {
   return typeof p === 'string' ? p.slice(p.lastIndexOf('/') + 1) : ''

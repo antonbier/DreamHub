@@ -134,10 +134,12 @@
               :selectable="fileOpsAvailable && movie.isRecording"
               :selected="selection.has(movie.filename)"
               :state="rowStates[movie.filename] ?? null"
+              :sources="suggestSources"
               @toggle="toggle(movie.filename)"
               @rename="rowStates[movie.filename] = { kind: 'rename', busy: false }"
               @trash="previewTrash(movie)"
               @preview-rename="(name: string) => previewRename(movie, name)"
+              @suggest="(source: SuggestionSource) => suggest(movie, source)"
               @confirm="confirmRow(movie)"
               @cancel="delete rowStates[movie.filename]"
             />
@@ -205,13 +207,13 @@ import Icon from '@/components/Icon.vue'
 import PlanPreview from '@/components/PlanPreview.vue'
 import RecordingRow from '@/components/media/RecordingRow.vue'
 import TrashPreview from '@/components/media/TrashPreview.vue'
-import type { RowState, TrashActionState } from '@/components/media/types'
+import type { RowState, SuggestSources, TrashActionState } from '@/components/media/types'
 import { useNavigationStore } from '@/stores/navigation'
 import { useProblem } from '@/composables/useProblem'
 import { usePlanError } from '@/composables/usePlanError'
 import { useDisplayTimeZone } from '@/composables/useDisplayTimeZone'
 import { formatBytes } from '@/lib/format'
-import type { Disk, MediaFolder, Movie, Plan, TrashItem } from '@/api/types'
+import type { Disk, MediaFolder, Movie, Plan, SuggestionSource, TrashItem } from '@/api/types'
 
 const { t, locale } = useI18n()
 const navigation = useNavigationStore()
@@ -292,12 +294,33 @@ const rowStates = reactive<Record<string, RowState>>({})
 
 async function previewRename(movie: Movie, newName: string) {
   const key = movie.filename
-  rowStates[key] = { kind: 'rename', busy: true }
+  // Keep the suggestions: if the preview is refused, they're still there.
+  const suggestions = rowStates[key]?.suggestions
+  rowStates[key] = { kind: 'rename', busy: true, suggestions }
   try {
     const res = await api.media.renamePlan(movie.filename, newName)
     rowStates[key] = { kind: 'rename', plan: res.plan, busy: false }
   } catch (err) {
-    rowStates[key] = { kind: 'rename', busy: false, error: planErrorMessage(err) }
+    rowStates[key] = { kind: 'rename', busy: false, error: planErrorMessage(err), suggestions }
+  }
+}
+
+// --- name suggestions (decision D2) ---------------------------------------------
+
+// TMDB and the AI provider need their keys; until then their buttons are
+// disabled with a hint (checked once, from the connector states).
+const suggestSources = ref<SuggestSources>({ tmdb: false, ai: false })
+
+async function suggest(movie: Movie, source: SuggestionSource) {
+  const key = movie.filename
+  const state = rowStates[key]
+  if (!state) return
+  rowStates[key] = { ...state, suggesting: source, suggestError: undefined }
+  try {
+    const res = await api.media.suggestName(movie.filename, source)
+    rowStates[key] = { ...rowStates[key], suggesting: undefined, suggestions: res.suggestions }
+  } catch (err) {
+    rowStates[key] = { ...rowStates[key], suggesting: undefined, suggestions: undefined, suggestError: planErrorMessage(err) }
   }
 }
 
@@ -409,6 +432,15 @@ async function confirmTrashAction() {
 
 onMounted(async () => {
   void open()
+  api
+    .connectors()
+    .then((res) => {
+      const ok = (id: string) => res.connectors.some((c) => c.id === id && c.state === 'ok')
+      suggestSources.value = { tmdb: ok('tmdb'), ai: ok('openai') }
+    })
+    .catch(() => {
+      // Unknown: leave TMDB/AI off; the metadata source always works.
+    })
   try {
     disks.value = (await api.media.disk()).disks
   } catch {

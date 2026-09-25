@@ -252,3 +252,60 @@ func TestMedia_ReadOnlyRunPreviewsButNeverTouchesFiles(t *testing.T) {
 		t.Error("a read-only run must not change any file")
 	}
 }
+
+type suggestResp struct {
+	Suggestions []struct {
+		Name   string `json:"name"`
+		Source string `json:"source"`
+		Kind   string `json:"kind"`
+	} `json:"suggestions"`
+}
+
+func (e *env) suggest(t *testing.T, path, source string) (int, suggestResp, []byte) {
+	t.Helper()
+	resp, b := e.do(t, "POST", "/api/v1/media/rename/suggest", fmt.Sprintf(`{"path":%q,"source":%q}`, path, source), nil)
+	var s suggestResp
+	json.Unmarshal(b, &s)
+	return resp.StatusCode, s, b
+}
+
+const tatortTS = mock.Root + "Tatort/20260920 2015 - Das Erste HD - Tatort_ Borowski und das Haus am Meer.ts"
+
+func TestMedia_NameSuggestions(t *testing.T) {
+	e := newEnv(t)
+
+	// Metadata: always available, built from .ts.meta; colons made SMB-safe.
+	status, s, b := e.suggest(t, tatortTS, "metadata")
+	if status != http.StatusOK || len(s.Suggestions) != 1 || s.Suggestions[0].Name != "Tatort - Borowski und das Haus am Meer" {
+		t.Fatalf("metadata suggestion: %d %s", status, b)
+	}
+
+	// TMDB and AI need their keys first — a clear code, not a failure.
+	for source, code := range map[string]string{"tmdb": "tmdb_not_configured", "ai": "ai_not_configured"} {
+		status, _, b := e.suggest(t, tatortTS, source)
+		if got, _, _ := errCode(t, b); status != http.StatusConflict || got != code {
+			t.Errorf("%s without a key: want 409 %s, got %d %s", source, code, status, b)
+		}
+	}
+	e.do(t, "PATCH", "/api/v1/settings", `{"values":{"tmdb.apiKey":"k","ai.openai.apiKey":"sk-test","ai.dailyLimit":1}}`, nil)
+
+	status, s, b = e.suggest(t, tatortTS, "tmdb")
+	if status != http.StatusOK || len(s.Suggestions) != 2 || s.Suggestions[1].Name != "Tatort - Borowski und das Haus am Meer (2026)" || s.Suggestions[1].Kind != "movie" {
+		t.Fatalf("tmdb suggestions: %d %s", status, b)
+	}
+
+	status, s, b = e.suggest(t, tatortTS, "ai")
+	if status != http.StatusOK || len(s.Suggestions) != 1 || s.Suggestions[0].Source != "ai" {
+		t.Fatalf("ai suggestion: %d %s", status, b)
+	}
+	// The daily budget (1) is used up now.
+	status, _, b = e.suggest(t, tatortTS, "ai")
+	if got, _, _ := errCode(t, b); status != http.StatusTooManyRequests || got != "ai_budget_exceeded" {
+		t.Fatalf("expected ai_budget_exceeded, got %d %s", status, b)
+	}
+
+	// A suggestion changes nothing on its own.
+	if !strings.Contains(fmt.Sprint(e.folder(t, mock.Root+"Tatort/").Movies), "Tatort_ Borowski") {
+		t.Error("suggesting must not rename anything")
+	}
+}

@@ -193,6 +193,21 @@ export interface MediaFolder {
   fileOps: { available: boolean; reason?: string }
 }
 
+// backend/internal/hubs.Suggestion — a proposed name; nothing changes
+// until it goes through the normal rename preview.
+export type SuggestionSource = 'metadata' | 'tmdb' | 'ai'
+export interface NameSuggestion {
+  name: string
+  source: SuggestionSource
+  kind?: 'movie' | 'tv'
+}
+
+// backend/internal/connector.Report (subset), GET /api/v1/connectors.
+export interface ConnectorState {
+  id: string
+  state: 'ok' | 'not_configured' | 'unreachable' | 'not_implemented' | 'not_installed'
+}
+
 // backend/internal/recfs.TrashItem.
 export interface TrashItem {
   path: string // the ".ts.trash" file

@@ -12,7 +12,11 @@
 // timer for the wrong program).
 package ai
 
-import "context"
+import (
+	"context"
+
+	"github.com/antonbier/DreamHub/backend/internal/naming"
+)
 
 // EPGItem is one candidate broadcast offered to the AI, trimmed for token
 // budget (ROADMAP.md: "~90k tokens/day for 30 channels is cents-level").
@@ -42,4 +46,18 @@ type Recommendation struct {
 // provider's default".
 type Client interface {
 	Recommend(ctx context.Context, apiKey, model string, items []EPGItem) ([]Recommendation, error)
+	// SuggestName reads a recording's own metadata and returns structured
+	// fields (title, year, season, episode, episode title) — never a file
+	// name: MediaHub builds that itself (internal/naming), and rejects
+	// fields that don't pass naming.Fields.Valid.
+	SuggestName(ctx context.Context, apiKey, model string, in NameInput) (naming.Fields, error)
+}
+
+// NameInput is what the AI sees of a recording: its real metadata only.
+type NameInput struct {
+	FileName    string `json:"fileName"`
+	Title       string `json:"title"`
+	Description string `json:"description,omitempty"`
+	Channel     string `json:"channel,omitempty"`
+	Folder      string `json:"folder,omitempty"` // path below the recording folder
 }

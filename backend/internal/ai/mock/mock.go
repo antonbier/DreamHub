@@ -5,6 +5,7 @@ package mock
 
 import (
 	"context"
+	"github.com/antonbier/DreamHub/backend/internal/naming"
 
 	"github.com/antonbier/DreamHub/backend/internal/ai"
 )
@@ -33,4 +34,10 @@ func (*Client) Recommend(ctx context.Context, apiKey, model string, items []ai.E
 		})
 	}
 	return out, nil
+}
+
+// SuggestName derives the fields from the recording's own title, like the
+// metadata source does — deterministic, free, no network.
+func (*Client) SuggestName(ctx context.Context, apiKey, model string, in ai.NameInput) (naming.Fields, error) {
+	return naming.FromMetadata(in.Title, in.Description, nil), nil
 }

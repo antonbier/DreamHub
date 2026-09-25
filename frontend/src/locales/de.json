@@ -249,7 +249,25 @@
     "restorePreview": "Die Aufnahme kommt unter ihrem alten Namen in ihren Ordner zurück.",
     "deletePreview": "{count} Aufnahme ({files} Dateien, {size}) wird endgültig gelöscht. Das lässt sich nicht rückgängig machen. | {count} Aufnahmen ({files} Dateien, {size}) werden endgültig gelöscht. Das lässt sich nicht rückgängig machen.",
     "restored": "Wiederhergestellt.",
-    "deleted": "{count} Aufnahme endgültig gelöscht. | {count} Aufnahmen endgültig gelöscht."
+    "deleted": "{count} Aufnahme endgültig gelöscht. | {count} Aufnahmen endgültig gelöscht.",
+    "suggest": {
+      "label": "Vorschlag:",
+      "asking": "Frage an…",
+      "none": "Kein Vorschlag gefunden.",
+      "source": {
+        "metadata": "Aus der Aufnahme",
+        "tmdb": "TMDB",
+        "ai": "KI"
+      },
+      "kind": {
+        "movie": "Film",
+        "tv": "Serie"
+      },
+      "needsKey": {
+        "tmdb": "Braucht einen TMDB-API-Schlüssel (Einstellungen → TMDB).",
+        "ai": "Braucht einen OpenAI-API-Schlüssel (Einstellungen → KI). Jeder Vorschlag zählt zum täglichen KI-Limit."
+      }
+    }
   },
   "guide": {
     "empty": "Keine Sender in diesem Bouquet.",
@@ -330,7 +348,13 @@
       "media_in_use": "Die Aufnahme wird gerade verwendet.",
       "media_in_use_recording": "Die Aufnahme läuft noch. Bitte nach dem Ende erneut versuchen.",
       "media_in_use_playing": "Die Aufnahme wird gerade am Fernseher abgespielt. Bitte erst die Wiedergabe beenden.",
-      "file_ops_unavailable": "Umbenennen und Papierkorb gibt es, wenn DreamHub auf der Box selbst läuft."
+      "file_ops_unavailable": "Umbenennen und Papierkorb gibt es, wenn DreamHub auf der Box selbst läuft.",
+      "tmdb_not_configured": "Bitte zuerst einen TMDB-API-Schlüssel in den Einstellungen eintragen.",
+      "tmdb_unauthorized": "TMDB hat den API-Schlüssel abgelehnt.",
+      "tmdb_unavailable": "TMDB ist gerade nicht erreichbar.",
+      "ai_not_configured": "Bitte zuerst einen OpenAI-API-Schlüssel in den Einstellungen eintragen.",
+      "ai_budget_exceeded": "Das KI-Limit für heute ist aufgebraucht.",
+      "ai_unavailable": "Die KI hat keine brauchbare Antwort geliefert."
     }
   },
   "settings": {

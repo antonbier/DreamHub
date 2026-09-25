@@ -6,6 +6,7 @@ package app
 import (
 	"context"
 	"github.com/antonbier/DreamHub/backend/internal/recfs"
+	"github.com/antonbier/DreamHub/backend/internal/tmdb"
 	"log/slog"
 	"net/http"
 	"sync"
@@ -36,8 +37,12 @@ type Options struct {
 	// used by SeriesHub and the SerienRecorder connector's reachability
 	// check. Required whenever Mock is false.
 	Series serienrecorder.Client
-	// AI is DiscoveryHub's recommendation client (internal/ai).
+	// AI is the AI provider's client (internal/ai): DiscoveryHub's
+	// recommendations and MediaHub's name suggestions.
 	AI ai.Client
+	// TMDB is the TMDB client (internal/tmdb), for name suggestions; nil
+	// means TMDB suggestions report "not configured".
+	TMDB tmdb.Client
 	// RecordingsFS is where MediaHub's file operations act: recfs.OS{} on
 	// the box, the mock's in-memory FS in mock mode, nil to disable them.
 	RecordingsFS recfs.FS
@@ -172,7 +177,8 @@ func New(ctx context.Context, o Options) (*App, error) {
 	watcher := hub.NewStatusWatcher()
 
 	timerHub := &hubs_.Timer{WC: o.WebControl, Plans: plans, Now: now, AT: o.AutoTimer}
-	mediaHub := &hubs_.Media{WC: o.WebControl, Plans: plans, FS: o.RecordingsFS, ReadOnly: o.ReadOnlyFiles}
+	mediaHub := &hubs_.Media{WC: o.WebControl, Plans: plans, FS: o.RecordingsFS, ReadOnly: o.ReadOnlyFiles,
+		Settings: svc, Store: st, AI: o.AI, TMDB: o.TMDB, Now: now}
 	guideHub := &hubs_.Guide{WC: o.WebControl, Now: now}
 	seriesHub := &hubs_.Series{SR: o.Series}
 	discoveryHub := &hubs_.Discovery{WC: o.WebControl, AI: o.AI, Store: st, Settings: svc, Now: now}

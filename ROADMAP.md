@@ -92,7 +92,10 @@ Releases: **Foundation** → **v1** → **v1.1** → **Later**. GitHub milestone
 - [x] MediaHub screen: folder breadcrumbs, recordings with inline rename (every file before → after), selection for bulk trash, trash tab with total size. Sizes are now decimal (GB) per `CONCEPT.md`
 
 **Open**:
-- [ ] Name suggestions (decision D2): metadata template, TMDB, AI provider. All optional, all ending in the same rename preview
+- [x] Name suggestions (decision D2), all ending in the same rename preview (`POST /api/v1/media/rename/suggest`):
+  - three sources: the recording's own metadata (`.ts.meta` plus folder names, always available), TMDB (optional, v3 key or v4 token, results in the user's language, episode titles for series) and the AI provider (optional, counts against `ai.dailyLimit`)
+  - every source returns only fields; `internal/naming` builds the name: `Title - S01E07 - Episode` / `Title (Year)`, the Plex/Jellyfin/Kodi convention, made SMB-safe
+  - verified on the reference box's real recordings (metadata source)
 - [ ] Update title/description in `.ts.meta` along with a rename
 - [ ] Global search across all folders (the search provider still only sees the top folder; needs a cached, throttled index — WP7)
 - [x] Rename engine covering **all** sidecar files of a `.ts` recording: `.ts`, `.ts.meta`, `.ts.ap`, `.ts.sc`, `.ts.cuts`, `.eit`. Plus existing cover art (`.jpg`, `.backdrop.jpg`) — move it along, don't re-fetch from TMDB. WebControl's API has no file-operation endpoints (`ARCHITECTURE.md`), so this needs its own filesystem-backed component (real: direct `os.Rename` — the backend runs on-device with local access to `/media/hdd`, per `PROJECT_PLAN.md`'s packaging plan, no SSH needed in production; mock: in-memory, per `PRINCIPLES.md`'s "Mock-first development")

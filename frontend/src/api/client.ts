@@ -15,7 +15,10 @@ import { authHeader, authState, clearCredentials } from './authState'
 import type {
   ApiToken,
   AutoTimers,
+  ConnectorState,
   MediaFolder,
+  NameSuggestion,
+  SuggestionSource,
   SimulatedTimer,
   TrashItem,
   Bouquet,
@@ -130,6 +133,7 @@ export const api = {
       request<SettingsView>('PATCH', '/api/v1/settings', { values }),
   },
   hubs: () => request<{ hubs: HubStatus[] }>('GET', '/api/v1/hubs'),
+  connectors: () => request<{ connectors: ConnectorState[] }>('GET', '/api/v1/connectors'),
   timers: () => request<{ timers: Timer[]; tuners: number }>('GET', '/api/v1/timers'),
   // backend/internal/hubs.createRequest (internal/hubs/timer.go) — used
   // directly by TimerHub's own future UI and by DiscoveryHub's "create
@@ -165,6 +169,8 @@ export const api = {
     // One folder; no dir means the box's first recording folder.
     folder: (dir?: string) =>
       request<MediaFolder>('GET', `/api/v1/media/movies${dir ? `?dir=${encodeURIComponent(dir)}` : ''}`),
+    suggestName: (path: string, source: SuggestionSource) =>
+      request<{ suggestions: NameSuggestion[] }>('POST', '/api/v1/media/rename/suggest', { path, source }),
     renamePlan: (path: string, newName: string) => request<{ plan: Plan }>('POST', '/api/v1/media/rename/plan', { path, newName }),
     trashPlan: (paths: string[]) => request<{ plan: Plan }>('POST', '/api/v1/media/trash/plan', { paths }),
     trash: () => request<{ items: TrashItem[] }>('GET', '/api/v1/media/trash'),

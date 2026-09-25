@@ -3,6 +3,7 @@ package ai
 import (
 	"context"
 	"encoding/json"
+	"errors"
 	"net/http"
 	"net/http/httptest"
 	"testing"
@@ -71,5 +72,28 @@ func TestRecommend_NoItemsIsNotAnError(t *testing.T) {
 	recs, err := c.Recommend(context.Background(), "sk-test", "", nil)
 	if err != nil || recs != nil {
 		t.Errorf("expected (nil, nil) for an empty candidate list, got (%v, %v)", recs, err)
+	}
+}
+
+func TestSuggestName_ValidatesTheAnswer(t *testing.T) {
+	answer := ""
+	srv := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		b, _ := json.Marshal(map[string]any{"choices": []any{map[string]any{"message": map[string]any{"role": "assistant", "content": answer}}}})
+		w.Write(b)
+	}))
+	defer srv.Close()
+	c := &OpenAIClient{HTTP: srv.Client(), BaseURL: srv.URL}
+	in := NameInput{FileName: "20260923 1932 - RTL - GZSZ.ts", Title: "GZSZ"}
+
+	answer = `{"title":"Gute Zeiten, schlechte Zeiten","year":0,"season":0,"episode":8614,"episodeTitle":"Hirngespinst"}`
+	f, err := c.SuggestName(context.Background(), "key", "", in)
+	if err != nil || f.Title != "Gute Zeiten, schlechte Zeiten" || f.Episode != 8614 {
+		t.Fatalf("valid answer: %+v, %v", f, err)
+	}
+	for _, bad := range []string{`{"title":""}`, `{"title":"X","year":20}`, `not json`} {
+		answer = bad
+		if _, err := c.SuggestName(context.Background(), "key", "", in); !errors.Is(err, ErrInvalidAnswer) {
+			t.Errorf("%s: want ErrInvalidAnswer, got %v", bad, err)
+		}
 	}
 }

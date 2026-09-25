@@ -36,6 +36,7 @@ import type {
   LogEntry,
   LogLevel,
   Navigation,
+  Notification,
   Plan,
   Recommendation,
   SearchResult,
@@ -228,7 +229,19 @@ export const api = {
       params.set('limit', String(filter.limit ?? 200))
       return request<{ entries: LogEntry[] }>('GET', `/api/v1/admin/logs?${params}`)
     },
+    // Live tail's stream path (useEventStream.ts reads it directly, not through request()).
+    logsStreamPath: (filter: { unit?: string; level?: string; text?: string }) => {
+      const params = new URLSearchParams()
+      if (filter.unit) params.set('unit', filter.unit)
+      if (filter.level) params.set('level', filter.level)
+      if (filter.text) params.set('text', filter.text)
+      return `/api/v1/admin/logs/stream?${params}`
+    },
     crashLogs: () => request<{ logs: CrashLog[] }>('GET', '/api/v1/admin/crashlogs'),
     crashLog: (name: string) => request<{ name: string; content: string }>('GET', `/api/v1/admin/crashlogs/${encodeURIComponent(name)}`),
+  },
+  notifications: {
+    list: (limit = 20) => request<{ notifications: Notification[]; unread: number }>('GET', `/api/v1/notifications?limit=${limit}`),
+    markRead: () => request<{ unread: number }>('POST', '/api/v1/notifications/read'),
   },
 }

@@ -85,17 +85,17 @@ Order matters where noted. Everything else can run in parallel.
 - UI states clearly that the journal is **since last boot** (volatile, see `ARCHITECTURE.md`).
 - enigma2 crash logs list + view, support download with secrets removed.
 
-### WP7 — Core leftovers for v1 *(in-flight coalescing done 2026-09-25 — see ROADMAP.md, step 7; short caches and the rest still open)*
+### WP7 — Core leftovers for v1 *(event bus, SSE live updates and in-flight coalescing done 2026-09-25 — see ROADMAP.md, step 7; criteria tiles, runtime locales, accessibility and complete Italian still open)*
 - Never fan out parallel requests to the box (enigma2 serializes them, see `ARCHITECTURE.md`): coalesce identical in-flight requests ([x], `webcontrol.HTTPClient.coalescedGet`), short caches, `/web/movielist` cached — a time-based cache is deliberately deferred: it would also apply to a plan's own apply-time freshness check (`internal/plan`'s Fingerprint/Current) and could silently weaken preview-and-confirm's staleness guarantee, so it needs a cache-bypass path for that check specifically, not a blanket TTL.
-- WebSocket + a minimal event bus. Events come from polling `/web/timerlist`/`movielist` (detection, not automation): `recording.started/finished`, `timer.conflict`, disk above 90 %. Persisted notifications (key + params), inbox in the bell.
+- [x] WebSocket + a minimal event bus. Events come from polling `/web/timerlist`/`movielist` (detection, not automation): `recording.started/finished`, disk above 90 % — `internal/events`. Persisted notifications (key + params, `store`'s `notifications` table), inbox in the bell (`stores/notifications.ts`). Implemented as **Server-Sent Events**, not a literal WebSocket: everything here only ever flows server → client, so SSE gets the identical result with no new dependency for a hand-rolled handshake — see `api.handleEventsStream`'s doc comment for the full reasoning, including why the frontend can't use the browser's native `EventSource` (it can't carry DreamHub's own auth header). `timer.conflict` isn't in the poller yet (still open, needs `internal/tuner` wired in without duplicating TimerHub's own estimate).
 - Custom/criteria tiles on top of the search providers (the mechanics exist).
 - Runtime drop-in locales from `/data/dreamhub/locales/`, accessibility pass, complete Italian strings.
 
-### WP8 — TV launcher plugin *(after WP1; needs WP2 for live tests)*
+### WP8 — TV launcher plugin *(written 2026-09-25, not yet verified in a live Enigma2 GUI session — see ROADMAP.md, "Enigma2 TV plugin")*
 - If D7 goes ahead: the `/dreamhub/timercheck` dry-run adapter lives here.
-- Python 2.7, gettext DE/IT/EN via `config.osd.language`.
-- The QR code is rendered **by the backend** (`/api/v1/qr.png`, local-only), so the plugin needs no QR library and holds no logic.
-- Shows backend status/version (`/api/v1/health`), mismatch message. Basic settings: auth on/off, port.
+- [x] Python 2.7, gettext DE/IT/EN via `config.osd.language`.
+- [x] The QR code is rendered **by the backend** (`/api/v1/qr.png`, local-only), so the plugin needs no QR library and holds no logic.
+- [x] Shows backend status/version (`/api/v1/health`), mismatch message. Basic settings: auth on/off, port.
 
 ### WP9 — Packaging & release *(last)*
 - `.deb` (arm64): binary, `dreamhub.service`, avahi service file, TV plugin, `postinst`/`prerm`, data in `/data/dreamhub`, `Depends` per `ROADMAP.md`.

@@ -1,6 +1,7 @@
 package api_test
 
 import (
+	"bytes"
 	"context"
 	"encoding/json"
 	"github.com/antonbier/DreamHub/backend/internal/autotimer"
@@ -20,7 +21,9 @@ import (
 	aimock "github.com/antonbier/DreamHub/backend/internal/ai/mock"
 	"github.com/antonbier/DreamHub/backend/internal/api"
 	"github.com/antonbier/DreamHub/backend/internal/app"
+	"github.com/antonbier/DreamHub/backend/internal/events"
 	"github.com/antonbier/DreamHub/backend/internal/httpx"
+	"github.com/antonbier/DreamHub/backend/internal/journald"
 	jmock "github.com/antonbier/DreamHub/backend/internal/journald/mock"
 	srmock "github.com/antonbier/DreamHub/backend/internal/serienrecorder/mock"
 	"github.com/antonbier/DreamHub/backend/internal/settings"
@@ -34,9 +37,10 @@ func discardLogger() *slog.Logger { return slog.New(slog.NewTextHandler(io.Disca
 var fixedNow = time.Date(2026, 9, 23, 18, 7, 0, 0, time.UTC)
 
 type env struct {
-	srv   *httptest.Server
-	store *store.Store
-	svc   *settings.Service
+	srv    *httptest.Server
+	store  *store.Store
+	svc    *settings.Service
+	events *events.Bus
 }
 
 // newEnv builds the application exactly as production does (internal/app),
@@ -58,14 +62,21 @@ func newEnvWithAutoTimer(t *testing.T, wc webcontrol.Client, at autotimer.Client
 }
 
 func newEnvWithOptions(t *testing.T, wc webcontrol.Client, at autotimer.Client, recFS recfs.FS) *env {
-	return newEnvFull(t, wc, at, recFS, false)
+	return newEnvFull(t, wc, at, recFS, false, jmock.New())
 }
 
 func newEnvWithReadOnlyFiles(t *testing.T, m *mock.Client) *env {
-	return newEnvFull(t, m, atmock.New(), m.FS, true)
+	return newEnvFull(t, m, atmock.New(), m.FS, true, jmock.New())
 }
 
-func newEnvFull(t *testing.T, wc webcontrol.Client, at autotimer.Client, recFS recfs.FS, readOnly bool) *env {
+// newEnvWithLogs is for AdminHub tests that need a journald.Reader they
+// control the content of, rather than the fixed mock fixture.
+func newEnvWithLogs(t *testing.T, logs journald.Reader) *env {
+	m := mock.New()
+	return newEnvFull(t, m, atmock.New(), m.FS, false, logs)
+}
+
+func newEnvFull(t *testing.T, wc webcontrol.Client, at autotimer.Client, recFS recfs.FS, readOnly bool, logs journald.Reader) *env {
 	t.Helper()
 	a, err := app.New(context.Background(), app.Options{
 		ReadOnlyFiles: readOnly,
@@ -76,7 +87,7 @@ func newEnvFull(t *testing.T, wc webcontrol.Client, at autotimer.Client, recFS r
 		RecordingsFS:  recFS,
 		Series:        srmock.New(),
 		AI:            aimock.New(),
-		Logs:          jmock.New(),
+		Logs:          logs,
 		Mock:          true,
 		LookPath:      func(string) (string, error) { return "/usr/bin/journalctl", nil },
 		Logger:        discardLogger(),
@@ -88,7 +99,7 @@ func newEnvFull(t *testing.T, wc webcontrol.Client, at autotimer.Client, recFS r
 	t.Cleanup(func() { a.Store.Close() })
 	srv := httptest.NewServer(a.Handler)
 	t.Cleanup(srv.Close)
-	return &env{srv: srv, store: a.Store, svc: a.Settings}
+	return &env{srv: srv, store: a.Store, svc: a.Settings, events: a.Events}
 }
 
 func (e *env) do(t *testing.T, method, path, body string, configure func(*http.Request)) (*http.Response, []byte) {
@@ -116,6 +127,28 @@ func (e *env) do(t *testing.T, method, path, body string, configure func(*http.R
 	defer resp.Body.Close()
 	b, _ := io.ReadAll(resp.Body)
 	return resp, b
+}
+
+func TestQR_ReturnsAPNGWithoutAuth(t *testing.T) {
+	e := newEnv(t)
+	resp, err := http.Get(e.srv.URL + "/api/v1/qr.png") // no Authorization header at all
+	if err != nil {
+		t.Fatal(err)
+	}
+	defer resp.Body.Close()
+	if resp.StatusCode != http.StatusOK {
+		t.Fatalf("expected 200, got %d", resp.StatusCode)
+	}
+	if ct := resp.Header.Get("Content-Type"); ct != "image/png" {
+		t.Errorf("expected image/png, got %q", ct)
+	}
+	b, err := io.ReadAll(resp.Body)
+	if err != nil {
+		t.Fatal(err)
+	}
+	if !bytes.HasPrefix(b, []byte("\x89PNG\r\n\x1a\n")) {
+		t.Errorf("expected a PNG file, got %d bytes starting %x", len(b), b[:min(8, len(b))])
+	}
 }
 
 func TestHealth(t *testing.T) {

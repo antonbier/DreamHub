@@ -383,3 +383,16 @@ export interface LogLevel {
   level: 'info' | 'debug'
   until?: string // RFC3339, UTC — only while level is "debug"
 }
+
+// backend/internal/api's notificationView — the core event bus's feed
+// (docs/V1_PLAN.md, WP7), from GET /api/v1/notifications and pushed live
+// over GET /api/v1/events/stream. key is an i18n key, params its
+// arguments — never finished text, translated client-side like
+// status.Problem everywhere else.
+export interface Notification {
+  id: number
+  at: string // RFC3339, UTC
+  key: string
+  params: Record<string, unknown>
+  read: boolean
+}

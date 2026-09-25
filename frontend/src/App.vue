@@ -31,12 +31,14 @@ import StatusStrip from './components/StatusStrip.vue'
 import LoginScreen from './components/LoginScreen.vue'
 import { usePreferencesStore } from './stores/preferences'
 import { useNavigationStore } from './stores/navigation'
+import { useNotificationsStore } from './stores/notifications'
 import { useAuth } from './composables/useAuth'
 import { useGlobalShortcuts } from './composables/useGlobalShortcuts'
 import type { NavSection } from './api/types'
 
 const preferences = usePreferencesStore()
 const navigation = useNavigationStore()
+const notifications = useNotificationsStore()
 const { authState, check } = useAuth()
 useGlobalShortcuts()
 
@@ -50,6 +52,8 @@ const fallbackSections: NavSection[] = [
 function loadShellData() {
   void preferences.load()
   void navigation.load()
+  void notifications.load()
+  notifications.connect()
 }
 
 onMounted(async () => {
@@ -64,7 +68,15 @@ function onAuthenticated() {
 // A 401 on some later request (e.g. the admin changed the password
 // elsewhere) flips authState.authenticated back to false — client.ts does
 // that directly since it's the one that sees the 401. Nothing else to do
-// here; the template above reacts on its own.
+// here for the shell itself; the template above reacts on its own. The
+// event stream does need telling explicitly, though — it would otherwise
+// keep quietly retrying a stream it no longer has credentials for.
+watch(
+  () => authState.authenticated,
+  (authenticated) => {
+    if (!authenticated) notifications.disconnect()
+  },
+)
 
 // The backend picks descriptive-vs-hub labels per navLabels, so re-fetch
 // the sidebar whenever that preference changes (skip the initial load).

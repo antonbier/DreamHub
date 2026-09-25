@@ -2,11 +2,11 @@
   The top bar's notification inbox (CONCEPT.md, "Notifications"). Two
   parts: *current* issues, derived live from data already on hand (hub
   problems from the navigation store — the same ones the sidebar's status
-  dots explain — and a clock-skew check); and *recent activity*, the real
-  hub.statusChanged entries the backend now writes to the change log
-  (internal/hub/watcher.go) — a genuine, if partial, history. A full
-  event-bus-backed inbox covering every hub action is still open
-  (ROADMAP.md).
+  dots explain — and a clock-skew check); and *recent activity*, the core
+  event bus's real, persisted feed (docs/V1_PLAN.md, WP7 —
+  GET /api/v1/notifications, kept live over SSE by
+  stores/notifications.ts): recording started/finished, disk above 90%.
+  Opening the panel marks everything read.
 -->
 <template>
   <DropdownMenu>
@@ -15,10 +15,10 @@
         type="button"
         :aria-label="t('topbar.notifications')"
         class="relative flex h-8 w-8 items-center justify-center rounded text-muted hover:bg-tile-2 hover:text-text"
-        @click="loadRecent"
+        @click="onOpen"
       >
         <Icon name="bell" :size="18" />
-        <span v-if="issues.length > 0" class="absolute end-1 top-1 h-1.5 w-1.5 rounded-full bg-warn" />
+        <span v-if="issues.length > 0 || notifications.unread > 0" class="absolute end-1 top-1 h-1.5 w-1.5 rounded-full bg-warn" />
       </button>
     </template>
     <template #panel>
@@ -32,11 +32,11 @@
           </li>
         </ul>
 
-        <template v-if="recent.length > 0">
+        <template v-if="notifications.items.length > 0">
           <div class="mb-1.5 mt-3 text-[12.5px] text-faint">{{ t('notifications.recent') }}</div>
           <ul class="flex flex-col">
-            <li v-for="entry in recent" :key="entry.id" class="border-b border-line-soft py-1.5 text-[12.5px] text-muted last:border-none">
-              {{ entry.summary }}
+            <li v-for="n in notifications.items" :key="n.id" class="border-b border-line-soft py-1.5 text-[12.5px] text-muted last:border-none">
+              {{ describeNotification(n) }}
             </li>
           </ul>
         </template>
@@ -46,22 +46,26 @@
 </template>
 
 <script setup lang="ts">
-import { computed, onMounted, ref } from 'vue'
+import { computed, onMounted } from 'vue'
 import { useI18n } from 'vue-i18n'
 import Icon from './Icon.vue'
 import DropdownMenu from './DropdownMenu.vue'
-import { api } from '@/api/client'
 import { useNavigationStore } from '@/stores/navigation'
+import { useNotificationsStore } from '@/stores/notifications'
 import { useProblem } from '@/composables/useProblem'
 import { useDeviceStatus, CLOCK_SKEW_WARN_MINUTES } from '@/composables/useDeviceStatus'
-import type { ChangeEntry } from '@/api/types'
+import type { Notification } from '@/api/types'
 
 const { t } = useI18n()
 const navigation = useNavigationStore()
+const notifications = useNotificationsStore()
 const { describe } = useProblem()
 const { clockSkew, checkClock } = useDeviceStatus()
 
-onMounted(checkClock)
+onMounted(() => {
+  checkClock()
+  if (!notifications.loaded) void notifications.load()
+})
 
 interface Issue {
   text: string
@@ -82,13 +86,14 @@ const issues = computed<Issue[]>(() => {
   return out
 })
 
-const recent = ref<ChangeEntry[]>([])
-async function loadRecent() {
-  try {
-    const { changes } = await api.changes(50)
-    recent.value = changes.filter((c) => c.action === 'hub.statusChanged').slice(0, 5)
-  } catch {
-    recent.value = []
-  }
+// notification.<key> mirrors problem.<code>'s nested-key convention
+// (useProblem.ts) — key/params from the backend, never finished text.
+function describeNotification(n: Notification): string {
+  const translated = t(`notification.${n.key}`, n.params)
+  return translated === `notification.${n.key}` ? n.key : translated
+}
+
+function onOpen() {
+  void notifications.markRead()
 }
 </script>

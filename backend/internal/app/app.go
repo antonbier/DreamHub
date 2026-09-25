@@ -19,6 +19,7 @@ import (
 	"github.com/antonbier/DreamHub/backend/internal/autotimer"
 	"github.com/antonbier/DreamHub/backend/internal/connector"
 	"github.com/antonbier/DreamHub/backend/internal/dashboard"
+	"github.com/antonbier/DreamHub/backend/internal/events"
 	"github.com/antonbier/DreamHub/backend/internal/hub"
 	hubs_ "github.com/antonbier/DreamHub/backend/internal/hubs"
 	"github.com/antonbier/DreamHub/backend/internal/journald"
@@ -87,6 +88,11 @@ type App struct {
 	Tokens     *apitoken.Service
 	Level      *logging.Level
 	User       store.User
+	// Events is the core event bus (internal/events, docs/V1_PLAN.md WP7).
+	// Poller isn't started here — cmd/dreamhub runs it as long as the
+	// process does; tests just use the Bus directly, no background polling.
+	Events *events.Bus
+	Poller *events.Poller
 
 	credMu      sync.Mutex
 	credLoaded  bool
@@ -179,6 +185,8 @@ func New(ctx context.Context, o Options) (*App, error) {
 	dash := dashboard.NewService(st)
 	tokens := apitoken.NewService(st, now)
 	watcher := hub.NewStatusWatcher()
+	eventBus := events.NewBus(st, now)
+	poller := &events.Poller{WC: o.WebControl, Bus: eventBus, Logger: o.Logger}
 
 	timerHub := &hubs_.Timer{WC: o.WebControl, Plans: plans, Now: now, AT: o.AutoTimer}
 	mediaHub := &hubs_.Media{WC: o.WebControl, Plans: plans, FS: o.RecordingsFS, ReadOnly: o.ReadOnlyFiles,
@@ -207,6 +215,7 @@ func New(ctx context.Context, o Options) (*App, error) {
 		Tokens:     tokens,
 		Watcher:    watcher,
 		Store:      st,
+		Events:     eventBus,
 		Mounts: []api.Mount{
 			{HubID: hub.IDTimer, Prefixes: []string{"/api/v1/timers"}, Register: timerHub.Mount},
 			{HubID: hub.IDMedia, Prefixes: []string{"/api/v1/media"}, Register: mediaHub.Mount},
@@ -229,5 +238,6 @@ func New(ctx context.Context, o Options) (*App, error) {
 	return &App{
 		Handler: handler, Store: st, Settings: svc, Connectors: conns, Hubs: hubs,
 		Plans: plans, Dashboard: dash, Tokens: tokens, Level: level, User: user,
+		Events: eventBus, Poller: poller,
 	}, nil
 }

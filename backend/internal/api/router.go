@@ -18,12 +18,14 @@ import (
 	"github.com/antonbier/DreamHub/backend/internal/auth"
 	"github.com/antonbier/DreamHub/backend/internal/connector"
 	"github.com/antonbier/DreamHub/backend/internal/dashboard"
+	"github.com/antonbier/DreamHub/backend/internal/events"
 	"github.com/antonbier/DreamHub/backend/internal/httpx"
 	"github.com/antonbier/DreamHub/backend/internal/hub"
 	"github.com/antonbier/DreamHub/backend/internal/plan"
 	"github.com/antonbier/DreamHub/backend/internal/settings"
 	"github.com/antonbier/DreamHub/backend/internal/store"
 	"github.com/antonbier/DreamHub/backend/internal/webcontrol"
+	"github.com/skip2/go-qrcode"
 )
 
 // Version is DreamHub's own version, following SemVer per PRINCIPLES.md.
@@ -53,7 +55,10 @@ type Deps struct {
 	// internal/hub/watcher.go's doc comment for what this is and isn't.
 	Watcher *hub.StatusWatcher
 	Store   *store.Store
-	Mounts  []Mount
+	// Events is the core event bus (internal/events, docs/V1_PLAN.md WP7):
+	// the persisted notification feed and its live SSE stream.
+	Events *events.Bus
+	Mounts []Mount
 	// User is the current user. v1 has exactly one user (an admin); once
 	// profiles exist this comes from the authenticated request instead.
 	User   store.User
@@ -82,6 +87,9 @@ func NewRouter(d Deps) http.Handler {
 	protected.HandleFunc("POST /api/v1/tokens", handleCreateToken(d))
 	protected.HandleFunc("DELETE /api/v1/tokens/{id}", handleDeleteToken(d))
 	protected.HandleFunc("POST /api/v1/plans/{id}/apply", handleApplyPlan(d))
+	protected.HandleFunc("GET /api/v1/notifications", handleNotifications(d))
+	protected.HandleFunc("POST /api/v1/notifications/read", handleMarkNotificationsRead(d))
+	protected.HandleFunc("GET /api/v1/events/stream", handleEventsStream(d))
 	for _, m := range d.Mounts {
 		sub := http.NewServeMux()
 		m.Register(sub)
@@ -96,6 +104,10 @@ func NewRouter(d Deps) http.Handler {
 	// Public on purpose: the Enigma2 plugin checks the backend version before
 	// it has any credentials, and must keep working when auth is enabled.
 	mux.HandleFunc("GET /api/v1/health", handleHealth(d))
+	// Public for the same reason health is: the Enigma2 launcher plugin
+	// (docs/V1_PLAN.md, WP8) shows this before any credentials exist, and
+	// it encodes nothing secret — just the URL to open on a phone.
+	mux.HandleFunc("GET /api/v1/qr.png", handleQR(d))
 	mux.Handle("/api/v1/", auth.Middleware(d.Verifier, protected))
 
 	allowedHosts := func(r *http.Request) []string {
@@ -149,6 +161,31 @@ func serverTimeZone() string {
 		return ""
 	}
 	return target[i+len(marker):]
+}
+
+// handleQR renders a QR code for the current origin as a PNG — used by the
+// Enigma2 launcher plugin (docs/V1_PLAN.md, WP8) so it needs no QR library
+// and holds no logic of its own, and by the web UI's onboarding wizard.
+// r.Host is exactly what a browser or the plugin already used to reach
+// this server, so the code always points somewhere that actually works —
+// unlike guessing an IP from the box's network interfaces, which could
+// pick the wrong one on a multi-homed box (LAN + ZeroTier, see
+// ARCHITECTURE.md).
+func handleQR(d Deps) http.HandlerFunc {
+	return func(w http.ResponseWriter, r *http.Request) {
+		scheme := "http"
+		if r.TLS != nil {
+			scheme = "https"
+		}
+		png, err := qrcode.Encode(scheme+"://"+r.Host, qrcode.Medium, 256)
+		if err != nil {
+			httpx.WriteError(w, r, http.StatusInternalServerError, "internal", "could not generate the QR code")
+			return
+		}
+		w.Header().Set("Content-Type", "image/png")
+		w.Header().Set("Cache-Control", "no-store") // the box's address can change (DHCP); never cache a stale one
+		w.Write(png)
+	}
 }
 
 func handleHealth(d Deps) http.HandlerFunc {

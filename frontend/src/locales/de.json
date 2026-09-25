@@ -101,6 +101,15 @@
     "clockSkew": "Die Uhr der Box geht etwa {minutes} Min. falsch.",
     "recent": "Letzte Aktivität"
   },
+  "notification": {
+    "recording": {
+      "started": "Aufnahme gestartet: {name}",
+      "finished": "Aufnahme beendet: {name}"
+    },
+    "disk": {
+      "aboveThreshold": "{model} ist zu {percent}% belegt"
+    }
+  },
   "statusStrip": {
     "connected": "Verbunden",
     "unreachable": "Nicht erreichbar",
@@ -522,6 +531,7 @@
       "unitPlaceholder": "Unit (z. B. dreamhub.service)",
       "textPlaceholder": "Text suchen",
       "refresh": "Aktualisieren",
+      "live": "Live",
       "empty": "Keine passenden Log-Zeilen.",
       "levelAny": "Jedes Level",
       "level": {

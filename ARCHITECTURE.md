@@ -132,6 +132,8 @@ WantedBy=graphical.target
 
 `python --version` → `Python 2.7.13`. **`python3` is not present on this box at all.** The `/usr/bin/enigma2` binary itself is a compiled ARM64 ELF executable (the C++ core); Python 2.7 is the plugin scripting layer. Drop the "Py2/Py3-compatible" hedge used elsewhere in this repo for the Enigma2 plugin — **target Python 2.7 specifically**, it's the only interpreter actually present.
 
+**Confirmed 2026-09-25** (`enigma2-plugin/`, WP8): the standalone `/usr/bin/python2` interpreter can `py_compile` a plugin module fine (syntax-level check), and can import plain Python packages like `twisted.web.client` — but every Enigma2-framework module (`Screens.Screen`, `Components.*`, `Plugins.Plugin`, `Tools.Directories`/`LoadPixmap`) fails with `No module named _enigma`, since that's the compiled C++ core only present inside the actual running `enigma2` GUI process. So a plugin's syntax and its plain-Python helper calls can be checked over SSH without touching the box's running state, but anything that actually exercises the Enigma2 framework (skin rendering, `ActionMap`, `ConfigListScreen`) needs installing into `Extensions/` and a GUI restart — no way around that with SSH alone.
+
 ## Filesystem layout notes
 
 - **Picon (channel logo) storage**: `/data/piconpool` — standard PNG files, useful for showing channel logos in DreamHub's UI without needing to source/cache them separately.

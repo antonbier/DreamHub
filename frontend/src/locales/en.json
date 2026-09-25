@@ -101,6 +101,15 @@
     "clockSkew": "The box's clock is off by about {minutes} min.",
     "recent": "Recent activity"
   },
+  "notification": {
+    "recording": {
+      "started": "Recording started: {name}",
+      "finished": "Recording finished: {name}"
+    },
+    "disk": {
+      "aboveThreshold": "{model} is at {percent}% used"
+    }
+  },
   "statusStrip": {
     "connected": "Connected",
     "unreachable": "Unreachable",
@@ -522,6 +531,7 @@
       "unitPlaceholder": "Unit (e.g. dreamhub.service)",
       "textPlaceholder": "Search text",
       "refresh": "Refresh",
+      "live": "Live",
       "empty": "No matching log lines.",
       "levelAny": "Any level",
       "level": {

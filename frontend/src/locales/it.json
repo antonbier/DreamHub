@@ -101,6 +101,15 @@
     "clockSkew": "L'orologio del box è sfasato di circa {minutes} min.",
     "recent": "Attività recente"
   },
+  "notification": {
+    "recording": {
+      "started": "Registrazione avviata: {name}",
+      "finished": "Registrazione terminata: {name}"
+    },
+    "disk": {
+      "aboveThreshold": "{model} è occupato al {percent}%"
+    }
+  },
   "statusStrip": {
     "connected": "Connesso",
     "unreachable": "Non raggiungibile",
@@ -522,6 +531,7 @@
       "unitPlaceholder": "Unità (es. dreamhub.service)",
       "textPlaceholder": "Cerca testo",
       "refresh": "Aggiorna",
+      "live": "Live",
       "empty": "Nessuna riga di log corrispondente.",
       "levelAny": "Qualsiasi livello",
       "level": {

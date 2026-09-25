@@ -6,6 +6,12 @@ Format follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/); version
 
 ## [Unreleased]
 
+### Added (v1 plan, WP8: Enigma2 launcher plugin; WP7: event bus, SSE live updates)
+- The core event bus (`internal/events`): a poller diffs `/web/timerlist`/`/web/deviceinfo` snapshots into `recording.started`/`recording.finished`/`disk.aboveThreshold` events (disk with hysteresis so it can't spam one line every poll while hovering right at 90%), persisted and fanned out live. `GET /api/v1/notifications` (+ mark-read) and `GET /api/v1/events/stream` (SSE). `NotificationsBell.vue`'s "Recent activity" is now this real, persisted inbox instead of change-log entries filtered down to one type.
+- Live updates over Server-Sent Events rather than a literal WebSocket — see `api.handleEventsStream`'s doc comment for why (server→client only, no new dependency, and the frontend needs its own stream reader either way since DreamHub's auth header isn't something the browser's native `EventSource` can send). AdminHub's log viewer gets a "Live" toggle on top of this (`GET /api/v1/admin/logs/stream`).
+- Found and fixed while building the SSE stream: `httpx`'s request-logging middleware wrapped every response in a type that silently dropped `http.Flusher`, which would have made any streaming response hang indefinitely in production despite passing in Go's own `httptest` environment used by earlier tests.
+- The Enigma2 launcher plugin (`enigma2-plugin/`): a QR code (`GET /api/v1/qr.png`, rendered server-side via `github.com/skip2/go-qrcode` so the Python 2.7 side needs no QR library), backend status/version with a mismatch warning, and basic settings (port, whether the backend expects a password). Written and syntax-verified against the reference box's own Python 2.7.13, but not yet installed into a live Enigma2 GUI session — see the module's README for the exact gap.
+
 ### Added (v1 plan, WP6: AdminHub logs; WP7: request coalescing)
 - AdminHub screen: DreamHub's own runtime log level (debug for 60 minutes, back to info), a journald log viewer filtered and bounded server-side (unit, minimum severity, text — `internal/journald`, real `journalctl -o json` client + mock), and enigma2's crash logs with view-in-browser and secrets redacted on read. The journal is stated as "since last boot only" — it's RAM-backed and cleared on every reboot (`ARCHITECTURE.md`).
 - Live tail over WebSocket is still open (needs WP7's event bus); the screen reads a bounded snapshot with its own refresh button for now.

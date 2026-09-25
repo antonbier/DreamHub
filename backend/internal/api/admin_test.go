@@ -1,11 +1,16 @@
 package api_test
 
 import (
+	"bufio"
+	"context"
 	"encoding/json"
 	"net/http"
 	"strings"
+	"sync"
 	"testing"
+	"time"
 
+	"github.com/antonbier/DreamHub/backend/internal/journald"
 	"github.com/antonbier/DreamHub/backend/internal/webcontrol/mock"
 )
 
@@ -100,5 +105,89 @@ func TestAdminCrashLogs_EmptyWithoutRecfs(t *testing.T) {
 	json.Unmarshal(b, &list)
 	if len(list.Logs) != 0 {
 		t.Errorf("expected an empty list, got %+v", list.Logs)
+	}
+}
+
+// mutableLogReader lets a test control what journalctl "returns" between
+// polls, for exercising logsStream's poll-and-dedupe live tail.
+type mutableLogReader struct {
+	mu      sync.Mutex
+	entries []journald.Entry
+}
+
+func (r *mutableLogReader) set(entries []journald.Entry) {
+	r.mu.Lock()
+	defer r.mu.Unlock()
+	r.entries = entries
+}
+
+func (r *mutableLogReader) Read(context.Context, journald.Query) ([]journald.Entry, error) {
+	r.mu.Lock()
+	defer r.mu.Unlock()
+	out := make([]journald.Entry, len(r.entries))
+	copy(out, r.entries)
+	return out, nil
+}
+
+func TestAdminLogsStream_PushesNewLinesWithoutRepeatingOldOnes(t *testing.T) {
+	reader := &mutableLogReader{}
+	e := newEnvWithLogs(t, reader)
+
+	reader.set([]journald.Entry{{Time: time.Unix(1, 0), Unit: "dreamhub.service", Level: journald.LevelInfo, Message: "first"}})
+
+	req, _ := http.NewRequest("GET", e.srv.URL+"/api/v1/admin/logs/stream", nil)
+	resp, err := http.DefaultClient.Do(req)
+	if err != nil {
+		t.Fatal(err)
+	}
+	defer resp.Body.Close()
+	if resp.StatusCode != http.StatusOK {
+		t.Fatalf("expected 200, got %d", resp.StatusCode)
+	}
+
+	lines := make(chan string, 10)
+	go func() {
+		sc := bufio.NewScanner(resp.Body)
+		for sc.Scan() {
+			if strings.HasPrefix(sc.Text(), "data:") {
+				lines <- sc.Text()
+			}
+		}
+	}()
+
+	waitFor := func(sub string) {
+		t.Helper()
+		deadline := time.After(5 * time.Second) // logStreamInterval is 3s between polls
+		for {
+			select {
+			case l := <-lines:
+				if strings.Contains(l, sub) {
+					return
+				}
+			case <-deadline:
+				t.Fatalf("timed out waiting for a line containing %q", sub)
+			}
+		}
+	}
+	waitFor("first")
+
+	reader.set([]journald.Entry{
+		{Time: time.Unix(1, 0), Unit: "dreamhub.service", Level: journald.LevelInfo, Message: "first"},
+		{Time: time.Unix(2, 0), Unit: "dreamhub.service", Level: journald.LevelInfo, Message: "second"},
+	})
+	waitFor("second")
+
+	// "first" must not have been pushed a second time once "second" showed
+	// up — drain what's buffered and make sure there's no repeat.
+	time.Sleep(50 * time.Millisecond)
+	for {
+		select {
+		case l := <-lines:
+			if strings.Contains(l, `"first"`) {
+				t.Fatalf("must not re-push an already-sent line: %s", l)
+			}
+		default:
+			return
+		}
 	}
 }

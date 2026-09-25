@@ -30,6 +30,16 @@ func (s *statusRecorder) WriteHeader(code int) {
 	s.ResponseWriter.WriteHeader(code)
 }
 
+// Flush makes statusRecorder itself an http.Flusher when the ResponseWriter
+// it wraps is one — needed for the SSE stream (GET /api/v1/events/stream):
+// without this, wrapping loses Flush even though the real underlying
+// writer supports it, since http.ResponseWriter itself doesn't declare it.
+func (s *statusRecorder) Flush() {
+	if f, ok := s.ResponseWriter.(http.Flusher); ok {
+		f.Flush()
+	}
+}
+
 // RequestIDAndLogging gives every request a fresh ID (never trusting one
 // sent by the client), returns it in the X-Request-ID header, stores it in
 // the context and logs one line per request with it.

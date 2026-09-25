@@ -129,6 +129,22 @@ var migrations = []string{
 		count INTEGER NOT NULL DEFAULT 0
 	);
 	`,
+	`
+	-- The core event bus's persisted feed (docs/V1_PLAN.md, WP7):
+	-- detection, not automation — recording.started/finished,
+	-- disk.aboveThreshold, hub.statusChanged. No user_id: v1 has exactly
+	-- one user and every event here is system-detected, never a user
+	-- action (those already go to change_log). key+params, never finished
+	-- text, translated client-side like status.Problem everywhere else.
+	CREATE TABLE notifications (
+		id      INTEGER PRIMARY KEY,
+		at      TEXT NOT NULL,
+		key     TEXT NOT NULL,
+		params  TEXT NOT NULL DEFAULT '{}',
+		read_at TEXT
+	);
+	CREATE INDEX notifications_at ON notifications (at);
+	`,
 }
 
 func (s *Store) migrate(ctx context.Context) error {

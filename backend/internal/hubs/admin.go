@@ -2,6 +2,7 @@ package hubs
 
 import (
 	"encoding/json"
+	"fmt"
 	"net/http"
 	"regexp"
 	"sort"
@@ -38,6 +39,7 @@ func (h *Admin) Mount(mux *http.ServeMux) {
 	mux.HandleFunc("GET /api/v1/admin/log-level", adminOnly(h.getLevel))
 	mux.HandleFunc("PUT /api/v1/admin/log-level", adminOnly(h.putLevel))
 	mux.HandleFunc("GET /api/v1/admin/logs", adminOnly(h.logs))
+	mux.HandleFunc("GET /api/v1/admin/logs/stream", adminOnly(h.logsStream))
 	mux.HandleFunc("GET /api/v1/admin/crashlogs", adminOnly(h.crashLogs))
 	mux.HandleFunc("GET /api/v1/admin/crashlogs/{name}", adminOnly(h.crashLog))
 }
@@ -124,14 +126,15 @@ type logEntryView struct {
 // Bounded and filtered server-side — the journal itself is the box's whole
 // RAM-backed buffer since boot (ARCHITECTURE.md, "journald is volatile"),
 // never fetched in full.
-func (h *Admin) logs(w http.ResponseWriter, r *http.Request) {
+// parseLogQuery builds a journald.Query from the request's filters (unit,
+// level, text, limit) — shared by the bounded snapshot (logs) and the live
+// tail (logsStream), which use the exact same filters.
+func parseLogQuery(r *http.Request) (journald.Query, *httpx.FieldError) {
 	q := journald.Query{Unit: r.URL.Query().Get("unit"), Text: r.URL.Query().Get("text"), MaxLevel: journald.LevelDebug}
 	if lv := r.URL.Query().Get("level"); lv != "" {
 		l, ok := levelNames[lv]
 		if !ok {
-			httpx.WriteErrorDetails(w, r, http.StatusBadRequest, "validation_failed", "unknown level",
-				map[string]httpx.FieldError{"level": {Code: "invalid_option"}})
-			return
+			return q, &httpx.FieldError{Code: "invalid_option"}
 		}
 		q.MaxLevel = l
 	}
@@ -139,23 +142,99 @@ func (h *Admin) logs(w http.ResponseWriter, r *http.Request) {
 	if v := r.URL.Query().Get("limit"); v != "" {
 		n, err := strconv.Atoi(v)
 		if err != nil || n < 1 || n > 1000 {
-			httpx.WriteError(w, r, http.StatusBadRequest, "invalid_limit", "limit must be between 1 and 1000")
-			return
+			return q, &httpx.FieldError{Code: "out_of_range"}
 		}
 		q.Limit = n
+	}
+	return q, nil
+}
+
+func toLogEntryView(e journald.Entry) logEntryView {
+	return logEntryView{Time: e.Time.UTC().Format(time.RFC3339), Unit: e.Unit, Level: e.Level.String(), Message: e.Message}
+}
+
+func (h *Admin) logs(w http.ResponseWriter, r *http.Request) {
+	q, ferr := parseLogQuery(r)
+	if ferr != nil {
+		httpx.WriteErrorDetails(w, r, http.StatusBadRequest, "validation_failed", "invalid filter",
+			map[string]httpx.FieldError{"level": *ferr})
+		return
 	}
 	entries, err := h.Logs.Read(r.Context(), q)
 	switch {
 	case err == nil:
 		out := make([]logEntryView, 0, len(entries))
 		for _, e := range entries {
-			out = append(out, logEntryView{Time: e.Time.UTC().Format(time.RFC3339), Unit: e.Unit, Level: e.Level.String(), Message: e.Message})
+			out = append(out, toLogEntryView(e))
 		}
 		httpx.WriteJSON(w, http.StatusOK, map[string]any{"entries": out})
 	case err == journald.ErrUnavailable:
 		httpx.WriteError(w, r, http.StatusServiceUnavailable, "journald_unavailable", "journalctl isn't available on this system")
 	default:
 		httpx.WriteError(w, r, http.StatusInternalServerError, "internal", "could not read the journal")
+	}
+}
+
+// logStreamInterval is how often logsStream re-polls journalctl. journald
+// has no long-lived "tail -f" a Go client can hold open without shelling
+// out to a second, separately-managed `journalctl -f` process per viewer;
+// polling the same bounded Read() the snapshot view uses, deduped against
+// what's already been sent, gets the same live-tail result far more simply.
+const logStreamInterval = 3 * time.Second
+
+// logsStream is AdminHub's live tail (ROADMAP.md: "Live tail over
+// WebSocket" — implemented as SSE; see api.handleEventsStream's doc comment
+// for why).
+func (h *Admin) logsStream(w http.ResponseWriter, r *http.Request) {
+	q, ferr := parseLogQuery(r)
+	if ferr != nil {
+		httpx.WriteErrorDetails(w, r, http.StatusBadRequest, "validation_failed", "invalid filter",
+			map[string]httpx.FieldError{"level": *ferr})
+		return
+	}
+	flusher, ok := w.(http.Flusher)
+	if !ok {
+		httpx.WriteError(w, r, http.StatusInternalServerError, "internal", "streaming not supported")
+		return
+	}
+
+	w.Header().Set("Content-Type", "text/event-stream")
+	w.Header().Set("Cache-Control", "no-cache")
+	w.Header().Set("Connection", "keep-alive")
+	w.WriteHeader(http.StatusOK)
+	flusher.Flush()
+
+	ctx := r.Context()
+	seen := map[string]bool{}
+	send := func() {
+		entries, err := h.Logs.Read(ctx, q)
+		if err != nil {
+			return
+		}
+		for _, e := range entries {
+			k := e.Time.String() + "|" + e.Unit + "|" + e.Message
+			if seen[k] {
+				continue
+			}
+			seen[k] = true
+			data, err := json.Marshal(toLogEntryView(e))
+			if err != nil {
+				continue
+			}
+			fmt.Fprintf(w, "event: log\ndata: %s\n\n", data)
+		}
+		flusher.Flush()
+	}
+	send()
+	ticker := time.NewTicker(logStreamInterval)
+	defer ticker.Stop()
+	for {
+		select {
+		case <-ctx.Done():
+			return
+		case <-ticker.C:
+			send()
+		}
 	}
 }
 

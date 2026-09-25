@@ -58,9 +58,25 @@
       <section class="mt-4">
         <div class="flex flex-wrap items-center justify-between gap-3">
           <h2 class="text-[15px] font-semibold text-text">{{ t('admin.logs.title') }}</h2>
-          <button type="button" class="rounded border border-line px-3 py-1.5 text-[13px] text-text hover:bg-field" @click="loadLogs">
-            {{ t('admin.logs.refresh') }}
-          </button>
+          <div class="flex items-center gap-2">
+            <button
+              type="button"
+              class="flex items-center gap-1.5 rounded border px-3 py-1.5 text-[13px] hover:bg-field"
+              :class="live ? 'border-accent text-accent' : 'border-line text-text'"
+              @click="toggleLive"
+            >
+              <span class="h-1.5 w-1.5 rounded-full" :class="live ? 'bg-onair' : 'bg-faint'" />
+              {{ t('admin.logs.live') }}
+            </button>
+            <button
+              type="button"
+              class="rounded border border-line px-3 py-1.5 text-[13px] text-text hover:bg-field disabled:opacity-60"
+              :disabled="live"
+              @click="loadLogs"
+            >
+              {{ t('admin.logs.refresh') }}
+            </button>
+          </div>
         </div>
         <p class="mt-1 text-[12.5px] text-faint">{{ t('admin.logs.sinceBoot') }}</p>
         <div class="mt-2 flex flex-wrap gap-2">
@@ -69,9 +85,9 @@
             type="text"
             :placeholder="t('admin.logs.unitPlaceholder')"
             class="w-56 max-w-full rounded border border-line bg-field px-2.5 py-1.5 text-[13px] text-text"
-            @change="loadLogs"
+            @change="onFilterChange"
           />
-          <select v-model="logLevelFilter" class="rounded border border-line bg-field px-2.5 py-1.5 text-[13px] text-text" @change="loadLogs">
+          <select v-model="logLevelFilter" class="rounded border border-line bg-field px-2.5 py-1.5 text-[13px] text-text" @change="onFilterChange">
             <option value="">{{ t('admin.logs.levelAny') }}</option>
             <option v-for="lv in logLevels" :key="lv" :value="lv">{{ t(`admin.logs.level.${lv}`) }}</option>
           </select>
@@ -80,7 +96,7 @@
             type="search"
             :placeholder="t('admin.logs.textPlaceholder')"
             class="w-56 max-w-full rounded border border-line bg-field px-2.5 py-1.5 text-[13px] text-text"
-            @change="loadLogs"
+            @change="onFilterChange"
           />
         </div>
         <p v-if="logsLoading" class="mt-3 text-[13px] text-faint">{{ t('common.loading') }}</p>
@@ -128,11 +144,12 @@
 </template>
 
 <script setup lang="ts">
-import { computed, onMounted, ref } from 'vue'
+import { computed, onMounted, onUnmounted, ref } from 'vue'
 import { useI18n } from 'vue-i18n'
 import { api, ApiError } from '@/api/client'
 import Icon from '@/components/Icon.vue'
 import { formatBytes } from '@/lib/format'
+import { openEventStream } from '@/composables/useEventStream'
 import { useNavigationStore } from '@/stores/navigation'
 import { useProblem } from '@/composables/useProblem'
 import { useDisplayTimeZone } from '@/composables/useDisplayTimeZone'
@@ -182,6 +199,52 @@ async function loadLogs() {
     logsLoading.value = false
   }
 }
+
+// Live tail (ROADMAP.md, AdminHub — SSE, see backend's handleEventsStream
+// doc comment for why not a real WebSocket). Starts from the current
+// snapshot so switching it on doesn't lose what's already on screen, then
+// appends each new line as the stream pushes it.
+const live = ref(false)
+let stopStream: (() => void) | null = null
+
+function toggleLive() {
+  if (live.value) {
+    stopLive()
+  } else {
+    startLive()
+  }
+}
+
+function startLive() {
+  stopStream?.()
+  live.value = true
+  logsError.value = ''
+  const path = api.admin.logsStreamPath({ unit: logUnit.value, level: logLevelFilter.value, text: logText.value })
+  stopStream = openEventStream(path, (e) => {
+    if (e.event !== 'log') return
+    try {
+      logs.value = [...logs.value, JSON.parse(e.data) as LogEntry]
+    } catch {
+      // Malformed push — skip it, the rest of the tail keeps working.
+    }
+  })
+}
+
+function stopLive() {
+  live.value = false
+  stopStream?.()
+  stopStream = null
+}
+
+function onFilterChange() {
+  if (live.value) {
+    startLive() // re-subscribe with the new filters
+  } else {
+    void loadLogs()
+  }
+}
+
+onUnmounted(stopLive)
 
 const crashLogs = ref<CrashLog[]>([])
 const openCrashLog = ref<{ name: string; content: string } | null>(null)

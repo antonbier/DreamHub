@@ -121,6 +121,8 @@ func run(logger *slog.Logger, level *logging.Level) error {
 		c.Credentials = a.BoxCredentials
 	}
 
+	go a.Poller.Run(context.Background())
+
 	logger.Info("dreamhub starting", "version", api.Version, "addr", cfg.ListenAddr, "dataDir", cfg.DataDir)
 	return http.ListenAndServe(cfg.ListenAddr, a.Handler)
 }

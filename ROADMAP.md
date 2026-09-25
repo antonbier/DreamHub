@@ -63,10 +63,11 @@ Releases: **Foundation** → **v1** → **v1.1** → **Later**. GitHub milestone
 - [ ] Remaining parts of the hub contract: search providers now cover TimerHub, MediaHub, SeriesHub and GuideHub, events still just TimerHub-triggered status changes — extend both to the rest of the hubs as they're built; custom/criteria-based tile types (CONCEPT.md: source + filters + sort + limit + display, reusing a hub's search provider — the dashboard's tile *mechanics* are ready for this, only the hub-contributed catalog entries are missing)
 - [ ] Core event bus (hub events → notifications, later AutomationHub) — the change log now carries one real system-detected event type (`hub.statusChanged`); a proper bus covering every hub action, with persistence designed for it rather than piggybacked on the change log, is still open
 - [ ] Live updates via WebSocket
+- [x] `docs/V1_PLAN.md` WP7, first bullet: `webcontrol.HTTPClient` now coalesces concurrent identical `GET`s (`coalescedGet`) — several callers asking for the same path at once (dashboard tiles loading together, the debounced search palette re-firing) make exactly one real request to the box instead of one each, addressing `ARCHITECTURE.md`'s "enigma2 serves WebControl single-threaded" finding. Deliberately *not* a time-based cache on top of that: a short TTL cache would also apply to a plan's own apply-time freshness re-check (`internal/plan`'s Fingerprint/Current), silently weakening preview-and-confirm's staleness guarantee — coalescing alone can't, since it only ever merges requests already happening at the same instant. The rest of WP7 (event bus, WebSocket, criteria tiles, runtime locales, full Italian, an accessibility pass) is still open
 - [ ] Runtime drop-in locales from `/data/dreamhub/locales/`
 - [x] Time zones: the per-user display zone setting (`general.timezoneMode`: box/browser/fixed, `general.timezone`) already existed but nothing consumed it — resolved via a new `useDisplayTimeZone.ts` composable (mode 'fixed' → the configured IANA zone; mode 'box' → the device's own zone; mode 'browser', the previous behavior, or an unresolved 'box' → Intl's runtime default). "Box" needed a new data source: WebControl's API has no timezone field (confirmed, ARCHITECTURE.md), so `GET /api/v1/health` now also reports `serverTimeZone`, read from the `/etc/localtime` symlink target (the one place this is derivable without SSH — works on Linux and macOS, useful for local dev too). Wired into every place that formats a time: the timers/series dashboard tiles, MediaHub/SeriesHub/GuideHub/DiscoveryHub screens, API tokens, and the status strip (which now shows the *effective* zone, not just the browser's)
 - [x] Keyboard shortcuts beyond search: `g` + letter global navigation (`useGlobalShortcuts.ts`, mounted once in `App.vue`, same "not while typing" guard as the search palette's own Cmd/Ctrl+K) — `g d` dashboard, `g m` recordings, `g s` series, `g g` guide, `g t` timers, `g r` recommendations, `g y` system, `g a` admin, `g ,` settings. Accessible contrast and labels audit still open
-- [x] Diagnostics: a dedicated page (`/diagnostics`, `DiagnosticsView.vue`) grouping every hub the user may see — including disabled ones — into Unavailable/Degraded/Disabled/Available, each with the same translated problem/fix text as everywhere else. No new backend needed: `GET /api/v1/hubs`'s own doc comment already called it "the diagnostics view". A core nav entry next to Settings (`internal/hub/hub.go`'s `Navigation()`), not a hub itself
+- [x] Diagnostics: grouping every hub the user may see — including disabled ones — into Unavailable/Degraded/Disabled/Available, each with the same translated problem/fix text as everywhere else. No new backend needed: `GET /api/v1/hubs`'s own doc comment already called it "the diagnostics view". Originally its own core nav entry (`/diagnostics`, `DiagnosticsView.vue`); folded into SystemHub as a tab in WP6 (see SystemHub, below) since `CONCEPT.md` already described it as "a diagnostics page in SystemHub" — `/diagnostics` now redirects to `/system?tab=diagnostics`
 - [ ] mDNS advertisement via a service file in `/etc/avahi/services/` (`avahi-daemon` already runs and is used this way by an existing companion app — see `ARCHITECTURE.md`)
 - [x] Capture real fixtures (#14): done 2026-09-24, see `backend/testdata/fixtures/` and `ARCHITECTURE.md`
 
@@ -177,7 +178,7 @@ Notes:
 ### SystemHub
 
 **Done** (v1 plan WP5, `docs/V1_PLAN.md`):
-- [x] `SystemHubView.vue`: device info (`GET /api/v1/deviceinfo` — image/Enigma2/WebControl versions, tuner count and models), a link into the existing `/diagnostics` page rather than a second copy of the same hub-status view
+- [x] `SystemHubView.vue`: device info (`GET /api/v1/deviceinfo` — image/Enigma2/WebControl versions, tuner count and models) and a diagnostics tab. Diagnostics used to be its own core route (`/diagnostics`); it's now folded into SystemHub as a second tab instead of a link to a near-duplicate hub-status page (`docs/V1_PLAN.md`, WP6), matching `CONCEPT.md`'s own "a diagnostics page in SystemHub". Old `/diagnostics` links redirect to `/system?tab=diagnostics`
 - [x] Backup and restore of DreamHub's own state as one JSON file, through preview-and-confirm like any other change: `GET /api/v1/system/backup` (settings plus the dashboard layout, decision-consistent with `PRINCIPLES.md`), `POST /api/v1/system/backup/restore` previews exactly which settings and whether the dashboard would change (`plan.Change` per field), applied via the normal `POST /api/v1/plans/{id}/apply`
 - [x] API keys and passwords are never in a backup — excluded at export (`settings.TypeSecret`/`TypePassword` fields are skipped, not just masked), so the file itself can't unlock the box; restoring re-validates every field through the same `settings.Service.Update` a manual edit uses
 - [x] Change log screen (`GET /api/v1/changes`) with a client-side filter over action/summary and a "load more" step
@@ -185,13 +186,16 @@ Notes:
 **Open**:
 - [ ] Filtering the change log by user (v1 has exactly one user; revisit once profiles exist)
 
-### AdminHub (logs)
-- Admin role only; bottom of the navigation next to Settings.
-- Logs from journald: DreamHub itself (for debugging), enigma2, other services as needed. Live tail over WebSocket; filters for service, level, time range, hub/connector, text.
-- DreamHub log level switchable at runtime; debug reverts automatically.
-- Request IDs link UI errors to log entries.
-- List of enigma2 crash logs (`/media/hdd/enigma2_crash_*.log`).
-- Download for support with secrets removed.
+### AdminHub
+
+**Done** (v1 plan WP6, `docs/V1_PLAN.md`):
+- [x] Admin role only (`adminOnly` on every route); bottom of the navigation next to Settings
+- [x] `internal/journald` (real `Exec{}` shelling out to `journalctl -o json`, mirroring `internal/webcontrol`'s real/mock pattern) reads DreamHub's, enigma2's and other units' log lines, bounded (`-n`, default 200, max 1000) and filtered server-side (`-u` unit, `-p` minimum severity) rather than ever fetching the journal in full — it's the box's whole RAM buffer since boot anyway (`ARCHITECTURE.md`, "journald is volatile"), which `AdminHubView.vue` states explicitly rather than implying real history
+- [x] `AdminHubView.vue`: the log level control (already had an endpoint, now a screen — debug for 60 minutes, back to info), a filterable log viewer (unit, minimum level, text), enigma2's crash logs (`GET /api/v1/admin/crashlogs`, listed from `/media/hdd/enigma2_crash_<unix-seconds>.log` via the same file system MediaHub's `internal/recfs` uses) with view-in-browser, secrets redacted (`password`/`token`/`secret`/`apikey`/`authorization` key-value lines)
+- [x] Request IDs already linked UI errors to log entries (Foundation, step 3c) — nothing new needed here
+
+**Open**:
+- [ ] Live tail over WebSocket (needs WP7's event bus/WebSocket infrastructure, not built yet — this screen always reads a bounded snapshot, with its own refresh button)
 
 ### Global search
 - Every hub contributes a search provider; results grouped by hub. `EPGSearch` (native on-screen) is a reference for search/filter logic.

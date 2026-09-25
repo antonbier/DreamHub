@@ -282,7 +282,9 @@ func (r *Registry) Navigation(statuses []Status, role store.Role, labels string)
 			sec.Items = append(sec.Items, item)
 		}
 		if g == GroupBottom {
-			sec.Items = append(sec.Items, NavItem{ID: "diagnostics", Kind: "core", Label: "nav.diagnostics", Icon: "diagnostics", Path: "/diagnostics"})
+			// Diagnostics used to be its own core nav entry; it's now a tab
+			// inside SystemHub's screen (docs/V1_PLAN.md, WP6), matching
+			// CONCEPT.md's "a diagnostics page in SystemHub".
 			sec.Items = append(sec.Items, NavItem{ID: "settings", Kind: "core", Label: "nav.settings", Icon: "settings", Path: "/settings"})
 		}
 		if len(sec.Items) > 0 {

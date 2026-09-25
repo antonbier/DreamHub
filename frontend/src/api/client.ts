@@ -25,6 +25,7 @@ import type {
   Bouquet,
   ChangeEntry,
   ChannelSchedule,
+  CrashLog,
   CreatedApiToken,
   DashboardLayout,
   DeviceInfo,
@@ -32,6 +33,8 @@ import type {
   DiscoveryStatus,
   HealthInfo,
   HubStatus,
+  LogEntry,
+  LogLevel,
   Navigation,
   Plan,
   Recommendation,
@@ -211,5 +214,21 @@ export const api = {
   system: {
     backup: () => request<BackupFile>('GET', '/api/v1/system/backup'),
     restorePlan: (file: BackupFile) => request<{ plan: Plan }>('POST', '/api/v1/system/backup/restore', file),
+  },
+  admin: {
+    logLevel: {
+      get: () => request<LogLevel>('GET', '/api/v1/admin/log-level'),
+      set: (level: 'info' | 'debug', minutes?: number) => request<LogLevel>('PUT', '/api/v1/admin/log-level', { level, minutes }),
+    },
+    logs: (filter: { unit?: string; level?: string; text?: string; limit?: number }) => {
+      const params = new URLSearchParams()
+      if (filter.unit) params.set('unit', filter.unit)
+      if (filter.level) params.set('level', filter.level)
+      if (filter.text) params.set('text', filter.text)
+      params.set('limit', String(filter.limit ?? 200))
+      return request<{ entries: LogEntry[] }>('GET', `/api/v1/admin/logs?${params}`)
+    },
+    crashLogs: () => request<{ logs: CrashLog[] }>('GET', '/api/v1/admin/crashlogs'),
+    crashLog: (name: string) => request<{ name: string; content: string }>('GET', `/api/v1/admin/crashlogs/${encodeURIComponent(name)}`),
   },
 }

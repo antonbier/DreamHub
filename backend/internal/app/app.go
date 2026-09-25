@@ -21,6 +21,7 @@ import (
 	"github.com/antonbier/DreamHub/backend/internal/dashboard"
 	"github.com/antonbier/DreamHub/backend/internal/hub"
 	hubs_ "github.com/antonbier/DreamHub/backend/internal/hubs"
+	"github.com/antonbier/DreamHub/backend/internal/journald"
 	"github.com/antonbier/DreamHub/backend/internal/logging"
 	"github.com/antonbier/DreamHub/backend/internal/plan"
 	"github.com/antonbier/DreamHub/backend/internal/serienrecorder"
@@ -52,6 +53,9 @@ type Options struct {
 	// AutoTimer is the optional AutoTimer plugin's API (internal/autotimer);
 	// nil behaves like a box without the plugin.
 	AutoTimer autotimer.Client
+	// Logs is AdminHub's journal reader (internal/journald): journald.Exec{}
+	// on the box, the mock in mock mode.
+	Logs journald.Reader
 	// Mock is true when running against the mock WebControl/Series clients;
 	// the SerienRecorder connector then reports OK without a real check.
 	Mock bool
@@ -183,7 +187,7 @@ func New(ctx context.Context, o Options) (*App, error) {
 	seriesHub := &hubs_.Series{SR: o.Series}
 	discoveryHub := &hubs_.Discovery{WC: o.WebControl, AI: o.AI, Store: st, Settings: svc, Now: now}
 	systemHub := &hubs_.System{Store: st, Settings: svc, Dashboard: dash, Plans: plans, Now: now}
-	adminHub := &hubs_.Admin{Store: st, Level: level}
+	adminHub := &hubs_.Admin{Store: st, Level: level, Logs: o.Logs, FS: o.RecordingsFS}
 
 	// TimerHub is the hub contract's first real search provider
 	// (internal/hub/search.go) — add more here as other hubs implement it.

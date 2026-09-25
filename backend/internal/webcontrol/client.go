@@ -5,6 +5,7 @@
 package webcontrol
 
 import (
+	"bytes"
 	"context"
 	"encoding/xml"
 	"errors"
@@ -295,6 +296,17 @@ type HTTPClient struct {
 
 	mu        sync.Mutex
 	sessionID string
+
+	inflightMu sync.Mutex
+	inflight   map[string]*inflightGet
+}
+
+// inflightGet is one GET in progress, shared by every caller asking for the
+// same path while it's outstanding — see coalescedGet.
+type inflightGet struct {
+	wg   sync.WaitGroup
+	body []byte
+	err  error
 }
 
 // NewHTTPClient returns an HTTPClient with a sane default timeout — a
@@ -303,8 +315,9 @@ type HTTPClient struct {
 // services are unavailable").
 func NewHTTPClient(baseURL string) *HTTPClient {
 	return &HTTPClient{
-		BaseURL: baseURL,
-		HTTP:    &http.Client{Timeout: 5 * time.Second},
+		BaseURL:  baseURL,
+		HTTP:     &http.Client{Timeout: 5 * time.Second},
+		inflight: map[string]*inflightGet{},
 	}
 }
 
@@ -581,7 +594,50 @@ func ParseSize(s string) (int64, bool) {
 // close — the shared HTTP mechanics behind both getXML and MovieList's own
 // tolerant decoding.
 func (c *HTTPClient) get(ctx context.Context, path string) (io.ReadCloser, error) {
-	return c.do(ctx, http.MethodGet, path, nil)
+	body, err := c.coalescedGet(ctx, path)
+	if err != nil {
+		return nil, err
+	}
+	return io.NopCloser(bytes.NewReader(body)), nil
+}
+
+// coalescedGet dedupes concurrent identical GETs (docs/V1_PLAN.md, WP7):
+// enigma2 serves WebControl single-threaded (ARCHITECTURE.md), so several
+// callers asking for the same path at once — dashboard tiles loading
+// together, the debounced search palette re-firing — only make the box
+// slower without any of them getting fresher data. One real request is
+// made per distinct path; every caller waiting on it gets the same result.
+// This only ever merges requests that are already happening at the same
+// moment and doesn't keep anything cached afterwards, so it can never
+// return anything staler than a directly serialized call already would —
+// in particular it never undermines a plan's own apply-time freshness
+// check (internal/plan's Fingerprint/Current), which always runs after any
+// in-flight call this could have coalesced with has long finished.
+func (c *HTTPClient) coalescedGet(ctx context.Context, path string) ([]byte, error) {
+	c.inflightMu.Lock()
+	if call, ok := c.inflight[path]; ok {
+		c.inflightMu.Unlock()
+		call.wg.Wait()
+		return call.body, call.err
+	}
+	call := &inflightGet{}
+	call.wg.Add(1)
+	c.inflight[path] = call
+	c.inflightMu.Unlock()
+
+	rc, err := c.do(ctx, http.MethodGet, path, nil)
+	var body []byte
+	if err == nil {
+		body, err = io.ReadAll(rc)
+		rc.Close()
+	}
+	call.body, call.err = body, err
+
+	c.inflightMu.Lock()
+	delete(c.inflight, path)
+	c.inflightMu.Unlock()
+	call.wg.Done()
+	return body, err
 }
 
 // do sends a request with Basic Auth (if configured) and, for POST, form as

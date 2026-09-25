@@ -6,6 +6,12 @@ Format follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/); version
 
 ## [Unreleased]
 
+### Added (v1 plan, WP6: AdminHub logs; WP7: request coalescing)
+- AdminHub screen: DreamHub's own runtime log level (debug for 60 minutes, back to info), a journald log viewer filtered and bounded server-side (unit, minimum severity, text — `internal/journald`, real `journalctl -o json` client + mock), and enigma2's crash logs with view-in-browser and secrets redacted on read. The journal is stated as "since last boot only" — it's RAM-backed and cleared on every reboot (`ARCHITECTURE.md`).
+- Live tail over WebSocket is still open (needs WP7's event bus); the screen reads a bounded snapshot with its own refresh button for now.
+- Diagnostics folded into SystemHub as a second tab instead of its own top-level page — `CONCEPT.md` already described it that way. Old `/diagnostics` links redirect to `/system?tab=diagnostics`.
+- `webcontrol.HTTPClient` now coalesces concurrent identical `GET`s: several callers asking for the same path at once (e.g. dashboard tiles loading together) make one real request to the box instead of one each, addressing enigma2's single-threaded request handling. Deliberately not a time-based cache on top of that — it would also apply to a plan's own apply-time freshness check and could silently weaken preview-and-confirm's staleness guarantee.
+
 ### Added (v1 plan, WP5: SystemHub)
 - SystemHub screen: device info (`GET /api/v1/deviceinfo`), a link into the existing Diagnostics page rather than a second copy of it, and the change log with a client-side filter by action/summary.
 - Backup and restore of DreamHub's own state (settings and the dashboard layout) as one JSON file, through preview-and-confirm like any other change: `GET /api/v1/system/backup` downloads it, `POST /api/v1/system/backup/restore` previews exactly which settings and whether the dashboard would change, `POST /api/v1/plans/{id}/apply` applies it. API keys and passwords are never included in a backup — they're excluded at export, not just masked, so the file itself can't unlock the box.

@@ -21,6 +21,7 @@ import (
 	"github.com/antonbier/DreamHub/backend/internal/api"
 	"github.com/antonbier/DreamHub/backend/internal/app"
 	"github.com/antonbier/DreamHub/backend/internal/httpx"
+	jmock "github.com/antonbier/DreamHub/backend/internal/journald/mock"
 	srmock "github.com/antonbier/DreamHub/backend/internal/serienrecorder/mock"
 	"github.com/antonbier/DreamHub/backend/internal/settings"
 	"github.com/antonbier/DreamHub/backend/internal/store"
@@ -75,6 +76,7 @@ func newEnvFull(t *testing.T, wc webcontrol.Client, at autotimer.Client, recFS r
 		RecordingsFS:  recFS,
 		Series:        srmock.New(),
 		AI:            aimock.New(),
+		Logs:          jmock.New(),
 		Mock:          true,
 		LookPath:      func(string) (string, error) { return "/usr/bin/journalctl", nil },
 		Logger:        discardLogger(),

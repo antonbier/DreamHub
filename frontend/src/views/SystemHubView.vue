@@ -1,10 +1,13 @@
 <!--
-  SystemHub's real screen (docs/V1_PLAN.md, WP5): device info
-  (GET /api/v1/deviceinfo), a link into the existing /diagnostics page
-  rather than rebuilding it, backup/restore of DreamHub's own state
-  (preview-and-confirm, PRINCIPLES.md), and the change log
-  (GET /api/v1/changes) with a client-side filter. Same
-  status-banner-plus-content pattern as SeriesHubView.vue.
+  SystemHub's real screen (docs/V1_PLAN.md, WP5/WP6): device info
+  (GET /api/v1/deviceinfo), backup/restore of DreamHub's own state
+  (preview-and-confirm, PRINCIPLES.md), the change log
+  (GET /api/v1/changes) with a client-side filter, and — as a second tab —
+  diagnostics (GET /api/v1/hubs), which used to be its own core route.
+  CONCEPT.md already describes diagnostics as "a diagnostics page in
+  SystemHub"; this folds the two together instead of keeping near-duplicate
+  hub-status UI in two places. Same status-banner-plus-content pattern as
+  SeriesHubView.vue.
 -->
 <template>
   <div class="mx-auto max-w-content p-6 below-md:p-4">
@@ -26,110 +29,153 @@
       </ul>
     </div>
 
-    <p v-if="loading" class="mt-5 text-[14px] text-muted">{{ t('common.loading') }}</p>
-    <p v-else-if="loadFailed" class="mt-5 text-[14px] text-muted">{{ t('common.backendUnreachable') }}</p>
-    <template v-else>
-      <!-- Device info -->
-      <section class="mt-5 rounded border border-line bg-tile p-4">
-        <h2 class="text-[14px] font-semibold text-text">{{ t('system.device.title') }}</h2>
-        <dl class="mt-2 grid grid-cols-2 gap-x-4 gap-y-1 text-[13px] below-md:grid-cols-1">
-          <div class="flex justify-between gap-3 sm:contents">
-            <dt class="text-muted">{{ device?.deviceName }}</dt>
-            <dd class="text-text">{{ t('system.device.enigma', { version: device?.enigmaVersion }) }}</dd>
-          </div>
-          <div class="flex justify-between gap-3 sm:contents">
-            <dt class="text-muted">{{ t('system.device.image', { version: device?.imageVersion }) }}</dt>
-            <dd class="text-text">{{ t('system.device.webif', { version: device?.webifVersion }) }}</dd>
-          </div>
-          <div class="flex justify-between gap-3 sm:contents">
-            <dt class="text-muted">{{ t('system.device.tuners', { count: device?.frontends.length ?? 0 }, device?.frontends.length ?? 0) }}</dt>
-            <dd class="text-text">{{ (device?.frontends ?? []).map((f) => f.model).join(', ') }}</dd>
-          </div>
-        </dl>
-      </section>
+    <div class="mt-4 flex gap-1 border-b border-line-soft" role="tablist">
+      <button
+        type="button"
+        role="tab"
+        :aria-selected="tab === 'overview'"
+        class="border-b-2 px-3 py-2 text-[13.5px] font-semibold"
+        :class="tab === 'overview' ? 'border-accent text-text' : 'border-transparent text-muted hover:text-text'"
+        @click="tab = 'overview'"
+      >
+        {{ t('system.tabs.overview') }}
+      </button>
+      <button
+        type="button"
+        role="tab"
+        :aria-selected="tab === 'diagnostics'"
+        class="border-b-2 px-3 py-2 text-[13.5px] font-semibold"
+        :class="tab === 'diagnostics' ? 'border-accent text-text' : 'border-transparent text-muted hover:text-text'"
+        @click="tab = 'diagnostics'"
+      >
+        {{ t('diagnostics.title') }}
+      </button>
+    </div>
 
-      <!-- Diagnostics -->
-      <section class="mt-4 flex flex-wrap items-center justify-between gap-3 rounded border border-line bg-tile p-4">
-        <div>
-          <h2 class="text-[14px] font-semibold text-text">{{ t('system.diagnostics.title') }}</h2>
-          <p class="mt-0.5 text-[12.5px] text-muted">{{ t('system.diagnostics.body') }}</p>
-        </div>
-        <RouterLink to="/diagnostics" class="shrink-0 rounded border border-line px-3 py-1.5 text-[13px] text-text hover:bg-field">
-          {{ t('system.diagnostics.open') }}
-        </RouterLink>
-      </section>
+    <template v-if="tab === 'overview'">
+      <p v-if="loading" class="mt-5 text-[14px] text-muted">{{ t('common.loading') }}</p>
+      <p v-else-if="loadFailed" class="mt-5 text-[14px] text-muted">{{ t('common.backendUnreachable') }}</p>
+      <template v-else>
+        <!-- Device info -->
+        <section class="mt-5 rounded border border-line bg-tile p-4">
+          <h2 class="text-[14px] font-semibold text-text">{{ t('system.device.title') }}</h2>
+          <dl class="mt-2 grid grid-cols-2 gap-x-4 gap-y-1 text-[13px] below-md:grid-cols-1">
+            <div class="flex justify-between gap-3 sm:contents">
+              <dt class="text-muted">{{ device?.deviceName }}</dt>
+              <dd class="text-text">{{ t('system.device.enigma', { version: device?.enigmaVersion }) }}</dd>
+            </div>
+            <div class="flex justify-between gap-3 sm:contents">
+              <dt class="text-muted">{{ t('system.device.image', { version: device?.imageVersion }) }}</dt>
+              <dd class="text-text">{{ t('system.device.webif', { version: device?.webifVersion }) }}</dd>
+            </div>
+            <div class="flex justify-between gap-3 sm:contents">
+              <dt class="text-muted">{{ t('system.device.tuners', { count: device?.frontends.length ?? 0 }, device?.frontends.length ?? 0) }}</dt>
+              <dd class="text-text">{{ (device?.frontends ?? []).map((f) => f.model).join(', ') }}</dd>
+            </div>
+          </dl>
+        </section>
 
-      <!-- Backup & restore -->
-      <section class="mt-4 rounded border border-line bg-tile p-4">
-        <h2 class="text-[14px] font-semibold text-text">{{ t('system.backup.title') }}</h2>
-        <p class="mt-0.5 text-[12.5px] text-muted">{{ t('system.backup.body') }}</p>
-        <div class="mt-3 flex flex-wrap gap-2">
-          <button type="button" class="rounded border border-line px-3 py-1.5 text-[13px] text-text hover:bg-field" @click="download">
-            {{ t('system.backup.download') }}
-          </button>
+        <!-- Backup & restore -->
+        <section class="mt-4 rounded border border-line bg-tile p-4">
+          <h2 class="text-[14px] font-semibold text-text">{{ t('system.backup.title') }}</h2>
+          <p class="mt-0.5 text-[12.5px] text-muted">{{ t('system.backup.body') }}</p>
+          <div class="mt-3 flex flex-wrap gap-2">
+            <button type="button" class="rounded border border-line px-3 py-1.5 text-[13px] text-text hover:bg-field" @click="download">
+              {{ t('system.backup.download') }}
+            </button>
+            <button
+              type="button"
+              class="rounded border border-line px-3 py-1.5 text-[13px] text-text hover:bg-field disabled:opacity-60"
+              :disabled="restoring"
+              @click="fileInput?.click()"
+            >
+              {{ restoring ? t('system.backup.restoring') : t('system.backup.restore') }}
+            </button>
+            <input ref="fileInput" type="file" accept="application/json" class="hidden" @change="onFileChosen" />
+          </div>
+          <p v-if="restoreError" class="mt-2 text-[12.5px] text-warn">{{ restoreError }}</p>
+          <p v-if="restored" class="mt-2 text-[12.5px] text-muted">{{ t('system.backup.restored') }}</p>
+          <div v-if="restorePlan" class="mt-3">
+            <PlanPreview
+              :plan="restorePlan"
+              :confirm-label="t('system.backup.confirmRestore')"
+              :busy="applying"
+              :error="applyError"
+              @confirm="applyRestore"
+              @cancel="restorePlan = null"
+            >
+              {{ t('system.backup.restorePreview', { count: restorePlan.changes.length, date: formatDate(restoreExportedAt) }, restorePlan.changes.length) }}
+            </PlanPreview>
+          </div>
+        </section>
+
+        <!-- Change log -->
+        <section class="mt-4">
+          <div class="flex flex-wrap items-center justify-between gap-3">
+            <h2 class="text-[15px] font-semibold text-text">{{ t('system.changes.title') }}</h2>
+            <input
+              v-model="filter"
+              type="search"
+              :placeholder="t('system.changes.filterPlaceholder')"
+              class="w-64 max-w-full rounded border border-line bg-field px-2.5 py-1.5 text-[13px] text-text"
+            />
+          </div>
+          <p v-if="filteredChanges.length === 0" class="mt-2 text-[13px] text-faint">{{ t('system.changes.empty') }}</p>
+          <ul v-else class="mt-2 flex flex-col">
+            <li v-for="c in filteredChanges" :key="c.id" class="flex items-start gap-3 border-b border-line-soft py-2 last:border-none">
+              <span class="w-36 shrink-0 whitespace-nowrap text-[12px] font-mono text-faint">{{ formatDate(c.at) }}</span>
+              <span class="min-w-0 flex-1">
+                <span class="block truncate text-[13.5px] text-text">{{ c.summary }}</span>
+                <span class="block truncate text-[12px] text-faint">{{ c.action }}</span>
+              </span>
+            </li>
+          </ul>
           <button
+            v-if="changes.length >= changesLimit"
             type="button"
-            class="rounded border border-line px-3 py-1.5 text-[13px] text-text hover:bg-field disabled:opacity-60"
-            :disabled="restoring"
-            @click="fileInput?.click()"
+            class="mt-3 rounded border border-line px-3 py-1.5 text-[13px] text-text hover:bg-field"
+            @click="loadMoreChanges"
           >
-            {{ restoring ? t('system.backup.restoring') : t('system.backup.restore') }}
+            {{ t('system.changes.loadMore') }}
           </button>
-          <input ref="fileInput" type="file" accept="application/json" class="hidden" @change="onFileChosen" />
-        </div>
-        <p v-if="restoreError" class="mt-2 text-[12.5px] text-warn">{{ restoreError }}</p>
-        <p v-if="restored" class="mt-2 text-[12.5px] text-muted">{{ t('system.backup.restored') }}</p>
-        <div v-if="restorePlan" class="mt-3">
-          <PlanPreview
-            :plan="restorePlan"
-            :confirm-label="t('system.backup.confirmRestore')"
-            :busy="applying"
-            :error="applyError"
-            @confirm="applyRestore"
-            @cancel="restorePlan = null"
-          >
-            {{ t('system.backup.restorePreview', { count: restorePlan.changes.length, date: formatDate(restoreExportedAt) }, restorePlan.changes.length) }}
-          </PlanPreview>
-        </div>
-      </section>
+        </section>
+      </template>
+    </template>
 
-      <!-- Change log -->
-      <section class="mt-4">
-        <div class="flex flex-wrap items-center justify-between gap-3">
-          <h2 class="text-[15px] font-semibold text-text">{{ t('system.changes.title') }}</h2>
-          <input
-            v-model="filter"
-            type="search"
-            :placeholder="t('system.changes.filterPlaceholder')"
-            class="w-64 max-w-full rounded border border-line bg-field px-2.5 py-1.5 text-[13px] text-text"
-          />
-        </div>
-        <p v-if="filteredChanges.length === 0" class="mt-2 text-[13px] text-faint">{{ t('system.changes.empty') }}</p>
-        <ul v-else class="mt-2 flex flex-col">
-          <li v-for="c in filteredChanges" :key="c.id" class="flex items-start gap-3 border-b border-line-soft py-2 last:border-none">
-            <span class="w-36 shrink-0 whitespace-nowrap text-[12px] font-mono text-faint">{{ formatDate(c.at) }}</span>
-            <span class="min-w-0 flex-1">
-              <span class="block truncate text-[13.5px] text-text">{{ c.summary }}</span>
-              <span class="block truncate text-[12px] text-faint">{{ c.action }}</span>
-            </span>
-          </li>
-        </ul>
-        <button
-          v-if="changes.length >= changesLimit"
-          type="button"
-          class="mt-3 rounded border border-line px-3 py-1.5 text-[13px] text-text hover:bg-field"
-          @click="loadMoreChanges"
-        >
-          {{ t('system.changes.loadMore') }}
-        </button>
-      </section>
+    <template v-else>
+      <p v-if="diagLoading" class="mt-5 text-[14px] text-muted">{{ t('common.loading') }}</p>
+      <p v-else-if="diagLoadFailed" class="mt-5 text-[14px] text-muted">{{ t('common.backendUnreachable') }}</p>
+      <template v-else>
+        <section v-for="group in diagGroups" :key="group.key" class="mt-5 first:mt-5">
+          <h2 class="text-[15px] font-semibold text-text">{{ t(`diagnostics.group.${group.key}`) }} ({{ group.hubs.length }})</h2>
+          <ul v-if="group.hubs.length > 0" class="mt-2 flex flex-col">
+            <li v-for="hub in group.hubs" :key="hub.id" class="flex items-start gap-3 border-b border-line-soft py-2.5 last:border-none">
+              <Icon :name="hub.icon" :size="18" class="mt-0.5 shrink-0 text-muted" />
+              <span class="min-w-0 flex-1">
+                <span class="flex items-center gap-2">
+                  <span class="truncate text-[14px] text-text">{{ t(hub.label) }}</span>
+                  <span v-if="!hub.enabled" class="shrink-0 text-[12px] text-faint">{{ t('diagnostics.disabled') }}</span>
+                </span>
+                <ul v-if="hub.problems.length > 0" class="mt-0.5 flex flex-col gap-0.5 text-[12.5px] text-muted">
+                  <li v-for="(p, i) in hub.problems" :key="i">
+                    {{ describe(p) }}
+                    <span v-if="describeFix(p)" class="text-faint">{{ ' — ' + describeFix(p) }}</span>
+                  </li>
+                </ul>
+              </span>
+            </li>
+          </ul>
+          <p v-else class="mt-2 text-[13px] text-faint">{{ t('diagnostics.groupEmpty') }}</p>
+        </section>
+      </template>
     </template>
   </div>
 </template>
 
 <script setup lang="ts">
-import { computed, onMounted, ref } from 'vue'
+import { computed, onMounted, ref, watch } from 'vue'
 import { useI18n } from 'vue-i18n'
+import { useRoute, useRouter } from 'vue-router'
 import { api } from '@/api/client'
 import Icon from '@/components/Icon.vue'
 import PlanPreview from '@/components/PlanPreview.vue'
@@ -137,15 +183,21 @@ import { useNavigationStore } from '@/stores/navigation'
 import { useProblem } from '@/composables/useProblem'
 import { useDisplayTimeZone } from '@/composables/useDisplayTimeZone'
 import { usePlanError } from '@/composables/usePlanError'
-import type { BackupFile, ChangeEntry, DeviceInfo, Plan } from '@/api/types'
+import type { BackupFile, ChangeEntry, DeviceInfo, HubStatus, Plan } from '@/api/types'
 
 const { t, locale } = useI18n()
+const route = useRoute()
+const router = useRouter()
 const navigation = useNavigationStore()
 const { describe, describeFix } = useProblem()
 const { timeZone } = useDisplayTimeZone()
 const { planErrorMessage } = usePlanError()
 
 const item = computed(() => navigation.navigation?.sections.flatMap((s) => s.items).find((i) => i.path === '/system'))
+
+type Tab = 'overview' | 'diagnostics'
+const tab = ref<Tab>(route.query.tab === 'diagnostics' ? 'diagnostics' : 'overview')
+watch(tab, (t) => router.replace({ query: { ...route.query, tab: t === 'overview' ? undefined : t } }))
 
 const device = ref<DeviceInfo | null>(null)
 const changes = ref<ChangeEntry[]>([])
@@ -184,6 +236,36 @@ onMounted(async () => {
     loading.value = false
   }
 })
+
+// Diagnostics tab: GET /api/v1/hubs, the same data and grouping the old
+// standalone /diagnostics route used. Loaded once, on first visit to the
+// tab, not eagerly — most visits to SystemHub are for the overview.
+const diagHubs = ref<HubStatus[]>([])
+const diagLoading = ref(true)
+const diagLoadFailed = ref(false)
+const diagLoaded = ref(false)
+
+const diagGroups = computed(() => [
+  { key: 'unavailable', hubs: diagHubs.value.filter((h) => h.enabled && h.status === 'unavailable') },
+  { key: 'degraded', hubs: diagHubs.value.filter((h) => h.enabled && h.status === 'degraded') },
+  { key: 'disabled', hubs: diagHubs.value.filter((h) => !h.enabled) },
+  { key: 'available', hubs: diagHubs.value.filter((h) => h.enabled && h.status === 'available') },
+])
+
+async function loadDiagnostics() {
+  if (diagLoaded.value) return
+  diagLoaded.value = true
+  try {
+    const res = await api.hubs()
+    diagHubs.value = res.hubs
+  } catch {
+    diagLoadFailed.value = true
+  } finally {
+    diagLoading.value = false
+  }
+}
+
+watch(tab, (t) => { if (t === 'diagnostics') loadDiagnostics() }, { immediate: true })
 
 // Backup: downloaded client-side as a plain JSON file — the browser never
 // needs the endpoint's own Content-Disposition header since fetch() already

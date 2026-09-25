@@ -22,6 +22,8 @@ import (
 	"github.com/antonbier/DreamHub/backend/internal/api"
 	"github.com/antonbier/DreamHub/backend/internal/app"
 	"github.com/antonbier/DreamHub/backend/internal/config"
+	"github.com/antonbier/DreamHub/backend/internal/journald"
+	jmock "github.com/antonbier/DreamHub/backend/internal/journald/mock"
 	"github.com/antonbier/DreamHub/backend/internal/logging"
 	"github.com/antonbier/DreamHub/backend/internal/serienrecorder"
 	srmock "github.com/antonbier/DreamHub/backend/internal/serienrecorder/mock"
@@ -49,6 +51,7 @@ func run(logger *slog.Logger, level *logging.Level) error {
 	var at autotimer.Client
 	var recFS recfs.FS
 	var tmdbClient tmdb.Client
+	var logs journald.Reader
 	switch cfg.Mode {
 	case config.ModeLive:
 		c := webcontrol.NewHTTPClient(cfg.WebControlURL)
@@ -70,6 +73,7 @@ func run(logger *slog.Logger, level *logging.Level) error {
 		// ErrNotConfigured).
 		aiClient = ai.NewOpenAIClient()
 		tmdbClient = tmdb.NewHTTPClient()
+		logs = journald.Exec{}
 		logger.Info("webcontrol client mode", "mode", "live", "url", cfg.WebControlURL, "deviceWrites", cfg.EnableDeviceWrites)
 	default:
 		m := mock.New()
@@ -79,6 +83,7 @@ func run(logger *slog.Logger, level *logging.Level) error {
 		at = atmock.New()
 		aiClient = aimock.New()
 		tmdbClient = tmdbmock.New()
+		logs = jmock.New()
 		logger.Info("webcontrol client mode", "mode", "mock")
 	}
 
@@ -92,6 +97,7 @@ func run(logger *slog.Logger, level *logging.Level) error {
 		// Same switch as WebControl writes; mock mode always writes.
 		ReadOnlyFiles: cfg.Mode == config.ModeLive && !cfg.EnableDeviceWrites,
 		AI:            aiClient,
+		Logs:          logs,
 		Mock:          cfg.Mode == config.ModeMock,
 		LookPath:      exec.LookPath,
 		Logger:        logger,

@@ -317,6 +317,10 @@
     }
   },
   "error": {
+    "admin": {
+      "journald_unavailable": "journalctl isn't available on this system.",
+      "invalid_limit": "Invalid limit."
+    },
     "discovery": {
       "ai_not_configured": "Configure an OpenAI API key in Settings first.",
       "ai_budget_exceeded": "Today's AI recommendation budget is used up.",
@@ -504,6 +508,40 @@
       "simulateNone": "The AutoTimers would create no new timers right now."
     }
   },
+  "admin": {
+    "logLevel": {
+      "title": "Log level",
+      "current": "Currently: {level}",
+      "currentUntil": "Currently: {level} until {until}",
+      "debugFor": "Debug for {minutes} minutes",
+      "backToInfo": "Back to info"
+    },
+    "logs": {
+      "title": "Logs",
+      "sinceBoot": "Since last boot only — the journal is cleared on every reboot.",
+      "unitPlaceholder": "Unit (e.g. dreamhub.service)",
+      "textPlaceholder": "Search text",
+      "refresh": "Refresh",
+      "empty": "No matching log lines.",
+      "levelAny": "Any level",
+      "level": {
+        "emerg": "Emergency",
+        "alert": "Alert",
+        "crit": "Critical",
+        "err": "Error",
+        "warning": "Warning",
+        "notice": "Notice",
+        "info": "Info",
+        "debug": "Debug"
+      }
+    },
+    "crashLogs": {
+      "title": "Crash logs",
+      "empty": "No crash logs.",
+      "view": "View",
+      "close": "Close"
+    }
+  },
   "system": {
     "device": {
       "title": "Device",
@@ -512,10 +550,8 @@
       "webif": "WebControl {version}",
       "tuners": "1 tuner | {count} tuners"
     },
-    "diagnostics": {
-      "title": "Diagnostics",
-      "body": "The status and fix instructions for every hub, in one place.",
-      "open": "Open diagnostics"
+    "tabs": {
+      "overview": "Overview"
     },
     "backup": {
       "title": "Backup & restore",

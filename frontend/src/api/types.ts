@@ -363,3 +363,23 @@ export interface BackupFile {
   settings: Record<string, unknown>
   dashboard: DashboardLayout
 }
+
+// backend/internal/hubs's logEntryView, from GET /api/v1/admin/logs.
+export interface LogEntry {
+  time: string // RFC3339, UTC
+  unit?: string
+  level: 'emerg' | 'alert' | 'crit' | 'err' | 'warning' | 'notice' | 'info' | 'debug'
+  message: string
+}
+
+// backend/internal/hubs's crashLogView, from GET /api/v1/admin/crashlogs.
+export interface CrashLog {
+  name: string
+  at?: string // RFC3339, UTC — parsed from the file name, when it carries one
+  size: number
+}
+
+export interface LogLevel {
+  level: 'info' | 'debug'
+  until?: string // RFC3339, UTC — only while level is "debug"
+}

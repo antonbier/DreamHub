@@ -317,6 +317,10 @@
     }
   },
   "error": {
+    "admin": {
+      "journald_unavailable": "journalctl non è disponibile su questo sistema.",
+      "invalid_limit": "Limite non valido."
+    },
     "discovery": {
       "ai_not_configured": "Configura prima una chiave API OpenAI nelle Impostazioni.",
       "ai_budget_exceeded": "Il budget di consigli AI di oggi è esaurito.",
@@ -504,6 +508,40 @@
       "simulateNone": "Al momento gli AutoTimer non creerebbero nuovi timer."
     }
   },
+  "admin": {
+    "logLevel": {
+      "title": "Livello di log",
+      "current": "Attualmente: {level}",
+      "currentUntil": "Attualmente: {level} fino a {until}",
+      "debugFor": "Debug per {minutes} minuti",
+      "backToInfo": "Torna a info"
+    },
+    "logs": {
+      "title": "Log",
+      "sinceBoot": "Solo dall'ultimo avvio — il journal viene svuotato a ogni riavvio.",
+      "unitPlaceholder": "Unità (es. dreamhub.service)",
+      "textPlaceholder": "Cerca testo",
+      "refresh": "Aggiorna",
+      "empty": "Nessuna riga di log corrispondente.",
+      "levelAny": "Qualsiasi livello",
+      "level": {
+        "emerg": "Emergenza",
+        "alert": "Allerta",
+        "crit": "Critico",
+        "err": "Errore",
+        "warning": "Avviso",
+        "notice": "Nota",
+        "info": "Info",
+        "debug": "Debug"
+      }
+    },
+    "crashLogs": {
+      "title": "Log di crash",
+      "empty": "Nessun log di crash.",
+      "view": "Visualizza",
+      "close": "Chiudi"
+    }
+  },
   "system": {
     "device": {
       "title": "Dispositivo",
@@ -512,10 +550,8 @@
       "webif": "WebControl {version}",
       "tuners": "1 tuner | {count} tuner"
     },
-    "diagnostics": {
-      "title": "Diagnostica",
-      "body": "Stato e istruzioni di risoluzione per ogni hub, in un unico posto.",
-      "open": "Apri diagnostica"
+    "tabs": {
+      "overview": "Panoramica"
     },
     "backup": {
       "title": "Backup e ripristino",

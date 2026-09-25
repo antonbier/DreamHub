@@ -7,6 +7,8 @@ import (
 	"net/http/httptest"
 	"net/url"
 	"os"
+	"sync"
+	"sync/atomic"
 	"testing"
 )
 
@@ -283,5 +285,44 @@ func TestMovieDir_ToleratesNoneAndListsSubfolders(t *testing.T) {
 	}
 	if len(f.Subfolders) != 2 || f.Subfolders[1] != "/media/hdd/movie/serien/" {
 		t.Errorf("subfolders after the odd entry must survive: %v", f.Subfolders)
+	}
+}
+
+func TestGet_CoalescesConcurrentIdenticalRequests(t *testing.T) {
+	var hits int32
+	release := make(chan struct{})
+	srv := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		atomic.AddInt32(&hits, 1)
+		<-release // every concurrent caller must already be waiting before this returns
+		w.Write([]byte(`<e2movielist><e2movie><e2title>x</e2title></e2movie></e2movielist>`))
+	}))
+	defer srv.Close()
+	c := NewHTTPClient(srv.URL)
+
+	const callers = 5
+	var wg sync.WaitGroup
+	errs := make([]error, callers)
+	for i := 0; i < callers; i++ {
+		wg.Add(1)
+		go func(i int) {
+			defer wg.Done()
+			_, errs[i] = c.MovieList(context.Background())
+		}(i)
+	}
+	// Give every goroutine a chance to reach the server before releasing it —
+	// if coalescing didn't work, a second request would also block here,
+	// and this call count check would eventually flake, not deadlock.
+	for atomic.LoadInt32(&hits) == 0 {
+	}
+	close(release)
+	wg.Wait()
+
+	for i, err := range errs {
+		if err != nil {
+			t.Errorf("caller %d: %v", i, err)
+		}
+	}
+	if got := atomic.LoadInt32(&hits); got != 1 {
+		t.Errorf("expected exactly 1 request to the box for %d concurrent identical callers, got %d", callers, got)
 	}
 }

@@ -75,6 +75,14 @@ func (s *Mem) Remove(name string) error {
 	return nil
 }
 
+// Put adds or overwrites one file — for tests that need a fixture beyond
+// what NewMem's initial set covers.
+func (s *Mem) Put(path, content string) {
+	s.mu.Lock()
+	defer s.mu.Unlock()
+	s.m[key(path)] = &fstest.MapFile{Data: []byte(content), Mode: 0o644, ModTime: time.Date(2026, 9, 1, 20, 15, 0, 0, time.UTC)}
+}
+
 // Paths lists every file, sorted — for tests and the mock's movie listing.
 func (s *Mem) Paths() []string {
 	s.mu.RLock()

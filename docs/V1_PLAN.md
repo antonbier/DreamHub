@@ -80,13 +80,13 @@ Order matters where noted. Everything else can run in parallel.
 - Screen: device info, the existing diagnostics, change log UI (filter by action/user).
 - Backup/restore of DreamHub's own state (settings incl. dashboards, tokens excluded or flagged) as one file. Restore goes through preview-and-confirm.
 
-### WP6 — AdminHub logs
-- journald via `journalctl -o json` (exec, streamed, bounded): DreamHub, enigma2, other units. Filters for unit, level, time, hub/connector, text. Live tail over WebSocket (reuses WP7).
+### WP6 — AdminHub logs *(mostly done 2026-09-25, live tail deferred to WP7 — see ROADMAP.md, AdminHub)*
+- journald via `journalctl -o json` (exec, bounded): DreamHub, enigma2, other units. Filters for unit, level, text. Live tail over WebSocket (reuses WP7, not built yet — the screen reads a bounded snapshot with its own refresh button for now).
 - UI states clearly that the journal is **since last boot** (volatile, see `ARCHITECTURE.md`).
 - enigma2 crash logs list + view, support download with secrets removed.
 
-### WP7 — Core leftovers for v1
-- Never fan out parallel requests to the box (enigma2 serializes them, see `ARCHITECTURE.md`): coalesce identical in-flight requests, short caches, `/web/movielist` cached.
+### WP7 — Core leftovers for v1 *(in-flight coalescing done 2026-09-25 — see ROADMAP.md, step 7; short caches and the rest still open)*
+- Never fan out parallel requests to the box (enigma2 serializes them, see `ARCHITECTURE.md`): coalesce identical in-flight requests ([x], `webcontrol.HTTPClient.coalescedGet`), short caches, `/web/movielist` cached — a time-based cache is deliberately deferred: it would also apply to a plan's own apply-time freshness check (`internal/plan`'s Fingerprint/Current) and could silently weaken preview-and-confirm's staleness guarantee, so it needs a cache-bypass path for that check specifically, not a blanket TTL.
 - WebSocket + a minimal event bus. Events come from polling `/web/timerlist`/`movielist` (detection, not automation): `recording.started/finished`, `timer.conflict`, disk above 90 %. Persisted notifications (key + params), inbox in the bell.
 - Custom/criteria tiles on top of the search providers (the mechanics exist).
 - Runtime drop-in locales from `/data/dreamhub/locales/`, accessibility pass, complete Italian strings.

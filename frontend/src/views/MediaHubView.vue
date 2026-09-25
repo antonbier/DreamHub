@@ -1,11 +1,20 @@
 <!--
-  MediaHub's real screen (ROADMAP.md, "v1 — hubs"): the recordings list
-  (GET /api/v1/media/movies) and disk usage (GET /api/v1/media/disk).
-  Read-only for now — rename/delete need their own preview-and-confirm
-  design (PRINCIPLES.md) and aren't built yet. Shows the hub's live
-  status/problems first, same as HubView, per frontend/README.md's "a hub
-  view without a backend implementation yet is a real placeholder" rule —
-  this one just also has real content once the hub is available.
+  MediaHub's real screen (ROADMAP.md, "v1 — hubs"; docs/V1_PLAN.md, WP4).
+
+  Recordings are browsed folder by folder (GET /api/v1/media/movies?dir=) —
+  the box keeps most of them in subfolders (SerienRecorder's series folders,
+  hand-made "Film/…" trees), and walking the whole tree through WebControl
+  takes tens of seconds while blocking enigma2 (ARCHITECTURE.md).
+
+  File operations — rename, move to trash, restore, delete for good — each
+  go through a preview (PlanPreview) and are refused while a recording is
+  being written or played. They only exist when DreamHub runs on the box
+  (`fileOps.available`); elsewhere browsing still works and one quiet line
+  says why the actions are missing. The trash follows AdvancedMovieSelection's
+  convention, so it's the same trash the TV's wastebasket shows.
+
+  The status banner and the content are independent (see HubView): a
+  degraded MediaHub (optional TMDB missing) still browses fine.
 -->
 <template>
   <div class="mx-auto max-w-content p-6 below-md:p-4">
@@ -14,13 +23,6 @@
       <h1 class="text-[26px] font-bold">{{ t(item ? item.label : 'hub.media') }}</h1>
     </div>
 
-    <!--
-      The status banner and the real content below are independent, not
-      mutually exclusive: MediaHub's only optional requirement is TMDB
-      (future enrichment), so "degraded" still means the recordings list and
-      disk usage work fine — only "unavailable" (WebControl itself missing)
-      means there's nothing real to show.
-    -->
     <div v-if="item && item.status && item.status !== 'available'" class="mt-4 rounded border border-line bg-tile p-4">
       <div class="mb-1.5 flex items-center gap-2 text-[13.5px] font-semibold">
         <span class="h-1.5 w-1.5 rounded-full" :class="item.status === 'degraded' ? 'bg-warn' : 'bg-faint'" />
@@ -51,80 +53,366 @@
         </div>
       </section>
 
-      <p v-if="loading" class="mt-5 text-[14px] text-muted">{{ t('common.loading') }}</p>
-      <p v-else-if="loadFailed" class="mt-5 text-[14px] text-muted">{{ t('common.backendUnreachable') }}</p>
-      <p v-else-if="movies.length === 0" class="mt-5 text-[14px] text-muted">{{ t('media.empty') }}</p>
-      <ul v-else class="mt-5 flex flex-col">
-        <li
-          v-for="movie in movies"
-          :key="movie.serviceReference"
-          class="flex items-start gap-3 border-b border-line-soft py-2.5 last:border-none"
-          :class="{ 'opacity-60': !movie.isRecording }"
+      <div class="mt-5 flex items-center gap-1 border-b border-line-soft" role="tablist">
+        <button
+          v-for="tab in tabs"
+          :key="tab.id"
+          type="button"
+          role="tab"
+          :aria-selected="activeTab === tab.id"
+          class="-mb-px border-b-2 px-3 py-2 text-[14px]"
+          :class="activeTab === tab.id ? 'border-accent text-text' : 'border-transparent text-muted hover:text-text'"
+          @click="switchTab(tab.id)"
         >
-          <span class="min-w-0 flex-1">
-            <span class="block truncate text-[14px] text-text">{{ movie.title }}</span>
-            <span class="block truncate text-[12.5px] text-muted">
-              <template v-if="movie.isRecording">{{ movie.serviceName }} · {{ formatTime(movie.time) }} · {{ movie.length }}</template>
-              <template v-else>{{ t('media.notARecording') }}</template>
-            </span>
-          </span>
-          <span class="shrink-0 whitespace-nowrap text-[12.5px] font-mono text-faint">{{ formatSize(movie.fileSize) }}</span>
-        </li>
-      </ul>
+          {{ tab.label }}
+        </button>
+      </div>
+
+      <p v-if="notice" class="mt-4 text-[13.5px] text-ok" role="status">{{ notice }}</p>
+
+      <!-- Recordings, one folder at a time -->
+      <template v-if="activeTab === 'recordings'">
+        <nav v-if="folder" class="mt-4 flex flex-wrap items-center gap-1 text-[13.5px]" :aria-label="t('media.folderPath')">
+          <template v-for="(crumb, i) in breadcrumbs" :key="crumb.path">
+            <span v-if="i > 0" class="text-faint">/</span>
+            <button
+              v-if="i < breadcrumbs.length - 1"
+              type="button"
+              class="rounded px-1 text-accent hover:bg-tile-2"
+              @click="open(crumb.path)"
+            >
+              {{ crumb.name }}
+            </button>
+            <span v-else class="px-1 font-semibold text-text">{{ crumb.name }}</span>
+          </template>
+        </nav>
+
+        <p v-if="folder && !folder.fileOps.available" class="mt-2 text-[13px] text-faint">{{ t(`media.fileOps.${folder.fileOps.reason ?? 'notOnBox'}`) }}</p>
+
+        <div v-if="selection.size > 0" class="mt-3 flex flex-wrap items-center gap-3 rounded border border-line bg-tile px-3 py-2 text-[13.5px]">
+          <span class="text-text">{{ t('media.selected', { count: selection.size }, selection.size) }}</span>
+          <button type="button" class="rounded px-2 py-1 text-accent hover:bg-tile-2" @click="selection.clear()">{{ t('media.clearSelection') }}</button>
+          <button type="button" class="ms-auto rounded bg-accent px-3 py-1.5 font-semibold text-bg disabled:opacity-60" :disabled="bulk?.busy" @click="previewBulkTrash">
+            {{ t('media.moveSelectedToTrash') }}
+          </button>
+        </div>
+        <div v-if="bulk" class="mt-3">
+          <p v-if="bulk.busy && !bulk.plan" class="text-[13px] text-faint">{{ t('common.loading') }}</p>
+          <PlanPreview
+            v-else-if="bulk.plan"
+            :plan="bulk.plan"
+            :confirm-label="t('media.confirmTrash')"
+            :busy="bulk.busy"
+            :error="bulk.error"
+            @confirm="confirmBulk"
+            @cancel="bulk = null"
+          >
+            {{ t('media.bulkTrashPreview', { count: bulk.plan.changes.length }, bulk.plan.changes.length) }}
+          </PlanPreview>
+          <p v-else-if="bulk.error" class="text-[12.5px] text-warn">{{ bulk.error }}</p>
+        </div>
+
+        <p v-if="loading" class="mt-5 text-[14px] text-muted">{{ t('common.loading') }}</p>
+        <p v-else-if="loadFailed" class="mt-5 text-[14px] text-muted">{{ t('common.backendUnreachable') }}</p>
+        <template v-else-if="folder">
+          <ul v-if="folder.subfolders.length > 0" class="mt-4 flex flex-col">
+            <li v-for="sub in folder.subfolders" :key="sub.path" class="border-b border-line-soft last:border-none">
+              <button type="button" class="flex w-full items-center gap-3 py-2 text-start hover:bg-tile-2" @click="open(sub.path)">
+                <Icon name="folder" :size="18" class="shrink-0 text-muted" />
+                <span class="min-w-0 flex-1 truncate text-[14px] text-text">{{ sub.name }}</span>
+              </button>
+            </li>
+          </ul>
+          <p v-if="folder.movies.length === 0 && folder.subfolders.length === 0" class="mt-5 text-[14px] text-muted">{{ t('media.empty') }}</p>
+          <ul v-if="folder.movies.length > 0" class="mt-4 flex flex-col">
+            <RecordingRow
+              v-for="movie in folder.movies"
+              :key="movie.filename"
+              :movie="movie"
+              :time-zone="timeZone"
+              :actions="fileOpsAvailable && movie.isRecording"
+              :selectable="fileOpsAvailable && movie.isRecording"
+              :selected="selection.has(movie.filename)"
+              :state="rowStates[movie.filename] ?? null"
+              @toggle="toggle(movie.filename)"
+              @rename="rowStates[movie.filename] = { kind: 'rename', busy: false }"
+              @trash="previewTrash(movie)"
+              @preview-rename="(name: string) => previewRename(movie, name)"
+              @confirm="confirmRow(movie)"
+              @cancel="delete rowStates[movie.filename]"
+            />
+          </ul>
+        </template>
+      </template>
+
+      <!-- Trash -->
+      <template v-else>
+        <p class="mt-4 text-[13px] text-muted">{{ t('media.trashExplain') }}</p>
+        <p v-if="trashLoading" class="mt-5 text-[14px] text-muted">{{ t('common.loading') }}</p>
+        <p v-else-if="trashError" class="mt-5 text-[14px] text-muted">{{ trashError }}</p>
+        <p v-else-if="trash.length === 0" class="mt-5 text-[14px] text-muted">{{ t('media.trashEmpty') }}</p>
+        <template v-else>
+          <div class="mt-3 flex items-center gap-3 text-[13px]">
+            <span class="text-muted">{{ t('media.trashTotal', { count: trash.length, size: formatBytes(trashTotal, locale) }, trash.length) }}</span>
+            <button type="button" class="ms-auto rounded px-2 py-1 text-accent hover:bg-tile-2" @click="previewTrashAction('empty', trash.map((x) => x.path))">
+              {{ t('media.emptyTrash') }}
+            </button>
+          </div>
+          <div v-if="trashAction && trashAction.all" class="mt-3">
+            <TrashPreview :state="trashAction" @confirm="confirmTrashAction" @cancel="trashAction = null" />
+          </div>
+          <ul class="mt-3 flex flex-col">
+            <li v-for="entry in trash" :key="entry.path" class="border-b border-line-soft last:border-none">
+              <div class="group flex items-center gap-3 py-2.5 hover:bg-tile-2">
+                <span class="min-w-0 flex-1">
+                  <span class="block truncate text-[14px] text-text">{{ entry.title }}</span>
+                  <span class="block truncate text-[12.5px] text-muted">{{ folderOf(entry.originalPath) }}</span>
+                </span>
+                <span class="shrink-0 whitespace-nowrap font-mono text-[12.5px] tabular-nums text-faint">{{ formatBytes(entry.size, locale) }}</span>
+                <button
+                  type="button"
+                  class="shrink-0 rounded px-2 py-1 text-[13px] text-accent hover:bg-tile"
+                  :class="{ invisible: trashAction }"
+                  @click="previewTrashAction('restore', [entry.path])"
+                >
+                  {{ t('media.restore') }}
+                </button>
+                <button
+                  type="button"
+                  class="shrink-0 rounded px-2 py-1 text-[13px] text-onair hover:bg-tile"
+                  :class="{ invisible: trashAction }"
+                  @click="previewTrashAction('empty', [entry.path])"
+                >
+                  {{ t('media.deleteForGood') }}
+                </button>
+              </div>
+              <div v-if="trashAction && !trashAction.all && trashAction.paths[0] === entry.path" class="pb-3">
+                <TrashPreview :state="trashAction" @confirm="confirmTrashAction" @cancel="trashAction = null" />
+              </div>
+            </li>
+          </ul>
+        </template>
+      </template>
     </template>
   </div>
 </template>
 
 <script setup lang="ts">
-import { computed, onMounted, ref } from 'vue'
+import { computed, onMounted, reactive, ref } from 'vue'
 import { useI18n } from 'vue-i18n'
 import { api } from '@/api/client'
 import Icon from '@/components/Icon.vue'
+import PlanPreview from '@/components/PlanPreview.vue'
+import RecordingRow from '@/components/media/RecordingRow.vue'
+import TrashPreview from '@/components/media/TrashPreview.vue'
+import type { RowState, TrashActionState } from '@/components/media/types'
 import { useNavigationStore } from '@/stores/navigation'
 import { useProblem } from '@/composables/useProblem'
+import { usePlanError } from '@/composables/usePlanError'
 import { useDisplayTimeZone } from '@/composables/useDisplayTimeZone'
-import type { Disk, Movie } from '@/api/types'
+import { formatBytes } from '@/lib/format'
+import type { Disk, MediaFolder, Movie, Plan, TrashItem } from '@/api/types'
 
 const { t, locale } = useI18n()
 const navigation = useNavigationStore()
 const { describe, describeFix } = useProblem()
+const { planErrorMessage } = usePlanError()
 const { timeZone } = useDisplayTimeZone()
 
 const item = computed(() => navigation.navigation?.sections.flatMap((s) => s.items).find((i) => i.path === '/media'))
 
-const movies = ref<Movie[]>([])
 const disks = ref<Disk[]>([])
+const folder = ref<MediaFolder | null>(null)
 const loading = ref(true)
 const loadFailed = ref(false)
+const notice = ref('')
+const fileOpsAvailable = computed(() => folder.value?.fileOps.available ?? false)
 
-function formatTime(unixSeconds: number): string {
-  return new Intl.DateTimeFormat(locale.value, { dateStyle: 'medium', timeStyle: 'short', timeZone: timeZone.value }).format(
-    unixSeconds * 1000,
-  )
+// --- tabs -------------------------------------------------------------------
+
+type TabId = 'recordings' | 'trash'
+const activeTab = ref<TabId>('recordings')
+const tabs = computed(() => {
+  const list: { id: TabId; label: string }[] = [{ id: 'recordings', label: t('media.tabRecordings') }]
+  // The trash is a file-system view: only where file operations work.
+  if (fileOpsAvailable.value) list.push({ id: 'trash', label: t('media.tabTrash') })
+  return list
+})
+function switchTab(id: TabId) {
+  activeTab.value = id
+  notice.value = ''
+  if (id === 'trash') void loadTrash()
 }
 
-// Binary units (GiB, not GB) since fileSize is an exact byte count from the
-// API, unlike Disk's already-formatted capacity/free strings (webcontrol.ParseSize).
-function formatSize(bytes: number): string {
-  const units = ['B', 'KiB', 'MiB', 'GiB', 'TiB']
-  let value = bytes
-  let unit = 0
-  while (value >= 1024 && unit < units.length - 1) {
-    value /= 1024
-    unit++
+// --- folders ----------------------------------------------------------------
+
+// Breadcrumbs from the root folder down to the open one; the root is shown
+// as "Recordings" rather than its path.
+const breadcrumbs = computed(() => {
+  const f = folder.value
+  if (!f) return []
+  const crumbs = [{ path: f.root, name: t('media.rootFolder') }]
+  let path = f.root
+  for (const part of f.dir.slice(f.root.length).split('/').filter(Boolean)) {
+    path += part + '/'
+    crumbs.push({ path, name: part })
   }
-  return `${value.toFixed(unit === 0 ? 0 : 1)} ${units[unit]}`
+  return crumbs
+})
+
+let loadToken = 0
+async function open(dir?: string) {
+  const token = ++loadToken
+  loading.value = true
+  selection.clear()
+  bulk.value = null
+  Object.keys(rowStates).forEach((k) => delete rowStates[k])
+  try {
+    const res = await api.media.folder(dir)
+    if (token !== loadToken) return
+    folder.value = res
+    loadFailed.value = false
+  } catch {
+    if (token === loadToken) loadFailed.value = true
+  } finally {
+    if (token === loadToken) loading.value = false
+  }
+}
+
+function folderOf(p: string): string {
+  const root = folder.value?.root ?? ''
+  const dir = p.slice(0, p.lastIndexOf('/') + 1)
+  const rel = root && dir.startsWith(root) ? dir.slice(root.length) : dir
+  return t('media.inFolder', { folder: rel === '' ? t('media.rootFolder') : rel.replace(/\/$/, '') })
+}
+
+// --- row actions: rename, trash ------------------------------------------------
+
+const rowStates = reactive<Record<string, RowState>>({})
+
+async function previewRename(movie: Movie, newName: string) {
+  const key = movie.filename
+  rowStates[key] = { kind: 'rename', busy: true }
+  try {
+    const res = await api.media.renamePlan(movie.filename, newName)
+    rowStates[key] = { kind: 'rename', plan: res.plan, busy: false }
+  } catch (err) {
+    rowStates[key] = { kind: 'rename', busy: false, error: planErrorMessage(err) }
+  }
+}
+
+async function previewTrash(movie: Movie) {
+  const key = movie.filename
+  rowStates[key] = { kind: 'trash', busy: true }
+  try {
+    const res = await api.media.trashPlan([movie.filename])
+    rowStates[key] = { kind: 'trash', plan: res.plan, busy: false }
+  } catch (err) {
+    rowStates[key] = { kind: 'trash', busy: false, error: planErrorMessage(err) }
+  }
+}
+
+async function confirmRow(movie: Movie) {
+  const key = movie.filename
+  const state = rowStates[key]
+  if (!state?.plan) return
+  rowStates[key] = { ...state, busy: true, error: undefined }
+  try {
+    await api.plans.apply(state.plan.id)
+    notice.value = state.kind === 'rename' ? t('media.renamed', { title: movie.title }) : t('media.trashed', { title: movie.title })
+    await open(folder.value?.dir)
+  } catch (err) {
+    // A failed or stale plan is used up; the user starts over.
+    rowStates[key] = { kind: state.kind, busy: false, error: planErrorMessage(err) }
+  }
+}
+
+// --- bulk: move the selection to the trash ------------------------------------
+
+const selection = reactive(new Set<string>())
+function toggle(filename: string) {
+  if (selection.has(filename)) selection.delete(filename)
+  else selection.add(filename)
+}
+
+const bulk = ref<{ plan?: Plan; busy: boolean; error?: string } | null>(null)
+async function previewBulkTrash() {
+  bulk.value = { busy: true }
+  try {
+    bulk.value = { plan: (await api.media.trashPlan([...selection])).plan, busy: false }
+  } catch (err) {
+    bulk.value = { busy: false, error: planErrorMessage(err) }
+  }
+}
+async function confirmBulk() {
+  const plan = bulk.value?.plan
+  if (!plan) return
+  bulk.value = { plan, busy: true }
+  try {
+    await api.plans.apply(plan.id)
+    notice.value = t('media.bulkTrashed', { count: plan.changes.length }, plan.changes.length)
+    await open(folder.value?.dir)
+  } catch (err) {
+    bulk.value = { busy: false, error: planErrorMessage(err) }
+  }
+}
+
+// --- trash tab --------------------------------------------------------------------
+
+const trash = ref<TrashItem[]>([])
+const trashLoading = ref(false)
+const trashError = ref('')
+const trashTotal = computed(() => trash.value.reduce((sum, x) => sum + x.size, 0))
+const trashAction = ref<TrashActionState | null>(null)
+
+async function loadTrash() {
+  trashLoading.value = true
+  trashError.value = ''
+  try {
+    trash.value = (await api.media.trash()).items
+  } catch (err) {
+    trashError.value = planErrorMessage(err)
+  } finally {
+    trashLoading.value = false
+  }
+}
+
+async function previewTrashAction(kind: 'restore' | 'empty', paths: string[]) {
+  const all = paths.length > 1
+  trashAction.value = { kind, paths, all, busy: true }
+  try {
+    if (kind === 'restore') {
+      const res = await api.media.restorePlan(paths)
+      trashAction.value = { kind, paths, all, busy: false, plan: res.plan }
+    } else {
+      const res = await api.media.emptyPlan(paths)
+      trashAction.value = { kind, paths, all, busy: false, plan: res.plan, bytes: res.bytes }
+    }
+  } catch (err) {
+    trashAction.value = { kind, paths, all, busy: false, error: planErrorMessage(err) }
+  }
+}
+
+async function confirmTrashAction() {
+  const state = trashAction.value
+  if (!state?.plan) return
+  trashAction.value = { ...state, busy: true, error: undefined }
+  try {
+    await api.plans.apply(state.plan.id)
+    notice.value = state.kind === 'restore' ? t('media.restored') : t('media.deleted', { count: state.paths.length }, state.paths.length)
+    trashAction.value = null
+    await loadTrash()
+  } catch (err) {
+    trashAction.value = { ...state, busy: false, plan: undefined, error: planErrorMessage(err) }
+  }
 }
 
 onMounted(async () => {
+  void open()
   try {
-    const [moviesRes, diskRes] = await Promise.all([api.media.movies(), api.media.disk()])
-    movies.value = moviesRes.movies
-    disks.value = diskRes.disks
+    disks.value = (await api.media.disk()).disks
   } catch {
-    loadFailed.value = true
-  } finally {
-    loading.value = false
+    // Disk usage is a bonus; the folder listing reports reachability.
   }
 })
 </script>

@@ -213,7 +213,43 @@
   "media": {
     "diskFree": "{free} liberi su {capacity}",
     "empty": "Nessuna registrazione.",
-    "notARecording": "Non è una registrazione Dreambox"
+    "notARecording": "Non è una registrazione Dreambox",
+    "select": "Seleziona \"{title}\"",
+    "rename": "Rinomina",
+    "moveToTrash": "Sposta nel cestino",
+    "newName": "Nuovo nome file",
+    "previewRename": "Anteprima",
+    "confirmRename": "Rinomina",
+    "confirmTrash": "Sposta nel cestino",
+    "renamePreview": "Tutti i {count} file di questa registrazione verranno rinominati:",
+    "trashPreview": "\"{title}\" va nel cestino. Da lì si può ripristinare.",
+    "folderPath": "Cartella",
+    "fileOps": {
+      "notOnBox": "Rinominare e il cestino sono disponibili quando DreamHub gira sul box stesso."
+    },
+    "selected": "{count} selezionata | {count} selezionate",
+    "clearSelection": "Deseleziona",
+    "moveSelectedToTrash": "Sposta nel cestino",
+    "bulkTrashPreview": "{count} registrazione va nel cestino. Da lì si può ripristinare. | {count} registrazioni vanno nel cestino. Da lì si possono ripristinare.",
+    "tabRecordings": "Registrazioni",
+    "tabTrash": "Cestino",
+    "rootFolder": "Registrazioni",
+    "inFolder": "in {folder}",
+    "renamed": "\"{title}\" rinominata.",
+    "trashed": "\"{title}\" spostata nel cestino.",
+    "bulkTrashed": "{count} registrazione spostata nel cestino. | {count} registrazioni spostate nel cestino.",
+    "trashExplain": "Le registrazioni nel cestino occupano spazio finché non vengono eliminate definitivamente. Il cestino di AdvancedMovieSelection sul televisore mostra lo stesso contenuto.",
+    "trashEmpty": "Il cestino è vuoto.",
+    "trashTotal": "{count} registrazione · {size} | {count} registrazioni · {size}",
+    "emptyTrash": "Svuota il cestino",
+    "restore": "Ripristina",
+    "deleteForGood": "Elimina definitivamente",
+    "confirmRestore": "Ripristina",
+    "confirmDelete": "Elimina definitivamente",
+    "restorePreview": "La registrazione torna nella sua cartella con il vecchio nome.",
+    "deletePreview": "{count} registrazione ({files} file, {size}) verrà eliminata definitivamente. Non si può annullare. | {count} registrazioni ({files} file, {size}) verranno eliminate definitivamente. Non si può annullare.",
+    "restored": "Ripristinata.",
+    "deleted": "{count} registrazione eliminata definitivamente. | {count} registrazioni eliminate definitivamente."
   },
   "guide": {
     "empty": "Nessun canale in questo bouquet.",
@@ -282,6 +318,19 @@
       "timer_not_found": "Questo timer non esiste più.",
       "webcontrol_unauthorized": "Il box richiede una password. Impostala in Impostazioni → WebControl.",
       "boxSays": "Il box dice: \"{text}\""
+    },
+    "media": {
+      "not_a_recording": "Questa registrazione non esiste (più).",
+      "outside_folders": "Non è in una cartella di registrazioni.",
+      "invalid_name": "Questo nome non si può usare (vuoto, troppo lungo o con \"/\").",
+      "same_name": "È il nome attuale.",
+      "target_exists": "Esiste già un file con questo nome.",
+      "not_in_trash": "Non è (più) nel cestino.",
+      "restore_blocked": "Impossibile ripristinare: esiste di nuovo una registrazione con il nome originale.",
+      "media_in_use": "La registrazione è in uso.",
+      "media_in_use_recording": "La registrazione è ancora in corso. Riprova quando è finita.",
+      "media_in_use_playing": "La registrazione è in riproduzione sul televisore. Interrompi prima la riproduzione.",
+      "file_ops_unavailable": "Rinominare e il cestino sono disponibili quando DreamHub gira sul box stesso."
     }
   },
   "settings": {

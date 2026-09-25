@@ -213,7 +213,43 @@
   "media": {
     "diskFree": "{free} frei von {capacity}",
     "empty": "Keine Aufnahmen.",
-    "notARecording": "Keine Dreambox-Aufnahme"
+    "notARecording": "Keine Dreambox-Aufnahme",
+    "select": "„{title}“ auswählen",
+    "rename": "Umbenennen",
+    "moveToTrash": "In den Papierkorb",
+    "newName": "Neuer Dateiname",
+    "previewRename": "Vorschau",
+    "confirmRename": "Umbenennen",
+    "confirmTrash": "In den Papierkorb",
+    "renamePreview": "Alle {count} Dateien dieser Aufnahme werden umbenannt:",
+    "trashPreview": "„{title}“ wandert in den Papierkorb und lässt sich von dort wiederherstellen.",
+    "folderPath": "Ordner",
+    "fileOps": {
+      "notOnBox": "Umbenennen und Papierkorb gibt es, wenn DreamHub auf der Box selbst läuft."
+    },
+    "selected": "{count} ausgewählt | {count} ausgewählt",
+    "clearSelection": "Aufheben",
+    "moveSelectedToTrash": "In den Papierkorb",
+    "bulkTrashPreview": "{count} Aufnahme wandert in den Papierkorb und lässt sich von dort wiederherstellen. | {count} Aufnahmen wandern in den Papierkorb und lassen sich von dort wiederherstellen.",
+    "tabRecordings": "Aufnahmen",
+    "tabTrash": "Papierkorb",
+    "rootFolder": "Aufnahmen",
+    "inFolder": "in {folder}",
+    "renamed": "„{title}“ umbenannt.",
+    "trashed": "„{title}“ in den Papierkorb verschoben.",
+    "bulkTrashed": "{count} Aufnahme in den Papierkorb verschoben. | {count} Aufnahmen in den Papierkorb verschoben.",
+    "trashExplain": "Aufnahmen im Papierkorb belegen weiter Platz, bis sie endgültig gelöscht werden. Der Papierkorb von AdvancedMovieSelection am Fernseher zeigt denselben Inhalt.",
+    "trashEmpty": "Der Papierkorb ist leer.",
+    "trashTotal": "{count} Aufnahme · {size} | {count} Aufnahmen · {size}",
+    "emptyTrash": "Papierkorb leeren",
+    "restore": "Wiederherstellen",
+    "deleteForGood": "Endgültig löschen",
+    "confirmRestore": "Wiederherstellen",
+    "confirmDelete": "Endgültig löschen",
+    "restorePreview": "Die Aufnahme kommt unter ihrem alten Namen in ihren Ordner zurück.",
+    "deletePreview": "{count} Aufnahme ({files} Dateien, {size}) wird endgültig gelöscht. Das lässt sich nicht rückgängig machen. | {count} Aufnahmen ({files} Dateien, {size}) werden endgültig gelöscht. Das lässt sich nicht rückgängig machen.",
+    "restored": "Wiederhergestellt.",
+    "deleted": "{count} Aufnahme endgültig gelöscht. | {count} Aufnahmen endgültig gelöscht."
   },
   "guide": {
     "empty": "Keine Sender in diesem Bouquet.",
@@ -282,6 +318,19 @@
       "timer_not_found": "Diesen Timer gibt es nicht mehr.",
       "webcontrol_unauthorized": "Die Box verlangt ein Passwort. In den Einstellungen unter „WebControl“ eintragen.",
       "boxSays": "Die Box meldet: „{text}“"
+    },
+    "media": {
+      "not_a_recording": "Diese Aufnahme gibt es nicht (mehr).",
+      "outside_folders": "Das liegt nicht in einem Aufnahmeordner.",
+      "invalid_name": "Dieser Name geht nicht (leer, zu lang oder mit „/“).",
+      "same_name": "Das ist der aktuelle Name.",
+      "target_exists": "Eine Datei mit diesem Namen gibt es schon.",
+      "not_in_trash": "Das liegt nicht (mehr) im Papierkorb.",
+      "restore_blocked": "Wiederherstellen geht nicht: Es gibt wieder eine Aufnahme mit dem ursprünglichen Namen.",
+      "media_in_use": "Die Aufnahme wird gerade verwendet.",
+      "media_in_use_recording": "Die Aufnahme läuft noch. Bitte nach dem Ende erneut versuchen.",
+      "media_in_use_playing": "Die Aufnahme wird gerade am Fernseher abgespielt. Bitte erst die Wiedergabe beenden.",
+      "file_ops_unavailable": "Umbenennen und Papierkorb gibt es, wenn DreamHub auf der Box selbst läuft."
     }
   },
   "settings": {

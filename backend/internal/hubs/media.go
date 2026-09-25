@@ -25,6 +25,10 @@ type Media struct {
 	// offered when the box's recording folders exist on it
 	// (recfs.Available) — off the box they're unavailable, not broken.
 	FS recfs.FS
+	// ReadOnly refuses to apply file changes (previews still work) — the same
+	// switch as WebControl writes (DREAMHUB_ENABLE_DEVICE_WRITES=0), so a
+	// read-only trial run on a real box can't touch recordings either.
+	ReadOnly bool
 }
 
 // Mount registers MediaHub's routes.

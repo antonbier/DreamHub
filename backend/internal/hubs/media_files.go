@@ -213,6 +213,9 @@ func (h *Media) planRename(w http.ResponseWriter, r *http.Request) {
 		Fingerprint: current,
 		Current:     fp,
 		Execute: func(ctx context.Context) error {
+			if h.ReadOnly {
+				return webcontrol.ErrWritesDisabled
+			}
 			if err := h.inUseFailure(ctx, []string{p}); err != nil {
 				return err
 			}
@@ -286,6 +289,9 @@ func (h *Media) planTrash(w http.ResponseWriter, r *http.Request) {
 		Fingerprint: current,
 		Current:     fp,
 		Execute: func(ctx context.Context) error {
+			if h.ReadOnly {
+				return webcontrol.ErrWritesDisabled
+			}
 			if err := h.inUseFailure(ctx, paths); err != nil {
 				return err
 			}
@@ -341,7 +347,12 @@ func (h *Media) planRestore(w http.ResponseWriter, r *http.Request) {
 		Detail:      map[string]any{"moves": moves},
 		Fingerprint: current,
 		Current:     fp,
-		Execute:     func(context.Context) error { return recfs.Apply(h.FS, moves) },
+		Execute: func(context.Context) error {
+			if h.ReadOnly {
+				return webcontrol.ErrWritesDisabled
+			}
+			return recfs.Apply(h.FS, moves)
+		},
 	})
 	httpx.WriteJSON(w, http.StatusOK, map[string]any{"plan": pl})
 }
@@ -383,7 +394,12 @@ func (h *Media) planEmpty(w http.ResponseWriter, r *http.Request) {
 		Detail:      map[string]any{"files": files, "bytes": size},
 		Fingerprint: current,
 		Current:     func(context.Context) (string, error) { return h.filesFingerprint(files), nil },
-		Execute:     func(context.Context) error { return recfs.Remove(h.FS, files) },
+		Execute: func(context.Context) error {
+			if h.ReadOnly {
+				return webcontrol.ErrWritesDisabled
+			}
+			return recfs.Remove(h.FS, files)
+		},
 	})
 	httpx.WriteJSON(w, http.StatusOK, map[string]any{"plan": pl, "bytes": size})
 }

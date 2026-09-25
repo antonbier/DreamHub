@@ -41,6 +41,9 @@ type Options struct {
 	// RecordingsFS is where MediaHub's file operations act: recfs.OS{} on
 	// the box, the mock's in-memory FS in mock mode, nil to disable them.
 	RecordingsFS recfs.FS
+	// ReadOnlyFiles refuses to apply MediaHub file changes (see
+	// hubs.Media.ReadOnly).
+	ReadOnlyFiles bool
 	// AutoTimer is the optional AutoTimer plugin's API (internal/autotimer);
 	// nil behaves like a box without the plugin.
 	AutoTimer autotimer.Client
@@ -169,7 +172,7 @@ func New(ctx context.Context, o Options) (*App, error) {
 	watcher := hub.NewStatusWatcher()
 
 	timerHub := &hubs_.Timer{WC: o.WebControl, Plans: plans, Now: now, AT: o.AutoTimer}
-	mediaHub := &hubs_.Media{WC: o.WebControl, Plans: plans, FS: o.RecordingsFS}
+	mediaHub := &hubs_.Media{WC: o.WebControl, Plans: plans, FS: o.RecordingsFS, ReadOnly: o.ReadOnlyFiles}
 	guideHub := &hubs_.Guide{WC: o.WebControl, Now: now}
 	seriesHub := &hubs_.Series{SR: o.Series}
 	discoveryHub := &hubs_.Discovery{WC: o.WebControl, AI: o.AI, Store: st, Settings: svc, Now: now}

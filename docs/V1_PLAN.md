@@ -68,7 +68,7 @@ Order matters where noted. Everything else can run in parallel.
 - AutoTimer per D3, as an optional capability (hidden/degraded when the plugin is missing).
 - GuideHub search provider (open item), dashboard tile "conflicts".
 
-### WP4 — MediaHub writes *(biggest; after WP2 for live testing)*
+### WP4 — MediaHub writes *(file engine, rename, trash and UI done 2026-09-24; name suggestions (D2) and `.ts.meta` title edits open — see ROADMAP.md, MediaHub)*
 - New file component (real: `os.Rename` on-device; mock: in-memory FS). Rule: all files sharing the recording's base name (`.ts`, `.ts.meta`, `.ts.ap`, `.ts.sc`, `.ts.cuts`, `.eit`, `.jpg`, `.backdrop.jpg`, whatever else exists), non-recordings left alone.
 - **In-use check** before any operation: timers in state 1/2 targeting that file, and the currently played service (`/web/getcurrent`).
 - **Rename** with preview (every file before → after), collision check, rollback on partial failure, optional title/description update in `.ts.meta`, name suggestions per D2 (metadata template, TMDB, AI — each optional, each degrading cleanly when unconfigured).

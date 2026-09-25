@@ -82,10 +82,21 @@ Releases: **Foundation** → **v1** → **v1.1** → **Later**. GitHub milestone
 - [x] Dashboard tile: disk usage (`media.diskSpace`, `MediaDiskSpaceTile.vue`)
 - [x] Confirmed 2026-09-24 (#11): Enigma2's movie list picks up files renamed outside Enigma2 correctly, no rescan needed — see `ARCHITECTURE.md`
 
+**Done** (v1 plan WP4):
+- [x] Folder browsing: every recording folder, one folder per request (`GET /api/v1/media/movies?dir=`). Previously only the top folder was visible (36 of 773 recordings on the reference box, see `ARCHITECTURE.md`)
+- [x] Tolerant listing: `None` sizes no longer drop entries and subfolders
+- [x] `internal/recfs`: which files belong to a recording, rename with rollback, trash in AdvancedMovieSelection's `.ts.trash` convention (works without AMS), restore, empty. Paths are confined to the recording folders. In-memory FS for the mock
+- [x] Rename, trash (single and bulk), restore and delete-for-good, each as preview-and-confirm. Refused while the file is being recorded or played, checked again at apply. Stale previews rejected
+- [x] File operations only when DreamHub runs on the box, and switched off together with device writes (`DREAMHUB_ENABLE_DEVICE_WRITES=0`)
+- [x] MediaHub screen: folder breadcrumbs, recordings with inline rename (every file before → after), selection for bulk trash, trash tab with total size. Sizes are now decimal (GB) per `CONCEPT.md`
+
 **Open**:
-- [ ] Rename engine covering **all** sidecar files of a `.ts` recording: `.ts`, `.ts.meta`, `.ts.ap`, `.ts.sc`, `.ts.cuts`, `.eit`. Plus existing cover art (`.jpg`, `.backdrop.jpg`) — move it along, don't re-fetch from TMDB. WebControl's API has no file-operation endpoints (`ARCHITECTURE.md`), so this needs its own filesystem-backed component (real: direct `os.Rename` — the backend runs on-device with local access to `/media/hdd`, per `PROJECT_PLAN.md`'s packaging plan, no SSH needed in production; mock: in-memory, per `PRINCIPLES.md`'s "Mock-first development")
-- [ ] Every rename/delete goes through preview-and-confirm (`internal/plan`, same pattern as TimerHub's `planCreate`); delete means move to trash
-- [ ] Never touch a file that is currently being recorded or played — cross-reference `/web/timerlist` against the current time (already resolved conceptually, #12; not yet wired into a mutating MediaHub endpoint since none exist yet)
+- [ ] Name suggestions (decision D2): metadata template, TMDB, AI provider. All optional, all ending in the same rename preview
+- [ ] Update title/description in `.ts.meta` along with a rename
+- [ ] Global search across all folders (the search provider still only sees the top folder; needs a cached, throttled index — WP7)
+- [x] Rename engine covering **all** sidecar files of a `.ts` recording: `.ts`, `.ts.meta`, `.ts.ap`, `.ts.sc`, `.ts.cuts`, `.eit`. Plus existing cover art (`.jpg`, `.backdrop.jpg`) — move it along, don't re-fetch from TMDB. WebControl's API has no file-operation endpoints (`ARCHITECTURE.md`), so this needs its own filesystem-backed component (real: direct `os.Rename` — the backend runs on-device with local access to `/media/hdd`, per `PROJECT_PLAN.md`'s packaging plan, no SSH needed in production; mock: in-memory, per `PRINCIPLES.md`'s "Mock-first development")
+- [x] Every rename/delete goes through preview-and-confirm (`internal/plan`, same pattern as TimerHub's `planCreate`); delete means move to trash
+- [x] Never touch a file that is currently being recorded or played — cross-reference `/web/timerlist` against the current time (already resolved conceptually, #12; not yet wired into a mutating MediaHub endpoint since none exist yet)
 - [ ] Bulk actions via a background queue
 - [ ] `.ts.meta` format: line 1 service reference, line 2 title, line 3 title+description+genre, line 4 unix timestamp — parse only where the API doesn't already provide the field (not needed yet — `/web/movielist` already covers everything the current read-only screen shows)
 - [ ] Reference implementation: `AdvancedMovieSelection` (`Rename.py`, `SearchTMDb*.py`) — native on-screen plugin, not web-based, CC BY-NC-SA licensed: read for approach, don't copy code

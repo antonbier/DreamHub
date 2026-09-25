@@ -213,7 +213,43 @@
   "media": {
     "diskFree": "{free} free of {capacity}",
     "empty": "No recordings.",
-    "notARecording": "Not a Dreambox recording"
+    "notARecording": "Not a Dreambox recording",
+    "select": "Select “{title}”",
+    "rename": "Rename",
+    "moveToTrash": "Move to trash",
+    "newName": "New file name",
+    "previewRename": "Preview",
+    "confirmRename": "Rename",
+    "confirmTrash": "Move to trash",
+    "renamePreview": "All {count} files of this recording will be renamed:",
+    "trashPreview": "“{title}” moves to the trash. You can restore it from there.",
+    "folderPath": "Folder",
+    "fileOps": {
+      "notOnBox": "Renaming and the trash are available when DreamHub runs on the box itself."
+    },
+    "selected": "{count} selected | {count} selected",
+    "clearSelection": "Clear",
+    "moveSelectedToTrash": "Move to trash",
+    "bulkTrashPreview": "{count} recording moves to the trash. You can restore it from there. | {count} recordings move to the trash. You can restore them from there.",
+    "tabRecordings": "Recordings",
+    "tabTrash": "Trash",
+    "rootFolder": "Recordings",
+    "inFolder": "in {folder}",
+    "renamed": "Renamed “{title}”.",
+    "trashed": "Moved “{title}” to the trash.",
+    "bulkTrashed": "Moved {count} recording to the trash. | Moved {count} recordings to the trash.",
+    "trashExplain": "Recordings in the trash still take up space until they're deleted for good. The TV's AdvancedMovieSelection wastebasket shows the same trash.",
+    "trashEmpty": "The trash is empty.",
+    "trashTotal": "{count} recording · {size} | {count} recordings · {size}",
+    "emptyTrash": "Empty trash",
+    "restore": "Restore",
+    "deleteForGood": "Delete for good",
+    "confirmRestore": "Restore",
+    "confirmDelete": "Delete for good",
+    "restorePreview": "The recording goes back to its folder under its old name.",
+    "deletePreview": "{count} recording ({files} files, {size}) will be deleted for good. This can't be undone. | {count} recordings ({files} files, {size}) will be deleted for good. This can't be undone.",
+    "restored": "Restored.",
+    "deleted": "Deleted {count} recording for good. | Deleted {count} recordings for good."
   },
   "guide": {
     "empty": "No channels in this bouquet.",
@@ -282,6 +318,19 @@
       "timer_not_found": "This timer no longer exists.",
       "webcontrol_unauthorized": "The box asks for a password. Set it in Settings → WebControl.",
       "boxSays": "The box says: “{text}”"
+    },
+    "media": {
+      "not_a_recording": "This recording doesn't exist (anymore).",
+      "outside_folders": "That's not inside a recording folder.",
+      "invalid_name": "That name can't be used (empty, too long, or with “/”).",
+      "same_name": "That's the current name.",
+      "target_exists": "A file with that name already exists.",
+      "not_in_trash": "That's not in the trash (anymore).",
+      "restore_blocked": "Can't restore: a recording with the original name exists again.",
+      "media_in_use": "The recording is in use right now.",
+      "media_in_use_recording": "The recording is still being recorded. Try again once it's finished.",
+      "media_in_use_playing": "The recording is playing on the TV right now. Stop playback first.",
+      "file_ops_unavailable": "Renaming and the trash are available when DreamHub runs on the box itself."
     }
   },
   "settings": {

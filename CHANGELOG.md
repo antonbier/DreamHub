@@ -15,6 +15,13 @@ Format follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/); version
 - A SerienRecorder that isn't installed now shows as `not_installed` with an install hint instead of a connection problem. Optional plugins never break DreamHub (`docs/V1_PLAN.md`).
 - `docs/V1_PLAN.md`: the plan for v1 (work packages, open decisions, the tuner proposal).
 
+### Added / fixed (v1 plan, WP4: MediaHub files)
+- MediaHub browses **every** recording folder. Before, only the top folder was visible (36 of 773 recordings on the reference box), because the box crashes on the subfolder part of `/web/movielist` without an explicit `dirname`.
+- Fixed: a `None` file size (a manually copied `.mkv`) made the listing lose that entry and everything after it.
+- Rename a recording: every file shown before → after, all or nothing. Move to trash, single or bulk, in AdvancedMovieSelection's `.ts.trash` convention, so it's the same trash the TV shows; it works without AMS too. Restore, and delete for good with the total size named.
+- Nothing is touched while it's being recorded or played; this is checked at preview and again at apply. File operations only run when DreamHub is on the box, and `DREAMHUB_ENABLE_DEVICE_WRITES=0` switches them off too.
+- Sizes are shown in decimal units (GB), as Enigma2 reports them.
+
 ### Added (v1 plan, WP3: TimerHub)
 - TimerHub screen: timers by day, state, source (SerienRecorder/AutoTimer, from the box's tags), a likely-conflict marker, and deleting through preview-and-confirm.
 - Record a programme straight from the TV guide grid. The preview shows the recording window including margins.

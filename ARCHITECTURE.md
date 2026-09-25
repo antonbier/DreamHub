@@ -328,6 +328,19 @@ The static ARM64 binary (12.9 MB, frontend embedded) was run by hand from `/tmp`
 - `/tmp` is a RAM-backed `tmpfs` (989 MB), fine for a trial but not for data. `/data` is a 7.6 GB ext4 partition, 43 % used.
 - The default umask `022` made DreamHub's data directory and SQLite's `-wal`/`-shm` files world-readable. DreamHub now sets umask `077` at startup. A `/data/dreamhub/` from an earlier manual test run (11:16–11:48 that day) still has the old modes and was left untouched.
 
+## `/web/movielist`: folders, the "Processing Failed" tail, and `None` sizes
+
+Confirmed 2026-09-24 against the reference box and its plugin source (`web/movielist.xml`, `WebComponents/Sources/Movie.py`):
+
+- **Without `dirname` the list only covers the top folder, and the subfolder part crashes.** The screen has two parts: `MovieList` (the recordings) and `MovieListSubdir` (the folder's direct subfolders as `<e2locations><e2location>…`). With no `dirname`, the second part runs `pathExists(None)` and the response ends in an HTML "Processing Failed" fragment. That is the "malformed tail" noted earlier, and not any single recording's metadata. With an explicit `dirname=/media/hdd/movie/` the response is complete and valid XML.
+- **Most recordings live in subfolders.** The reference box has 36 files in `/media/hdd/movie/` but 773 `.ts` recordings in total, in 173 folders: SerienRecorder's `<Series (year)>/Season N/` folders, plus hand-made `Film/Deutsch/<title>/` trees. Walking every folder through the API took 40 s and returned 913 entries, with enigma2 serving nothing else meanwhile. So MediaHub browses one folder per request.
+- **`e2filesize` (and potentially `e2time`) can be the string `None`**, seen on a manually copied `.mkv`. A strict integer field made Go's `encoding/xml` fail on that entry, and everything after it was lost, including the subfolder list. DreamHub reads these fields leniently (`webcontrol.Int64`).
+- A recording being played shows up in `/web/getcurrent` with its file path after the ten numeric fields (`1:0:0:0:0:0:0:0:0:0:/media/hdd/movie/x.ts`), the standard Enigma2 form. This wasn't exercised live (it would mean starting playback). A running timer's `e2filename` names the file it writes. MediaHub uses both to refuse touching a file in use.
+
+## MediaHub file operations on the box (v1 plan WP4)
+
+Previewed live 2026-09-24 on the read-only test instance, with nothing applied. A rename preview of a real SerienRecorder recording listed all 8 of its files, including `.backdrop.jpg` and the SerienRecorder cover. Applying was refused (`writes_disabled`), and the recording folders' file list was unchanged afterwards (same checksum). The rules are in `backend/internal/recfs`. No `.ts.trash` files existed on the box. The old `/media/hdd/movie/trashcan/` folder from 2023 is hidden in MediaHub's folder list.
+
 ## Real API fixtures captured (#14)
 
 Live responses for every endpoint in the table below, plus `epgnownext` (corrected, see above) and five `serienrecorderapi` endpoints, are saved verbatim under `backend/testdata/fixtures/` (`*.xml` for `/web/*`, `serienrecorder/*.json` for the SerienRecorder API) — captured directly from the reference device on 2026-09-24. `backend/internal/webcontrol/mock` can be extended to load these instead of (or alongside) its current hand-written fixtures for more realistic tests.

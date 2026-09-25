@@ -65,10 +65,27 @@ type Movie struct {
 	Description      string `xml:"e2description" json:"description"`
 	DescriptionExt   string `xml:"e2descriptionextended" json:"descriptionExtended"`
 	ServiceName      string `xml:"e2servicename" json:"serviceName"`
-	Time             int64  `xml:"e2time" json:"time"`
+	Time             Int64  `xml:"e2time" json:"time"`
 	Length           string `xml:"e2length" json:"length"`
 	Filename         string `xml:"e2filename" json:"filename"`
-	FileSize         int64  `xml:"e2filesize" json:"fileSize"`
+	FileSize         Int64  `xml:"e2filesize" json:"fileSize"`
+}
+
+// Int64 is a number field WebControl sometimes fills with Python's "None"
+// — confirmed live 2026-09-24: /web/movielist reports e2filesize "None" for
+// a manually copied .mkv. A strict int64 made encoding/xml fail on that
+// entry, and the listing silently lost it and everything after it,
+// including the folder's subfolders. Anything that isn't a number reads
+// as 0.
+type Int64 int64
+
+func (n *Int64) UnmarshalText(b []byte) error {
+	v, err := strconv.ParseInt(strings.TrimSpace(string(b)), 10, 64)
+	if err != nil {
+		v = 0
+	}
+	*n = Int64(v)
+	return nil
 }
 
 // Service is one bouquet or channel entry from /web/getservices (see

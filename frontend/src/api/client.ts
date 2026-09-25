@@ -15,7 +15,9 @@ import { authHeader, authState, clearCredentials } from './authState'
 import type {
   ApiToken,
   AutoTimers,
+  MediaFolder,
   SimulatedTimer,
+  TrashItem,
   Bouquet,
   ChangeEntry,
   ChannelSchedule,
@@ -26,7 +28,6 @@ import type {
   DiscoveryStatus,
   HealthInfo,
   HubStatus,
-  Movie,
   Navigation,
   Plan,
   Recommendation,
@@ -161,7 +162,14 @@ export const api = {
     apply: (id: string) => request<{ planId: string; action: string }>('POST', `/api/v1/plans/${encodeURIComponent(id)}/apply`),
   },
   media: {
-    movies: () => request<{ movies: Movie[] }>('GET', '/api/v1/media/movies'),
+    // One folder; no dir means the box's first recording folder.
+    folder: (dir?: string) =>
+      request<MediaFolder>('GET', `/api/v1/media/movies${dir ? `?dir=${encodeURIComponent(dir)}` : ''}`),
+    renamePlan: (path: string, newName: string) => request<{ plan: Plan }>('POST', '/api/v1/media/rename/plan', { path, newName }),
+    trashPlan: (paths: string[]) => request<{ plan: Plan }>('POST', '/api/v1/media/trash/plan', { paths }),
+    trash: () => request<{ items: TrashItem[] }>('GET', '/api/v1/media/trash'),
+    restorePlan: (paths: string[]) => request<{ plan: Plan }>('POST', '/api/v1/media/trash/restore/plan', { paths }),
+    emptyPlan: (paths: string[]) => request<{ plan: Plan; bytes: number }>('POST', '/api/v1/media/trash/empty/plan', { paths }),
     disk: () => request<{ disks: Disk[] }>('GET', '/api/v1/media/disk'),
   },
   guide: {

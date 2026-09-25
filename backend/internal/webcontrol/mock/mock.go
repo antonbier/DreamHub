@@ -225,7 +225,7 @@ func (c *Client) MovieDir(ctx context.Context, dir string) (webcontrol.MovieFold
 			ServiceReference: "1:0:0:0:0:0:0:0:0:0:" + full,
 			Title:            e.Name(),
 			Filename:         "/" + full,
-			FileSize:         c.FS.Size(full),
+			FileSize:         webcontrol.Int64(c.FS.Size(full)),
 		}
 		if title := recfs.MetaTitle(c.FS, full); title != "" {
 			m.Title = title

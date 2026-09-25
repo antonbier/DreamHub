@@ -182,6 +182,26 @@ export interface Movie {
   isRecording: boolean
 }
 
+// backend/internal/hubs.list — one folder of recordings, GET /api/v1/media/movies?dir=.
+export interface MediaFolder {
+  dir: string // absolute, trailing slash
+  root: string
+  parent?: string // absent at the root
+  subfolders: { path: string; name: string }[]
+  movies: Movie[]
+  // File operations (rename, trash) only work when DreamHub runs on the box.
+  fileOps: { available: boolean; reason?: string }
+}
+
+// backend/internal/recfs.TrashItem.
+export interface TrashItem {
+  path: string // the ".ts.trash" file
+  originalPath: string
+  title: string
+  size: number // bytes, all of its files
+  modified: string // RFC 3339, UTC
+}
+
 // backend/internal/hubs.Disk, as returned by GET /api/v1/media/disk.
 export interface Disk {
   model: string

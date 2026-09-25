@@ -56,7 +56,15 @@ Then open `http://<box>:8090`. Stop with `kill $(pidof dreamhub)` and remove `/t
 | GET | `/api/v1/health` | public; `status`, `version`, `time` (UTC) |
 | GET | `/api/v1/whoami` | protected; `{username, role}` — doubles as a credentials check, since the web UI's login screen has no browser-native prompt to rely on (only `/api/v1/*` sits behind auth, not the SPA shell) |
 | GET | `/api/v1/deviceinfo` | from WebControl |
-| GET | `/api/v1/movies` | from WebControl `/web/movielist` |
+| GET | `/api/v1/movies` | from WebControl `/web/movielist` (top folder only; MediaHub uses the folder endpoint below) |
+| GET | `/api/v1/media/movies?dir=` | MediaHub: one recording folder, default the box's first recording folder: `{dir, root, parent?, subfolders: [{path, name}], movies: [...], fileOps: {available, reason?}}`. `fileOps.available` is false (`reason: "notOnBox"`) when DreamHub doesn't run on the box. `400 outside_folders` for anything outside the recording folders |
+| POST | `/api/v1/media/rename/plan` | `{path, newName}`: preview renaming every file of a recording (`changes`: one `file.rename` per file, before → after, main file last). Errors: `invalid_name`, `same_name`, `target_exists`, `not_a_recording`, `outside_folders`, `409 media_in_use` (`details.reason`: `recording`/`playing`), `409 file_ops_unavailable` |
+| POST | `/api/v1/media/trash/plan` | `{paths: [...]}` (1–200): preview moving recordings to the trash (`<base>.ts` → `<base>.ts.trash`, AdvancedMovieSelection's convention) |
+| GET | `/api/v1/media/trash` | trashed recordings below the recording folders: `{items: [{path, originalPath, title, size, modified}]}` |
+| POST | `/api/v1/media/trash/restore/plan` | `{paths}`: preview restoring (`409 restore_blocked` if the original name is taken again) |
+| POST | `/api/v1/media/trash/empty/plan` | `{paths}`: preview deleting trashed recordings for good. Lists every file and returns `bytes`. MediaHub's only real delete |
+
+MediaHub file changes are applied only when DreamHub runs on the box and device writes are on. With `DREAMHUB_ENABLE_DEVICE_WRITES=0`, previews still work and applying answers `409 writes_disabled`. Every apply re-checks that the file isn't being recorded or played.
 | GET | `/api/v1/settings` | all sections with effective values; secrets masked, passwords never returned (`hasValue` only) |
 | PATCH | `/api/v1/settings` | `{"values": {"<key>": <value or null>}}` — `null` resets to default. All-or-nothing; on failure `400 validation_failed` with a code per field in `error.details` |
 | GET | `/api/v1/navigation` | the sidebar for the current user: sections (`main`, `media`, `program`, `device`, `bottom`), each hub with `name` (MediaHub…), `label` (i18n key), `status` and `problems`; disabled hubs and hubs the role can't see are omitted; `labels` is the user's `descriptive`/`hub` choice |

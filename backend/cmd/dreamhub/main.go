@@ -83,12 +83,14 @@ func run(logger *slog.Logger, level *logging.Level) error {
 		Series:       sr,
 		AutoTimer:    at,
 		RecordingsFS: recFS,
-		AI:           aiClient,
-		Mock:         cfg.Mode == config.ModeMock,
-		LookPath:     exec.LookPath,
-		Logger:       logger,
-		Level:        level,
-		WebUI:        webui.Handler(),
+		// Same switch as WebControl writes; mock mode always writes.
+		ReadOnlyFiles: cfg.Mode == config.ModeLive && !cfg.EnableDeviceWrites,
+		AI:            aiClient,
+		Mock:          cfg.Mode == config.ModeMock,
+		LookPath:      exec.LookPath,
+		Logger:        logger,
+		Level:         level,
+		WebUI:         webui.Handler(),
 	})
 	if err != nil {
 		return err

@@ -56,18 +56,27 @@ func newEnvWithAutoTimer(t *testing.T, wc webcontrol.Client, at autotimer.Client
 }
 
 func newEnvWithOptions(t *testing.T, wc webcontrol.Client, at autotimer.Client, recFS recfs.FS) *env {
+	return newEnvFull(t, wc, at, recFS, false)
+}
+
+func newEnvWithReadOnlyFiles(t *testing.T, m *mock.Client) *env {
+	return newEnvFull(t, m, atmock.New(), m.FS, true)
+}
+
+func newEnvFull(t *testing.T, wc webcontrol.Client, at autotimer.Client, recFS recfs.FS, readOnly bool) *env {
 	t.Helper()
 	a, err := app.New(context.Background(), app.Options{
-		DataDir:      t.TempDir(),
-		WebControl:   wc,
-		AutoTimer:    at,
-		RecordingsFS: recFS,
-		Series:       srmock.New(),
-		AI:           aimock.New(),
-		Mock:         true,
-		LookPath:     func(string) (string, error) { return "/usr/bin/journalctl", nil },
-		Logger:       discardLogger(),
-		Now:          func() time.Time { return fixedNow },
+		ReadOnlyFiles: readOnly,
+		DataDir:       t.TempDir(),
+		WebControl:    wc,
+		AutoTimer:     at,
+		RecordingsFS:  recFS,
+		Series:        srmock.New(),
+		AI:            aimock.New(),
+		Mock:          true,
+		LookPath:      func(string) (string, error) { return "/usr/bin/journalctl", nil },
+		Logger:        discardLogger(),
+		Now:           func() time.Time { return fixedNow },
 	})
 	if err != nil {
 		t.Fatal(err)

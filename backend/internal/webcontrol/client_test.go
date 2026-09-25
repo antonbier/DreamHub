@@ -250,3 +250,38 @@ func TestEPGMulti_SendsEndTimeAsMinutes(t *testing.T) {
 		t.Errorf("want time=1000 endTime=240, got %v", got)
 	}
 }
+
+func TestMovieDir_ToleratesNoneAndListsSubfolders(t *testing.T) {
+	// Real shape (2026-09-24): a manually copied .mkv with e2filesize
+	// "None" in the middle of the list, subfolders after it.
+	const body = `<?xml version="1.0" encoding="UTF-8"?>
+<e2movielist>
+	<e2movie><e2title>A</e2title><e2time>-1</e2time><e2filename>//media/hdd/movie/a.ts</e2filename><e2filesize>100</e2filesize></e2movie>
+	<e2movie><e2title>Oskars Kleid.mkv</e2title><e2time>None</e2time><e2filename>//media/hdd/movie/Oskars Kleid.mkv</e2filename><e2filesize>None</e2filesize></e2movie>
+	<e2movie><e2title>B</e2title><e2time>1780944521</e2time><e2filename>//media/hdd/movie/b.ts</e2filename><e2filesize>200</e2filesize></e2movie>
+	<e2locations>
+		<e2location>/media/hdd/movie/Film/</e2location>
+		<e2location>/media/hdd/movie/serien/</e2location>
+	</e2locations>
+</e2movielist>`
+	var form url.Values
+	srv := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		r.ParseForm()
+		form = r.PostForm
+		w.Write([]byte(body))
+	}))
+	defer srv.Close()
+	f, err := NewHTTPClient(srv.URL).MovieDir(context.Background(), "/media/hdd/movie/")
+	if err != nil {
+		t.Fatal(err)
+	}
+	if form.Get("dirname") != "/media/hdd/movie/" {
+		t.Errorf("dirname must always be sent explicitly, got %v", form)
+	}
+	if len(f.Movies) != 3 || f.Movies[1].FileSize != 0 || f.Movies[2].FileSize != 200 || f.Movies[2].Time != 1780944521 {
+		t.Errorf("a \"None\" field must not lose the entry or the ones after it: %+v", f.Movies)
+	}
+	if len(f.Subfolders) != 2 || f.Subfolders[1] != "/media/hdd/movie/serien/" {
+		t.Errorf("subfolders after the odd entry must survive: %v", f.Subfolders)
+	}
+}

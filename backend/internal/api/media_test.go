@@ -235,3 +235,20 @@ func TestMedia_OffTheBoxFileOpsAreUnavailableNotBroken(t *testing.T) {
 		t.Fatalf("expected 409 file_ops_unavailable, got %d %s", status, b)
 	}
 }
+
+func TestMedia_ReadOnlyRunPreviewsButNeverTouchesFiles(t *testing.T) {
+	box := mock.New()
+	e := newEnvWithReadOnlyFiles(t, box)
+	before := box.FS.Paths()
+	p, status, b := e.plan(t, "/api/v1/media/trash/plan", fmt.Sprintf(`{"paths":[%q]}`, bauerTS))
+	if status != http.StatusOK {
+		t.Fatalf("previews still work read-only: %d %s", status, b)
+	}
+	resp, b := e.apply(t, p.Plan.ID)
+	if code, _, _ := errCode(t, b); resp.StatusCode != http.StatusConflict || code != "writes_disabled" {
+		t.Fatalf("expected 409 writes_disabled, got %d %s", resp.StatusCode, b)
+	}
+	if after := box.FS.Paths(); fmt.Sprint(after) != fmt.Sprint(before) {
+		t.Error("a read-only run must not change any file")
+	}
+}

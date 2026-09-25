@@ -335,6 +335,8 @@
       "timer_not_deleted": "Il box non ha eliminato il timer.",
       "timer_not_found": "Questo timer non esiste più.",
       "webcontrol_unauthorized": "Il box richiede una password. Impostala in Impostazioni → WebControl.",
+      "invalid_backup": "Non è un file di backup di DreamHub, oppure proviene da una versione incompatibile.",
+      "restore_invalid": "Il backup contiene impostazioni non più valide.",
       "boxSays": "Il box dice: \"{text}\""
     },
     "media": {
@@ -500,6 +502,37 @@
       "disabled": "Spento",
       "simulateEyebrow": "Prova · questi timer verrebbero creati, nulla è cambiato",
       "simulateNone": "Al momento gli AutoTimer non creerebbero nuovi timer."
+    }
+  },
+  "system": {
+    "device": {
+      "title": "Dispositivo",
+      "enigma": "Enigma2 {version}",
+      "image": "Image {version}",
+      "webif": "WebControl {version}",
+      "tuners": "1 tuner | {count} tuner"
+    },
+    "diagnostics": {
+      "title": "Diagnostica",
+      "body": "Stato e istruzioni di risoluzione per ogni hub, in un unico posto.",
+      "open": "Apri diagnostica"
+    },
+    "backup": {
+      "title": "Backup e ripristino",
+      "body": "Salva le impostazioni di DreamHub e il layout della dashboard in un file, oppure ripristinali da un backup precedente. Le chiavi API e le password non sono mai incluse — reinseriscile dopo il ripristino.",
+      "download": "Scarica backup",
+      "restore": "Ripristina da file…",
+      "restoring": "Lettura del file…",
+      "nothingToRestore": "Questo file corrisponde allo stato attuale; nulla da ripristinare.",
+      "confirmRestore": "Ripristina",
+      "restorePreview": "0 modifiche da ripristinare | Ripristina {count} modifica da questo backup del {date}. | Ripristina {count} modifiche da questo backup del {date}.",
+      "restored": "Ripristinato dal backup."
+    },
+    "changes": {
+      "title": "Registro modifiche",
+      "empty": "Ancora nessuna modifica.",
+      "filterPlaceholder": "Filtra per azione o riepilogo",
+      "loadMore": "Carica altri"
     }
   }
 }

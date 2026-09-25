@@ -335,6 +335,8 @@
       "timer_not_deleted": "The box didn't delete the timer.",
       "timer_not_found": "This timer no longer exists.",
       "webcontrol_unauthorized": "The box asks for a password. Set it in Settings → WebControl.",
+      "invalid_backup": "This isn't a DreamHub backup file, or it's from an incompatible version.",
+      "restore_invalid": "The backup contains settings that no longer validate.",
       "boxSays": "The box says: “{text}”"
     },
     "media": {
@@ -500,6 +502,37 @@
       "disabled": "Off",
       "simulateEyebrow": "Dry run · these timers would be created, nothing was changed",
       "simulateNone": "The AutoTimers would create no new timers right now."
+    }
+  },
+  "system": {
+    "device": {
+      "title": "Device",
+      "enigma": "Enigma2 {version}",
+      "image": "Image {version}",
+      "webif": "WebControl {version}",
+      "tuners": "1 tuner | {count} tuners"
+    },
+    "diagnostics": {
+      "title": "Diagnostics",
+      "body": "The status and fix instructions for every hub, in one place.",
+      "open": "Open diagnostics"
+    },
+    "backup": {
+      "title": "Backup & restore",
+      "body": "Save DreamHub's own settings and dashboard layout as one file, or restore them from a previous backup. API keys and passwords are never included — set those again after restoring.",
+      "download": "Download backup",
+      "restore": "Restore from file…",
+      "restoring": "Reading file…",
+      "nothingToRestore": "This file matches the current state; nothing to restore.",
+      "confirmRestore": "Restore",
+      "restorePreview": "0 changes to restore | Restore {count} change from this backup, made {date}. | Restore {count} changes from this backup, made {date}.",
+      "restored": "Restored from the backup."
+    },
+    "changes": {
+      "title": "Change log",
+      "empty": "No changes yet.",
+      "filterPlaceholder": "Filter by action or summary",
+      "loadMore": "Load more"
     }
   }
 }

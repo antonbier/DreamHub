@@ -174,8 +174,16 @@ Notes:
 - [ ] Episodes on disk, missing episodes — needs cross-referencing recordings (`/web/movielist`, MediaHub) against tracked series/seasons; not attempted yet, deliberately scoped out of this pass
 - [ ] Per-series upcoming broadcasts beyond what's already timered (`/serienrecorderapi/transmissions?wlid=&fsid=&filterMode=`, confirmed live) — useful for a series detail view, not built
 
-### SystemHub (basic)
-- For every user: device info, diagnostics page (hub status, clock check), backup/restore of DreamHub's own state (incl. dashboards), change log.
+### SystemHub
+
+**Done** (v1 plan WP5, `docs/V1_PLAN.md`):
+- [x] `SystemHubView.vue`: device info (`GET /api/v1/deviceinfo` — image/Enigma2/WebControl versions, tuner count and models), a link into the existing `/diagnostics` page rather than a second copy of the same hub-status view
+- [x] Backup and restore of DreamHub's own state as one JSON file, through preview-and-confirm like any other change: `GET /api/v1/system/backup` (settings plus the dashboard layout, decision-consistent with `PRINCIPLES.md`), `POST /api/v1/system/backup/restore` previews exactly which settings and whether the dashboard would change (`plan.Change` per field), applied via the normal `POST /api/v1/plans/{id}/apply`
+- [x] API keys and passwords are never in a backup — excluded at export (`settings.TypeSecret`/`TypePassword` fields are skipped, not just masked), so the file itself can't unlock the box; restoring re-validates every field through the same `settings.Service.Update` a manual edit uses
+- [x] Change log screen (`GET /api/v1/changes`) with a client-side filter over action/summary and a "load more" step
+
+**Open**:
+- [ ] Filtering the change log by user (v1 has exactly one user; revisit once profiles exist)
 
 ### AdminHub (logs)
 - Admin role only; bottom of the navigation next to Settings.

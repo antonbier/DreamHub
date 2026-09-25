@@ -335,6 +335,8 @@
       "timer_not_deleted": "Die Box hat den Timer nicht gelöscht.",
       "timer_not_found": "Diesen Timer gibt es nicht mehr.",
       "webcontrol_unauthorized": "Die Box verlangt ein Passwort. In den Einstellungen unter „WebControl“ eintragen.",
+      "invalid_backup": "Das ist keine DreamHub-Sicherung oder eine mit einer nicht kompatiblen Version.",
+      "restore_invalid": "Die Sicherung enthält Einstellungen, die nicht mehr gültig sind.",
       "boxSays": "Die Box meldet: „{text}“"
     },
     "media": {
@@ -500,6 +502,37 @@
       "disabled": "Aus",
       "simulateEyebrow": "Probelauf · diese Timer würden angelegt, nichts wurde geändert",
       "simulateNone": "Die AutoTimer würden gerade keine neuen Timer anlegen."
+    }
+  },
+  "system": {
+    "device": {
+      "title": "Gerät",
+      "enigma": "Enigma2 {version}",
+      "image": "Image {version}",
+      "webif": "WebControl {version}",
+      "tuners": "1 Tuner | {count} Tuner"
+    },
+    "diagnostics": {
+      "title": "Diagnose",
+      "body": "Status und Lösungshinweise für jeden Hub, an einem Ort.",
+      "open": "Diagnose öffnen"
+    },
+    "backup": {
+      "title": "Sicherung & Wiederherstellung",
+      "body": "Speichert DreamHubs eigene Einstellungen und das Dashboard-Layout in einer Datei, oder stellt sie aus einer früheren Sicherung wieder her. API-Schlüssel und Passwörter werden nie mit gesichert — die nach der Wiederherstellung erneut eintragen.",
+      "download": "Sicherung herunterladen",
+      "restore": "Aus Datei wiederherstellen…",
+      "restoring": "Datei wird gelesen…",
+      "nothingToRestore": "Diese Datei entspricht dem aktuellen Stand; nichts wiederherzustellen.",
+      "confirmRestore": "Wiederherstellen",
+      "restorePreview": "0 Änderungen wiederherzustellen | {count} Änderung aus dieser Sicherung vom {date} wiederherstellen. | {count} Änderungen aus dieser Sicherung vom {date} wiederherstellen.",
+      "restored": "Aus der Sicherung wiederhergestellt."
+    },
+    "changes": {
+      "title": "Änderungsprotokoll",
+      "empty": "Noch keine Änderungen.",
+      "filterPlaceholder": "Nach Aktion oder Zusammenfassung filtern",
+      "loadMore": "Mehr laden"
     }
   }
 }

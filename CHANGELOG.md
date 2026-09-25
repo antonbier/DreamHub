@@ -6,6 +6,10 @@ Format follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/); version
 
 ## [Unreleased]
 
+### Added (v1 plan, WP5: SystemHub)
+- SystemHub screen: device info (`GET /api/v1/deviceinfo`), a link into the existing Diagnostics page rather than a second copy of it, and the change log with a client-side filter by action/summary.
+- Backup and restore of DreamHub's own state (settings and the dashboard layout) as one JSON file, through preview-and-confirm like any other change: `GET /api/v1/system/backup` downloads it, `POST /api/v1/system/backup/restore` previews exactly which settings and whether the dashboard would change, `POST /api/v1/plans/{id}/apply` applies it. API keys and passwords are never included in a backup — they're excluded at export, not just masked, so the file itself can't unlock the box.
+
 ### Added / changed (v1 plan, phase A — WP1: correct box writes)
 - Timer writes verified live on the reference box and **enabled by default** in live mode (`DREAMHUB_ENABLE_DEVICE_WRITES=0` switches them off). Writes are form-encoded `POST`s with every parameter. Boxes with the WebInterface's default `anti_hijack` refuse `GET`, and a missing parameter crashes the plugin.
 - Every apply is verified against `/web/timerlist`, because the box reports a silently dropped duplicate as success (`409 timer_not_created`). A refusal by the box, e.g. its own tuner conflict check, comes back as `409 box_rejected` with the box's text.

@@ -353,3 +353,13 @@ export interface ChangeEntry {
   summary: string
   detail: Record<string, unknown>
 }
+
+// backend/internal/hubs's backupFile, from GET /api/v1/system/backup and the
+// body POST /api/v1/system/backup/restore expects. Never carries secrets or
+// passwords (docs/V1_PLAN.md, WP5).
+export interface BackupFile {
+  version: number
+  exportedAt: string // RFC3339, UTC
+  settings: Record<string, unknown>
+  dashboard: DashboardLayout
+}

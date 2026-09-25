@@ -15,6 +15,7 @@ import { authHeader, authState, clearCredentials } from './authState'
 import type {
   ApiToken,
   AutoTimers,
+  BackupFile,
   ConnectorState,
   MediaFolder,
   NameSuggestion,
@@ -207,4 +208,8 @@ export const api = {
     revoke: (id: number) => request<void>('DELETE', `/api/v1/tokens/${id}`),
   },
   changes: (limit = 20) => request<{ changes: ChangeEntry[] }>('GET', `/api/v1/changes?limit=${limit}`),
+  system: {
+    backup: () => request<BackupFile>('GET', '/api/v1/system/backup'),
+    restorePlan: (file: BackupFile) => request<{ plan: Plan }>('POST', '/api/v1/system/backup/restore', file),
+  },
 }

@@ -1,9 +1,9 @@
 // Routes mirror the hub paths declared in backend/internal/hub/v1.go
 // (Descriptor.Path) and the core routes in Navigation() (dashboard,
-// settings). Most hub routes render HubView, a placeholder until that
-// hub's own screens are built (ROADMAP.md, "v1 — hubs") — the plumbing
-// behind it (navigation, status, settings) is already live. MediaHub,
-// GuideHub, SeriesHub and DiscoveryHub have real screens so far.
+// settings). AdminHub still renders HubView, a placeholder until its own
+// screen is built (ROADMAP.md, "v1 — hubs", WP6) — the plumbing behind it
+// (navigation, status, settings) is already live. MediaHub, GuideHub,
+// SeriesHub, DiscoveryHub, TimerHub and SystemHub have real screens so far.
 // /diagnostics is a core route, not a hub — see Navigation() in
 // backend/internal/hub/hub.go.
 import { createRouter, createWebHistory } from 'vue-router'
@@ -61,8 +61,13 @@ const router = createRouter({
       component: () => import('@/views/DiagnosticsView.vue'),
     },
     {
-      // SystemHub, AdminHub — one placeholder route per hub path.
-      path: '/:hub(system|admin)',
+      path: '/system',
+      name: 'system',
+      component: () => import('@/views/SystemHubView.vue'),
+    },
+    {
+      // AdminHub — still the shared placeholder (ROADMAP.md, WP6 next).
+      path: '/:hub(admin)',
       name: 'hub',
       component: () => import('@/views/HubView.vue'),
       props: true,

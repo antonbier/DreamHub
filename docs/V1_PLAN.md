@@ -76,7 +76,7 @@ Order matters where noted. Everything else can run in parallel.
 - Bulk actions as one plan with many changes, executed by a small background queue with progress. Each file set stays all-or-nothing.
 - Change log entries detailed enough for a later undo.
 
-### WP5 — SystemHub
+### WP5 — SystemHub *(done 2026-09-25, filtering the change log by user deferred until profiles exist — see ROADMAP.md, SystemHub)*
 - Screen: device info, the existing diagnostics, change log UI (filter by action/user).
 - Backup/restore of DreamHub's own state (settings incl. dashboards, tokens excluded or flagged) as one file. Restore goes through preview-and-confirm.
 

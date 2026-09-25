@@ -1,0 +1,35 @@
+#!/bin/sh
+# postinst runs after files are unpacked (dpkg convention: "configure").
+# PRINCIPLES.md: nothing happens silently — every step here is either
+# something the user already asked for by installing this package, or
+# something safe to redo (systemctl daemon-reload, enable).
+set -e
+
+# /data is the box's own persistent partition (PRINCIPLES.md, "Data
+# storage: one SQLite file, on /data") — the binary itself also creates
+# this with umask 077 at startup, but doing it here too means the very
+# first `systemctl start` below doesn't race an empty directory.
+mkdir -p /data/dreamhub
+chmod 700 /data/dreamhub
+
+if [ -d /run/systemd/system ]; then
+    systemctl daemon-reload || true
+    systemctl enable dreamhub.service || true
+    systemctl restart dreamhub.service || true
+fi
+
+if command -v systemctl >/dev/null 2>&1 && systemctl is-active --quiet avahi-daemon 2>/dev/null; then
+    systemctl reload avahi-daemon || true
+fi
+
+# The Enigma2 plugin only takes effect after enigma2 re-scans its plugin
+# list, which happens on GUI startup — same as installing any other
+# Extensions plugin through the Addon Manager. This does interrupt live
+# viewing for a few seconds; it's the standard, expected behavior for a
+# plugin install on this platform, not something DreamHub invented.
+if [ -d /run/systemd/system ] && systemctl is-active --quiet enigma2 2>/dev/null; then
+    echo "dreamhub: restarting enigma2 to load the launcher plugin..."
+    systemctl restart enigma2 || true
+fi
+
+exit 0

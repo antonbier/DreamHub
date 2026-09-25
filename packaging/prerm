@@ -1,0 +1,11 @@
+#!/bin/sh
+# prerm runs before files are removed (both on upgrade and on removal —
+# dpkg re-runs postinst afterward on upgrade, so stopping here is safe
+# either way).
+set -e
+
+if [ -d /run/systemd/system ]; then
+    systemctl stop dreamhub.service || true
+fi
+
+exit 0

@@ -1,0 +1,74 @@
+name: CI
+
+# docs/V1_PLAN.md, WP9: tests on every push, plus an ARM64 build and the
+# .deb, so a broken cross-compile or packaging step is caught immediately
+# rather than at the next manual deploy. Feed publishing (uploading the
+# .deb somewhere devices can `apt` from) is deferred — decision D4 in
+# docs/V1_PLAN.md hasn't been made yet; this only builds and uploads the
+# .deb as a workflow artifact.
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+    branches: [main]
+
+jobs:
+  backend:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-go@v5
+        with:
+          go-version: "1.27"
+      - name: Vet
+        working-directory: backend
+        run: go vet ./...
+      - name: Test
+        working-directory: backend
+        run: go test -race ./...
+
+  frontend:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: "20"
+          cache: npm
+          cache-dependency-path: frontend/package-lock.json
+      - name: Install
+        working-directory: frontend
+        run: npm ci
+      - name: Type-check and build
+        working-directory: frontend
+        run: npm run build
+      # The frontend build writes straight into backend/internal/webui/dist
+      # (go:embed's source) — carry that forward so the packaging job below
+      # doesn't need to rebuild it and can't drift from what was just
+      # type-checked here.
+      - uses: actions/upload-artifact@v4
+        with:
+          name: webui-dist
+          path: backend/internal/webui/dist
+
+  package:
+    runs-on: ubuntu-latest
+    needs: [backend, frontend]
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-go@v5
+        with:
+          go-version: "1.27"
+      - uses: actions/download-artifact@v4
+        with:
+          name: webui-dist
+          path: backend/internal/webui/dist
+      - name: Install packaging tools
+        run: sudo apt-get update && sudo apt-get install -y gettext fakeroot
+      - name: Build the .deb
+        run: sh packaging/build-deb.sh dist
+      - uses: actions/upload-artifact@v4
+        with:
+          name: dreamhub-deb
+          path: dist/*.deb

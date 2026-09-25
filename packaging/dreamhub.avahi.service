@@ -1,0 +1,17 @@
+<?xml version="1.0" standalone='no'?>
+<!DOCTYPE service-group SYSTEM "avahi-service.dtd">
+<!--
+  mDNS advertisement (ROADMAP.md, step 7, "open"): lets a phone/tablet find
+  DreamHub as "<box name>.local:8080" without knowing its IP. avahi-daemon
+  already runs on the reference box and is used this way by at least one
+  existing companion app (ARCHITECTURE.md) — this follows the same
+  convention, installed to /etc/avahi/services/dreamhub.service by the
+  .deb's postinst.
+-->
+<service-group>
+  <name replace-wildcards="yes">DreamHub on %h</name>
+  <service>
+    <type>_http._tcp</type>
+    <port>8080</port>
+  </service>
+</service-group>

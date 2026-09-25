@@ -203,25 +203,33 @@ Notes:
 
 ### Enigma2 TV plugin (launcher)
 
-**Done** (v1 plan WP8, `docs/V1_PLAN.md`; `enigma2-plugin/`) — **written, not yet verified live in an Enigma2 GUI session**, see caveat below:
+**Done** (v1 plan WP8, `docs/V1_PLAN.md`; `enigma2-plugin/`):
 - [x] `GET /api/v1/qr.png`: the backend renders the QR code itself (new dependency `github.com/skip2/go-qrcode`, MIT-licensed pure Go, no cgo — hand-rolling a QR encoder correctly, with its Reed–Solomon error correction and mask-pattern selection, was judged not worth the correctness risk for a well-understood, already-solved problem), encoding `r.Host` so it always points wherever the caller actually reached the box, not a guessed interface address on a multi-homed box (LAN + ZeroTier). Deliberately public/unauthenticated, same reasoning as `/api/v1/health`: the plugin shows it before any credentials exist, and it encodes nothing secret
 - [x] `enigma2-plugin/src/`: `plugin.py` (registration), `DreamHubScreen.py` (the launcher: QR code, backend status via `/api/v1/health`, a version-mismatch message), `DreamHubSetup.py` (the plugin's own port/auth-expected settings, reachable via the green button), `backend.py` (the two HTTP calls, over Twisted's `getPage` so a slow/unreachable backend never freezes the GUI thread), `__init__.py` (gettext wiring plus `config.plugins.dreamhub`)
 - [x] Python 2.7 targeted specifically (the only interpreter on the device, confirmed `PROJECT_PLAN.md`); every module's syntax confirmed via `py_compile` against the reference box's own `/usr/bin/python2` (2.7.13) — genuinely on-device, not just locally
 - [x] Language follows `config.osd.language` (format `de_DE`) via gettext, the confirmed on-device convention (`PROJECT_PLAN.md`): `PluginLanguageDomain`/`PluginLanguagePath`, `bindtextdomain()`, re-run on every `language.addCallback()`. `.po` sources for `de` and `it` committed (`en` is gettext's own source text); both validated with `msgfmt -c` — no missing/malformed entries
+- [x] **Installed on the reference box 2026-09-25** (with approval) into `/usr/lib/enigma2/python/Plugins/Extensions/DreamHub/`, then `systemctl restart enigma2`: the service came back `active (running)` within 15s, `journalctl -u enigma2 -b` has no traceback or error mentioning DreamHub anywhere in the full boot log, the pre-existing crash log (`enigma2_crash_1774122941.log`) is untouched (no new crash), and Python left behind compiled `.pyo` files for all five plugin modules next to the sources — evidence Enigma2's own boot-time plugin scan actually imported and compiled them for real, not just that they parse. This is real confirmation that `plugin.py`'s `Plugins()` registration and `__init__.py`'s gettext/config setup — the code that runs unconditionally at boot for every installed Extensions plugin — work correctly on-device
 
 **Open**:
-- [ ] Verification inside an actual Enigma2 GUI session (skin layout, `ActionMap` bindings, `LoadPixmap` behavior) — everything importing the `_enigma` C++ core module (`Screens.Screen`, `Components.*`, `Plugins.Plugin`, `Tools.Directories`/`LoadPixmap`) can only run inside the live `enigma2` process, confirmed by trying to import each standalone on the box (all fail with "No module named _enigma"; `twisted.web.client` alone imports fine standalone) — so this genuinely needs installing into `Extensions/DreamHub/` and restarting the GUI, not just SSH, and hasn't been done yet (that install + restart interrupts live viewing, so it needs the same explicit go-ahead as any other device write)
+- [ ] Visual/interactive confirmation of the launcher screen itself (the QR code actually renders, the status text updates, the buttons respond) — `DreamHubScreen.py`/`DreamHubSetup.py` are only imported lazily when a user actually opens the plugin from a menu, so the boot-time check above doesn't exercise them. The reference box's WebControl has no screenshot endpoint (`/web/grab` → `404`, unlike some OpenWebif builds) to confirm this remotely, and driving `/web/remotecontrol`'s blind key-simulation through this box's custom skin/menu structure without being able to see the result was judged too likely to leave the box in an unexpected state for a benefit that's really "look at the TV" — genuinely needs someone at the box, or a screen-grab capability added first
 - [ ] A real plugin icon (`PluginDescriptor` currently omits `icon=`, so Enigma2 shows its default) — not something to fabricate blindly, tracked for WP10 polish
 - [ ] The `/dreamhub/timercheck` dry-run adapter (decision D7, if it goes ahead)
-- [ ] `.deb` packaging wiring (`.po`→`.mo` via `msgfmt`, install to `/usr/lib/enigma2/python/Plugins/Extensions/DreamHub/`) — WP9
 
 ## v1 — release & packaging
 
-- An installable **`.deb`** via DreamHub's own apt feed. The box uses `apt`/`dpkg`; users can add a feed through WebAdmin's "Upload new *-feed.list" page — no SSH required (see `ARCHITECTURE.md`). Platform feeds use `[trusted=yes]` (unsigned).
-- Declare real dependencies (e.g. `ffmpeg`) in the `.deb` control file.
-- The box runs full systemd: ship the backend as `dreamhub.service` (`Restart=on-failure`, `WantedBy=multi-user.target`). Use `/lib/systemd/system/enigma2.service` as the reference (see `ARCHITECTURE.md`).
-- Keep the installed footprint on the 2 GB root partition small; persistent data goes to `/data/dreamhub/`.
-- If GPL codecs are ever needed: bundle a self-contained ffmpeg like `ffmpeg-mp` does under `/data/mediaportal/extra/ffmpeg/`, never replace the system one.
+**Done** (v1 plan WP9, `docs/V1_PLAN.md`; `packaging/`):
+- [x] `packaging/build-deb.sh` produces `dreamhub_<version>_arm64.deb`: cross-compiles the backend (`CGO_ENABLED=0 GOOS=linux GOARCH=arm64`), compiles the Enigma2 plugin's `.po` files to `.mo`, assembles the file tree and runs `dpkg-deb --build`. Verified locally: `dpkg-deb --info`/`--contents` confirm correct metadata (`Depends: ffmpeg`, `Installed-Size`) and file layout; not yet installed on the reference box itself (open, below)
+- [x] The backend ships as `dreamhub.service` (`packaging/dreamhub.service`: `Restart=on-failure`, `WantedBy=multi-user.target`, `After=`/`Wants=enigma2.service` since live mode talks to it), matching `/lib/systemd/system/enigma2.service`'s own shape (`ARCHITECTURE.md`)
+- [x] mDNS advertisement (`packaging/dreamhub.avahi.service` → `/etc/avahi/services/dreamhub.service`), resolving the item previously open under step 7 — a phone can reach `<box>.local:8080` without knowing the IP
+- [x] `postinst` creates `/data/dreamhub` (umask 700), enables/starts the service, and restarts `enigma2` so the launcher plugin shows up immediately — the same thing installing any other Extensions plugin through the Addon Manager already does. `postrm` only deletes `/data/dreamhub` on `purge`, never on a plain removal, so a reinstall picks up where the user left off
+- [x] `Depends: ffmpeg` declared in the control file, per the research in `PROJECT_PLAN.md` (present via the standard feed, confirmed live)
+- [x] CI (`.github/workflows/ci.yml`): backend `go vet`/`go test -race`, frontend type-check/build, then the `.deb` itself, on every push — the `.deb` is uploaded as a workflow artifact, not yet published anywhere a device could `apt` from (that's the open feed-hosting item below, decision D4)
+
+**Open**:
+- [ ] An actual apt feed to publish to (decision D4, `docs/V1_PLAN.md`) — the `.deb` itself doesn't depend on this being decided
+- [ ] Live install/upgrade/uninstall verified on the reference box (build correctness confirmed locally via `dpkg-deb`, not yet installed for real)
+- [ ] User docs: installing via WebAdmin's "Upload new `*-feed.list`" page (no SSH required, `ARCHITECTURE.md`), first steps, recommended `localauth=true`
+- [ ] If GPL codecs are ever needed: bundle a self-contained ffmpeg like `ffmpeg-mp` does under `/data/mediaportal/extra/ffmpeg/`, never replace the system one — not needed yet, nothing in v1 transcodes
 
 ## v1.1
 

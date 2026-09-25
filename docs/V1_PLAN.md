@@ -91,17 +91,17 @@ Order matters where noted. Everything else can run in parallel.
 - Custom/criteria tiles on top of the search providers (the mechanics exist).
 - Runtime drop-in locales from `/data/dreamhub/locales/`, accessibility pass, complete Italian strings.
 
-### WP8 — TV launcher plugin *(written 2026-09-25, not yet verified in a live Enigma2 GUI session — see ROADMAP.md, "Enigma2 TV plugin")*
+### WP8 — TV launcher plugin *(installed on the reference box 2026-09-25, enigma2 restarted cleanly — see ROADMAP.md, "Enigma2 TV plugin" for exactly what was and wasn't confirmed)*
 - If D7 goes ahead: the `/dreamhub/timercheck` dry-run adapter lives here.
 - [x] Python 2.7, gettext DE/IT/EN via `config.osd.language`.
 - [x] The QR code is rendered **by the backend** (`/api/v1/qr.png`, local-only), so the plugin needs no QR library and holds no logic.
 - [x] Shows backend status/version (`/api/v1/health`), mismatch message. Basic settings: auth on/off, port.
 
-### WP9 — Packaging & release *(last)*
-- `.deb` (arm64): binary, `dreamhub.service`, avahi service file, TV plugin, `postinst`/`prerm`, data in `/data/dreamhub`, `Depends` per `ROADMAP.md`.
-- CI: tests + ARM64 build + `.deb` on every push, feed publishing per D4 (decided later).
-- Live on the reference box: install, upgrade, uninstall (data kept), reboot survival.
-- User docs: install via WebAdmin's "Upload new *-feed.list", first steps, recommended `localauth=true`.
+### WP9 — Packaging & release *(last)* *(`.deb` build + CI done 2026-09-25, not yet installed live — see ROADMAP.md, "v1 — release & packaging")*
+- [x] `.deb` (arm64): binary, `dreamhub.service`, avahi service file, TV plugin, `postinst`/`prerm`/`postrm`, data in `/data/dreamhub`, `Depends` per `ROADMAP.md`.
+- [x] CI: tests + ARM64 build + `.deb` on every push. Feed publishing per D4 (decided later) — still open.
+- [ ] Live on the reference box: install, upgrade, uninstall (data kept), reboot survival.
+- [ ] User docs: install via WebAdmin's "Upload new *-feed.list", first steps, recommended `localauth=true`.
 
 ### WP10 — Hardening & release candidate
 - Resource measurement on the box under real use, security pass (CSRF, Host, plan ownership, file paths), DST test days, a run with none of the optional plugins installed.

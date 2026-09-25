@@ -1,0 +1,26 @@
+[Unit]
+Description=DreamHub
+Documentation=https://github.com/antonbier/DreamHub
+# WebControl (port 80, enigma2 itself) is what DreamHub talks to in live
+# mode — start after it's actually up, not just after the network is.
+After=network.target enigma2.service
+Wants=enigma2.service
+
+[Service]
+Type=simple
+Environment=DREAMHUB_MODE=live
+ExecStart=/usr/bin/dreamhub
+Restart=on-failure
+RestartSec=5
+# umask 077 is also set by the binary itself at startup (ARCHITECTURE.md,
+# "DreamHub itself on the box") — belt and suspenders, since a unit-level
+# default only applies before the process's own first chmod/umask call.
+UMask=0077
+
+[Install]
+WantedBy=multi-user.target
+
+# Fuller systemd sandboxing (ProtectSystem=strict, NoNewPrivileges, a
+# dedicated user instead of root) is WP10's security pass
+# (docs/V1_PLAN.md), not added here — a partial, non-enforcing directive
+# would be worse than none.

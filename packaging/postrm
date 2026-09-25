@@ -1,0 +1,29 @@
+#!/bin/sh
+# postrm handles the tail end of both removal and purge. dpkg calls this
+# with the action as $1 (remove, purge, upgrade, failed-upgrade, ...) —
+# see dpkg-maintscript-helper(1)'s convention.
+set -e
+
+case "$1" in
+    remove)
+        if [ -d /run/systemd/system ]; then
+            systemctl disable dreamhub.service >/dev/null 2>&1 || true
+            systemctl daemon-reload || true
+        fi
+        rm -f /etc/avahi/services/dreamhub.service
+        ;;
+    purge)
+        if [ -d /run/systemd/system ]; then
+            systemctl disable dreamhub.service >/dev/null 2>&1 || true
+            systemctl daemon-reload || true
+        fi
+        rm -f /etc/avahi/services/dreamhub.service
+        # Only a purge (explicit "remove the config/data too") ever
+        # deletes /data/dreamhub — a plain removal keeps it, exactly as
+        # ROADMAP.md's WP9 acceptance criteria ask ("uninstall (data
+        # kept)"), so reinstalling later picks up where the user left off.
+        rm -rf /data/dreamhub
+        ;;
+esac
+
+exit 0

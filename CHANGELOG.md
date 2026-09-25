@@ -6,6 +6,14 @@ Format follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/); version
 
 ## [Unreleased]
 
+### Added (v1 plan, WP9: packaging and CI)
+- `packaging/build-deb.sh` builds `dreamhub_<version>_arm64.deb`: the cross-compiled backend, `dreamhub.service`, an avahi mDNS service file, and the Enigma2 plugin with its `.po` files pre-compiled to `.mo`. Verified locally via `dpkg-deb --info`/`--contents`; not yet installed live on the reference box.
+- `.github/workflows/ci.yml`: backend `go vet`/`go test -race`, frontend type-check/build, then the `.deb` itself, on every push — uploaded as a workflow artifact. Publishing it somewhere a device could actually `apt` from is still open (decision D4).
+- `postinst` restarts `enigma2` so the launcher plugin takes effect immediately (same as installing any other Extensions plugin); `postrm` only deletes `/data/dreamhub` on `purge`, never on a plain removal.
+
+### Confirmed live (v1 plan, WP8)
+- The Enigma2 launcher plugin installed on the reference box and enigma2 restarted cleanly: no traceback anywhere in the boot journal, the service came back within 15s, and Python's own bytecode cache (`.pyo`) shows the boot-time plugin scan really did import and run the plugin's registration and gettext/config setup. The launcher screen's own on-screen rendering (QR code, status text) isn't confirmed yet — the box's WebControl has no screenshot endpoint, and blind remote-control key navigation through it without visual feedback wasn't worth the risk of leaving the box in an unexpected menu state.
+
 ### Added (v1 plan, WP8: Enigma2 launcher plugin; WP7: event bus, SSE live updates)
 - The core event bus (`internal/events`): a poller diffs `/web/timerlist`/`/web/deviceinfo` snapshots into `recording.started`/`recording.finished`/`disk.aboveThreshold` events (disk with hysteresis so it can't spam one line every poll while hovering right at 90%), persisted and fanned out live. `GET /api/v1/notifications` (+ mark-read) and `GET /api/v1/events/stream` (SSE). `NotificationsBell.vue`'s "Recent activity" is now this real, persisted inbox instead of change-log entries filtered down to one type.
 - Live updates over Server-Sent Events rather than a literal WebSocket — see `api.handleEventsStream`'s doc comment for why (server→client only, no new dependency, and the frontend needs its own stream reader either way since DreamHub's auth header isn't something the browser's native `EventSource` can send). AdminHub's log viewer gets a "Live" toggle on top of this (`GET /api/v1/admin/logs/stream`).

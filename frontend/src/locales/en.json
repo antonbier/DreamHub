@@ -563,10 +563,15 @@
     "screenshot": {
       "title": "Screen",
       "refresh": "Refresh",
-      "auto": "Auto-refresh"
+      "auto": "Auto-refresh",
+      "alt": "The box's current picture"
     },
     "pad": {
-      "title": "Remote"
+      "title": "Remote",
+      "digits": "Digits",
+      "volume": "Vol",
+      "channel": "CH",
+      "keyboardHint": "Keyboard: arrows, Enter = OK, ⌫ = back, 0–9, PgUp/PgDn = channel, +/− = volume"
     },
     "keys": {
       "up": "Up",
@@ -574,13 +579,30 @@
       "left": "Left",
       "right": "Right",
       "ok": "OK",
-      "exit": "Exit",
+      "exit": "Back",
       "menu": "Menu",
       "red": "Red",
       "green": "Green",
       "yellow": "Yellow",
       "blue": "Blue",
-      "power": "Power"
+      "power": "Power",
+      "mute": "Mute",
+      "volumeUp": "Volume up",
+      "volumeDown": "Volume down",
+      "channelUp": "Channel up",
+      "channelDown": "Channel down",
+      "info": "Info",
+      "epg": "EPG",
+      "rewind": "Rewind",
+      "play": "Play",
+      "pause": "Pause",
+      "stop": "Stop",
+      "fastForward": "Fast forward"
+    },
+    "panel": {
+      "toggle": "Show or hide the remote",
+      "openPage": "Full page",
+      "close": "Close the remote"
     }
   },
   "system": {

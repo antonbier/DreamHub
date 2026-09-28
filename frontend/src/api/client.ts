@@ -126,6 +126,35 @@ async function request<T>(method: string, path: string, body?: unknown): Promise
   return json as T
 }
 
+// For binary responses (ControlHub's screenshot). Fetched rather than
+// set as a plain <img src> so it carries the same Authorization header as
+// every other request — an <img> can't, and would just 401 with auth on.
+async function requestBlob(path: string): Promise<Blob> {
+  const headers: Record<string, string> = {}
+  const auth = authHeader()
+  if (auth) headers['Authorization'] = auth
+  let res: Response
+  try {
+    res = await fetch(path, { headers, cache: 'no-store' })
+  } catch (err) {
+    throw new ApiError(0, 'network_error', err instanceof Error ? err.message : String(err))
+  }
+  if (res.status === 401) {
+    clearCredentials()
+    authState.authenticated = false
+  }
+  if (!res.ok) {
+    let envelope: { code?: string; message?: string } | undefined
+    try {
+      envelope = ((await res.json()) as { error?: typeof envelope })?.error
+    } catch {
+      envelope = undefined
+    }
+    throw new ApiError(res.status, envelope?.code ?? 'unknown', envelope?.message ?? res.statusText, res.headers.get('X-Request-ID') ?? undefined)
+  }
+  return res.blob()
+}
+
 export const api = {
   health: () => request<HealthInfo>('GET', '/api/v1/health'),
   whoami: () => request<WhoAmI>('GET', '/api/v1/whoami'),
@@ -245,9 +274,7 @@ export const api = {
     markRead: () => request<{ unread: number }>('POST', '/api/v1/notifications/read'),
   },
   control: {
-    // A plain path, not a fetch() call — the screenshot is rendered
-    // directly as <img :src>, with a cache-busting query param.
-    screenshotPath: () => `/api/v1/control/screenshot?t=${Date.now()}`,
+    screenshot: () => requestBlob('/api/v1/control/screenshot'),
     power: () => request<{ inStandby: boolean }>('GET', '/api/v1/control/power'),
     sendKey: (code: number) => request<{ sent: number }>('POST', '/api/v1/control/key', { code }),
     zap: (serviceReference: string) => request<{ zapped: string }>('POST', '/api/v1/control/zap', { serviceReference }),

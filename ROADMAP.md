@@ -199,9 +199,17 @@ Pulled forward from v1.1 (`CONCEPT.md`, `docs/V1_PLAN.md`): verifying the Enigma
 - [x] `ControlHubView.vue`: a live screenshot (manual refresh + optional auto-refresh every 4s), a standby banner with a wake button, and a virtual remote pad (arrows/OK, exit, menu, four color keys, power)
 - [x] GuideHub's "switch now" button on a programme airing right now, calling ControlHub's zap directly (CONCEPT.md: a hub calls another hub's own API, not new backend logic)
 
+**Done** — remote rework (2026-09-28, mock only, box was offline):
+- [x] The remote laid out like a physical one (`components/control/RemotePad.vue`): power and mute, a number pad, Menu/EPG/Info, volume and channel rockers around a round direction pad with OK in the middle, Back, the four color keys, playback. Before this, every key showed only the first two letters of its name ("Ob", "Li") and the page's `lg:` grid never applied (the project defines no `lg` breakpoint, only `below-*`), so the remote always sat under the screenshot
+- [x] The picture and the remote side by side on ControlHub's page (stacked below 900px, the picture pinned on top while scrolling), and the same two components as a side panel any page can open from the top bar (`RemotePanel.vue`, open/closed remembered per browser; an overlay drawer below 900px)
+- [x] The picture refreshes itself ~0.7s after every key the box accepted (`stores/remote.ts`'s `keysSent`), so a key's result shows without a manual reload
+- [x] The whole pad takes the physical keyboard while focused (`lib/remoteKeys.ts`: arrows, Enter = OK, Backspace = back, 0–9, PageUp/PageDown = channel, +/- = volume). Escape stays reserved for closing the panel
+- [x] The screenshot is fetched with the app's own `Authorization` header (`api.control.screenshot()`) instead of a plain `<img src>`, which couldn't carry it and would have 401'd whenever DreamHub's auth is on
+- [x] The mock box simulates a screen (`webcontrol/mock/screen.go`): a test card, a menu overlay MENU opens and UP/DOWN moves through, standby on POWER. ControlHub now visibly works in mock mode
+
 **Open**:
+- [ ] Check the keys that aren't yet confirmed live on the box (mute, volume, channel, digits, Info, EPG, playback — standard Enigma2 codes, `lib/remoteKeys.ts`) once it's reachable again
 - [ ] "Message to TV" (`/web/message`) — v1.1, not yet researched or built
-- [ ] A numeric keypad on the remote (channel-number entry) — the arrow/OK/color/power set covers navigation; not attempted yet
 
 ### AdminHub
 

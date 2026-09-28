@@ -563,10 +563,15 @@
     "screenshot": {
       "title": "Schermo",
       "refresh": "Aggiorna",
-      "auto": "Aggiornamento automatico"
+      "auto": "Aggiornamento automatico",
+      "alt": "L'immagine attuale del box"
     },
     "pad": {
-      "title": "Telecomando"
+      "title": "Telecomando",
+      "digits": "Cifre",
+      "volume": "Vol",
+      "channel": "P",
+      "keyboardHint": "Tastiera: frecce, Invio = OK, ⌫ = indietro, 0–9, PagSu/PagGiù = canale, +/− = volume"
     },
     "keys": {
       "up": "Su",
@@ -580,7 +585,24 @@
       "green": "Verde",
       "yellow": "Giallo",
       "blue": "Blu",
-      "power": "Accensione"
+      "power": "Accensione",
+      "mute": "Muto",
+      "volumeUp": "Volume su",
+      "volumeDown": "Volume giù",
+      "channelUp": "Canale su",
+      "channelDown": "Canale giù",
+      "info": "Info",
+      "epg": "EPG",
+      "rewind": "Riavvolgi",
+      "play": "Riproduci",
+      "pause": "Pausa",
+      "stop": "Stop",
+      "fastForward": "Avanti veloce"
+    },
+    "panel": {
+      "toggle": "Mostra o nascondi il telecomando",
+      "openPage": "Pagina intera",
+      "close": "Chiudi il telecomando"
     }
   },
   "system": {

@@ -10,10 +10,7 @@
 package mock
 
 import (
-	"bytes"
 	"context"
-	"image"
-	"image/png"
 	"strings"
 	"sync"
 	"time"
@@ -41,6 +38,8 @@ type Client struct {
 	// tests to assert on.
 	LastZapped string
 	LastKey    int
+	// screen is the simulated on-screen state Screenshot renders (screen.go).
+	screen screen
 }
 
 // Root is the mock box's recording folder.
@@ -262,22 +261,22 @@ func (c *Client) Zap(ctx context.Context, serviceReference string) error {
 	return nil
 }
 
-// SendKey just records the code; the mock has no screen state to change.
+// SendKey records the code and applies it to the simulated screen
+// (screen.go), so a key press shows up in the next Screenshot.
 func (c *Client) SendKey(ctx context.Context, code int) error {
 	c.mu.Lock()
 	defer c.mu.Unlock()
 	c.LastKey = code
+	c.screen.press(code, &c.Standby)
 	return nil
 }
 
-// Screenshot returns a minimal valid 1x1 PNG — enough for ControlHub's
-// screen to render an <img>, without needing a real Enigma2 GUI.
+// Screenshot renders the simulated screen: a test card, the menu overlay
+// when MENU opened it, black in standby.
 func (c *Client) Screenshot(ctx context.Context) ([]byte, error) {
-	var buf bytes.Buffer
-	if err := png.Encode(&buf, image.NewRGBA(image.Rect(0, 0, 1, 1))); err != nil {
-		return nil, err
-	}
-	return buf.Bytes(), nil
+	c.mu.Lock()
+	defer c.mu.Unlock()
+	return c.screen.render(c.Standby)
 }
 
 func (c *Client) InStandby(ctx context.Context) (bool, error) {

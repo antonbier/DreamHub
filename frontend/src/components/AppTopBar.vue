@@ -27,6 +27,21 @@
       <SearchPalette ref="searchPalette" />
     </div>
 
+    <button
+      v-if="controlAvailable && route.path !== '/control'"
+      id="remote-panel-toggle"
+      type="button"
+      class="flex h-8 w-8 items-center justify-center rounded text-muted hover:bg-tile-2 hover:text-text"
+      :class="{ 'bg-tile-2 text-text': remote.panelOpen }"
+      :aria-label="t('control.panel.toggle')"
+      :title="t('control.panel.toggle')"
+      :aria-expanded="remote.panelOpen"
+      aria-controls="remote-panel"
+      @click="remote.togglePanel()"
+    >
+      <Icon name="control" :size="18" />
+    </button>
+
     <NotificationsBell />
 
     <DropdownMenu>
@@ -129,7 +144,7 @@
 
 <script setup lang="ts">
 import { ref } from 'vue'
-import { RouterLink } from 'vue-router'
+import { RouterLink, useRoute } from 'vue-router'
 import { useI18n } from 'vue-i18n'
 import Icon from './Icon.vue'
 import DropdownMenu from './DropdownMenu.vue'
@@ -137,12 +152,17 @@ import SearchPalette from './SearchPalette.vue'
 import NotificationsBell from './NotificationsBell.vue'
 import { usePreferencesStore } from '@/stores/preferences'
 import { useUiStore } from '@/stores/ui'
+import { useRemoteStore } from '@/stores/remote'
+import { useControlHub } from '@/composables/useControlHub'
 import { useAuth } from '@/composables/useAuth'
 import { LOCALE_NAMES, SUPPORTED_LOCALES } from '@/i18n'
 
 const { t } = useI18n()
 const preferences = usePreferencesStore()
 const ui = useUiStore()
+const remote = useRemoteStore()
+const route = useRoute()
+const { available: controlAvailable } = useControlHub()
 const { authState, logout } = useAuth()
 
 const searchPalette = ref<InstanceType<typeof SearchPalette> | null>(null)

@@ -563,10 +563,15 @@
     "screenshot": {
       "title": "Bildschirm",
       "refresh": "Aktualisieren",
-      "auto": "Automatisch aktualisieren"
+      "auto": "Automatisch aktualisieren",
+      "alt": "Aktuelles Bild der Box"
     },
     "pad": {
-      "title": "Fernbedienung"
+      "title": "Fernbedienung",
+      "digits": "Ziffern",
+      "volume": "Vol",
+      "channel": "P",
+      "keyboardHint": "Tastatur: Pfeile, Enter = OK, ⌫ = Zurück, 0–9, Bild↑/↓ = Programm, +/− = Lautstärke"
     },
     "keys": {
       "up": "Hoch",
@@ -580,7 +585,24 @@
       "green": "Grün",
       "yellow": "Gelb",
       "blue": "Blau",
-      "power": "Ein/Aus"
+      "power": "Ein/Aus",
+      "mute": "Stumm",
+      "volumeUp": "Lauter",
+      "volumeDown": "Leiser",
+      "channelUp": "Programm hoch",
+      "channelDown": "Programm runter",
+      "info": "Info",
+      "epg": "EPG",
+      "rewind": "Zurückspulen",
+      "play": "Wiedergabe",
+      "pause": "Pause",
+      "stop": "Stopp",
+      "fastForward": "Vorspulen"
+    },
+    "panel": {
+      "toggle": "Fernbedienung ein-/ausblenden",
+      "openPage": "Ganze Seite",
+      "close": "Fernbedienung schließen"
     }
   },
   "system": {

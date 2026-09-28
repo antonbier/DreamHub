@@ -19,6 +19,7 @@
         <RouterView />
       </main>
     </div>
+    <RemotePanel />
   </div>
 </template>
 
@@ -29,6 +30,7 @@ import AppSidebar from './components/AppSidebar.vue'
 import AppTopBar from './components/AppTopBar.vue'
 import StatusStrip from './components/StatusStrip.vue'
 import LoginScreen from './components/LoginScreen.vue'
+import RemotePanel from './components/control/RemotePanel.vue'
 import { usePreferencesStore } from './stores/preferences'
 import { useNavigationStore } from './stores/navigation'
 import { useNotificationsStore } from './stores/notifications'

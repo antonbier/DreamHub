@@ -418,7 +418,8 @@
       "season": "Stagione {season}",
       "noSeason": "Senza stagione",
       "code": "S{season}E{episode}",
-      "partUnavailable": "Non è stato possibile caricarlo adesso."
+      "partUnavailable": "Non è stato possibile caricarlo adesso.",
+      "cast": "Con {names}"
     },
     "guide": {
       "title": "Episodi",
@@ -767,12 +768,15 @@
       "channelUp": "Canale su",
       "channelDown": "Canale giù",
       "info": "Info",
-      "epg": "EPG",
       "rewind": "Riavvolgi",
       "play": "Riproduci",
       "pause": "Pausa",
       "stop": "Stop",
-      "fastForward": "Avanti veloce"
+      "fastForward": "Avanti veloce",
+      "audio": "Audio",
+      "tv": "TV",
+      "radio": "Radio",
+      "text": "Televideo"
     },
     "panel": {
       "toggle": "Mostra o nascondi il telecomando",

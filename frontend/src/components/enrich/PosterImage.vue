@@ -43,6 +43,8 @@ const props = withDefaults(
     path?: string
     // A recording's .ts path whose own cover art to show instead of path.
     recording?: string
+    // A series (marker id) whose folder cover to show instead of path.
+    series?: number
     size?: 'w92' | 'w185' | 'w342' | 'w780'
     width?: number
     height?: number
@@ -53,15 +55,16 @@ const props = withDefaults(
 
 const src = ref<string | null>(null)
 watch(
-  () => [props.recording, props.path, props.size],
+  () => [props.recording, props.series, props.path, props.size],
   async () => {
     src.value = null
-    const { recording, path, size } = props
+    const { recording, series, path, size } = props
     let url: string | null = null
     if (recording) url = await load(`rec:${recording}`, () => api.media.cover(recording))
+    else if (series !== undefined) url = await load(`series:${series}`, () => api.series.cover(series))
     else if (path) url = await load(`${size}${path}`, () => api.enrich.image(size, path))
     else return
-    if (props.recording === recording && props.path === path) src.value = url
+    if (props.recording === recording && props.series === series && props.path === path) src.value = url
   },
   { immediate: true },
 )

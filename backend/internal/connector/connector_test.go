@@ -144,6 +144,9 @@ func (failingSeriesClient) Info(context.Context) (*serienrecorder.Info, error) {
 func (failingSeriesClient) Markers(context.Context) ([]serienrecorder.Marker, error) {
 	return nil, errors.New("connection refused")
 }
+func (failingSeriesClient) SeriesInfo(context.Context, string, string) (*serienrecorder.SeriesInfo, error) {
+	return nil, errors.New("unreachable")
+}
 func (failingSeriesClient) UpcomingEpisodes(context.Context) ([]serienrecorder.UpcomingEpisode, error) {
 	return nil, errors.New("connection refused")
 }

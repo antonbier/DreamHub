@@ -120,9 +120,16 @@ type EPGEvent struct {
 
 // EPGSearch finds EPG events whose title contains query, via
 // /web/epgsearch — the box's own title search across every service it has
-// EPG for (at most 256 results, past events included). Events of services
+// EPG for (past events included; no result cap — confirmed live 2026-09-28:
+// a one-letter query answers 41 MB in ~11 s and holds up enigma2 meanwhile,
+// so callers must not send short queries, see MinEPGSearchQuery). Events of services
 // the box can't name (reference "-1:…", name "<n/a>") are dropped: they
 // can't be recorded or shown meaningfully.
+// MinEPGSearchQuery is the shortest query worth sending to /web/epgsearch:
+// three letters answered in ~0.2 s on the reference box, two in ~2 s, one
+// in ~11 s.
+const MinEPGSearchQuery = 3
+
 func (c *HTTPClient) EPGSearch(ctx context.Context, query string) ([]EPGEvent, error) {
 	body, err := c.do(ctx, http.MethodPost, "/web/epgsearch", url.Values{"search": {query}})
 	if err != nil {

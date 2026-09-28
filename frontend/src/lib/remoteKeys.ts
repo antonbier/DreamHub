@@ -2,10 +2,13 @@
 // what the box's /web/remotecontrol?command= expects (ARCHITECTURE.md,
 // "Real screenshot and remote-control endpoints"). The arrows, OK, EXIT,
 // MENU, the four color keys and POWER are confirmed live on the reference
-// box; the rest are the same standard codes every Enigma2 keymap uses, not
-// yet checked one by one on the box. A key the box's current screen
-// doesn't handle is harmless: the box briefly shows a "blocked" icon and
-// ignores it, like an unmapped button on a physical remote.
+// box; every other key here is checked against the box's own
+// /usr/share/enigma2/keymap.xml (ARCHITECTURE.md, "Remote keys the box
+// handles") — which has no KEY_EPG at all: on a Dreambox, INFO opens the
+// programme info, so there's no EPG key here either. A key the box's
+// current screen doesn't handle is harmless: the box briefly shows a
+// "blocked" icon and ignores it, like an unmapped button on a physical
+// remote.
 export const KEY = {
   POWER: 116,
   MUTE: 113,
@@ -21,7 +24,10 @@ export const KEY = {
   EXIT: 174,
   MENU: 139,
   INFO: 358,
-  EPG: 365,
+  TEXT: 388,
+  AUDIO: 392,
+  TV: 377,
+  RADIO: 385,
   RED: 398,
   GREEN: 399,
   YELLOW: 400,
@@ -65,8 +71,6 @@ export function keyForKeyboardEvent(e: KeyboardEvent): number | undefined {
       return KEY.MENU
     case 'i':
       return KEY.INFO
-    case 'e':
-      return KEY.EPG
   }
   return undefined
 }

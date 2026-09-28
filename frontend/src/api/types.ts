@@ -319,8 +319,19 @@ export interface EpisodeGuide {
   seasons: GuideSeason[]
 }
 
+// SerienRecorder's own information about a series (its seriesinfo endpoint).
+export interface SeriesInfo {
+  title: string
+  year: string // "2018-"
+  info: string // "Drama, Crime, Action (42 min)"
+  description: string
+  cast?: string[]
+}
+
 export interface SeriesDetail {
   marker: SeriesMarker
+  info?: SeriesInfo
+  cover: boolean // a folder.jpg in the series' folder on the box
   upcoming: UpcomingEpisode[]
   recordings: SeriesRecording[]
   broadcasts: SeriesBroadcast[]

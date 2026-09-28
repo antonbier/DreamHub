@@ -1,6 +1,6 @@
 <!--
   The virtual remote (ControlHub), laid out like a physical one: power and
-  mute on top, the number pad, menu/EPG/info, volume and channel rockers
+  mute on top, the number pad, Menu/Info/Audio and TV/Radio/Text, volume and channel rockers
   around the direction pad, back, the four color keys, playback. Used on
   ControlHub's own page and in the side panel every page can open
   (RemotePanel.vue); `compact` folds the number pad away behind a toggle
@@ -64,8 +64,11 @@
 
     <div class="grid grid-cols-3 gap-2">
       <button type="button" :class="pill" @click="press(KEY.MENU)">{{ t('control.keys.menu') }}</button>
-      <button type="button" :class="pill" @click="press(KEY.EPG)">{{ t('control.keys.epg') }}</button>
       <button type="button" :class="pill" @click="press(KEY.INFO)">{{ t('control.keys.info') }}</button>
+      <button type="button" :class="pill" @click="press(KEY.AUDIO)">{{ t('control.keys.audio') }}</button>
+      <button type="button" :class="pill" @click="press(KEY.TV)">{{ t('control.keys.tv') }}</button>
+      <button type="button" :class="pill" @click="press(KEY.RADIO)">{{ t('control.keys.radio') }}</button>
+      <button type="button" :class="pill" @click="press(KEY.TEXT)">{{ t('control.keys.text') }}</button>
     </div>
 
     <div class="flex items-center justify-between gap-2">

@@ -14,6 +14,7 @@ import (
 	"io"
 	"net/http"
 	"net/url"
+	"strconv"
 	"time"
 )
 
@@ -60,10 +61,37 @@ type Info struct {
 // Client is anything that can answer SerienRecorder API calls — implemented
 // by both the real HTTP client below and the mock in ./mock, per
 // PRINCIPLES.md's "Mock-first development".
+// SeriesInfo is what SerienRecorder knows about a series from its own
+// server (/serienrecorderapi/seriesinfo, confirmed live 2026-09-28):
+// German description, genres and length, cast, first year ("2018-").
+type SeriesInfo struct {
+	Title       string   `json:"title"`
+	Year        string   `json:"year"`
+	Info        string   `json:"info"` // "Drama, Crime, Action (42 min)"
+	Description string   `json:"description"`
+	Cast        []string `json:"cast"`
+	// "rating" isn't taken over: its value on the reference box (268909)
+	// is no rating anyone could read.
+}
+
+// StartYear is the series' first year, 0 when unknown.
+func (s SeriesInfo) StartYear() int {
+	if len(s.Year) < 4 {
+		return 0
+	}
+	y, err := strconv.Atoi(s.Year[:4])
+	if err != nil {
+		return 0
+	}
+	return y
+}
+
 type Client interface {
 	Info(ctx context.Context) (*Info, error)
 	Markers(ctx context.Context) ([]Marker, error)
 	UpcomingEpisodes(ctx context.Context) ([]UpcomingEpisode, error)
+	// SeriesInfo is nil (no error) when SerienRecorder has nothing.
+	SeriesInfo(ctx context.Context, wlid, fsid string) (*SeriesInfo, error)
 }
 
 // HTTPClient calls a real device's SerienRecorder API over HTTP. BaseURL is
@@ -132,6 +160,27 @@ func (c *HTTPClient) UpcomingEpisodes(ctx context.Context) ([]UpcomingEpisode, e
 		return nil, err
 	}
 	return env.Payload.Timer, nil
+}
+
+type seriesInfoEnvelope struct {
+	Payload struct {
+		Info *SeriesInfo `json:"info"`
+	} `json:"payload"`
+}
+
+func (c *HTTPClient) SeriesInfo(ctx context.Context, wlid, fsid string) (*SeriesInfo, error) {
+	if wlid == "" || fsid == "" {
+		return nil, nil // the endpoint answers an empty payload without both
+	}
+	var env seriesInfoEnvelope
+	q := url.Values{"wlid": {wlid}, "fsid": {fsid}}
+	if err := c.getJSON(ctx, "/serienrecorderapi/seriesinfo?"+q.Encode(), &env); err != nil {
+		return nil, err
+	}
+	if env.Payload.Info == nil || env.Payload.Info.Title == "" {
+		return nil, nil
+	}
+	return env.Payload.Info, nil
 }
 
 func (c *HTTPClient) getJSON(ctx context.Context, path string, v any) error {

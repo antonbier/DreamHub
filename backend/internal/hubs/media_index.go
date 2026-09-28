@@ -2,9 +2,6 @@ package hubs
 
 import (
 	"context"
-	"path"
-	"strconv"
-	"strings"
 	"sync"
 	"time"
 
@@ -114,70 +111,11 @@ func readRegular(fsys recfs.FS, name string) ([]byte, error) {
 	return fsys.ReadFile(name)
 }
 
-// mediaFile reports whether a file is something the box's movie list
-// shows: its own .ts recordings, and other video files placed alongside.
-func mediaFile(name string) bool {
-	switch strings.ToLower(path.Ext(name)) {
-	case ".ts", ".mkv", ".mp4", ".avi", ".m2ts", ".mpg", ".mpeg":
-		return true
-	}
-	return false
-}
-
 func walkRecordings(fsys recfs.FS, roots []string) []indexEntry {
-	out := []indexEntry{}
-	seen := map[string]bool{}
-	var walk func(dir string, depth int)
-	walk = func(dir string, depth int) {
-		if depth > indexMaxDepth || len(out) >= indexMaxItems || seen[dir] {
-			return
-		}
-		seen[dir] = true
-		entries, err := fsys.ReadDir(dir)
-		if err != nil {
-			return
-		}
-		folder := strings.TrimSuffix(dir, "/") + "/"
-		for _, e := range entries {
-			full := folder + e.Name()
-			if e.IsDir() {
-				// Not into hidden folders (.Trash, .AppleDouble …) or symlinks
-				// (DirEntry.IsDir is false for a symlink), so the walk stays
-				// inside the recording folders.
-				if !strings.HasPrefix(e.Name(), ".") {
-					walk(full, depth+1)
-				}
-				continue
-			}
-			if !mediaFile(e.Name()) {
-				continue
-			}
-			// Like /web/movielist: a recording's title from its .ts.meta, any
-			// other media file by its file name.
-			entry := indexEntry{Path: full, Folder: folder, Title: e.Name()}
-			if strings.HasSuffix(e.Name(), ".ts") {
-				entry.Title = recfs.Base(full)
-			}
-			if meta, err := readRegular(fsys, full+".meta"); err == nil {
-				lines := strings.SplitN(string(meta), "\n", 5)
-				if len(lines) > 1 && strings.TrimSpace(lines[1]) != "" {
-					entry.Title = strings.TrimSpace(lines[1])
-				}
-				if len(lines) > 3 {
-					entry.Time, _ = strconv.ParseInt(strings.TrimSpace(lines[3]), 10, 64)
-				}
-			}
-			if fi, err := fsys.Lstat(full); err == nil {
-				entry.Size = fi.Size()
-			}
-			out = append(out, entry)
-			if len(out) >= indexMaxItems {
-				return
-			}
-		}
-	}
-	for _, r := range roots {
-		walk(path.Clean(r), 0)
+	found := recfs.Walk(fsys, roots, indexMaxDepth, indexMaxItems)
+	out := make([]indexEntry, len(found))
+	for i, e := range found {
+		out[i] = indexEntry{Path: e.Path, Folder: e.Folder, Title: e.Title, Time: e.Time, Size: e.Size}
 	}
 	return out
 }

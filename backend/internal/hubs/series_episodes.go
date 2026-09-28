@@ -5,6 +5,7 @@ import (
 	"encoding/json"
 	"sort"
 	"strconv"
+	"strings"
 	"time"
 
 	"github.com/antonbier/DreamHub/backend/internal/connector"
@@ -74,7 +75,7 @@ const (
 	episodesCacheTTL = 12 * time.Hour // new episodes get announced
 )
 
-func (h *Series) episodeGuide(ctx context.Context, m serienrecorder.Marker, recs []seriesRecording, upcoming []serienrecorder.UpcomingEpisode) episodeGuide {
+func (h *Series) episodeGuide(ctx context.Context, m serienrecorder.Marker, startYear int, recs []seriesRecording, upcoming []serienrecorder.UpcomingEpisode) episodeGuide {
 	g := episodeGuide{State: GuideOff, Seasons: []guideSeason{}}
 	if h.TVmaze == nil || h.Store == nil || h.Settings == nil {
 		return g
@@ -85,7 +86,7 @@ func (h *Series) episodeGuide(ctx context.Context, m serienrecorder.Marker, recs
 		return g
 	}
 
-	show, ok, err := h.findShow(ctx, m.Name)
+	show, ok, err := h.findShow(ctx, m.Name, startYear)
 	switch {
 	case err != nil:
 		g.State = GuideFailed
@@ -108,7 +109,16 @@ func (h *Series) episodeGuide(ctx context.Context, m serienrecorder.Marker, recs
 			recorded[se{r.Season, r.Episode}] = true
 		}
 	}
-	g.Matchable = len(recorded) > 0
+	// Matchable only when the recordings' codes follow TVmaze's numbering:
+	// SerienRecorder numbers some series absolutely (S00E8615 for a daily
+	// soap, confirmed on the reference box) while TVmaze counts seasons —
+	// then nothing lines up, and every aired episode would look missing.
+	for _, e := range eps {
+		if recorded[se{e.Season, e.Number}] {
+			g.Matchable = true
+			break
+		}
+	}
 	planned := map[se]bool{}
 	for _, u := range upcoming {
 		s, err1 := strconv.Atoi(u.Season)
@@ -162,10 +172,15 @@ func (h *Series) episodeGuide(ctx context.Context, m serienrecorder.Marker, recs
 }
 
 // findShow looks the series up on TVmaze by name — an exact (normalized)
-// name match only, the best-scored if several; a near-miss like
-// "Tatort-Reiniger" for "Tatort" never counts. Cached, misses included.
-func (h *Series) findShow(ctx context.Context, name string) (tvmaze.Show, bool, error) {
-	key := "tvmaze|show|" + titles.Normalize(name)
+// name match, the best-scored if several; a near-miss like
+// "Tatort-Reiniger" for "Tatort" never counts. German titles often add a
+// subtitle to the original ("FBI: Special Crime Unit" is TVmaze's "FBI",
+// found on the reference box), so when the full name finds nothing, the
+// part before the subtitle is searched — and a hit only counts when it
+// also started in the same year SerienRecorder reports: two independent
+// signals, not a guess. Cached, misses included.
+func (h *Series) findShow(ctx context.Context, name string, startYear int) (tvmaze.Show, bool, error) {
+	key := "tvmaze|show2|" + titles.Normalize(name) // show2: since the year-checked fallback
 	if raw, at, ok, err := h.Store.Enrichment(ctx, key); err == nil && ok {
 		age := h.now().Sub(time.Unix(at, 0))
 		if raw == "" && age < showMissTTL {
@@ -185,6 +200,18 @@ func (h *Series) findShow(ctx context.Context, name string) (tvmaze.Show, bool, 
 	for i := range shows {
 		if titles.Normalize(shows[i].Name) == want && (best == nil || shows[i].Score > best.Score) {
 			best = &shows[i]
+		}
+	}
+	if part := titles.SeriesPart(strings.Replace(name, ":", ": ", 1)); best == nil && startYear > 0 && part != name {
+		more, err := h.TVmaze.SearchShows(ctx, part)
+		if err != nil {
+			return tvmaze.Show{}, false, err
+		}
+		for i := range more {
+			if titles.Normalize(more[i].Name) == titles.Normalize(part) && strings.HasPrefix(more[i].Premiered, strconv.Itoa(startYear)) {
+				best = &more[i]
+				break
+			}
 		}
 	}
 	raw := ""

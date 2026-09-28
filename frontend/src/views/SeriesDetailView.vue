@@ -26,13 +26,34 @@
         </span>
       </div>
 
-      <EnrichDetails
-        class="mt-4 max-w-[900px]"
-        :info="enrich.info(detail.marker.name, 'tv')"
-        :shown-title="detail.marker.name"
-        :poster-width="120"
-        :clamp="false"
-      />
+      <!-- What the box already keeps comes first: the folder cover and
+           SerienRecorder's own description; TMDB fills in what's missing. -->
+      <div v-if="detail.cover || detail.info || tmdb" class="mt-4 flex max-w-[900px] gap-4">
+        <PosterImage
+          v-if="detail.cover || tmdb?.poster"
+          :series="detail.cover ? detail.marker.id : undefined"
+          :path="detail.cover ? undefined : tmdb?.poster"
+          size="w185"
+          :width="120"
+          :height="180"
+          :alt="detail.marker.name"
+        />
+        <div class="min-w-0 flex-1">
+          <p class="flex flex-wrap items-center gap-x-2 gap-y-0.5 text-[13px] text-muted">
+            <span v-if="detail.info?.year" class="tabular-nums">{{ detail.info.year }}</span>
+            <span v-if="detail.info?.info">{{ detail.info.info }}</span>
+            <span v-else-if="tmdb?.genres?.length">{{ tmdb.genres.join(', ') }}</span>
+            <RatingBadge v-if="tmdb" :rating="tmdb.rating" :votes="tmdb.votes" />
+          </p>
+          <p v-if="detail.info?.description || tmdb?.overview" class="mt-1.5 text-[13.5px] text-text">
+            {{ detail.info?.description || tmdb?.overview }}
+          </p>
+          <p v-if="detail.info?.cast?.length" class="mt-1.5 truncate text-[12.5px] text-muted" :title="detail.info.cast.join(', ')">
+            {{ t('series.detail.cast', { names: detail.info.cast.slice(0, 4).join(', ') }) }}
+          </p>
+          <p class="mt-1.5 text-[11.5px] text-faint">{{ t('enrich.source', { source: sourceNames }) }}</p>
+        </div>
+      </div>
 
       <dl class="mt-4 grid grid-cols-4 gap-3 below-md:grid-cols-2 below-sm:grid-cols-1">
         <div v-for="fact in facts" :key="fact.label" class="rounded border border-line bg-tile px-3 py-2.5">
@@ -149,7 +170,8 @@ import { useI18n } from 'vue-i18n'
 import { api, ApiError } from '@/api/client'
 import Icon from '@/components/Icon.vue'
 import PlanPreview from '@/components/PlanPreview.vue'
-import EnrichDetails from '@/components/enrich/EnrichDetails.vue'
+import PosterImage from '@/components/enrich/PosterImage.vue'
+import RatingBadge from '@/components/enrich/RatingBadge.vue'
 import EpisodeGuide from '@/components/series/EpisodeGuide.vue'
 import { useEnrichStore } from '@/stores/enrich'
 import { useNavigationStore } from '@/stores/navigation'
@@ -184,6 +206,16 @@ async function load() {
 }
 onMounted(load)
 watch(() => props.id, load)
+
+const tmdb = computed(() => (detail.value ? enrich.info(detail.value.marker.name, 'tv') : null))
+// Names the sources actually shown.
+const sourceNames = computed(() => {
+  const d = detail.value
+  const names: string[] = []
+  if (d?.info) names.push('SerienRecorder')
+  if (tmdb.value && (!d?.cover || !d?.info || tmdb.value.rating)) names.push('TMDB')
+  return names.join(', ')
+})
 
 function isUnavailable(part: SeriesDetail['unavailable'][number]) {
   return detail.value?.unavailable.includes(part) ?? false

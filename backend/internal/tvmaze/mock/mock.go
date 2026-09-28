@@ -27,6 +27,10 @@ func (c *Client) SearchShows(ctx context.Context, name string) ([]tvmaze.Show, e
 	if strings.Contains(q, "verräter") || strings.Contains(q, "verrater") {
 		out = append(out, tvmaze.Show{ID: 501, Name: "Die Verräter - Vertraue Niemandem!", Premiered: "2023-10-05", Language: "German", Score: 0.9})
 	}
+	if q == "fbi" {
+		out = append(out, tvmaze.Show{ID: 601, Name: "FBI", Premiered: "2018-09-25", Language: "English", Score: 0.9},
+			tvmaze.Show{ID: 602, Name: "The FBI", Premiered: "1965-09-19", Language: "English", Score: 0.5})
+	}
 	if strings.Contains(q, "tatort") {
 		out = append(out, tvmaze.Show{ID: 777, Name: "Tatort-Reiniger", Premiered: "2011-12-18", Language: "German", Score: 0.6},
 			tvmaze.Show{ID: 502, Name: "Tatort", Premiered: "1970-11-29", Language: "German", Score: 0.8})

@@ -27,9 +27,22 @@ fi
 # Extensions plugin through the Addon Manager. This does interrupt live
 # viewing for a few seconds; it's the standard, expected behavior for a
 # plugin install on this platform, not something DreamHub invented.
-if [ -d /run/systemd/system ] && systemctl is-active --quiet enigma2 2>/dev/null; then
-    echo "dreamhub: restarting enigma2 to load the launcher plugin..."
-    systemctl restart enigma2 || true
+#
+# Only when the plugin actually changed, though: an update that only
+# replaces the backend has no reason to cut into what's on TV. A checksum
+# of the installed plugin files is kept next to DreamHub's data.
+PLUGIN_DIR=/usr/lib/enigma2/python/Plugins/Extensions/DreamHub
+SUM_FILE=/data/dreamhub/.plugin.sum
+NEW_SUM=$(find "$PLUGIN_DIR" -type f ! -name '*.pyc' ! -name '*.pyo' -exec md5sum {} + 2>/dev/null | sort | md5sum | cut -d' ' -f1)
+OLD_SUM=$(cat "$SUM_FILE" 2>/dev/null || true)
+if [ "$NEW_SUM" != "$OLD_SUM" ]; then
+    if [ -d /run/systemd/system ] && systemctl is-active --quiet enigma2 2>/dev/null; then
+        echo "dreamhub: restarting enigma2 to load the launcher plugin..."
+        systemctl restart enigma2 || true
+    fi
+    echo "$NEW_SUM" > "$SUM_FILE"
+else
+    echo "dreamhub: launcher plugin unchanged, enigma2 keeps running"
 fi
 
 exit 0

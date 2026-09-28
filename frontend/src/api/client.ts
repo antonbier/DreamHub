@@ -240,6 +240,8 @@ export const api = {
   series: {
     markers: () => request<{ markers: SeriesMarker[] }>('GET', '/api/v1/series/markers'),
     detail: (id: number) => request<SeriesDetail>('GET', `/api/v1/series/markers/${id}`),
+    // The series' own cover art from its folder on the box (folder.jpg).
+    cover: (id: number) => requestBlob(`/api/v1/series/markers/${id}/cover`),
     upcoming: () => request<{ episodes: UpcomingEpisode[] }>('GET', '/api/v1/series/upcoming'),
   },
   discovery: {

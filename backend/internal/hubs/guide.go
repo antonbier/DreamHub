@@ -5,6 +5,7 @@ import (
 	"net/http"
 	"sort"
 	"strconv"
+	"strings"
 	"time"
 
 	"github.com/antonbier/DreamHub/backend/internal/hub"
@@ -29,6 +30,11 @@ const maxGuideResults = 10
 // (/web/epgsearch), upcoming and running programmes only, soonest first.
 // A result links into the grid at that programme's start (?at=).
 func (h *Guide) Search(ctx context.Context, query string) ([]hub.SearchResult, error) {
+	// A short query makes the box serialize its whole EPG (ARCHITECTURE.md,
+	// "/web/epgsearch has no result cap"), blocking enigma2 for seconds.
+	if len([]rune(strings.TrimSpace(query))) < webcontrol.MinEPGSearchQuery {
+		return nil, nil
+	}
 	events, err := h.WC.EPGSearch(ctx, query)
 	if err != nil {
 		return nil, err

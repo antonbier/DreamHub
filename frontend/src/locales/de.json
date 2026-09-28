@@ -418,7 +418,8 @@
       "season": "Staffel {season}",
       "noSeason": "Ohne Staffelangabe",
       "code": "S{season}E{episode}",
-      "partUnavailable": "Konnte gerade nicht geladen werden."
+      "partUnavailable": "Konnte gerade nicht geladen werden.",
+      "cast": "Mit {names}"
     },
     "guide": {
       "title": "Folgen",
@@ -767,12 +768,15 @@
       "channelUp": "Programm hoch",
       "channelDown": "Programm runter",
       "info": "Info",
-      "epg": "EPG",
       "rewind": "Zurückspulen",
       "play": "Wiedergabe",
       "pause": "Pause",
       "stop": "Stopp",
-      "fastForward": "Vorspulen"
+      "fastForward": "Vorspulen",
+      "audio": "Audio",
+      "tv": "TV",
+      "radio": "Radio",
+      "text": "Text"
     },
     "panel": {
       "toggle": "Fernbedienung ein-/ausblenden",

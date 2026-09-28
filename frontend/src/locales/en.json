@@ -418,7 +418,8 @@
       "season": "Season {season}",
       "noSeason": "No season given",
       "code": "S{season}E{episode}",
-      "partUnavailable": "Couldn't be loaded right now."
+      "partUnavailable": "Couldn't be loaded right now.",
+      "cast": "With {names}"
     },
     "guide": {
       "title": "Episodes",
@@ -767,12 +768,15 @@
       "channelUp": "Channel up",
       "channelDown": "Channel down",
       "info": "Info",
-      "epg": "EPG",
       "rewind": "Rewind",
       "play": "Play",
       "pause": "Pause",
       "stop": "Stop",
-      "fastForward": "Fast forward"
+      "fastForward": "Fast forward",
+      "audio": "Audio",
+      "tv": "TV",
+      "radio": "Radio",
+      "text": "Text"
     },
     "panel": {
       "toggle": "Show or hide the remote",

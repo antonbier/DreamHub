@@ -9,6 +9,7 @@ import (
 
 	"github.com/antonbier/DreamHub/backend/internal/httpx"
 	"github.com/antonbier/DreamHub/backend/internal/hub"
+	"github.com/antonbier/DreamHub/backend/internal/recfs"
 	"github.com/antonbier/DreamHub/backend/internal/serienrecorder"
 	"github.com/antonbier/DreamHub/backend/internal/settings"
 	"github.com/antonbier/DreamHub/backend/internal/store"
@@ -24,6 +25,10 @@ type Series struct {
 	// WC is optional: without it the detail view still shows
 	// SerienRecorder's own data and reports the rest as unavailable.
 	WC webcontrol.Client
+	// FS is the recording file system (on the box), for finding a series'
+	// recordings in every folder without asking WebControl folder by
+	// folder; nil or off the box, /web/movielist is used instead.
+	FS recfs.FS
 	// TVmaze (optional) supplies the episode guide (series_episodes.go),
 	// cached in Store; Settings says whether it's switched on.
 	TVmaze   tvmaze.Client
@@ -43,6 +48,7 @@ func (h *Series) now() time.Time {
 func (h *Series) Mount(mux *http.ServeMux) {
 	mux.HandleFunc("GET /api/v1/series/markers", h.markers)
 	mux.HandleFunc("GET /api/v1/series/markers/{id}", h.detail)
+	mux.HandleFunc("GET /api/v1/series/markers/{id}/cover", h.cover)
 	mux.HandleFunc("GET /api/v1/series/upcoming", h.upcoming)
 }
 

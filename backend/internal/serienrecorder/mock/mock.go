@@ -51,3 +51,11 @@ func (*Client) UpcomingEpisodes(ctx context.Context) ([]serienrecorder.UpcomingE
 		},
 	}, nil
 }
+
+func (*Client) SeriesInfo(ctx context.Context, wlid, fsid string) (*serienrecorder.SeriesInfo, error) {
+	if fsid == "tatort" {
+		return &serienrecorder.SeriesInfo{Title: "Tatort", Year: "1970-", Info: "Krimi (90 min)",
+			Description: "Die Krimireihe der ARD mit wechselnden Ermittlerteams.", Cast: []string{"Axel Milberg (Klaus Borowski)"}}, nil
+	}
+	return nil, nil
+}

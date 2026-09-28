@@ -353,7 +353,24 @@
     },
     "changeTitle": "Also change the title in the box's list",
     "newTitle": "New title",
-    "titlePreview": "Title in the box's list:"
+    "titlePreview": "Title in the box's list:",
+    "selectAll": "Select all",
+    "batch": {
+      "open": "Rename by scheme",
+      "title": "Rename by scheme",
+      "source": "Source of the details",
+      "sources": {
+        "metadata": "Recording",
+        "tmdb": "+ TMDB"
+      },
+      "willRename": "Nothing to rename | 1 recording will be renamed | {n} recordings will be renamed",
+      "unchanged": "1 already named so | {n} already named so",
+      "skipped": "1 skipped | {n} skipped",
+      "alreadyNamed": "already named by the scheme",
+      "schemeHint": "Change the scheme in Settings → Recordings.",
+      "confirm": "Rename | Rename 1 | Rename {n}",
+      "done": "1 recording renamed · undo in the change log | {n} recordings renamed · undo in the change log"
+    }
   },
   "guide": {
     "empty": "No channels in this bouquet.",
@@ -513,7 +530,8 @@
       "ai_budget_exceeded": "Today's AI limit is used up.",
       "ai_unavailable": "The AI didn't give a usable answer.",
       "invalid_title": "The title can't be empty, span lines or be longer than 200 characters.",
-      "no_meta": "This recording has no .ts.meta file whose title could change."
+      "no_meta": "This recording has no .ts.meta file whose title could change.",
+      "duplicate_target": "another selected recording would get the same name"
     }
   },
   "settings": {
@@ -534,7 +552,8 @@
       "secretPlaceholder": "New key",
       "timezoneHint": "IANA time zone name, e.g. \"Europe/Rome\".",
       "allowedHostsHint": "Comma-separated host names, besides IP addresses, localhost and *.local.",
-      "runWizard": "Run setup wizard"
+      "runWizard": "Run setup wizard",
+      "namingHint": "Placeholders: {'{'}title{'}'} {'{'}year{'}'} {'{'}season{'}'} {'{'}episode{'}'} {'{'}episodeTitle{'}'} {'{'}channel{'}'} {'{'}date{'}'}; numbers with leading zeros: {'{'}episode:02{'}'}. Parts in [square brackets] are left out when a placeholder in them is empty, e.g. {'{'}title{'}'}[ ({'{'}year{'}'})]."
     },
     "general": {
       "title": "General",
@@ -603,7 +622,12 @@
       "too_short": "Must be at least {minLength} characters.",
       "invalid_timezone": "Not a valid time zone name (e.g. \"Europe/Rome\").",
       "unknown": "Unknown setting.",
-      "forbidden": "Only an admin can change this."
+      "forbidden": "Only an admin can change this.",
+      "template_syntax": "Brackets don't match: every {'{'} and [ needs its partner, and [ ] can't be nested.",
+      "template_placeholder": "Unknown placeholder.",
+      "template_no_title": "{'{'}title{'}'} has to appear, and not only in [square brackets].",
+      "template_no_episode": "The episode scheme needs {'{'}episode{'}'}.",
+      "template_slash": "No slashes — the scheme sets the file name only, not folders."
     },
     "webcontrol": {
       "title": "WebControl",
@@ -613,6 +637,11 @@
     "tvmaze": {
       "title": "TVmaze",
       "enabled": "Load episode lists from TVmaze (sends followed series' names to TVmaze)"
+    },
+    "media": {
+      "title": "Recordings",
+      "namingMovie": "Naming scheme for films",
+      "namingEpisode": "Naming scheme for episodes"
     }
   },
   "notFound": {

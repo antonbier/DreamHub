@@ -15,6 +15,7 @@ import { authHeader, authState, clearCredentials } from './authState'
 import type {
   ApiToken,
   AutoTimers,
+  BatchRenameItem,
   BackupFile,
   ConnectorState,
   MediaFolder,
@@ -216,6 +217,9 @@ export const api = {
       request<MediaFolder>('GET', `/api/v1/media/movies${dir ? `?dir=${encodeURIComponent(dir)}` : ''}`),
     suggestName: (path: string, source: SuggestionSource) =>
       request<{ suggestions: NameSuggestion[] }>('POST', '/api/v1/media/rename/suggest', { path, source }),
+    // Many recordings at once, named by the naming scheme (Settings → Recordings).
+    batchRenamePlan: (paths: string[], source: 'metadata' | 'tmdb') =>
+      request<{ plan?: Plan; items: BatchRenameItem[] }>('POST', '/api/v1/media/rename/batch/plan', { paths, source }),
     // title also changes the .ts.meta title the box's own list shows.
     renamePlan: (path: string, newName: string, title?: string) =>
       request<{ plan: Plan }>('POST', '/api/v1/media/rename/plan', { path, newName, title }),

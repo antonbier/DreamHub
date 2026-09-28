@@ -92,10 +92,34 @@
         <div v-if="selection.size > 0" class="mt-3 flex flex-wrap items-center gap-3 rounded border border-line bg-tile px-3 py-2 text-[13.5px]">
           <span class="text-text">{{ t('media.selected', { count: selection.size }, selection.size) }}</span>
           <button type="button" class="rounded px-2 py-1 text-accent hover:bg-tile-2" @click="selection.clear()">{{ t('media.clearSelection') }}</button>
-          <button type="button" class="ms-auto rounded bg-accent px-3 py-1.5 font-semibold text-bg disabled:opacity-60" :disabled="bulk?.busy" @click="previewBulkTrash">
+          <button
+            v-if="selection.size < selectableCount"
+            type="button"
+            class="rounded px-2 py-1 text-accent hover:bg-tile-2"
+            @click="selectAll"
+          >
+            {{ t('media.selectAll') }}
+          </button>
+          <button
+            type="button"
+            class="ms-auto rounded px-3 py-1.5 text-accent hover:bg-tile-2 disabled:opacity-60"
+            :disabled="bulk?.busy || batchOpen"
+            @click="openBatch"
+          >
+            {{ t('media.batch.open') }}
+          </button>
+          <button type="button" class="rounded bg-accent px-3 py-1.5 font-semibold text-bg disabled:opacity-60" :disabled="bulk?.busy || batchOpen" @click="previewBulkTrash">
             {{ t('media.moveSelectedToTrash') }}
           </button>
         </div>
+        <BatchRenamePreview
+          v-if="batchOpen"
+          class="mt-3"
+          :paths="[...selection]"
+          :tmdb="suggestSources.tmdb"
+          @cancel="batchOpen = false"
+          @done="onBatchDone"
+        />
         <div v-if="bulk" class="mt-3">
           <p v-if="bulk.busy && !bulk.plan" class="text-[13px] text-faint">{{ t('common.loading') }}</p>
           <PlanPreview
@@ -208,6 +232,7 @@ import Icon from '@/components/Icon.vue'
 import PlanPreview from '@/components/PlanPreview.vue'
 import RecordingRow from '@/components/media/RecordingRow.vue'
 import TrashPreview from '@/components/media/TrashPreview.vue'
+import BatchRenamePreview from '@/components/media/BatchRenamePreview.vue'
 import type { RowState, SuggestSources, TrashActionState } from '@/components/media/types'
 import { useNavigationStore } from '@/stores/navigation'
 import { useProblem } from '@/composables/useProblem'
@@ -269,6 +294,7 @@ async function open(dir?: string) {
   loading.value = true
   selection.clear()
   bulk.value = null
+  batchOpen.value = false
   Object.keys(rowStates).forEach((k) => delete rowStates[k])
   try {
     const res = await api.media.folder(dir)
@@ -357,6 +383,24 @@ const selection = reactive(new Set<string>())
 function toggle(filename: string) {
   if (selection.has(filename)) selection.delete(filename)
   else selection.add(filename)
+}
+
+// "Select all": every recording in this folder that file actions apply to.
+const selectableCount = computed(() => folder.value?.movies.filter((m) => m.isRecording).length ?? 0)
+function selectAll() {
+  for (const m of folder.value?.movies ?? []) if (m.isRecording) selection.add(m.filename)
+}
+
+// --- bulk: rename the selection by the naming scheme ---------------------------
+const batchOpen = ref(false)
+function openBatch() {
+  bulk.value = null
+  batchOpen.value = true
+}
+async function onBatchDone(count: number) {
+  batchOpen.value = false
+  notice.value = t('media.batch.done', { n: count }, count)
+  await open(folder.value?.dir)
 }
 
 const bulk = ref<{ plan?: Plan; busy: boolean; error?: string } | null>(null)

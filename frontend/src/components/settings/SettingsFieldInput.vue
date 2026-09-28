@@ -75,6 +75,9 @@
       <p v-else-if="field.key === 'network.allowedHosts'" class="mt-1 text-[12.5px] text-faint">
         {{ t('settings.page.allowedHostsHint') }}
       </p>
+      <p v-else-if="field.key.startsWith('media.naming.')" class="mt-1 text-[12.5px] text-faint">
+        {{ t('settings.page.namingHint') }}
+      </p>
       <p v-else-if="field.type === 'secret' || field.type === 'password'" class="mt-1 text-[12.5px] text-faint">
         {{ statusHint }}
       </p>

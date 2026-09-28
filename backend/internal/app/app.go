@@ -166,6 +166,8 @@ func New(ctx context.Context, o Options) (*App, error) {
 	for _, c := range conns.All() {
 		sections = append(sections, c.Settings()...)
 	}
+	// Hubs' own sections, then the per-hub enable switches.
+	sections = append(sections, hubs_.MediaSettingsSection())
 	sections = append(sections, hubs.SettingsSection())
 	reg := settings.NewRegistry()
 	for _, sec := range sections {

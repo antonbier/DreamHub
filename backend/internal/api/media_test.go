@@ -379,3 +379,84 @@ func TestMedia_CoverArtAlreadyOnDisk(t *testing.T) {
 		}
 	}
 }
+
+func TestMedia_BatchRenameByScheme(t *testing.T) {
+	box := mock.New()
+	// Two episodes and a film, as SerienRecorder/Enigma2 name them.
+	put := func(base, title, desc string) string {
+		box.FS.Put(mock.Root+base+".ts", "recording")
+		box.FS.Put(mock.Root+base+".ts.meta", "1:0:19:2EE3:441:1:C00000:0:0:0:\n"+title+"\n"+desc+"\n1696532400\n")
+		box.FS.Put(mock.Root+base+".eit", "eit")
+		return "/" + mock.Root + base + ".ts"
+	}
+	e1 := put("20231005 2015 - RTL - Bones", "Bones", "S03E07 - Der Mann im Keller")
+	e2 := put("20231012 2015 - RTL - Bones", "Bones", "S03E08")
+	film := put("20231020 2015 - ARD - Tatort", "Tatort", "")
+	e := newEnvWith(t, box)
+	e.do(t, "PATCH", "/api/v1/settings", `{"values":{"media.naming.episode":"{title} {season}x{episode:02}[ - {episodeTitle}]"}}`, nil)
+
+	body := fmt.Sprintf(`{"paths":[%q,%q,%q,"/etc/passwd"]}`, e1, e2, film)
+	resp, b := e.do(t, "POST", "/api/v1/media/rename/batch/plan", body, nil)
+	if resp.StatusCode != http.StatusOK {
+		t.Fatalf("plan: %d %s", resp.StatusCode, b)
+	}
+	var out struct {
+		Plan *struct {
+			ID      string `json:"id"`
+			Changes []any  `json:"changes"`
+		} `json:"plan"`
+		Items []struct {
+			After  string `json:"after"`
+			Status string `json:"status"`
+			Reason string `json:"reason"`
+		} `json:"items"`
+	}
+	json.Unmarshal(b, &out)
+	if out.Plan == nil || len(out.Plan.Changes) != 3 || len(out.Items) != 4 {
+		t.Fatalf("expected 3 renames and the outside path skipped: %s", b)
+	}
+	if out.Items[0].After != "Bones 3x07 - Der Mann im Keller" || out.Items[1].After != "Bones 3x08" || out.Items[2].After != "Tatort" {
+		t.Errorf("names by the scheme: %+v", out.Items)
+	}
+	if out.Items[3].Status != "skipped" || out.Items[3].Reason != "outside_folders" {
+		t.Errorf("a path outside the recording folders is skipped, not fatal: %+v", out.Items[3])
+	}
+	if resp, b := e.apply(t, out.Plan.ID); resp.StatusCode != http.StatusOK {
+		t.Fatalf("apply: %d %s", resp.StatusCode, b)
+	}
+	for _, f := range []string{"Bones 3x07 - Der Mann im Keller.ts", "Bones 3x07 - Der Mann im Keller.eit", "Bones 3x08.ts.meta", "Tatort.ts"} {
+		if _, err := box.FS.Lstat(mock.Root + f); err != nil {
+			t.Errorf("%s missing after apply", f)
+		}
+	}
+
+	// Running it again: everything is already named by the scheme.
+	body = fmt.Sprintf(`{"paths":[%q]}`, "/"+mock.Root+"Bones 3x08.ts")
+	_, b = e.do(t, "POST", "/api/v1/media/rename/batch/plan", body, nil)
+	if strings.Contains(string(b), `"plan"`) || !strings.Contains(string(b), `"unchanged"`) {
+		t.Errorf("nothing to rename, no plan: %s", b)
+	}
+
+	// TMDB completes a film's year on an exact title match only.
+	e.do(t, "PATCH", "/api/v1/settings", `{"values":{"tmdb.apiKey":"k-1234567890"}}`, nil)
+	body = fmt.Sprintf(`{"paths":[%q],"source":"tmdb"}`, "/"+bauerTS)
+	_, b = e.do(t, "POST", "/api/v1/media/rename/batch/plan", body, nil)
+	if !strings.Contains(string(b), `"after":"Bauer sucht Frau International"`) {
+		t.Errorf("a TV show found by TMDB gets no film year: %s", b)
+	}
+
+	// Two recordings that would end up with the same name: only the first.
+	d1 := put("A", "Doppelt", "")
+	d2 := put("B", "Doppelt", "")
+	body = fmt.Sprintf(`{"paths":[%q,%q]}`, d1, d2)
+	_, b = e.do(t, "POST", "/api/v1/media/rename/batch/plan", body, nil)
+	if !strings.Contains(string(b), `"duplicate_target"`) {
+		t.Errorf("a second recording aiming at the same name is skipped: %s", b)
+	}
+
+	// A broken scheme is refused when saving.
+	resp, b = e.do(t, "PATCH", "/api/v1/settings", `{"values":{"media.naming.movie":"{year}"}}`, nil)
+	if resp.StatusCode != http.StatusBadRequest || !strings.Contains(string(b), "template_no_title") {
+		t.Errorf("a scheme without {title} must be refused: %d %s", resp.StatusCode, b)
+	}
+}

@@ -547,3 +547,13 @@ export interface EnrichQuery {
   title: string
   kind?: 'movie' | 'tv'
 }
+
+// backend/internal/hubs/media_batch.go: one recording of a batch rename.
+export interface BatchRenameItem {
+  path: string
+  before: string // base name, without .ts
+  after?: string
+  files?: number
+  status: 'rename' | 'unchanged' | 'skipped'
+  reason?: string // an error.media code, for skipped
+}

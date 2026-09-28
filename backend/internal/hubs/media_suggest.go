@@ -26,8 +26,8 @@ import (
 //   - "ai": the AI provider reads the metadata and returns fields; counts
 //     against ai.dailyLimit like DiscoveryHub.
 //
-// Every source only yields naming.Fields; the file name is always built by
-// naming.Fields.FileName. Nothing here changes anything — a suggestion just
+// Every source only yields naming.Fields; the file name is always built from
+// the user's naming scheme (media_naming.go, naming.Templates). Nothing here changes anything — a suggestion just
 // fills the rename box.
 
 // Suggestion is one proposed name.
@@ -54,7 +54,7 @@ type recordingMeta struct {
 
 func (h *Media) readMeta(tsPath string, roots []string) recordingMeta {
 	m := recordingMeta{file: path.Base(tsPath), title: recfs.Base(tsPath)}
-	if data, err := h.FS.ReadFile(tsPath + ".meta"); err == nil {
+	if data, err := readRegular(h.FS, tsPath+".meta"); err == nil {
 		lines := strings.SplitN(string(data), "\n", 4)
 		if len(lines) > 1 && strings.TrimSpace(lines[1]) != "" {
 			m.title = strings.TrimSpace(lines[1])
@@ -101,10 +101,13 @@ func (h *Media) suggest(w http.ResponseWriter, r *http.Request) {
 	}
 	meta := h.readMeta(p, roots)
 	base := naming.FromMetadata(meta.title, meta.description, meta.folders)
+	// Names follow the user's naming scheme (media_naming.go).
+	tpls := h.templates(ctx)
+	extra := h.extraFor(p, h.channelsIn(ctx, path.Dir(p)))
 
 	var out []Suggestion
 	add := func(f naming.Fields, source, kind string) {
-		name := f.FileName()
+		name := tpls.Render(f, extra)
 		if name == "" || name == recfs.Base(p) {
 			return // nothing to suggest
 		}

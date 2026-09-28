@@ -353,7 +353,24 @@
     },
     "changeTitle": "Cambia anche il titolo nell'elenco del box",
     "newTitle": "Nuovo titolo",
-    "titlePreview": "Titolo nell'elenco del box:"
+    "titlePreview": "Titolo nell'elenco del box:",
+    "selectAll": "Seleziona tutto",
+    "batch": {
+      "open": "Rinomina secondo lo schema",
+      "title": "Rinomina secondo lo schema",
+      "source": "Fonte dei dati",
+      "sources": {
+        "metadata": "Registrazione",
+        "tmdb": "+ TMDB"
+      },
+      "willRename": "Niente da rinominare | 1 registrazione verrà rinominata | {n} registrazioni verranno rinominate",
+      "unchanged": "1 ha già questo nome | {n} hanno già questo nome",
+      "skipped": "1 saltata | {n} saltate",
+      "alreadyNamed": "ha già il nome secondo lo schema",
+      "schemeHint": "Lo schema si cambia in Impostazioni → Registrazioni.",
+      "confirm": "Rinomina | Rinomina 1 | Rinomina {n}",
+      "done": "1 registrazione rinominata · annullabile nel registro modifiche | {n} registrazioni rinominate · annullabile nel registro modifiche"
+    }
   },
   "guide": {
     "empty": "Nessun canale in questo bouquet.",
@@ -513,7 +530,8 @@
       "ai_budget_exceeded": "Il limite IA di oggi è esaurito.",
       "ai_unavailable": "L'IA non ha dato una risposta utilizzabile.",
       "invalid_title": "Il titolo non può essere vuoto, andare a capo o superare i 200 caratteri.",
-      "no_meta": "Questa registrazione non ha un file .ts.meta di cui cambiare il titolo."
+      "no_meta": "Questa registrazione non ha un file .ts.meta di cui cambiare il titolo.",
+      "duplicate_target": "un'altra registrazione selezionata avrebbe lo stesso nome"
     }
   },
   "settings": {
@@ -534,7 +552,8 @@
       "secretPlaceholder": "Nuova chiave",
       "timezoneHint": "Nome del fuso orario IANA, ad es. \"Europe/Rome\".",
       "allowedHostsHint": "Nomi host separati da virgola, oltre a indirizzi IP, localhost e *.local.",
-      "runWizard": "Avvia la configurazione guidata"
+      "runWizard": "Avvia la configurazione guidata",
+      "namingHint": "Segnaposto: {'{'}title{'}'} {'{'}year{'}'} {'{'}season{'}'} {'{'}episode{'}'} {'{'}episodeTitle{'}'} {'{'}channel{'}'} {'{'}date{'}'}; numeri con zeri iniziali: {'{'}episode:02{'}'}. Le parti tra [parentesi quadre] vengono omesse se un segnaposto al loro interno è vuoto, ad es. {'{'}title{'}'}[ ({'{'}year{'}'})]."
     },
     "general": {
       "title": "Generale",
@@ -603,7 +622,12 @@
       "too_short": "Deve avere almeno {minLength} caratteri.",
       "invalid_timezone": "Nome del fuso orario non valido (ad es. \"Europe/Rome\").",
       "unknown": "Impostazione sconosciuta.",
-      "forbidden": "Solo un admin può modificarlo."
+      "forbidden": "Solo un admin può modificarlo.",
+      "template_syntax": "Le parentesi non tornano: ogni {'{'} e [ va chiusa, e le [ ] non si possono annidare.",
+      "template_placeholder": "Segnaposto sconosciuto.",
+      "template_no_title": "{'{'}title{'}'} deve comparire, e non solo tra [parentesi quadre].",
+      "template_no_episode": "Lo schema degli episodi richiede {'{'}episode{'}'}.",
+      "template_slash": "Niente barre — lo schema definisce solo il nome del file, non le cartelle."
     },
     "webcontrol": {
       "title": "WebControl",
@@ -613,6 +637,11 @@
     "tvmaze": {
       "title": "TVmaze",
       "enabled": "Carica gli elenchi degli episodi da TVmaze (invia a TVmaze i nomi delle serie seguite)"
+    },
+    "media": {
+      "title": "Registrazioni",
+      "namingMovie": "Schema dei nomi per i film",
+      "namingEpisode": "Schema dei nomi per gli episodi"
     }
   },
   "notFound": {

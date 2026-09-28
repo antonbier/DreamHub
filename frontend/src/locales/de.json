@@ -353,7 +353,24 @@
     },
     "changeTitle": "Auch den Titel in der Box-Liste ändern",
     "newTitle": "Neuer Titel",
-    "titlePreview": "Titel in der Box-Liste:"
+    "titlePreview": "Titel in der Box-Liste:",
+    "selectAll": "Alle auswählen",
+    "batch": {
+      "open": "Nach Schema umbenennen",
+      "title": "Nach Schema umbenennen",
+      "source": "Quelle der Angaben",
+      "sources": {
+        "metadata": "Aufnahme",
+        "tmdb": "+ TMDB"
+      },
+      "willRename": "Nichts umzubenennen | 1 Aufnahme wird umbenannt | {n} Aufnahmen werden umbenannt",
+      "unchanged": "1 heißt schon so | {n} heißen schon so",
+      "skipped": "1 übersprungen | {n} übersprungen",
+      "alreadyNamed": "heißt schon nach dem Schema",
+      "schemeHint": "Das Schema lässt sich unter Einstellungen → Aufnahmen ändern.",
+      "confirm": "Umbenennen | 1 umbenennen | {n} umbenennen",
+      "done": "1 Aufnahme umbenannt · rückgängig im Änderungsprotokoll | {n} Aufnahmen umbenannt · rückgängig im Änderungsprotokoll"
+    }
   },
   "guide": {
     "empty": "Keine Sender in diesem Bouquet.",
@@ -513,7 +530,8 @@
       "ai_budget_exceeded": "Das KI-Limit für heute ist aufgebraucht.",
       "ai_unavailable": "Die KI hat keine brauchbare Antwort geliefert.",
       "invalid_title": "Der Titel darf nicht leer sein, keine Zeilenumbrüche enthalten und höchstens 200 Zeichen haben.",
-      "no_meta": "Zu dieser Aufnahme gibt es keine .ts.meta-Datei, deren Titel sich ändern ließe."
+      "no_meta": "Zu dieser Aufnahme gibt es keine .ts.meta-Datei, deren Titel sich ändern ließe.",
+      "duplicate_target": "eine andere Aufnahme der Auswahl bekäme denselben Namen"
     }
   },
   "settings": {
@@ -534,7 +552,8 @@
       "secretPlaceholder": "Neuer Schlüssel",
       "timezoneHint": "IANA-Zeitzonenname, z. B. „Europe/Rome“.",
       "allowedHostsHint": "Kommagetrennte Hostnamen, zusätzlich zu IP-Adressen, localhost und *.local.",
-      "runWizard": "Einrichtungsassistent starten"
+      "runWizard": "Einrichtungsassistent starten",
+      "namingHint": "Platzhalter: {'{'}title{'}'} {'{'}year{'}'} {'{'}season{'}'} {'{'}episode{'}'} {'{'}episodeTitle{'}'} {'{'}channel{'}'} {'{'}date{'}'}; Zahlen mit führenden Nullen: {'{'}episode:02{'}'}. Teile in [eckigen Klammern] entfallen, wenn ein Platzhalter darin leer ist, z. B. {'{'}title{'}'}[ ({'{'}year{'}'})]."
     },
     "general": {
       "title": "Allgemein",
@@ -603,7 +622,12 @@
       "too_short": "Muss mindestens {minLength} Zeichen lang sein.",
       "invalid_timezone": "Kein gültiger Zeitzonenname (z. B. „Europe/Rome“).",
       "unknown": "Unbekannte Einstellung.",
-      "forbidden": "Nur ein Admin kann das ändern."
+      "forbidden": "Nur ein Admin kann das ändern.",
+      "template_syntax": "Klammern stimmen nicht: jede {'{'} und [ braucht ihr Gegenstück, [ ] nicht verschachteln.",
+      "template_placeholder": "Unbekannter Platzhalter.",
+      "template_no_title": "{'{'}title{'}'} muss vorkommen, und nicht nur in [eckigen Klammern].",
+      "template_no_episode": "Das Schema für Folgen braucht {'{'}episode{'}'}.",
+      "template_slash": "Keine Schrägstriche — das Schema legt nur den Dateinamen fest, keine Ordner."
     },
     "webcontrol": {
       "title": "WebControl",
@@ -613,6 +637,11 @@
     "tvmaze": {
       "title": "TVmaze",
       "enabled": "Folgenlisten von TVmaze laden (sendet die Namen verfolgter Serien an TVmaze)"
+    },
+    "media": {
+      "title": "Aufnahmen",
+      "namingMovie": "Namensschema für Filme",
+      "namingEpisode": "Namensschema für Serienfolgen"
     }
   },
   "notFound": {

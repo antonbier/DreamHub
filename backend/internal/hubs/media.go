@@ -56,6 +56,7 @@ func (h *Media) Mount(mux *http.ServeMux) {
 	mux.HandleFunc("GET /api/v1/media/disk", h.disk)
 	mux.HandleFunc("GET /api/v1/media/cover", h.cover)
 	mux.HandleFunc("POST /api/v1/media/rename/plan", h.planRename)
+	mux.HandleFunc("POST /api/v1/media/rename/batch/plan", h.planBatchRename)
 	mux.HandleFunc("POST /api/v1/media/rename/suggest", h.suggest)
 	mux.HandleFunc("POST /api/v1/media/trash/plan", h.planTrash)
 	mux.HandleFunc("GET /api/v1/media/trash", h.trashList)

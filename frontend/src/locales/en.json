@@ -350,7 +350,10 @@
         "tmdb": "Needs a TMDB API key (Settings → TMDB).",
         "ai": "Needs an OpenAI API key (Settings → AI). Each suggestion counts against the daily AI limit."
       }
-    }
+    },
+    "changeTitle": "Also change the title in the box's list",
+    "newTitle": "New title",
+    "titlePreview": "Title in the box's list:"
   },
   "guide": {
     "empty": "No channels in this bouquet.",
@@ -486,7 +489,9 @@
       "tmdb_unavailable": "TMDB can't be reached right now.",
       "ai_not_configured": "Set an OpenAI API key in Settings first.",
       "ai_budget_exceeded": "Today's AI limit is used up.",
-      "ai_unavailable": "The AI didn't give a usable answer."
+      "ai_unavailable": "The AI didn't give a usable answer.",
+      "invalid_title": "The title can't be empty, span lines or be longer than 200 characters.",
+      "no_meta": "This recording has no .ts.meta file whose title could change."
     }
   },
   "settings": {

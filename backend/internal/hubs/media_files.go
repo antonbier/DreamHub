@@ -131,6 +131,8 @@ func writeRecfsError(w http.ResponseWriter, r *http.Request, err error) {
 		recfs.ErrOutsideFolders: http.StatusBadRequest,
 		recfs.ErrInvalidName:    http.StatusBadRequest,
 		recfs.ErrSameName:       http.StatusBadRequest,
+		recfs.ErrInvalidTitle:   http.StatusBadRequest,
+		recfs.ErrNoMeta:         http.StatusConflict,
 		recfs.ErrTargetExists:   http.StatusConflict,
 		recfs.ErrRestoreBlocked: http.StatusConflict,
 	}
@@ -172,6 +174,10 @@ func (h *Media) movesFingerprint(moves []recfs.Move) func(ctx context.Context) (
 type renameRequest struct {
 	Path    string `json:"path"`    // the recording's .ts file, as listed
 	NewName string `json:"newName"` // new base name, without ".ts"
+	// Title, when set, also changes the title in the recording's .ts.meta —
+	// what the box's own movie list shows. With NewName unchanged, only the
+	// title changes.
+	Title *string `json:"title,omitempty"`
 }
 
 func (h *Media) planRename(w http.ResponseWriter, r *http.Request) {
@@ -190,7 +196,25 @@ func (h *Media) planRename(w http.ResponseWriter, r *http.Request) {
 		writeRecfsError(w, r, err)
 		return
 	}
+	var title, oldTitle string
+	if req.Title != nil {
+		if title, err = recfs.ValidTitle(*req.Title); err != nil {
+			writeRecfsError(w, r, err)
+			return
+		}
+		if _, err := h.FS.ReadFile(p + ".meta"); err != nil {
+			writeRecfsError(w, r, recfs.ErrNoMeta)
+			return
+		}
+		oldTitle = recfs.MetaTitle(h.FS, p)
+		if title == oldTitle {
+			title = "" // unchanged: nothing to write
+		}
+	}
 	moves, err := recfs.PlanRename(h.FS, p, req.NewName)
+	if errors.Is(err, recfs.ErrSameName) && title != "" {
+		moves, err = nil, nil // only the title changes
+	}
 	if err != nil {
 		writeRecfsError(w, r, err)
 		return
@@ -198,18 +222,36 @@ func (h *Media) planRename(w http.ResponseWriter, r *http.Request) {
 	if !h.checkNotInUse(w, r, []string{p}) {
 		return
 	}
-	changes := make([]plan.Change, 0, len(moves))
+	changes := make([]plan.Change, 0, len(moves)+1)
 	for _, m := range moves {
 		changes = append(changes, plan.Change{Type: "file.rename", Before: m.From, After: m.To})
 	}
-	fp := h.movesFingerprint(moves)
+	if title != "" {
+		changes = append(changes, plan.Change{Type: "meta.title", Before: oldTitle, After: title})
+	}
+	// The title is part of what the preview promised: changed since, the
+	// plan is stale like a moved file would make it.
+	movesFP := h.movesFingerprint(moves)
+	fp := func(ctx context.Context) (string, error) {
+		f, err := movesFP(ctx)
+		return f + "|" + recfs.MetaTitle(h.FS, p), err
+	}
 	current, _ := fp(r.Context())
-	newTS := moves[len(moves)-1].To
+	newTS := p
+	if len(moves) > 0 {
+		newTS = moves[len(moves)-1].To
+	}
+	summary := fmt.Sprintf("Renamed recording: %s → %s (%d files)", path.Base(p), path.Base(newTS), len(moves))
+	if len(moves) == 0 {
+		summary = fmt.Sprintf("Changed a recording's title: %s → %s", oldTitle, title)
+	} else if title != "" {
+		summary += fmt.Sprintf(", title %s → %s", oldTitle, title)
+	}
 	pl := h.Plans.Create(user, plan.Draft{
 		Action:      "media.rename",
 		Changes:     changes,
-		Summary:     fmt.Sprintf("Renamed recording: %s → %s (%d files)", path.Base(p), path.Base(newTS), len(moves)),
-		Detail:      map[string]any{"moves": moves},
+		Summary:     summary,
+		Detail:      map[string]any{"moves": moves, "title": title},
 		Fingerprint: current,
 		Current:     fp,
 		Execute: func(ctx context.Context) error {
@@ -219,9 +261,23 @@ func (h *Media) planRename(w http.ResponseWriter, r *http.Request) {
 			if err := h.inUseFailure(ctx, []string{p}); err != nil {
 				return err
 			}
-			err := recfs.Apply(h.FS, moves)
-			h.refreshIndex(context.WithoutCancel(ctx))
-			return err
+			defer h.refreshIndex(context.WithoutCancel(ctx))
+			// The title first, on the file as it's named now; if the renames
+			// then fail, the old content goes back: all or nothing.
+			var oldMeta []byte
+			if title != "" {
+				var err error
+				if oldMeta, err = recfs.SetMetaTitle(h.FS, p, title); err != nil {
+					return err
+				}
+			}
+			if err := recfs.Apply(h.FS, moves); err != nil {
+				if oldMeta != nil {
+					_ = h.FS.WriteFile(p+".meta", oldMeta)
+				}
+				return err
+			}
+			return nil
 		},
 	})
 	httpx.WriteJSON(w, http.StatusOK, map[string]any{"plan": pl})

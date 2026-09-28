@@ -138,7 +138,7 @@
               @toggle="toggle(movie.filename)"
               @rename="rowStates[movie.filename] = { kind: 'rename', busy: false }"
               @trash="previewTrash(movie)"
-              @preview-rename="(name: string) => previewRename(movie, name)"
+              @preview-rename="(name: string, title?: string) => previewRename(movie, name, title)"
               @suggest="(source: SuggestionSource) => suggest(movie, source)"
               @confirm="confirmRow(movie)"
               @cancel="delete rowStates[movie.filename]"
@@ -293,13 +293,13 @@ function folderOf(p: string): string {
 
 const rowStates = reactive<Record<string, RowState>>({})
 
-async function previewRename(movie: Movie, newName: string) {
+async function previewRename(movie: Movie, newName: string, title?: string) {
   const key = movie.filename
   // Keep the suggestions: if the preview is refused, they're still there.
   const suggestions = rowStates[key]?.suggestions
   rowStates[key] = { kind: 'rename', busy: true, suggestions }
   try {
-    const res = await api.media.renamePlan(movie.filename, newName)
+    const res = await api.media.renamePlan(movie.filename, newName, title)
     rowStates[key] = { kind: 'rename', plan: res.plan, busy: false }
   } catch (err) {
     rowStates[key] = { kind: 'rename', busy: false, error: planErrorMessage(err), suggestions }

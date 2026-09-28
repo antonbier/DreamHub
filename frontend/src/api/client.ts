@@ -213,7 +213,9 @@ export const api = {
       request<MediaFolder>('GET', `/api/v1/media/movies${dir ? `?dir=${encodeURIComponent(dir)}` : ''}`),
     suggestName: (path: string, source: SuggestionSource) =>
       request<{ suggestions: NameSuggestion[] }>('POST', '/api/v1/media/rename/suggest', { path, source }),
-    renamePlan: (path: string, newName: string) => request<{ plan: Plan }>('POST', '/api/v1/media/rename/plan', { path, newName }),
+    // title also changes the .ts.meta title the box's own list shows.
+    renamePlan: (path: string, newName: string, title?: string) =>
+      request<{ plan: Plan }>('POST', '/api/v1/media/rename/plan', { path, newName, title }),
     trashPlan: (paths: string[]) => request<{ plan: Plan }>('POST', '/api/v1/media/trash/plan', { paths }),
     trash: () => request<{ items: TrashItem[] }>('GET', '/api/v1/media/trash'),
     restorePlan: (paths: string[]) => request<{ plan: Plan }>('POST', '/api/v1/media/trash/restore/plan', { paths }),

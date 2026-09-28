@@ -309,3 +309,47 @@ func TestMedia_NameSuggestions(t *testing.T) {
 		t.Error("suggesting must not rename anything")
 	}
 }
+
+func TestMedia_RenameCanAlsoChangeTheTitle(t *testing.T) {
+	box := mock.New()
+	e := newEnvWith(t, box)
+
+	// File name and title together: every file, plus the title change.
+	p, status, b := e.plan(t, "/api/v1/media/rename/plan", fmt.Sprintf(`{"path":%q,"newName":"Bauer sucht Frau - Folge 7","title":"Bauer sucht Frau International – Folge 7"}`, "/"+bauerTS))
+	if status != http.StatusOK || len(p.Plan.Changes) != 8 || !strings.Contains(string(b), `"meta.title"`) {
+		t.Fatalf("plan: %d %s", status, b)
+	}
+	if resp, b := e.apply(t, p.Plan.ID); resp.StatusCode != http.StatusOK {
+		t.Fatalf("apply: %d %s", resp.StatusCode, b)
+	}
+	newTS := mock.Root + "Bauer sucht Frau - Folge 7.ts"
+	meta, err := box.FS.ReadFile(newTS + ".meta")
+	lines := strings.Split(string(meta), "\n")
+	if err != nil || len(lines) < 4 || lines[1] != "Bauer sucht Frau International – Folge 7" || lines[0] != "1:0:19:2EE3:441:1:C00000:0:0:0:" || lines[3] != "1780944521" {
+		t.Fatalf("only line 2 may change: %q %v", meta, err)
+	}
+
+	// The title alone, file name unchanged.
+	p, status, b = e.plan(t, "/api/v1/media/rename/plan", fmt.Sprintf(`{"path":%q,"newName":"Bauer sucht Frau - Folge 7","title":"Nur der Titel"}`, newTS))
+	if status != http.StatusOK || len(p.Plan.Changes) != 1 {
+		t.Fatalf("title-only plan: %d %s", status, b)
+	}
+	e.apply(t, p.Plan.ID)
+	if got := string(must(box.FS.ReadFile(newTS + ".meta"))); !strings.Contains(got, "\nNur der Titel\n") {
+		t.Errorf("title-only change not applied: %q", got)
+	}
+
+	for _, bad := range []string{`"title":"zwei\nZeilen"`, `"title":"  "`} {
+		_, status, b := e.plan(t, "/api/v1/media/rename/plan", fmt.Sprintf(`{"path":%q,"newName":"X",%s}`, newTS, bad))
+		if code, _, _ := errCode(t, b); status != http.StatusBadRequest || code != "invalid_title" {
+			t.Errorf("%s: expected 400 invalid_title, got %d %s", bad, status, b)
+		}
+	}
+}
+
+func must(b []byte, err error) []byte {
+	if err != nil {
+		panic(err)
+	}
+	return b
+}

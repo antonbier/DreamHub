@@ -38,6 +38,9 @@ type FS interface {
 	Rename(from, to string) error
 	Remove(name string) error
 	ReadFile(name string) ([]byte, error)
+	// WriteFile replaces an existing file's content atomically (a temporary
+	// file next to it, then a rename), keeping its permissions.
+	WriteFile(name string, data []byte) error
 }
 
 // OS is the real file system.
@@ -48,6 +51,23 @@ func (OS) Lstat(name string) (fs.FileInfo, error)     { return os.Lstat(name) }
 func (OS) Rename(from, to string) error               { return os.Rename(from, to) }
 func (OS) Remove(name string) error                   { return os.Remove(name) }
 func (OS) ReadFile(name string) ([]byte, error)       { return os.ReadFile(name) }
+
+func (OS) WriteFile(name string, data []byte) error {
+	fi, err := os.Lstat(name)
+	if err != nil {
+		return err
+	}
+	tmp := name + ".dreamhub-tmp"
+	if err := os.WriteFile(tmp, data, fi.Mode().Perm()); err != nil {
+		_ = os.Remove(tmp)
+		return err
+	}
+	if err := os.Rename(tmp, name); err != nil {
+		_ = os.Remove(tmp)
+		return err
+	}
+	return nil
+}
 
 // Error codes (i18n keys for the client, under "error.media").
 var (
@@ -334,6 +354,46 @@ func MetaTitle(fsys FS, tsPath string) string {
 		return ""
 	}
 	return strings.TrimSpace(lines[1])
+}
+
+// ErrNoMeta means a recording has no .ts.meta whose title could change.
+var ErrNoMeta = errors.New("no_meta")
+
+// ErrInvalidTitle means a title that can't go into .ts.meta: empty, too
+// long or spanning lines (each line of the file is its own field).
+var ErrInvalidTitle = errors.New("invalid_title")
+
+// ValidTitle trims a title for .ts.meta and checks it.
+func ValidTitle(title string) (string, error) {
+	title = strings.TrimSpace(title)
+	if title == "" || utf8.RuneCountInString(title) > 200 || strings.ContainsAny(title, "\r\n") || !utf8.ValidString(title) {
+		return "", ErrInvalidTitle
+	}
+	return title, nil
+}
+
+// SetMetaTitle replaces line 2 of a recording's .ts.meta — the title
+// Enigma2's own movie list shows (ARCHITECTURE.md: line 1 service
+// reference, line 2 title, line 3 description, line 4 time) — leaving every
+// other line exactly as it was. Returns the previous content, for undoing.
+func SetMetaTitle(fsys FS, tsPath, title string) ([]byte, error) {
+	title, err := ValidTitle(title)
+	if err != nil {
+		return nil, err
+	}
+	old, err := fsys.ReadFile(tsPath + ".meta")
+	if err != nil {
+		return nil, ErrNoMeta
+	}
+	lines := strings.Split(string(old), "\n")
+	if len(lines) < 2 {
+		return nil, ErrNoMeta
+	}
+	lines[1] = title
+	if err := fsys.WriteFile(tsPath+".meta", []byte(strings.Join(lines, "\n"))); err != nil {
+		return nil, err
+	}
+	return old, nil
 }
 
 // Available reports whether the recording folders exist on this file system

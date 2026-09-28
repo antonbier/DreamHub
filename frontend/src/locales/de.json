@@ -350,7 +350,10 @@
         "tmdb": "Braucht einen TMDB-API-Schlüssel (Einstellungen → TMDB).",
         "ai": "Braucht einen OpenAI-API-Schlüssel (Einstellungen → KI). Jeder Vorschlag zählt zum täglichen KI-Limit."
       }
-    }
+    },
+    "changeTitle": "Auch den Titel in der Box-Liste ändern",
+    "newTitle": "Neuer Titel",
+    "titlePreview": "Titel in der Box-Liste:"
   },
   "guide": {
     "empty": "Keine Sender in diesem Bouquet.",
@@ -486,7 +489,9 @@
       "tmdb_unavailable": "TMDB ist gerade nicht erreichbar.",
       "ai_not_configured": "Bitte zuerst einen OpenAI-API-Schlüssel in den Einstellungen eintragen.",
       "ai_budget_exceeded": "Das KI-Limit für heute ist aufgebraucht.",
-      "ai_unavailable": "Die KI hat keine brauchbare Antwort geliefert."
+      "ai_unavailable": "Die KI hat keine brauchbare Antwort geliefert.",
+      "invalid_title": "Der Titel darf nicht leer sein, keine Zeilenumbrüche enthalten und höchstens 200 Zeichen haben.",
+      "no_meta": "Zu dieser Aufnahme gibt es keine .ts.meta-Datei, deren Titel sich ändern ließe."
     }
   },
   "settings": {

@@ -350,7 +350,10 @@
         "tmdb": "Serve una chiave API TMDB (Impostazioni → TMDB).",
         "ai": "Serve una chiave API OpenAI (Impostazioni → IA). Ogni suggerimento conta nel limite IA giornaliero."
       }
-    }
+    },
+    "changeTitle": "Cambia anche il titolo nell'elenco del box",
+    "newTitle": "Nuovo titolo",
+    "titlePreview": "Titolo nell'elenco del box:"
   },
   "guide": {
     "empty": "Nessun canale in questo bouquet.",
@@ -486,7 +489,9 @@
       "tmdb_unavailable": "TMDB al momento non è raggiungibile.",
       "ai_not_configured": "Imposta prima una chiave API OpenAI nelle impostazioni.",
       "ai_budget_exceeded": "Il limite IA di oggi è esaurito.",
-      "ai_unavailable": "L'IA non ha dato una risposta utilizzabile."
+      "ai_unavailable": "L'IA non ha dato una risposta utilizzabile.",
+      "invalid_title": "Il titolo non può essere vuoto, andare a capo o superare i 200 caratteri.",
+      "no_meta": "Questa registrazione non ha un file .ts.meta di cui cambiare il titolo."
     }
   },
   "settings": {

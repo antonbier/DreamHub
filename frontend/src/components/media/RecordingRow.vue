@@ -55,7 +55,7 @@
     </div>
 
     <div v-if="state" class="pb-3">
-      <form v-if="state.kind === 'rename' && !state.plan" class="flex flex-wrap items-center gap-2" @submit.prevent="emit('previewRename', draft)">
+      <form v-if="state.kind === 'rename' && !state.plan" class="flex flex-wrap items-center gap-2" @submit.prevent="emit('previewRename', draft, changeTitle ? titleDraft : undefined)">
         <label class="sr-only" :for="inputId">{{ t('media.newName') }}</label>
         <input
           :id="inputId"
@@ -71,6 +71,24 @@
           {{ t('media.previewRename') }}
         </button>
         <p v-if="state.error" class="basis-full text-[12.5px] text-warn">{{ state.error }}</p>
+
+        <!-- The title the box's own movie list shows (.ts.meta), optional. -->
+        <div class="flex basis-full flex-wrap items-center gap-2">
+          <label class="flex items-center gap-2 text-[13px] text-text">
+            <input v-model="changeTitle" type="checkbox" class="accent-[var(--dh-accent)]" />
+            {{ t('media.changeTitle') }}
+          </label>
+          <template v-if="changeTitle">
+            <label class="sr-only" :for="inputId + '-title'">{{ t('media.newTitle') }}</label>
+            <input
+              :id="inputId + '-title'"
+              v-model="titleDraft"
+              type="text"
+              maxlength="200"
+              class="min-w-0 flex-1 rounded border border-line bg-field px-2.5 py-1.5 text-[13px] text-text"
+            />
+          </template>
+        </div>
 
         <!-- Name suggestions: each fills the box; the rename still goes
              through the preview. -->
@@ -118,14 +136,22 @@
         @cancel="emit('cancel')"
       >
         <template v-if="state.kind === 'rename'">
-          <p>{{ t('media.renamePreview', { count: state.plan.changes.length }) }}</p>
-          <ul class="mt-2 flex flex-col gap-1 font-mono text-[12.5px]">
-            <li v-for="(c, i) in state.plan.changes" :key="i" class="break-all">
-              <span class="text-faint line-through">{{ fileName(c.before) }}</span>
-              <span class="text-faint"> → </span>
-              <span class="text-accent">{{ fileName(c.after) }}</span>
-            </li>
-          </ul>
+          <template v-if="fileChanges.length">
+            <p>{{ t('media.renamePreview', { count: fileChanges.length }) }}</p>
+            <ul class="mt-2 flex flex-col gap-1 font-mono text-[12.5px]">
+              <li v-for="(c, i) in fileChanges" :key="i" class="break-all">
+                <span class="text-faint line-through">{{ fileName(c.before) }}</span>
+                <span class="text-faint"> → </span>
+                <span class="text-accent">{{ fileName(c.after) }}</span>
+              </li>
+            </ul>
+          </template>
+          <p v-if="titleChange" :class="{ 'mt-2': fileChanges.length }">
+            {{ t('media.titlePreview') }}
+            <span class="text-faint line-through">{{ titleChange.before }}</span>
+            <span class="text-faint"> → </span>
+            <span class="text-accent">{{ titleChange.after }}</span>
+          </p>
         </template>
         <p v-else>{{ t('media.trashPreview', { title: movie.title }) }}</p>
       </PlanPreview>
@@ -165,7 +191,7 @@ const emit = defineEmits<{
   toggle: []
   rename: []
   trash: []
-  previewRename: [newName: string]
+  previewRename: [newName: string, title?: string]
   suggest: [source: SuggestionSource]
   confirm: []
   cancel: []
@@ -194,13 +220,19 @@ const inputId = `rename-${Math.random().toString(36).slice(2)}`
 const nameInput = ref<HTMLInputElement | null>(null)
 const baseName = () => fileName(props.movie.filename).replace(/\.ts$/, '')
 const draft = ref(baseName())
+const changeTitle = ref(false)
+const titleDraft = ref(props.movie.title)
 
 // Opening the rename form starts from the current name, focused and selected.
 watch(
   () => props.state?.kind === 'rename' && !props.state.plan,
   async (open) => {
     if (!open) return
-    if (!props.state?.error) draft.value = baseName()
+    if (!props.state?.error) {
+      draft.value = baseName()
+      changeTitle.value = false
+      titleDraft.value = props.movie.title
+    }
     await nextTick()
     nameInput.value?.focus()
     nameInput.value?.select()
@@ -212,6 +244,10 @@ const sourceList = computed<{ id: SuggestionSource; enabled: boolean }[]>(() => 
   { id: 'tmdb', enabled: props.sources.tmdb },
   { id: 'ai', enabled: props.sources.ai },
 ])
+
+// A rename preview lists every file first, then the title change if any.
+const fileChanges = computed(() => props.state?.plan?.changes.filter((c) => c.type === 'file.rename') ?? [])
+const titleChange = computed(() => props.state?.plan?.changes.find((c) => c.type === 'meta.title'))
 
 function useSuggestion(name: string) {
   draft.value = name

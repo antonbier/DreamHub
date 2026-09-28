@@ -65,6 +65,17 @@ func (s *Mem) Rename(from, to string) error {
 	return nil
 }
 
+func (s *Mem) WriteFile(name string, data []byte) error {
+	s.mu.Lock()
+	defer s.mu.Unlock()
+	f, ok := s.m[key(name)]
+	if !ok {
+		return &fs.PathError{Op: "write", Path: name, Err: fs.ErrNotExist}
+	}
+	s.m[key(name)] = &fstest.MapFile{Data: append([]byte(nil), data...), Mode: f.Mode, ModTime: time.Now()}
+	return nil
+}
+
 func (s *Mem) Remove(name string) error {
 	s.mu.Lock()
 	defer s.mu.Unlock()

@@ -172,6 +172,7 @@ import Icon from '@/components/Icon.vue'
 import PlanPreview from '@/components/PlanPreview.vue'
 import PosterImage from '@/components/enrich/PosterImage.vue'
 import RatingBadge from '@/components/enrich/RatingBadge.vue'
+import { sourceName } from '@/lib/enrichSource'
 import EpisodeGuide from '@/components/series/EpisodeGuide.vue'
 import { useEnrichStore } from '@/stores/enrich'
 import { useNavigationStore } from '@/stores/navigation'
@@ -213,7 +214,7 @@ const sourceNames = computed(() => {
   const d = detail.value
   const names: string[] = []
   if (d?.info) names.push('SerienRecorder')
-  if (tmdb.value && (!d?.cover || !d?.info || tmdb.value.rating)) names.push('TMDB')
+  if (tmdb.value && (!d?.cover || !d?.info || tmdb.value.rating)) names.push(sourceName(tmdb.value))
   return names.join(', ')
 })
 

@@ -831,6 +831,7 @@
   },
   "enrich": {
     "source": "Informazioni e immagini: {source}",
-    "ratingTitle": "Voto {rating} su 10, {votes} voti"
+    "ratingTitle": "Voto {rating} su 10, {votes} voti",
+    "fsk": "FSK {age}"
   }
 }

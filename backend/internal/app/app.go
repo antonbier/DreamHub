@@ -21,6 +21,7 @@ import (
 	"github.com/antonbier/DreamHub/backend/internal/autotimer"
 	"github.com/antonbier/DreamHub/backend/internal/connector"
 	"github.com/antonbier/DreamHub/backend/internal/dashboard"
+	"github.com/antonbier/DreamHub/backend/internal/dmi"
 	"github.com/antonbier/DreamHub/backend/internal/enrich"
 	"github.com/antonbier/DreamHub/backend/internal/events"
 	"github.com/antonbier/DreamHub/backend/internal/hub"
@@ -51,6 +52,9 @@ type Options struct {
 	// TVmaze is the TVmaze client (internal/tvmaze), for SeriesHub's
 	// episode lists; nil leaves them out.
 	TVmaze tvmaze.Client
+	// DMI is the optional DreamMediaInfo plugin's database (read-only), the
+	// first enrichment source; nil in mock mode.
+	DMI *dmi.Reader
 	// RecordingsFS is where MediaHub's file operations act: recfs.OS{} on
 	// the box, the mock's in-memory FS in mock mode, nil to disable them.
 	RecordingsFS recfs.FS
@@ -223,7 +227,7 @@ func New(ctx context.Context, o Options) (*App, error) {
 	var enricher *enrich.Service
 	if o.TMDB != nil {
 		enricher = &enrich.Service{
-			TMDB: o.TMDB, Store: st, Now: now,
+			DMI: o.DMI, TMDB: o.TMDB, Store: st, Now: now,
 			Images: &enrich.ImageCache{Dir: filepath.Join(o.DataDir, "cache", "tmdb"), MaxBytes: enrich.DefaultImageCacheBytes},
 		}
 	}

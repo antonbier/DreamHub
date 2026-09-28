@@ -9,6 +9,7 @@ import (
 	"image/color"
 	"image/draw"
 	"image/png"
+	"strconv"
 	"strings"
 	"sync/atomic"
 
@@ -67,6 +68,15 @@ func (c *Client) Search(ctx context.Context, apiKey, query, language string) ([]
 
 func (*Client) EpisodeTitle(ctx context.Context, apiKey string, tvID int64, season, episode int, language string) (string, error) {
 	return "Mock-Episode", nil
+}
+
+func (*Client) Details(ctx context.Context, apiKey, kind string, id int64, language string) (tmdb.Result, error) {
+	for _, k := range known {
+		if k.res.ID == id && k.res.Kind == kind {
+			return k.res, nil
+		}
+	}
+	return tmdb.Result{Kind: kind, ID: id, Title: "Mock", PosterPath: "/mock-" + strconv.FormatInt(id, 10) + ".png"}, nil
 }
 
 func (*Client) Genres(ctx context.Context, apiKey, language string) (map[int]string, error) {

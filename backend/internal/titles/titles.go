@@ -6,6 +6,7 @@
 package titles
 
 import (
+	"regexp"
 	"strings"
 	"unicode"
 )
@@ -80,4 +81,22 @@ func Matches(title, series string) bool {
 		}
 	}
 	return false
+}
+
+// fromFileName matches Enigma2's default recording file name,
+// "YYYYMMDD HHMM - Channel - Title.ts" (the box shows that as the title
+// when a recording has no .ts.meta title — six such on the reference box).
+var fromFileName = regexp.MustCompile(`^\d{8} \d{4} - [^-]+? - (.+?)(?:\.ts)?$`)
+
+// FromFileName returns the title part of an Enigma2 default file name
+// ("…Angel Has Fallen.ts" → "Angel Has Fallen"), with the "_ " Enigma2
+// writes for a colon turned back into ": "; any other string unchanged.
+// Only the title is taken — never a time (PRINCIPLES.md: no times from
+// file names).
+func FromFileName(s string) string {
+	m := fromFileName.FindStringSubmatch(strings.TrimSpace(s))
+	if m == nil {
+		return s
+	}
+	return strings.ReplaceAll(m[1], "_ ", ": ")
 }

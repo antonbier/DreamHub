@@ -426,3 +426,22 @@ Confirmed present: `curl`, `wget`, `python` (2.7), `tar`, `unzip`, `sed`, `awk`.
 - **Cover art next to recordings**: 23 of the 36 recordings in the top folder have `<base>.jpg`, 19 a `<base>.backdrop.jpg`. There are 173 folders and 775 `.ts` files below `/media/hdd/movie`.
 - **SerienRecorder's `/serienrecorderapi/seriesinfo?wlid=&fsid=`** returns `{info: {title, year: "2018-", info: "Drama, Crime, Action (42 min)", description (German), cast: [...], rating, seasons_and_episodes}, coverURL}` from SerienRecorder's own server — both parameters required, otherwise an empty payload. Its `rating` (268909 for "FBI") is not a rating. Markers carry no TVDB ID.
 - **TVmaze** finds 7 of the 9 followed series by exact name; "FBI: Special Crime Unit" is TVmaze's "FBI" (premiered 2018, German title not among its "akas"), found through the subtitle fallback with the start year; "Sing meinen Song – Das Tauschkonzert" isn't on TVmaze.
+
+## DreamMediaInfo (inspected read-only, 2026-09-28)
+
+`/usr/lib/enigma2/python/Plugins/Extensions/DreamMediaInfo` — readable Python ("coded by zombi, friends and Gemini KI", licensed for DreamOS only, modification and redistribution prohibited: DreamHub only *reads its data*, never its code). It enriches EPG/infobar titles from TMDB with its own key and keeps the results in **SQLite at `config.plugins.dreammediainfo.db_path`** (`/data/dreammediainfo.db`, 75 MB on the reference box; setting in `/etc/enigma2/settings`):
+
+- `media_cache(key, title, type, data, ts)` — key = lower-cased title + `_tv` / `_movie` (films also `_<year>_movie`), with a colon written as ` -` (`fbi - special crime unit_tv`); `data` = TMDB's details as JSON (`id`, `name`/`title`, `overview`, `genres`, `cast`, `vote_average`, `fsk` — the German age rating —, dates). 151 entries, 54 films / 97 series — **titles seen in the EPG, not the recordings** (none of the top folder's recordings is in it). The box's copy has the older schema without `tmdb_id`/`poster_path` columns.
+- `episode_cache(key "<tmdb id>|<season>|<lang>", data)` — 12,793 season episode lists; `match_cache(key "<tmdb id>|<episode title>", se "S05E14")` — 2,543 EPG episode titles mapped to their code; `epg_to_tmdb` (empty).
+- Images in `/data/dmi_image/` (2,857 files, 351 MB) named after TMDB's image paths (`<path>_backdrop.jpg`, `_logo.png`) — not linked to the entries in this schema.
+- Settings on the box include `enable_tmdb=true`, `ttl_hours=96`, `api_langs=de,en`.
+
+DreamHub reads `media_cache` read-only (`internal/dmi`) as its **first** enrichment source; with the TMDB ID from there, TMDB is only asked for the poster, by ID. Confirmed live: Tatort, FBI, Columbo, The Masked Singer, Twister come from DreamMediaInfo with overview, year and FSK, pictures from TMDB. Recordings mostly aren't in DreamMediaInfo, so they keep coming from TMDB — 34 of 35 top-folder recordings found, after reading the title out of Enigma2's default file name (`20230423 2115 - ORF1 HD - Angel Has Fallen.ts`) for the six recordings without a `.ts.meta` title.
+
+`match_cache` (EPG episode title → `S05E14`) is a candidate for marking which episode a broadcast is (and whether it's missing) — not used yet.
+
+## Live write tests (2026-09-28, each reverted)
+
+- Remote keys via `/web/remotecontrol`: INFO opened the event info, EXIT closed it, MUTE twice, VOLUME up then down — all answered `e2result True`.
+- `/web/message` with type 1, timeout 5: shown as "Nachricht (3)" with a countdown, closed on its own.
+- `.ts.meta` title change through DreamHub's rename plan: `/web/movielist` showed the new title immediately, no reload; after changing it back the file was byte-identical (same MD5), mode 644 kept, no temporary file left.

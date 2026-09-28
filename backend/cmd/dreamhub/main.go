@@ -9,6 +9,7 @@ import (
 	"context"
 	"github.com/antonbier/DreamHub/backend/internal/autotimer"
 	atmock "github.com/antonbier/DreamHub/backend/internal/autotimer/mock"
+	"github.com/antonbier/DreamHub/backend/internal/dmi"
 	"github.com/antonbier/DreamHub/backend/internal/recfs"
 	"github.com/antonbier/DreamHub/backend/internal/tmdb"
 	tmdbmock "github.com/antonbier/DreamHub/backend/internal/tmdb/mock"
@@ -54,6 +55,7 @@ func run(logger *slog.Logger, level *logging.Level) error {
 	var recFS recfs.FS
 	var tmdbClient tmdb.Client
 	var tvmazeClient tvmaze.Client
+	var dmiReader *dmi.Reader
 	var logs journald.Reader
 	switch cfg.Mode {
 	case config.ModeLive:
@@ -77,6 +79,7 @@ func run(logger *slog.Logger, level *logging.Level) error {
 		aiClient = ai.NewOpenAIClient()
 		tmdbClient = tmdb.NewHTTPClient()
 		tvmazeClient = tvmaze.NewHTTPClient()
+		dmiReader = &dmi.Reader{}
 		logs = journald.Exec{}
 		logger.Info("webcontrol client mode", "mode", "live", "url", cfg.WebControlURL, "deviceWrites", cfg.EnableDeviceWrites)
 	default:
@@ -99,6 +102,7 @@ func run(logger *slog.Logger, level *logging.Level) error {
 		AutoTimer:    at,
 		TMDB:         tmdbClient,
 		TVmaze:       tvmazeClient,
+		DMI:          dmiReader,
 		RecordingsFS: recFS,
 		// Same switch as WebControl writes; mock mode always writes.
 		ReadOnlyFiles: cfg.Mode == config.ModeLive && !cfg.EnableDeviceWrites,

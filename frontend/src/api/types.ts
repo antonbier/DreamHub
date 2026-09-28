@@ -540,7 +540,8 @@ export interface TasteCounts {
 
 // backend/internal/enrich.Info, from POST /api/v1/enrich/lookup.
 export interface EnrichInfo {
-  source: string // "tmdb"
+  source: string // "dreammediainfo" (the plugin's own data, pictures via TMDB) or "tmdb"
+  fsk?: string // German age rating, from DreamMediaInfo
   kind: 'movie' | 'tv'
   id: number
   title: string

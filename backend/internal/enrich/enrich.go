@@ -16,17 +16,23 @@
 //   - The browser never talks to TMDB (PRINCIPLES.md: no external requests
 //     from the UI): images are fetched and served by DreamHub itself.
 //
-// Other databases (OMDb, TVmaze, fanart.tv …) can join later as further
-// sources; Info.Source already says where a result came from.
+// Sources, in order: what the box already keeps first — the optional
+// DreamMediaInfo plugin's database (internal/dmi: overview, genres, rating,
+// age rating and the exact TMDB ID, read-only) — then TMDB. When
+// DreamMediaInfo knows a title, TMDB is only asked for its poster, by ID,
+// so nothing is guessed from a search. Info.Source says where a result
+// came from; more databases can join the same way.
 package enrich
 
 import (
 	"context"
 	"encoding/json"
 	"errors"
+	"strconv"
 	"sync"
 	"time"
 
+	"github.com/antonbier/DreamHub/backend/internal/dmi"
 	"github.com/antonbier/DreamHub/backend/internal/store"
 	"github.com/antonbier/DreamHub/backend/internal/titles"
 	"github.com/antonbier/DreamHub/backend/internal/tmdb"
@@ -44,6 +50,7 @@ type Info struct {
 	Rating        float64  `json:"rating,omitempty"` // 0-10
 	Votes         int      `json:"votes,omitempty"`
 	Genres        []string `json:"genres,omitempty"`
+	FSK           string   `json:"fsk,omitempty"`      // German age rating (DreamMediaInfo)
 	Poster        string   `json:"poster,omitempty"`   // image path, served by /api/v1/enrich/image
 	Backdrop      string   `json:"backdrop,omitempty"` // image path
 }
@@ -71,6 +78,9 @@ const (
 
 // Service looks titles up and caches the answers.
 type Service struct {
+	// DMI is the optional DreamMediaInfo plugin's database; nil or absent
+	// just skips it.
+	DMI    *dmi.Reader
 	TMDB   tmdb.Client
 	Store  *store.Store
 	Images *ImageCache
@@ -99,9 +109,24 @@ func (s *Service) Lookup(ctx context.Context, apiKey, language string, qs []Quer
 	if len(qs) > MaxBatch {
 		qs = qs[:MaxBatch]
 	}
+	for i := range qs {
+		// A recording without a .ts.meta title shows its file name.
+		qs[i].Title = titles.FromFileName(qs[i].Title)
+	}
 	out := make([]*Info, len(qs))
 	var todo []int
+	fromDMI := map[int]bool{}
 	for i, q := range qs {
+		if s.DMI != nil {
+			if e, ok := s.DMI.Lookup(ctx, q.Title, q.Kind); ok {
+				out[i] = fromDMIEntry(e)
+				fromDMI[i] = true
+				if apiKey != "" && s.TMDB != nil {
+					todo = append(todo, i) // for the poster, by ID
+				}
+				continue
+			}
+		}
 		info, fresh, ok := s.cached(ctx, language, q)
 		if ok {
 			out[i] = info
@@ -129,6 +154,20 @@ func (s *Service) Lookup(ctx context.Context, apiKey, language string, qs []Quer
 				return
 			}
 			defer func() { <-sem }()
+			if fromDMI[i] {
+				mu.Lock()
+				base := out[i]
+				mu.Unlock()
+				if pics, err := s.byID(ctx, apiKey, language, base.Kind, base.ID); err == nil {
+					mu.Lock()
+					out[i].Poster, out[i].Backdrop = pics.Poster, pics.Backdrop
+					if out[i].Votes == 0 {
+						out[i].Votes = pics.Votes
+					}
+					mu.Unlock()
+				}
+				return
+			}
 			info, err := s.fetch(ctx, apiKey, language, qs[i])
 			if err != nil {
 				return // not cached: tried again next time
@@ -269,6 +308,34 @@ func (s *Service) genreNames(ctx context.Context, apiKey, language string) map[i
 	s.genres[language] = genreList{names: names, fetched: s.now()}
 	s.mu.Unlock()
 	return names
+}
+
+// fromDMIEntry turns DreamMediaInfo's entry into an Info.
+func fromDMIEntry(e dmi.Entry) *Info {
+	return &Info{
+		Source: "dreammediainfo", Kind: e.Kind, ID: e.TMDBID, Title: e.Title, Year: e.Year,
+		Overview: e.Overview, Rating: e.Rating, Genres: e.Genres, FSK: e.FSK,
+	}
+}
+
+// byID is TMDB's own record for an exact ID, cached like search answers.
+func (s *Service) byID(ctx context.Context, apiKey, language, kind string, id int64) (*Info, error) {
+	key := "tmdb|id|" + language + "|" + kind + "|" + strconv.FormatInt(id, 10)
+	if raw, at, ok, err := s.Store.Enrichment(ctx, key); err == nil && ok && raw != "" && s.now().Sub(time.Unix(at, 0)) < hitTTL {
+		var info Info
+		if json.Unmarshal([]byte(raw), &info) == nil {
+			return &info, nil
+		}
+	}
+	r, err := s.TMDB.Details(ctx, apiKey, kind, id, language)
+	if err != nil {
+		return nil, err
+	}
+	info := s.toInfo(ctx, apiKey, language, r)
+	if b, err := json.Marshal(info); err == nil {
+		_ = s.Store.PutEnrichment(context.WithoutCancel(ctx), key, string(b), s.now().Unix())
+	}
+	return info, nil
 }
 
 // ErrNoImages is returned by Image when no image cache is configured.

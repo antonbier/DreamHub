@@ -15,9 +15,10 @@
         <span v-if="info.year" class="tabular-nums">{{ info.year }}</span>
         <span v-if="info.genres?.length">{{ info.genres.join(', ') }}</span>
         <RatingBadge :rating="info.rating" :votes="info.votes" />
+        <span v-if="info.fsk" class="rounded-sm border border-line px-1 text-[11.5px] text-muted">{{ t('enrich.fsk', { age: info.fsk }) }}</span>
       </p>
       <p v-if="info.overview" class="mt-1.5 text-[13.5px] text-text" :class="{ 'line-clamp-4': clamp }">{{ info.overview }}</p>
-      <p class="mt-1.5 text-[11.5px] text-faint">{{ t('enrich.source', { source: 'TMDB' }) }}</p>
+      <p class="mt-1.5 text-[11.5px] text-faint">{{ t('enrich.source', { source: sourceName(info) }) }}</p>
     </div>
   </div>
 </template>
@@ -29,6 +30,7 @@ import PosterImage from './PosterImage.vue'
 import RatingBadge from './RatingBadge.vue'
 import type { EnrichInfo } from '@/api/types'
 import { titlesDiffer } from '@/lib/titles'
+import { sourceName } from '@/lib/enrichSource'
 
 const props = withDefaults(
   defineProps<{ info?: EnrichInfo | null; shownTitle?: string; posterWidth?: number; clamp?: boolean }>(),

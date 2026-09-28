@@ -42,6 +42,10 @@ type Client interface {
 	Search(ctx context.Context, apiKey, query, language string) ([]Result, error)
 	// EpisodeTitle returns a series episode's title ("" if TMDB has none).
 	EpisodeTitle(ctx context.Context, apiKey string, tvID int64, season, episode int, language string) (string, error)
+	// Details fetches one film or series by its TMDB ID (kind "movie" or
+	// "tv") — for when another source already knows exactly which title
+	// it is, so nothing has to be guessed from a search.
+	Details(ctx context.Context, apiKey, kind string, id int64, language string) (Result, error)
 	// Genres returns TMDB's genre names by ID, movie and TV genres merged.
 	Genres(ctx context.Context, apiKey, language string) (map[int]string, error)
 	// Image fetches one image from TMDB's image server; size is one of
@@ -134,6 +138,42 @@ func (c *HTTPClient) EpisodeTitle(ctx context.Context, apiKey string, tvID int64
 // get authenticates with either key form TMDB hands out: a v4 "API read
 // access token" (a JWT, sent as a bearer token) or a v3 API key (a query
 // parameter).
+func (c *HTTPClient) Details(ctx context.Context, apiKey, kind string, id int64, language string) (Result, error) {
+	if kind != "movie" && kind != "tv" {
+		return Result{}, fmt.Errorf("tmdb: unknown kind %q", kind)
+	}
+	var d struct {
+		ID            int64   `json:"id"`
+		Title         string  `json:"title"`
+		Name          string  `json:"name"`
+		OriginalTitle string  `json:"original_title"`
+		OriginalName  string  `json:"original_name"`
+		ReleaseDate   string  `json:"release_date"`
+		FirstAirDate  string  `json:"first_air_date"`
+		Overview      string  `json:"overview"`
+		VoteAverage   float64 `json:"vote_average"`
+		VoteCount     int     `json:"vote_count"`
+		PosterPath    string  `json:"poster_path"`
+		BackdropPath  string  `json:"backdrop_path"`
+		Genres        []struct {
+			ID int `json:"id"`
+		} `json:"genres"`
+	}
+	if err := c.get(ctx, apiKey, fmt.Sprintf("/%s/%d", kind, id), url.Values{"language": {language}}, &d); err != nil {
+		return Result{}, err
+	}
+	r := Result{Kind: kind, ID: d.ID, Overview: strings.TrimSpace(d.Overview), Rating: d.VoteAverage, Votes: d.VoteCount, PosterPath: d.PosterPath, BackdropPath: d.BackdropPath}
+	if kind == "movie" {
+		r.Title, r.OriginalTitle, r.Year = d.Title, d.OriginalTitle, year(d.ReleaseDate)
+	} else {
+		r.Title, r.OriginalTitle, r.Year = d.Name, d.OriginalName, year(d.FirstAirDate)
+	}
+	for _, g := range d.Genres {
+		r.GenreIDs = append(r.GenreIDs, g.ID)
+	}
+	return r, nil
+}
+
 func (c *HTTPClient) Genres(ctx context.Context, apiKey, language string) (map[int]string, error) {
 	out := map[int]string{}
 	for _, kind := range []string{"movie", "tv"} {

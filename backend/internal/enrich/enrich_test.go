@@ -2,11 +2,13 @@ package enrich
 
 import (
 	"context"
+	"database/sql"
 	"os"
 	"path/filepath"
 	"testing"
 	"time"
 
+	"github.com/antonbier/DreamHub/backend/internal/dmi"
 	"github.com/antonbier/DreamHub/backend/internal/store"
 	"github.com/antonbier/DreamHub/backend/internal/tmdb/mock"
 )
@@ -99,5 +101,39 @@ func TestImage_CachesOnDiskAndPrunes(t *testing.T) {
 	})
 	if files != 1 {
 		t.Errorf("prune should keep the cache under its cap, %d files left", files)
+	}
+}
+
+func TestLookup_DreamMediaInfoFirst(t *testing.T) {
+	s, m := newService(t)
+	p := filepath.Join(t.TempDir(), "dmi.db")
+	db, err := sql.Open("sqlite", p)
+	if err != nil {
+		t.Fatal(err)
+	}
+	for _, q := range []string{
+		`CREATE TABLE media_cache (id INTEGER PRIMARY KEY AUTOINCREMENT, key TEXT UNIQUE, title TEXT, type TEXT, data TEXT, ts INTEGER)`,
+		`INSERT INTO media_cache (key, title, type, data, ts) VALUES ('tatort_tv', 'Tatort', 'tv', '{"id":1002,"name":"Tatort","overview":"Aus DreamMediaInfo.","genres":[{"name":"Krimi"}],"fsk":"12","first_air_date":"1970-11-29"}', 1)`,
+	} {
+		if _, err := db.Exec(q); err != nil {
+			t.Fatal(err)
+		}
+	}
+	db.Close()
+	s.DMI = &dmi.Reader{Path: p}
+
+	before := m.Searches.Load()
+	got := s.Lookup(context.Background(), "key", "de-DE", []Query{{Title: "Tatort"}, {Title: "Bones"}})
+	if got[0] == nil || got[0].Source != "dreammediainfo" || got[0].Overview != "Aus DreamMediaInfo." || got[0].FSK != "12" {
+		t.Fatalf("DreamMediaInfo's entry first: %+v", got[0])
+	}
+	if got[0].Poster != "/mock-tatort.png" {
+		t.Errorf("the poster comes from TMDB by ID: %+v", got[0])
+	}
+	if m.Searches.Load()-before != 1 {
+		t.Errorf("only the title DreamMediaInfo doesn't know is searched on TMDB, got %d searches", m.Searches.Load()-before)
+	}
+	if got[1] == nil || got[1].Source != "tmdb" {
+		t.Errorf("TMDB for the rest: %+v", got[1])
 	}
 }

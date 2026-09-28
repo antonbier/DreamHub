@@ -30,7 +30,7 @@
         :alt="movie.title"
       />
       <span class="min-w-0 flex-1">
-        <span class="block truncate text-[14px] text-text">{{ movie.title }}</span>
+        <span class="block truncate text-[14px] text-text" :title="movie.title">{{ shownTitle }}</span>
         <span class="block truncate text-[12.5px] text-muted">
           <template v-if="movie.isRecording">{{ details }}</template>
           <template v-else>{{ t('media.notARecording') }}</template>
@@ -178,6 +178,7 @@ import PosterImage from '@/components/enrich/PosterImage.vue'
 import RatingBadge from '@/components/enrich/RatingBadge.vue'
 import { useEnrichStore } from '@/stores/enrich'
 import { formatBytes } from '@/lib/format'
+import { titleFromFileName } from '@/lib/titles'
 import type { Movie } from '@/api/types'
 import type { RowState, SuggestSources } from './types'
 import type { SuggestionSource } from '@/api/types'
@@ -209,6 +210,8 @@ const { t, locale } = useI18n()
 // only for real recordings — a copied .mkv's file name isn't a title.
 const enrich = useEnrichStore()
 const info = computed(() => (props.movie.isRecording ? enrich.info(props.movie.title) : null))
+// Without a .ts.meta title the box reports the file name; show its title part.
+const shownTitle = computed(() => (props.movie.isRecording ? titleFromFileName(props.movie.title) : props.movie.title))
 
 // channel · time · length · genres, leaving out whatever is unknown.
 const details = computed(() =>

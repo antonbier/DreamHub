@@ -109,6 +109,9 @@
     },
     "disk": {
       "aboveThreshold": "{model} è occupato al {percent}%"
+    },
+    "timer": {
+      "conflict": "Possibile conflitto timer: {name} ({service})"
     }
   },
   "statusStrip": {

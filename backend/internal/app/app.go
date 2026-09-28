@@ -188,7 +188,7 @@ func New(ctx context.Context, o Options) (*App, error) {
 	tokens := apitoken.NewService(st, now)
 	watcher := hub.NewStatusWatcher()
 	eventBus := events.NewBus(st, now)
-	poller := &events.Poller{WC: o.WebControl, Bus: eventBus, Logger: o.Logger}
+	poller := &events.Poller{WC: o.WebControl, Bus: eventBus, Logger: o.Logger, Now: now}
 
 	timerHub := &hubs_.Timer{WC: o.WebControl, Plans: plans, Now: now, AT: o.AutoTimer}
 	mediaHub := &hubs_.Media{WC: o.WebControl, Plans: plans, FS: o.RecordingsFS, ReadOnly: o.ReadOnlyFiles,

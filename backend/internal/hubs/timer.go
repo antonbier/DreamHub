@@ -129,20 +129,10 @@ func timerSource(tags string) string {
 // timerViews marks every pending timer that likely conflicts with the
 // others (internal/tuner).
 func timerViews(timers []webcontrol.Timer, info *webcontrol.DeviceInfo) []TimerView {
-	frontends := tuner.Frontends(info)
+	clash := tuner.TimerConflicts(timers, info)
 	out := make([]TimerView, len(timers))
 	for i, t := range timers {
-		out[i] = TimerView{Timer: t, Source: timerSource(t.Tags)}
-		if !occupiesTuner(t) || t.JustPlay {
-			continue
-		}
-		var others []tuner.Booking
-		for j, o := range timers {
-			if j != i && occupiesTuner(o) && !o.JustPlay {
-				others = append(others, tuner.Booking{ServiceReference: o.ServiceReference, Begin: o.Begin, End: o.End})
-			}
-		}
-		out[i].Conflict = len(tuner.Conflicts(frontends, others, tuner.Booking{ServiceReference: t.ServiceReference, Begin: t.Begin, End: t.End})) > 0
+		out[i] = TimerView{Timer: t, Source: timerSource(t.Tags), Conflict: clash[i]}
 	}
 	return out
 }

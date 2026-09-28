@@ -250,3 +250,30 @@ func fits(frontends []Frontend, refs []string) bool {
 	}
 	return true
 }
+
+// Occupies reports whether a timer holds a tuner at its time: enabled,
+// not already ended, and not a zap timer (which only switches channel).
+func Occupies(t webcontrol.Timer) bool {
+	return !t.Disabled && t.State != webcontrol.TimerEnded && !t.JustPlay
+}
+
+// TimerConflicts marks, per timer, whether it likely clashes with the
+// others on this box's tuners — the estimate TimerHub's list shows and
+// the event bus notifies about, computed in one place.
+func TimerConflicts(timers []webcontrol.Timer, info *webcontrol.DeviceInfo) []bool {
+	frontends := Frontends(info)
+	out := make([]bool, len(timers))
+	for i, t := range timers {
+		if !Occupies(t) {
+			continue
+		}
+		var others []Booking
+		for j, o := range timers {
+			if j != i && Occupies(o) {
+				others = append(others, Booking{ServiceReference: o.ServiceReference, Begin: o.Begin, End: o.End})
+			}
+		}
+		out[i] = len(Conflicts(frontends, others, Booking{ServiceReference: t.ServiceReference, Begin: t.Begin, End: t.End})) > 0
+	}
+	return out
+}

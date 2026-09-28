@@ -3,6 +3,7 @@ package events
 import (
 	"context"
 	"testing"
+	"time"
 
 	"github.com/antonbier/DreamHub/backend/internal/store"
 	"github.com/antonbier/DreamHub/backend/internal/webcontrol"
@@ -133,5 +134,38 @@ func TestPoller_DiskAboveThresholdWithHysteresis(t *testing.T) {
 	p.tick(ctx)
 	if got := keys(t, st); len(got) != 2 {
 		t.Fatalf("expected a second disk.aboveThreshold after dropping below the reset line, got %v", got)
+	}
+}
+
+func TestPoller_NewTimerConflict(t *testing.T) {
+	bus, st := newTestBus(t)
+	fc := &fakeClient{Client: mock.New()}
+	p := &Poller{WC: fc, Bus: bus, Now: func() time.Time { return time.Unix(1000, 0) }}
+	ctx := context.Background()
+
+	// Two different transponders, overlapping, one tuner: a conflict that
+	// already exists when DreamHub starts is the baseline, not news.
+	a := webcontrol.Timer{ServiceReference: "1:0:19:2EE3:441:1:C00000:0:0:0:", Name: "Bauer sucht Frau", Begin: 2000, End: 5000}
+	b := webcontrol.Timer{ServiceReference: "1:0:19:2B7A:3F3:1:C00000:0:0:0:", Name: "The Rookie", Begin: 4000, End: 7000}
+	fc.timers = []webcontrol.Timer{a, b}
+	p.tick(ctx)
+	if got := keys(t, st); len(got) != 0 {
+		t.Fatalf("existing conflicts must not be announced on the first tick, got %v", got)
+	}
+
+	// SerienRecorder adds a third, clashing timer in the background.
+	c := webcontrol.Timer{ServiceReference: "1:0:19:283D:3FB:1:C00000:0:0:0:", Name: "Tatort", Begin: 6000, End: 9000}
+	fc.timers = []webcontrol.Timer{a, b, c}
+	p.tick(ctx)
+	p.tick(ctx) // no repeat while it stays in conflict
+	if got := keys(t, st); len(got) != 1 || got[0] != "timer.conflict" {
+		t.Fatalf("expected exactly one timer.conflict, got %v", got)
+	}
+
+	// Past timers don't count, and a disabled one resolves nothing to announce.
+	fc.timers = []webcontrol.Timer{{Name: "old", ServiceReference: a.ServiceReference, Begin: 100, End: 900}, {Name: "old2", ServiceReference: b.ServiceReference, Begin: 200, End: 800}}
+	p.tick(ctx)
+	if got := keys(t, st); len(got) != 1 {
+		t.Errorf("past timers must not raise conflicts, got %v", got)
 	}
 }

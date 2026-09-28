@@ -6,7 +6,7 @@ import (
 	"errors"
 )
 
-// Enrichment returns the cached enrichment result for key: its JSON (''
+// Enrichment returns the cached enrichment result for key: its JSON (”
 // for a cached miss), when it was fetched (Unix seconds), and whether
 // there is an entry at all.
 func (s *Store) Enrichment(ctx context.Context, key string) (info string, fetchedAt int64, ok bool, err error) {

@@ -6,6 +6,7 @@ import (
 	"strconv"
 	"time"
 
+	"github.com/antonbier/DreamHub/backend/internal/tuner"
 	"github.com/antonbier/DreamHub/backend/internal/webcontrol"
 )
 
@@ -24,10 +25,10 @@ const (
 // "disk.aboveThreshold" by diffing successive snapshots of
 // /web/timerlist and /web/deviceinfo — the same data TimerHub and
 // MediaHub's own screens already read, not a new capability on the box.
-// Timer conflicts aren't detected here yet (open, docs/V1_PLAN.md WP7):
-// TimerHub's own per-timer conflict marker already covers the interactive
-// case; a background "a new conflict appeared" notification needs the same
-// tuner-aware estimate (internal/tuner) wired in without duplicating it.
+// It also notices "timer.conflict": a timer still to come that newly
+// clashes with another on the box's tuners — the same estimate TimerHub's
+// list shows (tuner.TimerConflicts), typically after SerienRecorder or
+// AutoTimer added a timer in the background.
 type Poller struct {
 	WC       webcontrol.Client
 	Bus      *Bus
@@ -36,6 +37,12 @@ type Poller struct {
 
 	running   map[string]bool // timer key -> was recording last tick
 	diskAbove map[string]bool // disk model -> currently above threshold
+	// conflicting holds the timers that clashed last tick; nil until the
+	// first tick, which only takes the baseline — a restart mustn't
+	// re-announce every conflict that already existed.
+	conflicting map[string]bool
+	// Now is the clock ("still to come"); time.Now when nil.
+	Now func() time.Time
 }
 
 func key(t webcontrol.Timer) string {
@@ -68,18 +75,46 @@ func (p *Poller) tick(ctx context.Context) {
 	if p.diskAbove == nil {
 		p.diskAbove = map[string]bool{}
 	}
-	p.checkRecordings(ctx)
-	p.checkDisk(ctx)
-}
-
-func (p *Poller) checkRecordings(ctx context.Context) {
 	timers, err := p.WC.TimerList(ctx)
 	if err != nil {
 		if p.Logger != nil {
 			p.Logger.Debug("events: poller could not read timers", "error", err)
 		}
-		return
 	}
+	info, infoErr := p.WC.DeviceInfo(ctx)
+	if infoErr != nil && p.Logger != nil {
+		p.Logger.Debug("events: poller could not read device info", "error", infoErr)
+	}
+	if err == nil {
+		p.checkRecordings(ctx, timers)
+		p.checkConflicts(ctx, timers, info)
+	}
+	if infoErr == nil {
+		p.checkDisk(ctx, info)
+	}
+}
+
+func (p *Poller) checkConflicts(ctx context.Context, timers []webcontrol.Timer, info *webcontrol.DeviceInfo) {
+	now := time.Now()
+	if p.Now != nil {
+		now = p.Now()
+	}
+	clash := tuner.TimerConflicts(timers, info)
+	current := map[string]bool{}
+	for i, t := range timers {
+		if !clash[i] || t.End <= now.Unix() {
+			continue
+		}
+		k := key(t)
+		current[k] = true
+		if p.conflicting != nil && !p.conflicting[k] {
+			p.Bus.Publish(ctx, "timer.conflict", map[string]any{"name": t.Name, "service": t.ServiceName, "begin": t.Begin})
+		}
+	}
+	p.conflicting = current
+}
+
+func (p *Poller) checkRecordings(ctx context.Context, timers []webcontrol.Timer) {
 	seen := make(map[string]bool, len(timers))
 	for _, t := range timers {
 		k := key(t)
@@ -108,14 +143,7 @@ func seenContains(seen map[string]bool, k string) bool {
 	return ok
 }
 
-func (p *Poller) checkDisk(ctx context.Context) {
-	info, err := p.WC.DeviceInfo(ctx)
-	if err != nil {
-		if p.Logger != nil {
-			p.Logger.Debug("events: poller could not read device info", "error", err)
-		}
-		return
-	}
+func (p *Poller) checkDisk(ctx context.Context, info *webcontrol.DeviceInfo) {
 	for _, hd := range info.HDDs {
 		cap, ok := webcontrol.ParseSize(hd.Capacity)
 		if !ok || cap <= 0 {

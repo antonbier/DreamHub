@@ -109,6 +109,9 @@
     },
     "disk": {
       "aboveThreshold": "{model} is at {percent}% used"
+    },
+    "timer": {
+      "conflict": "Likely timer conflict: {name} ({service})"
     }
   },
   "statusStrip": {

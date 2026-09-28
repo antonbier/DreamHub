@@ -109,6 +109,9 @@
     },
     "disk": {
       "aboveThreshold": "{model} ist zu {percent}% belegt"
+    },
+    "timer": {
+      "conflict": "Möglicher Timer-Konflikt: {name} ({service})"
     }
   },
   "statusStrip": {

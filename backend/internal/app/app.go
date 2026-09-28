@@ -9,6 +9,7 @@ import (
 	"github.com/antonbier/DreamHub/backend/internal/tmdb"
 	"log/slog"
 	"net/http"
+	"path/filepath"
 	"sync"
 	"time"
 
@@ -19,6 +20,7 @@ import (
 	"github.com/antonbier/DreamHub/backend/internal/autotimer"
 	"github.com/antonbier/DreamHub/backend/internal/connector"
 	"github.com/antonbier/DreamHub/backend/internal/dashboard"
+	"github.com/antonbier/DreamHub/backend/internal/enrich"
 	"github.com/antonbier/DreamHub/backend/internal/events"
 	"github.com/antonbier/DreamHub/backend/internal/hub"
 	hubs_ "github.com/antonbier/DreamHub/backend/internal/hubs"
@@ -211,6 +213,14 @@ func New(ctx context.Context, o Options) (*App, error) {
 	hubs.AddViewProvider(hub.IDSeries, seriesHub)
 	dash.KnownSource = hubs.KnownSource
 
+	var enricher *enrich.Service
+	if o.TMDB != nil {
+		enricher = &enrich.Service{
+			TMDB: o.TMDB, Store: st, Now: now,
+			Images: &enrich.ImageCache{Dir: filepath.Join(o.DataDir, "cache", "tmdb"), MaxBytes: enrich.DefaultImageCacheBytes},
+		}
+	}
+
 	handler := api.NewRouter(api.Deps{
 		WebControl: o.WebControl,
 		Verifier:   auth.NewSettingsVerifier(svc, tokens),
@@ -223,6 +233,7 @@ func New(ctx context.Context, o Options) (*App, error) {
 		Watcher:    watcher,
 		Store:      st,
 		Events:     eventBus,
+		Enrich:     enricher,
 		Mounts: []api.Mount{
 			{HubID: hub.IDTimer, Prefixes: []string{"/api/v1/timers"}, Register: timerHub.Mount},
 			{HubID: hub.IDMedia, Prefixes: []string{"/api/v1/media"}, Register: mediaHub.Mount},

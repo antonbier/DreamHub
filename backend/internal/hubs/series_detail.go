@@ -7,10 +7,10 @@ import (
 	"sort"
 	"strconv"
 	"strings"
-	"unicode"
 
 	"github.com/antonbier/DreamHub/backend/internal/httpx"
 	"github.com/antonbier/DreamHub/backend/internal/serienrecorder"
+	"github.com/antonbier/DreamHub/backend/internal/titles"
 	"github.com/antonbier/DreamHub/backend/internal/webcontrol"
 )
 
@@ -195,66 +195,9 @@ func (h *Series) seriesBroadcasts(ctx context.Context, name string) ([]seriesBro
 	return out, nil
 }
 
-// matchesSeries reports whether a recording or EPG title is the series
-// itself: the same name, or the name followed by a separator and an
-// episode title ("Tatort: Borowski …", "Bones - Folge 3"). Case, accents
-// and punctuation don't matter; a longer title that merely starts with the
-// same word ("Tatort-Reiniger") doesn't match.
-func matchesSeries(title, series string) bool {
-	t, s := normalizeTitle(title), normalizeTitle(series)
-	if s == "" {
-		return false
-	}
-	if t == s {
-		return true
-	}
-	// The name followed by a separator and an episode title. The part
-	// before the separator has to be the name, so "Tatort-Reiniger" or
-	// "Tatort X-Files" stay out.
-	for _, sep := range []string{":", " - ", " – ", " — ", " | ", " ("} {
-		if i := strings.Index(title, sep); i > 0 && normalizeTitle(title[:i]) == s {
-			return true
-		}
-	}
-	return false
-}
+func matchesSeries(title, series string) bool { return titles.Matches(title, series) }
 
-// normalizeTitle lowercases, folds common accents and replaces every run of
-// non-letters/digits with one space, so "Die Verräter – Vertraue
-// Niemandem!" and "die verrater vertraue niemandem" compare equal.
-func normalizeTitle(s string) string {
-	var b strings.Builder
-	space := false
-	for _, r := range strings.ToLower(s) {
-		r = foldAccent(r)
-		if unicode.IsLetter(r) || unicode.IsDigit(r) {
-			if space && b.Len() > 0 {
-				b.WriteByte(' ')
-			}
-			space = false
-			b.WriteRune(r)
-		} else {
-			space = true
-		}
-	}
-	return b.String()
-}
-
-func foldAccent(r rune) rune {
-	switch r {
-	case 'ä', 'à', 'á', 'â':
-		return 'a'
-	case 'ö', 'ò', 'ó', 'ô':
-		return 'o'
-	case 'ü', 'ù', 'ú', 'û':
-		return 'u'
-	case 'é', 'è', 'ê':
-		return 'e'
-	case 'í', 'ì', 'î':
-		return 'i'
-	}
-	return r
-}
+func normalizeTitle(s string) string { return titles.Normalize(s) }
 
 var episodeCode = regexp.MustCompile(`(?i)\bS(\d{1,4})\s?E(\d{1,4})\b`)
 

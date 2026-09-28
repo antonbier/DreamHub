@@ -8,6 +8,7 @@ import (
 
 	"github.com/antonbier/DreamHub/backend/internal/ai"
 	"github.com/antonbier/DreamHub/backend/internal/connector"
+	"github.com/antonbier/DreamHub/backend/internal/enrich"
 	"github.com/antonbier/DreamHub/backend/internal/httpx"
 	"github.com/antonbier/DreamHub/backend/internal/naming"
 	"github.com/antonbier/DreamHub/backend/internal/recfs"
@@ -198,11 +199,5 @@ func (h *Media) suggest(w http.ResponseWriter, r *http.Request) {
 // tmdbLanguage maps the user's UI language to TMDB's language parameter, so
 // titles come back as the user knows them ("Stirb langsam", not "Die Hard").
 func tmdbLanguage(v settings.Values) string {
-	switch v.String(settings.KeyLanguage) {
-	case "de":
-		return "de-DE"
-	case "it":
-		return "it-IT"
-	}
-	return "en-US"
+	return enrich.Language(v.String(settings.KeyLanguage))
 }

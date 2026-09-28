@@ -145,6 +145,18 @@ var migrations = []string{
 	);
 	CREATE INDEX notifications_at ON notifications (at);
 	`,
+	`
+	-- Enrichment cache (internal/enrich): what an external database (TMDB
+	-- first) said about a title, so lists don't ask it again on every view
+	-- and still show pictures and ratings while it's unreachable. key is
+	-- source, language, kind and normalized title; info is the JSON result,
+	-- '' for "known not to match" (cached too, for a shorter time).
+	CREATE TABLE enrichment (
+		key        TEXT PRIMARY KEY,
+		info       TEXT NOT NULL,
+		fetched_at INTEGER NOT NULL
+	);
+	`,
 }
 
 func (s *Store) migrate(ctx context.Context) error {

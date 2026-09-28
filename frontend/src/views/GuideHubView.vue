@@ -69,6 +69,7 @@
             <span class="block text-[15.5px] font-semibold text-text">{{ selected.title }}</span>
             <span class="block text-[13px] text-muted">{{ selected.serviceName }} · {{ eventTimeRange(selected) }}</span>
             <span v-if="selected.description" class="mt-1 block text-[13.5px] text-text">{{ selected.description }}</span>
+            <EnrichDetails class="mt-3" :info="enrich.info(selected.title)" :shown-title="selected.title" />
           </div>
           <button type="button" class="shrink-0 rounded px-2 py-1 text-[13px] text-muted hover:bg-tile-2" @click="closeSelected">
             {{ t('plan.close') }}
@@ -164,6 +165,8 @@ import { useRoute } from 'vue-router'
 import { api } from '@/api/client'
 import Icon from '@/components/Icon.vue'
 import PlanPreview from '@/components/PlanPreview.vue'
+import EnrichDetails from '@/components/enrich/EnrichDetails.vue'
+import { useEnrichStore } from '@/stores/enrich'
 import { usePlanError } from '@/composables/usePlanError'
 import { useNavigationStore } from '@/stores/navigation'
 import { useProblem } from '@/composables/useProblem'
@@ -177,6 +180,7 @@ const WINDOW_HOURS = 4
 
 const { t, locale } = useI18n()
 const navigation = useNavigationStore()
+const enrich = useEnrichStore()
 const { describe, describeFix } = useProblem()
 const { timeZone } = useDisplayTimeZone()
 

@@ -539,7 +539,8 @@
     },
     "tmdb": {
       "title": "TMDB",
-      "apiKey": "API key"
+      "apiKey": "API key",
+      "enrich": "Load pictures, ratings and overviews"
     },
     "ai": {
       "title": "AI",
@@ -744,5 +745,9 @@
       "filterPlaceholder": "Filter by action or summary",
       "loadMore": "Load more"
     }
+  },
+  "enrich": {
+    "source": "Details and images: {source}",
+    "ratingTitle": "Rated {rating} out of 10, {votes} votes"
   }
 }

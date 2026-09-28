@@ -22,7 +22,11 @@ const (
 
 // Setting keys owned by connectors.
 const (
-	KeyTMDBAPIKey   = "tmdb.apiKey"
+	KeyTMDBAPIKey = "tmdb.apiKey"
+	// KeyTMDBEnrich turns enrichment (posters, ratings, overviews for the
+	// titles on screen, internal/enrich) on or off; with it off, TMDB is
+	// only asked on an explicit rename suggestion.
+	KeyTMDBEnrich   = "tmdb.enrich"
 	KeyAIProvider   = "ai.provider"
 	KeyOpenAIAPIKey = "ai.openai.apiKey"
 	KeyOpenAIModel  = "ai.openai.model"
@@ -154,6 +158,7 @@ func (TMDB) Settings() []settings.Section {
 		Label: "settings.tmdb",
 		Fields: []settings.Field{
 			{Key: KeyTMDBAPIKey, Type: settings.TypeSecret, Scope: settings.ScopeGlobal, Label: "settings.tmdb.apiKey"},
+			{Key: KeyTMDBEnrich, Type: settings.TypeBool, Scope: settings.ScopeGlobal, Label: "settings.tmdb.enrich", Default: true},
 		},
 	}}
 }

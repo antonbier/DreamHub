@@ -539,7 +539,8 @@
     },
     "tmdb": {
       "title": "TMDB",
-      "apiKey": "Chiave API"
+      "apiKey": "Chiave API",
+      "enrich": "Carica immagini, voti e descrizioni"
     },
     "ai": {
       "title": "IA",
@@ -744,5 +745,9 @@
       "filterPlaceholder": "Filtra per azione o riepilogo",
       "loadMore": "Carica altri"
     }
+  },
+  "enrich": {
+    "source": "Informazioni e immagini: {source}",
+    "ratingTitle": "Voto {rating} su 10, {votes} voti"
   }
 }

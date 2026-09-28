@@ -4,10 +4,10 @@ import (
 	"context"
 	"net/http"
 	"sort"
-	"strings"
 
 	"github.com/antonbier/DreamHub/backend/internal/ai"
 	"github.com/antonbier/DreamHub/backend/internal/httpx"
+	"github.com/antonbier/DreamHub/backend/internal/titles"
 	"github.com/antonbier/DreamHub/backend/internal/webcontrol"
 )
 
@@ -81,13 +81,13 @@ func (h *Discovery) taste(ctx context.Context) ai.Taste {
 // X" and "Tatort: Y" count once, as "Tatort": the series is the signal,
 // not each episode) — not for names that already are a series name
 // ("Die Verräter - Vertraue Niemandem!").
-func dedupeTitles(titles []string, episodes bool) []string {
+func dedupeTitles(list []string, episodes bool) []string {
 	seen := map[string]bool{}
 	out := []string{}
-	for _, title := range titles {
+	for _, title := range list {
 		name := title
 		if episodes {
-			name = seriesPart(title)
+			name = titles.SeriesPart(title)
 		}
 		key := normalizeTitle(name)
 		if key == "" || seen[key] {
@@ -100,18 +100,6 @@ func dedupeTitles(titles []string, episodes bool) []string {
 		}
 	}
 	return out
-}
-
-// seriesPart is the part of a title before an episode separator
-// ("Tatort: Borowski …" → "Tatort"), or the whole title.
-func seriesPart(title string) string {
-	cut := len(title)
-	for _, sep := range []string{": ", " - ", " – ", " — ", " | "} {
-		if i := strings.Index(title, sep); i > 0 && i < cut {
-			cut = i
-		}
-	}
-	return title[:cut]
 }
 
 func coveredByTimer(e webcontrol.EPGEvent, timers []webcontrol.Timer) bool {

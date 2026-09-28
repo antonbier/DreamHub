@@ -65,6 +65,7 @@
                 class="-mx-2 flex items-center gap-3 rounded px-2 py-2.5 hover:bg-tile-2"
                 :class="{ 'opacity-60': !m.active }"
               >
+                <PosterImage v-if="enrich.enabled" :path="enrich.info(m.name, 'tv')?.poster" :alt="m.name" />
                 <span class="min-w-0 flex-1">
                   <span class="block truncate text-[14px] text-text">{{ m.name }}</span>
                   <span class="block truncate text-[12.5px] text-muted">{{ m.info }}</span>
@@ -109,6 +110,8 @@ import { RouterLink } from 'vue-router'
 import { useI18n } from 'vue-i18n'
 import { api } from '@/api/client'
 import Icon from '@/components/Icon.vue'
+import PosterImage from '@/components/enrich/PosterImage.vue'
+import { useEnrichStore } from '@/stores/enrich'
 import { useNavigationStore } from '@/stores/navigation'
 import { useProblem } from '@/composables/useProblem'
 import { useDisplayTimeZone } from '@/composables/useDisplayTimeZone'
@@ -116,6 +119,7 @@ import type { SeriesMarker, UpcomingEpisode } from '@/api/types'
 
 const { t, locale } = useI18n()
 const navigation = useNavigationStore()
+const enrich = useEnrichStore()
 const { describe, describeFix } = useProblem()
 const { timeZone } = useDisplayTimeZone()
 

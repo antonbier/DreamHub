@@ -94,6 +94,7 @@
               <span class="block truncate text-[14.5px] font-semibold text-text">{{ rec.title }}</span>
               <span class="block truncate text-[12.5px] text-muted">{{ rec.serviceName }} · {{ formatTime(rec.start) }}</span>
               <span class="mt-1 block text-[13px] text-text">{{ rec.reason }}</span>
+              <EnrichDetails class="mt-3" :info="enrich.info(rec.title)" :shown-title="rec.title" :poster-width="60" />
             </div>
             <button
               v-if="!timerState[i] || timerState[i]?.status === 'error'"
@@ -133,6 +134,8 @@ import { computed, onMounted, reactive, ref, watch } from 'vue'
 import { useI18n } from 'vue-i18n'
 import { api, ApiError } from '@/api/client'
 import Icon from '@/components/Icon.vue'
+import EnrichDetails from '@/components/enrich/EnrichDetails.vue'
+import { useEnrichStore } from '@/stores/enrich'
 import { useNavigationStore } from '@/stores/navigation'
 import { useProblem } from '@/composables/useProblem'
 import { useDisplayTimeZone } from '@/composables/useDisplayTimeZone'
@@ -144,6 +147,7 @@ const navigation = useNavigationStore()
 const { describe, describeFix } = useProblem()
 const { timeZone } = useDisplayTimeZone()
 const { planErrorMessage } = usePlanError()
+const enrich = useEnrichStore()
 
 const item = computed(() => navigation.navigation?.sections.flatMap((s) => s.items).find((i) => i.path === '/discovery'))
 // TimerHub is an optional requirement (CONCEPT.md); DiscoveryHub itself can

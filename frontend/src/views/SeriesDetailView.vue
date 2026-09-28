@@ -26,6 +26,14 @@
         </span>
       </div>
 
+      <EnrichDetails
+        class="mt-4 max-w-[900px]"
+        :info="enrich.info(detail.marker.name, 'tv')"
+        :shown-title="detail.marker.name"
+        :poster-width="120"
+        :clamp="false"
+      />
+
       <dl class="mt-4 grid grid-cols-4 gap-3 below-md:grid-cols-2 below-sm:grid-cols-1">
         <div v-for="fact in facts" :key="fact.label" class="rounded border border-line bg-tile px-3 py-2.5">
           <dt class="text-[12.5px] text-faint">{{ fact.label }}</dt>
@@ -139,6 +147,8 @@ import { useI18n } from 'vue-i18n'
 import { api, ApiError } from '@/api/client'
 import Icon from '@/components/Icon.vue'
 import PlanPreview from '@/components/PlanPreview.vue'
+import EnrichDetails from '@/components/enrich/EnrichDetails.vue'
+import { useEnrichStore } from '@/stores/enrich'
 import { useNavigationStore } from '@/stores/navigation'
 import { useDisplayTimeZone } from '@/composables/useDisplayTimeZone'
 import { usePlanError } from '@/composables/usePlanError'
@@ -149,6 +159,7 @@ const props = defineProps<{ id: number }>()
 
 const { t, locale } = useI18n()
 const navigation = useNavigationStore()
+const enrich = useEnrichStore()
 const { timeZone } = useDisplayTimeZone()
 const { planErrorMessage } = usePlanError()
 

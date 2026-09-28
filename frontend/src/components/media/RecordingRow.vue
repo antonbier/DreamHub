@@ -1,6 +1,7 @@
 <!--
   One entry of a MediaHub folder — DESIGN.md's Row: an optional selection
-  box (bulk "move to trash"), title with channel · time · length, size, and
+  box (bulk "move to trash"), a poster thumbnail when enrichment is on,
+  title with channel · time · length · genres, rating, size, and
   text actions that appear on hover (always visible below 900 px). A
   non-recording (a manually copied .mkv) is dimmed and labeled, never
   offered file actions.
@@ -21,16 +22,15 @@
         :aria-label="t('media.select', { title: movie.title })"
         @change="emit('toggle')"
       />
+      <PosterImage v-if="movie.isRecording && enrich.enabled" :path="info?.poster" :alt="info?.title" />
       <span class="min-w-0 flex-1">
         <span class="block truncate text-[14px] text-text">{{ movie.title }}</span>
         <span class="block truncate text-[12.5px] text-muted">
-          <template v-if="movie.isRecording">
-            <template v-if="movie.serviceName">{{ movie.serviceName }} · </template>
-            <template v-if="movie.time > 0">{{ formatTime(movie.time) }} · </template>{{ movie.length }}
-          </template>
+          <template v-if="movie.isRecording">{{ details }}</template>
           <template v-else>{{ t('media.notARecording') }}</template>
         </span>
       </span>
+      <RatingBadge v-if="info" class="shrink-0 text-[12.5px] below-sm:hidden" :rating="info.rating" :votes="info.votes" />
       <span class="shrink-0 whitespace-nowrap font-mono text-[12.5px] tabular-nums text-faint">{{ formatBytes(movie.fileSize, locale) }}</span>
       <template v-if="actions">
         <button
@@ -142,6 +142,9 @@
 import { computed, nextTick, ref, watch } from 'vue'
 import { useI18n } from 'vue-i18n'
 import PlanPreview from '@/components/PlanPreview.vue'
+import PosterImage from '@/components/enrich/PosterImage.vue'
+import RatingBadge from '@/components/enrich/RatingBadge.vue'
+import { useEnrichStore } from '@/stores/enrich'
 import { formatBytes } from '@/lib/format'
 import type { Movie } from '@/api/types'
 import type { RowState, SuggestSources } from './types'
@@ -169,6 +172,23 @@ const emit = defineEmits<{
 }>()
 
 const { t, locale } = useI18n()
+
+// Poster, genres and rating from enrichment (backend/internal/enrich),
+// only for real recordings — a copied .mkv's file name isn't a title.
+const enrich = useEnrichStore()
+const info = computed(() => (props.movie.isRecording ? enrich.info(props.movie.title) : null))
+
+// channel · time · length · genres, leaving out whatever is unknown.
+const details = computed(() =>
+  [
+    props.movie.serviceName,
+    props.movie.time > 0 ? formatTime(props.movie.time) : '',
+    props.movie.length,
+    info.value?.genres?.slice(0, 2).join(', '),
+  ]
+    .filter(Boolean)
+    .join(' · '),
+)
 
 const inputId = `rename-${Math.random().toString(36).slice(2)}`
 const nameInput = ref<HTMLInputElement | null>(null)

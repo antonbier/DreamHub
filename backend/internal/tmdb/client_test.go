@@ -14,7 +14,7 @@ func TestSearchAndEpisode_BothKeyForms(t *testing.T) {
 		gotKey, gotAuth = r.URL.Query().Get("api_key"), r.Header.Get("Authorization")
 		switch r.URL.Path {
 		case "/search/multi":
-			w.Write([]byte(`{"results":[{"media_type":"movie","id":949,"title":"Heat","release_date":"1995-12-15"},{"media_type":"person","id":1,"name":"Al Pacino"},{"media_type":"tv","id":7,"name":"Heat","first_air_date":""}]}`))
+			w.Write([]byte(`{"results":[{"media_type":"movie","id":949,"title":"Heat","release_date":"1995-12-15","overview":" Ein Cop jagt einen Profi. ","vote_average":7.9,"vote_count":7000,"genre_ids":[80,18],"poster_path":"/umSVjVdbVwtx5ryCA2QXL44Durm.jpg"},{"media_type":"person","id":1,"name":"Al Pacino"},{"media_type":"tv","id":7,"name":"Heat","first_air_date":""}]}`))
 		case "/tv/7/season/1/episode/2":
 			w.Write([]byte(`{"name":"Pilot, Teil 2"}`))
 		default:
@@ -28,8 +28,12 @@ func TestSearchAndEpisode_BothKeyForms(t *testing.T) {
 	if err != nil {
 		t.Fatal(err)
 	}
-	if len(res) != 2 || res[0] != (Result{Kind: "movie", ID: 949, Title: "Heat", Year: 1995}) || res[1].Kind != "tv" {
+	if len(res) != 2 || res[0].Kind != "movie" || res[0].ID != 949 || res[0].Title != "Heat" || res[0].Year != 1995 || res[1].Kind != "tv" {
 		t.Errorf("unexpected results (people must be skipped): %+v", res)
+	}
+	if res[0].Overview != "Ein Cop jagt einen Profi." || res[0].Rating != 7.9 || res[0].Votes != 7000 ||
+		len(res[0].GenreIDs) != 2 || res[0].PosterPath != "/umSVjVdbVwtx5ryCA2QXL44Durm.jpg" {
+		t.Errorf("enrichment details not read: %+v", res[0])
 	}
 	if gotKey != "v3key" || gotAuth != "" {
 		t.Errorf("a v3 key goes in the query, got key=%q auth=%q", gotKey, gotAuth)
@@ -47,5 +51,26 @@ func TestSearchAndEpisode_BothKeyForms(t *testing.T) {
 	}
 	if _, err := c.Search(context.Background(), "", "x", "de-DE"); !errors.Is(err, ErrNotConfigured) {
 		t.Errorf("no key: want ErrNotConfigured, got %v", err)
+	}
+}
+
+func TestImage_OnlyFetchesTMDBImagePaths(t *testing.T) {
+	var gotPath string
+	srv := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		gotPath = r.URL.Path
+		w.Header().Set("Content-Type", "image/jpeg")
+		w.Write([]byte("jpegbytes"))
+	}))
+	defer srv.Close()
+	c := &HTTPClient{HTTP: srv.Client(), ImageBaseURL: srv.URL}
+
+	b, ct, err := c.Image(context.Background(), "w185", "/abc123.jpg")
+	if err != nil || string(b) != "jpegbytes" || ct != "image/jpeg" || gotPath != "/w185/abc123.jpg" {
+		t.Fatalf("got %q %q %v from %q", b, ct, err, gotPath)
+	}
+	for _, bad := range [][2]string{{"original", "/abc.jpg"}, {"w185", "/../etc/passwd"}, {"w185", "//evil.com/x.jpg"}, {"w185", "/a.svg"}, {"w185", "abc.jpg"}} {
+		if _, _, err := c.Image(context.Background(), bad[0], bad[1]); !errors.Is(err, ErrInvalidImage) {
+			t.Errorf("%v: want ErrInvalidImage, got %v", bad, err)
+		}
 	}
 }

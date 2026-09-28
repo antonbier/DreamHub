@@ -539,7 +539,8 @@
     },
     "tmdb": {
       "title": "TMDB",
-      "apiKey": "API-Schlüssel"
+      "apiKey": "API-Schlüssel",
+      "enrich": "Bilder, Bewertungen und Beschreibungen laden"
     },
     "ai": {
       "title": "KI",
@@ -744,5 +745,9 @@
       "filterPlaceholder": "Nach Aktion oder Zusammenfassung filtern",
       "loadMore": "Mehr laden"
     }
+  },
+  "enrich": {
+    "source": "Infos und Bilder: {source}",
+    "ratingTitle": "Bewertung {rating} von 10, {votes} Stimmen"
   }
 }

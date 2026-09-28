@@ -1044,3 +1044,47 @@ func TestDiscovery_TasteProfile(t *testing.T) {
 		t.Errorf("without useTaste nothing about the user is sent: %s", b)
 	}
 }
+
+func TestEnrich_LookupAndImages(t *testing.T) {
+	e := newEnv(t)
+	body := `{"items":[{"title":"Tatort: Borowski und der gute Mensch"},{"title":"Bones Spezial"}]}`
+
+	// No key: switched off, not an error.
+	resp, b := e.do(t, "POST", "/api/v1/enrich/lookup", body, nil)
+	if resp.StatusCode != http.StatusOK || !strings.Contains(string(b), `"enabled":false`) || !strings.Contains(string(b), `[null,null]`) {
+		t.Fatalf("without a key: %d %s", resp.StatusCode, b)
+	}
+
+	e.do(t, "PATCH", "/api/v1/settings", `{"values":{"tmdb.apiKey":"k-1234567890"}}`, nil)
+	_, b = e.do(t, "POST", "/api/v1/enrich/lookup", body, nil)
+	var out struct {
+		Enabled bool `json:"enabled"`
+		Results []*struct {
+			Title  string   `json:"title"`
+			Poster string   `json:"poster"`
+			Rating float64  `json:"rating"`
+			Genres []string `json:"genres"`
+		} `json:"results"`
+	}
+	json.Unmarshal(b, &out)
+	if !out.Enabled || len(out.Results) != 2 || out.Results[0] == nil || out.Results[0].Title != "Tatort" || out.Results[0].Poster == "" || out.Results[1] != nil {
+		t.Fatalf("lookup: %s", b)
+	}
+
+	resp, b = e.do(t, "GET", "/api/v1/enrich/image/w185"+out.Results[0].Poster, "", nil)
+	if resp.StatusCode != http.StatusOK || resp.Header.Get("Content-Type") != "image/png" || len(b) == 0 {
+		t.Errorf("image: %d %s", resp.StatusCode, resp.Header.Get("Content-Type"))
+	}
+	for _, bad := range []string{"/api/v1/enrich/image/original/x.jpg", "/api/v1/enrich/image/w185/..%2Fx.jpg", "/api/v1/enrich/image/w185/x.svg"} {
+		if resp, _ := e.do(t, "GET", bad, "", nil); resp.StatusCode != http.StatusNotFound {
+			t.Errorf("%s: expected 404, got %d", bad, resp.StatusCode)
+		}
+	}
+
+	// Switched off in settings: nothing is looked up any more.
+	e.do(t, "PATCH", "/api/v1/settings", `{"values":{"tmdb.enrich":false}}`, nil)
+	_, b = e.do(t, "POST", "/api/v1/enrich/lookup", body, nil)
+	if !strings.Contains(string(b), `"enabled":false`) {
+		t.Errorf("enrich off: %s", b)
+	}
+}

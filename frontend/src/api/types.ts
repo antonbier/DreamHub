@@ -495,3 +495,24 @@ export interface TasteCounts {
   timers: number
   autoTimers: number
 }
+
+// backend/internal/enrich.Info, from POST /api/v1/enrich/lookup.
+export interface EnrichInfo {
+  source: string // "tmdb"
+  kind: 'movie' | 'tv'
+  id: number
+  title: string
+  originalTitle?: string
+  year?: number
+  overview?: string
+  rating?: number // 0-10
+  votes?: number
+  genres?: string[]
+  poster?: string // image path for /api/v1/enrich/image
+  backdrop?: string
+}
+
+export interface EnrichQuery {
+  title: string
+  kind?: 'movie' | 'tv'
+}

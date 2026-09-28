@@ -18,6 +18,7 @@ import (
 	"github.com/antonbier/DreamHub/backend/internal/auth"
 	"github.com/antonbier/DreamHub/backend/internal/connector"
 	"github.com/antonbier/DreamHub/backend/internal/dashboard"
+	"github.com/antonbier/DreamHub/backend/internal/enrich"
 	"github.com/antonbier/DreamHub/backend/internal/events"
 	"github.com/antonbier/DreamHub/backend/internal/httpx"
 	"github.com/antonbier/DreamHub/backend/internal/hub"
@@ -58,6 +59,9 @@ type Deps struct {
 	// Events is the core event bus (internal/events, docs/V1_PLAN.md WP7):
 	// the persisted notification feed and its live SSE stream.
 	Events *events.Bus
+	// Enrich adds posters, ratings and overviews to titles
+	// (internal/enrich); nil turns /api/v1/enrich off.
+	Enrich *enrich.Service
 	Mounts []Mount
 	// User is the current user. v1 has exactly one user (an admin); once
 	// profiles exist this comes from the authenticated request instead.
@@ -82,6 +86,8 @@ func NewRouter(d Deps) http.Handler {
 	protected.HandleFunc("GET /api/v1/connectors", handleConnectors(d))
 	protected.HandleFunc("GET /api/v1/dashboard", handleGetDashboard(d))
 	protected.HandleFunc("PUT /api/v1/dashboard", handlePutDashboard(d))
+	protected.HandleFunc("POST /api/v1/enrich/lookup", handleEnrichLookup(d))
+	protected.HandleFunc("GET /api/v1/enrich/image/{size}/{file}", handleEnrichImage(d))
 	protected.HandleFunc("GET /api/v1/dashboard/sources", handleViewSources(d))
 	protected.HandleFunc("POST /api/v1/dashboard/view", handleView(d))
 	protected.HandleFunc("GET /api/v1/search", handleSearch(d))

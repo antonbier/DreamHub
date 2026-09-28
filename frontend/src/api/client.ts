@@ -31,6 +31,8 @@ import type {
   DeviceInfo,
   Disk,
   DiscoveryStatus,
+  EnrichInfo,
+  EnrichQuery,
   HealthInfo,
   HubStatus,
   LogEntry,
@@ -240,6 +242,13 @@ export const api = {
         '/api/v1/discovery/recommendations',
         { bouquet, useTaste },
       ),
+  },
+  enrich: {
+    // Read-only despite the POST (a batch of titles).
+    lookup: (items: EnrichQuery[]) =>
+      request<{ enabled: boolean; results: (EnrichInfo | null)[] }>('POST', '/api/v1/enrich/lookup', { items }),
+    // Served by DreamHub from its own cache; the browser never contacts TMDB.
+    image: (size: string, path: string) => requestBlob(`/api/v1/enrich/image/${size}${path}`),
   },
   dashboard: {
     get: () => request<DashboardLayout>('GET', '/api/v1/dashboard'),

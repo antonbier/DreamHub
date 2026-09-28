@@ -408,7 +408,25 @@
     "timerHubUnavailable": "Timers isn't available.",
     "confirm": "Confirm",
     "cancel": "Cancel",
-    "created": "Timer created"
+    "created": "Timer created",
+    "taste": {
+      "use": "Take my taste into account",
+      "show": "What gets sent?",
+      "hide": "Hide",
+      "explain": "With this on, these titles go to the AI provider along with the programme, so the picks fit you — titles only, nothing else. Series come from SerienRecorder, AutoTimers from the AutoTimer plugin, when installed.",
+      "series": "Followed series",
+      "recordings": "Recordings",
+      "timers": "Planned timers",
+      "autoTimers": "AutoTimers",
+      "none": "—",
+      "considered": "Taken into account: {list}.",
+      "count": {
+        "series": "1 series | {n} series",
+        "recordings": "1 recording | {n} recordings",
+        "timers": "1 timer | {n} timers",
+        "autoTimers": "1 AutoTimer | {n} AutoTimers"
+      }
+    }
   },
   "diagnostics": {
     "title": "Diagnostics",

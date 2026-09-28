@@ -49,7 +49,7 @@ From the requirements the core derives each hub's **status**: *available*, *degr
 | **MediaHub** | Recordings list, disk space, rename with preview, cover art, trash | v1 (trimming in v1.1) |
 | **TimerHub** | Timers, AutoTimer, conflict detection | v1 |
 | **GuideHub** | EPG as a TV-guide grid ("TV-Zeitschrift") | v1 (basic) |
-| **DiscoveryHub** | AI recommendations, one click → TimerHub (with confirmation) | v1 |
+| **DiscoveryHub** | AI recommendations, one click → TimerHub (with confirmation); optionally shaped by the user's taste (recordings, followed series, timers, AutoTimers — opt-in, since it sends viewing data to the AI provider) | v1 |
 | **SeriesHub** | SerienRecorder: episodes on disk, missing episodes, upcoming | v1 (basic) |
 | **SystemHub** | Device info, diagnostics, backup/restore, change log — for every user | v1 (basic) |
 | **AdminHub** | Logs (v1), service status, terminal (later) — admin role only | v1 (logs) |

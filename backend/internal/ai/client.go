@@ -29,6 +29,22 @@ type EPGItem struct {
 	Duration         int64 // seconds
 }
 
+// Taste is what the user already records, plans and follows — titles only,
+// so the model can lean its picks toward the user's taste instead of
+// "generally good TV". Empty means no profile (the user switched it off,
+// or nothing is known yet); every list is capped by DiscoveryHub.
+type Taste struct {
+	Recordings []string `json:"recordings,omitempty"` // recent recordings' titles
+	Series     []string `json:"series,omitempty"`     // series followed in SerienRecorder
+	Timers     []string `json:"timers,omitempty"`     // upcoming timers' titles
+	AutoTimers []string `json:"autoTimers,omitempty"` // AutoTimer search terms
+}
+
+// Empty reports whether t carries no signal at all.
+func (t Taste) Empty() bool {
+	return len(t.Recordings) == 0 && len(t.Series) == 0 && len(t.Timers) == 0 && len(t.AutoTimers) == 0
+}
+
 // Recommendation is one AI pick, built from an EPGItem plus the model's
 // stated reason.
 type Recommendation struct {
@@ -45,7 +61,8 @@ type Recommendation struct {
 // per PRINCIPLES.md's "Mock-first development". model empty means "the
 // provider's default".
 type Client interface {
-	Recommend(ctx context.Context, apiKey, model string, items []EPGItem) ([]Recommendation, error)
+	// taste may be empty; the picks are still grounded in items only.
+	Recommend(ctx context.Context, apiKey, model string, items []EPGItem, taste Taste) ([]Recommendation, error)
 	// SuggestName reads a recording's own metadata and returns structured
 	// fields (title, year, season, episode, episode title) — never a file
 	// name: MediaHub builds that itself (internal/naming), and rejects

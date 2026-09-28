@@ -41,6 +41,8 @@ import type {
   Recommendation,
   SearchResult,
   SeriesDetail,
+  TasteCounts,
+  TasteProfile,
   SeriesMarker,
   SettingsView,
   Timer,
@@ -231,8 +233,13 @@ export const api = {
   },
   discovery: {
     status: () => request<DiscoveryStatus>('GET', '/api/v1/discovery/status'),
-    generate: (bouquet: string) =>
-      request<DiscoveryStatus & { recommendations: Recommendation[] }>('POST', '/api/v1/discovery/recommendations', { bouquet }),
+    taste: () => request<TasteProfile>('GET', '/api/v1/discovery/taste'),
+    generate: (bouquet: string, useTaste: boolean) =>
+      request<DiscoveryStatus & { recommendations: Recommendation[]; taste: TasteCounts }>(
+        'POST',
+        '/api/v1/discovery/recommendations',
+        { bouquet, useTaste },
+      ),
   },
   dashboard: {
     get: () => request<DashboardLayout>('GET', '/api/v1/dashboard'),

@@ -40,3 +40,14 @@ func TestParseEpisodeCode(t *testing.T) {
 		}
 	}
 }
+
+func TestDedupeTitles(t *testing.T) {
+	got := dedupeTitles([]string{"Tatort: Borowski", "tatort – Der Fall", "", "Bones - Folge 3", "Bones"}, true)
+	if len(got) != 2 || got[0] != "Tatort: Borowski"[:6] || got[1] != "Bones" {
+		t.Errorf("episodes collapse to their series: %q", got)
+	}
+	got = dedupeTitles([]string{"Die Verräter - Vertraue Niemandem!"}, false)
+	if len(got) != 1 || got[0] != "Die Verräter - Vertraue Niemandem!" {
+		t.Errorf("series names stay whole: %q", got)
+	}
+}

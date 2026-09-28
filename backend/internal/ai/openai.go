@@ -27,7 +27,10 @@ const maxPicks = 8
 
 const defaultModel = "gpt-4o-mini"
 
-const systemPrompt = `You are DreamHub's TV recommendation assistant. You will receive a numbered, JSON-encoded list of upcoming broadcasts (today's EPG for the user's selected channels). Recommend up to 8 broadcasts genuinely worth watching or recording, favoring variety over repeats of the same show. Respond with ONLY a JSON object of this exact shape: {"picks":[{"index":<integer index from the list>,"reason":"<one short sentence, same language as the titles>"}]}. Only use indices that appear in the given list. If nothing stands out, return {"picks":[]}.`
+const systemPrompt = `You are DreamHub's TV recommendation assistant. You will receive a JSON object with "candidates", a numbered list of upcoming broadcasts (today's EPG for the user's selected channels), and optionally "taste": what the user already records ("recordings"), follows as series ("series"), has planned ("timers") and searches for automatically ("autoTimers"). Recommend up to 8 candidates genuinely worth watching or recording. When a taste is given, favor candidates that fit it — same genres, topics, formats or people — but don't recommend the very shows the user already follows or has planned; find related things they might have missed. Favor variety over repeats of the same show. Respond with ONLY a JSON object of this exact shape: {"picks":[{"index":<integer index from the candidates>,"reason":"<one short sentence, same language as the titles; when a pick fits the taste, say which of the user's shows it relates to>"}]}. Only use indices that appear in the candidates. If nothing stands out, return {"picks":[]}.`
+
+// maxTasteItems caps each taste list sent to the model.
+const maxTasteItems = 40
 
 // OpenAIClient calls OpenAI's chat completions API.
 type OpenAIClient struct {
@@ -84,7 +87,7 @@ type chatResponse struct {
 	} `json:"error"`
 }
 
-func (c *OpenAIClient) Recommend(ctx context.Context, apiKey, model string, items []EPGItem) ([]Recommendation, error) {
+func (c *OpenAIClient) Recommend(ctx context.Context, apiKey, model string, items []EPGItem, taste Taste) ([]Recommendation, error) {
 	if apiKey == "" {
 		return nil, ErrNotConfigured
 	}
@@ -102,7 +105,18 @@ func (c *OpenAIClient) Recommend(ctx context.Context, apiKey, model string, item
 			StartUTC: time.Unix(it.Start, 0).UTC().Format(time.RFC3339), DurationMinutes: it.Duration / 60,
 		}
 	}
-	userContent, err := json.Marshal(prompts)
+	var tastePtr *Taste
+	if !taste.Empty() {
+		capped := Taste{
+			Recordings: capList(taste.Recordings), Series: capList(taste.Series),
+			Timers: capList(taste.Timers), AutoTimers: capList(taste.AutoTimers),
+		}
+		tastePtr = &capped
+	}
+	userContent, err := json.Marshal(struct {
+		Candidates []promptItem `json:"candidates"`
+		Taste      *Taste       `json:"taste,omitempty"`
+	}{prompts, tastePtr})
 	if err != nil {
 		return nil, fmt.Errorf("ai: encoding candidate list: %w", err)
 	}
@@ -203,6 +217,13 @@ func (c *OpenAIClient) chat(ctx context.Context, apiKey, model, system, user str
 		return "", fmt.Errorf("ai: OpenAI returned no choices")
 	}
 	return chat.Choices[0].Message.Content, nil
+}
+
+func capList(l []string) []string {
+	if len(l) > maxTasteItems {
+		return l[:maxTasteItems]
+	}
+	return l
 }
 
 func truncate(s string, n int) string {

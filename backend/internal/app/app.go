@@ -193,7 +193,7 @@ func New(ctx context.Context, o Options) (*App, error) {
 		Settings: svc, Store: st, AI: o.AI, TMDB: o.TMDB, Now: now}
 	guideHub := &hubs_.Guide{WC: o.WebControl, Now: now}
 	seriesHub := &hubs_.Series{SR: o.Series, WC: o.WebControl, Now: now}
-	discoveryHub := &hubs_.Discovery{WC: o.WebControl, AI: o.AI, Store: st, Settings: svc, Now: now}
+	discoveryHub := &hubs_.Discovery{WC: o.WebControl, SR: o.Series, AT: o.AutoTimer, AI: o.AI, Store: st, Settings: svc, Now: now}
 	systemHub := &hubs_.System{Store: st, Settings: svc, Dashboard: dash, Plans: plans, Now: now}
 	adminHub := &hubs_.Admin{Store: st, Level: level, Logs: o.Logs, FS: o.RecordingsFS}
 	controlHub := &hubs_.Control{WC: o.WebControl}

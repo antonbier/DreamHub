@@ -6,6 +6,7 @@ import (
 	"errors"
 	"net/http"
 	"net/http/httptest"
+	"strings"
 	"testing"
 )
 
@@ -31,7 +32,7 @@ func TestRecommend_GroundsPicksInTheGivenItems(t *testing.T) {
 		{Title: "News", ServiceReference: "ref1", ServiceName: "Chan1", Start: 100, Duration: 60},
 		{Title: "Drama", ServiceReference: "ref2", ServiceName: "Chan2", Start: 200, Duration: 120},
 	}
-	recs, err := c.Recommend(context.Background(), "sk-test", "", items)
+	recs, err := c.Recommend(context.Background(), "sk-test", "", items, Taste{})
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -51,7 +52,7 @@ func TestRecommend_DropsOutOfRangeIndices(t *testing.T) {
 
 	c := &OpenAIClient{HTTP: srv.Client(), BaseURL: srv.URL}
 	items := []EPGItem{{Title: "Only item", ServiceReference: "ref1", ServiceName: "Chan1", Start: 100, Duration: 60}}
-	recs, err := c.Recommend(context.Background(), "sk-test", "", items)
+	recs, err := c.Recommend(context.Background(), "sk-test", "", items, Taste{})
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -62,14 +63,14 @@ func TestRecommend_DropsOutOfRangeIndices(t *testing.T) {
 
 func TestRecommend_NoAPIKey(t *testing.T) {
 	c := NewOpenAIClient()
-	if _, err := c.Recommend(context.Background(), "", "", []EPGItem{{Title: "x"}}); err != ErrNotConfigured {
+	if _, err := c.Recommend(context.Background(), "", "", []EPGItem{{Title: "x"}}, Taste{}); err != ErrNotConfigured {
 		t.Errorf("expected ErrNotConfigured, got %v", err)
 	}
 }
 
 func TestRecommend_NoItemsIsNotAnError(t *testing.T) {
 	c := NewOpenAIClient()
-	recs, err := c.Recommend(context.Background(), "sk-test", "", nil)
+	recs, err := c.Recommend(context.Background(), "sk-test", "", nil, Taste{})
 	if err != nil || recs != nil {
 		t.Errorf("expected (nil, nil) for an empty candidate list, got (%v, %v)", recs, err)
 	}
@@ -95,5 +96,33 @@ func TestSuggestName_ValidatesTheAnswer(t *testing.T) {
 		if _, err := c.SuggestName(context.Background(), "key", "", in); !errors.Is(err, ErrInvalidAnswer) {
 			t.Errorf("%s: want ErrInvalidAnswer, got %v", bad, err)
 		}
+	}
+}
+
+func TestRecommend_SendsTheTasteOnlyWhenThereIsOne(t *testing.T) {
+	var bodies []string
+	srv := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		var req chatRequest
+		json.NewDecoder(r.Body).Decode(&req)
+		bodies = append(bodies, req.Messages[len(req.Messages)-1].Content)
+		json.NewEncoder(w).Encode(chatResponse{Choices: []struct {
+			Message chatMessage `json:"message"`
+		}{{Message: chatMessage{Content: `{"picks":[]}`}}}})
+	}))
+	defer srv.Close()
+	c := &OpenAIClient{HTTP: srv.Client(), BaseURL: srv.URL}
+	items := []EPGItem{{Title: "Polizeiruf 110", ServiceReference: "ref1", ServiceName: "Das Erste HD", Start: 100, Duration: 5400}}
+
+	if _, err := c.Recommend(context.Background(), "sk-test", "", items, Taste{Series: []string{"Tatort"}}); err != nil {
+		t.Fatal(err)
+	}
+	if _, err := c.Recommend(context.Background(), "sk-test", "", items, Taste{}); err != nil {
+		t.Fatal(err)
+	}
+	if len(bodies) != 2 || !strings.Contains(bodies[0], `"taste":{"series":["Tatort"]}`) || !strings.Contains(bodies[0], `"candidates":[`) {
+		t.Errorf("expected candidates plus the taste, got %q", bodies)
+	}
+	if strings.Contains(bodies[1], `"taste"`) {
+		t.Errorf("an empty taste must not be sent at all, got %q", bodies[1])
 	}
 }

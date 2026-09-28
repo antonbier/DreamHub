@@ -408,7 +408,25 @@
     "timerHubUnavailable": "Timer non è disponibile.",
     "confirm": "Conferma",
     "cancel": "Annulla",
-    "created": "Timer creato"
+    "created": "Timer creato",
+    "taste": {
+      "use": "Tieni conto dei miei gusti",
+      "show": "Cosa viene inviato?",
+      "hide": "Nascondi",
+      "explain": "Con questa opzione questi titoli vengono inviati al fornitore di IA, così i consigli ti somigliano — solo titoli, nient'altro. Le serie vengono da SerienRecorder, gli AutoTimer dal plugin AutoTimer, se installati.",
+      "series": "Serie seguite",
+      "recordings": "Registrazioni",
+      "timers": "Timer pianificati",
+      "autoTimers": "AutoTimer",
+      "none": "—",
+      "considered": "Considerati: {list}.",
+      "count": {
+        "series": "1 serie | {n} serie",
+        "recordings": "1 registrazione | {n} registrazioni",
+        "timers": "1 timer | {n} timer",
+        "autoTimers": "1 AutoTimer | {n} AutoTimer"
+      }
+    }
   },
   "diagnostics": {
     "title": "Diagnostica",

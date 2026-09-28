@@ -6,8 +6,10 @@ import (
 	"time"
 
 	"github.com/antonbier/DreamHub/backend/internal/ai"
+	"github.com/antonbier/DreamHub/backend/internal/autotimer"
 	"github.com/antonbier/DreamHub/backend/internal/connector"
 	"github.com/antonbier/DreamHub/backend/internal/httpx"
+	"github.com/antonbier/DreamHub/backend/internal/serienrecorder"
 	"github.com/antonbier/DreamHub/backend/internal/settings"
 	"github.com/antonbier/DreamHub/backend/internal/store"
 	"github.com/antonbier/DreamHub/backend/internal/webcontrol"
@@ -19,7 +21,12 @@ import (
 // builds itself (CONCEPT.md: "When DiscoveryHub creates a timer, it calls
 // TimerHub's API").
 type Discovery struct {
-	WC       webcontrol.Client
+	WC webcontrol.Client
+	// SR and AT are optional taste sources (SerienRecorder's followed
+	// series, AutoTimer's search terms): nil, or failing because the plugin
+	// isn't installed, just leaves that part of the taste profile empty.
+	SR       serienrecorder.Client
+	AT       autotimer.Client
 	AI       ai.Client
 	Store    *store.Store
 	Settings *settings.Service
@@ -29,6 +36,7 @@ type Discovery struct {
 // Mount registers DiscoveryHub's routes.
 func (h *Discovery) Mount(mux *http.ServeMux) {
 	mux.HandleFunc("GET /api/v1/discovery/status", h.status)
+	mux.HandleFunc("GET /api/v1/discovery/taste", h.getTaste)
 	mux.HandleFunc("POST /api/v1/discovery/recommendations", h.generate)
 }
 
@@ -55,6 +63,10 @@ func (h *Discovery) status(w http.ResponseWriter, r *http.Request) {
 
 type generateRequest struct {
 	Bouquet string `json:"bouquet"`
+	// UseTaste sends the user's taste profile (taste.go) along. Off
+	// unless asked for: it's the user's own viewing data going to an
+	// external AI provider.
+	UseTaste bool `json:"useTaste"`
 }
 
 func (h *Discovery) generate(w http.ResponseWriter, r *http.Request) {
@@ -95,12 +107,22 @@ func (h *Discovery) generate(w http.ResponseWriter, r *http.Request) {
 		httpx.WriteError(w, r, http.StatusBadGateway, "webcontrol_unavailable", "could not reach WebControl")
 		return
 	}
-	items := make([]ai.EPGItem, len(events))
-	for i, e := range events {
-		items[i] = ai.EPGItem{
+	// Broadcasts a timer already covers aren't worth recommending — the
+	// user has them.
+	timers, _ := h.WC.TimerList(ctx)
+	items := make([]ai.EPGItem, 0, len(events))
+	for _, e := range events {
+		if coveredByTimer(e, timers) {
+			continue
+		}
+		items = append(items, ai.EPGItem{
 			Title: e.Title, Description: e.Description, ServiceReference: e.ServiceReference,
 			ServiceName: e.ServiceName, Start: e.Start, Duration: e.Duration,
-		}
+		})
+	}
+	var taste ai.Taste
+	if req.UseTaste {
+		taste = h.taste(ctx)
 	}
 
 	// Reserve the budget slot before the real call: a slow/failed call still
@@ -111,10 +133,10 @@ func (h *Discovery) generate(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	recs, err := h.AI.Recommend(ctx, apiKey, v.String(connector.KeyOpenAIModel), items)
+	recs, err := h.AI.Recommend(ctx, apiKey, v.String(connector.KeyOpenAIModel), items, taste)
 	if err != nil {
 		httpx.WriteError(w, r, http.StatusBadGateway, "ai_unavailable", "could not get recommendations")
 		return
 	}
-	httpx.WriteJSON(w, http.StatusOK, map[string]any{"recommendations": recs, "usedToday": used, "dailyLimit": limit})
+	httpx.WriteJSON(w, http.StatusOK, map[string]any{"recommendations": recs, "usedToday": used, "dailyLimit": limit, "taste": tasteCounts(taste)})
 }

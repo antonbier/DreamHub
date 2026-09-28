@@ -6,6 +6,12 @@
   CONCEPT.md: DiscoveryHub calls TimerHub's API, not its Go code). Nothing
   here calls the AI automatically — every real API call costs money, so
   generating is always an explicit click, never on page load.
+
+  "Use my taste" sends what the user records, follows and has planned
+  (titles only) along, so the picks fit them. It's the user's own viewing
+  data going to an external provider, so it's an explicit, remembered
+  choice, and "What gets sent" shows exactly that list before anything is
+  sent (GET /api/v1/discovery/taste sends nothing).
 -->
 <template>
   <div class="mx-auto max-w-content p-6 below-md:p-4">
@@ -47,7 +53,35 @@
         <span v-if="budget" class="text-[12.5px] text-muted">{{ t('discovery.budget', { used: budget.usedToday, limit: budget.dailyLimit }) }}</span>
       </div>
 
+      <div class="mt-3 flex flex-wrap items-center gap-x-3 gap-y-1">
+        <label class="flex cursor-pointer items-center gap-2 text-[13.5px] text-text">
+          <input v-model="useTaste" type="checkbox" class="rounded" />
+          {{ t('discovery.taste.use') }}
+        </label>
+        <button
+          type="button"
+          class="rounded px-1.5 py-0.5 text-[13px] text-accent hover:bg-tile-2"
+          :aria-expanded="tasteShown"
+          aria-controls="taste-panel"
+          @click="toggleTaste"
+        >
+          {{ tasteShown ? t('discovery.taste.hide') : t('discovery.taste.show') }}
+        </button>
+      </div>
+      <section v-if="tasteShown" id="taste-panel" class="mt-2 rounded border border-line bg-tile p-4">
+        <p class="text-[12.5px] text-faint">{{ t('discovery.taste.explain') }}</p>
+        <p v-if="tasteLoading" class="mt-2 text-[13px] text-muted">{{ t('common.loading') }}</p>
+        <p v-else-if="!taste" class="mt-2 text-[13px] text-muted">{{ t('common.backendUnreachable') }}</p>
+        <dl v-else class="mt-2 grid grid-cols-[160px_1fr] gap-x-4 gap-y-2 text-[13px] below-sm:grid-cols-1 below-sm:gap-y-0.5">
+          <template v-for="part in tasteParts" :key="part.key">
+            <dt class="text-muted below-sm:mt-2">{{ t(`discovery.taste.${part.key}`) }}</dt>
+            <dd class="text-text">{{ part.items.length ? part.items.join(' · ') : t('discovery.taste.none') }}</dd>
+          </template>
+        </dl>
+      </section>
+
       <p v-if="genError" class="mt-3 text-[13px] text-warn">{{ genError }}</p>
+      <p v-if="usedTaste && hasGenerated" class="mt-3 text-[12.5px] text-faint">{{ usedTaste }}</p>
 
       <p v-if="!hasGenerated && !loading" class="mt-5 text-[14px] text-muted">{{ t('discovery.empty') }}</p>
       <p v-else-if="hasGenerated && recommendations.length === 0 && !generating" class="mt-5 text-[14px] text-muted">
@@ -95,7 +129,7 @@
 </template>
 
 <script setup lang="ts">
-import { computed, onMounted, reactive, ref } from 'vue'
+import { computed, onMounted, reactive, ref, watch } from 'vue'
 import { useI18n } from 'vue-i18n'
 import { api, ApiError } from '@/api/client'
 import Icon from '@/components/Icon.vue'
@@ -103,7 +137,7 @@ import { useNavigationStore } from '@/stores/navigation'
 import { useProblem } from '@/composables/useProblem'
 import { useDisplayTimeZone } from '@/composables/useDisplayTimeZone'
 import { usePlanError } from '@/composables/usePlanError'
-import type { Bouquet, DiscoveryStatus, Plan, Recommendation } from '@/api/types'
+import type { Bouquet, DiscoveryStatus, Plan, Recommendation, TasteCounts, TasteProfile } from '@/api/types'
 
 const { t, locale } = useI18n()
 const navigation = useNavigationStore()
@@ -127,6 +161,57 @@ const hasGenerated = ref(false)
 const genError = ref('')
 const recommendations = ref<Recommendation[]>([])
 
+// The taste profile: an explicit, per-browser choice (see the comment on
+// top), off until the user turns it on.
+const TASTE_KEY = 'dreamhub.discoveryUseTaste'
+function readUseTaste(): boolean {
+  try {
+    return localStorage.getItem(TASTE_KEY) === '1'
+  } catch {
+    return false
+  }
+}
+const useTaste = ref(readUseTaste())
+watch(useTaste, (on) => {
+  try {
+    localStorage.setItem(TASTE_KEY, on ? '1' : '0')
+  } catch {
+    // Not remembered, still applies to this visit.
+  }
+})
+
+const tasteShown = ref(false)
+const tasteLoading = ref(false)
+const taste = ref<TasteProfile | null>(null)
+async function toggleTaste() {
+  tasteShown.value = !tasteShown.value
+  if (!tasteShown.value) return
+  tasteLoading.value = true
+  try {
+    taste.value = await api.discovery.taste()
+  } catch {
+    taste.value = null
+  } finally {
+    tasteLoading.value = false
+  }
+}
+const tasteParts = computed(() =>
+  taste.value
+    ? (['series', 'recordings', 'timers', 'autoTimers'] as const).map((key) => ({ key, items: taste.value![key] ?? [] }))
+    : [],
+)
+
+// "Considered: 3 series, 38 recordings, 2 timers" under the results.
+const lastTaste = ref<TasteCounts | null>(null)
+const usedTaste = computed(() => {
+  const c = lastTaste.value
+  if (!c) return ''
+  const parts = (['series', 'recordings', 'timers', 'autoTimers'] as const)
+    .filter((k) => c[k] > 0)
+    .map((k) => t(`discovery.taste.count.${k}`, { n: c[k] }, c[k]))
+  return parts.length ? t('discovery.taste.considered', { list: parts.join(', ') }) : ''
+})
+
 type TimerState = { status: 'previewing' | 'created' | 'error'; plan?: Plan; error?: string }
 const timerState = reactive<Record<number, TimerState>>({})
 
@@ -146,8 +231,9 @@ async function generate() {
   generating.value = true
   genError.value = ''
   try {
-    const res = await api.discovery.generate(selectedBouquet.value)
+    const res = await api.discovery.generate(selectedBouquet.value, useTaste.value)
     recommendations.value = res.recommendations
+    lastTaste.value = res.taste ?? null
     budget.value = { usedToday: res.usedToday, dailyLimit: res.dailyLimit }
     hasGenerated.value = true
     Object.keys(timerState).forEach((k) => delete timerState[Number(k)])

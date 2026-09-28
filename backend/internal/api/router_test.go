@@ -997,3 +997,50 @@ func TestDashboard_CustomTiles(t *testing.T) {
 		}
 	}
 }
+
+func TestDiscovery_TasteProfile(t *testing.T) {
+	e := newEnv(t)
+
+	// What "use my taste" would send, shown before anything is sent.
+	resp, b := e.do(t, "GET", "/api/v1/discovery/taste", "", nil)
+	if resp.StatusCode != http.StatusOK {
+		t.Fatalf("expected 200, got %d: %s", resp.StatusCode, b)
+	}
+	var taste struct {
+		Recordings []string `json:"recordings"`
+		Series     []string `json:"series"`
+		Timers     []string `json:"timers"`
+	}
+	json.Unmarshal(b, &taste)
+	if len(taste.Recordings) == 0 || len(taste.Series) != 3 || len(taste.Timers) == 0 {
+		t.Fatalf("expected recordings, the mock's 3 active series and upcoming timers: %s", b)
+	}
+
+	e.do(t, "PATCH", "/api/v1/settings", `{"values":{"ai.openai.apiKey":"sk-test-1234"}}`, nil)
+	bRef := `1:7:1:0:0:0:0:0:0:0:FROM BOUQUET "userbouquet.favourites.tv" ORDER BY bouquet`
+	var out struct {
+		Recommendations []struct {
+			Title string `json:"title"`
+		} `json:"recommendations"`
+		Taste struct {
+			Series int `json:"series"`
+		} `json:"taste"`
+	}
+	_, b = e.do(t, "POST", "/api/v1/discovery/recommendations", `{"bouquet":`+strconv.Quote(bRef)+`,"useTaste":true}`, nil)
+	json.Unmarshal(b, &out)
+	if out.Taste.Series != 3 {
+		t.Errorf("useTaste must send the profile along: %s", b)
+	}
+	for _, r := range out.Recommendations {
+		if r.Title == "Bauer sucht Frau International" || r.Title == "The Rookie" {
+			t.Errorf("a broadcast a timer already covers must not be recommended: %s", b)
+		}
+	}
+
+	_, b = e.do(t, "POST", "/api/v1/discovery/recommendations", `{"bouquet":`+strconv.Quote(bRef)+`}`, nil)
+	out.Taste.Series = -1
+	json.Unmarshal(b, &out)
+	if out.Taste.Series != 0 {
+		t.Errorf("without useTaste nothing about the user is sent: %s", b)
+	}
+}

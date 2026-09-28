@@ -408,7 +408,25 @@
     "timerHubUnavailable": "Timer ist nicht verfügbar.",
     "confirm": "Bestätigen",
     "cancel": "Abbrechen",
-    "created": "Timer angelegt"
+    "created": "Timer angelegt",
+    "taste": {
+      "use": "Meinen Geschmack berücksichtigen",
+      "show": "Was wird gesendet?",
+      "hide": "Ausblenden",
+      "explain": "Mit dieser Option gehen diese Titel mit an den KI-Anbieter, damit die Vorschläge zu dir passen — nur Titel, nichts sonst. Serien kommen aus SerienRecorder, AutoTimer aus dem AutoTimer-Plugin, sofern installiert.",
+      "series": "Verfolgte Serien",
+      "recordings": "Aufnahmen",
+      "timers": "Geplante Timer",
+      "autoTimers": "AutoTimer",
+      "none": "—",
+      "considered": "Berücksichtigt: {list}.",
+      "count": {
+        "series": "1 Serie | {n} Serien",
+        "recordings": "1 Aufnahme | {n} Aufnahmen",
+        "timers": "1 Timer | {n} Timer",
+        "autoTimers": "1 AutoTimer | {n} AutoTimer"
+      }
+    }
   },
   "diagnostics": {
     "title": "Diagnose",

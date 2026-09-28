@@ -479,3 +479,19 @@ export interface Notification {
   params: Record<string, unknown>
   read: boolean
 }
+
+// backend/internal/ai.Taste, from GET /api/v1/discovery/taste: exactly what
+// "use my taste" sends to the AI provider.
+export interface TasteProfile {
+  recordings: string[]
+  series: string[]
+  timers: string[]
+  autoTimers: string[]
+}
+
+export interface TasteCounts {
+  recordings: number
+  series: number
+  timers: number
+  autoTimers: number
+}

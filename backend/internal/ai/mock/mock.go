@@ -16,21 +16,29 @@ const maxPicks = 3
 
 // Client is a deterministic ai.Client: it "recommends" the first few
 // candidates it's given, with a canned reason, regardless of apiKey/model.
-type Client struct{}
+type Client struct {
+	// LastTaste is the taste profile of the most recent Recommend call,
+	// for tests to assert on.
+	LastTaste ai.Taste
+}
 
 var _ ai.Client = (*Client)(nil)
 
 // New returns a mock client.
 func New() *Client { return &Client{} }
 
-func (*Client) Recommend(ctx context.Context, apiKey, model string, items []ai.EPGItem) ([]ai.Recommendation, error) {
+func (c *Client) Recommend(ctx context.Context, apiKey, model string, items []ai.EPGItem, taste ai.Taste) ([]ai.Recommendation, error) {
+	c.LastTaste = taste
 	n := min(len(items), maxPicks)
 	out := make([]ai.Recommendation, 0, n)
+	reason := "Mock pick for local development (internal/ai/mock) — not a real AI recommendation."
+	if !taste.Empty() {
+		reason = "Mock pick with a taste profile (internal/ai/mock) — not a real AI recommendation."
+	}
 	for _, it := range items[:n] {
 		out = append(out, ai.Recommendation{
 			Title: it.Title, ServiceReference: it.ServiceReference, ServiceName: it.ServiceName,
-			Start: it.Start, Duration: it.Duration,
-			Reason: "Mock pick for local development (internal/ai/mock) — not a real AI recommendation.",
+			Start: it.Start, Duration: it.Duration, Reason: reason,
 		})
 	}
 	return out, nil

@@ -160,7 +160,11 @@ Notes:
 - [x] Nothing calls the AI automatically — every real call costs money, so "Generate recommendations" is always an explicit click, never on page load or a background refresh
 - [x] The OpenAI connector's `Check` was already settings-only (API-key presence); left as-is deliberately — a network round-trip to a paid API just to show a status dot isn't worth it, unlike WebControl/SerienRecorder's real reachability pings to a local, free LAN device
 
+- [x] Taste profile (2026-09-28): with "Take my taste into account" on, the request also carries what the user records (recent titles, top folder), follows in SerienRecorder (active markers), has planned (upcoming timers) and searches for with AutoTimer (enabled search terms) — titles only, deduplicated per series, at most 40 each (`internal/hubs/discovery_taste.go`, `ai.Taste`). The prompt asks for picks that fit the taste without re-recommending what's already followed or planned, with the reason naming the related show. Every source is optional: a missing plugin or unreachable box just leaves that list empty. **Opt-in, per browser**: it's the user's own viewing data going to an external provider, so it's off until switched on, and "What gets sent?" (`GET /api/v1/discovery/taste`, which sends nothing) shows the exact lists first; the response reports what was taken into account
+- [x] Broadcasts a timer already covers are no longer offered to the AI as candidates — the user has them already
+
 **Open**:
+- [ ] Check the taste-based picks against the real box's recordings and a real OpenAI key (only the mock AI was exercised, box offline)
 - [ ] Swapping to a different AI provider (the interface is provider-agnostic already, only `OpenAIClient` exists)
 - [ ] Per-user channel-level filtering finer than a whole bouquet, if a bouquet ever proves too coarse in practice
 

@@ -470,7 +470,8 @@
       "webcontrol_unauthorized": "Die Box verlangt ein Passwort. In den Einstellungen unter „WebControl“ eintragen.",
       "invalid_backup": "Das ist keine DreamHub-Sicherung oder eine mit einer nicht kompatiblen Version.",
       "restore_invalid": "Die Sicherung enthält Einstellungen, die nicht mehr gültig sind.",
-      "boxSays": "Die Box meldet: „{text}“"
+      "boxSays": "Die Box meldet: „{text}“",
+      "invalid_message": "Die Nachricht darf nicht leer sein und höchstens 300 Zeichen haben."
     },
     "media": {
       "not_a_recording": "Diese Aufnahme gibt es nicht (mehr).",
@@ -723,6 +724,22 @@
       "toggle": "Fernbedienung ein-/ausblenden",
       "openPage": "Ganze Seite",
       "close": "Fernbedienung schließen"
+    },
+    "message": {
+      "title": "Nachricht an den TV",
+      "text": "Nachricht",
+      "placeholder": "z. B. Essen ist fertig!",
+      "kind": "Art",
+      "timeout": "Anzeigedauer",
+      "kinds": {
+        "info": "Info",
+        "warning": "Warnung",
+        "error": "Fehler"
+      },
+      "seconds": "{n} Sek.",
+      "untilClosed": "Bis zum Schließen",
+      "send": "Senden",
+      "sent": "Auf dem TV angezeigt."
     }
   },
   "system": {

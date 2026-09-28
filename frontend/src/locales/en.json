@@ -470,7 +470,8 @@
       "webcontrol_unauthorized": "The box asks for a password. Set it in Settings → WebControl.",
       "invalid_backup": "This isn't a DreamHub backup file, or it's from an incompatible version.",
       "restore_invalid": "The backup contains settings that no longer validate.",
-      "boxSays": "The box says: “{text}”"
+      "boxSays": "The box says: “{text}”",
+      "invalid_message": "The message can't be empty or longer than 300 characters."
     },
     "media": {
       "not_a_recording": "This recording doesn't exist (anymore).",
@@ -723,6 +724,22 @@
       "toggle": "Show or hide the remote",
       "openPage": "Full page",
       "close": "Close the remote"
+    },
+    "message": {
+      "title": "Message to the TV",
+      "text": "Message",
+      "placeholder": "e.g. Dinner's ready!",
+      "kind": "Kind",
+      "timeout": "Shown for",
+      "kinds": {
+        "info": "Info",
+        "warning": "Warning",
+        "error": "Error"
+      },
+      "seconds": "{n} s",
+      "untilClosed": "Until closed",
+      "send": "Send",
+      "sent": "Shown on the TV."
     }
   },
   "system": {

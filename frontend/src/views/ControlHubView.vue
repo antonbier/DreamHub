@@ -40,11 +40,20 @@
       class="mt-5 grid grid-cols-[minmax(0,1fr)_300px] items-start gap-5 below-md:grid-cols-1"
     >
       <!-- Stays in view while scrolling down to the remote on a phone. -->
-      <div class="rounded border border-line bg-tile p-3 below-md:sticky below-md:top-0 below-md:z-10">
-        <ScreenView />
+      <div class="flex flex-col gap-5">
+        <div class="rounded border border-line bg-tile p-3 below-md:sticky below-md:top-0 below-md:z-10">
+          <ScreenView />
+        </div>
+        <div class="rounded border border-line bg-tile p-4 below-md:hidden">
+          <TvMessage />
+        </div>
       </div>
       <div class="rounded border border-line bg-tile p-4">
         <RemotePad />
+      </div>
+      <!-- Below 900px the message form follows the remote instead. -->
+      <div class="hidden rounded border border-line bg-tile p-4 below-md:block">
+        <TvMessage />
       </div>
     </div>
   </div>
@@ -55,6 +64,7 @@ import { useI18n } from 'vue-i18n'
 import Icon from '@/components/Icon.vue'
 import RemotePad from '@/components/control/RemotePad.vue'
 import ScreenView from '@/components/control/ScreenView.vue'
+import TvMessage from '@/components/control/TvMessage.vue'
 import { useControlHub } from '@/composables/useControlHub'
 import { useProblem } from '@/composables/useProblem'
 

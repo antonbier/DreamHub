@@ -3,6 +3,7 @@ package api_test
 import (
 	"encoding/json"
 	"net/http"
+	"strings"
 	"testing"
 
 	"github.com/antonbier/DreamHub/backend/internal/webcontrol/mock"
@@ -74,5 +75,19 @@ func TestControlZap_SwitchesChannel(t *testing.T) {
 	resp2, _ := e.do(t, "POST", "/api/v1/control/zap", `{}`, nil)
 	if resp2.StatusCode != http.StatusBadRequest {
 		t.Errorf("expected 400 for a missing serviceReference, got %d", resp2.StatusCode)
+	}
+}
+
+func TestControlMessage(t *testing.T) {
+	m := mock.New()
+	e := newEnvWith(t, m)
+	resp, b := e.do(t, "POST", "/api/v1/control/message", `{"text":"  Essen ist fertig!  ","kind":"info","timeout":10}`, nil)
+	if resp.StatusCode != http.StatusOK || m.LastMessage != "Essen ist fertig!" {
+		t.Fatalf("expected the trimmed text on the box, got %d %s / %q", resp.StatusCode, b, m.LastMessage)
+	}
+	for _, bad := range []string{`{"text":""}`, `{"text":"x","kind":"shout"}`, `{"text":"x","timeout":-1}`, `{"text":"` + strings.Repeat("a", 301) + `"}`} {
+		if resp, _ := e.do(t, "POST", "/api/v1/control/message", bad, nil); resp.StatusCode != http.StatusBadRequest {
+			t.Errorf("%s: expected 400, got %d", bad, resp.StatusCode)
+		}
 	}
 }

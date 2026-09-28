@@ -305,5 +305,7 @@ export const api = {
     power: () => request<{ inStandby: boolean }>('GET', '/api/v1/control/power'),
     sendKey: (code: number) => request<{ sent: number }>('POST', '/api/v1/control/key', { code }),
     zap: (serviceReference: string) => request<{ zapped: string }>('POST', '/api/v1/control/zap', { serviceReference }),
+    message: (text: string, kind: 'info' | 'warning' | 'error', timeout: number) =>
+      request<{ sent: boolean }>('POST', '/api/v1/control/message', { text, kind, timeout }),
   },
 }

@@ -36,8 +36,9 @@ type Client struct {
 	Standby bool
 	// LastZapped and LastKey record the most recent ControlHub action, for
 	// tests to assert on.
-	LastZapped string
-	LastKey    int
+	LastZapped  string
+	LastKey     int
+	LastMessage string
 	// screen is the simulated on-screen state Screenshot renders (screen.go).
 	screen screen
 }
@@ -271,6 +272,14 @@ func (c *Client) SendKey(ctx context.Context, code int) error {
 	defer c.mu.Unlock()
 	c.LastKey = code
 	c.screen.press(code, &c.Standby)
+	return nil
+}
+
+// Message records the text, for tests to assert on.
+func (c *Client) Message(ctx context.Context, text string, kind, timeout int) error {
+	c.mu.Lock()
+	defer c.mu.Unlock()
+	c.LastMessage = text
 	return nil
 }
 

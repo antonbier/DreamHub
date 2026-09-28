@@ -250,6 +250,9 @@ type Client interface {
 	Zap(ctx context.Context, serviceReference string) error
 	// SendKey simulates a remote-control keypress (ControlHub).
 	SendKey(ctx context.Context, code int) error
+	// Message shows a text on the TV (ControlHub): kind is one of the
+	// Message* constants, timeout in seconds (0 = until closed).
+	Message(ctx context.Context, text string, kind, timeout int) error
 	// Screenshot grabs the box's current screen as a PNG (ControlHub).
 	Screenshot(ctx context.Context) ([]byte, error)
 	// InStandby reports whether the box is in standby (ControlHub).
@@ -638,6 +641,30 @@ func (c *HTTPClient) SendKey(ctx context.Context, code int) error {
 		return &RejectedError{Op: "remotecontrol", Text: strings.TrimSpace(res.ResultText)}
 	}
 	return nil
+}
+
+// Message kinds, as Enigma2's MessageBox numbers them.
+const (
+	MessageInfo    = 1
+	MessageWarning = 2
+	MessageError   = 3
+)
+
+// Message shows text on the TV via /web/message (text, type, timeout —
+// the classic WebInterface's parameters; not yet confirmed live on the
+// reference box, ROADMAP.md). A form-encoded POST like every other write
+// (anti_hijack, ARCHITECTURE.md), gated by AllowWrites: it puts something
+// on the screen of whoever is watching.
+func (c *HTTPClient) Message(ctx context.Context, text string, kind, timeout int) error {
+	if !c.AllowWrites {
+		return ErrWritesDisabled
+	}
+	form := url.Values{
+		"text":    {text},
+		"type":    {strconv.Itoa(kind)},
+		"timeout": {strconv.Itoa(timeout)},
+	}
+	return c.simpleWrite(ctx, "message", form)
 }
 
 // Screenshot grabs the box's current screen as a PNG via /screenshot

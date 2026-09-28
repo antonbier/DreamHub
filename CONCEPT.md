@@ -207,5 +207,5 @@ DreamHub is a tool for getting things done, not a media center for browsing. Ple
 ## Release scope summary
 
 - **v1**: the complete core (dashboard with customizable and custom tiles, navigation, global search, notifications inbox, settings, onboarding, diagnostics, auth, i18n DE/IT/EN, time zone handling, profile- and role-ready data model) + MediaHub, TimerHub, GuideHub, DiscoveryHub, SeriesHub (basic), SystemHub (basic), AdminHub (logs), ControlHub (remote, screenshot, power — pulled forward from v1.1) + the TV launcher plugin + `.deb` packaging.
-- **v1.1**: RadioHub, ChannelHub, MediaHub trimming, AdminHub service status, ControlHub's "message to TV" (`/web/message`, not yet built).
+- **v1.1**: RadioHub, ChannelHub, MediaHub trimming, AdminHub service status, ControlHub's "message to TV" (`/web/message`) — built early, still to be confirmed live.
 - **Later**: StreamHub, AutomationHub, AdminHub terminal, external notification channels, Plex/Jellyfin/Emby connectors, more AI providers, profile/role UI, multiple dashboards UI, installable PWA (needs HTTPS — e.g. via a reverse proxy), additional languages incl. RTL.

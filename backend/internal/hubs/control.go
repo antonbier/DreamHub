@@ -3,6 +3,8 @@ package hubs
 import (
 	"errors"
 	"net/http"
+	"strings"
+	"unicode/utf8"
 
 	"github.com/antonbier/DreamHub/backend/internal/httpx"
 	"github.com/antonbier/DreamHub/backend/internal/webcontrol"
@@ -27,6 +29,7 @@ func (h *Control) Mount(mux *http.ServeMux) {
 	mux.HandleFunc("GET /api/v1/control/power", h.getPower)
 	mux.HandleFunc("POST /api/v1/control/key", h.sendKey)
 	mux.HandleFunc("POST /api/v1/control/zap", h.zap)
+	mux.HandleFunc("POST /api/v1/control/message", h.message)
 }
 
 func (h *Control) screenshot(w http.ResponseWriter, r *http.Request) {
@@ -89,6 +92,37 @@ func (h *Control) zap(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 	httpx.WriteJSON(w, http.StatusOK, map[string]any{"zapped": body.ServiceReference})
+}
+
+type messageBody struct {
+	Text    string `json:"text"`
+	Kind    string `json:"kind"`    // "info" (default), "warning", "error"
+	Timeout int    `json:"timeout"` // seconds, 0 = until closed; default 10 when omitted is the UI's choice
+}
+
+// maxMessageRunes keeps a message to what fits a TV message box.
+const maxMessageRunes = 300
+
+// message shows a text on the TV ("dinner's ready"). Direct, like the
+// remote: it's a transient on-screen box, not a durable change.
+func (h *Control) message(w http.ResponseWriter, r *http.Request) {
+	var body messageBody
+	if err := httpx.DecodeJSON(r, &body); err != nil {
+		httpx.WriteError(w, r, http.StatusBadRequest, "invalid_body", `expected {"text", "kind", "timeout"}`)
+		return
+	}
+	text := strings.TrimSpace(body.Text)
+	kinds := map[string]int{"": webcontrol.MessageInfo, "info": webcontrol.MessageInfo, "warning": webcontrol.MessageWarning, "error": webcontrol.MessageError}
+	kind, ok := kinds[body.Kind]
+	if text == "" || utf8.RuneCountInString(text) > maxMessageRunes || !ok || body.Timeout < 0 || body.Timeout > 600 {
+		httpx.WriteError(w, r, http.StatusBadRequest, "invalid_message", "text 1-300 characters, kind info/warning/error, timeout 0-600 s")
+		return
+	}
+	if err := h.WC.Message(r.Context(), text, kind, body.Timeout); err != nil {
+		writeControlError(w, r, "message", err)
+		return
+	}
+	httpx.WriteJSON(w, http.StatusOK, map[string]any{"sent": true})
 }
 
 func writeControlError(w http.ResponseWriter, r *http.Request, op string, err error) {

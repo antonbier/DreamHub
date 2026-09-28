@@ -401,3 +401,22 @@ func TestInStandby_ParsesPowerState(t *testing.T) {
 		t.Error("expected InStandby to report true")
 	}
 }
+
+func TestMessage_PostsTheForm(t *testing.T) {
+	srv := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		r.ParseForm()
+		if r.Method != http.MethodPost || r.URL.Path != "/web/message" || r.PostForm.Get("text") != "Essen!" || r.PostForm.Get("type") != "1" || r.PostForm.Get("timeout") != "10" {
+			t.Errorf("unexpected request: %s %s %v", r.Method, r.URL.Path, r.PostForm)
+		}
+		w.Write([]byte(`<e2simplexmlresult><e2state>True</e2state><e2statetext>Message sent successfully!</e2statetext></e2simplexmlresult>`))
+	}))
+	defer srv.Close()
+	c := NewHTTPClient(srv.URL)
+	if err := c.Message(context.Background(), "Essen!", MessageInfo, 10); err != ErrWritesDisabled {
+		t.Errorf("writes off: want ErrWritesDisabled, got %v", err)
+	}
+	c.AllowWrites = true
+	if err := c.Message(context.Background(), "Essen!", MessageInfo, 10); err != nil {
+		t.Fatalf("expected success, got %v", err)
+	}
+}

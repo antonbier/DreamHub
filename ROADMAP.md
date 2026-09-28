@@ -223,7 +223,8 @@ Pulled forward from v1.1 (`CONCEPT.md`, `docs/V1_PLAN.md`): verifying the Enigma
 
 **Open**:
 - [ ] Check the keys that aren't yet confirmed live on the box (mute, volume, channel, digits, Info, EPG, playback — standard Enigma2 codes, `lib/remoteKeys.ts`) once it's reachable again
-- [ ] "Message to TV" (`/web/message`) — v1.1, not yet researched or built
+- [x] "Message to TV" (2026-09-28, pulled forward from v1.1): `POST /api/v1/control/message` (`{text, kind: info|warning|error, timeout}`, 1–300 characters, 0–600 s) → `/web/message` as a form-encoded POST with the classic WebInterface's `text`/`type`/`timeout`, gated by `AllowWrites`; a small form under the picture on ControlHub's page, which refreshes the picture afterwards
+- [ ] Confirm `/web/message` live on the box (read `web/message.xml` and its `WebComponents/Sources` in the WebInterface plugin first, then one approved test message)
 
 ### AdminHub
 

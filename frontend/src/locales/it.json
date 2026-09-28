@@ -470,7 +470,8 @@
       "webcontrol_unauthorized": "Il box richiede una password. Impostala in Impostazioni → WebControl.",
       "invalid_backup": "Non è un file di backup di DreamHub, oppure proviene da una versione incompatibile.",
       "restore_invalid": "Il backup contiene impostazioni non più valide.",
-      "boxSays": "Il box dice: \"{text}\""
+      "boxSays": "Il box dice: \"{text}\"",
+      "invalid_message": "Il messaggio non può essere vuoto né superare i 300 caratteri."
     },
     "media": {
       "not_a_recording": "Questa registrazione non esiste (più).",
@@ -723,6 +724,22 @@
       "toggle": "Mostra o nascondi il telecomando",
       "openPage": "Pagina intera",
       "close": "Chiudi il telecomando"
+    },
+    "message": {
+      "title": "Messaggio alla TV",
+      "text": "Messaggio",
+      "placeholder": "es. La cena è pronta!",
+      "kind": "Tipo",
+      "timeout": "Durata",
+      "kinds": {
+        "info": "Info",
+        "warning": "Avviso",
+        "error": "Errore"
+      },
+      "seconds": "{n} s",
+      "untilClosed": "Fino alla chiusura",
+      "send": "Invia",
+      "sent": "Mostrato sulla TV."
     }
   },
   "system": {

@@ -370,7 +370,7 @@ func TestMedia_CoverArtAlreadyOnDisk(t *testing.T) {
 	}
 	for _, q := range []string{
 		"path=" + url.QueryEscape(ts) + "&kind=backdrop", // none there
-		"path=" + url.QueryEscape("/"+bauerTS),            // no cover
+		"path=" + url.QueryEscape("/"+bauerTS),           // no cover
 		"path=" + url.QueryEscape("/etc/passwd"),
 		"path=" + url.QueryEscape(mock.Root+"../../etc/x.ts"),
 	} {

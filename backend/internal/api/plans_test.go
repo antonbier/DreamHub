@@ -466,3 +466,37 @@ func TestAutoTimers_InstalledAndNot(t *testing.T) {
 		t.Errorf("the AutoTimer connector should report not_installed, got %s", b)
 	}
 }
+
+// Every mutating route goes through the same CSRF check — including the
+// read-only POSTs (views, enrichment lookups), which are harmless but must
+// not be the one door a foreign page could knock on.
+func TestCSRF_EveryMutatingRoute(t *testing.T) {
+	e := newEnv(t)
+	noHeader := func(r *http.Request) { r.Header.Del(httpx.CSRFHeader) }
+	foreign := func(r *http.Request) { r.Header.Set("Origin", "http://192.168.1.99:8080") }
+	routes := [][2]string{
+		{"POST", "/api/v1/control/key"},
+		{"POST", "/api/v1/control/zap"},
+		{"PUT", "/api/v1/dashboard"},
+		{"POST", "/api/v1/dashboard/view"},
+		{"POST", "/api/v1/enrich/lookup"},
+		{"POST", "/api/v1/media/rename/plan"},
+		{"POST", "/api/v1/media/trash/plan"},
+		{"POST", "/api/v1/media/rename/suggest"},
+		{"POST", "/api/v1/discovery/recommendations"},
+		{"POST", "/api/v1/timers/delete/plan"},
+		{"POST", "/api/v1/tokens"},
+		{"DELETE", "/api/v1/tokens/1"},
+		{"POST", "/api/v1/plans/x/apply"},
+		{"POST", "/api/v1/notifications/read"},
+		{"PUT", "/api/v1/admin/log-level"},
+	}
+	for _, rt := range routes {
+		for _, configure := range []func(*http.Request){noHeader, foreign} {
+			resp, b := e.do(t, rt[0], rt[1], `{}`, configure)
+			if code, _, _ := errCode(t, b); resp.StatusCode != http.StatusForbidden || code != "csrf_failed" {
+				t.Errorf("%s %s: expected 403 csrf_failed, got %d %s", rt[0], rt[1], resp.StatusCode, b)
+			}
+		}
+	}
+}

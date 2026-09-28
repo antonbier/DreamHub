@@ -191,7 +191,7 @@ func (h *Media) planRename(w http.ResponseWriter, r *http.Request) {
 	if !ok {
 		return
 	}
-	p, err := recfs.Clean(req.Path, roots)
+	p, err := recfs.CleanIn(h.FS, req.Path, roots)
 	if err != nil {
 		writeRecfsError(w, r, err)
 		return
@@ -202,7 +202,7 @@ func (h *Media) planRename(w http.ResponseWriter, r *http.Request) {
 			writeRecfsError(w, r, err)
 			return
 		}
-		if _, err := h.FS.ReadFile(p + ".meta"); err != nil {
+		if fi, err := h.FS.Lstat(p + ".meta"); err != nil || !fi.Mode().IsRegular() {
 			writeRecfsError(w, r, recfs.ErrNoMeta)
 			return
 		}
@@ -289,7 +289,7 @@ type pathsRequest struct {
 	Paths []string `json:"paths"`
 }
 
-func decodePaths(w http.ResponseWriter, r *http.Request, roots []string) ([]string, bool) {
+func (h *Media) decodePaths(w http.ResponseWriter, r *http.Request, roots []string) ([]string, bool) {
 	var req pathsRequest
 	if err := httpx.DecodeJSON(r, &req); err != nil || len(req.Paths) == 0 || len(req.Paths) > maxPathsPerPlan {
 		httpx.WriteError(w, r, http.StatusBadRequest, "invalid_body", fmt.Sprintf(`expected {"paths": [...]} with 1–%d entries`, maxPathsPerPlan))
@@ -298,7 +298,7 @@ func decodePaths(w http.ResponseWriter, r *http.Request, roots []string) ([]stri
 	out := make([]string, 0, len(req.Paths))
 	seen := map[string]bool{}
 	for _, raw := range req.Paths {
-		p, err := recfs.Clean(raw, roots)
+		p, err := recfs.CleanIn(h.FS, raw, roots)
 		if err != nil {
 			writeRecfsError(w, r, err)
 			return nil, false
@@ -317,7 +317,7 @@ func (h *Media) planTrash(w http.ResponseWriter, r *http.Request) {
 	if !ok {
 		return
 	}
-	paths, ok := decodePaths(w, r, roots)
+	paths, ok := h.decodePaths(w, r, roots)
 	if !ok {
 		return
 	}
@@ -383,7 +383,7 @@ func (h *Media) planRestore(w http.ResponseWriter, r *http.Request) {
 	if !ok {
 		return
 	}
-	paths, ok := decodePaths(w, r, roots)
+	paths, ok := h.decodePaths(w, r, roots)
 	if !ok {
 		return
 	}
@@ -427,7 +427,7 @@ func (h *Media) planEmpty(w http.ResponseWriter, r *http.Request) {
 	if !ok {
 		return
 	}
-	paths, ok := decodePaths(w, r, roots)
+	paths, ok := h.decodePaths(w, r, roots)
 	if !ok {
 		return
 	}

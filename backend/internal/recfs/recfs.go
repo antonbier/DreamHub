@@ -62,6 +62,12 @@ func (OS) WriteFile(name string, data []byte) error {
 		_ = os.Remove(tmp)
 		return err
 	}
+	// Explicitly: DreamHub runs with umask 077, which WriteFile would apply,
+	// and the box's other readers (a Samba share, say) expect the old mode.
+	if err := os.Chmod(tmp, fi.Mode().Perm()); err != nil {
+		_ = os.Remove(tmp)
+		return err
+	}
 	if err := os.Rename(tmp, name); err != nil {
 		_ = os.Remove(tmp)
 		return err
@@ -103,6 +109,35 @@ func Clean(p string, roots []string) (string, error) {
 		if strings.HasPrefix(p, r+"/") {
 			return p, nil
 		}
+	}
+	return "", ErrOutsideFolders
+}
+
+// CleanIn is Clean plus a check against symbolic links: every folder
+// between the recording folder and p must be a real folder, not a link. A
+// link inside the recording folders (e.g. "movie/x -> /etc") would
+// otherwise let a file operation reach outside them while the path still
+// looks inside.
+func CleanIn(fsys FS, p string, roots []string) (string, error) {
+	p, err := Clean(p, roots)
+	if err != nil {
+		return "", err
+	}
+	for _, r := range roots {
+		root := path.Clean("/" + strings.TrimLeft(r, "/"))
+		if !strings.HasPrefix(p, root+"/") {
+			continue
+		}
+		for dir := path.Dir(p); dir != root && strings.HasPrefix(dir, root+"/"); dir = path.Dir(dir) {
+			fi, err := fsys.Lstat(dir)
+			if err != nil {
+				return "", err
+			}
+			if fi.Mode()&fs.ModeSymlink != 0 || !fi.IsDir() {
+				return "", ErrOutsideFolders
+			}
+		}
+		return p, nil
 	}
 	return "", ErrOutsideFolders
 }
@@ -380,6 +415,11 @@ func SetMetaTitle(fsys FS, tsPath, title string) ([]byte, error) {
 	title, err := ValidTitle(title)
 	if err != nil {
 		return nil, err
+	}
+	// A regular file only: a .ts.meta that is a link to some other file
+	// must not have that file's content copied into the recording folder.
+	if fi, err := fsys.Lstat(tsPath + ".meta"); err != nil || !fi.Mode().IsRegular() {
+		return nil, ErrNoMeta
 	}
 	old, err := fsys.ReadFile(tsPath + ".meta")
 	if err != nil {

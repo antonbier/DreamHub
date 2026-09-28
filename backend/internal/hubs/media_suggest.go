@@ -91,7 +91,7 @@ func (h *Media) suggest(w http.ResponseWriter, r *http.Request) {
 	if !ok {
 		return
 	}
-	p, err := recfs.Clean(req.Path, roots)
+	p, err := recfs.CleanIn(h.FS, req.Path, roots)
 	if err == nil {
 		_, err = recfs.Files(h.FS, p)
 	}

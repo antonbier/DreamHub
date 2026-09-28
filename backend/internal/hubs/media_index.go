@@ -101,6 +101,19 @@ func (h *Media) refreshIndex(ctx context.Context) {
 	go h.buildIndex(roots)
 }
 
+// readRegular reads a file only if it's a regular file, not a link to
+// something outside the recording folders.
+func readRegular(fsys recfs.FS, name string) ([]byte, error) {
+	fi, err := fsys.Lstat(name)
+	if err != nil {
+		return nil, err
+	}
+	if !fi.Mode().IsRegular() {
+		return nil, recfs.ErrOutsideFolders
+	}
+	return fsys.ReadFile(name)
+}
+
 // mediaFile reports whether a file is something the box's movie list
 // shows: its own .ts recordings, and other video files placed alongside.
 func mediaFile(name string) bool {
@@ -145,7 +158,7 @@ func walkRecordings(fsys recfs.FS, roots []string) []indexEntry {
 			if strings.HasSuffix(e.Name(), ".ts") {
 				entry.Title = recfs.Base(full)
 			}
-			if meta, err := fsys.ReadFile(full + ".meta"); err == nil {
+			if meta, err := readRegular(fsys, full+".meta"); err == nil {
 				lines := strings.SplitN(string(meta), "\n", 5)
 				if len(lines) > 1 && strings.TrimSpace(lines[1]) != "" {
 					entry.Title = strings.TrimSpace(lines[1])

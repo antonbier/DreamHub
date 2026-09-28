@@ -1,7 +1,9 @@
 <!--
-  A poster or backdrop from enrichment, fetched through DreamHub's own
-  image endpoint with the app's auth header (an <img src> can't carry it)
-  and shown as an object URL. Object URLs are shared per image for the
+  A poster or backdrop: a recording's own cover art already on the box
+  (`recording`, GET /api/v1/media/cover — preferred, it's what the box's
+  other plugins show too), else one from enrichment (`path`, TMDB through
+  DreamHub's image endpoint). Fetched with the app's auth header (an
+  <img src> can't carry it) and shown as an object URL. Object URLs are shared per image for the
   session, so the same poster in two places is fetched once. Without a
   path, or while loading, it's a plain `field`-colored box of the same
   size, so rows don't jump when the picture arrives.
@@ -18,12 +20,10 @@ import { api } from '@/api/client'
 // Session-wide cache: image key → object URL (or the pending fetch).
 const urls = new Map<string, Promise<string | null>>()
 
-function load(size: string, path: string): Promise<string | null> {
-  const key = `${size}${path}`
+function load(key: string, fetchBlob: () => Promise<Blob>): Promise<string | null> {
   let p = urls.get(key)
   if (!p) {
-    p = api.enrich
-      .image(size, path)
+    p = fetchBlob()
       .then((blob) => URL.createObjectURL(blob))
       .catch(() => {
         urls.delete(key) // try again another time
@@ -39,19 +39,29 @@ function load(size: string, path: string): Promise<string | null> {
 import { ref, watch } from 'vue'
 
 const props = withDefaults(
-  defineProps<{ path?: string; size?: 'w92' | 'w185' | 'w342' | 'w780'; width?: number; height?: number; alt?: string }>(),
+  defineProps<{
+    path?: string
+    // A recording's .ts path whose own cover art to show instead of path.
+    recording?: string
+    size?: 'w92' | 'w185' | 'w342' | 'w780'
+    width?: number
+    height?: number
+    alt?: string
+  }>(),
   { size: 'w92', width: 36, height: 52, alt: '' },
 )
 
 const src = ref<string | null>(null)
 watch(
-  () => [props.path, props.size],
+  () => [props.recording, props.path, props.size],
   async () => {
     src.value = null
-    if (!props.path) return
-    const path = props.path
-    const url = await load(props.size, path)
-    if (props.path === path) src.value = url
+    const { recording, path, size } = props
+    let url: string | null = null
+    if (recording) url = await load(`rec:${recording}`, () => api.media.cover(recording))
+    else if (path) url = await load(`${size}${path}`, () => api.enrich.image(size, path))
+    else return
+    if (props.recording === recording && props.path === path) src.value = url
   },
   { immediate: true },
 )

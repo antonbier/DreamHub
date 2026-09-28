@@ -5,8 +5,19 @@ import (
 	"image"
 	"image/color"
 	"image/draw"
+	"image/jpeg"
 	"image/png"
 )
+
+// coverJPEG is a small real JPEG poster for the mock's cover-art fixture.
+func coverJPEG() string {
+	img := image.NewRGBA(image.Rect(0, 0, 120, 180))
+	draw.Draw(img, img.Bounds(), image.NewUniform(color.RGBA{140, 40, 50, 255}), image.Point{}, draw.Src)
+	draw.Draw(img, image.Rect(0, 120, 120, 180), image.NewUniform(color.RGBA{30, 30, 40, 255}), image.Point{}, draw.Src)
+	var buf bytes.Buffer
+	_ = jpeg.Encode(&buf, img, &jpeg.Options{Quality: 80})
+	return buf.String()
+}
 
 // Linux input-event codes the mock's simulated screen reacts to — the
 // subset confirmed live on the reference box (ARCHITECTURE.md, "Real

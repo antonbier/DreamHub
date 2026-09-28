@@ -66,8 +66,11 @@ func recordingFixtures() map[string]string {
 		tatort + ".ts":            "recording",
 		tatort + ".ts.meta":       "1:0:19:283D:3FB:1:C00000:0:0:0:\nTatort: Borowski und das Haus am Meer\n\n1790021700\n",
 		tatort + ".eit":           "eit",
-		old + ".ts.trash":         "recording",
-		old + ".ts.meta":          "1:0:19:2B66:3F2:1:C00000:0:0:0:\nAlte Doku\n\n1735758900\n",
+		// Cover art another plugin left next to the recording, as found on
+		// the reference box (ARCHITECTURE.md #11).
+		tatort + ".jpg":   coverJPEG(),
+		old + ".ts.trash": "recording",
+		old + ".ts.meta":  "1:0:19:2B66:3F2:1:C00000:0:0:0:\nAlte Doku\n\n1735758900\n",
 	}
 }
 

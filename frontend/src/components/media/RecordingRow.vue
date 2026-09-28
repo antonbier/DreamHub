@@ -1,6 +1,7 @@
 <!--
   One entry of a MediaHub folder — DESIGN.md's Row: an optional selection
-  box (bulk "move to trash"), a poster thumbnail when enrichment is on,
+  box (bulk "move to trash"), a poster thumbnail (the recording's own cover
+  art on the box if there is one, else TMDB's when enrichment is on),
   title with channel · time · length · genres, rating, size, and
   text actions that appear on hover (always visible below 900 px). A
   non-recording (a manually copied .mkv) is dimmed and labeled, never
@@ -22,7 +23,12 @@
         :aria-label="t('media.select', { title: movie.title })"
         @change="emit('toggle')"
       />
-      <PosterImage v-if="movie.isRecording && enrich.enabled" :path="info?.poster" :alt="info?.title" />
+      <PosterImage
+        v-if="movie.isRecording && (movie.cover || enrich.enabled)"
+        :recording="movie.cover ? movie.filename : undefined"
+        :path="movie.cover ? undefined : info?.poster"
+        :alt="movie.title"
+      />
       <span class="min-w-0 flex-1">
         <span class="block truncate text-[14px] text-text">{{ movie.title }}</span>
         <span class="block truncate text-[12.5px] text-muted">

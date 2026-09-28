@@ -5,6 +5,7 @@ import (
 	"encoding/json"
 	"fmt"
 	"net/http"
+	"net/url"
 	"strings"
 	"testing"
 
@@ -352,4 +353,29 @@ func must(b []byte, err error) []byte {
 		panic(err)
 	}
 	return b
+}
+
+func TestMedia_CoverArtAlreadyOnDisk(t *testing.T) {
+	e := newEnv(t)
+	tatortDir := mock.Root + "Tatort/"
+	f := e.folder(t, tatortDir)
+	_, b := e.do(t, "GET", "/api/v1/media/movies?dir="+url.QueryEscape(tatortDir), "", nil)
+	if len(f.Movies) != 1 || !strings.Contains(string(b), `"cover":true`) || strings.Contains(string(b), `"backdrop":true`) {
+		t.Fatalf("the Tatort recording has a cover, no backdrop: %s", b)
+	}
+	ts := f.Movies[0].Filename
+	resp, img := e.do(t, "GET", "/api/v1/media/cover?path="+url.QueryEscape(ts), "", nil)
+	if resp.StatusCode != http.StatusOK || resp.Header.Get("Content-Type") != "image/jpeg" || len(img) == 0 {
+		t.Fatalf("cover: %d %s", resp.StatusCode, resp.Header.Get("Content-Type"))
+	}
+	for _, q := range []string{
+		"path=" + url.QueryEscape(ts) + "&kind=backdrop", // none there
+		"path=" + url.QueryEscape("/"+bauerTS),            // no cover
+		"path=" + url.QueryEscape("/etc/passwd"),
+		"path=" + url.QueryEscape(mock.Root+"../../etc/x.ts"),
+	} {
+		if resp, _ := e.do(t, "GET", "/api/v1/media/cover?"+q, "", nil); resp.StatusCode != http.StatusNotFound {
+			t.Errorf("%s: expected 404, got %d", q, resp.StatusCode)
+		}
+	}
 }

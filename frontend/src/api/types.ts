@@ -180,6 +180,10 @@ export interface Movie {
   filename: string
   fileSize: number
   isRecording: boolean
+  // Cover art already next to the recording on the box (another plugin's),
+  // served by GET /api/v1/media/cover; only known when DreamHub runs on the box.
+  cover?: boolean
+  backdrop?: boolean
 }
 
 // backend/internal/hubs.list — one folder of recordings, GET /api/v1/media/movies?dir=.

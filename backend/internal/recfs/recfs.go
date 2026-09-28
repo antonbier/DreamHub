@@ -157,6 +157,28 @@ func belongs(name, base string) bool {
 	return false
 }
 
+// Covers returns a recording's cover art already on disk — written by
+// another plugin next to the recording (confirmed on the reference box:
+// "<base>.jpg" and "<base>.backdrop.jpg", ARCHITECTURE.md #11) — as paths,
+// "" where there is none. Regular files only, never a link.
+func Covers(fsys FS, tsPath string) (poster, backdrop string) {
+	dir, base := path.Dir(tsPath), Base(tsPath)
+	regular := func(p string) bool {
+		fi, err := fsys.Lstat(p)
+		return err == nil && fi.Mode().IsRegular() && fi.Size() > 0
+	}
+	for _, name := range []string{base + ".jpg", base + ".png"} {
+		if p := path.Join(dir, name); regular(p) {
+			poster = p
+			break
+		}
+	}
+	if p := path.Join(dir, base+".backdrop.jpg"); regular(p) {
+		backdrop = p
+	}
+	return poster, backdrop
+}
+
 // Files returns every regular file of the recording at tsPath (which must
 // exist and be a regular .ts file), main file first.
 func Files(fsys FS, tsPath string) ([]string, error) {

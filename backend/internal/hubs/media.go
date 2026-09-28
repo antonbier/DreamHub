@@ -54,6 +54,7 @@ type Media struct {
 func (h *Media) Mount(mux *http.ServeMux) {
 	mux.HandleFunc("GET /api/v1/media/movies", h.list)
 	mux.HandleFunc("GET /api/v1/media/disk", h.disk)
+	mux.HandleFunc("GET /api/v1/media/cover", h.cover)
 	mux.HandleFunc("POST /api/v1/media/rename/plan", h.planRename)
 	mux.HandleFunc("POST /api/v1/media/rename/suggest", h.suggest)
 	mux.HandleFunc("POST /api/v1/media/trash/plan", h.planTrash)
@@ -77,6 +78,11 @@ func isRecording(filename string) bool {
 type MovieView struct {
 	webcontrol.Movie
 	IsRecording bool `json:"isRecording"`
+	// Cover/Backdrop: cover art already next to the recording on disk
+	// (media_cover.go), served by GET /api/v1/media/cover. Only known when
+	// DreamHub runs on the box.
+	Cover    bool `json:"cover,omitempty"`
+	Backdrop bool `json:"backdrop,omitempty"`
 }
 
 // Search implements hub.SearchProvider: a case-insensitive substring match
@@ -151,9 +157,16 @@ func (h *Media) list(w http.ResponseWriter, r *http.Request) {
 		httpx.WriteError(w, r, http.StatusBadGateway, "webcontrol_unavailable", "could not reach WebControl")
 		return
 	}
+	onBox := recfs.Available(h.FS, roots)
 	views := make([]MovieView, len(folder.Movies))
 	for i, m := range folder.Movies {
 		views[i] = MovieView{Movie: m, IsRecording: isRecording(m.Filename)}
+		if onBox && views[i].IsRecording {
+			if p, err := recfs.CleanIn(h.FS, m.Filename, roots); err == nil {
+				poster, backdrop := recfs.Covers(h.FS, p)
+				views[i].Cover, views[i].Backdrop = poster != "", backdrop != ""
+			}
+		}
 	}
 	subfolders := make([]folderView, 0, len(folder.Subfolders))
 	for _, sf := range folder.Subfolders {

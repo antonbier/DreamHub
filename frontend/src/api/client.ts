@@ -209,6 +209,9 @@ export const api = {
   },
   media: {
     // One folder; no dir means the box's first recording folder.
+    // A recording's own cover art from the box's disk (not TMDB).
+    cover: (path: string, kind: 'poster' | 'backdrop' = 'poster') =>
+      requestBlob(`/api/v1/media/cover?path=${encodeURIComponent(path)}&kind=${kind}`),
     folder: (dir?: string) =>
       request<MediaFolder>('GET', `/api/v1/media/movies${dir ? `?dir=${encodeURIComponent(dir)}` : ''}`),
     suggestName: (path: string, source: SuggestionSource) =>

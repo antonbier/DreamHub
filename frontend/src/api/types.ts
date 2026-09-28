@@ -293,11 +293,38 @@ export interface SeriesBroadcast {
   hasTimer: boolean
 }
 
+// backend/internal/hubs/series_episodes.go: every episode TVmaze knows.
+export type EpisodeStatus = 'recorded' | 'planned' | 'upcoming' | 'missing' | 'aired'
+export interface GuideEpisode {
+  season: number
+  number: number
+  name: string
+  airdate?: string // YYYY-MM-DD
+  airstamp?: number // Unix seconds, UTC
+  status: EpisodeStatus
+}
+export interface GuideSeason {
+  season: number
+  episodes: GuideEpisode[]
+  recorded: number
+  planned: number
+  missing: number
+  upcoming: number
+}
+export interface EpisodeGuide {
+  state: 'ok' | 'off' | 'noMatch' | 'failed'
+  source?: string
+  showName?: string
+  matchable: boolean // recordings carry episode codes, so "missing" means something
+  seasons: GuideSeason[]
+}
+
 export interface SeriesDetail {
   marker: SeriesMarker
   upcoming: UpcomingEpisode[]
   recordings: SeriesRecording[]
   broadcasts: SeriesBroadcast[]
+  episodes: EpisodeGuide
   unavailable: Array<'upcoming' | 'recordings' | 'broadcasts'>
 }
 

@@ -7,6 +7,7 @@ import (
 	"context"
 	"github.com/antonbier/DreamHub/backend/internal/recfs"
 	"github.com/antonbier/DreamHub/backend/internal/tmdb"
+	"github.com/antonbier/DreamHub/backend/internal/tvmaze"
 	"log/slog"
 	"net/http"
 	"path/filepath"
@@ -47,6 +48,9 @@ type Options struct {
 	// TMDB is the TMDB client (internal/tmdb), for name suggestions; nil
 	// means TMDB suggestions report "not configured".
 	TMDB tmdb.Client
+	// TVmaze is the TVmaze client (internal/tvmaze), for SeriesHub's
+	// episode lists; nil leaves them out.
+	TVmaze tvmaze.Client
 	// RecordingsFS is where MediaHub's file operations act: recfs.OS{} on
 	// the box, the mock's in-memory FS in mock mode, nil to disable them.
 	RecordingsFS recfs.FS
@@ -143,6 +147,7 @@ func New(ctx context.Context, o Options) (*App, error) {
 	conns.Add(connector.AutoTimer{Client: o.AutoTimer})
 	conns.Add(connector.OpenAI{})
 	conns.Add(connector.TMDB{})
+	conns.Add(connector.TVmaze{})
 
 	hubs := hub.NewRegistry()
 	for _, d := range hub.V1() {
@@ -194,7 +199,7 @@ func New(ctx context.Context, o Options) (*App, error) {
 	mediaHub := &hubs_.Media{WC: o.WebControl, Plans: plans, FS: o.RecordingsFS, ReadOnly: o.ReadOnlyFiles,
 		Settings: svc, Store: st, AI: o.AI, TMDB: o.TMDB, Now: now}
 	guideHub := &hubs_.Guide{WC: o.WebControl, Now: now}
-	seriesHub := &hubs_.Series{SR: o.Series, WC: o.WebControl, Now: now}
+	seriesHub := &hubs_.Series{SR: o.Series, WC: o.WebControl, TVmaze: o.TVmaze, Store: st, Settings: svc, Now: now}
 	discoveryHub := &hubs_.Discovery{WC: o.WebControl, SR: o.Series, AT: o.AutoTimer, AI: o.AI, Store: st, Settings: svc, Now: now}
 	systemHub := &hubs_.System{Store: st, Settings: svc, Dashboard: dash, Plans: plans, Now: now}
 	adminHub := &hubs_.Admin{Store: st, Level: level, Logs: o.Logs, FS: o.RecordingsFS}

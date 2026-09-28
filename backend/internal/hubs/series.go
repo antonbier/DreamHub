@@ -10,6 +10,9 @@ import (
 	"github.com/antonbier/DreamHub/backend/internal/httpx"
 	"github.com/antonbier/DreamHub/backend/internal/hub"
 	"github.com/antonbier/DreamHub/backend/internal/serienrecorder"
+	"github.com/antonbier/DreamHub/backend/internal/settings"
+	"github.com/antonbier/DreamHub/backend/internal/store"
+	"github.com/antonbier/DreamHub/backend/internal/tvmaze"
 	"github.com/antonbier/DreamHub/backend/internal/webcontrol"
 )
 
@@ -20,8 +23,13 @@ type Series struct {
 	SR serienrecorder.Client
 	// WC is optional: without it the detail view still shows
 	// SerienRecorder's own data and reports the rest as unavailable.
-	WC  webcontrol.Client
-	Now func() time.Time
+	WC webcontrol.Client
+	// TVmaze (optional) supplies the episode guide (series_episodes.go),
+	// cached in Store; Settings says whether it's switched on.
+	TVmaze   tvmaze.Client
+	Store    *store.Store
+	Settings *settings.Service
+	Now      func() time.Time
 }
 
 func (h *Series) now() time.Time {

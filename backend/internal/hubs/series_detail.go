@@ -26,6 +26,9 @@ type seriesDetail struct {
 	Upcoming   []serienrecorder.UpcomingEpisode `json:"upcoming"`
 	Recordings []seriesRecording                `json:"recordings"`
 	Broadcasts []seriesBroadcast                `json:"broadcasts"`
+	// Episodes is every episode TVmaze knows, with what's recorded,
+	// planned, missing or still to come (series_episodes.go).
+	Episodes episodeGuide `json:"episodes"`
 	// Unavailable names the parts that couldn't be loaded ("upcoming",
 	// "recordings", "broadcasts"), so the screen can say so instead of
 	// showing a misleading empty list.
@@ -101,6 +104,7 @@ func (h *Series) detail(w http.ResponseWriter, r *http.Request) {
 			out.Broadcasts = casts
 		}
 	}
+	out.Episodes = h.episodeGuide(r.Context(), *marker, out.Recordings, out.Upcoming)
 	httpx.WriteJSON(w, http.StatusOK, out)
 }
 

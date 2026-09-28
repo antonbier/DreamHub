@@ -186,7 +186,8 @@ Notes:
 
 **Open**:
 - [x] SerienRecorder not installed → connector state `not_installed` with an install hint instead of "unreachable" (v1 plan rule 1: optional plugins never break DreamHub)
-- [ ] Missing episodes — needs the series' full episode list, which neither the box nor the endpoints used so far provide; SerienRecorder's `transmissions` (`?wlid=&fsid=&filterMode=`, confirmed reachable) is the likely source, but its response format hasn't been captured yet (the saved fixture is a failed call without parameters) — capture it on the box first
+- [x] Episode guide with missing episodes (2026-09-28): a new optional connector, **TVmaze** (`internal/tvmaze`, public API, no key; Settings → TVmaze, on by default, since it sends followed series' names), supplies every episode; the series page lists them per season (newest first, open) as recorded (a recording carries the S01E02 code), planned (SerienRecorder has timered it), still to come, or missing. **"Missing" is only claimed when the series' recordings carry episode codes at all** — otherwise every aired episode would look missing, so it just says "aired" and explains why. The show must match the series name exactly (normalized), so "Tatort-Reiniger" is never taken for "Tatort". Show matches are cached 30 days (misses 3), episode lists 12 h, and a stale list is still used while TVmaze is down
+- [ ] Check the guide on the box: how many followed series TVmaze finds by name (German titles), and whether SerienRecorder's recordings carry their S01E02 codes where `/web/movielist` reports them (title or description). SerienRecorder's own `transmissions` endpoint remains an alternative source once its format is captured
 - [ ] Check the detail view's recording match against real SerienRecorder recordings on the box (how SR names its timers/files there, whether its `S01E02` codes land in the title or description)
 
 **Done** — series detail view (2026-09-28, mock only, box was offline):

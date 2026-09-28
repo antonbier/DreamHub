@@ -402,6 +402,27 @@
       "noSeason": "Senza stagione",
       "code": "S{season}E{episode}",
       "partUnavailable": "Non è stato possibile caricarlo adesso."
+    },
+    "guide": {
+      "title": "Episodi",
+      "off": "L'elenco degli episodi arriva da TVmaze — attivalo nelle impostazioni alla voce «TVmaze».",
+      "noMatch": "TVmaze non conosce una serie con esattamente questo nome.",
+      "notMatchable": "Le registrazioni di questa serie non hanno codici episodio (S01E02), quindi non si può dire quali episodi manchino.",
+      "source": "Elenco episodi: {source}",
+      "status": {
+        "recorded": "Registrato",
+        "planned": "Pianificato",
+        "missing": "Manca",
+        "upcoming": "In arrivo",
+        "aired": "Trasmesso"
+      },
+      "tally": {
+        "recorded": "{n} di {of} registrati",
+        "missing": "1 manca | {n} mancano",
+        "planned": "1 pianificato | {n} pianificati",
+        "upcoming": "1 in arrivo | {n} in arrivo",
+        "aired": "1 trasmesso | {n} trasmessi"
+      }
     }
   },
   "discovery": {
@@ -588,6 +609,10 @@
       "title": "WebControl",
       "username": "Nome utente del box (solo se il box richiede una password)",
       "password": "Password del box"
+    },
+    "tvmaze": {
+      "title": "TVmaze",
+      "enabled": "Carica gli elenchi degli episodi da TVmaze (invia a TVmaze i nomi delle serie seguite)"
     }
   },
   "notFound": {

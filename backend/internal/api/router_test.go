@@ -8,6 +8,7 @@ import (
 	atmock "github.com/antonbier/DreamHub/backend/internal/autotimer/mock"
 	"github.com/antonbier/DreamHub/backend/internal/recfs"
 	tmdbmock "github.com/antonbier/DreamHub/backend/internal/tmdb/mock"
+	tvmazemock "github.com/antonbier/DreamHub/backend/internal/tvmaze/mock"
 	"io"
 	"log/slog"
 	"net/http"
@@ -81,6 +82,7 @@ func newEnvFull(t *testing.T, wc webcontrol.Client, at autotimer.Client, recFS r
 	a, err := app.New(context.Background(), app.Options{
 		ReadOnlyFiles: readOnly,
 		TMDB:          tmdbmock.New(),
+		TVmaze:        tvmazemock.New(),
 		DataDir:       t.TempDir(),
 		WebControl:    wc,
 		AutoTimer:     at,
@@ -456,7 +458,7 @@ func TestSettings_GetReturnsCoreSections(t *testing.T) {
 	for _, s := range body.Sections {
 		ids = append(ids, s.ID)
 	}
-	if strings.Join(ids, ",") != "general,auth,network,webcontrol,ai,tmdb,hubs" {
+	if strings.Join(ids, ",") != "general,auth,network,webcontrol,ai,tmdb,tvmaze,hubs" {
 		t.Fatalf("expected core, connector and hub sections in order, got %v", ids)
 	}
 	if v := body.Sections[0].Fields[0]; v.Key != settings.KeyLanguage || v.Value != "en" {
@@ -1106,5 +1108,65 @@ func TestSearch_FindsRecordingsInSubfolders(t *testing.T) {
 	if len(body.Results) != 1 || body.Results[0].HubID != "media" ||
 		body.Results[0].Path != "/media?dir="+url.QueryEscape("/media/hdd/movie/Tatort/") {
 		t.Fatalf("expected the subfolder recording, opening its folder: %s", b)
+	}
+}
+
+func TestSeries_EpisodeGuide(t *testing.T) {
+	box := mock.New()
+	// One recorded episode, with its code in the description as
+	// SerienRecorder writes it.
+	base := mock.Root + "20231005 2015 - RTL - Die Verräter"
+	box.FS.Put(base+".ts", "recording")
+	box.FS.Put(base+".ts.meta", "1:0:19:2EE3:441:1:C00000:0:0:0:\nDie Verräter - Vertraue Niemandem!\nS01E01 - Die Burg\n1696532400\n")
+	e := newEnvWith(t, box)
+
+	type guide struct {
+		Episodes struct {
+			State     string `json:"state"`
+			Matchable bool   `json:"matchable"`
+			Seasons   []struct {
+				Season   int `json:"season"`
+				Missing  int `json:"missing"`
+				Episodes []struct {
+					Number int    `json:"number"`
+					Status string `json:"status"`
+				} `json:"episodes"`
+			} `json:"seasons"`
+		} `json:"episodes"`
+	}
+	var g guide
+	_, b := e.do(t, "GET", "/api/v1/series/markers/10", "", nil)
+	json.Unmarshal(b, &g)
+	if g.Episodes.State != "ok" || !g.Episodes.Matchable || len(g.Episodes.Seasons) != 2 || g.Episodes.Seasons[0].Season != 2 {
+		t.Fatalf("guide, newest season first: %s", b)
+	}
+	s1 := g.Episodes.Seasons[1]
+	if s1.Missing != 2 || s1.Episodes[0].Status != "recorded" || s1.Episodes[1].Status != "missing" {
+		t.Errorf("season 1: E1 recorded, E2+E3 missing: %+v", s1)
+	}
+	if st := g.Episodes.Seasons[0].Episodes[1].Status; st != "upcoming" {
+		t.Errorf("an episode still to come isn't missing: %s", st)
+	}
+
+	// Tatort's recording carries no code: nothing is called missing, and
+	// SerienRecorder's timered E31 counts as planned.
+	g = guide{}
+	_, b = e.do(t, "GET", "/api/v1/series/markers/11", "", nil)
+	json.Unmarshal(b, &g)
+	if g.Episodes.State != "ok" || g.Episodes.Matchable || len(g.Episodes.Seasons) != 1 {
+		t.Fatalf("Tatort guide: %s", b)
+	}
+	eps := g.Episodes.Seasons[0].Episodes
+	if eps[0].Status != "aired" || eps[1].Status != "planned" {
+		t.Errorf("Tatort: E30 aired (unmatchable), E31 planned: %+v", eps)
+	}
+
+	// Switched off: nothing is asked.
+	e.do(t, "PATCH", "/api/v1/settings", `{"values":{"tvmaze.enabled":false}}`, nil)
+	g = guide{}
+	_, b = e.do(t, "GET", "/api/v1/series/markers/10", "", nil)
+	json.Unmarshal(b, &g)
+	if g.Episodes.State != "off" || len(g.Episodes.Seasons) != 0 {
+		t.Errorf("TVmaze off: %s", b)
 	}
 }

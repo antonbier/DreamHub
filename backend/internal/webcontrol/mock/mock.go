@@ -11,6 +11,7 @@ package mock
 
 import (
 	"context"
+	"strconv"
 	"strings"
 	"sync"
 	"time"
@@ -242,8 +243,20 @@ func (c *Client) MovieDir(ctx context.Context, dir string) (webcontrol.MovieFold
 			Filename:         "/" + full,
 			FileSize:         webcontrol.Int64(c.FS.Size(full)),
 		}
-		if title := recfs.MetaTitle(c.FS, full); title != "" {
-			m.Title = title
+		// Like the box: title, short description and time from .ts.meta.
+		if meta, err := c.FS.ReadFile(full + ".meta"); err == nil {
+			lines := strings.SplitN(string(meta), "\n", 5)
+			if len(lines) > 1 && strings.TrimSpace(lines[1]) != "" {
+				m.Title = strings.TrimSpace(lines[1])
+			}
+			if len(lines) > 2 {
+				m.Description = strings.TrimSpace(lines[2])
+			}
+			if len(lines) > 3 {
+				if t, err := strconv.ParseInt(strings.TrimSpace(lines[3]), 10, 64); err == nil {
+					m.Time = webcontrol.Int64(t)
+				}
+			}
 		}
 		f.Movies = append(f.Movies, m)
 	}

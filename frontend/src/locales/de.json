@@ -402,6 +402,27 @@
       "noSeason": "Ohne Staffelangabe",
       "code": "S{season}E{episode}",
       "partUnavailable": "Konnte gerade nicht geladen werden."
+    },
+    "guide": {
+      "title": "Folgen",
+      "off": "Die Folgenübersicht kommt von TVmaze — in den Einstellungen unter „TVmaze“ einschalten.",
+      "noMatch": "TVmaze kennt keine Serie mit genau diesem Namen.",
+      "notMatchable": "Die Aufnahmen dieser Serie tragen keine Folgennummern (S01E02) — welche Folgen fehlen, lässt sich daher nicht sagen.",
+      "source": "Folgenliste: {source}",
+      "status": {
+        "recorded": "Aufgenommen",
+        "planned": "Geplant",
+        "missing": "Fehlt",
+        "upcoming": "Kommt noch",
+        "aired": "Gelaufen"
+      },
+      "tally": {
+        "recorded": "{n} von {of} aufgenommen",
+        "missing": "1 fehlt | {n} fehlen",
+        "planned": "1 geplant | {n} geplant",
+        "upcoming": "1 kommt noch | {n} kommen noch",
+        "aired": "1 gelaufen | {n} gelaufen"
+      }
     }
   },
   "discovery": {
@@ -588,6 +609,10 @@
       "title": "WebControl",
       "username": "Benutzername der Box (nur nötig, wenn die Box ein Passwort verlangt)",
       "password": "Passwort der Box"
+    },
+    "tvmaze": {
+      "title": "TVmaze",
+      "enabled": "Folgenlisten von TVmaze laden (sendet die Namen verfolgter Serien an TVmaze)"
     }
   },
   "notFound": {

@@ -402,6 +402,27 @@
       "noSeason": "No season given",
       "code": "S{season}E{episode}",
       "partUnavailable": "Couldn't be loaded right now."
+    },
+    "guide": {
+      "title": "Episodes",
+      "off": "The episode list comes from TVmaze — switch it on in Settings under “TVmaze”.",
+      "noMatch": "TVmaze doesn't know a series of exactly this name.",
+      "notMatchable": "This series' recordings carry no episode codes (S01E02), so which episodes are missing can't be told.",
+      "source": "Episode list: {source}",
+      "status": {
+        "recorded": "Recorded",
+        "planned": "Planned",
+        "missing": "Missing",
+        "upcoming": "Still to come",
+        "aired": "Aired"
+      },
+      "tally": {
+        "recorded": "{n} of {of} recorded",
+        "missing": "1 missing | {n} missing",
+        "planned": "1 planned | {n} planned",
+        "upcoming": "1 still to come | {n} still to come",
+        "aired": "1 aired | {n} aired"
+      }
     }
   },
   "discovery": {
@@ -588,6 +609,10 @@
       "title": "WebControl",
       "username": "Box user name (only if the box asks for a password)",
       "password": "Box password"
+    },
+    "tvmaze": {
+      "title": "TVmaze",
+      "enabled": "Load episode lists from TVmaze (sends followed series' names to TVmaze)"
     }
   },
   "notFound": {

@@ -108,6 +108,8 @@
         </section>
       </div>
 
+      <EpisodeGuide class="mt-8" :guide="detail.episodes" />
+
       <!-- On disk -->
       <section class="mt-8">
         <h2 class="text-[15.5px] font-semibold text-text">
@@ -148,6 +150,7 @@ import { api, ApiError } from '@/api/client'
 import Icon from '@/components/Icon.vue'
 import PlanPreview from '@/components/PlanPreview.vue'
 import EnrichDetails from '@/components/enrich/EnrichDetails.vue'
+import EpisodeGuide from '@/components/series/EpisodeGuide.vue'
 import { useEnrichStore } from '@/stores/enrich'
 import { useNavigationStore } from '@/stores/navigation'
 import { useDisplayTimeZone } from '@/composables/useDisplayTimeZone'

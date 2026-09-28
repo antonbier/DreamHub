@@ -18,6 +18,7 @@ const (
 	IDSerienRecorder = "serienrecorder"
 	IDTMDB           = "tmdb"
 	IDOpenAI         = "openai"
+	IDTVmaze         = "tvmaze"
 )
 
 // Setting keys owned by connectors.
@@ -26,11 +27,15 @@ const (
 	// KeyTMDBEnrich turns enrichment (posters, ratings, overviews for the
 	// titles on screen, internal/enrich) on or off; with it off, TMDB is
 	// only asked on an explicit rename suggestion.
-	KeyTMDBEnrich   = "tmdb.enrich"
-	KeyAIProvider   = "ai.provider"
-	KeyOpenAIAPIKey = "ai.openai.apiKey"
-	KeyOpenAIModel  = "ai.openai.model"
-	KeyAIDailyLimit = "ai.dailyLimit"
+	KeyTMDBEnrich = "tmdb.enrich"
+	// KeyTVmazeEnabled switches the TVmaze connector (episode lists for
+	// SeriesHub's "missing episodes"); it sends followed series' names to
+	// TVmaze, so it can be turned off.
+	KeyTVmazeEnabled = "tvmaze.enabled"
+	KeyAIProvider    = "ai.provider"
+	KeyOpenAIAPIKey  = "ai.openai.apiKey"
+	KeyOpenAIModel   = "ai.openai.model"
+	KeyAIDailyLimit  = "ai.dailyLimit"
 
 	// Optional credentials for WebControl (and every plugin API behind it,
 	// e.g. SerienRecorder's). Only needed when the box enforces auth for
@@ -165,6 +170,30 @@ func (TMDB) Settings() []settings.Section {
 func (TMDB) Check(_ context.Context, v settings.Values) Report {
 	if v.String(KeyTMDBAPIKey) == "" {
 		return notConfigured("TMDB", "tmdb")
+	}
+	return Report{State: OK}
+}
+
+// --- TVmaze ---------------------------------------------------------------
+
+// TVmaze provides complete episode lists (SeriesHub's missing episodes).
+// Public API, no key: on unless switched off. Optional for every hub.
+type TVmaze struct{}
+
+func (TVmaze) ID() string   { return IDTVmaze }
+func (TVmaze) Name() string { return "TVmaze" }
+func (TVmaze) Settings() []settings.Section {
+	return []settings.Section{{
+		ID:    "tvmaze",
+		Label: "settings.tvmaze",
+		Fields: []settings.Field{
+			{Key: KeyTVmazeEnabled, Type: settings.TypeBool, Scope: settings.ScopeGlobal, Label: "settings.tvmaze.enabled", Default: true},
+		},
+	}}
+}
+func (TVmaze) Check(_ context.Context, v settings.Values) Report {
+	if !v.Bool(KeyTVmazeEnabled) {
+		return notConfigured("TVmaze", "tvmaze")
 	}
 	return Report{State: OK}
 }

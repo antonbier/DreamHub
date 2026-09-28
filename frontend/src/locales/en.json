@@ -279,7 +279,7 @@
       "any": "Any",
       "days": "1 day | {n} days",
       "minDurationHint": "The box's EPG has no genre — a minimum length of about 85 minutes mostly finds films.",
-      "topFolderOnly": "Searches only the top recording folder for now.",
+      "topFolderOnly": "On the box every recording folder is searched, elsewhere only the top folder.",
       "sort": "Sort",
       "limit": "Show",
       "preview": "Finds nothing right now. | Finds 1 match right now. | Finds {n} matches right now.",

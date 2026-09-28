@@ -3,6 +3,7 @@ package hubs
 import (
 	"context"
 	"fmt"
+	"net/url"
 	"strconv"
 	"time"
 
@@ -25,10 +26,9 @@ const (
 // schedule for a week is a lot for the box to serialize for one tile.
 const maxViewDays = 3
 
-// ViewSources implements hub.ViewProvider. Recordings come from the top
-// recording folder only, like MediaHub's search — walking every folder
-// through WebControl takes ~40 s on the reference box and blocks enigma2
-// meanwhile (ARCHITECTURE.md), so that waits for a cached index.
+// ViewSources implements hub.ViewProvider. Recordings come from every
+// folder when DreamHub runs on the box (the recording index,
+// media_index.go), else from the top folder only, like MediaHub's search.
 func (h *Media) ViewSources() []hub.ViewSource {
 	return []hub.ViewSource{{
 		ID:      SourceRecordings,
@@ -39,6 +39,13 @@ func (h *Media) ViewSources() []hub.ViewSource {
 }
 
 func (h *Media) View(ctx context.Context, sourceID string, q hub.ViewQuery, now time.Time) ([]hub.ViewItem, error) {
+	if entries, ok := h.recordingIndex(ctx); ok {
+		out := make([]hub.ViewItem, 0, len(entries))
+		for _, e := range entries {
+			out = append(out, hub.ViewItem{Title: e.Title, Subtitle: folderLabel(e.Folder), Time: e.Time, Size: e.Size, Path: "/media?dir=" + url.QueryEscape(e.Folder)})
+		}
+		return out, nil
+	}
 	movies, err := h.WC.MovieList(ctx)
 	if err != nil {
 		return nil, err

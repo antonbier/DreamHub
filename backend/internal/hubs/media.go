@@ -3,6 +3,7 @@ package hubs
 import (
 	"context"
 	"net/http"
+	"net/url"
 	"path"
 	"sort"
 	"strings"
@@ -43,6 +44,10 @@ type Media struct {
 	AI       ai.Client
 	TMDB     tmdb.Client
 	Now      func() time.Time
+
+	// index is every recording below the recording folders, read from the
+	// file system on the box (media_index.go).
+	index recIndex
 }
 
 // Mount registers MediaHub's routes.
@@ -76,19 +81,42 @@ type MovieView struct {
 
 // Search implements hub.SearchProvider: a case-insensitive substring match
 // over each recording's title.
+// Search implements hub.SearchProvider: recordings whose title contains
+// query, across every folder when DreamHub runs on the box (the recording
+// index), else the top folder /web/movielist answers for. A result opens
+// its folder.
 func (h *Media) Search(ctx context.Context, query string) ([]hub.SearchResult, error) {
+	q := strings.ToLower(query)
+	var out []hub.SearchResult
+	if entries, ok := h.recordingIndex(ctx); ok {
+		for _, e := range entries {
+			if strings.Contains(strings.ToLower(e.Title), q) {
+				out = append(out, hub.SearchResult{Title: e.Title, Subtitle: folderLabel(e.Folder), Path: "/media?dir=" + url.QueryEscape(e.Folder)})
+				if len(out) == maxMediaResults {
+					break
+				}
+			}
+		}
+		return out, nil
+	}
 	movies, err := h.WC.MovieList(ctx)
 	if err != nil {
 		return nil, err
 	}
-	q := strings.ToLower(query)
-	var out []hub.SearchResult
 	for _, m := range movies {
 		if strings.Contains(strings.ToLower(m.Title), q) {
 			out = append(out, hub.SearchResult{Title: m.Title, Subtitle: m.ServiceName, Path: "/media"})
 		}
 	}
 	return out, nil
+}
+
+// maxMediaResults caps the search provider's answer over the whole index.
+const maxMediaResults = 20
+
+// folderLabel is a folder's own name for a search result's subtitle.
+func folderLabel(folder string) string {
+	return path.Base(strings.TrimSuffix(folder, "/"))
 }
 
 // folderView is one subfolder in a listing.

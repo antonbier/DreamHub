@@ -279,7 +279,7 @@
       "any": "Qualsiasi",
       "days": "1 giorno | {n} giorni",
       "minDurationHint": "L'EPG del box non conosce il genere — una durata minima di circa 85 minuti trova per lo più film.",
-      "topFolderOnly": "Per ora cerca solo nella cartella principale delle registrazioni.",
+      "topFolderOnly": "Sul box vengono cercate tutte le cartelle, altrove solo quella principale.",
       "sort": "Ordinamento",
       "limit": "Quanti",
       "preview": "Al momento non trova nulla. | Al momento trova 1 risultato. | Al momento trova {n} risultati.",

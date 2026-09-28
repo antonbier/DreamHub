@@ -242,7 +242,7 @@ func TestSearch_FindsARealMovieByTitle(t *testing.T) {
 		} `json:"results"`
 	}
 	json.Unmarshal(b, &body)
-	if len(body.Results) != 1 || body.Results[0].Title != "Oskars Kleid.mkv" || body.Results[0].HubID != "media" || body.Results[0].Path != "/media" {
+	if len(body.Results) != 1 || body.Results[0].Title != "Oskars Kleid.mkv" || body.Results[0].HubID != "media" || !strings.HasPrefix(body.Results[0].Path, "/media") {
 		t.Fatalf("expected exactly the mock's non-recording file, got %+v", body.Results)
 	}
 }
@@ -1086,5 +1086,25 @@ func TestEnrich_LookupAndImages(t *testing.T) {
 	_, b = e.do(t, "POST", "/api/v1/enrich/lookup", body, nil)
 	if !strings.Contains(string(b), `"enabled":false`) {
 		t.Errorf("enrich off: %s", b)
+	}
+}
+
+func TestSearch_FindsRecordingsInSubfolders(t *testing.T) {
+	e := newEnv(t)
+	// The Tatort recording sits in a subfolder /web/movielist's top-folder
+	// answer doesn't include; the recording index (on the box: the file
+	// system) does.
+	_, b := e.do(t, "GET", "/api/v1/search?q=Haus%20am%20Meer", "", nil)
+	var body struct {
+		Results []struct {
+			HubID string `json:"hubId"`
+			Title string `json:"title"`
+			Path  string `json:"path"`
+		} `json:"results"`
+	}
+	json.Unmarshal(b, &body)
+	if len(body.Results) != 1 || body.Results[0].HubID != "media" ||
+		body.Results[0].Path != "/media?dir="+url.QueryEscape("/media/hdd/movie/Tatort/") {
+		t.Fatalf("expected the subfolder recording, opening its folder: %s", b)
 	}
 }

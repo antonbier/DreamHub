@@ -279,7 +279,7 @@
       "any": "Beliebig",
       "days": "1 Tag | {n} Tage",
       "minDurationHint": "Das EPG der Box kennt kein Genre — eine Mindestdauer von etwa 85 Minuten findet meist Spielfilme.",
-      "topFolderOnly": "Durchsucht vorerst nur den Hauptordner der Aufnahmen.",
+      "topFolderOnly": "Auf der Box werden alle Aufnahmeordner durchsucht, sonst nur der Hauptordner.",
       "sort": "Sortierung",
       "limit": "Anzahl",
       "preview": "Findet gerade nichts. | Findet gerade 1 Treffer. | Findet gerade {n} Treffer.",

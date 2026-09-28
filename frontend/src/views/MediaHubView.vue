@@ -200,7 +200,8 @@
 </template>
 
 <script setup lang="ts">
-import { computed, onMounted, reactive, ref } from 'vue'
+import { computed, onMounted, reactive, ref, watch } from 'vue'
+import { useRoute } from 'vue-router'
 import { useI18n } from 'vue-i18n'
 import { api } from '@/api/client'
 import Icon from '@/components/Icon.vue'
@@ -430,8 +431,16 @@ async function confirmTrashAction() {
   }
 }
 
+// ?dir= opens a folder directly — search results and custom tiles link a
+// recording's folder this way.
+const route = useRoute()
+const queryDir = () => (typeof route.query.dir === 'string' && route.query.dir ? route.query.dir : undefined)
+watch(queryDir, (dir) => {
+  if (dir) void open(dir)
+})
+
 onMounted(async () => {
-  void open()
+  void open(queryDir())
   api
     .connectors()
     .then((res) => {

@@ -219,7 +219,9 @@ func (h *Media) planRename(w http.ResponseWriter, r *http.Request) {
 			if err := h.inUseFailure(ctx, []string{p}); err != nil {
 				return err
 			}
-			return recfs.Apply(h.FS, moves)
+			err := recfs.Apply(h.FS, moves)
+			h.refreshIndex(context.WithoutCancel(ctx))
+			return err
 		},
 	})
 	httpx.WriteJSON(w, http.StatusOK, map[string]any{"plan": pl})
@@ -295,7 +297,9 @@ func (h *Media) planTrash(w http.ResponseWriter, r *http.Request) {
 			if err := h.inUseFailure(ctx, paths); err != nil {
 				return err
 			}
-			return recfs.Apply(h.FS, moves)
+			err := recfs.Apply(h.FS, moves)
+			h.refreshIndex(context.WithoutCancel(ctx))
+			return err
 		},
 	})
 	httpx.WriteJSON(w, http.StatusOK, map[string]any{"plan": pl})
@@ -347,11 +351,13 @@ func (h *Media) planRestore(w http.ResponseWriter, r *http.Request) {
 		Detail:      map[string]any{"moves": moves},
 		Fingerprint: current,
 		Current:     fp,
-		Execute: func(context.Context) error {
+		Execute: func(ctx context.Context) error {
 			if h.ReadOnly {
 				return webcontrol.ErrWritesDisabled
 			}
-			return recfs.Apply(h.FS, moves)
+			err := recfs.Apply(h.FS, moves)
+			h.refreshIndex(context.WithoutCancel(ctx))
+			return err
 		},
 	})
 	httpx.WriteJSON(w, http.StatusOK, map[string]any{"plan": pl})
@@ -394,11 +400,13 @@ func (h *Media) planEmpty(w http.ResponseWriter, r *http.Request) {
 		Detail:      map[string]any{"files": files, "bytes": size},
 		Fingerprint: current,
 		Current:     func(context.Context) (string, error) { return h.filesFingerprint(files), nil },
-		Execute: func(context.Context) error {
+		Execute: func(ctx context.Context) error {
 			if h.ReadOnly {
 				return webcontrol.ErrWritesDisabled
 			}
-			return recfs.Remove(h.FS, files)
+			err := recfs.Remove(h.FS, files)
+			h.refreshIndex(context.WithoutCancel(ctx))
+			return err
 		},
 	})
 	httpx.WriteJSON(w, http.StatusOK, map[string]any{"plan": pl, "bytes": size})

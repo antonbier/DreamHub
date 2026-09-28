@@ -29,6 +29,11 @@ type Marker struct {
 	Info            string `json:"info"`
 	Channels        string `json:"channels"`
 	NumberOfRecords int    `json:"numberOfRecords"`
+	// Seasons is SerienRecorder's own description of which seasons it
+	// records ("Alle (inkl. Specials)"), RecordFolder where the recordings
+	// go (confirmed in the live markers fixture).
+	Seasons      string `json:"seasons"`
+	RecordFolder string `json:"recordfolder"`
 }
 
 // UpcomingEpisode is one entry from /serienrecorderapi/timer?remaining=1 —

@@ -40,6 +40,7 @@ import type {
   Plan,
   Recommendation,
   SearchResult,
+  SeriesDetail,
   SeriesMarker,
   SettingsView,
   Timer,
@@ -222,6 +223,7 @@ export const api = {
   },
   series: {
     markers: () => request<{ markers: SeriesMarker[] }>('GET', '/api/v1/series/markers'),
+    detail: (id: number) => request<SeriesDetail>('GET', `/api/v1/series/markers/${id}`),
     upcoming: () => request<{ episodes: UpcomingEpisode[] }>('GET', '/api/v1/series/upcoming'),
   },
   discovery: {

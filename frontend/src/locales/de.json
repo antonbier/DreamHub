@@ -303,6 +303,29 @@
       "show": "Hier anzeigen",
       "hide": "Ausblenden",
       "openTab": "In neuem Tab öffnen"
+    },
+    "detail": {
+      "back": "Alle Serien",
+      "notFound": "Diese Serie wird nicht (mehr) verfolgt.",
+      "channels": "Sender",
+      "seasons": "Staffeln",
+      "recordedBySR": "Laut SerienRecorder aufgenommen",
+      "folder": "Aufnahmeordner",
+      "upcoming": "Geplante Folgen",
+      "upcomingEmpty": "SerienRecorder hat gerade keine Folge geplant.",
+      "broadcasts": "Im EPG",
+      "broadcastsHint": "Weitere Ausstrahlungen laut Programmführer der Box.",
+      "broadcastsEmpty": "Keine weiteren Ausstrahlungen im EPG.",
+      "hasTimer": "Timer vorhanden",
+      "record": "Aufnehmen",
+      "createTimer": "Timer anlegen",
+      "recordSummary": "Timer für „{title}“ auf {channel}, {time}.",
+      "recordings": "Aufnahmen",
+      "recordingsEmpty": "Keine Aufnahmen dieser Serie gefunden.",
+      "season": "Staffel {season}",
+      "noSeason": "Ohne Staffelangabe",
+      "code": "S{season}E{episode}",
+      "partUnavailable": "Konnte gerade nicht geladen werden."
     }
   },
   "discovery": {

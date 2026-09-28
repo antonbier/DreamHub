@@ -3,24 +3,38 @@ package hubs
 import (
 	"context"
 	"net/http"
+	"strconv"
 	"strings"
+	"time"
 
 	"github.com/antonbier/DreamHub/backend/internal/httpx"
 	"github.com/antonbier/DreamHub/backend/internal/hub"
 	"github.com/antonbier/DreamHub/backend/internal/serienrecorder"
+	"github.com/antonbier/DreamHub/backend/internal/webcontrol"
 )
 
 // Series is SeriesHub: series tracked in SerienRecorder and their upcoming
-// episodes. Episodes-on-disk/missing-episodes cross-referencing against
-// recordings is still open (ROADMAP.md) — this uses only what
-// SerienRecorder's own API already provides.
+// episodes, plus a per-series detail view (series_detail.go) that adds the
+// series' recordings and further EPG broadcasts from WebControl.
 type Series struct {
 	SR serienrecorder.Client
+	// WC is optional: without it the detail view still shows
+	// SerienRecorder's own data and reports the rest as unavailable.
+	WC  webcontrol.Client
+	Now func() time.Time
+}
+
+func (h *Series) now() time.Time {
+	if h.Now != nil {
+		return h.Now()
+	}
+	return time.Now()
 }
 
 // Mount registers SeriesHub's routes.
 func (h *Series) Mount(mux *http.ServeMux) {
 	mux.HandleFunc("GET /api/v1/series/markers", h.markers)
+	mux.HandleFunc("GET /api/v1/series/markers/{id}", h.detail)
 	mux.HandleFunc("GET /api/v1/series/upcoming", h.upcoming)
 }
 
@@ -35,7 +49,7 @@ func (h *Series) Search(ctx context.Context, query string) ([]hub.SearchResult, 
 	var out []hub.SearchResult
 	for _, m := range markers {
 		if strings.Contains(strings.ToLower(m.Name), q) {
-			out = append(out, hub.SearchResult{Title: m.Name, Subtitle: m.Info, Path: "/series"})
+			out = append(out, hub.SearchResult{Title: m.Name, Subtitle: m.Info, Path: "/series/" + strconv.Itoa(m.ID)})
 		}
 	}
 	return out, nil

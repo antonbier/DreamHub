@@ -1,9 +1,9 @@
 <!--
   SeriesHub's real screen (ROADMAP.md, "v1 — hubs"): series tracked in
   SerienRecorder and their upcoming episodes (GET /api/v1/series/markers,
-  GET /api/v1/series/upcoming). Episodes-on-disk/missing-episodes
-  cross-referencing against recordings is still open. Same
-  status-banner-plus-content pattern as MediaHubView.vue.
+  GET /api/v1/series/upcoming); each series opens its own detail page
+  (SeriesDetailView.vue). Same status-banner-plus-content pattern as
+  MediaHubView.vue.
 -->
 <template>
   <div class="mx-auto max-w-content p-6 below-md:p-4">
@@ -59,17 +59,19 @@
           <h2 class="mt-5 text-[15px] font-semibold text-text">{{ t('series.tracked') }}</h2>
           <p v-if="markers.length === 0" class="mt-2 text-[14px] text-muted">{{ t('series.trackedEmpty') }}</p>
           <ul v-else class="mt-2 flex flex-col">
-            <li
-              v-for="m in markers"
-              :key="m.id"
-              class="flex items-start gap-3 border-b border-line-soft py-2.5 last:border-none"
-              :class="{ 'opacity-60': !m.active }"
-            >
-              <span class="min-w-0 flex-1">
-                <span class="block truncate text-[14px] text-text">{{ m.name }}</span>
-                <span class="block truncate text-[12.5px] text-muted">{{ m.info }}</span>
-              </span>
-              <span v-if="!m.active" class="shrink-0 text-[12.5px] text-faint">{{ t('series.inactive') }}</span>
+            <li v-for="m in markers" :key="m.id" class="border-b border-line-soft last:border-none">
+              <RouterLink
+                :to="`/series/${m.id}`"
+                class="-mx-2 flex items-center gap-3 rounded px-2 py-2.5 hover:bg-tile-2"
+                :class="{ 'opacity-60': !m.active }"
+              >
+                <span class="min-w-0 flex-1">
+                  <span class="block truncate text-[14px] text-text">{{ m.name }}</span>
+                  <span class="block truncate text-[12.5px] text-muted">{{ m.info }}</span>
+                </span>
+                <span v-if="!m.active" class="shrink-0 text-[12.5px] text-faint">{{ t('series.inactive') }}</span>
+                <Icon name="chevron-right" :size="16" class="shrink-0 text-faint rtl:rotate-180" />
+              </RouterLink>
             </li>
           </ul>
         </section>
@@ -81,7 +83,14 @@
             <li v-for="(ep, i) in upcoming" :key="i" class="flex items-center gap-3 border-b border-line-soft py-2 last:border-none">
               <span class="w-28 shrink-0 whitespace-nowrap text-[12.5px] font-mono text-faint">{{ formatTime(ep.startTime) }}</span>
               <span class="min-w-0 flex-1">
-                <span class="block truncate text-[14px] text-text">{{ ep.series }}</span>
+                <RouterLink
+                  v-if="markerIdByFsid[ep.fsID]"
+                  :to="`/series/${markerIdByFsid[ep.fsID]}`"
+                  class="block truncate text-[14px] text-text hover:text-accent"
+                >
+                  {{ ep.series }}
+                </RouterLink>
+                <span v-else class="block truncate text-[14px] text-text">{{ ep.series }}</span>
                 <span class="block truncate text-[12.5px] text-muted">
                   {{ t('series.episode', { season: ep.season, episode: ep.episode, title: ep.title }) }} · {{ ep.channel }}
                 </span>
@@ -96,6 +105,7 @@
 
 <script setup lang="ts">
 import { computed, onMounted, ref } from 'vue'
+import { RouterLink } from 'vue-router'
 import { useI18n } from 'vue-i18n'
 import { api } from '@/api/client'
 import Icon from '@/components/Icon.vue'
@@ -116,6 +126,7 @@ const upcoming = ref<UpcomingEpisode[]>([])
 const loading = ref(true)
 const loadFailed = ref(false)
 const showEmbed = ref(false)
+const markerIdByFsid = computed(() => Object.fromEntries(markers.value.map((m) => [m.fsid, m.id])))
 
 // SerienRecorder's own web GUI (confirmed reachable, no X-Frame-Options/CSP
 // that would block embedding — ARCHITECTURE.md, #10) lives on the same

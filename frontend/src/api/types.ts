@@ -262,6 +262,39 @@ export interface SeriesMarker {
   info: string
   channels: string
   numberOfRecords: number
+  seasons: string
+  recordfolder: string
+}
+
+// GET /api/v1/series/markers/{id} (backend/internal/hubs/series_detail.go).
+export interface SeriesRecording {
+  path: string
+  title: string
+  description: string
+  serviceName: string
+  time: number // Unix seconds, UTC
+  fileSize: number
+  season: number // 0 when the title/description has no S01E02 code
+  episode: number
+}
+
+export interface SeriesBroadcast {
+  id: number
+  start: number // Unix seconds, UTC
+  duration: number
+  title: string
+  description: string
+  serviceReference: string
+  serviceName: string
+  hasTimer: boolean
+}
+
+export interface SeriesDetail {
+  marker: SeriesMarker
+  upcoming: UpcomingEpisode[]
+  recordings: SeriesRecording[]
+  broadcasts: SeriesBroadcast[]
+  unavailable: Array<'upcoming' | 'recordings' | 'broadcasts'>
 }
 
 // backend/internal/serienrecorder.UpcomingEpisode, as returned by

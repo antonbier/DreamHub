@@ -24,8 +24,11 @@ func (*Client) Info(ctx context.Context) (*serienrecorder.Info, error) {
 
 func (*Client) Markers(ctx context.Context) ([]serienrecorder.Marker, error) {
 	return []serienrecorder.Marker{
-		{ID: 9, Name: "And Just Like That...", FSID: "and-just-like-that", WLID: "42185", Active: true, Info: "USA 2021-2025", Channels: "Alle", NumberOfRecords: 1},
-		{ID: 10, Name: "Die Verräter - Vertraue Niemandem!", FSID: "die-verraeter-vertraue-niemandem", WLID: "47241", Active: true, Info: "D 2023-", Channels: "Alle", NumberOfRecords: 1},
+		{ID: 9, Name: "And Just Like That...", FSID: "and-just-like-that", WLID: "42185", Active: true, Info: "USA 2021-2025", Channels: "Alle", NumberOfRecords: 1, Seasons: "Alle (inkl. Specials)", RecordFolder: "/media/hdd/movie/"},
+		{ID: 10, Name: "Die Verräter - Vertraue Niemandem!", FSID: "die-verraeter-vertraue-niemandem", WLID: "47241", Active: true, Info: "D 2023-", Channels: "Alle", NumberOfRecords: 1, Seasons: "Alle (inkl. Specials)", RecordFolder: "/media/hdd/movie/"},
+		// Matches the mock box's "Tatort/" recording folder and its EPG,
+		// so SeriesHub's detail view has something on every source.
+		{ID: 11, Name: "Tatort", FSID: "tatort", WLID: "1234", Active: true, Info: "D 1970-", Channels: "Das Erste HD", NumberOfRecords: 1, Seasons: "Alle", RecordFolder: "/media/hdd/movie/"},
 	}, nil
 }
 
@@ -40,6 +43,11 @@ func (*Client) UpcomingEpisodes(ctx context.Context) ([]serienrecorder.UpcomingE
 			Series: "Gute Zeiten, schlechte Zeiten", Title: "Echte Reue?",
 			Channel: "RTL Television", ServiceReference: "1:0:1:2EE3:441:1:C00000:0:0:0:",
 			Season: "0", Episode: "8616", StartTime: 1790357520, FSID: "gute-zeiten-schlechte-zeiten",
+		},
+		{
+			Series: "Tatort", Title: "Borowski und der gute Mensch",
+			Channel: "Das Erste HD", ServiceReference: "1:0:19:283D:3FB:1:C00000:0:0:0:",
+			Season: "2026", Episode: "31", StartTime: 1790626500, FSID: "tatort",
 		},
 	}, nil
 }

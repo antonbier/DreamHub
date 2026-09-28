@@ -97,6 +97,12 @@ function toggle() {
 const mainSections = computed(() => props.sections.filter((s) => s.id !== 'bottom'))
 const bottomSection = computed(() => props.sections.find((s) => s.id === 'bottom'))
 
+// A hub stays highlighted on its own sub-pages too (/series/11 under
+// /series); the dashboard at "/" only on exactly "/".
+function isActive(current: string, itemPath: string): boolean {
+  return itemPath === '/' ? current === '/' : current === itemPath || current.startsWith(itemPath + '/')
+}
+
 // One nav row: icon, label (or a tooltip when collapsed), active state and
 // an unavailable/degraded indicator with a translated explanation.
 const NavLink = defineComponent({
@@ -128,7 +134,7 @@ const NavLink = defineComponent({
           onClick: () => emit('navigate'),
           class: [
             'flex items-center gap-2.5 rounded px-2 py-[7px] text-[14.5px] hover:bg-tile-2',
-            route.path === props.item.path ? 'bg-tile-2 text-text' : 'text-muted',
+            isActive(route.path, props.item.path) ? 'bg-tile-2 text-text' : 'text-muted',
             props.item.status === 'unavailable' ? 'opacity-60' : '',
           ],
         },

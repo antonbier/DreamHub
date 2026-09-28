@@ -43,6 +43,12 @@ const router = createRouter({
       component: () => import('@/views/SeriesHubView.vue'),
     },
     {
+      path: '/series/:id(\\d+)',
+      name: 'series-detail',
+      component: () => import('@/views/SeriesDetailView.vue'),
+      props: (route) => ({ id: Number(route.params.id) }),
+    },
+    {
       path: '/discovery',
       name: 'discovery',
       component: () => import('@/views/DiscoveryHubView.vue'),

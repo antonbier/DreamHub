@@ -303,6 +303,29 @@
       "show": "Mostra qui",
       "hide": "Nascondi",
       "openTab": "Apri in nuova scheda"
+    },
+    "detail": {
+      "back": "Tutte le serie",
+      "notFound": "Questa serie non è (più) seguita.",
+      "channels": "Canali",
+      "seasons": "Stagioni",
+      "recordedBySR": "Registrati secondo SerienRecorder",
+      "folder": "Cartella di registrazione",
+      "upcoming": "Episodi pianificati",
+      "upcomingEmpty": "SerienRecorder non ha pianificato episodi al momento.",
+      "broadcasts": "Nell'EPG",
+      "broadcastsHint": "Altre trasmissioni secondo la guida del box.",
+      "broadcastsEmpty": "Nessun'altra trasmissione nell'EPG.",
+      "hasTimer": "Timer presente",
+      "record": "Registra",
+      "createTimer": "Crea timer",
+      "recordSummary": "Un timer per «{title}» su {channel}, {time}.",
+      "recordings": "Registrazioni",
+      "recordingsEmpty": "Nessuna registrazione di questa serie trovata.",
+      "season": "Stagione {season}",
+      "noSeason": "Senza stagione",
+      "code": "S{season}E{episode}",
+      "partUnavailable": "Non è stato possibile caricarlo adesso."
     }
   },
   "discovery": {

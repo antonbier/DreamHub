@@ -174,8 +174,14 @@ Notes:
 
 **Open**:
 - [x] SerienRecorder not installed → connector state `not_installed` with an install hint instead of "unreachable" (v1 plan rule 1: optional plugins never break DreamHub)
-- [ ] Episodes on disk, missing episodes — needs cross-referencing recordings (`/web/movielist`, MediaHub) against tracked series/seasons; not attempted yet, deliberately scoped out of this pass
-- [ ] Per-series upcoming broadcasts beyond what's already timered (`/serienrecorderapi/transmissions?wlid=&fsid=&filterMode=`, confirmed live) — useful for a series detail view, not built
+- [ ] Missing episodes — needs the series' full episode list, which neither the box nor the endpoints used so far provide; SerienRecorder's `transmissions` (`?wlid=&fsid=&filterMode=`, confirmed reachable) is the likely source, but its response format hasn't been captured yet (the saved fixture is a failed call without parameters) — capture it on the box first
+- [ ] Check the detail view's recording match against real SerienRecorder recordings on the box (how SR names its timers/files there, whether its `S01E02` codes land in the title or description)
+
+**Done** — series detail view (2026-09-28, mock only, box was offline):
+- [x] `GET /api/v1/series/markers/{id}` (`internal/hubs/series_detail.go`): the marker (now with `seasons` and `recordfolder`, both in the live fixture), its timered episodes (filtered by `fsid`), its recordings on disk and further EPG broadcasts. Each part from a different source, failing on its own (`unavailable: [...]`) instead of failing the view; WebControl is optional for SeriesHub
+- [x] Recordings: the marker's record folder (or every recording folder) plus a direct subfolder named after the series, one level only — a few `/web/movielist` calls, not a disk walk. A recording counts when its title *is* the series ("Tatort", "Tatort: …", "Bones - …"; case, accents and punctuation ignored, "Tatort-Reiniger" excluded) or it sits in the series folder. Season/episode from an `S01E02` code in title or description, never from the file name
+- [x] Broadcasts: the box's own EPG title search (`/web/epgsearch`), filtered to real matches that haven't ended, flagged when a timer already covers them; "Record" goes through TimerHub's own plan → apply, same inline preview as DiscoveryHub
+- [x] `SeriesDetailView.vue` at `/series/{id}`; the series list and upcoming episodes link to it, search results for a series open it directly, and the sidebar keeps a hub highlighted on its sub-pages
 
 ### SystemHub
 

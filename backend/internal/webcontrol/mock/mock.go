@@ -171,6 +171,7 @@ func (*Client) Services(ctx context.Context, bouquetRef string) ([]webcontrol.Se
 func epgSchedule() []webcontrol.EPGEvent {
 	rtl := webcontrol.Service{ServiceReference: "1:0:19:2EE3:441:1:C00000:0:0:0:", ServiceName: "RTL Television"}
 	zdfneo := webcontrol.Service{ServiceReference: "1:0:19:2B7A:3F3:1:C00000:0:0:0:", ServiceName: "zdf_neo HD"}
+	ard := webcontrol.Service{ServiceReference: "1:0:19:283D:3FB:1:C00000:0:0:0:", ServiceName: "Das Erste HD"}
 	return []webcontrol.EPGEvent{
 		{ID: 1, Start: at(19, 5), Duration: 35 * 60, Title: "Explosiv – Das Magazin", ServiceReference: rtl.ServiceReference, ServiceName: rtl.ServiceName},
 		{ID: 2, Start: at(19, 40), Duration: 35 * 60, Title: "RTL Aktuell", ServiceReference: rtl.ServiceReference, ServiceName: rtl.ServiceName},
@@ -182,6 +183,8 @@ func epgSchedule() []webcontrol.EPGEvent {
 		{ID: 8, Start: at(21, 0), Duration: 45 * 60, Title: "The Rookie", ServiceReference: zdfneo.ServiceReference, ServiceName: zdfneo.ServiceName},
 		{ID: 9, Start: at(21, 45), Duration: 45 * 60, Title: "The Rookie: Feds", ServiceReference: zdfneo.ServiceReference, ServiceName: zdfneo.ServiceName},
 		{ID: 10, Start: at(22, 30), Duration: 60 * 60, Title: "Bones", ServiceReference: zdfneo.ServiceReference, ServiceName: zdfneo.ServiceName},
+		{ID: 11, Start: at(20, 15), Duration: 90 * 60, Title: "Tatort: Borowski und der gute Mensch", Description: "Kriminalfilm, D 2026", ServiceReference: ard.ServiceReference, ServiceName: ard.ServiceName},
+		{ID: 12, Start: at(21, 45), Duration: 30 * 60, Title: "Tatort-Reiniger Spezial", ServiceReference: ard.ServiceReference, ServiceName: ard.ServiceName},
 	}
 }
 

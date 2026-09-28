@@ -286,8 +286,8 @@ func TestGuide_BouquetsAndGrid(t *testing.T) {
 		} `json:"channels"`
 	}
 	json.Unmarshal(b, &grid)
-	if len(grid.Channels) != 2 {
-		t.Fatalf("expected 2 channels, got %+v", grid.Channels)
+	if len(grid.Channels) != 3 {
+		t.Fatalf("expected 3 channels, got %+v", grid.Channels)
 	}
 	for _, ch := range grid.Channels {
 		if len(ch.Events) < 2 {
@@ -317,7 +317,7 @@ func TestSeries_MarkersAndUpcoming(t *testing.T) {
 		} `json:"markers"`
 	}
 	json.Unmarshal(b, &markers)
-	if len(markers.Markers) != 2 || markers.Markers[0].Name != "And Just Like That..." {
+	if len(markers.Markers) != 3 || markers.Markers[0].Name != "And Just Like That..." {
 		t.Fatalf("unexpected markers: %+v", markers.Markers)
 	}
 
@@ -332,7 +332,7 @@ func TestSeries_MarkersAndUpcoming(t *testing.T) {
 		} `json:"episodes"`
 	}
 	json.Unmarshal(b, &upcoming)
-	if len(upcoming.Episodes) != 2 || upcoming.Episodes[0].Series != "Gute Zeiten, schlechte Zeiten" {
+	if len(upcoming.Episodes) != 3 || upcoming.Episodes[0].Series != "Gute Zeiten, schlechte Zeiten" {
 		t.Fatalf("unexpected upcoming episodes: %+v", upcoming.Episodes)
 	}
 }
@@ -351,7 +351,7 @@ func TestSearch_FindsARealSeriesByName(t *testing.T) {
 		} `json:"results"`
 	}
 	json.Unmarshal(b, &body)
-	if len(body.Results) != 1 || body.Results[0].HubID != "series" || body.Results[0].Path != "/series" {
+	if len(body.Results) != 1 || body.Results[0].HubID != "series" || body.Results[0].Path != "/series/10" {
 		t.Fatalf("expected exactly the mock's tracked series, got %+v", body.Results)
 	}
 }
@@ -888,5 +888,47 @@ func TestConnectors_NeverLeakSecrets(t *testing.T) {
 		if states[id] != "ok" {
 			t.Errorf("mock mode with keys set: %s should be ok, got %q", id, states[id])
 		}
+	}
+}
+
+func TestSeries_Detail(t *testing.T) {
+	e := newEnv(t)
+	resp, b := e.do(t, "GET", "/api/v1/series/markers/11", "", nil)
+	if resp.StatusCode != http.StatusOK {
+		t.Fatalf("expected 200, got %d: %s", resp.StatusCode, b)
+	}
+	var d struct {
+		Marker   struct{ Name string } `json:"marker"`
+		Upcoming []struct {
+			Title string `json:"title"`
+		} `json:"upcoming"`
+		Recordings []struct {
+			Title string `json:"title"`
+			Path  string `json:"path"`
+		} `json:"recordings"`
+		Broadcasts []struct {
+			Title    string `json:"title"`
+			HasTimer bool   `json:"hasTimer"`
+		} `json:"broadcasts"`
+		Unavailable []string `json:"unavailable"`
+	}
+	json.Unmarshal(b, &d)
+	if d.Marker.Name != "Tatort" || len(d.Unavailable) != 0 {
+		t.Fatalf("unexpected marker/unavailable: %s", b)
+	}
+	if len(d.Upcoming) != 1 || d.Upcoming[0].Title != "Borowski und der gute Mensch" {
+		t.Errorf("upcoming should hold only this series' episodes: %+v", d.Upcoming)
+	}
+	if len(d.Recordings) != 1 || !strings.Contains(d.Recordings[0].Path, "/Tatort/") {
+		t.Errorf("expected the recording in the series folder: %+v", d.Recordings)
+	}
+	// "Tatort-Reiniger Spezial" is found by the box's substring search but
+	// isn't this series.
+	if len(d.Broadcasts) != 1 || d.Broadcasts[0].Title != "Tatort: Borowski und der gute Mensch" {
+		t.Errorf("unexpected broadcasts: %+v", d.Broadcasts)
+	}
+
+	if resp, _ := e.do(t, "GET", "/api/v1/series/markers/999", "", nil); resp.StatusCode != http.StatusNotFound {
+		t.Errorf("unknown marker: expected 404, got %d", resp.StatusCode)
 	}
 }

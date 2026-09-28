@@ -303,6 +303,29 @@
       "show": "Show here",
       "hide": "Hide",
       "openTab": "Open in new tab"
+    },
+    "detail": {
+      "back": "All series",
+      "notFound": "This series isn't tracked (any more).",
+      "channels": "Channels",
+      "seasons": "Seasons",
+      "recordedBySR": "Recorded, per SerienRecorder",
+      "folder": "Recording folder",
+      "upcoming": "Planned episodes",
+      "upcomingEmpty": "SerienRecorder hasn't planned an episode right now.",
+      "broadcasts": "In the EPG",
+      "broadcastsHint": "More broadcasts, per the box's programme guide.",
+      "broadcastsEmpty": "No more broadcasts in the EPG.",
+      "hasTimer": "Timer set",
+      "record": "Record",
+      "createTimer": "Create timer",
+      "recordSummary": "A timer for “{title}” on {channel}, {time}.",
+      "recordings": "Recordings",
+      "recordingsEmpty": "No recordings of this series found.",
+      "season": "Season {season}",
+      "noSeason": "No season given",
+      "code": "S{season}E{episode}",
+      "partUnavailable": "Couldn't be loaded right now."
     }
   },
   "discovery": {

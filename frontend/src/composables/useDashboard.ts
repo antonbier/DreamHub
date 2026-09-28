@@ -3,9 +3,16 @@
 // edit mode — reorder, resize, hide/show — persists immediately; there's
 // no separate Save step (same direct-save exception as preferences.ts and
 // the settings menu: this is DreamHub's own state, not a device change).
+//
+// Tiles are addressed by tileKey(): the type for a built-in tile (one of
+// each), the ID for a custom tile (any number of them).
 import { ref } from 'vue'
 import { api } from '@/api/client'
-import type { DashboardLayout } from '@/api/types'
+import type { CustomTileView, DashboardLayout, DashboardTile } from '@/api/types'
+
+export function tileKey(tile: DashboardTile): string {
+  return tile.type === 'custom' ? `custom:${tile.id ?? ''}` : tile.type
+}
 
 export function useDashboard() {
   const layout = ref<DashboardLayout>({ tiles: [] })
@@ -36,29 +43,48 @@ export function useDashboard() {
     }
   }
 
-  function toggleHidden(type: string) {
-    const tile = layout.value.tiles.find((t) => t.type === type)
+  const find = (key: string) => layout.value.tiles.find((t) => tileKey(t) === key)
+
+  function toggleHidden(key: string) {
+    const tile = find(key)
     if (!tile) return
     tile.hidden = !tile.hidden
     void persist()
   }
 
-  function setWidth(type: string, width: number) {
-    const tile = layout.value.tiles.find((t) => t.type === type)
+  function setWidth(key: string, width: number) {
+    const tile = find(key)
     if (!tile) return
     tile.width = Math.min(4, Math.max(1, width))
     void persist()
   }
 
-  function reorder(fromType: string, toType: string) {
+  function reorder(fromKey: string, toKey: string) {
     const tiles = layout.value.tiles
-    const from = tiles.findIndex((t) => t.type === fromType)
-    const to = tiles.findIndex((t) => t.type === toType)
+    const from = tiles.findIndex((t) => tileKey(t) === fromKey)
+    const to = tiles.findIndex((t) => tileKey(t) === toKey)
     if (from === -1 || to === -1 || from === to) return
     const [moved] = tiles.splice(from, 1)
     tiles.splice(to, 0, moved)
     void persist()
   }
 
-  return { layout, loading, loadFailed, editing, load, toggleHidden, setWidth, reorder }
+  // Custom tiles: unlike the background saves above, these report failure,
+  // since the builder dialog has to stay open and say so.
+  async function addCustom(custom: CustomTileView) {
+    const next = { tiles: [...layout.value.tiles, { type: 'custom', label: '', width: 2, hidden: false, custom }] }
+    layout.value = await api.dashboard.save(next)
+  }
+
+  async function updateCustom(key: string, custom: CustomTileView) {
+    const next = { tiles: layout.value.tiles.map((t) => (tileKey(t) === key ? { ...t, custom } : t)) }
+    layout.value = await api.dashboard.save(next)
+  }
+
+  function removeCustom(key: string) {
+    layout.value.tiles = layout.value.tiles.filter((t) => tileKey(t) !== key)
+    void persist()
+  }
+
+  return { layout, loading, loadFailed, editing, load, toggleHidden, setWidth, reorder, addCustom, updateCustom, removeCustom }
 }

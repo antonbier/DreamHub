@@ -194,7 +194,8 @@
       "hidden": "Hidden",
       "widthDecrease": "Narrower",
       "widthIncrease": "Wider",
-      "dragHandle": "Drag to reorder"
+      "dragHandle": "Drag to reorder",
+      "remove": "Remove"
     },
     "timersTile": {
       "empty": "No upcoming timers.",
@@ -214,6 +215,75 @@
     "conflictsTile": {
       "none": "No tuner conflicts ahead.",
       "open": "Resolve in Timers"
+    },
+    "add": {
+      "title": "Add tile",
+      "custom": "+ Custom view with criteria …",
+      "hint": "Drag to move · arrows change the width · hidden tiles stay here, dimmed"
+    },
+    "custom": {
+      "meta": "Custom view",
+      "noMatches": "Nothing matches right now.",
+      "failed": "Couldn't be loaded right now.",
+      "matches": "no matches | 1 match | {n} matches",
+      "editFilters": "Edit filters"
+    },
+    "source": {
+      "recordings": "Recordings",
+      "timers": "Timers",
+      "guide": "TV guide",
+      "seriesUpcoming": "Series episodes"
+    },
+    "criteria": {
+      "text": "contains “{text}”",
+      "olderThanDays": "older than 1 day | older than {n} days",
+      "newerThanDays": "from the last day | from the last {n} days",
+      "minSizeGB": "at least {n} GB",
+      "withinDays": "in the next 24 hours | in the next {n} days",
+      "fromTime": "from {time}",
+      "minDuration": "at least {n} min",
+      "warnOnly": "conflicts only"
+    },
+    "sort": {
+      "newest": "newest first",
+      "oldest": "oldest first",
+      "soonest": "by start",
+      "largest": "largest first"
+    },
+    "criteriaField": {
+      "bouquet": "Bouquet",
+      "text": "Title or channel contains",
+      "olderThanDays": "Older than (days)",
+      "newerThanDays": "From the last (days)",
+      "minSizeGB": "At least (GB)",
+      "withinDays": "Time span",
+      "fromTime": "Starting from (time)",
+      "minDuration": "Minimum length (minutes)",
+      "warnOnly": "Likely conflicts only"
+    },
+    "builder": {
+      "eyebrow": "Custom tile",
+      "title": "View with criteria",
+      "sourcesFailed": "The sources couldn't be loaded right now.",
+      "noSources": "No source is available right now.",
+      "name": "Name",
+      "source": "Source",
+      "display": "Display",
+      "displayList": "List",
+      "displayCount": "Number",
+      "conditions": "Conditions",
+      "firstBouquet": "First bouquet",
+      "any": "Any",
+      "days": "1 day | {n} days",
+      "minDurationHint": "The box's EPG has no genre — a minimum length of about 85 minutes mostly finds films.",
+      "topFolderOnly": "Searches only the top recording folder for now.",
+      "sort": "Sort",
+      "limit": "Show",
+      "preview": "Finds nothing right now. | Finds 1 match right now. | Finds {n} matches right now.",
+      "note": "A tile only shows things; it never acts on its own.",
+      "save": "Save",
+      "create": "Create tile",
+      "saveFailed": "Couldn't be saved."
     }
   },
   "hubPlaceholder": {

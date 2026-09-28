@@ -194,7 +194,8 @@
       "hidden": "Nascosta",
       "widthDecrease": "Più stretta",
       "widthIncrease": "Più larga",
-      "dragHandle": "Trascina per riordinare"
+      "dragHandle": "Trascina per riordinare",
+      "remove": "Rimuovi"
     },
     "timersTile": {
       "empty": "Nessun timer in programma.",
@@ -214,6 +215,75 @@
     "conflictsTile": {
       "none": "Nessun conflitto di tuner in vista.",
       "open": "Risolvi nei timer"
+    },
+    "add": {
+      "title": "Aggiungi riquadro",
+      "custom": "+ Vista personalizzata con criteri …",
+      "hint": "Trascina per spostare · le frecce cambiano la larghezza · i riquadri nascosti restano qui, attenuati"
+    },
+    "custom": {
+      "meta": "Vista personalizzata",
+      "noMatches": "Al momento non c'è nulla.",
+      "failed": "Non è stato possibile caricarlo adesso.",
+      "matches": "nessun risultato | 1 risultato | {n} risultati",
+      "editFilters": "Modifica filtri"
+    },
+    "source": {
+      "recordings": "Registrazioni",
+      "timers": "Timer",
+      "guide": "Guida TV",
+      "seriesUpcoming": "Episodi delle serie"
+    },
+    "criteria": {
+      "text": "contiene «{text}»",
+      "olderThanDays": "più vecchie di 1 giorno | più vecchie di {n} giorni",
+      "newerThanDays": "dell'ultimo giorno | degli ultimi {n} giorni",
+      "minSizeGB": "almeno {n} GB",
+      "withinDays": "nelle prossime 24 ore | nei prossimi {n} giorni",
+      "fromTime": "dalle {time}",
+      "minDuration": "almeno {n} min",
+      "warnOnly": "solo conflitti"
+    },
+    "sort": {
+      "newest": "più recenti prima",
+      "oldest": "meno recenti prima",
+      "soonest": "per inizio",
+      "largest": "più grandi prima"
+    },
+    "criteriaField": {
+      "bouquet": "Bouquet",
+      "text": "Titolo o canale contiene",
+      "olderThanDays": "Più vecchie di (giorni)",
+      "newerThanDays": "Degli ultimi (giorni)",
+      "minSizeGB": "Almeno (GB)",
+      "withinDays": "Periodo",
+      "fromTime": "Inizio dalle (ora)",
+      "minDuration": "Durata minima (minuti)",
+      "warnOnly": "Solo possibili conflitti"
+    },
+    "builder": {
+      "eyebrow": "Riquadro personalizzato",
+      "title": "Vista con criteri",
+      "sourcesFailed": "Non è stato possibile caricare le fonti adesso.",
+      "noSources": "Nessuna fonte disponibile al momento.",
+      "name": "Nome",
+      "source": "Fonte",
+      "display": "Visualizzazione",
+      "displayList": "Elenco",
+      "displayCount": "Numero",
+      "conditions": "Condizioni",
+      "firstBouquet": "Primo bouquet",
+      "any": "Qualsiasi",
+      "days": "1 giorno | {n} giorni",
+      "minDurationHint": "L'EPG del box non conosce il genere — una durata minima di circa 85 minuti trova per lo più film.",
+      "topFolderOnly": "Per ora cerca solo nella cartella principale delle registrazioni.",
+      "sort": "Ordinamento",
+      "limit": "Quanti",
+      "preview": "Al momento non trova nulla. | Al momento trova 1 risultato. | Al momento trova {n} risultati.",
+      "note": "Un riquadro mostra soltanto e non fa mai nulla da solo.",
+      "save": "Salva",
+      "create": "Crea riquadro",
+      "saveFailed": "Non è stato possibile salvare."
     }
   },
   "hubPlaceholder": {

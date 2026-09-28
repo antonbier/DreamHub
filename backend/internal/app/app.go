@@ -204,6 +204,12 @@ func New(ctx context.Context, o Options) (*App, error) {
 	hubs.AddSearchProvider(hub.IDMedia, mediaHub)
 	hubs.AddSearchProvider(hub.IDSeries, seriesHub)
 	hubs.AddSearchProvider(hub.IDGuide, guideHub)
+	// View sources for custom dashboard tiles (internal/hub/view.go).
+	hubs.AddViewProvider(hub.IDMedia, mediaHub)
+	hubs.AddViewProvider(hub.IDTimer, timerHub)
+	hubs.AddViewProvider(hub.IDGuide, guideHub)
+	hubs.AddViewProvider(hub.IDSeries, seriesHub)
+	dash.KnownSource = hubs.KnownSource
 
 	handler := api.NewRouter(api.Deps{
 		WebControl: o.WebControl,

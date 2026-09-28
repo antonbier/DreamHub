@@ -346,10 +346,60 @@ export interface Plan {
 
 // backend/internal/dashboard.Tile / .Layout.
 export interface DashboardTile {
-  type: string
-  label: string
+  type: string // a built-in tile type, or 'custom'
+  id?: string // custom tiles only; assigned by the backend on first save
+  label: string // i18n key; empty for custom tiles
   width: number
   hidden: boolean
+  custom?: CustomTileView
+}
+
+// A custom tile's saved view (backend/internal/dashboard.Custom).
+export interface CustomTileView {
+  title: string
+  source: string
+  query: ViewQuery
+  display: 'list' | 'count'
+}
+
+// backend/internal/hub.ViewQuery — zero/absent means "no filter".
+export interface ViewQuery {
+  text?: string
+  olderThanDays?: number
+  newerThanDays?: number
+  minSizeGB?: number
+  withinDays?: number
+  fromTime?: string // "HH:MM"
+  minDuration?: number // minutes
+  warnOnly?: boolean
+  bouquet?: string
+  sort?: string
+  limit?: number
+}
+
+// backend/internal/hub.ViewSource, from GET /api/v1/dashboard/sources.
+export interface ViewSource {
+  id: string
+  label: string // i18n key
+  hubId: string
+  filters: string[]
+  sorts: string[] // the first is the default
+}
+
+export interface ViewItem {
+  title: string
+  subtitle?: string
+  time?: number // Unix seconds, UTC
+  end?: number
+  size?: number // bytes
+  warn?: boolean
+  path?: string
+}
+
+export interface ViewResult {
+  items: ViewItem[]
+  total: number
+  totalSize?: number
 }
 
 export interface DashboardLayout {

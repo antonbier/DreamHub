@@ -932,3 +932,68 @@ func TestSeries_Detail(t *testing.T) {
 		t.Errorf("unknown marker: expected 404, got %d", resp.StatusCode)
 	}
 }
+
+func TestDashboard_CustomTiles(t *testing.T) {
+	e := newEnv(t)
+
+	resp, b := e.do(t, "GET", "/api/v1/dashboard/sources", "", nil)
+	if resp.StatusCode != http.StatusOK || !strings.Contains(string(b), `"media.recordings"`) || !strings.Contains(string(b), `"guide.broadcasts"`) {
+		t.Fatalf("expected the view sources, got %d: %s", resp.StatusCode, b)
+	}
+
+	// Evaluate a view: the mock's timers still to come at fixedNow, the
+	// conflicting ones only.
+	resp, b = e.do(t, "POST", "/api/v1/dashboard/view", `{"source":"timers.upcoming","query":{"warnOnly":true},"timeZone":"Europe/Rome"}`, nil)
+	if resp.StatusCode != http.StatusOK {
+		t.Fatalf("view: expected 200, got %d: %s", resp.StatusCode, b)
+	}
+	var view struct {
+		Items []struct {
+			Title string `json:"title"`
+			Warn  bool   `json:"warn"`
+		} `json:"items"`
+		Total int `json:"total"`
+	}
+	json.Unmarshal(b, &view)
+	if view.Total != 2 || !view.Items[0].Warn {
+		t.Errorf("expected the two overlapping mock timers: %s", b)
+	}
+	if resp, _ := e.do(t, "POST", "/api/v1/dashboard/view", `{"source":"nope"}`, nil); resp.StatusCode != http.StatusNotFound {
+		t.Errorf("unknown source: expected 404, got %d", resp.StatusCode)
+	}
+
+	// Save a custom tile: it gets an ID, keeps its criteria, sits among the
+	// built-ins; an unknown source or an empty title is refused.
+	resp, b = e.do(t, "PUT", "/api/v1/dashboard",
+		`{"tiles":[{"type":"custom","width":2,"custom":{"title":"Aufräumen","source":"media.recordings","display":"list","query":{"olderThanDays":90,"minSizeGB":3,"sort":"largest","limit":5}}},{"type":"hubs.status","width":1}]}`, nil)
+	if resp.StatusCode != http.StatusOK {
+		t.Fatalf("save custom tile: %d %s", resp.StatusCode, b)
+	}
+	var layout struct {
+		Tiles []struct {
+			Type   string `json:"type"`
+			ID     string `json:"id"`
+			Custom *struct {
+				Title string `json:"title"`
+				Query struct {
+					MinSizeGB float64 `json:"minSizeGB"`
+				} `json:"query"`
+			} `json:"custom"`
+		} `json:"tiles"`
+	}
+	_, b = e.do(t, "GET", "/api/v1/dashboard", "", nil)
+	json.Unmarshal(b, &layout)
+	if len(layout.Tiles) != 6 || layout.Tiles[0].Type != "custom" || layout.Tiles[0].ID == "" ||
+		layout.Tiles[0].Custom == nil || layout.Tiles[0].Custom.Title != "Aufräumen" || layout.Tiles[0].Custom.Query.MinSizeGB != 3 {
+		t.Fatalf("custom tile not saved as expected: %s", b)
+	}
+	for _, bad := range []string{
+		`{"tiles":[{"type":"custom","width":2,"custom":{"title":"x","source":"nope","display":"list"}}]}`,
+		`{"tiles":[{"type":"custom","width":2,"custom":{"title":" ","source":"media.recordings","display":"list"}}]}`,
+		`{"tiles":[{"type":"custom","width":2,"custom":{"title":"x","source":"media.recordings","display":"poster"}}]}`,
+	} {
+		if resp, b := e.do(t, "PUT", "/api/v1/dashboard", bad, nil); resp.StatusCode != http.StatusBadRequest {
+			t.Errorf("expected 400 for %s, got %d: %s", bad, resp.StatusCode, b)
+		}
+	}
+}

@@ -82,6 +82,8 @@ func NewRouter(d Deps) http.Handler {
 	protected.HandleFunc("GET /api/v1/connectors", handleConnectors(d))
 	protected.HandleFunc("GET /api/v1/dashboard", handleGetDashboard(d))
 	protected.HandleFunc("PUT /api/v1/dashboard", handlePutDashboard(d))
+	protected.HandleFunc("GET /api/v1/dashboard/sources", handleViewSources(d))
+	protected.HandleFunc("POST /api/v1/dashboard/view", handleView(d))
 	protected.HandleFunc("GET /api/v1/search", handleSearch(d))
 	protected.HandleFunc("GET /api/v1/tokens", handleListTokens(d))
 	protected.HandleFunc("POST /api/v1/tokens", handleCreateToken(d))
@@ -399,6 +401,64 @@ func handleSearch(d Deps) http.HandlerFunc {
 		reports := d.Connectors.Reports(r.Context(), v, d.Settings.Version())
 		results := d.Hubs.Search(r.Context(), v, reports, d.User.Role, q)
 		httpx.WriteJSON(w, http.StatusOK, map[string]any{"results": results})
+	}
+}
+
+// handleViewSources lists the view sources custom dashboard tiles can use
+// right now (internal/hub/view.go) — only hubs the user can currently see.
+func handleViewSources(d Deps) http.HandlerFunc {
+	return func(w http.ResponseWriter, r *http.Request) {
+		v, err := d.Settings.Values(r.Context(), d.User)
+		if err != nil {
+			httpx.WriteError(w, r, http.StatusInternalServerError, "internal", "could not load settings")
+			return
+		}
+		reports := d.Connectors.Reports(r.Context(), v, d.Settings.Version())
+		httpx.WriteJSON(w, http.StatusOK, map[string]any{"sources": d.Hubs.ViewSources(v, reports, d.User.Role)})
+	}
+}
+
+// viewBody is a custom tile's criteria, evaluated for display (a saved
+// tile) or for the builder's live preview. Read-only despite the POST: the
+// criteria are structured, not a query string.
+type viewBody struct {
+	Source string        `json:"source"`
+	Query  hub.ViewQuery `json:"query"`
+	// TimeZone is the zone "from 20:15" means (the user's display zone);
+	// UTC when empty or unknown.
+	TimeZone string `json:"timeZone"`
+}
+
+func handleView(d Deps) http.HandlerFunc {
+	return func(w http.ResponseWriter, r *http.Request) {
+		var body viewBody
+		if err := httpx.DecodeJSON(r, &body); err != nil || body.Source == "" {
+			httpx.WriteError(w, r, http.StatusBadRequest, "invalid_body", `expected {"source", "query", "timeZone"}`)
+			return
+		}
+		loc := time.UTC
+		if body.TimeZone != "" {
+			if l, err := time.LoadLocation(body.TimeZone); err == nil {
+				loc = l
+			}
+		}
+		v, err := d.Settings.Values(r.Context(), d.User)
+		if err != nil {
+			httpx.WriteError(w, r, http.StatusInternalServerError, "internal", "could not load settings")
+			return
+		}
+		reports := d.Connectors.Reports(r.Context(), v, d.Settings.Version())
+		res, err := d.Hubs.View(r.Context(), v, reports, d.User.Role, body.Source, body.Query, d.Now(), loc)
+		switch {
+		case errors.Is(err, hub.ErrUnknownSource):
+			httpx.WriteError(w, r, http.StatusNotFound, "unknown_source", "no hub offers this source")
+		case errors.Is(err, hub.ErrSourceUnavailable):
+			httpx.WriteError(w, r, http.StatusConflict, "source_unavailable", "this source's hub is disabled or unavailable")
+		case err != nil:
+			httpx.WriteError(w, r, http.StatusBadGateway, "source_failed", "the source could not be read")
+		default:
+			httpx.WriteJSON(w, http.StatusOK, res)
+		}
 	}
 }
 

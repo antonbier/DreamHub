@@ -68,11 +68,12 @@ type Registry struct {
 	byID   map[string]Descriptor
 	caps   map[string]Capability
 	search map[string]SearchProvider
+	views  map[string]ViewProvider
 }
 
 // NewRegistry returns an empty registry.
 func NewRegistry() *Registry {
-	return &Registry{byID: map[string]Descriptor{}, caps: map[string]Capability{}, search: map[string]SearchProvider{}}
+	return &Registry{byID: map[string]Descriptor{}, caps: map[string]Capability{}, search: map[string]SearchProvider{}, views: map[string]ViewProvider{}}
 }
 
 // Add registers a hub.

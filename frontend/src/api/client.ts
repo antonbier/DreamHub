@@ -45,6 +45,9 @@ import type {
   SettingsView,
   Timer,
   UpcomingEpisode,
+  ViewQuery,
+  ViewResult,
+  ViewSource,
   WhoAmI,
 } from './types'
 
@@ -234,6 +237,10 @@ export const api = {
   dashboard: {
     get: () => request<DashboardLayout>('GET', '/api/v1/dashboard'),
     save: (layout: DashboardLayout) => request<DashboardLayout>('PUT', '/api/v1/dashboard', layout),
+    sources: () => request<{ sources: ViewSource[] }>('GET', '/api/v1/dashboard/sources'),
+    // Read-only despite the POST (structured criteria, not a query string).
+    view: (source: string, query: ViewQuery, timeZone: string) =>
+      request<ViewResult>('POST', '/api/v1/dashboard/view', { source, query, timeZone }),
   },
   search: (query: string) =>
     request<{ results: SearchResult[] }>('GET', `/api/v1/search?q=${encodeURIComponent(query)}`),

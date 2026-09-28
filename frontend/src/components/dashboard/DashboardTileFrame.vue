@@ -21,6 +21,7 @@
       />
       <h3 class="truncate text-[15.5px] font-semibold">{{ title }}</h3>
       <span v-if="editing && tile.hidden" class="ms-1 text-[11.5px] text-faint">{{ t('dashboard.tileFrame.hidden') }}</span>
+      <span v-if="!editing && meta" class="ms-auto shrink-0 text-[12.5px] text-faint">{{ meta }}</span>
 
       <div v-if="editing" class="ms-auto flex items-center gap-1">
         <button
@@ -28,6 +29,7 @@
           class="flex h-6 w-6 items-center justify-center rounded text-muted hover:bg-tile-2 hover:text-text disabled:opacity-30"
           :disabled="tile.width <= 1"
           :title="t('dashboard.tileFrame.widthDecrease')"
+          :aria-label="t('dashboard.tileFrame.widthDecrease')"
           @click="$emit('width', tile.width - 1)"
         >
           <Icon name="chevron-left" :size="14" />
@@ -38,6 +40,7 @@
           class="flex h-6 w-6 items-center justify-center rounded text-muted hover:bg-tile-2 hover:text-text disabled:opacity-30"
           :disabled="tile.width >= 4"
           :title="t('dashboard.tileFrame.widthIncrease')"
+          :aria-label="t('dashboard.tileFrame.widthIncrease')"
           @click="$emit('width', tile.width + 1)"
         >
           <Icon name="chevron-right" :size="14" />
@@ -48,6 +51,14 @@
           @click="$emit('hide')"
         >
           {{ tile.hidden ? t('dashboard.tileFrame.show') : t('dashboard.tileFrame.hide') }}
+        </button>
+        <button
+          v-if="removable"
+          type="button"
+          class="rounded px-2 py-1 text-[12px] text-onair hover:bg-tile-2"
+          @click="$emit('remove')"
+        >
+          {{ t('dashboard.tileFrame.remove') }}
         </button>
       </div>
     </div>
@@ -60,7 +71,15 @@ import { useI18n } from 'vue-i18n'
 import Icon from '@/components/Icon.vue'
 import type { DashboardTile } from '@/api/types'
 
-defineProps<{ tile: DashboardTile; title: string; editing: boolean }>()
-defineEmits<{ hide: []; width: [number] }>()
+defineProps<{
+  tile: DashboardTile
+  title: string
+  editing: boolean
+  // A small faint note beside the title (custom tiles: "Custom view").
+  meta?: string
+  // Custom tiles can be removed for good; built-ins only hidden.
+  removable?: boolean
+}>()
+defineEmits<{ hide: []; width: [number]; remove: [] }>()
 const { t } = useI18n()
 </script>

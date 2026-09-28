@@ -4,27 +4,60 @@
 // it's the app's own state, not a device change (PRINCIPLES.md, "Preview
 // and confirm").
 //
-// v1 has a fixed catalog of built-in tile types (see catalog below); custom
-// tiles as saved views over a hub's search results are a later addition
-// once hubs contribute search providers (ROADMAP.md, hub contract).
+// Two kinds of tile: the built-in ones from a fixed catalog (see catalog
+// below), one of each, and custom tiles — saved views with criteria over a
+// hub's view source (CONCEPT.md: source + filters + sort + limit +
+// display; internal/hub/view.go), any number up to MaxCustomTiles.
 package dashboard
 
 import (
 	"context"
+	"crypto/rand"
+	"encoding/hex"
 	"encoding/json"
 	"errors"
 	"fmt"
+	"strings"
+	"unicode/utf8"
 
+	"github.com/antonbier/DreamHub/backend/internal/hub"
 	"github.com/antonbier/DreamHub/backend/internal/store"
 )
 
-// Tile is one tile on the dashboard. Label is always the catalog's current
-// value for Type — never trust or store a caller-supplied label.
+// Tile is one tile on the dashboard. For a built-in tile, Label is always
+// the catalog's current value for Type — never trust or store a
+// caller-supplied label. A custom tile has Type "custom", its own ID and
+// Custom; its title is the user's own text, not an i18n key.
 type Tile struct {
-	Type   string `json:"type"`
-	Label  string `json:"label"`
-	Width  int    `json:"width"`
-	Hidden bool   `json:"hidden"`
+	Type   string  `json:"type"`
+	ID     string  `json:"id,omitempty"`
+	Label  string  `json:"label"`
+	Width  int     `json:"width"`
+	Hidden bool    `json:"hidden"`
+	Custom *Custom `json:"custom,omitempty"`
+}
+
+// TypeCustom is the Type of every custom tile.
+const TypeCustom = "custom"
+
+// MaxCustomTiles caps custom tiles per dashboard.
+const MaxCustomTiles = 12
+
+// Custom is a custom tile's saved view.
+type Custom struct {
+	Title   string        `json:"title"`
+	Source  string        `json:"source"`
+	Query   hub.ViewQuery `json:"query"`
+	Display string        `json:"display"` // "list" or "count"
+}
+
+// key identifies a tile within a layout: its type for built-ins, its ID
+// for custom tiles.
+func (t Tile) key() string {
+	if t.Type == TypeCustom {
+		return "custom:" + t.ID
+	}
+	return t.Type
 }
 
 // Layout is a dashboard's tiles, in display order.
@@ -65,6 +98,9 @@ var ErrInvalidTile = errors.New("dashboard: invalid tile")
 // Service reads and writes dashboard layouts.
 type Service struct {
 	store *store.Store
+	// KnownSource validates a custom tile's source (hub.Registry's
+	// KnownSource); nil accepts any non-empty source.
+	KnownSource func(string) bool
 }
 
 // NewService returns a Service.
@@ -95,6 +131,17 @@ func reconcile(l Layout) Layout {
 	seen := make(map[string]bool, len(l.Tiles))
 	out := Layout{Tiles: []Tile{}}
 	for _, t := range l.Tiles {
+		if t.Type == TypeCustom {
+			if t.ID == "" || t.Custom == nil || seen[t.key()] {
+				continue
+			}
+			seen[t.key()] = true
+			if t.Width < 1 || t.Width > 4 {
+				t.Width = 2
+			}
+			out.Tiles = append(out.Tiles, Tile{Type: TypeCustom, ID: t.ID, Width: t.Width, Hidden: t.Hidden, Custom: t.Custom})
+			continue
+		}
 		ct, ok := idx[t.Type]
 		if !ok || seen[t.Type] {
 			continue
@@ -112,6 +159,35 @@ func reconcile(l Layout) Layout {
 		}
 	}
 	return out
+}
+
+func (s *Service) validateCustom(c *Custom) error {
+	if c == nil {
+		return fmt.Errorf("%w: custom tile without a view", ErrInvalidTile)
+	}
+	c.Title = strings.TrimSpace(c.Title)
+	if c.Title == "" || utf8.RuneCountInString(c.Title) > 60 {
+		return fmt.Errorf("%w: custom tile title must be 1-60 characters", ErrInvalidTile)
+	}
+	if c.Source == "" || (s.KnownSource != nil && !s.KnownSource(c.Source)) {
+		return fmt.Errorf("%w: unknown source %q", ErrInvalidTile, c.Source)
+	}
+	if c.Display != "list" && c.Display != "count" {
+		return fmt.Errorf("%w: display must be list or count", ErrInvalidTile)
+	}
+	if c.Query.Limit < 0 || c.Query.Limit > hub.MaxViewLimit {
+		return fmt.Errorf("%w: limit must be 1-%d", ErrInvalidTile, hub.MaxViewLimit)
+	}
+	if utf8.RuneCountInString(c.Query.Text) > 100 {
+		return fmt.Errorf("%w: text filter too long", ErrInvalidTile)
+	}
+	return nil
+}
+
+func newTileID() string {
+	b := make([]byte, 6)
+	_, _ = rand.Read(b)
+	return hex.EncodeToString(b)
 }
 
 // Get returns the user's dashboard layout, reconciled against the current
@@ -133,7 +209,29 @@ func (s *Service) Get(ctx context.Context, u store.User) (Layout, error) {
 func (s *Service) Save(ctx context.Context, u store.User, l Layout) (Layout, error) {
 	idx := catalogIndex()
 	seen := make(map[string]bool, len(l.Tiles))
-	for _, t := range l.Tiles {
+	customs := 0
+	for i := range l.Tiles {
+		t := &l.Tiles[i]
+		if t.Type == TypeCustom {
+			customs++
+			if customs > MaxCustomTiles {
+				return Layout{}, fmt.Errorf("%w: at most %d custom tiles", ErrInvalidTile, MaxCustomTiles)
+			}
+			if t.ID == "" {
+				t.ID = newTileID() // a tile just created in the builder
+			}
+			if seen[t.key()] {
+				return Layout{}, fmt.Errorf("%w: duplicate custom tile %q", ErrInvalidTile, t.ID)
+			}
+			seen[t.key()] = true
+			if err := s.validateCustom(t.Custom); err != nil {
+				return Layout{}, err
+			}
+			if t.Width < 1 || t.Width > 4 {
+				return Layout{}, fmt.Errorf("%w: width must be 1-4, got %d for custom tile", ErrInvalidTile, t.Width)
+			}
+			continue
+		}
 		ct, ok := idx[t.Type]
 		if !ok {
 			return Layout{}, fmt.Errorf("%w: unknown type %q", ErrInvalidTile, t.Type)

@@ -194,7 +194,8 @@
       "hidden": "Ausgeblendet",
       "widthDecrease": "Schmaler",
       "widthIncrease": "Breiter",
-      "dragHandle": "Zum Umsortieren ziehen"
+      "dragHandle": "Zum Umsortieren ziehen",
+      "remove": "Entfernen"
     },
     "timersTile": {
       "empty": "Keine anstehenden Timer.",
@@ -214,6 +215,75 @@
     "conflictsTile": {
       "none": "Keine Tuner-Konflikte in Sicht.",
       "open": "In Timern lösen"
+    },
+    "add": {
+      "title": "Kachel hinzufügen",
+      "custom": "+ Eigene Ansicht mit Kriterien …",
+      "hint": "Ziehen zum Verschieben · Pfeile ändern die Breite · Ausgeblendetes bleibt hier gedimmt sichtbar"
+    },
+    "custom": {
+      "meta": "Eigene Ansicht",
+      "noMatches": "Gerade nichts, das passt.",
+      "failed": "Konnte gerade nicht geladen werden.",
+      "matches": "keine Treffer | 1 Treffer | {n} Treffer",
+      "editFilters": "Filter bearbeiten"
+    },
+    "source": {
+      "recordings": "Aufnahmen",
+      "timers": "Timer",
+      "guide": "TV-Programm",
+      "seriesUpcoming": "Serienfolgen"
+    },
+    "criteria": {
+      "text": "enthält „{text}“",
+      "olderThanDays": "älter als 1 Tag | älter als {n} Tage",
+      "newerThanDays": "aus dem letzten Tag | aus den letzten {n} Tagen",
+      "minSizeGB": "ab {n} GB",
+      "withinDays": "in den nächsten 24 Stunden | in den nächsten {n} Tagen",
+      "fromTime": "ab {time}",
+      "minDuration": "ab {n} Min.",
+      "warnOnly": "nur Konflikte"
+    },
+    "sort": {
+      "newest": "neueste zuerst",
+      "oldest": "älteste zuerst",
+      "soonest": "nach Beginn",
+      "largest": "größte zuerst"
+    },
+    "criteriaField": {
+      "bouquet": "Bouquet",
+      "text": "Titel oder Sender enthält",
+      "olderThanDays": "Älter als (Tage)",
+      "newerThanDays": "Aus den letzten (Tagen)",
+      "minSizeGB": "Mindestens (GB)",
+      "withinDays": "Zeitraum",
+      "fromTime": "Beginn ab (Uhrzeit)",
+      "minDuration": "Mindestdauer (Minuten)",
+      "warnOnly": "Nur mögliche Konflikte"
+    },
+    "builder": {
+      "eyebrow": "Eigene Kachel",
+      "title": "Ansicht mit Kriterien",
+      "sourcesFailed": "Die Quellen konnten gerade nicht geladen werden.",
+      "noSources": "Gerade ist keine Quelle verfügbar.",
+      "name": "Name",
+      "source": "Quelle",
+      "display": "Darstellung",
+      "displayList": "Liste",
+      "displayCount": "Zahl",
+      "conditions": "Bedingungen",
+      "firstBouquet": "Erstes Bouquet",
+      "any": "Beliebig",
+      "days": "1 Tag | {n} Tage",
+      "minDurationHint": "Das EPG der Box kennt kein Genre — eine Mindestdauer von etwa 85 Minuten findet meist Spielfilme.",
+      "topFolderOnly": "Durchsucht vorerst nur den Hauptordner der Aufnahmen.",
+      "sort": "Sortierung",
+      "limit": "Anzahl",
+      "preview": "Findet gerade nichts. | Findet gerade 1 Treffer. | Findet gerade {n} Treffer.",
+      "note": "Eine Kachel zeigt nur an und löst nie selbst etwas aus.",
+      "save": "Speichern",
+      "create": "Kachel anlegen",
+      "saveFailed": "Konnte nicht gespeichert werden."
     }
   },
   "hubPlaceholder": {

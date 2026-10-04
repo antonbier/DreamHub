@@ -243,6 +243,9 @@ type Client interface {
 	// seconds) for every channel in a bouquet — the data source for
 	// GuideHub's timeline grid.
 	EPGMulti(ctx context.Context, bouquetRef string, start, end int64) ([]EPGEvent, error)
+	// EPGNowNext returns what runs now and next on every channel of a
+	// bouquet, in the bouquet's order (/web/epgnownext?bRef=, one call).
+	EPGNowNext(ctx context.Context, bouquetRef string) ([]NowNext, error)
 	// EPGSearch finds EPG events by title substring (the box's own search).
 	EPGSearch(ctx context.Context, query string) ([]EPGEvent, error)
 	// Locations lists the box's recording folders (/web/getlocations).
@@ -514,6 +517,65 @@ func (c *HTTPClient) EPGMulti(ctx context.Context, bouquetRef string, start, end
 		return nil, err
 	}
 	return list.Events, nil
+}
+
+// NowNext is one channel's current and next event; nil where the box has
+// no EPG for it.
+type NowNext struct {
+	ServiceReference string    `json:"serviceReference"`
+	ServiceName      string    `json:"serviceName"`
+	Now              *EPGEvent `json:"now"`
+	Next             *EPGEvent `json:"next"`
+}
+
+// EPGNowNext reads /web/epgnownext, which takes the bouquet reference as
+// bRef, not sRef (ARCHITECTURE.md, "epgnownext takes bRef"): two events
+// per channel, now then next, in bouquet order. A channel without EPG
+// answers its fields as the literal "None" (confirmed live, fixture
+// epgnownext.xml), so they're read as text and converted here.
+func (c *HTTPClient) EPGNowNext(ctx context.Context, bouquetRef string) ([]NowNext, error) {
+	var list struct {
+		Events []struct {
+			ID               string `xml:"e2eventid"`
+			Start            string `xml:"e2eventstart"`
+			Duration         string `xml:"e2eventduration"`
+			Title            string `xml:"e2eventtitle"`
+			Description      string `xml:"e2eventdescription"`
+			ServiceReference string `xml:"e2eventservicereference"`
+			ServiceName      string `xml:"e2eventservicename"`
+		} `xml:"e2event"`
+	}
+	if err := c.getXML(ctx, "/web/epgnownext?"+url.Values{"bRef": {bouquetRef}}.Encode(), &list); err != nil {
+		return nil, err
+	}
+	var out []NowNext
+	index := map[string]int{}
+	for _, e := range list.Events {
+		ref := strings.TrimSpace(e.ServiceReference)
+		if ref == "" || strings.HasPrefix(ref, "-1:") {
+			continue
+		}
+		i, ok := index[ref]
+		if !ok {
+			i = len(out)
+			index[ref] = i
+			out = append(out, NowNext{ServiceReference: ref, ServiceName: strings.TrimSpace(e.ServiceName)})
+		}
+		id, err1 := strconv.ParseInt(strings.TrimSpace(e.ID), 10, 64)
+		start, err2 := strconv.ParseInt(strings.TrimSpace(e.Start), 10, 64)
+		dur, err3 := strconv.ParseInt(strings.TrimSpace(e.Duration), 10, 64)
+		if err1 != nil || err2 != nil || err3 != nil {
+			continue // "None": no EPG
+		}
+		ev := &EPGEvent{ID: id, Start: start, Duration: dur, Title: strings.TrimSpace(e.Title), Description: strings.TrimSpace(e.Description),
+			ServiceReference: ref, ServiceName: out[i].ServiceName}
+		if out[i].Now == nil {
+			out[i].Now = ev
+		} else if out[i].Next == nil {
+			out[i].Next = ev
+		}
+	}
+	return out, nil
 }
 
 type simpleResult struct {

@@ -249,6 +249,15 @@ export interface EPGEvent {
 
 // backend/internal/hubs.ChannelSchedule, as returned by GET /api/v1/guide/grid:
 // every event in the requested window, in chronological order.
+// One channel's current and next programme (GET /api/v1/guide/nownext);
+// null where the box has no EPG.
+export interface NowNext {
+  serviceReference: string
+  serviceName: string
+  now: EPGEvent | null
+  next: EPGEvent | null
+}
+
 export interface ChannelSchedule {
   serviceReference: string
   serviceName: string

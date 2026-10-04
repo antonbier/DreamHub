@@ -393,7 +393,32 @@
     "confirmRecord": "Create timer",
     "recordPreview": "A timer for “{name}” on {channel} will be created, recording {when}.",
     "timerCreated": "Timer created.",
-    "timerHubUnavailable": "Recording needs TimerHub, which isn't available."
+    "timerHubUnavailable": "Recording needs TimerHub, which isn't available.",
+    "views": {
+      "label": "View",
+      "grid": "Grid",
+      "nowNext": "Now & next",
+      "tonight": "Tonight",
+      "channel": "Channel"
+    },
+    "filters": {
+      "label": "Filters",
+      "movies": "Films only",
+      "rated": "Rated 7+",
+      "needsEnrichment": "The filters need details from TMDB — turn it on in Settings under “TMDB”."
+    },
+    "bouquet": "Bouquet",
+    "day": "Day",
+    "channel": "Channel",
+    "earlier": "Earlier",
+    "later": "Later",
+    "progress": "Progress of the current programme",
+    "noEpg": "No programme data",
+    "then": "then {time}",
+    "switch": "Switch",
+    "filteredEmpty": "Nothing matches the chosen filters.",
+    "primeSlot": "Starting between {from} and {to}",
+    "epgText": "From the programme guide"
   },
   "series": {
     "tracked": "Tracked series",
@@ -501,7 +526,6 @@
       "tv": "Series"
     },
     "openDetails": "Details for “{title}”",
-    "close": "Close",
     "why": "Why it was picked",
     "noDetails": "The data sources don’t know this title — only the EPG’s details are available."
   },

@@ -393,7 +393,32 @@
     "confirmRecord": "Crea timer",
     "recordPreview": "Verrà creato un timer per \"{name}\" su {channel}, registrazione {when}.",
     "timerCreated": "Timer creato.",
-    "timerHubUnavailable": "La registrazione richiede TimerHub, che non è disponibile."
+    "timerHubUnavailable": "La registrazione richiede TimerHub, che non è disponibile.",
+    "views": {
+      "label": "Vista",
+      "grid": "Griglia",
+      "nowNext": "Ora e dopo",
+      "tonight": "Stasera",
+      "channel": "Canale"
+    },
+    "filters": {
+      "label": "Filtri",
+      "movies": "Solo film",
+      "rated": "Voto da 7",
+      "needsEnrichment": "I filtri richiedono i dati di TMDB: attivalo nelle Impostazioni alla voce “TMDB”."
+    },
+    "bouquet": "Bouquet",
+    "day": "Giorno",
+    "channel": "Canale",
+    "earlier": "Prima",
+    "later": "Dopo",
+    "progress": "Avanzamento del programma in corso",
+    "noEpg": "Nessun dato di programma",
+    "then": "poi {time}",
+    "switch": "Cambia canale",
+    "filteredEmpty": "Niente corrisponde ai filtri scelti.",
+    "primeSlot": "Inizio tra le {from} e le {to}",
+    "epgText": "Dalla guida ai programmi"
   },
   "series": {
     "tracked": "Serie seguite",
@@ -501,7 +526,6 @@
       "tv": "Serie"
     },
     "openDetails": "Dettagli di «{title}»",
-    "close": "Chiudi",
     "why": "Perché è consigliato",
     "noDetails": "Le fonti di dati non conoscono questo titolo: ci sono solo i dati dell’EPG."
   },

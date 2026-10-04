@@ -56,8 +56,11 @@ type Options struct {
 	TVmaze tvmaze.Client
 	// OMDb and Fanart (optional) add ratings and logos to a title's
 	// detail view (internal/enrich, extras.go).
-	OMDb   omdb.Client
-	Fanart fanart.Client
+	// PiconDirs are where channel logos are looked for (GuideHub); nil
+	// means the box's usual places.
+	PiconDirs []string
+	OMDb      omdb.Client
+	Fanart    fanart.Client
 	// DMI is the optional DreamMediaInfo plugin's database (read-only), the
 	// first enrichment source; nil in mock mode.
 	DMI *dmi.Reader
@@ -220,7 +223,7 @@ func New(ctx context.Context, o Options) (*App, error) {
 	timerHub := &hubs_.Timer{WC: o.WebControl, Plans: plans, Now: now, AT: o.AutoTimer}
 	mediaHub := &hubs_.Media{WC: o.WebControl, Plans: plans, FS: o.RecordingsFS, ReadOnly: o.ReadOnlyFiles,
 		Settings: svc, Store: st, AI: o.AI, TMDB: o.TMDB, Enrich: enricher, Now: now}
-	guideHub := &hubs_.Guide{WC: o.WebControl, Now: now}
+	guideHub := &hubs_.Guide{WC: o.WebControl, Now: now, PiconDirs: o.PiconDirs}
 	seriesHub := &hubs_.Series{SR: o.Series, WC: o.WebControl, FS: o.RecordingsFS, TVmaze: o.TVmaze, Store: st, Settings: svc, DMI: o.DMI, Now: now}
 	discoveryHub := &hubs_.Discovery{WC: o.WebControl, SR: o.Series, AT: o.AutoTimer, AI: o.AI, Store: st, Settings: svc, Now: now}
 	systemHub := &hubs_.System{Store: st, Settings: svc, Dashboard: dash, Plans: plans, Now: now}

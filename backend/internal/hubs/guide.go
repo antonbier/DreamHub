@@ -20,6 +20,9 @@ import (
 type Guide struct {
 	WC  webcontrol.Client
 	Now func() time.Time
+	// PiconDirs are searched for channel logos (guide_views.go); nil
+	// means DefaultPiconDirs.
+	PiconDirs []string
 }
 
 // maxGuideResults caps the search provider's answer; the palette shows a
@@ -61,6 +64,8 @@ func (h *Guide) Search(ctx context.Context, query string) ([]hub.SearchResult, e
 func (h *Guide) Mount(mux *http.ServeMux) {
 	mux.HandleFunc("GET /api/v1/guide/bouquets", h.bouquets)
 	mux.HandleFunc("GET /api/v1/guide/grid", h.grid)
+	mux.HandleFunc("GET /api/v1/guide/nownext", h.nowNext)
+	mux.HandleFunc("GET /api/v1/guide/picon", h.picon)
 }
 
 func (h *Guide) bouquets(w http.ResponseWriter, r *http.Request) {
@@ -116,6 +121,17 @@ func (h *Guide) grid(w http.ResponseWriter, r *http.Request) {
 	if err != nil {
 		httpx.WriteError(w, r, http.StatusBadGateway, "webcontrol_unavailable", "could not reach WebControl")
 		return
+	}
+	// ?service= narrows the answer to one channel (the channel view): the
+	// box is still asked for the bouquet, but the browser gets one row.
+	if svc := q.Get("service"); svc != "" {
+		kept := events[:0]
+		for _, e := range events {
+			if e.ServiceReference == svc {
+				kept = append(kept, e)
+			}
+		}
+		events = kept
 	}
 	httpx.WriteJSON(w, http.StatusOK, map[string]any{"channels": groupByChannel(events)})
 }

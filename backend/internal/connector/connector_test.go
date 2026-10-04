@@ -94,6 +94,9 @@ func (f failingClient) Bouquets(context.Context) ([]webcontrol.Service, error) {
 func (f failingClient) Services(context.Context, string) ([]webcontrol.Service, error) {
 	return nil, f.fail()
 }
+func (f failingClient) EPGNowNext(context.Context, string) ([]webcontrol.NowNext, error) {
+	return nil, f.fail()
+}
 func (f failingClient) EPGMulti(context.Context, string, int64, int64) ([]webcontrol.EPGEvent, error) {
 	return nil, f.fail()
 }

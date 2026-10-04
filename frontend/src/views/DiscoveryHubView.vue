@@ -145,6 +145,7 @@ import { useNavigationStore } from '@/stores/navigation'
 import { useProblem } from '@/composables/useProblem'
 import { useDisplayTimeZone } from '@/composables/useDisplayTimeZone'
 import { usePlanError } from '@/composables/usePlanError'
+import { dayKey as zonedDayKey } from '@/lib/zonedTime'
 import type { Bouquet, DiscoveryStatus, Recommendation, TasteCounts, TasteProfile } from '@/api/types'
 
 const { t, locale } = useI18n()
@@ -244,9 +245,7 @@ const ticker = setInterval(() => (nowSec.value = Math.floor(Date.now() / 1000)),
 onBeforeUnmount(() => clearInterval(ticker))
 
 // Day of a Unix time in the display zone, as YYYY-MM-DD (for grouping).
-function dayKey(unixSeconds: number): string {
-  return new Intl.DateTimeFormat('en-CA', { year: 'numeric', month: '2-digit', day: '2-digit', timeZone: timeZone.value }).format(unixSeconds * 1000)
-}
+const dayKey = (unixSeconds: number) => zonedDayKey(unixSeconds, timeZone.value)
 // Picks grouped by day ("Today", "Tomorrow", else the date), in airing order.
 const groups = computed(() => {
   const today = dayKey(nowSec.value)

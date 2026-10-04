@@ -393,7 +393,32 @@
     "confirmRecord": "Timer anlegen",
     "recordPreview": "Ein Timer für „{name}“ auf {channel} wird angelegt, Aufnahme {when}.",
     "timerCreated": "Timer angelegt.",
-    "timerHubUnavailable": "Aufnehmen braucht TimerHub, der nicht verfügbar ist."
+    "timerHubUnavailable": "Aufnehmen braucht TimerHub, der nicht verfügbar ist.",
+    "views": {
+      "label": "Ansicht",
+      "grid": "Raster",
+      "nowNext": "Jetzt & danach",
+      "tonight": "Heute Abend",
+      "channel": "Sender"
+    },
+    "filters": {
+      "label": "Filter",
+      "movies": "Nur Filme",
+      "rated": "Bewertung ab 7",
+      "needsEnrichment": "Die Filter brauchen Infos aus TMDB – in den Einstellungen unter „TMDB“ einschalten."
+    },
+    "bouquet": "Bouquet",
+    "day": "Tag",
+    "channel": "Sender",
+    "earlier": "Früher",
+    "later": "Später",
+    "progress": "Fortschritt der laufenden Sendung",
+    "noEpg": "Keine Programmdaten",
+    "then": "danach {time}",
+    "switch": "Umschalten",
+    "filteredEmpty": "Nichts passt zu den gewählten Filtern.",
+    "primeSlot": "Beginn zwischen {from} und {to}",
+    "epgText": "Aus dem Programmführer"
   },
   "series": {
     "tracked": "Verfolgte Serien",
@@ -501,7 +526,6 @@
       "tv": "Serie"
     },
     "openDetails": "Details zu „{title}“",
-    "close": "Schließen",
     "why": "Warum empfohlen",
     "noDetails": "Die Datenquellen kennen diesen Titel nicht – es gibt nur die Angaben aus dem EPG."
   },

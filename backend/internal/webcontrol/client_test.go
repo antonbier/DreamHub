@@ -420,3 +420,37 @@ func TestMessage_PostsTheForm(t *testing.T) {
 		t.Fatalf("expected success, got %v", err)
 	}
 }
+
+func TestEPGNowNext_Fixture(t *testing.T) {
+	fixture, err := os.ReadFile("../../testdata/fixtures/epgnownext.xml")
+	if err != nil {
+		t.Fatal(err)
+	}
+	var gotBRef string
+	srv := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		gotBRef = r.URL.Query().Get("bRef")
+		w.Write(fixture)
+	}))
+	defer srv.Close()
+
+	bRef := `1:7:1:0:0:0:0:0:0:0:FROM BOUQUET "userbouquet.favourites.tv" ORDER BY bouquet`
+	list, err := NewHTTPClient(srv.URL).EPGNowNext(context.Background(), bRef)
+	if err != nil {
+		t.Fatal(err)
+	}
+	if gotBRef != bRef {
+		t.Errorf("the bouquet goes in bRef: %q", gotBRef)
+	}
+	if len(list) != 46 {
+		t.Errorf("one entry per channel, got %d", len(list))
+	}
+	first := list[0]
+	if first.ServiceName != "RAS ORF1 HD" || first.Now == nil || first.Now.Title != "WaPo Bodensee" || first.Next == nil || first.Next.Start != 1790234019 {
+		t.Errorf("now, then next: %+v %+v %+v", first, first.Now, first.Next)
+	}
+	for _, c := range list {
+		if c.ServiceName == "DMF" && (c.Now != nil || c.Next != nil) {
+			t.Errorf("a channel without EPG (\"None\") has no events: %+v", c)
+		}
+	}
+}

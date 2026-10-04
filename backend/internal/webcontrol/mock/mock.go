@@ -35,6 +35,8 @@ type Client struct {
 	Playing string
 	// Standby is what InStandby reports (ControlHub).
 	Standby bool
+	// Now is the mock's clock for EPGNowNext; nil = the fixture evening.
+	Now func() time.Time
 	// LastZapped and LastKey record the most recent ControlHub action, for
 	// tests to assert on.
 	LastZapped  string
@@ -198,6 +200,33 @@ func (c *Client) EPGMulti(ctx context.Context, bouquetRef string, start, end int
 	for _, e := range epgSchedule() {
 		if e.Start >= start && e.Start < end {
 			out = append(out, e)
+		}
+	}
+	return out, nil
+}
+
+// EPGNowNext answers from the evening schedule at the mock's own clock
+// (Now, else the fixture evening at 21:10), per channel of the bouquet.
+func (c *Client) EPGNowNext(ctx context.Context, bouquetRef string) ([]webcontrol.NowNext, error) {
+	now := at(21, 10)
+	if c.Now != nil {
+		now = c.Now().Unix()
+	}
+	var out []webcontrol.NowNext
+	index := map[string]int{}
+	for _, e := range epgSchedule() {
+		i, ok := index[e.ServiceReference]
+		if !ok {
+			i = len(out)
+			index[e.ServiceReference] = i
+			out = append(out, webcontrol.NowNext{ServiceReference: e.ServiceReference, ServiceName: e.ServiceName})
+		}
+		ev := e
+		switch {
+		case e.Start <= now && now < e.Start+e.Duration:
+			out[i].Now = &ev
+		case e.Start > now && (out[i].Next == nil || e.Start < out[i].Next.Start):
+			out[i].Next = &ev
 		}
 	}
 	return out, nil

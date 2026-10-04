@@ -41,7 +41,9 @@ var validPath = regexp.MustCompile(`^/fanart/(movies|tv)/\d{1,10}/[a-z]{3,20}/[A
 
 // ValidImage accepts only fanart.tv's own image paths, so the image proxy
 // can't be pointed anywhere else.
-func ValidImage(path string) bool { return validPath.MatchString(path) && !strings.Contains(path, "..") }
+func ValidImage(path string) bool {
+	return validPath.MatchString(path) && !strings.Contains(path, "..")
+}
 
 // HTTPClient calls webservice.fanart.tv and assets.fanart.tv.
 type HTTPClient struct {

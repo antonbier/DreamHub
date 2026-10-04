@@ -43,6 +43,7 @@ import type {
   Navigation,
   Notification,
   Plan,
+  NowNext,
   Recommendation,
   SavedPicks,
   SearchResult,
@@ -240,11 +241,17 @@ export const api = {
   },
   guide: {
     bouquets: () => request<{ bouquets: Bouquet[] }>('GET', '/api/v1/guide/bouquets'),
-    grid: (bouquet: string, start: number, end: number) =>
+    // service narrows the answer to one channel (the channel view).
+    grid: (bouquet: string, start: number, end: number, service?: string) =>
       request<{ channels: ChannelSchedule[] }>(
         'GET',
-        `/api/v1/guide/grid?bouquet=${encodeURIComponent(bouquet)}&start=${start}&end=${end}`,
+        `/api/v1/guide/grid?bouquet=${encodeURIComponent(bouquet)}&start=${start}&end=${end}` +
+          (service ? `&service=${encodeURIComponent(service)}` : ''),
       ),
+    // Now and next on every channel of a bouquet, one call to the box.
+    nowNext: (bouquet: string) => request<{ channels: NowNext[] }>('GET', `/api/v1/guide/nownext?bouquet=${encodeURIComponent(bouquet)}`),
+    // The channel's logo from the box (404 when it has none).
+    picon: (ref: string, name: string) => requestBlob(`/api/v1/guide/picon?ref=${encodeURIComponent(ref)}&name=${encodeURIComponent(name)}`),
   },
   series: {
     markers: () => request<{ markers: SeriesMarker[] }>('GET', '/api/v1/series/markers'),

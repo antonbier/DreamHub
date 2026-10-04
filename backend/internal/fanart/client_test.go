@@ -51,8 +51,8 @@ func TestValidImage(t *testing.T) {
 		"/fanart/movies/603/hdmovielogo/the-matrix-5245.png": true,
 		"/fanart/tv/81189/clearlogo/x.jpg":                   true,
 		"/fanart/movies/603/hdmovielogo/../../etc.png":       false,
-		"/etc/passwd":                                        false,
-		"/fanart/movies/603/hdmovielogo/x.svg":               false,
+		"/etc/passwd":                          false,
+		"/fanart/movies/603/hdmovielogo/x.svg": false,
 	} {
 		if ValidImage(p) != ok {
 			t.Errorf("ValidImage(%q) != %v", p, ok)

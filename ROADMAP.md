@@ -159,6 +159,10 @@ Notes:
 - [x] GuideHub search provider over the box's own EPG title search (`/web/epgsearch`): upcoming and running programmes only, soonest first, unnamed services (`-1:…`, `<n/a>`) dropped; a result opens the grid at that programme (`/guide?at=`)
 - [x] Record a programme from the grid (via TimerHub's plan/apply, see TimerHub)
 - [x] "Switch now" on a programme actually airing right now — a direct call to ControlHub's zap (`/web/zap?sRef=`, confirmed live 2026-09-25), not preview-and-confirm (switching channels isn't a durable mutation the way creating a timer is)
+- [x] Four switchable views (2026-10-04, `frontend/src/components/guide/`), the choice remembered per browser, phones starting on Now & next: **Grid** (the timeline, as before); **Now & next** — per channel the current programme with a progress bar and the next one, plus "Switch", from one call to the box (`GET /api/v1/guide/nownext` → `/web/epgnownext?bRef=`, whose "None" fields for channels without EPG are handled, fixture-tested); **Tonight** — what starts between 19:55 and 21:30 (display zone) as poster cards, a week ahead, short fillers under 15 minutes left out; **Channel** — one channel's TV day (05:00–05:00) as a list, now marked, past dimmed (`grid?service=` narrows the answer to that channel)
+- [x] Filters across all views: films only, rated 7+ (from enrichment; a title that isn't known doesn't pass), remembered per browser; the grid dims instead of hiding
+- [x] Channel logos (picons) from the box (`GET /api/v1/guide/picon`): `/data/piconpool` first, then the usual Enigma2 picon folders, by service reference (also as service type 1) or channel name — still to check against the reference box's real picon names
+- [x] Every view opens the same details dialog as DiscoveryHub (`ProgrammeDialog`): backdrop, poster, logo, ratings, overview, the EPG text, Record and Switch now
 - [ ] `GraphMultiEPG` and `TvSpielfilm` are native on-screen references, not replacements
 
 ### DiscoveryHub

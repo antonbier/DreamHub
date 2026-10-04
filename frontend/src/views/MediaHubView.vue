@@ -72,7 +72,7 @@
 
       <!-- Recordings, one folder at a time -->
       <template v-if="activeTab === 'recordings'">
-        <nav v-if="folder" class="mt-4 flex flex-wrap items-center gap-1 text-[13.5px]" :aria-label="t('media.folderPath')">
+        <nav v-if="folder && breadcrumbs.length > 1" class="mt-4 flex flex-wrap items-center gap-1 text-[13.5px]" :aria-label="t('media.folderPath')">
           <template v-for="(crumb, i) in breadcrumbs" :key="crumb.path">
             <span v-if="i > 0" class="text-faint">/</span>
             <button

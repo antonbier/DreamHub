@@ -536,7 +536,8 @@
     },
     "openDetails": "Dettagli di «{title}»",
     "why": "Perché è consigliato",
-    "noDetails": "Le fonti di dati non conoscono questo titolo: ci sono solo i dati dell’EPG."
+    "noDetails": "Le fonti di dati non conoscono questo titolo: ci sono solo i dati dell’EPG.",
+    "emptySingle": "Premi «Genera consigli»: DreamHub legge la guida TV dei prossimi giorni e sceglie cosa vale la pena guardare."
   },
   "diagnostics": {
     "title": "Diagnostica",
@@ -626,7 +627,8 @@
       "runWizard": "Avvia la configurazione guidata",
       "namingHint": "Segnaposto: {'{'}title{'}'} {'{'}year{'}'} {'{'}season{'}'} {'{'}episode{'}'} {'{'}episodeTitle{'}'} {'{'}channel{'}'} {'{'}date{'}'}; numeri con zeri iniziali: {'{'}episode:02{'}'}. Le parti tra [parentesi quadre] vengono omesse se un segnaposto al loro interno è vuoto, ad es. {'{'}title{'}'}[ ({'{'}year{'}'})].",
       "folderHint": "Vuoto = le registrazioni restano dove sono. Altrimenti un percorso sotto la cartella di registrazione con gli stessi segnaposto, ad es. {'{'}title{'}'}/Stagione {'{'}season:02{'}'} o Film.",
-      "pushServerHint": "ntfy.sh è il servizio pubblico; se usi un tuo server ntfy, inserisci il suo indirizzo."
+      "pushServerHint": "ntfy.sh è il servizio pubblico; se usi un tuo server ntfy, inserisci il suo indirizzo.",
+      "jumpTo": "Vai alla sezione"
     },
     "general": {
       "title": "Generale",
@@ -931,7 +933,9 @@
       "enigma": "Enigma2 {version}",
       "image": "Image {version}",
       "webif": "WebControl {version}",
-      "tuners": "1 tuner | {count} tuner"
+      "tuners": "1 tuner | {count} tuner",
+      "model": "Modello",
+      "imageLabel": "Immagine"
     },
     "tabs": {
       "overview": "Panoramica"

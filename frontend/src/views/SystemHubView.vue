@@ -59,19 +59,12 @@
         <!-- Device info -->
         <section class="mt-5 rounded border border-line bg-tile p-4">
           <h2 class="text-[14px] font-semibold text-text">{{ t('system.device.title') }}</h2>
-          <dl class="mt-2 grid grid-cols-2 gap-x-4 gap-y-1 text-[13px] below-md:grid-cols-1">
-            <div class="flex justify-between gap-3 sm:contents">
-              <dt class="text-muted">{{ device?.deviceName }}</dt>
-              <dd class="text-text">{{ t('system.device.enigma', { version: device?.enigmaVersion }) }}</dd>
-            </div>
-            <div class="flex justify-between gap-3 sm:contents">
-              <dt class="text-muted">{{ t('system.device.image', { version: device?.imageVersion }) }}</dt>
-              <dd class="text-text">{{ t('system.device.webif', { version: device?.webifVersion }) }}</dd>
-            </div>
-            <div class="flex justify-between gap-3 sm:contents">
-              <dt class="text-muted">{{ t('system.device.tuners', { count: device?.frontends.length ?? 0 }, device?.frontends.length ?? 0) }}</dt>
-              <dd class="text-text">{{ (device?.frontends ?? []).map((f) => f.model).join(', ') }}</dd>
-            </div>
+          <!-- Label and value side by side; one under the other on phones. -->
+          <dl class="mt-2 grid grid-cols-[max-content_1fr] gap-x-6 gap-y-1.5 text-[13px] below-sm:grid-cols-1 below-sm:gap-y-0">
+            <template v-for="row in deviceRows" :key="row.label">
+              <dt class="text-muted below-sm:mt-1.5">{{ row.label }}</dt>
+              <dd class="min-w-0 break-words text-text">{{ row.value }}</dd>
+            </template>
           </dl>
         </section>
 
@@ -200,6 +193,18 @@ const tab = ref<Tab>(route.query.tab === 'diagnostics' ? 'diagnostics' : 'overvi
 watch(tab, (t) => router.replace({ query: { ...route.query, tab: t === 'overview' ? undefined : t } }))
 
 const device = ref<DeviceInfo | null>(null)
+const deviceRows = computed(() => {
+  const d = device.value
+  if (!d) return []
+  const tuners = d.frontends.map((f) => f.model.trim()).filter(Boolean)
+  return [
+    { label: t('system.device.model'), value: `Dreambox ${d.deviceName}` },
+    { label: t('system.device.imageLabel'), value: d.imageVersion },
+    { label: 'Enigma2', value: d.enigmaVersion },
+    { label: 'WebControl', value: d.webifVersion },
+    { label: t('system.device.tuners', { count: d.frontends.length }, d.frontends.length), value: tuners.join(', ') || '—' },
+  ]
+})
 const changes = ref<ChangeEntry[]>([])
 const changesLimit = ref(50)
 const filter = ref('')

@@ -6,7 +6,7 @@
   everything else on the line.
 -->
 <template>
-  <div class="flex h-8 shrink-0 items-center gap-4 border-b border-line bg-bg px-4 text-[12.5px]">
+  <div class="flex h-8 shrink-0 items-center gap-4 overflow-hidden whitespace-nowrap border-b border-line bg-bg px-4 text-[12.5px] below-sm:gap-3">
     <span class="flex items-center gap-1.5" :class="status.reachable.value ? 'text-muted' : 'text-warn'">
       <span class="h-1.5 w-1.5 rounded-full" :class="status.reachable.value ? 'bg-ok' : 'bg-warn'" />
       {{ status.reachable.value ? t('statusStrip.connected') : t('statusStrip.unreachable') }}
@@ -22,7 +22,7 @@
       {{ status.issueCount.value === 1 ? t('statusStrip.issueSingular') : t('statusStrip.issuePlural', { count: status.issueCount.value }) }}
     </span>
 
-    <span class="ms-auto text-faint">{{ timeZone }}</span>
+    <span class="ms-auto truncate text-faint below-sm:hidden">{{ timeZone }}</span>
   </div>
 </template>
 

@@ -31,9 +31,13 @@
   --dh-onair: #f2564a;
   --dh-warn: #e0a23b;
   --dh-ok: #4fbf7f;
+  /* Native controls (checkboxes, selects, scrollbars, date pickers) follow
+     the theme instead of staying browser-white on the dark surfaces. */
+  color-scheme: dark;
 }
 
 :root[data-theme='light'] {
+  color-scheme: light;
   --dh-bg: #f2f3f5;
   --dh-side: #fafbfc;
   --dh-tile: #ffffff;
@@ -70,6 +74,13 @@ body {
   font-size: 15px;
   line-height: 1.5;
   font-variant-numeric: tabular-nums; /* times, sizes, counts (DESIGN.md) */
+}
+
+input[type='checkbox'],
+input[type='radio'],
+input[type='range'],
+progress {
+  accent-color: var(--dh-accent);
 }
 
 /* Focus is always visible (DESIGN.md, Interaction). */

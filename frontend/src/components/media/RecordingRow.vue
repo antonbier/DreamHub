@@ -15,7 +15,7 @@
 -->
 <template>
   <li class="border-b border-line-soft last:border-none" :class="{ 'opacity-60': !movie.isRecording }">
-    <div class="group flex items-center gap-3 py-2.5 hover:bg-tile-2">
+    <div class="group flex items-center gap-3 py-2.5 hover:bg-tile-2 below-sm:flex-wrap below-sm:gap-y-1">
       <input
         v-if="selectable"
         type="checkbox"
@@ -48,7 +48,9 @@
       </span>
       <RatingBadge v-if="info" class="shrink-0 text-[12.5px] below-sm:hidden" :rating="info.rating" :votes="info.votes" />
       <span class="shrink-0 whitespace-nowrap font-mono text-[12.5px] tabular-nums text-faint">{{ formatBytes(movie.fileSize, locale) }}</span>
-      <template v-if="actions">
+      <!-- On phones the actions move to their own line under the title, so
+           the title isn't cut down to a couple of letters. -->
+      <span v-if="actions" class="flex shrink-0 below-sm:basis-full below-sm:justify-end">
         <button
           type="button"
           class="shrink-0 rounded px-2 py-1 text-[13px] text-accent opacity-0 hover:bg-tile focus:opacity-100 group-hover:opacity-100 below-md:opacity-100"
@@ -67,7 +69,7 @@
         >
           {{ t('media.moveToTrash') }}
         </button>
-      </template>
+      </span>
     </div>
 
     <div v-if="state" class="pb-3">

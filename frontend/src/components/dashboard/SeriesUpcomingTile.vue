@@ -12,7 +12,7 @@
       :key="i"
       class="flex items-center gap-3 border-b border-line-soft py-2 last:border-none"
     >
-      <span class="w-16 shrink-0 whitespace-nowrap text-[12.5px] font-mono text-faint">{{ formatTime(ep.startTime) }}</span>
+      <span class="w-24 shrink-0 whitespace-nowrap text-[12.5px] font-mono tabular-nums text-faint">{{ formatTime(ep.startTime) }}</span>
       <span class="min-w-0 flex-1">
         <span class="block truncate text-[14px] text-text">{{ ep.series }}</span>
         <span class="block truncate text-[12.5px] text-muted">{{ ep.channel }}</span>
@@ -26,6 +26,7 @@ import { computed, onMounted, ref } from 'vue'
 import { useI18n } from 'vue-i18n'
 import { api } from '@/api/client'
 import { useDisplayTimeZone } from '@/composables/useDisplayTimeZone'
+import { formatWhen } from '@/lib/format'
 import type { UpcomingEpisode } from '@/api/types'
 
 const MAX_ROWS = 5
@@ -39,7 +40,7 @@ const unavailable = ref(false)
 const upcoming = computed(() => episodes.value.slice(0, MAX_ROWS))
 
 function formatTime(unixSeconds: number): string {
-  return new Intl.DateTimeFormat(locale.value, { hour: '2-digit', minute: '2-digit', timeZone: timeZone.value }).format(unixSeconds * 1000)
+  return formatWhen(unixSeconds, locale.value, timeZone.value)
 }
 
 onMounted(async () => {

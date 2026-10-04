@@ -536,7 +536,8 @@
     },
     "openDetails": "Details zu „{title}“",
     "why": "Warum empfohlen",
-    "noDetails": "Die Datenquellen kennen diesen Titel nicht – es gibt nur die Angaben aus dem EPG."
+    "noDetails": "Die Datenquellen kennen diesen Titel nicht – es gibt nur die Angaben aus dem EPG.",
+    "emptySingle": "Tippe auf „Empfehlungen generieren“: DreamHub liest das EPG der nächsten Tage und sucht heraus, was sich lohnt."
   },
   "diagnostics": {
     "title": "Diagnose",
@@ -626,7 +627,8 @@
       "runWizard": "Einrichtungsassistent starten",
       "namingHint": "Platzhalter: {'{'}title{'}'} {'{'}year{'}'} {'{'}season{'}'} {'{'}episode{'}'} {'{'}episodeTitle{'}'} {'{'}channel{'}'} {'{'}date{'}'}; Zahlen mit führenden Nullen: {'{'}episode:02{'}'}. Teile in [eckigen Klammern] entfallen, wenn ein Platzhalter darin leer ist, z. B. {'{'}title{'}'}[ ({'{'}year{'}'})].",
       "folderHint": "Leer = Aufnahmen bleiben, wo sie sind. Sonst ein Pfad unterhalb des Aufnahmeordners mit denselben Platzhaltern, z. B. {'{'}title{'}'}/Staffel {'{'}season:02{'}'} oder Filme.",
-      "pushServerHint": "ntfy.sh ist der öffentliche Dienst; wer einen eigenen ntfy-Server betreibt, trägt dessen Adresse ein."
+      "pushServerHint": "ntfy.sh ist der öffentliche Dienst; wer einen eigenen ntfy-Server betreibt, trägt dessen Adresse ein.",
+      "jumpTo": "Zum Abschnitt springen"
     },
     "general": {
       "title": "Allgemein",
@@ -931,7 +933,9 @@
       "enigma": "Enigma2 {version}",
       "image": "Image {version}",
       "webif": "WebControl {version}",
-      "tuners": "1 Tuner | {count} Tuner"
+      "tuners": "1 Tuner | {count} Tuner",
+      "model": "Modell",
+      "imageLabel": "Image"
     },
     "tabs": {
       "overview": "Übersicht"

@@ -536,7 +536,8 @@
     },
     "openDetails": "Details for “{title}”",
     "why": "Why it was picked",
-    "noDetails": "The data sources don’t know this title — only the EPG’s details are available."
+    "noDetails": "The data sources don’t know this title — only the EPG’s details are available.",
+    "emptySingle": "Press “Generate recommendations”: DreamHub reads the coming days' EPG and picks what's worth watching."
   },
   "diagnostics": {
     "title": "Diagnostics",
@@ -626,7 +627,8 @@
       "runWizard": "Run setup wizard",
       "namingHint": "Placeholders: {'{'}title{'}'} {'{'}year{'}'} {'{'}season{'}'} {'{'}episode{'}'} {'{'}episodeTitle{'}'} {'{'}channel{'}'} {'{'}date{'}'}; numbers with leading zeros: {'{'}episode:02{'}'}. Parts in [square brackets] are left out when a placeholder in them is empty, e.g. {'{'}title{'}'}[ ({'{'}year{'}'})].",
       "folderHint": "Empty = recordings stay where they are. Otherwise a path below the recording folder with the same placeholders, e.g. {'{'}title{'}'}/Season {'{'}season:02{'}'} or Films.",
-      "pushServerHint": "ntfy.sh is the public service; if you run your own ntfy server, enter its address."
+      "pushServerHint": "ntfy.sh is the public service; if you run your own ntfy server, enter its address.",
+      "jumpTo": "Jump to section"
     },
     "general": {
       "title": "General",
@@ -931,7 +933,9 @@
       "enigma": "Enigma2 {version}",
       "image": "Image {version}",
       "webif": "WebControl {version}",
-      "tuners": "1 tuner | {count} tuners"
+      "tuners": "1 tuner | {count} tuners",
+      "model": "Model",
+      "imageLabel": "Image"
     },
     "tabs": {
       "overview": "Overview"

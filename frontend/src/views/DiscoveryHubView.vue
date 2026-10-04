@@ -92,7 +92,10 @@
       <p v-if="genError" class="mt-3 text-[13px] text-warn">{{ genError }}</p>
       <p v-if="usedTaste && hasGenerated" class="mt-3 text-[12.5px] text-faint">{{ usedTaste }}</p>
 
-      <p v-if="!hasGenerated && !loading" class="mt-5 text-[14px] text-muted">{{ t('discovery.empty') }}</p>
+      <div v-if="!hasGenerated && !loading" class="mt-6 flex flex-col items-center gap-3 rounded border border-dashed border-line px-6 py-10 text-center">
+        <Icon name="recommendations" :size="28" class="text-faint" />
+        <p class="max-w-md text-[14px] text-muted">{{ bouquets.length > 1 ? t('discovery.empty') : t('discovery.emptySingle') }}</p>
+      </div>
       <p v-else-if="hasGenerated && recommendations.length === 0 && !generating" class="mt-5 text-[14px] text-muted">
         {{ t('discovery.noPicks') }}
       </p>

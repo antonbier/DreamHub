@@ -14,15 +14,18 @@
     >
       <Icon name="menu" :size="18" />
     </button>
-    <div class="flex flex-1 justify-center">
+    <!-- On phones the search field shrinks to an icon: the placeholder would
+         otherwise wrap into three lines and spill over the status strip. -->
+    <div class="flex flex-1 justify-center below-sm:justify-end">
       <button
         type="button"
-        class="relative w-full max-w-[420px] rounded border border-line bg-field py-1.5 ps-8 pe-3 text-start text-[13.5px] text-faint hover:border-line-soft"
+        class="relative w-full max-w-[420px] truncate rounded border border-line bg-field py-1.5 ps-8 pe-3 text-start text-[13.5px] text-faint hover:border-line-soft below-sm:flex below-sm:h-8 below-sm:w-8 below-sm:items-center below-sm:justify-center below-sm:border-0 below-sm:bg-transparent below-sm:p-0 below-sm:text-muted below-sm:hover:bg-tile-2 below-sm:hover:text-text"
+        :aria-label="t('topbar.searchPlaceholder')"
         @click="searchPalette?.show()"
       >
-        <Icon name="search" :size="16" class="pointer-events-none absolute start-2.5 top-1/2 -translate-y-1/2 text-faint" />
-        {{ t('topbar.searchPlaceholder') }}
-        <span class="absolute end-2.5 top-1/2 -translate-y-1/2 text-[11px]">{{ shortcutHint }}</span>
+        <Icon name="search" :size="16" class="pointer-events-none absolute start-2.5 top-1/2 -translate-y-1/2 text-faint below-sm:static below-sm:translate-y-0 below-sm:text-current" />
+        <span class="below-sm:hidden">{{ t('topbar.searchPlaceholder') }}</span>
+        <span class="absolute end-2.5 top-1/2 -translate-y-1/2 text-[11px] below-sm:hidden">{{ shortcutHint }}</span>
       </button>
       <SearchPalette ref="searchPalette" />
     </div>

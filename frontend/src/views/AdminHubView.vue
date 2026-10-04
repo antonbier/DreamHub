@@ -106,12 +106,14 @@
           <li
             v-for="(e, i) in logs"
             :key="i"
-            class="flex items-start gap-3 border-b border-line-soft py-1.5 last:border-none"
+            class="flex items-start gap-x-3 border-b border-line-soft py-1.5 last:border-none below-sm:flex-wrap"
             :class="{ 'text-warn': e.level === 'warning', 'text-onair': ['emerg', 'alert', 'crit', 'err'].includes(e.level) }"
           >
-            <span class="w-36 shrink-0 whitespace-nowrap text-faint">{{ formatDate(e.time) }}</span>
-            <span class="w-40 shrink-0 truncate text-faint">{{ e.unit }}</span>
-            <span class="min-w-0 flex-1 break-words">{{ e.message }}</span>
+            <span class="w-44 shrink-0 whitespace-nowrap text-faint below-sm:w-auto">{{ formatDate(e.time) }}</span>
+            <span class="w-40 shrink-0 truncate text-faint below-sm:w-auto below-sm:min-w-0 below-sm:flex-1">{{ e.unit }}</span>
+            <!-- On phones the message gets its own full-width line: squeezed
+                 next to time and unit it would wrap after every letter. -->
+            <span class="min-w-0 flex-1 break-words below-sm:basis-full">{{ e.message }}</span>
           </li>
         </ul>
       </section>

@@ -109,6 +109,8 @@ MediaHub file changes are applied only when DreamHub runs on the box and device 
 | POST | `/api/v1/control/message` | ControlHub: show a text on the TV — `{text, kind: "info"\|"warning"\|"error", timeout}` (seconds, 0 = until closed). Direct like the remote keys, gated by device writes. `400 invalid_message` |
 | GET | `/api/v1/control/current` | ControlHub: what the box shows right now (`/web/getcurrent`) — `{serviceReference, serviceName, providerName, kind: "tv"\|"radio"\|"recording", now, next, volume, muted, inStandby}`; `now`/`next` `null` without EPG. Backs the dashboard's "Now on the box" tile |
 | GET/PUT | `/api/v1/admin/log-level` | AdminHub (admin only): `{"level": "debug", "minutes": 60}` — debug reverts to info automatically |
+| GET | `/api/v1/admin/services` | AdminHub (admin only): the box's services (`hubs.DefaultServices`: enigma2, dreamhub, Samba, NFS, avahi, ZeroTier — ones the box lacks left out) via `systemctl show` — `{services: [{name, description, active, sub, since, mainPid, memory, restarts}]}`; `503 systemd_unavailable` without systemd |
+| POST | `/api/v1/admin/services/plan` | AdminHub (admin only): preview restarting (`service.restart`) or, when it's down, starting (`service.start`) one of those units — `{name}`. Warnings: `service.restartEnigma2`, `service.recordingsInterrupted` (`names` of recordings running now), `service.restartSelf`. Applied through `/api/v1/plans/{id}/apply` (`systemctl restart --no-block`), stale if the unit changed in between, refused with `writes_disabled` under `DREAMHUB_ENABLE_DEVICE_WRITES=0` |
 
 Authentication accepts **either** Basic Auth or a bearer API token (`Authorization: Bearer dh_...`, from `POST /api/v1/tokens`) on any endpoint, whenever `auth.enabled` is on.
 

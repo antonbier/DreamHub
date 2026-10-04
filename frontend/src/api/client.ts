@@ -17,6 +17,7 @@ import type {
   AutoTimers,
   BatchRenameItem,
   CurrentService,
+  ServiceUnit,
   CoverItem,
   BackupFile,
   ConnectorState,
@@ -322,6 +323,10 @@ export const api = {
     restorePlan: (file: BackupFile) => request<{ plan: Plan }>('POST', '/api/v1/system/backup/restore', file),
   },
   admin: {
+    // The box's services (enigma2, DreamHub, Samba, …) and their state.
+    services: () => request<{ services: ServiceUnit[] }>('GET', '/api/v1/admin/services'),
+    // Preview restarting (or starting) one; applied through plans.apply.
+    servicePlan: (name: string) => request<{ plan: Plan }>('POST', '/api/v1/admin/services/plan', { name }),
     logLevel: {
       get: () => request<LogLevel>('GET', '/api/v1/admin/log-level'),
       set: (level: 'info' | 'debug', minutes?: number) => request<LogLevel>('PUT', '/api/v1/admin/log-level', { level, minutes }),

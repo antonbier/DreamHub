@@ -47,6 +47,11 @@
       "conflict": "Probabile conflitto con un'altra registrazione (tuner: {tuners}). Il box verifica di nuovo al salvataggio.",
       "duplicate": "Esiste già un timer su questo canale che inizia alla stessa ora (\"{name}\"). Il box ignorerebbe questo.",
       "deleteRunning": "\"{name}\" è in registrazione. Eliminare il timer interrompe la registrazione."
+    },
+    "service": {
+      "restartEnigma2": "L'immagine TV, l'interfaccia web del box e il telecomando non funzionano per circa mezzo minuto.",
+      "recordingsInterrupted": "In registrazione ora, verrebbe interrotto: {names}.",
+      "restartSelf": "Questa pagina perde la connessione per qualche secondo e si ricollega da sola."
     }
   },
   "fix": {
@@ -596,7 +601,11 @@
       "timer_toggle_running": "Il timer sta registrando: disattivarlo interromperebbe la registrazione.",
       "timer_toggle_restored": "Il box ha rifiutato la modifica (di solito un conflitto). Il timer è invariato.",
       "timer_unchanged": "Il timer è già impostato così.",
-      "timer_in_past": "L’orario del timer è passato; non si può più attivare."
+      "timer_in_past": "L’orario del timer è passato; non si può più attivare.",
+      "service_restart_failed": "systemd non è riuscito a riavviare il servizio — il suo log qui sotto spiega perché.",
+      "service_not_found": "Questo box non ha questo servizio.",
+      "systemd_unavailable": "Lo stato dei servizi richiede systemd — solo sul box.",
+      "systemd_failed": "Impossibile leggere lo stato del servizio."
     },
     "media": {
       "not_a_recording": "Questa registrazione non esiste (più).",
@@ -881,6 +890,28 @@
       "empty": "Nessun log di crash.",
       "view": "Visualizza",
       "close": "Chiudi"
+    },
+    "services": {
+      "title": "Servizi",
+      "unavailable": "Lo stato dei servizi richiede systemd — solo sul box.",
+      "logs": "Log",
+      "restart": "Riavvia",
+      "start": "Avvia",
+      "confirmRestart": "Riavvia ora",
+      "confirmStart": "Avvia ora",
+      "previewRestart": "{name} verrà riavviato.",
+      "previewStart": "{name} verrà avviato.",
+      "done": "{name} si sta riavviando.",
+      "runningFor": "In esecuzione da {duration}",
+      "restarts": "riavviato una volta da systemd | riavviato {count} volte da systemd",
+      "state": {
+        "inactive": "Fermo",
+        "failed": "Non riuscito",
+        "activating": "Avvio…",
+        "deactivating": "Arresto…",
+        "reloading": "Ricaricamento…"
+      },
+      "doneStart": "{name} si sta avviando."
     }
   },
   "control": {

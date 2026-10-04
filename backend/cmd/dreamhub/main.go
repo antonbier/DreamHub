@@ -36,6 +36,8 @@ import (
 	"github.com/antonbier/DreamHub/backend/internal/logging"
 	"github.com/antonbier/DreamHub/backend/internal/serienrecorder"
 	srmock "github.com/antonbier/DreamHub/backend/internal/serienrecorder/mock"
+	"github.com/antonbier/DreamHub/backend/internal/systemd"
+	sdmock "github.com/antonbier/DreamHub/backend/internal/systemd/mock"
 	"github.com/antonbier/DreamHub/backend/internal/webcontrol"
 	"github.com/antonbier/DreamHub/backend/internal/webcontrol/mock"
 	"github.com/antonbier/DreamHub/backend/internal/webui"
@@ -66,6 +68,7 @@ func run(logger *slog.Logger, level *logging.Level) error {
 	var pushClient push.Client
 	var dmiReader *dmi.Reader
 	var logs journald.Reader
+	var services systemd.Manager
 	switch cfg.Mode {
 	case config.ModeLive:
 		c := webcontrol.NewHTTPClient(cfg.WebControlURL)
@@ -93,6 +96,7 @@ func run(logger *slog.Logger, level *logging.Level) error {
 		pushClient = push.NewHTTPClient()
 		dmiReader = &dmi.Reader{}
 		logs = journald.Exec{}
+		services = systemd.Exec{}
 		logger.Info("webcontrol client mode", "mode", "live", "url", cfg.WebControlURL, "deviceWrites", cfg.EnableDeviceWrites)
 	default:
 		m := mock.New()
@@ -107,6 +111,7 @@ func run(logger *slog.Logger, level *logging.Level) error {
 		fanartClient = fanartmock.New()
 		pushClient = pushmock.New()
 		logs = jmock.New()
+		services = sdmock.New()
 		logger.Info("webcontrol client mode", "mode", "mock")
 	}
 
@@ -126,6 +131,7 @@ func run(logger *slog.Logger, level *logging.Level) error {
 		ReadOnlyFiles: cfg.Mode == config.ModeLive && !cfg.EnableDeviceWrites,
 		AI:            aiClient,
 		Logs:          logs,
+		Systemd:       services,
 		Mock:          cfg.Mode == config.ModeMock,
 		LookPath:      exec.LookPath,
 		Logger:        logger,

@@ -12,8 +12,11 @@ import (
 	"github.com/antonbier/DreamHub/backend/internal/httpx"
 	"github.com/antonbier/DreamHub/backend/internal/journald"
 	"github.com/antonbier/DreamHub/backend/internal/logging"
+	"github.com/antonbier/DreamHub/backend/internal/plan"
 	"github.com/antonbier/DreamHub/backend/internal/recfs"
 	"github.com/antonbier/DreamHub/backend/internal/store"
+	"github.com/antonbier/DreamHub/backend/internal/systemd"
+	"github.com/antonbier/DreamHub/backend/internal/webcontrol"
 )
 
 // Admin is AdminHub: DreamHub's runtime log level, journald's log viewer
@@ -27,6 +30,26 @@ type Admin struct {
 	// (internal/recfs) — reused here read-only, rooted the same way, just
 	// for a different directory (crashLogDir, not the recording folders).
 	FS recfs.FS
+	// Systemd reads and restarts the box's services (admin_services.go);
+	// nil hides them.
+	Systemd systemd.Manager
+	// Services overrides DefaultServices (tests).
+	Services []string
+	// Plans holds restart previews; WC tells which recordings a restart
+	// of enigma2 would cut.
+	Plans *plan.Service
+	WC    webcontrol.Client
+	Now   func() time.Time
+	// ReadOnly: the same switch as WebControl writes
+	// (DREAMHUB_ENABLE_DEVICE_WRITES=0) — no restarts either.
+	ReadOnly bool
+}
+
+func (h *Admin) now() time.Time {
+	if h.Now != nil {
+		return h.Now()
+	}
+	return time.Now()
 }
 
 // crashLogDir is where enigma2 writes its own crash logs — confirmed live,
@@ -42,6 +65,8 @@ func (h *Admin) Mount(mux *http.ServeMux) {
 	mux.HandleFunc("GET /api/v1/admin/logs/stream", adminOnly(h.logsStream))
 	mux.HandleFunc("GET /api/v1/admin/crashlogs", adminOnly(h.crashLogs))
 	mux.HandleFunc("GET /api/v1/admin/crashlogs/{name}", adminOnly(h.crashLog))
+	mux.HandleFunc("GET /api/v1/admin/services", adminOnly(h.listServices))
+	mux.HandleFunc("POST /api/v1/admin/services/plan", adminOnly(h.planRestart))
 }
 
 // DefaultDebugMinutes is how long debug logging lasts unless specified.

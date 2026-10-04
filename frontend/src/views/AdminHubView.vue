@@ -1,5 +1,6 @@
 <!--
-  AdminHub's real screen (docs/V1_PLAN.md, WP6): DreamHub's own runtime log
+  AdminHub's real screen (docs/V1_PLAN.md, WP6): the box's services with
+  restart through preview (ServicesPanel.vue), DreamHub's own runtime log
   level, a journald log viewer (bounded, filtered server-side — the journal
   itself is the box's whole RAM buffer since boot, ARCHITECTURE.md,
   "journald is volatile"), and enigma2's own crash logs. Admin role only —
@@ -28,6 +29,8 @@
     </div>
 
     <template v-if="!item || item.status !== 'unavailable'">
+      <ServicesPanel @logs="showLogsFor" />
+
       <!-- Log level -->
       <section class="mt-5 rounded border border-line bg-tile p-4">
         <h2 class="text-[14px] font-semibold text-text">{{ t('admin.logLevel.title') }}</h2>
@@ -55,7 +58,7 @@
       </section>
 
       <!-- Logs -->
-      <section class="mt-4">
+      <section ref="logsSection" class="mt-4 scroll-mt-4">
         <div class="flex flex-wrap items-center justify-between gap-3">
           <h2 class="text-[15px] font-semibold text-text">{{ t('admin.logs.title') }}</h2>
           <div class="flex items-center gap-2">
@@ -150,6 +153,7 @@ import { computed, onMounted, onUnmounted, ref } from 'vue'
 import { useI18n } from 'vue-i18n'
 import { api, ApiError } from '@/api/client'
 import Icon from '@/components/Icon.vue'
+import ServicesPanel from '@/components/admin/ServicesPanel.vue'
 import { formatBytes } from '@/lib/format'
 import { openEventStream } from '@/composables/useEventStream'
 import { useNavigationStore } from '@/stores/navigation'
@@ -236,6 +240,14 @@ function stopLive() {
   live.value = false
   stopStream?.()
   stopStream = null
+}
+
+// A service's "Logs": filter the viewer to that unit and bring it into view.
+const logsSection = ref<HTMLElement | null>(null)
+function showLogsFor(unit: string) {
+  logUnit.value = unit
+  onFilterChange()
+  logsSection.value?.scrollIntoView({ behavior: 'smooth', block: 'start' })
 }
 
 function onFilterChange() {

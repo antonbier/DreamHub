@@ -627,3 +627,15 @@ export interface CurrentService {
   muted: boolean
   inStandby: boolean
 }
+
+// GET /api/v1/admin/services — one systemd unit on the box.
+export interface ServiceUnit {
+  name: string // "enigma2.service"
+  description: string
+  active: string // systemd's ActiveState: active, inactive, failed, activating, …
+  sub: string
+  since?: string // RFC 3339, while active
+  mainPid?: number
+  memory?: number // bytes
+  restarts: number // automatic restarts by systemd
+}

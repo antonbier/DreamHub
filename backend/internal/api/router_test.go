@@ -10,6 +10,7 @@ import (
 	omdbmock "github.com/antonbier/DreamHub/backend/internal/omdb/mock"
 	pushmock "github.com/antonbier/DreamHub/backend/internal/push/mock"
 	"github.com/antonbier/DreamHub/backend/internal/recfs"
+	sdmock "github.com/antonbier/DreamHub/backend/internal/systemd/mock"
 	tmdbmock "github.com/antonbier/DreamHub/backend/internal/tmdb/mock"
 	tvmazemock "github.com/antonbier/DreamHub/backend/internal/tvmaze/mock"
 	"io"
@@ -46,6 +47,8 @@ type env struct {
 	svc    *settings.Service
 	events *events.Bus
 	pushed *pushmock.Client
+	// systemd is AdminHub's service manager (in-memory).
+	systemd *sdmock.Manager
 }
 
 // newEnv builds the application exactly as production does (internal/app),
@@ -84,6 +87,7 @@ func newEnvWithLogs(t *testing.T, logs journald.Reader) *env {
 func newEnvFull(t *testing.T, wc webcontrol.Client, at autotimer.Client, recFS recfs.FS, readOnly bool, logs journald.Reader) *env {
 	t.Helper()
 	pushed := pushmock.New()
+	services := sdmock.New()
 	a, err := app.New(context.Background(), app.Options{
 		ReadOnlyFiles: readOnly,
 		TMDB:          tmdbmock.New(),
@@ -98,6 +102,7 @@ func newEnvFull(t *testing.T, wc webcontrol.Client, at autotimer.Client, recFS r
 		Series:        srmock.New(),
 		AI:            aimock.New(),
 		Logs:          logs,
+		Systemd:       services,
 		Mock:          true,
 		LookPath:      func(string) (string, error) { return "/usr/bin/journalctl", nil },
 		Logger:        discardLogger(),
@@ -116,7 +121,7 @@ func newEnvFull(t *testing.T, wc webcontrol.Client, at autotimer.Client, recFS r
 	for _, job := range a.Background {
 		go job(jobs)
 	}
-	return &env{srv: srv, store: a.Store, svc: a.Settings, events: a.Events, pushed: pushed}
+	return &env{srv: srv, store: a.Store, svc: a.Settings, events: a.Events, pushed: pushed, systemd: services}
 }
 
 func (e *env) do(t *testing.T, method, path, body string, configure func(*http.Request)) (*http.Response, []byte) {

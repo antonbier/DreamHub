@@ -323,6 +323,14 @@ Pulled forward from v1.1 (`CONCEPT.md`, `docs/V1_PLAN.md`): verifying the Enigma
 ### AdminHub service status
 - Status of enigma2, dreamhub, Samba and other units; restarting is a change and goes through preview-and-confirm.
 
+**Done** (2026-10-04, built early against an in-memory manager while the box was out of reach — `internal/systemd`, `internal/hubs/admin_services.go`, `components/admin/ServicesPanel.vue`):
+- [x] `systemd.Exec` reads `systemctl show` for a fixed list of units (enigma2, dreamhub, smbd/nmbd/samba, nfs-server, avahi-daemon, zerotier-one — the services found on the reference box, ARCHITECTURE.md); unknown ones (`LoadState=not-found`) are left out. "Since" comes from the monotonic timestamp plus the boot time from `/proc/uptime`, since older systemd prints the wall-clock one only as a zone-abbreviated local string
+- [x] State, running since, memory, automatic restarts; failed units in `onair`; "Logs" fills the log viewer's unit filter
+- [x] Restart, or Start for a unit that's down, through plan → apply: only listed units; warnings for enigma2 (picture, WebControl and remote gone for a while; recordings running now are named) and for DreamHub itself (the page reconnects); `--no-block`, so DreamHub can restart itself and still answer; stale when the unit changed between preview and confirm; under `DREAMHUB_ENABLE_DEVICE_WRITES=0` nothing is restarted; logged in the change log
+
+**Open**:
+- [ ] Check on the box (`device-access`): the real unit names (Samba's especially), that `MemoryCurrent`/`NRestarts` are reported by the box's systemd version (older ones lack them — then they're just not shown), and restarting DreamHub itself from its own page
+
 ## Later
 
 ### StreamHub

@@ -47,6 +47,11 @@
       "conflict": "Likely conflicts with another recording (tuners: {tuners}). The box checks again when saving.",
       "duplicate": "A timer on this channel starting at the same time already exists (“{name}”). The box would ignore this one.",
       "deleteRunning": "“{name}” is recording right now. Deleting the timer stops the recording."
+    },
+    "service": {
+      "restartEnigma2": "The TV picture, the box's own web interface and the remote are gone for about half a minute.",
+      "recordingsInterrupted": "Recording right now, and would be cut: {names}.",
+      "restartSelf": "This page loses the connection for a few seconds and reconnects by itself."
     }
   },
   "fix": {
@@ -596,7 +601,11 @@
       "timer_toggle_running": "The timer is recording right now — disabling it would stop the recording.",
       "timer_toggle_restored": "The box refused the change (usually a conflict). The timer is unchanged.",
       "timer_unchanged": "The timer is already set that way.",
-      "timer_in_past": "The timer’s time has passed; it can’t be enabled again."
+      "timer_in_past": "The timer’s time has passed; it can’t be enabled again.",
+      "service_restart_failed": "systemd couldn't restart the service — its log below says why.",
+      "service_not_found": "This box has no such service.",
+      "systemd_unavailable": "Service status needs systemd — only on the box.",
+      "systemd_failed": "Couldn't read the service's state."
     },
     "media": {
       "not_a_recording": "This recording doesn't exist (anymore).",
@@ -881,6 +890,28 @@
       "empty": "No crash logs.",
       "view": "View",
       "close": "Close"
+    },
+    "services": {
+      "title": "Services",
+      "unavailable": "Service status needs systemd — only on the box.",
+      "logs": "Logs",
+      "restart": "Restart",
+      "start": "Start",
+      "confirmRestart": "Restart now",
+      "confirmStart": "Start now",
+      "previewRestart": "{name} will be restarted.",
+      "previewStart": "{name} will be started.",
+      "done": "{name} is restarting.",
+      "runningFor": "Running for {duration}",
+      "restarts": "restarted once by systemd | restarted {count}× by systemd",
+      "state": {
+        "inactive": "Stopped",
+        "failed": "Failed",
+        "activating": "Starting…",
+        "deactivating": "Stopping…",
+        "reloading": "Reloading…"
+      },
+      "doneStart": "{name} is starting."
     }
   },
   "control": {

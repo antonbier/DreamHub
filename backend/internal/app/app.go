@@ -35,6 +35,7 @@ import (
 	"github.com/antonbier/DreamHub/backend/internal/serienrecorder"
 	"github.com/antonbier/DreamHub/backend/internal/settings"
 	"github.com/antonbier/DreamHub/backend/internal/store"
+	"github.com/antonbier/DreamHub/backend/internal/systemd"
 	"github.com/antonbier/DreamHub/backend/internal/webcontrol"
 )
 
@@ -80,6 +81,9 @@ type Options struct {
 	// Logs is AdminHub's journal reader (internal/journald): journald.Exec{}
 	// on the box, the mock in mock mode.
 	Logs journald.Reader
+	// Systemd is AdminHub's service status (internal/systemd): Exec{} on
+	// the box, the in-memory mock otherwise; nil hides the section.
+	Systemd systemd.Manager
 	// Mock is true when running against the mock WebControl/Series clients;
 	// the SerienRecorder connector then reports OK without a real check.
 	Mock bool
@@ -236,7 +240,8 @@ func New(ctx context.Context, o Options) (*App, error) {
 	seriesHub := &hubs_.Series{SR: o.Series, WC: o.WebControl, FS: o.RecordingsFS, TVmaze: o.TVmaze, Store: st, Settings: svc, DMI: o.DMI, Now: now}
 	discoveryHub := &hubs_.Discovery{WC: o.WebControl, SR: o.Series, AT: o.AutoTimer, AI: o.AI, Store: st, Settings: svc, Now: now}
 	systemHub := &hubs_.System{Store: st, Settings: svc, Dashboard: dash, Plans: plans, Now: now}
-	adminHub := &hubs_.Admin{Store: st, Level: level, Logs: o.Logs, FS: o.RecordingsFS}
+	adminHub := &hubs_.Admin{Store: st, Level: level, Logs: o.Logs, FS: o.RecordingsFS,
+		Systemd: o.Systemd, Plans: plans, WC: o.WebControl, Now: now, ReadOnly: o.ReadOnlyFiles}
 	controlHub := &hubs_.Control{WC: o.WebControl}
 
 	// TimerHub is the hub contract's first real search provider

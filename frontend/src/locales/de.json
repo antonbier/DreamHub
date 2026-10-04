@@ -47,6 +47,11 @@
       "conflict": "Kollidiert wahrscheinlich mit einer anderen Aufnahme (Tuner: {tuners}). Die Box prüft beim Speichern erneut.",
       "duplicate": "Auf diesem Sender beginnt bereits ein Timer zur selben Zeit („{name}“). Die Box würde diesen hier ignorieren.",
       "deleteRunning": "„{name}“ wird gerade aufgenommen. Löschen des Timers beendet die Aufnahme."
+    },
+    "service": {
+      "restartEnigma2": "Fernsehbild, die Weboberfläche der Box und die Fernbedienung sind etwa eine halbe Minute weg.",
+      "recordingsInterrupted": "Läuft gerade und würde abgebrochen: {names}.",
+      "restartSelf": "Diese Seite verliert für ein paar Sekunden die Verbindung und verbindet sich von selbst wieder."
     }
   },
   "fix": {
@@ -596,7 +601,11 @@
       "timer_toggle_running": "Der Timer nimmt gerade auf – Deaktivieren würde die Aufnahme abbrechen.",
       "timer_toggle_restored": "Die Box hat die Änderung abgelehnt (meist ein Konflikt). Der Timer ist unverändert.",
       "timer_unchanged": "Der Timer ist schon so eingestellt.",
-      "timer_in_past": "Die Zeit des Timers ist vorbei; er lässt sich nicht mehr aktivieren."
+      "timer_in_past": "Die Zeit des Timers ist vorbei; er lässt sich nicht mehr aktivieren.",
+      "service_restart_failed": "systemd konnte den Dienst nicht neu starten – sein Log unten sagt, warum.",
+      "service_not_found": "Diesen Dienst gibt es auf dieser Box nicht.",
+      "systemd_unavailable": "Der Dienststatus braucht systemd – gibt es nur auf der Box.",
+      "systemd_failed": "Der Zustand des Dienstes ließ sich nicht lesen."
     },
     "media": {
       "not_a_recording": "Diese Aufnahme gibt es nicht (mehr).",
@@ -881,6 +890,28 @@
       "empty": "Keine Absturzprotokolle.",
       "view": "Ansehen",
       "close": "Schließen"
+    },
+    "services": {
+      "title": "Dienste",
+      "unavailable": "Der Dienststatus braucht systemd – gibt es nur auf der Box.",
+      "logs": "Logs",
+      "restart": "Neu starten",
+      "start": "Starten",
+      "confirmRestart": "Jetzt neu starten",
+      "confirmStart": "Jetzt starten",
+      "previewRestart": "{name} wird neu gestartet.",
+      "previewStart": "{name} wird gestartet.",
+      "done": "{name} startet neu.",
+      "runningFor": "Läuft seit {duration}",
+      "restarts": "einmal von systemd neu gestartet | {count}× von systemd neu gestartet",
+      "state": {
+        "inactive": "Gestoppt",
+        "failed": "Fehlgeschlagen",
+        "activating": "Startet…",
+        "deactivating": "Stoppt…",
+        "reloading": "Lädt neu…"
+      },
+      "doneStart": "{name} startet."
     }
   },
   "control": {

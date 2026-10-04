@@ -134,7 +134,7 @@ A remote control for the box in the browser, with a live picture of the TV scree
 
 ### System and Admin
 
-**System** shows the box, its disks, DreamHub's diagnostics and the **Change log** of every change made through DreamHub. **Admin** shows logs — DreamHub's own and the box's — live if you like.
+**System** shows the box, its disks, DreamHub's diagnostics and the **Change log** of every change made through DreamHub. **Admin** shows the box's **services** — enigma2, DreamHub, Samba and the others — with their state; **Restart** (or **Start**, when one is down) shows first what it interrupts, such as a recording running right now. Below that, logs — DreamHub's own and the box's — live if you like; **Logs** next to a service shows just its lines.
 
 ---
 

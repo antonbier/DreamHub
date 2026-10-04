@@ -7,6 +7,7 @@
   non-recording (a manually copied .mkv) is dimmed and labeled, never
   offered file actions.
 
+  The title opens the recording's details (MediaHubView's ProgrammeDialog).
   Rename expands in place: an input with the current file name, then the
   preview (PlanPreview) listing every file of the recording before → after
   (DESIGN.md: monospace, old struck through, new highlighted). Moving to the
@@ -30,7 +31,16 @@
         :alt="movie.title"
       />
       <span class="min-w-0 flex-1">
-        <span class="block truncate text-[14px] text-text" :title="movie.title">{{ shownTitle }}</span>
+        <button
+          v-if="movie.isRecording"
+          type="button"
+          class="block max-w-full truncate text-start text-[14px] text-text hover:text-accent"
+          :title="movie.title"
+          @click="emit('open')"
+        >
+          {{ shownTitle }}
+        </button>
+        <span v-else class="block truncate text-[14px] text-text" :title="movie.title">{{ shownTitle }}</span>
         <span class="block truncate text-[12.5px] text-muted">
           <template v-if="movie.isRecording">{{ details }}</template>
           <template v-else>{{ t('media.notARecording') }}</template>
@@ -202,6 +212,8 @@ const emit = defineEmits<{
   suggest: [source: SuggestionSource]
   confirm: []
   cancel: []
+  // The title was clicked: show the recording's details.
+  open: []
 }>()
 
 const { t, locale } = useI18n()

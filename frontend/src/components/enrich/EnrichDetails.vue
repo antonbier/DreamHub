@@ -9,7 +9,14 @@
 -->
 <template>
   <div v-if="info" class="flex gap-4">
-    <PosterImage :path="info.poster" size="w185" :width="posterWidth" :height="Math.round(posterWidth * 1.5)" :alt="info.title" />
+    <PosterImage
+      :recording="recording"
+      :path="recording ? undefined : info.poster"
+      size="w185"
+      :width="posterWidth"
+      :height="Math.round(posterWidth * 1.5)"
+      :alt="info.title"
+    />
     <div class="min-w-0 flex-1">
       <img v-if="logoSrc" :src="logoSrc" :alt="info.title" class="mb-1.5 h-9 max-w-[220px] object-contain object-left" />
       <p class="flex flex-wrap items-center gap-x-2 gap-y-0.5 text-[13px] text-muted">
@@ -39,7 +46,9 @@ import { titlesDiffer } from '@/lib/titles'
 import { sourceName } from '@/lib/enrichSource'
 
 const props = withDefaults(
-  defineProps<{ info?: EnrichInfo | null; shownTitle?: string; posterWidth?: number; clamp?: boolean }>(),
+  // recording: show that recording's own cover on the box instead of
+  // the database's poster (it's what the box's other plugins show too).
+  defineProps<{ info?: EnrichInfo | null; shownTitle?: string; posterWidth?: number; clamp?: boolean; recording?: string }>(),
   { posterWidth: 92, clamp: true },
 )
 const { t } = useI18n()

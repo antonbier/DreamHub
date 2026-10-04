@@ -39,11 +39,15 @@
           :alt="detail.marker.name"
         />
         <div class="min-w-0 flex-1">
+          <img v-if="logoSrc" :src="logoSrc" :alt="detail.marker.name" class="mb-1.5 h-9 max-w-[220px] object-contain object-left" />
           <p class="flex flex-wrap items-center gap-x-2 gap-y-0.5 text-[13px] text-muted">
             <span v-if="detail.info?.year" class="tabular-nums">{{ detail.info.year }}</span>
             <span v-if="detail.info?.info">{{ detail.info.info }}</span>
             <span v-else-if="tmdb?.genres?.length">{{ tmdb.genres.join(', ') }}</span>
             <RatingBadge v-if="tmdb" :rating="tmdb.rating" :votes="tmdb.votes" />
+            <span v-for="c in chips" :key="c.id" class="whitespace-nowrap rounded-sm border border-line px-1 text-[11.5px] tabular-nums text-muted" :title="c.title">
+              {{ c.label }} <span class="text-text">{{ c.value }}</span>
+            </span>
           </p>
           <p v-if="detail.info?.description || tmdb?.overview" class="mt-1.5 text-[13.5px] text-text">
             {{ detail.info?.description || tmdb?.overview }}
@@ -186,6 +190,7 @@ import RatingBadge from '@/components/enrich/RatingBadge.vue'
 import { sourceName } from '@/lib/enrichSource'
 import EpisodeGuide from '@/components/series/EpisodeGuide.vue'
 import { useEnrichStore } from '@/stores/enrich'
+import { useEnrichExtras } from '@/composables/useEnrichExtras'
 import { useNavigationStore } from '@/stores/navigation'
 import { useDisplayTimeZone } from '@/composables/useDisplayTimeZone'
 import { usePlanError } from '@/composables/usePlanError'
@@ -220,12 +225,15 @@ onMounted(load)
 watch(() => props.id, load)
 
 const tmdb = computed(() => (detail.value ? enrich.info(detail.value.marker.name, 'tv') : null))
+// Ratings (OMDb) and the logo (fanart.tv) for the series, when set up.
+const { logoSrc, chips, sources: extraSources } = useEnrichExtras(tmdb)
 // Names the sources actually shown.
 const sourceNames = computed(() => {
   const d = detail.value
   const names: string[] = []
   if (d?.info) names.push('SerienRecorder')
   if (tmdb.value && (!d?.cover || !d?.info || tmdb.value.rating)) names.push(sourceName(tmdb.value))
+  names.push(...extraSources.value)
   return names.join(', ')
 })
 

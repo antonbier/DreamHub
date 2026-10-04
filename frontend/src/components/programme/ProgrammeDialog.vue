@@ -5,7 +5,7 @@
   channel, length), everything the data sources know (EnrichDetails:
   poster, logo, year, genres, ratings, FSK, the full overview, credited),
   then the caller's own sections (default slot: the EPG text, why the AI
-  picked it) and actions (slot "actions": record, switch now). Escape, the
+  picked it, a recording's description) and actions (slot "actions": record, switch now). Escape, the
   close button and the backdrop close it; Close gets focus on open, and
   focus goes back to whatever opened it. Full screen below sm.
 -->
@@ -33,14 +33,16 @@
 
       <div class="p-5" :class="{ 'relative -mt-12': info?.backdrop }">
         <h2 id="programme-title" class="pe-20 text-[21px] font-bold leading-tight text-text">{{ title }}</h2>
-        <p class="mt-1 flex flex-wrap items-center gap-x-1.5 text-[13.5px] text-muted">
+        <p v-if="subtitle" class="mt-1 text-[13.5px] text-muted">{{ subtitle }}</p>
+        <p v-else class="mt-1 flex flex-wrap items-center gap-x-1.5 text-[13.5px] text-muted">
           <span v-if="airingNow" class="flex items-center gap-1 text-onair"><span class="h-1.5 w-1.5 rounded-full bg-onair" />{{ t('discovery.now') }}</span>
           <span class="tabular-nums">{{ when }}</span>
           <span>· {{ serviceName }}</span>
           <span class="tabular-nums">· {{ t('discovery.minutes', { n: Math.round(duration / 60) }) }}</span>
         </p>
 
-        <EnrichDetails v-if="info" class="mt-4" :info="info" :shown-title="title" :poster-width="120" :clamp="false" />
+        <EnrichDetails v-if="info" class="mt-4" :info="info" :shown-title="title" :poster-width="120" :clamp="false" :recording="recording" />
+        <PosterImage v-else-if="recording" class="mt-4" :recording="recording" size="w185" :width="120" :height="180" :alt="title" />
         <p v-else-if="info === null" class="mt-4 text-[13px] text-faint">{{ t('discovery.noDetails') }}</p>
         <p v-else class="mt-4 text-[13px] text-faint">{{ t('common.loading') }}</p>
 
@@ -69,6 +71,10 @@ const props = defineProps<{
   when: string
   now: number
   info?: EnrichInfo | null
+  // A recording: its own line instead of the broadcast's, and its own
+  // cover on the box (preferred over TMDB's poster).
+  subtitle?: string
+  recording?: string
 }>()
 defineEmits<{ close: [] }>()
 const { t } = useI18n()

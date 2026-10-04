@@ -170,6 +170,7 @@
               :state="rowStates[movie.filename] ?? null"
               :sources="suggestSources"
               @toggle="toggle(movie.filename)"
+              @open="openMovie = movie"
               @rename="rowStates[movie.filename] = { kind: 'rename', busy: false }"
               @trash="previewTrash(movie)"
               @preview-rename="(name: string, title?: string) => previewRename(movie, name, title)"
@@ -230,6 +231,38 @@
         </template>
       </template>
     </template>
+    <ProgrammeDialog
+      v-if="openMovie"
+      :title="titleFromFileName(openMovie.title)"
+      :service-name="openMovie.serviceName"
+      :start="openMovie.time"
+      :duration="0"
+      when=""
+      :now="0"
+      :subtitle="movieSubtitle(openMovie)"
+      :info="enrich.info(openMovie.title)"
+      :recording="openMovie.cover ? openMovie.filename : undefined"
+      @close="openMovie = null"
+    >
+      <section v-if="openMovie.description || openMovie.descriptionExtended" class="mt-4 rounded border border-line-soft bg-bg p-3">
+        <h3 class="text-[12.5px] text-faint">{{ t('media.detail.fromRecording') }}</h3>
+        <p v-if="openMovie.description" class="mt-1 text-[14px] text-text">{{ openMovie.description }}</p>
+        <p v-if="openMovie.descriptionExtended" class="mt-1 whitespace-pre-line text-[13.5px] text-muted">{{ openMovie.descriptionExtended }}</p>
+      </section>
+      <template #actions>
+        <div class="flex flex-wrap items-center gap-2">
+          <button
+            type="button"
+            class="rounded bg-accent px-3.5 py-1.5 text-[13.5px] font-semibold text-bg disabled:opacity-60"
+            :disabled="playing"
+            @click="playOnTv(openMovie)"
+          >
+            {{ played ? t('media.detail.playing') : t('media.detail.play') }}
+          </button>
+        </div>
+        <p v-if="playError" class="mt-2 text-[12.5px] text-warn">{{ playError }}</p>
+      </template>
+    </ProgrammeDialog>
   </div>
 </template>
 
@@ -244,6 +277,9 @@ import RecordingRow from '@/components/media/RecordingRow.vue'
 import TrashPreview from '@/components/media/TrashPreview.vue'
 import BatchRenamePreview from '@/components/media/BatchRenamePreview.vue'
 import SaveCoversPreview from '@/components/media/SaveCoversPreview.vue'
+import ProgrammeDialog from '@/components/programme/ProgrammeDialog.vue'
+import { titleFromFileName } from '@/lib/titles'
+import { useEnrichStore } from '@/stores/enrich'
 import type { RowState, SuggestSources, TrashActionState } from '@/components/media/types'
 import { useNavigationStore } from '@/stores/navigation'
 import { useProblem } from '@/composables/useProblem'
@@ -257,6 +293,7 @@ const navigation = useNavigationStore()
 const { describe, describeFix } = useProblem()
 const { planErrorMessage } = usePlanError()
 const { timeZone } = useDisplayTimeZone()
+const enrich = useEnrichStore()
 
 const item = computed(() => navigation.navigation?.sections.flatMap((s) => s.items).find((i) => i.path === '/media'))
 
@@ -386,6 +423,36 @@ async function confirmRow(movie: Movie) {
   } catch (err) {
     // A failed or stale plan is used up; the user starts over.
     rowStates[key] = { kind: state.kind, busy: false, error: planErrorMessage(err) }
+  }
+}
+
+// --- one recording's details, and playing it on the TV ----------------------
+
+const openMovie = ref<Movie | null>(null)
+const playing = ref(false)
+const played = ref(false)
+const playError = ref('')
+watch(openMovie, () => {
+  played.value = false
+  playError.value = ''
+})
+// channel · date and time · length, leaving out what's unknown.
+function movieSubtitle(m: Movie): string {
+  const when = m.time > 0 ? new Intl.DateTimeFormat(locale.value, { dateStyle: 'medium', timeStyle: 'short', timeZone: timeZone.value }).format(m.time * 1000) : ''
+  return [m.serviceName, when, m.length ? t('media.detail.length', { length: m.length }) : ''].filter(Boolean).join(' · ')
+}
+// Playing is a zap to the recording's own reference — a live input like
+// the remote (ControlHub), not a change to anything, so no preview.
+async function playOnTv(m: Movie) {
+  playing.value = true
+  playError.value = ''
+  try {
+    await api.control.zap(m.serviceReference)
+    played.value = true
+  } catch (err) {
+    playError.value = planErrorMessage(err)
+  } finally {
+    playing.value = false
   }
 }
 

@@ -382,6 +382,12 @@
       "hint": "Gespeichert wird neben der Aufnahme, wie es Enigma2 und andere Plugins erwarten. Vorhandene Cover werden nie überschrieben.",
       "confirm": "Speichern | 1 speichern | {n} speichern",
       "done": "1 Cover gespeichert | {n} Cover gespeichert"
+    },
+    "detail": {
+      "fromRecording": "Aus der Aufnahme",
+      "play": "Auf dem TV abspielen",
+      "playing": "Läuft auf dem TV",
+      "length": "{length} Min."
     }
   },
   "guide": {

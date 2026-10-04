@@ -382,6 +382,12 @@
       "hint": "Salvate accanto alla registrazione, dove le cercano Enigma2 e gli altri plugin. Le copertine esistenti non vengono mai sostituite.",
       "confirm": "Salva | Salva 1 | Salva {n}",
       "done": "1 copertina salvata | {n} copertine salvate"
+    },
+    "detail": {
+      "fromRecording": "Dalla registrazione",
+      "play": "Riproduci sulla TV",
+      "playing": "In riproduzione sulla TV",
+      "length": "{length} min"
     }
   },
   "guide": {

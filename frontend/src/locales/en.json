@@ -382,6 +382,12 @@
       "hint": "Saved next to the recording, where Enigma2 and other plugins look. Existing covers are never replaced.",
       "confirm": "Save | Save 1 | Save {n}",
       "done": "1 cover saved | {n} covers saved"
+    },
+    "detail": {
+      "fromRecording": "From the recording",
+      "play": "Play on the TV",
+      "playing": "Playing on the TV",
+      "length": "{length} min"
     }
   },
   "guide": {

@@ -75,6 +75,9 @@
       <p v-else-if="field.key === 'network.allowedHosts'" class="mt-1 text-[12.5px] text-faint">
         {{ t('settings.page.allowedHostsHint') }}
       </p>
+      <p v-else-if="field.key.startsWith('media.naming.folder')" class="mt-1 text-[12.5px] text-faint">
+        {{ t('settings.page.folderHint') }}
+      </p>
       <p v-else-if="field.key.startsWith('media.naming.')" class="mt-1 text-[12.5px] text-faint">
         {{ t('settings.page.namingHint') }}
       </p>

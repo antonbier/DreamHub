@@ -369,7 +369,9 @@
       "alreadyNamed": "already named by the scheme",
       "schemeHint": "Change the scheme in Settings → Recordings.",
       "confirm": "Rename | Rename 1 | Rename {n}",
-      "done": "1 recording renamed · undo in the change log | {n} recordings renamed · undo in the change log"
+      "done": "1 recording renamed · undo in the change log | {n} recordings renamed · undo in the change log",
+      "folders": "Sort into folders",
+      "newFolders": "1 new folder: | {n} new folders:"
     }
   },
   "guide": {
@@ -554,7 +556,8 @@
       "timezoneHint": "IANA time zone name, e.g. \"Europe/Rome\".",
       "allowedHostsHint": "Comma-separated host names, besides IP addresses, localhost and *.local.",
       "runWizard": "Run setup wizard",
-      "namingHint": "Placeholders: {'{'}title{'}'} {'{'}year{'}'} {'{'}season{'}'} {'{'}episode{'}'} {'{'}episodeTitle{'}'} {'{'}channel{'}'} {'{'}date{'}'}; numbers with leading zeros: {'{'}episode:02{'}'}. Parts in [square brackets] are left out when a placeholder in them is empty, e.g. {'{'}title{'}'}[ ({'{'}year{'}'})]."
+      "namingHint": "Placeholders: {'{'}title{'}'} {'{'}year{'}'} {'{'}season{'}'} {'{'}episode{'}'} {'{'}episodeTitle{'}'} {'{'}channel{'}'} {'{'}date{'}'}; numbers with leading zeros: {'{'}episode:02{'}'}. Parts in [square brackets] are left out when a placeholder in them is empty, e.g. {'{'}title{'}'}[ ({'{'}year{'}'})].",
+      "folderHint": "Empty = recordings stay where they are. Otherwise a path below the recording folder with the same placeholders, e.g. {'{'}title{'}'}/Season {'{'}season:02{'}'} or Films."
     },
     "general": {
       "title": "General",
@@ -628,7 +631,8 @@
       "template_placeholder": "Unknown placeholder.",
       "template_no_title": "{'{'}title{'}'} has to appear, and not only in [square brackets].",
       "template_no_episode": "The episode scheme needs {'{'}episode{'}'}.",
-      "template_slash": "No slashes — the scheme sets the file name only, not folders."
+      "template_slash": "No slashes — the scheme sets the file name only, not folders.",
+      "template_folder": "A folder has to be below the recording folder: no leading /, no empty parts, no .."
     },
     "webcontrol": {
       "title": "WebControl",
@@ -642,7 +646,9 @@
     "media": {
       "title": "Recordings",
       "namingMovie": "Naming scheme for films",
-      "namingEpisode": "Naming scheme for episodes"
+      "namingEpisode": "Naming scheme for episodes",
+      "folderMovie": "Folder for films",
+      "folderEpisode": "Folder for episodes"
     }
   },
   "notFound": {

@@ -21,6 +21,10 @@ import (
 const (
 	KeyNamingMovie   = "media.naming.movie"
 	KeyNamingEpisode = "media.naming.episode"
+	// Folder schemes for "sort into folders" (media_batch.go); empty =
+	// leave recordings where they are.
+	KeyFolderMovie   = "media.naming.folderMovie"
+	KeyFolderEpisode = "media.naming.folderEpisode"
 )
 
 // MediaSettingsSection is MediaHub's own settings section.
@@ -31,11 +35,18 @@ func MediaSettingsSection() settings.Section {
 		Fields: []settings.Field{
 			{Key: KeyNamingMovie, Type: settings.TypeString, Scope: settings.ScopeGlobal, Label: "settings.media.namingMovie", Default: naming.DefaultMovieTemplate},
 			{Key: KeyNamingEpisode, Type: settings.TypeString, Scope: settings.ScopeGlobal, Label: "settings.media.namingEpisode", Default: naming.DefaultEpisodeTemplate},
+			{Key: KeyFolderMovie, Type: settings.TypeString, Scope: settings.ScopeGlobal, Label: "settings.media.folderMovie", Default: ""},
+			{Key: KeyFolderEpisode, Type: settings.TypeString, Scope: settings.ScopeGlobal, Label: "settings.media.folderEpisode", Default: ""},
 		},
 		Check: func(v settings.Values) map[string]settings.FieldError {
 			errs := map[string]settings.FieldError{}
 			for key, episode := range map[string]bool{KeyNamingMovie: false, KeyNamingEpisode: true} {
 				if err := naming.CheckTemplate(v.String(key), episode); err != nil {
+					errs[key] = settings.FieldError{Code: templateErrorCode(err)}
+				}
+			}
+			for _, key := range []string{KeyFolderMovie, KeyFolderEpisode} {
+				if err := naming.CheckFolderTemplate(v.String(key)); err != nil {
 					errs[key] = settings.FieldError{Code: templateErrorCode(err)}
 				}
 			}
@@ -48,7 +59,7 @@ func MediaSettingsSection() settings.Section {
 }
 
 func templateErrorCode(err error) string {
-	for _, e := range []error{naming.ErrTemplateSyntax, naming.ErrTemplatePlaceholder, naming.ErrTemplateNoTitle, naming.ErrTemplateNoEpisode, naming.ErrTemplateSlash} {
+	for _, e := range []error{naming.ErrTemplateSyntax, naming.ErrTemplatePlaceholder, naming.ErrTemplateNoTitle, naming.ErrTemplateNoEpisode, naming.ErrTemplateSlash, naming.ErrFolderTemplate} {
 		if errors.Is(err, e) {
 			return e.Error()
 		}
@@ -71,6 +82,7 @@ func (h *Media) templates(ctx context.Context) naming.Templates {
 		if s := v.String(KeyNamingEpisode); s != "" {
 			ts.Episode = s
 		}
+		ts.FolderMovie, ts.FolderEpisode = v.String(KeyFolderMovie), v.String(KeyFolderEpisode)
 	}
 	return ts
 }

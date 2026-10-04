@@ -41,6 +41,8 @@ type FS interface {
 	// WriteFile replaces an existing file's content atomically (a temporary
 	// file next to it, then a rename), keeping its permissions.
 	WriteFile(name string, data []byte) error
+	// Mkdir creates one folder (its parent must exist).
+	Mkdir(name string) error
 }
 
 // OS is the real file system.
@@ -51,6 +53,16 @@ func (OS) Lstat(name string) (fs.FileInfo, error)     { return os.Lstat(name) }
 func (OS) Rename(from, to string) error               { return os.Rename(from, to) }
 func (OS) Remove(name string) error                   { return os.Remove(name) }
 func (OS) ReadFile(name string) ([]byte, error)       { return os.ReadFile(name) }
+
+// Mkdir creates a folder with the usual mode for recording folders (0755,
+// set explicitly: DreamHub runs with umask 077, and the box's other
+// readers — a Samba share, say — need to see into it).
+func (OS) Mkdir(name string) error {
+	if err := os.Mkdir(name, 0o755); err != nil {
+		return err
+	}
+	return os.Chmod(name, 0o755)
+}
 
 func (OS) WriteFile(name string, data []byte) error {
 	fi, err := os.Lstat(name)
@@ -227,6 +239,12 @@ func ValidName(name string) (string, error) {
 // PlanRename lists the moves that rename the recording at tsPath to newBase,
 // in the order they'll be applied (main file last). Nothing is changed.
 func PlanRename(fsys FS, tsPath, newBase string) ([]Move, error) {
+	return PlanRenameTo(fsys, tsPath, path.Dir(tsPath), newBase)
+}
+
+// PlanRenameTo is PlanRename into another folder newDir (which may not
+// exist yet — see MissingDirs): every file of the recording moves along.
+func PlanRenameTo(fsys FS, tsPath, newDir, newBase string) ([]Move, error) {
 	newBase, err := ValidName(newBase)
 	if err != nil {
 		return nil, err
@@ -236,21 +254,74 @@ func PlanRename(fsys FS, tsPath, newBase string) ([]Move, error) {
 		return nil, err
 	}
 	oldBase := Base(tsPath)
-	if newBase == oldBase {
+	newDir = path.Clean(newDir)
+	if newBase == oldBase && newDir == path.Dir(tsPath) {
 		return nil, ErrSameName
 	}
-	dir := path.Dir(tsPath)
 	moves := make([]Move, 0, len(files))
 	for _, f := range files[1:] {
-		moves = append(moves, Move{From: f, To: path.Join(dir, newBase+strings.TrimPrefix(path.Base(f), oldBase))})
+		moves = append(moves, Move{From: f, To: path.Join(newDir, newBase+strings.TrimPrefix(path.Base(f), oldBase))})
 	}
-	moves = append(moves, Move{From: tsPath, To: path.Join(dir, newBase+".ts")})
+	moves = append(moves, Move{From: tsPath, To: path.Join(newDir, newBase+".ts")})
 	for _, m := range moves {
 		if _, err := fsys.Lstat(m.To); err == nil {
 			return nil, ErrTargetExists
 		}
 	}
 	return moves, nil
+}
+
+// MissingDirs lists the folders (outermost first) that moves need and
+// that don't exist yet, stopping at an existing folder. A path segment
+// that exists but isn't a real folder (a file, a link) is an error: a move
+// must never go through a link.
+func MissingDirs(fsys FS, moves []Move) ([]string, error) {
+	var out []string
+	seen := map[string]bool{}
+	for _, m := range moves {
+		var chain []string
+		for dir := path.Dir(m.To); dir != "/" && dir != "." && !seen[dir]; dir = path.Dir(dir) {
+			fi, err := fsys.Lstat(dir)
+			if err == nil {
+				if fi.Mode()&fs.ModeSymlink != 0 || !fi.IsDir() {
+					return nil, ErrOutsideFolders
+				}
+				break
+			}
+			chain = append(chain, dir)
+		}
+		for i := len(chain) - 1; i >= 0; i-- {
+			if !seen[chain[i]] {
+				seen[chain[i]] = true
+				out = append(out, chain[i])
+			}
+		}
+	}
+	return out, nil
+}
+
+// ApplyInto creates the missing folders, then applies moves — all or
+// nothing: on a failure it renames back what it moved and removes the
+// folders it created (only if they're empty again).
+func ApplyInto(fsys FS, dirs []string, moves []Move) error {
+	var made []string
+	undo := func() {
+		for i := len(made) - 1; i >= 0; i-- {
+			_ = fsys.Remove(made[i])
+		}
+	}
+	for _, d := range dirs {
+		if err := fsys.Mkdir(d); err != nil {
+			undo()
+			return err
+		}
+		made = append(made, d)
+	}
+	if err := Apply(fsys, moves); err != nil {
+		undo()
+		return err
+	}
+	return nil
 }
 
 // PlanTrash moves a recording to the trash: only its main file is renamed.

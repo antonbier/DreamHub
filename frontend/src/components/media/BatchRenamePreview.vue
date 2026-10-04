@@ -11,6 +11,10 @@
   <div class="rounded border border-line-soft bg-bg p-3" role="group" :aria-label="t('media.batch.title')">
     <div class="flex flex-wrap items-center gap-3">
       <p class="text-[12px] text-faint">{{ t('plan.eyebrow') }}</p>
+      <label class="flex cursor-pointer items-center gap-2 text-[12.5px] text-text">
+        <input v-model="folders" type="checkbox" class="rounded" :disabled="busy" @change="load" />
+        {{ t('media.batch.folders') }}
+      </label>
       <div class="ms-auto flex items-center gap-1 rounded bg-field p-1 text-[12.5px]" role="radiogroup" :aria-label="t('media.batch.source')">
         <button
           v-for="s in sources"
@@ -37,7 +41,7 @@
           <template v-if="it.status === 'rename'">
             <span class="text-faint line-through">{{ it.before }}</span>
             <span class="text-faint"> → </span>
-            <span class="text-accent">{{ it.after }}</span>
+            <span class="text-accent"><template v-if="it.folder">{{ it.folder }}/</template>{{ it.after }}</span>
           </template>
           <template v-else>
             <span class="text-faint">{{ it.before }}</span>
@@ -46,6 +50,10 @@
         </li>
       </ul>
     </template>
+    <p v-if="newFolders.length" class="mt-2 text-[12.5px] text-muted">
+      {{ t('media.batch.newFolders', { n: newFolders.length }, newFolders.length) }}
+      <span class="font-mono text-[12px] text-faint">{{ newFolders.map(shortFolder).join(' · ') }}</span>
+    </p>
     <p class="mt-2 text-[12px] text-faint">{{ t('media.batch.schemeHint') }}</p>
     <p v-if="error" class="mt-2 text-[12.5px] text-warn">{{ error }}</p>
 
@@ -84,6 +92,14 @@ const sources = computed(() => [
   { id: 'tmdb' as const, enabled: props.tmdb },
 ])
 const source = ref<'metadata' | 'tmdb'>('metadata')
+// Also sort into folders by the folder schemes (Settings → Recordings).
+const folders = ref(false)
+const newFolders = ref<string[]>([])
+// A new folder shown from its recording folder down ("…/Staffel 05").
+function shortFolder(p: string) {
+  const parts = p.split('/').filter(Boolean)
+  return parts.slice(-2).join('/')
+}
 const items = ref<BatchRenameItem[]>([])
 const plan = ref<Plan | null>(null)
 const busy = ref(false)
@@ -112,9 +128,10 @@ async function load() {
   error.value = ''
   plan.value = null
   try {
-    const res = await api.media.batchRenamePlan(props.paths, source.value)
+    const res = await api.media.batchRenamePlan(props.paths, source.value, folders.value)
     items.value = res.items
     plan.value = res.plan ?? null
+    newFolders.value = res.folders ?? []
   } catch (err) {
     error.value = planErrorMessage(err)
   } finally {

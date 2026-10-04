@@ -31,6 +31,10 @@ type batchRenameRequest struct {
 	// folder names, default) or "tmdb" (metadata, completed by TMDB: a
 	// film's year, an episode's title — only on an exact title match).
 	Source string `json:"source"`
+	// Folders also sorts recordings into folders by the folder schemes
+	// (Settings → Recordings), relative to their recording folder;
+	// missing folders are created on apply.
+	Folders bool `json:"folders"`
 }
 
 // Batch item states.
@@ -41,9 +45,12 @@ const (
 )
 
 type batchItem struct {
-	Path   string        `json:"path"`
-	Before string        `json:"before"` // base name, without .ts
-	After  string        `json:"after,omitempty"`
+	Path   string `json:"path"`
+	Before string `json:"before"` // base name, without .ts
+	After  string `json:"after,omitempty"`
+	// Folder is the new folder relative to the recording folder, set when
+	// the recording moves ("FBI - Most Wanted/Staffel 05").
+	Folder string        `json:"folder,omitempty"`
 	Files  int           `json:"files,omitempty"`
 	Fields naming.Fields `json:"fields"`
 	Status string        `json:"status"`
@@ -132,15 +139,28 @@ func (h *Media) planBatchRename(w http.ResponseWriter, r *http.Request) {
 		if channels[dir] == nil {
 			channels[dir] = h.channelsIn(ctx, dir)
 		}
-		name := tpls.Render(it.Fields, h.extraFor(it.Path, channels[dir]))
+		extra := h.extraFor(it.Path, channels[dir])
+		name := tpls.Render(it.Fields, extra)
+		targetDir := dir
+		if req.Folders {
+			if folder := tpls.Folder(it.Fields, extra); folder != "" {
+				root := rootOf(it.Path, roots)
+				if _, err := recfs.Clean(path.Join(root, folder, "x"), roots); err == nil {
+					targetDir = path.Join(root, folder)
+				}
+			}
+		}
+		if targetDir != dir {
+			it.Folder = strings.TrimPrefix(targetDir, rootOf(it.Path, roots)+"/")
+		}
 		switch {
 		case !it.Fields.Valid() || name == "":
 			it.Status, it.Reason = BatchSkipped, recfs.ErrInvalidName.Error()
 			continue
-		case name == it.Before:
+		case name == it.Before && targetDir == dir:
 			it.Status, it.After = BatchUnchanged, name
 			continue
-		case targets[path.Join(dir, name)]:
+		case targets[path.Join(targetDir, name)]:
 			it.Status, it.After, it.Reason = BatchSkipped, name, "duplicate_target"
 			continue
 		}
@@ -148,16 +168,27 @@ func (h *Media) planBatchRename(w http.ResponseWriter, r *http.Request) {
 			it.Status, it.Reason = BatchSkipped, CodeMediaInUse
 			continue
 		}
-		ms, err := recfs.PlanRename(h.FS, it.Path, name)
+		ms, err := recfs.PlanRenameTo(h.FS, it.Path, targetDir, name)
 		if err != nil {
 			it.Status, it.After, it.Reason = BatchSkipped, name, recfsCode(err)
 			continue
 		}
-		targets[path.Join(dir, name)] = true
+		targets[path.Join(targetDir, name)] = true
 		it.Status, it.After, it.Files = BatchRename, name, len(ms)
 		moves = append(moves, ms...)
 		renamed = append(renamed, it.Path)
 		changes = append(changes, plan.Change{Type: "recording.rename", Before: it.Path, After: ms[len(ms)-1].To})
+	}
+
+	// Folders the moves need: listed in the preview, created on apply. A
+	// path through a link is refused outright.
+	dirs, err := recfs.MissingDirs(h.FS, moves)
+	if err != nil {
+		writeRecfsError(w, r, err)
+		return
+	}
+	for _, d := range dirs {
+		changes = append(changes, plan.Change{Type: "folder.create", After: d})
 	}
 
 	out := map[string]any{"items": items}
@@ -165,12 +196,13 @@ func (h *Media) planBatchRename(w http.ResponseWriter, r *http.Request) {
 		httpx.WriteJSON(w, http.StatusOK, out) // nothing to do: no plan
 		return
 	}
+	out["folders"] = dirs
 	fp := h.movesFingerprint(moves)
 	current, _ := fp(ctx)
 	out["plan"] = h.Plans.Create(user, plan.Draft{
 		Action:      "media.batchRename",
 		Changes:     changes,
-		Summary:     fmt.Sprintf("Renamed %d recording(s) by the naming scheme (%d files)", len(renamed), len(moves)),
+		Summary:     fmt.Sprintf("Renamed %d recording(s) by the naming scheme (%d files, %d new folders)", len(renamed), len(moves), len(dirs)),
 		Detail:      map[string]any{"moves": moves},
 		Fingerprint: current,
 		Current:     fp,
@@ -182,9 +214,13 @@ func (h *Media) planBatchRename(w http.ResponseWriter, r *http.Request) {
 				return err
 			}
 			defer h.refreshIndex(context.WithoutCancel(ctx))
-			// One Apply for everything: a failure halfway renames every
-			// recording back, not just the one that failed.
-			return recfs.Apply(h.FS, moves)
+			// Everything at once: a failure halfway renames every recording
+			// back and removes the folders made for them.
+			dirs, err := recfs.MissingDirs(h.FS, moves)
+			if err != nil {
+				return err
+			}
+			return recfs.ApplyInto(h.FS, dirs, moves)
 		},
 	})
 	httpx.WriteJSON(w, http.StatusOK, out)
@@ -273,6 +309,17 @@ func (h *Media) inUseChecker(ctx context.Context) (func(string) string, error) {
 		}
 		return ""
 	}, nil
+}
+
+// rootOf is the recording folder p lies in.
+func rootOf(p string, roots []string) string {
+	for _, r := range roots {
+		r = path.Clean(r)
+		if strings.HasPrefix(p, r+"/") {
+			return r
+		}
+	}
+	return path.Dir(p)
 }
 
 // recfsCode is a recfs error as the API's error code.

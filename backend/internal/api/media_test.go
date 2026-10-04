@@ -460,3 +460,60 @@ func TestMedia_BatchRenameByScheme(t *testing.T) {
 		t.Errorf("a scheme without {title} must be refused: %d %s", resp.StatusCode, b)
 	}
 }
+
+func TestMedia_BatchRenameIntoFolders(t *testing.T) {
+	box := mock.New()
+	put := func(base, title, desc string) string {
+		box.FS.Put(mock.Root+base+".ts", "recording")
+		box.FS.Put(mock.Root+base+".ts.meta", "1:0:19:2EE3:441:1:C00000:0:0:0:\n"+title+"\n"+desc+"\n1696532400\n")
+		box.FS.Put(mock.Root+base+".jpg", "cover")
+		return "/" + mock.Root + base + ".ts"
+	}
+	e1 := put("20250429 2300 - SAT_1 - FBI_ Most Wanted - S05E07", "FBI: Most Wanted - S05E07 - Gefangenenübergabe", "S05E07 - Gefangenenübergabe")
+	film := put("20231020 2015 - ARD - Heat", "Heat", "")
+	e := newEnvWith(t, box)
+	resp, b := e.do(t, "PATCH", "/api/v1/settings", `{"values":{"media.naming.folderEpisode":"{title}/Staffel {season:02}","media.naming.folderMovie":"Filme"}}`, nil)
+	if resp.StatusCode != http.StatusOK {
+		t.Fatalf("settings: %d %s", resp.StatusCode, b)
+	}
+	if resp, b := e.do(t, "PATCH", "/api/v1/settings", `{"values":{"media.naming.folderMovie":"../raus"}}`, nil); resp.StatusCode != http.StatusBadRequest || !strings.Contains(string(b), "template_folder") {
+		t.Errorf("a folder scheme climbing out must be refused: %d %s", resp.StatusCode, b)
+	}
+
+	// Without "folders", nothing moves.
+	_, b = e.do(t, "POST", "/api/v1/media/rename/batch/plan", fmt.Sprintf(`{"paths":[%q]}`, film), nil)
+	if strings.Contains(string(b), `"folder"`) {
+		t.Errorf("no folder unless asked: %s", b)
+	}
+
+	_, b = e.do(t, "POST", "/api/v1/media/rename/batch/plan", fmt.Sprintf(`{"paths":[%q,%q],"folders":true}`, e1, film), nil)
+	var out struct {
+		Plan *struct {
+			ID string `json:"id"`
+		} `json:"plan"`
+		Folders []string `json:"folders"`
+		Items   []struct {
+			After  string `json:"after"`
+			Folder string `json:"folder"`
+		} `json:"items"`
+	}
+	json.Unmarshal(b, &out)
+	if out.Plan == nil || out.Items[0].Folder != "FBI - Most Wanted/Staffel 05" || out.Items[1].Folder != "Filme" || len(out.Folders) != 3 {
+		t.Fatalf("folders by scheme, the new ones listed: %s", b)
+	}
+	if resp, b := e.apply(t, out.Plan.ID); resp.StatusCode != http.StatusOK {
+		t.Fatalf("apply: %d %s", resp.StatusCode, b)
+	}
+	for _, f := range []string{
+		"FBI - Most Wanted/Staffel 05/FBI - Most Wanted - S05E07 - Gefangenenübergabe.ts",
+		"FBI - Most Wanted/Staffel 05/FBI - Most Wanted - S05E07 - Gefangenenübergabe.jpg",
+		"Filme/Heat.ts.meta",
+	} {
+		if _, err := box.FS.Lstat(mock.Root + f); err != nil {
+			t.Errorf("%s missing after apply", f)
+		}
+	}
+	if _, err := box.FS.Lstat(strings.TrimPrefix(e1, "/")); err == nil {
+		t.Error("the old file must be gone")
+	}
+}

@@ -565,6 +565,7 @@ export interface BatchRenameItem {
   path: string
   before: string // base name, without .ts
   after?: string
+  folder?: string // new folder relative to the recording folder, when it moves
   files?: number
   status: 'rename' | 'unchanged' | 'skipped'
   reason?: string // an error.media code, for skipped

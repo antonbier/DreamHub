@@ -218,8 +218,12 @@ export const api = {
     suggestName: (path: string, source: SuggestionSource) =>
       request<{ suggestions: NameSuggestion[] }>('POST', '/api/v1/media/rename/suggest', { path, source }),
     // Many recordings at once, named by the naming scheme (Settings → Recordings).
-    batchRenamePlan: (paths: string[], source: 'metadata' | 'tmdb') =>
-      request<{ plan?: Plan; items: BatchRenameItem[] }>('POST', '/api/v1/media/rename/batch/plan', { paths, source }),
+    batchRenamePlan: (paths: string[], source: 'metadata' | 'tmdb', folders: boolean) =>
+      request<{ plan?: Plan; items: BatchRenameItem[]; folders?: string[] }>('POST', '/api/v1/media/rename/batch/plan', {
+        paths,
+        source,
+        folders,
+      }),
     // title also changes the .ts.meta title the box's own list shows.
     renamePlan: (path: string, newName: string, title?: string) =>
       request<{ plan: Plan }>('POST', '/api/v1/media/rename/plan', { path, newName, title }),

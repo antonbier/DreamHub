@@ -76,6 +76,9 @@ func (s *Mem) WriteFile(name string, data []byte) error {
 	return nil
 }
 
+// Mkdir is a no-op: folders exist implicitly through the files in them.
+func (s *Mem) Mkdir(name string) error { return nil }
+
 func (s *Mem) Remove(name string) error {
 	s.mu.Lock()
 	defer s.mu.Unlock()

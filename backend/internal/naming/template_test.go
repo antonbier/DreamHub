@@ -68,3 +68,32 @@ func TestCheckTemplate(t *testing.T) {
 		t.Errorf("a movie template needs no {episode}: %v", err)
 	}
 }
+
+func TestFolderTemplates(t *testing.T) {
+	ep := Fields{Title: "FBI: Most Wanted", Season: 5, Episode: 7}
+	if got := RenderFolder("{title}/Staffel {season:02}", ep, Extra{}); got != "FBI - Most Wanted/Staffel 05" {
+		t.Errorf("episode folder: %q", got)
+	}
+	if got := RenderFolder("Filme/[{year}]", Fields{Title: "Heat"}, Extra{}); got != "Filme" {
+		t.Errorf("an empty optional segment is left out: %q", got)
+	}
+	if RenderFolder("", ep, Extra{}) != "" {
+		t.Error("an empty scheme means no move")
+	}
+	for tpl, bad := range map[string]bool{
+		"{title}/Staffel {season}": false,
+		"/etc":                     true,
+		"{title}/../x":             true,
+		"a//b":                     true,
+		"a\\b":                     true,
+		"{title}/{nope}":           true,
+		"":                         false,
+	} {
+		if err := CheckFolderTemplate(tpl); (err != nil) != bad {
+			t.Errorf("CheckFolderTemplate(%q) = %v", tpl, err)
+		}
+	}
+	if got := RenderFolder("{title}", Fields{Title: ".."}, Extra{}); got != "" {
+		t.Errorf("a title can't climb out: %q", got)
+	}
+}

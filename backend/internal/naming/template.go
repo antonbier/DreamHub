@@ -24,6 +24,20 @@ import (
 type Templates struct {
 	Movie   string
 	Episode string
+	// Folder schemes (optional, "" = stay in the folder): where a batch
+	// rename sorts films and episodes into, relative to the recording
+	// folder — e.g. "{title}/Staffel {season:02}". See RenderFolder.
+	FolderMovie   string
+	FolderEpisode string
+}
+
+// Folder is the relative folder f goes into by the matching folder
+// scheme, "" for none.
+func (ts Templates) Folder(f Fields, x Extra) string {
+	if f.IsEpisode() {
+		return RenderFolder(ts.FolderEpisode, f, x)
+	}
+	return RenderFolder(ts.FolderMovie, f, x)
 }
 
 // Default templates: exactly what Fields.FileName has always produced.
@@ -182,7 +196,12 @@ func (ts Templates) Render(f Fields, x Extra) string {
 	if err != nil || CheckTemplate(tpl, f.IsEpisode()) != nil {
 		toks, _ = parse(def)
 	}
-	// A bracketed group is dropped when any of its placeholders is empty.
+	return render(toks, f, x)
+}
+
+// render joins a parsed template's parts, dropping a bracketed group when
+// any of its placeholders is empty, and sanitizes the result.
+func render(toks []token, f Fields, x Extra) string {
 	dropped := map[int]bool{}
 	for _, t := range toks {
 		if t.name != "" && t.optional >= 0 && value(t.name, t.width, f, x) == "" {
@@ -201,4 +220,53 @@ func (ts Templates) Render(f Fields, x Extra) string {
 		}
 	}
 	return Sanitize(b.String())
+}
+
+// ErrFolderTemplate is a folder scheme that could leave the recording
+// folder or has an empty segment.
+var ErrFolderTemplate = errors.New("template_folder")
+
+// CheckFolderTemplate validates a folder scheme ("{title}/Staffel
+// {season:02}"): "" (don't move) or segments separated by "/", each a
+// template like a name scheme's but without the {title} requirement. No
+// leading slash, no "." or ".." segment — a folder scheme only ever goes
+// deeper into the recording folder.
+func CheckFolderTemplate(tpl string) error {
+	if strings.TrimSpace(tpl) == "" {
+		return nil
+	}
+	if strings.HasPrefix(tpl, "/") || strings.Contains(tpl, "\\") {
+		return ErrFolderTemplate
+	}
+	for _, seg := range strings.Split(tpl, "/") {
+		t := strings.TrimSpace(seg)
+		if t == "" || t == "." || t == ".." {
+			return ErrFolderTemplate
+		}
+		if _, err := parse(seg); err != nil {
+			return err
+		}
+	}
+	return nil
+}
+
+// RenderFolder builds the relative folder path a recording goes into by a
+// folder scheme, "" for no move (an empty or invalid scheme). Each
+// segment is rendered like a name and sanitized; a segment that comes out
+// empty (every placeholder in it unknown) is left out.
+func RenderFolder(tpl string, f Fields, x Extra) string {
+	if CheckFolderTemplate(tpl) != nil || strings.TrimSpace(tpl) == "" {
+		return ""
+	}
+	var out []string
+	for _, seg := range strings.Split(tpl, "/") {
+		toks, err := parse(seg)
+		if err != nil {
+			return ""
+		}
+		if s := render(toks, f, x); s != "" && s != "." && s != ".." {
+			out = append(out, s)
+		}
+	}
+	return strings.Join(out, "/")
 }

@@ -369,7 +369,9 @@
       "alreadyNamed": "ha già il nome secondo lo schema",
       "schemeHint": "Lo schema si cambia in Impostazioni → Registrazioni.",
       "confirm": "Rinomina | Rinomina 1 | Rinomina {n}",
-      "done": "1 registrazione rinominata · annullabile nel registro modifiche | {n} registrazioni rinominate · annullabile nel registro modifiche"
+      "done": "1 registrazione rinominata · annullabile nel registro modifiche | {n} registrazioni rinominate · annullabile nel registro modifiche",
+      "folders": "Ordina in cartelle",
+      "newFolders": "1 nuova cartella: | {n} nuove cartelle:"
     }
   },
   "guide": {
@@ -554,7 +556,8 @@
       "timezoneHint": "Nome del fuso orario IANA, ad es. \"Europe/Rome\".",
       "allowedHostsHint": "Nomi host separati da virgola, oltre a indirizzi IP, localhost e *.local.",
       "runWizard": "Avvia la configurazione guidata",
-      "namingHint": "Segnaposto: {'{'}title{'}'} {'{'}year{'}'} {'{'}season{'}'} {'{'}episode{'}'} {'{'}episodeTitle{'}'} {'{'}channel{'}'} {'{'}date{'}'}; numeri con zeri iniziali: {'{'}episode:02{'}'}. Le parti tra [parentesi quadre] vengono omesse se un segnaposto al loro interno è vuoto, ad es. {'{'}title{'}'}[ ({'{'}year{'}'})]."
+      "namingHint": "Segnaposto: {'{'}title{'}'} {'{'}year{'}'} {'{'}season{'}'} {'{'}episode{'}'} {'{'}episodeTitle{'}'} {'{'}channel{'}'} {'{'}date{'}'}; numeri con zeri iniziali: {'{'}episode:02{'}'}. Le parti tra [parentesi quadre] vengono omesse se un segnaposto al loro interno è vuoto, ad es. {'{'}title{'}'}[ ({'{'}year{'}'})].",
+      "folderHint": "Vuoto = le registrazioni restano dove sono. Altrimenti un percorso sotto la cartella di registrazione con gli stessi segnaposto, ad es. {'{'}title{'}'}/Stagione {'{'}season:02{'}'} o Film."
     },
     "general": {
       "title": "Generale",
@@ -628,7 +631,8 @@
       "template_placeholder": "Segnaposto sconosciuto.",
       "template_no_title": "{'{'}title{'}'} deve comparire, e non solo tra [parentesi quadre].",
       "template_no_episode": "Lo schema degli episodi richiede {'{'}episode{'}'}.",
-      "template_slash": "Niente barre — lo schema definisce solo il nome del file, non le cartelle."
+      "template_slash": "Niente barre — lo schema definisce solo il nome del file, non le cartelle.",
+      "template_folder": "Una cartella deve stare sotto la cartella di registrazione: niente / iniziale, niente parti vuote, niente .."
     },
     "webcontrol": {
       "title": "WebControl",
@@ -642,7 +646,9 @@
     "media": {
       "title": "Registrazioni",
       "namingMovie": "Schema dei nomi per i film",
-      "namingEpisode": "Schema dei nomi per gli episodi"
+      "namingEpisode": "Schema dei nomi per gli episodi",
+      "folderMovie": "Cartella per i film",
+      "folderEpisode": "Cartella per gli episodi"
     }
   },
   "notFound": {

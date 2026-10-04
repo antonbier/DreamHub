@@ -369,7 +369,9 @@
       "alreadyNamed": "heißt schon nach dem Schema",
       "schemeHint": "Das Schema lässt sich unter Einstellungen → Aufnahmen ändern.",
       "confirm": "Umbenennen | 1 umbenennen | {n} umbenennen",
-      "done": "1 Aufnahme umbenannt · rückgängig im Änderungsprotokoll | {n} Aufnahmen umbenannt · rückgängig im Änderungsprotokoll"
+      "done": "1 Aufnahme umbenannt · rückgängig im Änderungsprotokoll | {n} Aufnahmen umbenannt · rückgängig im Änderungsprotokoll",
+      "folders": "In Ordner einsortieren",
+      "newFolders": "1 neuer Ordner: | {n} neue Ordner:"
     }
   },
   "guide": {
@@ -554,7 +556,8 @@
       "timezoneHint": "IANA-Zeitzonenname, z. B. „Europe/Rome“.",
       "allowedHostsHint": "Kommagetrennte Hostnamen, zusätzlich zu IP-Adressen, localhost und *.local.",
       "runWizard": "Einrichtungsassistent starten",
-      "namingHint": "Platzhalter: {'{'}title{'}'} {'{'}year{'}'} {'{'}season{'}'} {'{'}episode{'}'} {'{'}episodeTitle{'}'} {'{'}channel{'}'} {'{'}date{'}'}; Zahlen mit führenden Nullen: {'{'}episode:02{'}'}. Teile in [eckigen Klammern] entfallen, wenn ein Platzhalter darin leer ist, z. B. {'{'}title{'}'}[ ({'{'}year{'}'})]."
+      "namingHint": "Platzhalter: {'{'}title{'}'} {'{'}year{'}'} {'{'}season{'}'} {'{'}episode{'}'} {'{'}episodeTitle{'}'} {'{'}channel{'}'} {'{'}date{'}'}; Zahlen mit führenden Nullen: {'{'}episode:02{'}'}. Teile in [eckigen Klammern] entfallen, wenn ein Platzhalter darin leer ist, z. B. {'{'}title{'}'}[ ({'{'}year{'}'})].",
+      "folderHint": "Leer = Aufnahmen bleiben, wo sie sind. Sonst ein Pfad unterhalb des Aufnahmeordners mit denselben Platzhaltern, z. B. {'{'}title{'}'}/Staffel {'{'}season:02{'}'} oder Filme."
     },
     "general": {
       "title": "Allgemein",
@@ -628,7 +631,8 @@
       "template_placeholder": "Unbekannter Platzhalter.",
       "template_no_title": "{'{'}title{'}'} muss vorkommen, und nicht nur in [eckigen Klammern].",
       "template_no_episode": "Das Schema für Folgen braucht {'{'}episode{'}'}.",
-      "template_slash": "Keine Schrägstriche — das Schema legt nur den Dateinamen fest, keine Ordner."
+      "template_slash": "Keine Schrägstriche — das Schema legt nur den Dateinamen fest, keine Ordner.",
+      "template_folder": "Ein Ordner muss unterhalb des Aufnahmeordners liegen: kein / am Anfang, keine leeren Teile, kein .."
     },
     "webcontrol": {
       "title": "WebControl",
@@ -642,7 +646,9 @@
     "media": {
       "title": "Aufnahmen",
       "namingMovie": "Namensschema für Filme",
-      "namingEpisode": "Namensschema für Serienfolgen"
+      "namingEpisode": "Namensschema für Serienfolgen",
+      "folderMovie": "Ordner für Filme",
+      "folderEpisode": "Ordner für Serienfolgen"
     }
   },
   "notFound": {

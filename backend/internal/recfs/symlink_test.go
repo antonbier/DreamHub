@@ -66,3 +66,46 @@ func TestSetMetaTitle_OnlyRegularFiles(t *testing.T) {
 		}
 	}
 }
+
+func TestApplyInto_CreatesFoldersAndRollsBack(t *testing.T) {
+	old := syscall.Umask(0o077)
+	defer syscall.Umask(old)
+	root := t.TempDir()
+	os.WriteFile(filepath.Join(root, "a.ts"), []byte("x"), 0o644)
+	os.WriteFile(filepath.Join(root, "a.eit"), []byte("x"), 0o644)
+
+	moves, err := PlanRenameTo(OS{}, root+"/a.ts", root+"/Serie/Staffel 01", "Serie - S01E01")
+	if err != nil {
+		t.Fatal(err)
+	}
+	dirs, err := MissingDirs(OS{}, moves)
+	if err != nil || len(dirs) != 2 || dirs[0] != root+"/Serie" {
+		t.Fatalf("missing folders, outermost first: %v %v", dirs, err)
+	}
+	// A move that can't work: everything goes back, the new folders too.
+	bad := append([]Move{}, moves...)
+	bad = append(bad, Move{From: root + "/nope.ts", To: root + "/Serie/Staffel 01/nope.ts"})
+	if err := ApplyInto(OS{}, dirs, bad); err == nil {
+		t.Fatal("expected a failure")
+	}
+	if _, err := os.Stat(root + "/a.ts"); err != nil {
+		t.Error("the recording must be back in place")
+	}
+	if _, err := os.Stat(root + "/Serie"); !os.IsNotExist(err) {
+		t.Errorf("the created folders must be gone again: %v", err)
+	}
+	if err := ApplyInto(OS{}, dirs, moves); err != nil {
+		t.Fatal(err)
+	}
+	fi, err := os.Stat(root + "/Serie/Staffel 01/Serie - S01E01.ts")
+	di, _ := os.Stat(root + "/Serie")
+	if err != nil || fi == nil || di.Mode().Perm() != 0o755 {
+		t.Errorf("moved into new folders with mode 0755: %v %v", err, di.Mode())
+	}
+	// A folder segment that is a link is refused.
+	os.Symlink(t.TempDir(), root+"/Link")
+	m2, _ := PlanRenameTo(OS{}, root+"/Serie/Staffel 01/Serie - S01E01.ts", root+"/Link/x", "y")
+	if _, err := MissingDirs(OS{}, m2); err == nil {
+		t.Error("a path through a link must be refused")
+	}
+}

@@ -12,8 +12,9 @@ import (
 // has "<base>.jpg" and "<base>.backdrop.jpg" next to some recordings,
 // ARCHITECTURE.md #11) put it next to the recording, so DreamHub shows
 // that instead of fetching its own — the data is kept once, by whoever
-// already keeps it. Read-only: DreamHub never writes these files. TMDB
-// (internal/enrich) is only the fallback for recordings without one.
+// already keeps it. TMDB (internal/enrich) is only the fallback for
+// recordings without one — and "Save covers" (media_cover_save.go) can
+// write that fallback next to them, never replacing an existing file.
 
 // maxCoverBytes guards against a huge or bogus file.
 const maxCoverBytes = 8 << 20

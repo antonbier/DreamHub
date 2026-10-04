@@ -16,6 +16,7 @@ import type {
   ApiToken,
   AutoTimers,
   BatchRenameItem,
+  CoverItem,
   BackupFile,
   ConnectorState,
   MediaFolder,
@@ -224,6 +225,8 @@ export const api = {
         source,
         folders,
       }),
+    // Covers from enrichment written next to recordings that have none.
+    saveCoversPlan: (paths: string[]) => request<{ plan?: Plan; items: CoverItem[] }>('POST', '/api/v1/media/covers/plan', { paths }),
     // title also changes the .ts.meta title the box's own list shows.
     renamePlan: (path: string, newName: string, title?: string) =>
       request<{ plan: Plan }>('POST', '/api/v1/media/rename/plan', { path, newName, title }),

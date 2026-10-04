@@ -561,6 +561,16 @@ export interface EnrichQuery {
 }
 
 // backend/internal/hubs/media_batch.go: one recording of a batch rename.
+// One recording in "Save covers" (POST /api/v1/media/covers/plan).
+export interface CoverItem {
+  path: string
+  title: string
+  status: 'write' | 'has_cover' | 'skipped'
+  reason?: string // an error.media code, for skipped
+  files?: string[] // file names to be written
+  poster?: string // TMDB image path, for the thumbnail
+}
+
 export interface BatchRenameItem {
   path: string
   before: string // base name, without .ts

@@ -76,6 +76,16 @@ func (s *Mem) WriteFile(name string, data []byte) error {
 	return nil
 }
 
+func (s *Mem) Create(name string, data []byte) error {
+	s.mu.Lock()
+	defer s.mu.Unlock()
+	if _, ok := s.m[key(name)]; ok {
+		return &fs.PathError{Op: "create", Path: name, Err: fs.ErrExist}
+	}
+	s.m[key(name)] = &fstest.MapFile{Data: append([]byte(nil), data...), Mode: 0o644, ModTime: time.Now()}
+	return nil
+}
+
 // Mkdir is a no-op: folders exist implicitly through the files in them.
 func (s *Mem) Mkdir(name string) error { return nil }
 

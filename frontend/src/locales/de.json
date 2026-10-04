@@ -372,6 +372,16 @@
       "done": "1 Aufnahme umbenannt · rückgängig im Änderungsprotokoll | {n} Aufnahmen umbenannt · rückgängig im Änderungsprotokoll",
       "folders": "In Ordner einsortieren",
       "newFolders": "1 neuer Ordner: | {n} neue Ordner:"
+    },
+    "covers": {
+      "open": "Cover speichern",
+      "title": "Cover speichern",
+      "willWrite": "Kein Cover zu speichern | 1 Aufnahme bekommt ein Cover | {n} Aufnahmen bekommen ein Cover",
+      "hasCover": "1 hat schon eins | {n} haben schon eins",
+      "alreadyThere": "hat schon ein Cover, bleibt unverändert",
+      "hint": "Gespeichert wird neben der Aufnahme, wie es Enigma2 und andere Plugins erwarten. Vorhandene Cover werden nie überschrieben.",
+      "confirm": "Speichern | 1 speichern | {n} speichern",
+      "done": "1 Cover gespeichert | {n} Cover gespeichert"
     }
   },
   "guide": {
@@ -526,6 +536,7 @@
       "media_in_use_recording": "Die Aufnahme läuft noch. Bitte nach dem Ende erneut versuchen.",
       "media_in_use_playing": "Die Aufnahme wird gerade am Fernseher abgespielt. Bitte erst die Wiedergabe beenden.",
       "file_ops_unavailable": "Umbenennen und Papierkorb gibt es, wenn DreamHub auf der Box selbst läuft.",
+      "no_match": "kein passendes Cover gefunden",
       "tmdb_not_configured": "Bitte zuerst einen TMDB-API-Schlüssel in den Einstellungen eintragen.",
       "tmdb_unauthorized": "TMDB hat den API-Schlüssel abgelehnt.",
       "tmdb_unavailable": "TMDB ist gerade nicht erreichbar.",

@@ -10,6 +10,7 @@ import (
 	"time"
 
 	"github.com/antonbier/DreamHub/backend/internal/ai"
+	"github.com/antonbier/DreamHub/backend/internal/enrich"
 	"github.com/antonbier/DreamHub/backend/internal/httpx"
 	"github.com/antonbier/DreamHub/backend/internal/hub"
 	"github.com/antonbier/DreamHub/backend/internal/plan"
@@ -44,6 +45,9 @@ type Media struct {
 	AI       ai.Client
 	TMDB     tmdb.Client
 	Now      func() time.Time
+	// Enrich finds the covers "Save covers" writes (media_cover_save.go);
+	// nil when TMDB isn't available at all.
+	Enrich *enrich.Service
 
 	// index is every recording below the recording folders, read from the
 	// file system on the box (media_index.go).
@@ -55,6 +59,7 @@ func (h *Media) Mount(mux *http.ServeMux) {
 	mux.HandleFunc("GET /api/v1/media/movies", h.list)
 	mux.HandleFunc("GET /api/v1/media/disk", h.disk)
 	mux.HandleFunc("GET /api/v1/media/cover", h.cover)
+	mux.HandleFunc("POST /api/v1/media/covers/plan", h.planSaveCovers)
 	mux.HandleFunc("POST /api/v1/media/rename/plan", h.planRename)
 	mux.HandleFunc("POST /api/v1/media/rename/batch/plan", h.planBatchRename)
 	mux.HandleFunc("POST /api/v1/media/rename/suggest", h.suggest)

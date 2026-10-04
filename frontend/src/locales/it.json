@@ -372,6 +372,16 @@
       "done": "1 registrazione rinominata · annullabile nel registro modifiche | {n} registrazioni rinominate · annullabile nel registro modifiche",
       "folders": "Ordina in cartelle",
       "newFolders": "1 nuova cartella: | {n} nuove cartelle:"
+    },
+    "covers": {
+      "open": "Salva copertine",
+      "title": "Salva copertine",
+      "willWrite": "Nessuna copertina da salvare | 1 registrazione riceve una copertina | {n} registrazioni ricevono una copertina",
+      "hasCover": "1 ne ha già una | {n} ne hanno già una",
+      "alreadyThere": "ha già una copertina, resta invariata",
+      "hint": "Salvate accanto alla registrazione, dove le cercano Enigma2 e gli altri plugin. Le copertine esistenti non vengono mai sostituite.",
+      "confirm": "Salva | Salva 1 | Salva {n}",
+      "done": "1 copertina salvata | {n} copertine salvate"
     }
   },
   "guide": {
@@ -526,6 +536,7 @@
       "media_in_use_recording": "La registrazione è ancora in corso. Riprova quando è finita.",
       "media_in_use_playing": "La registrazione è in riproduzione sul televisore. Interrompi prima la riproduzione.",
       "file_ops_unavailable": "Rinominare e il cestino sono disponibili quando DreamHub gira sul box stesso.",
+      "no_match": "nessuna copertina corrispondente trovata",
       "tmdb_not_configured": "Imposta prima una chiave API TMDB nelle impostazioni.",
       "tmdb_unauthorized": "TMDB ha rifiutato la chiave API.",
       "tmdb_unavailable": "TMDB al momento non è raggiungibile.",

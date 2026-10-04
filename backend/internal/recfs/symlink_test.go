@@ -109,3 +109,26 @@ func TestApplyInto_CreatesFoldersAndRollsBack(t *testing.T) {
 		t.Error("a path through a link must be refused")
 	}
 }
+
+func TestCreate_NeverOverwrites(t *testing.T) {
+	old := syscall.Umask(0o077)
+	defer syscall.Umask(old)
+	root := t.TempDir()
+	if err := (OS{}).Create(root+"/a.jpg", []byte("x")); err != nil {
+		t.Fatal(err)
+	}
+	if fi, _ := os.Stat(root + "/a.jpg"); fi.Mode().Perm() != 0o644 {
+		t.Errorf("readable by the box's other readers: %v", fi.Mode())
+	}
+	if err := (OS{}).Create(root+"/a.jpg", []byte("y")); err == nil {
+		t.Error("an existing file must not be replaced")
+	}
+	outside := filepath.Join(t.TempDir(), "target")
+	os.Symlink(outside, root+"/b.jpg")
+	if err := (OS{}).Create(root+"/b.jpg", []byte("y")); err == nil {
+		t.Error("a link must not be written through")
+	}
+	if _, err := os.Stat(outside); !os.IsNotExist(err) {
+		t.Error("nothing may appear at the link's target")
+	}
+}

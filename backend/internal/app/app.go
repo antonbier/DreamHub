@@ -201,9 +201,17 @@ func New(ctx context.Context, o Options) (*App, error) {
 	eventBus := events.NewBus(st, now)
 	poller := &events.Poller{WC: o.WebControl, Bus: eventBus, Logger: o.Logger, Now: now}
 
+	var enricher *enrich.Service
+	if o.TMDB != nil {
+		enricher = &enrich.Service{
+			DMI: o.DMI, TMDB: o.TMDB, Store: st, Now: now,
+			Images: &enrich.ImageCache{Dir: filepath.Join(o.DataDir, "cache", "tmdb"), MaxBytes: enrich.DefaultImageCacheBytes},
+		}
+	}
+
 	timerHub := &hubs_.Timer{WC: o.WebControl, Plans: plans, Now: now, AT: o.AutoTimer}
 	mediaHub := &hubs_.Media{WC: o.WebControl, Plans: plans, FS: o.RecordingsFS, ReadOnly: o.ReadOnlyFiles,
-		Settings: svc, Store: st, AI: o.AI, TMDB: o.TMDB, Now: now}
+		Settings: svc, Store: st, AI: o.AI, TMDB: o.TMDB, Enrich: enricher, Now: now}
 	guideHub := &hubs_.Guide{WC: o.WebControl, Now: now}
 	seriesHub := &hubs_.Series{SR: o.Series, WC: o.WebControl, FS: o.RecordingsFS, TVmaze: o.TVmaze, Store: st, Settings: svc, Now: now}
 	discoveryHub := &hubs_.Discovery{WC: o.WebControl, SR: o.Series, AT: o.AutoTimer, AI: o.AI, Store: st, Settings: svc, Now: now}
@@ -223,14 +231,6 @@ func New(ctx context.Context, o Options) (*App, error) {
 	hubs.AddViewProvider(hub.IDGuide, guideHub)
 	hubs.AddViewProvider(hub.IDSeries, seriesHub)
 	dash.KnownSource = hubs.KnownSource
-
-	var enricher *enrich.Service
-	if o.TMDB != nil {
-		enricher = &enrich.Service{
-			DMI: o.DMI, TMDB: o.TMDB, Store: st, Now: now,
-			Images: &enrich.ImageCache{Dir: filepath.Join(o.DataDir, "cache", "tmdb"), MaxBytes: enrich.DefaultImageCacheBytes},
-		}
-	}
 
 	handler := api.NewRouter(api.Deps{
 		WebControl: o.WebControl,

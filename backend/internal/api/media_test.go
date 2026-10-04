@@ -517,3 +517,68 @@ func TestMedia_BatchRenameIntoFolders(t *testing.T) {
 		t.Error("the old file must be gone")
 	}
 }
+
+func TestMedia_SaveCovers(t *testing.T) {
+	box := mock.New()
+	put := func(base, title string) string {
+		box.FS.Put(mock.Root+base+".ts", "recording")
+		box.FS.Put(mock.Root+base+".ts.meta", "1:0:19:2EE3:441:1:C00000:0:0:0:\n"+title+"\n\n1696532400\n")
+		return "/" + mock.Root + base + ".ts"
+	}
+	bones := put("Bones", "Bones")
+	rookie := put("Rookie", "The Rookie")
+	box.FS.Put(mock.Root+"Rookie.jpg", "own cover") // another plugin's: kept
+	unknown := put("Unbekannt", "Gibt es nicht")
+	e := newEnvWith(t, box)
+
+	if resp, b := e.do(t, "POST", "/api/v1/media/covers/plan", fmt.Sprintf(`{"paths":[%q]}`, bones), nil); resp.StatusCode != http.StatusConflict {
+		t.Fatalf("without a TMDB key: %d %s", resp.StatusCode, b)
+	}
+	e.do(t, "PATCH", "/api/v1/settings", `{"values":{"tmdb.apiKey":"k-1234567890"}}`, nil)
+
+	_, b := e.do(t, "POST", "/api/v1/media/covers/plan", fmt.Sprintf(`{"paths":[%q,%q,%q]}`, bones, rookie, unknown), nil)
+	var out struct {
+		Plan *struct {
+			ID string `json:"id"`
+		} `json:"plan"`
+		Items []struct {
+			Status string   `json:"status"`
+			Reason string   `json:"reason"`
+			Files  []string `json:"files"`
+		} `json:"items"`
+	}
+	json.Unmarshal(b, &out)
+	if out.Plan == nil || len(out.Items) != 3 {
+		t.Fatalf("plan: %s", b)
+	}
+	// The mock's pictures are PNGs: a poster, no (JPEG-only) backdrop.
+	if it := out.Items[0]; it.Status != "write" || len(it.Files) != 1 || it.Files[0] != "Bones.png" {
+		t.Errorf("Bones gets its poster: %+v", it)
+	}
+	if it := out.Items[1]; it.Status != "has_cover" {
+		t.Errorf("an existing cover is never replaced: %+v", it)
+	}
+	if it := out.Items[2]; it.Status != "skipped" || it.Reason != "no_match" {
+		t.Errorf("no poster, nothing written: %+v", it)
+	}
+
+	// Someone else writes the file meanwhile: the plan is stale.
+	box.FS.Put(mock.Root+"Bones.png", "late")
+	if resp, b := e.apply(t, out.Plan.ID); resp.StatusCode == http.StatusOK {
+		t.Fatalf("a file appearing after the preview must stop the plan: %s", b)
+	}
+	box.FS.Remove(mock.Root + "Bones.png")
+
+	_, b = e.do(t, "POST", "/api/v1/media/covers/plan", fmt.Sprintf(`{"paths":[%q]}`, bones), nil)
+	json.Unmarshal(b, &out)
+	if resp, b := e.apply(t, out.Plan.ID); resp.StatusCode != http.StatusOK {
+		t.Fatalf("apply: %d %s", resp.StatusCode, b)
+	}
+	data, err := box.FS.ReadFile(mock.Root + "Bones.png")
+	if err != nil || http.DetectContentType(data) != "image/png" {
+		t.Errorf("the poster is written: %v", err)
+	}
+	if own, _ := box.FS.ReadFile(mock.Root + "Rookie.jpg"); string(own) != "own cover" {
+		t.Error("the other plugin's cover must stay untouched")
+	}
+}

@@ -43,6 +43,9 @@ type FS interface {
 	WriteFile(name string, data []byte) error
 	// Mkdir creates one folder (its parent must exist).
 	Mkdir(name string) error
+	// Create writes a new file; it fails when anything exists at name
+	// already, so it can never overwrite (or write through a link).
+	Create(name string, data []byte) error
 }
 
 // OS is the real file system.
@@ -62,6 +65,27 @@ func (OS) Mkdir(name string) error {
 		return err
 	}
 	return os.Chmod(name, 0o755)
+}
+
+// Create writes a new file with mode 0644 (set explicitly, as Mkdir), via
+// O_EXCL: an existing file or link at name is an error, never replaced.
+// A failed write leaves nothing behind.
+func (OS) Create(name string, data []byte) error {
+	f, err := os.OpenFile(name, os.O_WRONLY|os.O_CREATE|os.O_EXCL, 0o644)
+	if err != nil {
+		return err
+	}
+	_, err = f.Write(data)
+	if cerr := f.Close(); err == nil {
+		err = cerr
+	}
+	if err == nil {
+		err = os.Chmod(name, 0o644)
+	}
+	if err != nil {
+		_ = os.Remove(name)
+	}
+	return err
 }
 
 func (OS) WriteFile(name string, data []byte) error {

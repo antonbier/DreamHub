@@ -103,12 +103,21 @@
           <button
             type="button"
             class="ms-auto rounded px-3 py-1.5 text-accent hover:bg-tile-2 disabled:opacity-60"
-            :disabled="bulk?.busy || batchOpen"
+            :disabled="bulk?.busy || batchOpen || coversOpen"
             @click="openBatch"
           >
             {{ t('media.batch.open') }}
           </button>
-          <button type="button" class="rounded bg-accent px-3 py-1.5 font-semibold text-bg disabled:opacity-60" :disabled="bulk?.busy || batchOpen" @click="previewBulkTrash">
+          <button
+            v-if="suggestSources.tmdb"
+            type="button"
+            class="rounded px-3 py-1.5 text-accent hover:bg-tile-2 disabled:opacity-60"
+            :disabled="bulk?.busy || batchOpen || coversOpen"
+            @click="openCovers"
+          >
+            {{ t('media.covers.open') }}
+          </button>
+          <button type="button" class="rounded bg-accent px-3 py-1.5 font-semibold text-bg disabled:opacity-60" :disabled="bulk?.busy || batchOpen || coversOpen" @click="previewBulkTrash">
             {{ t('media.moveSelectedToTrash') }}
           </button>
         </div>
@@ -120,6 +129,7 @@
           @cancel="batchOpen = false"
           @done="onBatchDone"
         />
+        <SaveCoversPreview v-if="coversOpen" class="mt-3" :paths="[...selection]" @cancel="coversOpen = false" @done="onCoversDone" />
         <div v-if="bulk" class="mt-3">
           <p v-if="bulk.busy && !bulk.plan" class="text-[13px] text-faint">{{ t('common.loading') }}</p>
           <PlanPreview
@@ -233,6 +243,7 @@ import PlanPreview from '@/components/PlanPreview.vue'
 import RecordingRow from '@/components/media/RecordingRow.vue'
 import TrashPreview from '@/components/media/TrashPreview.vue'
 import BatchRenamePreview from '@/components/media/BatchRenamePreview.vue'
+import SaveCoversPreview from '@/components/media/SaveCoversPreview.vue'
 import type { RowState, SuggestSources, TrashActionState } from '@/components/media/types'
 import { useNavigationStore } from '@/stores/navigation'
 import { useProblem } from '@/composables/useProblem'
@@ -295,6 +306,7 @@ async function open(dir?: string) {
   selection.clear()
   bulk.value = null
   batchOpen.value = false
+  coversOpen.value = false
   Object.keys(rowStates).forEach((k) => delete rowStates[k])
   try {
     const res = await api.media.folder(dir)
@@ -395,11 +407,25 @@ function selectAll() {
 const batchOpen = ref(false)
 function openBatch() {
   bulk.value = null
+  coversOpen.value = false
   batchOpen.value = true
 }
 async function onBatchDone(count: number) {
   batchOpen.value = false
   notice.value = t('media.batch.done', { n: count }, count)
+  await open(folder.value?.dir)
+}
+
+// --- bulk: save covers next to the selection ---------------------------------
+const coversOpen = ref(false)
+function openCovers() {
+  bulk.value = null
+  batchOpen.value = false
+  coversOpen.value = true
+}
+async function onCoversDone(count: number) {
+  coversOpen.value = false
+  notice.value = t('media.covers.done', { n: count }, count)
   await open(folder.value?.dir)
 }
 

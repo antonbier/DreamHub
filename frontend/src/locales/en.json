@@ -372,6 +372,16 @@
       "done": "1 recording renamed · undo in the change log | {n} recordings renamed · undo in the change log",
       "folders": "Sort into folders",
       "newFolders": "1 new folder: | {n} new folders:"
+    },
+    "covers": {
+      "open": "Save covers",
+      "title": "Save covers",
+      "willWrite": "No covers to save | 1 recording gets a cover | {n} recordings get a cover",
+      "hasCover": "1 already has one | {n} already have one",
+      "alreadyThere": "already has a cover, left as is",
+      "hint": "Saved next to the recording, where Enigma2 and other plugins look. Existing covers are never replaced.",
+      "confirm": "Save | Save 1 | Save {n}",
+      "done": "1 cover saved | {n} covers saved"
     }
   },
   "guide": {
@@ -526,6 +536,7 @@
       "media_in_use_recording": "The recording is still being recorded. Try again once it's finished.",
       "media_in_use_playing": "The recording is playing on the TV right now. Stop playback first.",
       "file_ops_unavailable": "Renaming and the trash are available when DreamHub runs on the box itself.",
+      "no_match": "no matching cover found",
       "tmdb_not_configured": "Set a TMDB API key in Settings first.",
       "tmdb_unauthorized": "TMDB rejected the API key.",
       "tmdb_unavailable": "TMDB can't be reached right now.",

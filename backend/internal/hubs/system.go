@@ -24,6 +24,8 @@ type System struct {
 	Dashboard *dashboard.Service
 	Plans     *plan.Service
 	Now       func() time.Time
+	// SelfTest is the box self-test (selftest.go); nil leaves it out.
+	SelfTest *SelfTest
 }
 
 func (h *System) now() time.Time {
@@ -38,6 +40,11 @@ func (h *System) Mount(mux *http.ServeMux) {
 	mux.HandleFunc("GET /api/v1/changes", h.changes)
 	mux.HandleFunc("GET /api/v1/system/backup", h.backup)
 	mux.HandleFunc("POST /api/v1/system/backup/restore", h.planRestore)
+	if h.SelfTest != nil {
+		mux.HandleFunc("GET /api/v1/system/selftest", adminOnly(h.SelfTest.handleLast))
+		mux.HandleFunc("POST /api/v1/system/selftest", adminOnly(h.SelfTest.handleRun))
+		mux.HandleFunc("GET /api/v1/system/selftest/download", adminOnly(h.SelfTest.handleDownload))
+	}
 }
 
 type changeView struct {

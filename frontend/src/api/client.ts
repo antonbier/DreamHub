@@ -17,6 +17,7 @@ import type {
   AutoTimers,
   BatchRenameItem,
   CurrentService,
+  SelfTestReport,
   ServiceUnit,
   CoverItem,
   BackupFile,
@@ -321,6 +322,11 @@ export const api = {
   system: {
     backup: () => request<BackupFile>('GET', '/api/v1/system/backup'),
     restorePlan: (file: BackupFile) => request<{ plan: Plan }>('POST', '/api/v1/system/backup/restore', file),
+    // The box self-test (admin only): the last report, a new run, and the
+    // run's captured answers as a zip.
+    selfTest: () => request<{ report: SelfTestReport | null }>('GET', '/api/v1/system/selftest'),
+    runSelfTest: () => request<{ report: SelfTestReport }>('POST', '/api/v1/system/selftest'),
+    selfTestZip: () => requestBlob('/api/v1/system/selftest/download'),
   },
   admin: {
     // The box's services (enigma2, DreamHub, Samba, …) and their state.

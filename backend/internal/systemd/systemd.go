@@ -57,6 +57,16 @@ func (Exec) Status(ctx context.Context, names []string) ([]Unit, error) {
 	if len(names) == 0 {
 		return []Unit{}, nil
 	}
+	out, err := Exec{}.Show(ctx, names)
+	if err != nil {
+		return nil, err
+	}
+	return ParseShow(out, bootTime()), nil
+}
+
+// Show is `systemctl show` for names as systemctl prints it (the
+// self-test keeps it as a fixture).
+func (Exec) Show(ctx context.Context, names []string) ([]byte, error) {
 	args := append([]string{"show", "--property=" + strings.Join(showProps, ",")}, names...)
 	out, err := exec.CommandContext(ctx, "systemctl", args...).Output()
 	if errors.Is(err, exec.ErrNotFound) {
@@ -65,7 +75,7 @@ func (Exec) Status(ctx context.Context, names []string) ([]Unit, error) {
 	if err != nil {
 		return nil, fmt.Errorf("systemd: systemctl show: %w", err)
 	}
-	return ParseShow(out, bootTime()), nil
+	return out, nil
 }
 
 func (Exec) Restart(ctx context.Context, name string) error {

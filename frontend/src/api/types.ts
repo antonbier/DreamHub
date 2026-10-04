@@ -639,3 +639,17 @@ export interface ServiceUnit {
   memory?: number // bytes
   restarts: number // automatic restarts by systemd
 }
+
+// GET/POST /api/v1/system/selftest — the box self-test.
+export interface SelfTestCheck {
+  id: string
+  status: 'ok' | 'warn' | 'fail' | 'skip'
+  code: string // detail line, under system.selftest.result
+  params?: Record<string, string | number | boolean>
+  ms: number
+}
+export interface SelfTestReport {
+  startedAt: string
+  checks: SelfTestCheck[]
+  captured: string[] // files kept next to the report (none in mock mode)
+}

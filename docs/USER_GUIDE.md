@@ -172,6 +172,7 @@ Privacy: a message's text (a recording's or series' title, a channel name) passe
 
 ## 6. When something doesn't work
 
+- **Not sure what works on your box?** **System → Diagnostics → Run self-test** asks the box everything DreamHub needs, without changing anything, and marks each answer: fine, worth a look, failed, or not applicable. **Download the box's answers** gives a zip that helps when reporting a problem.
 - **DreamHub doesn't open:** check that the service runs — in the WebAdmin terminal, `systemctl status dreamhub`. Its log: `journalctl -u dreamhub -n 100`.
 - **A hub shows "unavailable" or "degraded":** the sidebar dot and the bell say why and how to fix it (a missing key, a plugin that isn't installed, the box not answering). **System → Diagnostics** lists all of them.
 - **"Could not reach WebControl":** the box's interface is restarting or busy (after an update, enigma2 takes a moment), or it now asks for a login — enter it under **Settings → WebControl**.

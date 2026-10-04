@@ -239,7 +239,9 @@ func New(ctx context.Context, o Options) (*App, error) {
 	radioHub := &hubs_.Radio{WC: o.WebControl, Now: now, PiconDirs: o.PiconDirs}
 	seriesHub := &hubs_.Series{SR: o.Series, WC: o.WebControl, FS: o.RecordingsFS, TVmaze: o.TVmaze, Store: st, Settings: svc, DMI: o.DMI, Now: now}
 	discoveryHub := &hubs_.Discovery{WC: o.WebControl, SR: o.Series, AT: o.AutoTimer, AI: o.AI, Store: st, Settings: svc, Now: now}
-	systemHub := &hubs_.System{Store: st, Settings: svc, Dashboard: dash, Plans: plans, Now: now}
+	systemHub := &hubs_.System{Store: st, Settings: svc, Dashboard: dash, Plans: plans, Now: now,
+		SelfTest: &hubs_.SelfTest{WC: o.WebControl, SR: o.Series, AT: o.AutoTimer, DMI: o.DMI, Systemd: o.Systemd, FS: o.RecordingsFS,
+			PiconDirs: o.PiconDirs, Dir: filepath.Join(o.DataDir, "selftest"), Writes: !o.ReadOnlyFiles, Now: now}}
 	adminHub := &hubs_.Admin{Store: st, Level: level, Logs: o.Logs, FS: o.RecordingsFS,
 		Systemd: o.Systemd, Plans: plans, WC: o.WebControl, Now: now, ReadOnly: o.ReadOnlyFiles}
 	controlHub := &hubs_.Control{WC: o.WebControl}

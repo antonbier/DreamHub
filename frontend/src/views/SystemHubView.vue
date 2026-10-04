@@ -136,6 +136,7 @@
     </template>
 
     <template v-else>
+      <SelfTestPanel />
       <p v-if="diagLoading" class="mt-5 text-[14px] text-muted">{{ t('common.loading') }}</p>
       <p v-else-if="diagLoadFailed" class="mt-5 text-[14px] text-muted">{{ t('common.backendUnreachable') }}</p>
       <template v-else>
@@ -171,6 +172,7 @@ import { useI18n } from 'vue-i18n'
 import { useRoute, useRouter } from 'vue-router'
 import { api } from '@/api/client'
 import Icon from '@/components/Icon.vue'
+import SelfTestPanel from '@/components/system/SelfTestPanel.vue'
 import PlanPreview from '@/components/PlanPreview.vue'
 import { useNavigationStore } from '@/stores/navigation'
 import { useProblem } from '@/composables/useProblem'

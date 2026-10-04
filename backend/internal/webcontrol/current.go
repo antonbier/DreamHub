@@ -77,3 +77,10 @@ func IsRecordingReference(ref string) bool {
 	parts := strings.SplitN(ref, ":", 11)
 	return len(parts) == 11 && strings.HasPrefix(parts[10], "/")
 }
+
+// Raw returns a WebControl answer as the box sent it — for the self-test
+// (internal/hubs/selftest.go), which keeps them as test fixtures. Read-only
+// GETs only; nothing here parses or interprets the body.
+func (c *HTTPClient) Raw(ctx context.Context, path string) ([]byte, error) {
+	return c.coalescedGet(ctx, path)
+}

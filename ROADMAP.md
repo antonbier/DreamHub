@@ -166,7 +166,7 @@ Notes:
 - [x] "Switch now" on a programme actually airing right now — a direct call to ControlHub's zap (`/web/zap?sRef=`, confirmed live 2026-09-25), not preview-and-confirm (switching channels isn't a durable mutation the way creating a timer is)
 - [x] Four switchable views (2026-10-04, `frontend/src/components/guide/`), the choice remembered per browser, phones starting on Now & next: **Grid** (the timeline, as before); **Now & next** — per channel the current programme with a progress bar and the next one, plus "Switch", from one call to the box (`GET /api/v1/guide/nownext` → `/web/epgnownext?bRef=`, whose "None" fields for channels without EPG are handled, fixture-tested); **Tonight** — what starts between 19:55 and 21:30 (display zone) as poster cards, a week ahead, short fillers under 15 minutes left out; **Channel** — one channel's TV day (05:00–05:00) as a list, now marked, past dimmed (`grid?service=` narrows the answer to that channel)
 - [x] Filters across all views: films only, rated 7+ (from enrichment; a title that isn't known doesn't pass), remembered per browser; the grid dims instead of hiding
-- [x] Channel logos (picons) from the box (`GET /api/v1/guide/picon`): `/data/piconpool` first, then the usual Enigma2 picon folders, by service reference (also as service type 1) or channel name — still to check against the reference box's real picon names
+- [x] Channel logos (picons) from the box (`GET /api/v1/guide/picon`): `/data/piconpool` first, then the usual Enigma2 picon folders, by service reference (also as service type 1) or channel name — checked 2026-10-04: the reference box's `/data/piconpool` holds whole picon **sets** as subfolders (`PPH_carbon_220x132`, …), searched now too, the newest set first (`piconSearchDirs`); 25 of the first 30 TV channels and 18 of 30 radio stations get a logo
 - [x] Every view opens the same details dialog as DiscoveryHub (`ProgrammeDialog`): backdrop, poster, logo, ratings, overview, the EPG text, Record and Switch now
 - [ ] `GraphMultiEPG` and `TvSpielfilm` are native on-screen references, not replacements
 
@@ -288,6 +288,7 @@ Pulled forward from v1.1 (`CONCEPT.md`, `docs/V1_PLAN.md`): verifying the Enigma
 - [x] CI (`.github/workflows/ci.yml`): backend `go vet`/`go test -race`, frontend type-check/build, then the `.deb` itself, on every push — the `.deb` is uploaded as a workflow artifact, not yet published anywhere a device could `apt` from (that's the open feed-hosting item below, decision D4)
 
 **Open**:
+- [x] **Release 0.1.0** (2026-10-04): packages for `arm64` (Dreambox One/Two — tested) and `armhf` (DM900/DM920 — built, smoke-tested on the One's 32-bit compatibility, not on such a box) attached to the GitHub release; `ARCH=` in `packaging/build-deb.sh`, CI builds both. MIPS (`mipsel`: DM7080, DM820, DM520, DM525) can't be built yet: `modernc.org/sqlite` has no `linux/mipsle` port — a cgo SQLite driver with a MIPS toolchain, or another store, would be needed
 - [ ] An actual apt feed to publish to (decision D4, `docs/V1_PLAN.md`) — the `.deb` itself doesn't depend on this being decided
 - [x] Live install and in-place upgrade verified on the reference box (2026-09-28, ARCHITECTURE.md); upgrades only restart enigma2 when the launcher plugin changed
 - [ ] Uninstall/purge on the box (not run: the box keeps DreamHub installed)
@@ -309,14 +310,14 @@ Pulled forward from v1.1 (`CONCEPT.md`, `docs/V1_PLAN.md`): verifying the Enigma
 - [x] Station logos under RadioHub's own prefix (`/api/v1/radio/picon`, the picon lookup shared with GuideHub) so neither depends on the other hub being on; a search provider over station names (`/radio?bouquet=&station=` highlights it); `g o` opens it
 
 **Open**:
-- [ ] Check on the box (`device-access`): that `Services(RadioRoot)` lists the radio bouquets on DreamOS's WebInterface as on other Enigma2 images, that `/web/epgnownext` answers for a radio bouquet, and what the reference box's radio stations' references and EPG look like — the mock's stations are made up (well-formed), not captured; record a fixture once it answers
+- [x] Checked on the box (2026-10-04, with the self-test): the radio root works as on other Enigma2 images (fixture `getservices_radio_root.xml`); the reference box's radio favourites are **empty**, so RadioHub adds "All radio stations" (`webcontrol.RadioAll`, `(type == 2) || (type == 10) ORDER BY name`: 664 entries, 0.06 s; epgnownext over it 0.25 s) as the last list and switches to it when the bouquet it picked by itself is empty. That list has every transponder's copy of a station and data services named "." or "10796V SID 0x3dae" — dropped, one entry per name (502 stations left, fixture `getservices_radio_all.xml`). `/web/epgnownext` on an **empty** bouquet makes the box's WebInterface fail with a traceback (ARCHITECTURE.md), so it isn't asked then
 - [ ] Radio text / now-playing song (RDS, DAB+ DLS) — not exposed by WebControl as far as known; look for it on the box before building anything
 
 ### ChannelHub
 - Link to / embed the BouquetEditor plugin (`/bouqueteditor/*`); its write endpoints still need a write-permitted check on the device. Picons from `/data/piconpool`.
 
 ### ControlHub: "message to TV"
-- `/web/message` — not yet researched or built. The rest of ControlHub (remote, screenshot, power) was pulled forward into v1; see the v1 section above.
+- Built early (2026-09-28): see ControlHub in the v1 section above.
 
 ### MediaHub trimming
 - Lossless trimming via `ffmpeg -c copy` (cuts land on keyframe boundaries). `CutListEditor` is the on-screen reference for the `.ts.cuts` mechanism.
@@ -330,7 +331,7 @@ Pulled forward from v1.1 (`CONCEPT.md`, `docs/V1_PLAN.md`): verifying the Enigma
 - [x] Restart, or Start for a unit that's down, through plan → apply: only listed units; warnings for enigma2 (picture, WebControl and remote gone for a while; recordings running now are named) and for DreamHub itself (the page reconnects); `--no-block`, so DreamHub can restart itself and still answer; stale when the unit changed between preview and confirm; under `DREAMHUB_ENABLE_DEVICE_WRITES=0` nothing is restarted; logged in the change log
 
 **Open**:
-- [ ] Check on the box (`device-access`): the real unit names (Samba's especially), that `MemoryCurrent`/`NRestarts` are reported by the box's systemd version (older ones lack them — then they're just not shown), and restarting DreamHub itself from its own page
+- [x] Checked on the box (2026-10-04, self-test): the units are `smb`/`nmb`, `zerotierone`, `oscam-cycecplus`, `nfs-server`, `avahi-daemon` (`DefaultServices` lists those first, the other images' names after); systemd **232** has no `NRestarts` and stops `systemctl show` with exit 1 when asked for it, so it's asked again without; no memory accounting (`MemoryCurrent` unset) — memory and restarts just aren't shown. Fixture `systemctl_show_232.txt`. Restarting DreamHub from its own page: still to try
 
 ## Later
 

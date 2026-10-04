@@ -56,7 +56,7 @@ The REST API is the product; the web UI is just its first client. Concretely:
 
 - Version the API from day one (`/api/v1/...`) so a future mobile app doesn't break when the API evolves.
 - No backend logic that only the web frontend can reach — if the web UI can do it, the API can do it, and the web UI calls the API like any other client would.
-- WebSockets for real-time push (e.g. "recording finished", "timer conflict") — useful for the web UI today and for a future app's push notifications tomorrow.
+- Real-time push (e.g. "recording finished", "timer conflict") over Server-Sent Events (`GET /api/v1/events/stream`; server → client only, so SSE rather than WebSockets — see `ROADMAP.md`, Foundation) — useful for the web UI today and for a future app tomorrow; on the phone today through ntfy.
 - Generate/maintain an OpenAPI spec from the Go code rather than hand-written docs that drift out of sync.
 
 ## Interoperability over hardcoded integrations
@@ -168,7 +168,7 @@ DreamHub releases follow SemVer (`MAJOR.MINOR.PATCH`), tracked in [`CHANGELOG.md
 
 ## Explicit hardware/support scope
 
-DreamHub officially targets the **Dreambox One / DreamOS AIO** — the actual reference device this whole `ARCHITECTURE.md` is built from. Other Enigma2 images or hardware (OpenATV, OpenPLi, non-DreamOS Dreamboxes, other DreamOS-Amlogic models) are best-effort at most, never a support obligation. Stating this explicitly now heads off scope-creep pressure later ("why doesn't this work on my Vu+"), consistent with the capability-detection principle above — DreamHub should degrade gracefully elsewhere, but isn't required to be *correct* elsewhere.
+DreamHub officially targets the **Dreambox One / DreamOS AIO** — the actual reference device this whole `ARCHITECTURE.md` is built from. Packages are also built for the other DreamOS architecture Go and DreamHub's SQLite driver support — ARMv7 (`armhf`: DM900, DM920) — but only the reference device is tested; the MIPS DreamOS boxes (DM7080, DM820, DM520, DM525) can't be built yet (no `linux/mipsle` port of `modernc.org/sqlite`). Other Enigma2 images or hardware (OpenATV, OpenPLi, non-DreamOS Dreamboxes) are best-effort at most, never a support obligation. Stating this explicitly now heads off scope-creep pressure later ("why doesn't this work on my Vu+"), consistent with the capability-detection principle above — DreamHub should degrade gracefully elsewhere, but isn't required to be *correct* elsewhere.
 
 ## Code style: idiomatic, not bikeshed
 

@@ -2,13 +2,13 @@ Package: dreamhub
 Version: @VERSION@
 Section: web
 Priority: optional
-Architecture: arm64
+Architecture: @ARCH@
 Depends: ffmpeg
 Maintainer: Armin Mair <arminmair@hotmail.com>
 Homepage: https://github.com/antonbier/DreamHub
-Description: Modern web control for Dreambox One / DreamOS receivers
+Description: Modern web control for Dreambox receivers running DreamOS
  DreamHub is a Go backend plus web UI that modernizes the native
- WebControl interface of a Dreambox One (Enigma2/DreamOS satellite
+ WebControl interface of a Dreambox (Enigma2/DreamOS satellite
  receiver): recordings, timers, the TV guide and AI recommendations,
  usable from any browser on the LAN. Runs alongside WebControl on its
  own port (8080) and never modifies it.

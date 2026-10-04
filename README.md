@@ -1,38 +1,49 @@
 # DreamHub
 
-One place for everything your **Dreambox One (DreamOS AIO)** does — recordings, timers, EPG, series, AI recommendations — in a modern web interface, running alongside the native WebControl rather than replacing it.
+One place for everything your **Dreambox (DreamOS)** does — recordings, timers, the TV guide, radio, series, recommendations, the remote — in a modern web interface that runs on the box itself, alongside the native WebControl rather than replacing it. Works in any browser and installs as an app on phones and desktops.
 
 ## What it is
 
-DreamHub is a **core** (home page, global search, notifications, settings, onboarding) with **hubs** plugged into it:
+DreamHub is a **core** (dashboard, global search, notifications, settings, setup assistant) with **hubs** plugged into it:
 
-- **MediaHub** — recordings, disk space, rename with preview, trash
-- **TimerHub** — timers, AutoTimer, conflict detection
-- **GuideHub** — EPG as a TV-guide grid
-- **DiscoveryHub** — AI recommendations, one tap to a timer
-- **SeriesHub** — SerienRecorder: what you have, what's missing, what's coming
-- **SystemHub** — device info, diagnostics, backup, change log
-- **AdminHub** — logs (incl. DreamHub's own), later service status and terminal — admins only
-- later: RadioHub, ChannelHub, ControlHub, StreamHub, AutomationHub
+- **MediaHub** — recordings and folders, disk space, rename (also in bulk, by naming scheme, into folders), covers, trash
+- **SeriesHub** — SerienRecorder: followed series, episode guide with what's missing (TVmaze), what's coming
+- **GuideHub** — the TV guide in four views (grid, now & next, tonight, one channel), channel logos, record or switch from any programme
+- **RadioHub** — radio stations with what's on, play on the box, radio recordings
+- **TimerHub** — timers, disabling/enabling, AutoTimer, conflict detection
+- **DiscoveryHub** — AI recommendations from the EPG, optionally matched to your taste, one tap to a timer
+- **ControlHub** — a remote with the live picture, on every page; messages to the TV
+- **SystemHub** — device info, diagnostics with a box self-test, backup, change log
+- **AdminHub** — the box's services with restart, logs (live), crash logs — admins only
+- later: ChannelHub, StreamHub, AutomationHub (see [ROADMAP.md](ROADMAP.md))
 
-The home page is a personal, customizable dashboard of tiles. Available in German, Italian and English, extensible by dropping in a locale file.
+The dashboard is a personal set of tiles ("Now on the box", timers, conflicts, disk space, episodes, your own saved views). Details come from the box's own cover art and DreamMediaInfo first, then TMDB, OMDb (Rotten Tomatoes, IMDb, Metascore) and fanart.tv. Push notifications to the phone go through ntfy. Available in German, Italian and English.
 
-Hubs get their data through **connectors** (WebControl, SerienRecorder, TMDB, OpenAI, later Plex/Jellyfin/Emby). The value is in how they connect: a recommendation becomes a timer, the timer becomes a recording, the recording gets a clean name — all in one place. Nothing is ever changed without showing you what will change first. See [CONCEPT.md](CONCEPT.md).
+Hubs get their data through **connectors** (WebControl, SerienRecorder, AutoTimer, TMDB, TVmaze, OMDb, fanart.tv, OpenAI, ntfy). The value is in how they connect: a recommendation becomes a timer, the timer becomes a recording, the recording gets a clean name — all in one place. **Nothing is ever changed without showing you what will change first.** See [CONCEPT.md](CONCEPT.md).
 
-**Using it:** [docs/USER_GUIDE.md](docs/USER_GUIDE.md) — installing on the box, first steps, every part explained, push notifications, troubleshooting.
+**Using it:** [docs/USER_GUIDE.md](docs/USER_GUIDE.md) — installing on the box, first steps, every part explained, the app, push notifications, troubleshooting.
+
+## Supported boxes
+
+| Box | Package | Status |
+| --- | --- | --- |
+| Dreambox One, Two (DreamOS, ARM64) | `dreamhub_<version>_arm64.deb` | developed and tested on a Dreambox One (DreamOS 2.6) |
+| DM900 UHD, DM920 UHD (DreamOS, ARMv7) | `dreamhub_<version>_armhf.deb` | built, not yet tested on such a box |
+| DM7080, DM820, DM520, DM525 (DreamOS, MIPS) | — | not yet: the SQLite driver has no MIPS port |
+| Older Dreamboxes without DreamOS | — | not supported (no dpkg, no systemd) |
+
+Packages are attached to each [release](https://github.com/antonbier/DreamHub/releases).
 
 ## Tech stack
 
-- **Backend:** Go, statically compiled for ARM64, runs as a systemd service on port 8080. REST API + WebSockets.
-- **Frontend:** responsive web app (Vue.js + Tailwind), embedded into the Go binary via `go:embed`.
+- **Backend:** Go, statically compiled, runs as a systemd service on port 8080. REST API, Server-Sent Events for live updates, SQLite for DreamHub's own state.
+- **Frontend:** Vue 3 + TypeScript + Tailwind, embedded into the Go binary via `go:embed`; an installable web app (manifest + service worker over HTTPS).
 - **TV plugin:** a minimal Enigma2 plugin (Python 2.7) — a launcher with a QR code to open DreamHub on your phone.
-- **Distribution:** an installable `.deb` via its own apt feed.
+- **Distribution:** `.deb` packages from the releases; an apt feed is planned.
 
 ## Status
 
-Pre-release, but the core shell is real and running, not just planned: REST API, SQLite-backed settings/dashboards/change log, auth (Basic Auth + revocable API tokens), the full web UI (sidebar, dashboard tiles, schema-driven settings, global search, notifications, onboarding wizard, status strip), and TimerHub as the first working hub, all buildable and testable against a mock — no Dreambox required. See [ROADMAP.md](ROADMAP.md) for exactly what's done and what's open under **Foundation**, [PROJECT_PLAN.md](PROJECT_PLAN.md) for why the project exists, and [backend/README.md](backend/README.md) / [frontend/README.md](frontend/README.md) to run it locally.
-
-Still open before v1: MediaHub, GuideHub, DiscoveryHub, SeriesHub and the rest of AdminHub (see "v1 — hubs" in `ROADMAP.md`), plus anything in the Foundation's "Open" list that needs real device access (`ARCHITECTURE.md`'s open questions) — the reference Dreambox isn't reachable at the moment, so that work is paused, not forgotten.
+**0.1.0** is the first release. Every hub above works against the real box — confirmed on the reference Dreambox One with the self-test (System → Diagnostics) — and against a mock for development, so no Dreambox is needed to work on it. [ROADMAP.md](ROADMAP.md) has exactly what's done and what's open, [CHANGELOG.md](CHANGELOG.md) what changed, [PROJECT_PLAN.md](PROJECT_PLAN.md) why the project exists, and [backend/README.md](backend/README.md) / [frontend/README.md](frontend/README.md) how to run it locally.
 
 ## License
 

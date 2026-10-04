@@ -111,3 +111,39 @@ func TestSelfTest_BoxDownStillChecksTheDisk(t *testing.T) {
 		t.Errorf("box down: %v %+v", ids, rep.Checks[0])
 	}
 }
+
+// The reference box's list of all radio services (fixture, captured by the
+// self-test 2026-10-04): 664 entries; after dropping data services ("."),
+// names Enigma2 made up ("10796V SID 0x3dae") and stations on a second
+// transponder, each station once, 1LIVE among them.
+func TestMergeStations_ReferenceBoxRadioList(t *testing.T) {
+	b, err := os.ReadFile("../../testdata/fixtures/getservices_radio_all.xml")
+	if err != nil {
+		t.Fatal(err)
+	}
+	srv := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) { w.Write(b) }))
+	defer srv.Close()
+	services, err := webcontrol.NewHTTPClient(srv.URL).Services(context.Background(), webcontrol.RadioAll)
+	if err != nil {
+		t.Fatal(err)
+	}
+	if len(services) != 664 {
+		t.Fatalf("fixture has %d entries", len(services))
+	}
+	stations := mergeStations(services, nil, true)
+	seen := map[string]bool{}
+	var live bool
+	for _, st := range stations {
+		if unnamedService(st.ServiceName) || strings.Contains(st.ServiceName, " SID 0x") {
+			t.Errorf("unnamed service kept: %q", st.ServiceName)
+		}
+		if seen[strings.ToLower(st.ServiceName)] {
+			t.Errorf("duplicate %q", st.ServiceName)
+		}
+		seen[strings.ToLower(st.ServiceName)] = true
+		live = live || st.ServiceName == "1LIVE"
+	}
+	if !live || len(stations) < 400 || len(stations) >= 664 {
+		t.Errorf("%d stations, 1LIVE among them: %v", len(stations), live)
+	}
+}

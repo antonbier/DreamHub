@@ -1084,7 +1084,8 @@
         "servicesDown": "Found: {found}; not running: {down}.",
         "noEnigmaUnit": "Found: {found} — but no enigma2.service; the unit names differ on this box.",
         "noSystemd": "No systemd here (only on the box).",
-        "dmi": "Database found — used first for details."
+        "dmi": "Database found — used first for details.",
+        "radioFavouritesEmpty": "The radio favourites are empty — RadioHub shows all {stations} radio stations instead ({withEpg} with programme information)."
       }
     }
   },
@@ -1120,6 +1121,7 @@
       "empty": "No radio recordings planned. Open a programme to record it.",
       "manage": "All timers",
       "running": "recording"
-    }
+    },
+    "allStations": "All radio stations"
   }
 }

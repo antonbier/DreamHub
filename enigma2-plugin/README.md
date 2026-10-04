@@ -1,6 +1,6 @@
 # enigma2-plugin/
 
-The Enigma2 launcher plugin (docs/V1_PLAN.md, WP8). Python 2.7 — the only interpreter present on-device (see `ARCHITECTURE.md`). **Written but not yet verified live on the box** — everything else in this repo that's marked done has been exercised on the reference device; this hasn't, since it needs an actual Enigma2 GUI session to test, not just SSH. Verify before considering WP8 closed.
+The Enigma2 launcher plugin (docs/V1_PLAN.md, WP8). Python 2.7 — the only interpreter present on-device (see `ARCHITECTURE.md`). **Verified live on the reference box** (2026-09-25, CHANGELOG.md): installed through the `.deb`, it appears in the Plugin Browser with its translated description, and the screen renders the QR code and the backend status ("Backend läuft (v…)") — checked through the box's own screenshot endpoint and simulated remote keys.
 
 **v1 scope — a launcher, not a second UI** (same division of labor as the WebControl plugin: basic settings on the TV, everything else in the web UI):
 - Shows a **QR code** that opens DreamHub on a phone — no IP address to type. Rendered by the backend (`GET /api/v1/qr.png`, public/unauthenticated like `/api/v1/health` — the plugin needs it before any credentials exist), so the plugin itself needs no QR library and holds no logic.
@@ -37,4 +37,4 @@ Then copy `src/` (including the compiled `.mo` files, not the `.po` sources) to 
 ## Known gaps
 
 - Plugin icon: `src/plugin.png` (100×40 with transparency, the Plugin Browser's classic size), drawn from `art/plugin-icon.svg` in DreamHub's own colors and font — a hub of five nodes around a core, next to the name. Regenerate with `art/render-icon.mjs` (headless Chromium via `playwright-core`). Not yet seen in the box's own Plugin Browser: skins that expect a different size scale it.
-- Not yet verified against a real Enigma2 GUI session (skin layout, `ActionMap` key bindings, `LoadPixmap` behavior) — SSH-only testing can confirm the Python imports and HTTP calls but not the actual on-screen rendering.
+- Checked on one skin only (the reference box's Gemini/AIO image); it doesn't appear in that image's own "Gemini BluePanel" quick launcher, which keeps its own category list.

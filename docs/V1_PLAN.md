@@ -1,5 +1,7 @@
 # v1 plan (draft for discussion)
 
+> **Status 2026-10-04 (release 0.1.0):** this plan was written on 2026-09-24 and its "Where we are" describes that day. Since then WP1–WP9 are done and confirmed on the reference box, ControlHub, RadioHub and AdminHub's service status were built early, and live updates use Server-Sent Events rather than WebSockets. What's left is WP10 (hardening) and the feed (D4). `ROADMAP.md` is the authoritative status; the decisions below still hold.
+
 Plan for getting from today's state to a released **DreamHub 1.0.0**. It builds on `ROADMAP.md` (authoritative status) and the device findings of 2026-09-24 in `ARCHITECTURE.md`. Once the open decisions below are settled, the work packages become GitHub issues under the existing milestones and this file is folded into `ROADMAP.md`.
 
 ## Where we are
@@ -82,13 +84,13 @@ Order matters where noted. Everything else can run in parallel.
 - Backup/restore of DreamHub's own state (settings incl. dashboards, tokens excluded or flagged) as one file. Restore goes through preview-and-confirm.
 
 ### WP6 — AdminHub logs *(mostly done 2026-09-25, live tail deferred to WP7 — see ROADMAP.md, AdminHub)*
-- journald via `journalctl -o json` (exec, bounded): DreamHub, enigma2, other units. Filters for unit, level, text. Live tail over WebSocket (reuses WP7, not built yet — the screen reads a bounded snapshot with its own refresh button for now).
+- journald via `journalctl -o json` (exec, bounded): DreamHub, enigma2, other units. Filters for unit, level, text. Live tail over Server-Sent Events (reuses WP7; built).
 - UI states clearly that the journal is **since last boot** (volatile, see `ARCHITECTURE.md`).
 - enigma2 crash logs list + view, support download with secrets removed.
 
 ### WP7 — Core leftovers for v1 *(event bus, SSE live updates and in-flight coalescing done 2026-09-25 — see ROADMAP.md, step 7; criteria tiles, runtime locales, accessibility and complete Italian still open)*
 - Never fan out parallel requests to the box (enigma2 serializes them, see `ARCHITECTURE.md`): coalesce identical in-flight requests ([x], `webcontrol.HTTPClient.coalescedGet`), short caches, `/web/movielist` cached — a time-based cache is deliberately deferred: it would also apply to a plan's own apply-time freshness check (`internal/plan`'s Fingerprint/Current) and could silently weaken preview-and-confirm's staleness guarantee, so it needs a cache-bypass path for that check specifically, not a blanket TTL.
-- [x] WebSocket + a minimal event bus. Events come from polling `/web/timerlist`/`movielist` (detection, not automation): `recording.started/finished`, disk above 90 % — `internal/events`. Persisted notifications (key + params, `store`'s `notifications` table), inbox in the bell (`stores/notifications.ts`). Implemented as **Server-Sent Events**, not a literal WebSocket: everything here only ever flows server → client, so SSE gets the identical result with no new dependency for a hand-rolled handshake — see `api.handleEventsStream`'s doc comment for the full reasoning, including why the frontend can't use the browser's native `EventSource` (it can't carry DreamHub's own auth header). `timer.conflict` isn't in the poller yet (still open, needs `internal/tuner` wired in without duplicating TimerHub's own estimate).
+- [x] Live updates (Server-Sent Events, not WebSockets — server → client only) + a minimal event bus. Events come from polling `/web/timerlist`/`movielist` (detection, not automation): `recording.started/finished`, disk above 90 % — `internal/events`. Persisted notifications (key + params, `store`'s `notifications` table), inbox in the bell (`stores/notifications.ts`). Implemented as **Server-Sent Events**, not a literal WebSocket: everything here only ever flows server → client, so SSE gets the identical result with no new dependency for a hand-rolled handshake — see `api.handleEventsStream`'s doc comment for the full reasoning, including why the frontend can't use the browser's native `EventSource` (it can't carry DreamHub's own auth header). `timer.conflict` isn't in the poller yet (still open, needs `internal/tuner` wired in without duplicating TimerHub's own estimate).
 - Custom/criteria tiles on top of the search providers (the mechanics exist).
 - Runtime drop-in locales from `/data/dreamhub/locales/`, accessibility pass, complete Italian strings.
 
@@ -98,11 +100,11 @@ Order matters where noted. Everything else can run in parallel.
 - [x] The QR code is rendered **by the backend** (`/api/v1/qr.png`, local-only), so the plugin needs no QR library and holds no logic.
 - [x] Shows backend status/version (`/api/v1/health`), mismatch message. Basic settings: auth on/off, port.
 
-### WP9 — Packaging & release *(last)* *(`.deb` build + CI done 2026-09-25, not yet installed live — see ROADMAP.md, "v1 — release & packaging")*
+### WP9 — Packaging & release *(last)* *(done: `.deb` + CI 2026-09-25, installed live 2026-09-28, release 0.1.0 2026-10-04 — see ROADMAP.md, "v1 — release & packaging")*
 - [x] `.deb` (arm64): binary, `dreamhub.service`, avahi service file, TV plugin, `postinst`/`prerm`/`postrm`, data in `/data/dreamhub`, `Depends` per `ROADMAP.md`.
 - [x] CI: tests + ARM64 build + `.deb` on every push. Feed publishing per D4 (decided later) — still open.
-- [ ] Live on the reference box: install, upgrade, uninstall (data kept), reboot survival.
-- [ ] User docs: install via WebAdmin's "Upload new *-feed.list", first steps, recommended `localauth=true`.
+- [x] Live on the reference box: install and in-place upgrades (2026-09-28, 2026-10-04). Uninstall/purge not run — the box keeps DreamHub.
+- [x] User docs (`docs/USER_GUIDE.md`): install from the release, first steps, recommended `localauth=true`; the feed route once the feed exists.
 
 ### WP10 — Hardening & release candidate
 - Resource measurement on the box under real use, security pass (CSRF, Host, plan ownership, file paths), DST test days, a run with none of the optional plugins installed.
@@ -114,7 +116,7 @@ Order matters where noted. Everything else can run in parallel.
 Phase A   WP1 ─┬─ WP2
                │
 Phase B        ├─ WP3 (TimerHub) ── WP4 (MediaHub) ──┐
-               ├─ WP5 (SystemHub) ── WP6 (AdminHub) ─┤  (WP6 needs WP7's WebSocket)
+               ├─ WP5 (SystemHub) ── WP6 (AdminHub) ─┤  (WP6 needs WP7's live stream)
                └─ WP7 (core leftovers) ──────────────┤
 Phase C                             WP8 (TV plugin) ─┤
 Phase D                                  WP9 ── WP10 ─┴─> 1.0.0
@@ -122,4 +124,4 @@ Phase D                                  WP9 ── WP10 ─┴─> 1.0.0
 
 ## Out of v1 (unchanged)
 
-RadioHub, ChannelHub (BouquetEditor), ControlHub, trimming, service status → v1.1. StreamHub, AutomationHub, terminal, external notifications, Plex/Jellyfin/Emby, more AI providers → later (`CONCEPT.md`).
+RadioHub, ChannelHub (BouquetEditor), ControlHub, trimming, service status → v1.1 (since built early: ControlHub, RadioHub, service status). StreamHub, AutomationHub, terminal, external notifications, Plex/Jellyfin/Emby, more AI providers → later (`CONCEPT.md`).

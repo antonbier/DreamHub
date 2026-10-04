@@ -98,6 +98,9 @@ type selfTestRun struct {
 	radioRef string // first radio bouquet's reference
 	tvRefs   []webcontrol.Service
 	radio    []webcontrol.Service
+	// radioFromAll: the first radio bouquet was empty, r.radio came from
+	// the list of all radio services.
+	radioFromAll bool
 }
 
 func (r *selfTestRun) check(ctx context.Context, id string, fn func(ctx context.Context) (status, code string, params map[string]any)) {
@@ -268,7 +271,11 @@ func (r *selfTestRun) boxChecks(ctx context.Context) {
 					other++ // a stream or a type RadioHub doesn't recognize
 				}
 			}
-			nowNext, err := t.WC.EPGNowNext(ctx, r.radioRef)
+			// Not for an empty bouquet: the box fails on that (radio.go).
+			var nowNext []webcontrol.NowNext
+			if hasServices(services) {
+				nowNext, err = t.WC.EPGNowNext(ctx, r.radioRef)
+			}
 			with := 0
 			if err == nil {
 				for _, n := range nowNext {
@@ -278,6 +285,29 @@ func (r *selfTestRun) boxChecks(ctx context.Context) {
 				}
 			}
 			params := map[string]any{"stations": len(r.radio), "other": other, "withEpg": with}
+			if len(r.radio) == 0 && other == 0 {
+				// Empty favourites (the reference box's): RadioHub falls
+				// back to all radio stations — count those instead.
+				all, err := t.WC.Services(ctx, webcontrol.RadioAll)
+				if err != nil {
+					return CheckFail, "error", map[string]any{"error": err.Error()}
+				}
+				nn, _ := t.WC.EPGNowNext(ctx, webcontrol.RadioAll)
+				stations := mergeStations(all, nn, true)
+				r.radioFromAll = true
+				with = 0
+				for _, st := range stations {
+					r.radio = append(r.radio, webcontrol.Service{ServiceReference: st.ServiceReference, ServiceName: st.ServiceName})
+					if st.Now != nil {
+						with++
+					}
+				}
+				params = map[string]any{"stations": len(stations), "withEpg": with, "entries": len(all)}
+				if len(stations) == 0 {
+					return CheckWarn, "noRadioStations", params
+				}
+				return CheckOK, "radioFavouritesEmpty", params
+			}
 			if len(r.radio) == 0 {
 				return CheckWarn, "noRadioStations", params
 			}
@@ -287,7 +317,10 @@ func (r *selfTestRun) boxChecks(ctx context.Context) {
 			return CheckOK, "radioStations", params
 		})
 		r.capture(ctx, "getservices_radio_bouquet.xml", getservices(r.radioRef))
-		r.capture(ctx, "epgnownext_radio.xml", "/web/epgnownext?"+url.Values{"bRef": {r.radioRef}}.Encode())
+		if len(r.radio) > 0 && r.radio[0].ServiceReference != "" && !r.radioFromAll {
+			r.capture(ctx, "epgnownext_radio.xml", "/web/epgnownext?"+url.Values{"bRef": {r.radioRef}}.Encode())
+		}
+		r.capture(ctx, "getservices_radio_all.xml", getservices(webcontrol.RadioAll))
 	}
 
 	r.check(ctx, "timers", func(ctx context.Context) (string, string, map[string]any) {
@@ -384,8 +417,8 @@ func (r *selfTestRun) localChecks(ctx context.Context, boxDown bool) {
 		if len(present) == 0 {
 			return CheckWarn, "noPiconDirs", map[string]any{"dirs": strings.Join(dirs, ", ")}
 		}
-		found, tried := matchPicons(dirs, r.tvRefs, 30)
-		rfound, rtried := matchPicons(dirs, r.radio, 30)
+		found, tried := matchPicons(piconSearchDirs(dirs), r.tvRefs, 30)
+		rfound, rtried := matchPicons(piconSearchDirs(dirs), r.radio, 30)
 		params := map[string]any{"dirs": strings.Join(present, ", "), "tv": found, "tvTried": tried, "radio": rfound, "radioTried": rtried}
 		if tried > 0 && found == 0 {
 			return CheckWarn, "piconsNoMatch", params

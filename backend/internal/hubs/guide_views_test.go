@@ -10,8 +10,10 @@ import (
 	"net/url"
 	"os"
 	"path/filepath"
+	"slices"
 	"strconv"
 	"testing"
+	"time"
 
 	"github.com/antonbier/DreamHub/backend/internal/webcontrol/mock"
 )
@@ -75,5 +77,25 @@ func TestGuideViews(t *testing.T) {
 	json.Unmarshal(rec.Body.Bytes(), &grid)
 	if len(grid.Channels) != 1 || grid.Channels[0].ServiceName != "Das Erste HD" {
 		t.Errorf("one channel only: %s", rec.Body)
+	}
+}
+
+// A picon pool with sets in subfolders (the reference box's layout): the
+// logo is found in a set, the newest set first.
+func TestPiconSearchDirs_LooksIntoSets(t *testing.T) {
+	pool := t.TempDir()
+	older := filepath.Join(pool, "PPH_carbon_220x132")
+	newer := filepath.Join(pool, "stefanbenno6_220x132")
+	for _, d := range []string{older, newer} {
+		if err := os.MkdirAll(d, 0o755); err != nil {
+			t.Fatal(err)
+		}
+	}
+	past := time.Now().Add(-48 * time.Hour)
+	os.Chtimes(older, past, past)
+	got := piconSearchDirs([]string{pool, "/nonexistent"})
+	want := []string{pool, newer, older, "/nonexistent"}
+	if !slices.Equal(got, want) {
+		t.Fatalf("got %v, want %v", got, want)
 	}
 }

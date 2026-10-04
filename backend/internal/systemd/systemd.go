@@ -13,6 +13,7 @@ import (
 	"fmt"
 	"os"
 	"os/exec"
+	"slices"
 	"strconv"
 	"strings"
 	"time"
@@ -65,9 +66,20 @@ func (Exec) Status(ctx context.Context, names []string) ([]Unit, error) {
 }
 
 // Show is `systemctl show` for names as systemctl prints it (the
-// self-test keeps it as a fixture).
+// self-test keeps it as a fixture). systemd before 235 doesn't know
+// NRestarts and stops with exit status 1 after the first unit when asked
+// for it (confirmed on the reference box, systemd 232) — then it's asked
+// again without.
 func (Exec) Show(ctx context.Context, names []string) ([]byte, error) {
-	args := append([]string{"show", "--property=" + strings.Join(showProps, ",")}, names...)
+	out, err := show(ctx, showProps, names)
+	if err != nil && !errors.Is(err, ErrUnavailable) {
+		out, err = show(ctx, slices.DeleteFunc(slices.Clone(showProps), func(p string) bool { return p == "NRestarts" }), names)
+	}
+	return out, err
+}
+
+func show(ctx context.Context, props, names []string) ([]byte, error) {
+	args := append([]string{"show", "--property=" + strings.Join(props, ",")}, names...)
 	out, err := exec.CommandContext(ctx, "systemctl", args...).Output()
 	if errors.Is(err, exec.ErrNotFound) {
 		return nil, ErrUnavailable

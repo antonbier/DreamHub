@@ -23,17 +23,25 @@ import (
 // freely.
 
 // DefaultServices are the units shown, in this order; ones a box doesn't
-// have are left out. Samba's unit names differ between images (smbd/nmbd
-// or samba), so all are listed.
+// have are left out. Names differ between images, so alternatives are
+// listed: on the reference box (DreamOS 2.6) Samba is smb/nmb, ZeroTier
+// zerotierone and the softcam oscam-cycecplus (confirmed live 2026-10-04,
+// ARCHITECTURE.md); smbd/nmbd, zerotier-one and oscam are the names
+// elsewhere. Socket-activated units (dropbear, vsftpd) aren't listed: they
+// read "inactive" while working fine.
 var DefaultServices = []string{
 	"enigma2.service",
 	"dreamhub.service",
+	"smb.service",
+	"nmb.service",
 	"smbd.service",
 	"nmbd.service",
-	"samba.service",
 	"nfs-server.service",
 	"avahi-daemon.service",
+	"zerotierone.service",
 	"zerotier-one.service",
+	"oscam-cycecplus.service",
+	"oscam.service",
 }
 
 // Warning codes on a restart preview.

@@ -32,13 +32,14 @@ func TestAdminServices_ListsTheBoxServices(t *testing.T) {
 		names = append(names, s.Name)
 		state[s.Name] = s.Active
 	}
-	// DefaultServices' order; samba.service and nfs-server.service don't
-	// exist on the mock box and are left out.
-	want := []string{"enigma2.service", "dreamhub.service", "smbd.service", "nmbd.service", "avahi-daemon.service", "zerotier-one.service"}
+	// DefaultServices' order; the alternative names (smbd, zerotier-one,
+	// oscam, …) don't exist on the mock box, as on the reference box, and
+	// are left out.
+	want := []string{"enigma2.service", "dreamhub.service", "smb.service", "nmb.service", "nfs-server.service", "avahi-daemon.service", "zerotierone.service", "oscam-cycecplus.service"}
 	if !slices.Equal(names, want) {
 		t.Fatalf("services = %v, want %v", names, want)
 	}
-	if state["nmbd.service"] != "failed" || state["enigma2.service"] != "active" {
+	if state["nmb.service"] != "failed" || state["enigma2.service"] != "active" {
 		t.Errorf("states: %v", state)
 	}
 }
@@ -95,14 +96,14 @@ func TestAdminServices_RestartGoesThroughPreview(t *testing.T) {
 
 func TestAdminServices_StartingAFailedUnitAndRefusals(t *testing.T) {
 	e := newEnv(t)
-	if code, p := e.planRestart(t, "nmbd.service"); code != http.StatusOK || p.Plan.Action != "service.start" || len(p.Plan.Warnings) != 0 {
+	if code, p := e.planRestart(t, "nmb.service"); code != http.StatusOK || p.Plan.Action != "service.start" || len(p.Plan.Warnings) != 0 {
 		t.Errorf("a failed unit is started, without warnings: %d %+v", code, p)
 	}
 	if code, p := e.planRestart(t, "dreamhub.service"); code != http.StatusOK || len(p.Plan.Warnings) != 1 || p.Plan.Warnings[0].Code != "service.restartSelf" {
 		t.Errorf("restarting DreamHub warns that the page reconnects: %d %+v", code, p)
 	}
 	// Only the listed units, and only ones the box has.
-	for _, name := range []string{"sshd.service", "samba.service", "../../etc/passwd"} {
+	for _, name := range []string{"sshd.service", "smbd.service", "../../etc/passwd"} {
 		if code, _ := e.planRestart(t, name); code != http.StatusNotFound {
 			t.Errorf("%s: expected 404, got %d", name, code)
 		}
@@ -111,9 +112,9 @@ func TestAdminServices_StartingAFailedUnitAndRefusals(t *testing.T) {
 
 func TestAdminServices_StalePreviewIsRefused(t *testing.T) {
 	e := newEnv(t)
-	_, p := e.planRestart(t, "smbd.service")
+	_, p := e.planRestart(t, "smb.service")
 	// Something else restarts it in between.
-	e.systemd.Restart(context.Background(), "smbd.service")
+	e.systemd.Restart(context.Background(), "smb.service")
 	resp, b := e.do(t, "POST", "/api/v1/plans/"+p.Plan.ID+"/apply", "", nil)
 	if resp.StatusCode == http.StatusOK {
 		t.Fatalf("a preview made before another restart must not apply: %s", b)
@@ -125,7 +126,7 @@ func TestAdminServices_StalePreviewIsRefused(t *testing.T) {
 
 func TestAdminServices_ReadOnlyRestartsNothing(t *testing.T) {
 	e := newEnvWithReadOnlyFiles(t, mock.New())
-	_, p := e.planRestart(t, "smbd.service")
+	_, p := e.planRestart(t, "smb.service")
 	resp, b := e.do(t, "POST", "/api/v1/plans/"+p.Plan.ID+"/apply", "", nil)
 	if code, _, _ := errCode(t, b); resp.StatusCode != http.StatusConflict || code != "writes_disabled" {
 		t.Fatalf("expected 409 writes_disabled, got %d %s", resp.StatusCode, b)

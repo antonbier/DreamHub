@@ -1084,7 +1084,8 @@
         "servicesDown": "Gefunden: {found}; laufen nicht: {down}.",
         "noEnigmaUnit": "Gefunden: {found} – aber kein enigma2.service; die Dienstnamen sind auf dieser Box anders.",
         "noSystemd": "Kein systemd hier (gibt es nur auf der Box).",
-        "dmi": "Datenbank gefunden – wird zuerst für Details genutzt."
+        "dmi": "Datenbank gefunden – wird zuerst für Details genutzt.",
+        "radioFavouritesEmpty": "Die Radio-Favoriten sind leer – RadioHub zeigt stattdessen alle {stations} Radiosender ({withEpg} mit Programmdaten)."
       }
     }
   },
@@ -1120,6 +1121,7 @@
       "empty": "Keine Radio-Aufnahmen geplant. Öffne eine Sendung, um sie aufzunehmen.",
       "manage": "Alle Timer",
       "running": "nimmt auf"
-    }
+    },
+    "allStations": "Alle Radiosender"
   }
 }

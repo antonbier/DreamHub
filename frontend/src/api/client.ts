@@ -260,7 +260,8 @@ export const api = {
     picon: (ref: string, name: string) => requestBlob(`/api/v1/guide/picon?ref=${encodeURIComponent(ref)}&name=${encodeURIComponent(name)}`),
   },
   radio: {
-    bouquets: () => request<{ bouquets: Bouquet[] }>('GET', '/api/v1/radio/bouquets'),
+    // The radio bouquets, then all radio stations (`all`, unnamed).
+    bouquets: () => request<{ bouquets: Bouquet[]; all: string }>('GET', '/api/v1/radio/bouquets'),
     // Every station of a radio bouquet with now/next (null without EPG),
     // and what the box is playing.
     stations: (bouquet: string) =>

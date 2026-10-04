@@ -5,7 +5,10 @@ import (
 	"os"
 	"path/filepath"
 	"regexp"
+	"sort"
 	"strings"
+	"sync"
+	"time"
 	"unicode"
 
 	"github.com/antonbier/DreamHub/backend/internal/httpx"
@@ -80,6 +83,7 @@ func servePicon(w http.ResponseWriter, r *http.Request, dirs []string) {
 	if dirs == nil {
 		dirs = DefaultPiconDirs
 	}
+	dirs = piconSearchDirs(dirs)
 	for _, name := range piconNames(r.URL.Query().Get("ref"), r.URL.Query().Get("name")) {
 		for _, dir := range dirs {
 			p := filepath.Join(dir, name)
@@ -99,4 +103,55 @@ func servePicon(w http.ResponseWriter, r *http.Request, dirs []string) {
 		}
 	}
 	httpx.WriteError(w, r, http.StatusNotFound, "not_found", "no picon for this channel")
+}
+
+// Picon pools hold whole picon sets as subfolders, one per style — the
+// reference box's /data/piconpool has six ("PPH_carbon_220x132", …) and no
+// logo directly inside (confirmed live 2026-10-04). Nothing on the box
+// says which set the skin uses, so each folder is searched first, then its
+// subfolders, the most recently changed set first. The list is cached for
+// a few minutes: a guide page asks for dozens of logos at once.
+var (
+	piconDirsMu    sync.Mutex
+	piconDirsCache = map[string][]string{}
+	piconDirsAt    = map[string]time.Time{}
+)
+
+const piconDirsTTL = 5 * time.Minute
+
+func piconSearchDirs(dirs []string) []string {
+	key := strings.Join(dirs, "\x00")
+	piconDirsMu.Lock()
+	defer piconDirsMu.Unlock()
+	if cached, ok := piconDirsCache[key]; ok && time.Since(piconDirsAt[key]) < piconDirsTTL {
+		return cached
+	}
+	var out []string
+	for _, d := range dirs {
+		out = append(out, d)
+		entries, err := os.ReadDir(d)
+		if err != nil {
+			continue
+		}
+		type set struct {
+			path string
+			mod  time.Time
+		}
+		var sets []set
+		for _, e := range entries {
+			if !e.IsDir() {
+				continue
+			}
+			if fi, err := e.Info(); err == nil {
+				sets = append(sets, set{filepath.Join(d, e.Name()), fi.ModTime()})
+			}
+		}
+		sort.SliceStable(sets, func(i, j int) bool { return sets[i].mod.After(sets[j].mod) })
+		for _, st := range sets {
+			out = append(out, st.path)
+		}
+	}
+	piconDirsCache[key] = out
+	piconDirsAt[key] = time.Now()
+	return out
 }

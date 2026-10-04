@@ -71,7 +71,7 @@ A separate hub, visible only to the *admin* role, placed at the bottom of the na
 
 - **Logs (v1)** — read-only, so no preview needed:
   - From journald (the box runs systemd): **DreamHub's own logs** (for debugging DreamHub itself), enigma2, and other services as needed.
-  - Live tail over WebSocket; filter by service, level, time range, hub/connector (DreamHub logs are structured), free text.
+  - Live tail (Server-Sent Events); filter by service, level, time range, hub/connector (DreamHub logs are structured), free text.
   - **DreamHub's log level switchable at runtime** (info/debug) without a restart; debug automatically reverts after e.g. one hour so logs don't fill up.
   - **Request IDs:** every API request gets an ID; when the UI shows an error it shows the ID, so the matching log entry is found immediately.
   - List of **enigma2 crash logs** (`/media/hdd/enigma2_crash_*.log`) with date.
@@ -199,7 +199,7 @@ DreamHub is a tool for getting things done, not a media center for browsing. Ple
 - **Typography**: **Source Sans 3**, bundled with the app (no requests to Google Fonts at runtime — the box must work offline, and the UI shouldn't call out to third parties). Sentence-case headings.
 - **Appearance**: **dark by default**, switchable to light or "follow system". No theme system in v1 — all colors are design tokens, so themes or a selectable accent color are cheap to add later.
 - **Keyboard**: `/` search, `g` + letter to jump to a hub, arrow keys in lists, `Esc` closes dialogs. Accessible contrast and screen-reader labels from the start.
-- **Live**: the dashboard updates over WebSocket (e.g. "recording finished") without reloading.
+- **Live**: the dashboard updates over Server-Sent Events (e.g. "recording finished") without reloading.
 - **Box unreachable**: a clear banner ("Box not reachable, last connected 14:02"), never empty tiles or raw errors.
 - **Units**: GB in decimal (1000), matching how Enigma2 itself reports sizes.
 - Layout reference: Sonarr/Radarr (sidebar + dense lists); imagery reference: Plex Web, used sparingly.
@@ -207,5 +207,5 @@ DreamHub is a tool for getting things done, not a media center for browsing. Ple
 ## Release scope summary
 
 - **v1**: the complete core (dashboard with customizable and custom tiles, navigation, global search, notifications inbox, settings, onboarding, diagnostics, auth, i18n DE/IT/EN, time zone handling, profile- and role-ready data model) + MediaHub, TimerHub, GuideHub, DiscoveryHub, SeriesHub (basic), SystemHub (basic), AdminHub (logs), ControlHub (remote, screenshot, power — pulled forward from v1.1) + the TV launcher plugin + `.deb` packaging.
-- **v1.1**: RadioHub, ChannelHub, MediaHub trimming, AdminHub service status, ControlHub's "message to TV" (`/web/message`) — built early, still to be confirmed live.
+- **v1.1**: RadioHub, ChannelHub, MediaHub trimming, AdminHub service status, ControlHub's "message to TV" (`/web/message`). Built early and confirmed on the box: RadioHub, service status, message to TV (release 0.1.0); still to build: ChannelHub, trimming.
 - **Later**: StreamHub, AutomationHub, AdminHub terminal, external notification channels, Plex/Jellyfin/Emby connectors, more AI providers, profile/role UI, multiple dashboards UI, additional languages incl. RTL.

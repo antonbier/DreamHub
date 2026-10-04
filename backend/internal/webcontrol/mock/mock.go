@@ -186,6 +186,15 @@ func (*Client) Services(ctx context.Context, bouquetRef string) ([]webcontrol.Se
 		return []webcontrol.Service{FavouritesRadio}, nil
 	case FavouritesRadio.ServiceReference:
 		return []webcontrol.Service{RadioDLF, radioMarker, RadioBayern3, RadioSWR3, RadioKlassik}, nil
+	case webcontrol.RadioAll:
+		// By name, a data service named "." and a station on a second
+		// transponder among them — as on the reference box.
+		return []webcontrol.Service{
+			{ServiceReference: "1:0:2:A3:7:85:820000:0:0:0:", ServiceName: "."},
+			RadioBayern3,
+			{ServiceReference: "1:0:2:6F37:3F3:1:C00000:0:0:0:", ServiceName: "BAYERN 3"},
+			RadioDLF, RadioKlassik, RadioSWR3,
+		}, nil
 	}
 	return []webcontrol.Service{
 		{ServiceReference: "1:0:19:2EE3:441:1:C00000:0:0:0:", ServiceName: "RTL Television"},
@@ -239,7 +248,7 @@ func radioSchedule() []webcontrol.EPGEvent {
 }
 
 func (c *Client) schedule(bouquetRef string) []webcontrol.EPGEvent {
-	if bouquetRef == FavouritesRadio.ServiceReference {
+	if bouquetRef == FavouritesRadio.ServiceReference || bouquetRef == webcontrol.RadioAll {
 		return radioSchedule()
 	}
 	return epgSchedule()
@@ -264,7 +273,7 @@ func (c *Client) EPGNowNext(ctx context.Context, bouquetRef string) ([]webcontro
 	}
 	var out []webcontrol.NowNext
 	index := map[string]int{}
-	if bouquetRef == FavouritesRadio.ServiceReference {
+	if bouquetRef == FavouritesRadio.ServiceReference || bouquetRef == webcontrol.RadioAll {
 		// Stations without EPG come back with no events (the box's "None"),
 		// in bouquet order.
 		for _, svc := range []webcontrol.Service{RadioDLF, RadioBayern3, RadioSWR3, RadioKlassik} {

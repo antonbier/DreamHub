@@ -6,6 +6,7 @@ import (
 	"fmt"
 	"net/http"
 	"net/url"
+	"slices"
 	"testing"
 	"time"
 
@@ -34,8 +35,11 @@ func TestRadio_BouquetsAndStations(t *testing.T) {
 		Bouquets []webcontrol.Service `json:"bouquets"`
 	}
 	json.Unmarshal(b, &bouquets)
-	if len(bouquets.Bouquets) != 1 || bouquets.Bouquets[0].ServiceReference != mock.FavouritesRadio.ServiceReference {
-		t.Fatalf("expected the radio bouquet from the radio root, got %s", b)
+	// The radio root's bouquet, then the list of every radio service
+	// (unnamed — the screen names it).
+	if len(bouquets.Bouquets) != 2 || bouquets.Bouquets[0].ServiceReference != mock.FavouritesRadio.ServiceReference ||
+		bouquets.Bouquets[1].ServiceReference != webcontrol.RadioAll || bouquets.Bouquets[1].ServiceName != "" {
+		t.Fatalf("expected the radio bouquet from the radio root and all stations, got %s", b)
 	}
 
 	// Play a station first, so the list can mark it.
@@ -141,5 +145,26 @@ func TestRadio_RecordingAProgrammeShowsUpAsRadioTimer(t *testing.T) {
 	json.Unmarshal(b, &timers)
 	if len(timers.Timers) != 1 || timers.Timers[0].Name != "Hörspiel: Der Process" || timers.Timers[0].ServiceReference != mock.RadioDLF.ServiceReference {
 		t.Fatalf("expected the new radio timer, got %s", b)
+	}
+}
+
+// All radio stations: unnamed data services dropped, a station on two
+// transponders once — the reference box's list looks like that.
+func TestRadio_AllStationsAreCleanedUp(t *testing.T) {
+	e := newEnv(t)
+	_, b := e.do(t, "GET", "/api/v1/radio/stations?"+url.Values{"bouquet": {webcontrol.RadioAll}}.Encode(), "", nil)
+	var body struct {
+		Stations []radioStation `json:"stations"`
+	}
+	json.Unmarshal(b, &body)
+	var names []string
+	for _, s := range body.Stations {
+		names = append(names, s.ServiceName)
+	}
+	if want := []string{"BAYERN 3", "Deutschlandfunk", "Klassik Radio", "SWR3"}; !slices.Equal(names, want) {
+		t.Fatalf("stations %v, want %v", names, want)
+	}
+	if body.Stations[0].ServiceReference != mock.RadioBayern3.ServiceReference || body.Stations[0].Now == nil {
+		t.Errorf("BAYERN 3 should be the one with programme information: %+v", body.Stations[0])
 	}
 }

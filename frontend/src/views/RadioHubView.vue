@@ -70,8 +70,9 @@
             v-model="selectedBouquet"
             class="rounded border border-line bg-field px-3 py-1.5 text-[13.5px] text-text"
             :aria-label="t('radio.bouquet')"
+            @change="autoPicked = false"
           >
-            <option v-for="b in bouquets" :key="b.serviceReference" :value="b.serviceReference">{{ b.serviceName }}</option>
+            <option v-for="b in bouquets" :key="b.serviceReference" :value="b.serviceReference">{{ b.serviceName || t('radio.allStations') }}</option>
           </select>
           <input
             v-if="stations.length > 8"
@@ -274,6 +275,12 @@ function formatRange(start: number, duration: number): string {
 
 const bouquets = ref<Bouquet[]>([])
 const selectedBouquet = ref('')
+// The list of every radio service (the backend's last, unnamed entry).
+const allRef = ref('')
+// True while the bouquet was chosen for the user, not by them: an empty
+// one (radio favourites nobody filled — the reference box's) then gives
+// way to all radio stations.
+const autoPicked = ref(false)
 const bouquetsLoading = ref(true)
 const bouquetsFailed = ref(false)
 
@@ -317,6 +324,10 @@ async function loadStations() {
     stations.value = res.stations
     playing.value = res.playing
     stationsFailed.value = false
+    if (autoPicked.value && res.stations.length === 0 && allRef.value && selectedBouquet.value !== allRef.value) {
+      autoPicked.value = false
+      selectedBouquet.value = allRef.value
+    }
   } catch {
     if (mine === token) stationsFailed.value = true
   } finally {
@@ -369,7 +380,9 @@ onMounted(async () => {
   try {
     const res = await api.radio.bouquets()
     bouquets.value = res.bouquets
+    allRef.value = res.all
     const wanted = [route.query.bouquet, rememberedBouquet()].find((b) => typeof b === 'string' && res.bouquets.some((x) => x.serviceReference === b))
+    autoPicked.value = !wanted
     selectedBouquet.value = (wanted as string | undefined) ?? res.bouquets[0]?.serviceReference ?? ''
   } catch {
     bouquetsFailed.value = true

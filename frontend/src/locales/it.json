@@ -1084,7 +1084,8 @@
         "servicesDown": "Trovati: {found}; non in esecuzione: {down}.",
         "noEnigmaUnit": "Trovati: {found} — ma nessun enigma2.service; i nomi dei servizi sono diversi su questo box.",
         "noSystemd": "Nessun systemd qui (solo sul box).",
-        "dmi": "Database trovato — usato per primo per i dettagli."
+        "dmi": "Database trovato — usato per primo per i dettagli.",
+        "radioFavouritesEmpty": "I preferiti radio sono vuoti — RadioHub mostra invece tutte le {stations} emittenti ({withEpg} con informazioni sul programma)."
       }
     }
   },
@@ -1120,6 +1121,7 @@
       "empty": "Nessuna registrazione radio in programma. Apri un programma per registrarlo.",
       "manage": "Tutti i timer",
       "running": "in registrazione"
-    }
+    },
+    "allStations": "Tutte le emittenti radio"
   }
 }

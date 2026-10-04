@@ -4,6 +4,7 @@ import (
 	"context"
 	"net/http"
 	"net/url"
+	"regexp"
 	"sort"
 	"strings"
 	"time"
@@ -47,7 +48,9 @@ func (h *Radio) radioBouquets(ctx context.Context) ([]webcontrol.Service, error)
 			out = append(out, b)
 		}
 	}
-	return out, nil
+	// Every radio service, last; no name — the screen calls it "All radio
+	// stations" in its own language.
+	return append(out, webcontrol.Service{ServiceReference: webcontrol.RadioAll}), nil
 }
 
 func (h *Radio) bouquets(w http.ResponseWriter, r *http.Request) {
@@ -56,7 +59,7 @@ func (h *Radio) bouquets(w http.ResponseWriter, r *http.Request) {
 		httpx.WriteError(w, r, http.StatusBadGateway, "webcontrol_unavailable", "could not reach WebControl")
 		return
 	}
-	httpx.WriteJSON(w, http.StatusOK, map[string]any{"bouquets": list})
+	httpx.WriteJSON(w, http.StatusOK, map[string]any{"bouquets": list, "all": webcontrol.RadioAll})
 }
 
 // Station is one radio station with its now/next (nil without EPG —
@@ -70,13 +73,17 @@ type Station struct {
 
 // mergeStations takes the bouquet's own list for order and completeness
 // (epgnownext may skip a station without EPG) and adds now/next from the
-// box's one-call epgnownext. Headings are dropped.
-func mergeStations(services []webcontrol.Service, nowNext []webcontrol.NowNext) []Station {
+// box's one-call epgnownext. Headings are dropped. For the list of all
+// radio services (all), unnamed data services go too, and a station on
+// several transponders is shown once — the one with programme
+// information, else the first.
+func mergeStations(services []webcontrol.Service, nowNext []webcontrol.NowNext, all bool) []Station {
 	byRef := map[string]webcontrol.NowNext{}
 	for _, n := range nowNext {
 		byRef[n.ServiceReference] = n
 	}
 	out := []Station{}
+	byName := map[string]int{}
 	for _, s := range services {
 		if webcontrol.IsMarker(s.ServiceReference) {
 			continue
@@ -84,6 +91,19 @@ func mergeStations(services []webcontrol.Service, nowNext []webcontrol.NowNext) 
 		st := Station{ServiceReference: s.ServiceReference, ServiceName: strings.TrimSpace(s.ServiceName)}
 		if n, ok := byRef[s.ServiceReference]; ok {
 			st.Now, st.Next = n.Now, n.Next
+		}
+		if all {
+			if unnamedService(st.ServiceName) {
+				continue
+			}
+			key := strings.ToLower(st.ServiceName)
+			if i, seen := byName[key]; seen {
+				if out[i].Now == nil && st.Now != nil {
+					out[i] = st
+				}
+				continue
+			}
+			byName[key] = len(out)
 		}
 		out = append(out, st)
 	}
@@ -103,10 +123,17 @@ func (h *Radio) stations(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 	// Without EPG the list is still worth showing: names, Play on the box.
-	nowNext, _ := h.WC.EPGNowNext(ctx, bouquet)
+	// An empty bouquet isn't asked at all: the box's /web/epgnownext fails
+	// on one with a traceback in enigma2's log ("Processing Failed",
+	// KeyError 'BouquetReference' — confirmed live 2026-10-04, the
+	// reference box's empty radio favourites).
+	var nowNext []webcontrol.NowNext
+	if hasServices(services) {
+		nowNext, _ = h.WC.EPGNowNext(ctx, bouquet)
+	}
 	// What the box plays, to mark it; not knowing just marks nothing.
 	playing, _ := h.WC.CurrentServiceReference(ctx)
-	httpx.WriteJSON(w, http.StatusOK, map[string]any{"stations": mergeStations(services, nowNext), "playing": playing})
+	httpx.WriteJSON(w, http.StatusOK, map[string]any{"stations": mergeStations(services, nowNext, bouquet == webcontrol.RadioAll), "playing": playing})
 }
 
 // radioTimers are the timers on radio stations that haven't ended yet,
@@ -147,6 +174,8 @@ func (h *Radio) Search(ctx context.Context, query string) ([]hub.SearchResult, e
 	if err != nil {
 		return nil, err
 	}
+	// By name: the list of all radio services has a station once per
+	// transponder.
 	seen := map[string]bool{}
 	var out []hub.SearchResult
 	for _, b := range bouquets {
@@ -156,10 +185,11 @@ func (h *Radio) Search(ctx context.Context, query string) ([]hub.SearchResult, e
 		}
 		for _, s := range services {
 			name := strings.TrimSpace(s.ServiceName)
-			if webcontrol.IsMarker(s.ServiceReference) || seen[s.ServiceReference] || !strings.Contains(strings.ToLower(name), q) {
+			key := strings.ToLower(name)
+			if webcontrol.IsMarker(s.ServiceReference) || unnamedService(name) || seen[key] || !strings.Contains(key, q) {
 				continue
 			}
-			seen[s.ServiceReference] = true
+			seen[key] = true
 			out = append(out, hub.SearchResult{Title: name, Subtitle: b.ServiceName,
 				Path: "/radio?" + url.Values{"bouquet": {b.ServiceReference}, "station": {s.ServiceReference}}.Encode()})
 			if len(out) == maxRadioResults {
@@ -168,4 +198,25 @@ func (h *Radio) Search(ctx context.Context, query string) ([]hub.SearchResult, e
 		}
 	}
 	return out, nil
+}
+
+// sidName is how Enigma2 names a service that sends no name of its own:
+// frequency, polarisation and service ID ("10796V SID 0x3dae" — nine of
+// them in the reference box's radio list).
+var sidName = regexp.MustCompile(`^\d+[HVLR] SID 0x[0-9a-fA-F]+$`)
+
+// unnamedService: a data service ("." on the reference box), an empty
+// name, or one Enigma2 made up from the transponder.
+func unnamedService(name string) bool {
+	return strings.Trim(name, ". ") == "" || sidName.MatchString(name)
+}
+
+// hasServices: anything besides headings.
+func hasServices(services []webcontrol.Service) bool {
+	for _, s := range services {
+		if !webcontrol.IsMarker(s.ServiceReference) {
+			return true
+		}
+	}
+	return false
 }

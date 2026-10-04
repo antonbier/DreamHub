@@ -1,6 +1,6 @@
 # DreamHub user guide
 
-DreamHub is a web interface for the **Dreambox One** (DreamOS, ARM64; other DreamOS ARM64 boxes should work but are untested). It runs on the box itself, next to the box's own WebControl, and you use it from a browser — on your phone, tablet or computer. This guide covers installing it, the first steps, and what each part does.
+DreamHub is a web interface for **Dreamboxes running DreamOS** — developed and tested on a Dreambox One; see *What you need* for the others. It runs on the box itself, next to the box's own WebControl, and you use it from a browser — on your phone, tablet or computer. This guide covers installing it, the first steps, and what each part does.
 
 DreamHub changes nothing on its own: every change to recordings, timers or settings on the box is shown to you first ("Preview · nothing changed yet") and only happens when you confirm it. Every applied change is listed under **System → Change log**.
 
@@ -10,7 +10,10 @@ DreamHub changes nothing on its own: every change to recordings, timers or setti
 
 ### What you need
 
-- A Dreambox One running DreamOS (developed on one with the Gemini/AIO image).
+- A Dreambox running DreamOS:
+  - **Dreambox One or Two** (ARM64) — package `dreamhub_<version>_arm64.deb`. Developed and tested on a Dreambox One with DreamOS 2.6 (Gemini/AIO image).
+  - **DM900 UHD or DM920 UHD** (ARMv7) — package `dreamhub_<version>_armhf.deb`. Built the same way, but not yet tested on such a box: feedback welcome.
+  - The MIPS boxes (DM7080, DM820, DM520, DM525) aren't supported yet, older Dreamboxes without DreamOS not at all.
 - The box on your home network. DreamHub uses port **8080**; WebControl stays on port 80.
 - About 15 MB on the root partition for the program; its database lives on `/data`.
 
@@ -18,15 +21,16 @@ DreamHub changes nothing on its own: every change to recordings, timers or setti
 
 There is no package feed to subscribe to yet (see *Later: from a feed* below), so for now the `.deb` package is installed directly.
 
-1. **Get the package.** Every change to DreamHub is built automatically on GitHub: open the repository's **Actions** tab, pick the latest successful run on `main`, and download the artifact **`dreamhub-deb`**. It's a ZIP file containing `dreamhub_<version>_arm64.deb`. (You need to be signed in to GitHub to download artifacts.)
+1. **Get the package** for your box from the latest release: [github.com/antonbier/DreamHub/releases](https://github.com/antonbier/DreamHub/releases) — `…_arm64.deb` for a Dreambox One/Two, `…_armhf.deb` for a DM900/DM920. (In-between builds of every change are on the repository's **Actions** tab, artifact **`dreamhub-deb`**, for anyone signed in to GitHub.)
 2. **Copy it to the box**, for example to `/tmp/` — over the box's network share (Samba), with an SCP program such as WinSCP or Cyberduck (user `root`), or from a USB stick.
 3. **Install it.** Open a shell on the box. No SSH client is needed: the box's own **WebAdmin** has a terminal in the browser at `http://<box>/webadmin/terminal/` (log in as `root`). Then run:
 
    ```sh
-   dpkg -i /tmp/dreamhub_*_arm64.deb
+   dpkg -i /tmp/dreamhub_*.deb
    ```
 
-   This installs the DreamHub service and starts it, and adds the **DreamHub** plugin to the TV's plugin list. The TV's interface (enigma2) restarts once, so the plugin appears right away; after later updates it only restarts again if the plugin itself changed.
+   This installs the DreamHub service and starts it, and adds the **DreamHub** plugin to the TV's plugin list. The TV's interface (enigma2) restarts once, so the plugin appears right away; after later updates it only restarts again if the plugin itself changed. A recording running at that moment would be cut, so install when nothing is recording.
+4. **Check it:** open DreamHub (next section), then **System → Diagnostics → Run self-test**. It asks the box everything DreamHub needs and should come back all green.
 
 ### Later: from a feed
 

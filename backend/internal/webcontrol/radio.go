@@ -8,9 +8,17 @@ import (
 // RadioRoot is the reference of the box's radio bouquet list: passed to
 // Services it lists the radio bouquets, the way /web/getservices without
 // sRef lists the TV ones. This is Enigma2's own convention (the TV root is
-// the same with service type 1 and "bouquets.tv"); not yet confirmed on
-// the reference box — ROADMAP.md, RadioHub.
+// the same with service type 1 and "bouquets.tv"); confirmed on the
+// reference box 2026-10-04 (fixture getservices_radio_root.xml).
 const RadioRoot = `1:7:2:0:0:0:0:0:0:0:FROM BOUQUET "bouquets.radio" ORDER BY bouquet`
+
+// RadioAll lists every radio service the box knows, by name — every
+// transponder's, so a station can appear more than once, and data
+// services named "." are among them (confirmed live 2026-10-04: 664
+// entries in 0.06 s, epgnownext over it in 0.25 s). RadioHub offers it
+// as "All radio stations", the only list there is when the radio
+// favourites are empty, as on the reference box.
+const RadioAll = `1:7:2:0:0:0:0:0:0:0:(type == 2) || (type == 10) ORDER BY name`
 
 // serviceFields splits a service reference into its numeric fields
 // ("1:0:2:6F37:..." → 1, 0, 0x2, 0x6F37, …), hex as Enigma2 writes them.

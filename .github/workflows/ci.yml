@@ -66,8 +66,10 @@ jobs:
           path: backend/internal/webui/dist
       - name: Install packaging tools
         run: sudo apt-get update && sudo apt-get install -y gettext fakeroot
-      - name: Build the .deb
-        run: sh packaging/build-deb.sh dist
+      - name: Build the .debs (arm64, armhf)
+        run: |
+          ARCH=arm64 sh packaging/build-deb.sh dist
+          ARCH=armhf sh packaging/build-deb.sh dist
       - uses: actions/upload-artifact@v4
         with:
           name: dreamhub-deb

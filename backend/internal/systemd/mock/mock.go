@@ -1,6 +1,6 @@
 // Package mock implements systemd.Manager in memory: the services found
 // running on the reference box (ARCHITECTURE.md, "Process architecture"),
-// one of them failed so the screen has something to show. Restart brings
+// one of them failed. Restart brings
 // a unit (back) up and records it for tests.
 package mock
 
@@ -25,16 +25,20 @@ type Manager struct {
 var _ systemd.Manager = (*Manager)(nil)
 
 // New returns the reference box's services, up since about two hours,
-// except nmbd, which failed.
+// except nmb, failed here so the screen has something to show.
 func New() *Manager {
 	up := time.Now().Add(-2 * time.Hour).Truncate(time.Second)
+	// The reference box's units as `systemctl show` reported them live
+	// (2026-10-04, systemd 232): no memory accounting, no NRestarts.
 	units := []systemd.Unit{
-		{Name: "enigma2.service", Description: "enigma2", Active: "active", Sub: "running", Since: up, MainPID: 812, Memory: 182 << 20},
-		{Name: "dreamhub.service", Description: "DreamHub", Active: "active", Sub: "running", Since: up.Add(40 * time.Second), MainPID: 1204, Memory: 24 << 20},
-		{Name: "smbd.service", Description: "Samba SMB Daemon", Active: "active", Sub: "running", Since: up, MainPID: 640, Memory: 9 << 20},
-		{Name: "nmbd.service", Description: "Samba NMB Daemon", Active: "failed", Sub: "failed", Restarts: 3},
-		{Name: "avahi-daemon.service", Description: "Avahi mDNS/DNS-SD Stack", Active: "active", Sub: "running", Since: up, MainPID: 402, Memory: 2 << 20},
-		{Name: "zerotier-one.service", Description: "ZeroTier One", Active: "active", Sub: "running", Since: up, MainPID: 455, Memory: 6 << 20},
+		{Name: "enigma2.service", Description: "enigma2", Active: "active", Sub: "running", Since: up, MainPID: 812},
+		{Name: "dreamhub.service", Description: "DreamHub", Active: "active", Sub: "running", Since: up.Add(40 * time.Second), MainPID: 1204},
+		{Name: "smb.service", Description: "Samba SMB Daemon", Active: "active", Sub: "running", Since: up, MainPID: 640},
+		{Name: "nmb.service", Description: "Samba NMB Daemon", Active: "failed", Sub: "failed"},
+		{Name: "nfs-server.service", Description: "NFS server and services", Active: "active", Sub: "exited", Since: up},
+		{Name: "avahi-daemon.service", Description: "Avahi mDNS/DNS-SD Stack", Active: "active", Sub: "running", Since: up, MainPID: 402},
+		{Name: "zerotierone.service", Description: "ZeroTier One", Active: "active", Sub: "running", Since: up, MainPID: 455},
+		{Name: "oscam-cycecplus.service", Description: "OSCam", Active: "active", Sub: "running", Since: up, MainPID: 470},
 	}
 	m := &Manager{units: map[string]systemd.Unit{}}
 	for _, u := range units {

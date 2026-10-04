@@ -1,6 +1,7 @@
 package systemd
 
 import (
+	"os"
 	"testing"
 	"time"
 )
@@ -59,5 +60,27 @@ func TestParseShow(t *testing.T) {
 func TestParseShow_NoBootTimeLeavesSinceUnset(t *testing.T) {
 	if u := ParseShow([]byte(showOutput), time.Time{}); !u[0].Since.IsZero() {
 		t.Errorf("got %v", u[0].Since)
+	}
+}
+
+// The reference box's own answer (systemd 232, captured by the self-test
+// 2026-10-04): no NRestarts, MemoryCurrent "unset" as 2^64-1, properties
+// in its own order, unknown units left out.
+func TestParseShow_ReferenceBox232(t *testing.T) {
+	b, err := os.ReadFile("../../testdata/fixtures/systemctl_show_232.txt")
+	if err != nil {
+		t.Fatal(err)
+	}
+	units := ParseShow(b, time.Date(2026, 10, 4, 16, 50, 0, 0, time.UTC))
+	if len(units) != 8 || units[0].Name != "enigma2.service" || units[0].MainPID != 1842 || units[0].Active != "active" {
+		t.Fatalf("got %+v", units)
+	}
+	for _, u := range units {
+		if u.Memory != 0 || u.Restarts != 0 {
+			t.Errorf("%s: memory/restarts not reported on 232, got %+v", u.Name, u)
+		}
+		if u.Active == "active" && u.Since.IsZero() {
+			t.Errorf("%s: since missing", u.Name)
+		}
 	}
 }

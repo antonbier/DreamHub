@@ -36,5 +36,5 @@ Then copy `src/` (including the compiled `.mo` files, not the `.po` sources) to 
 
 ## Known gaps
 
-- No plugin icon yet (`PluginDescriptor` omits `icon=`, so Enigma2 shows its default) — needs actual icon artwork, not something to fabricate blindly; tracked for WP10 polish.
+- Plugin icon: `src/plugin.png` (100×40 with transparency, the Plugin Browser's classic size), drawn from `art/plugin-icon.svg` in DreamHub's own colors and font — a hub of five nodes around a core, next to the name. Regenerate with `art/render-icon.mjs` (headless Chromium via `playwright-core`). Not yet seen in the box's own Plugin Browser: skins that expect a different size scale it.
 - Not yet verified against a real Enigma2 GUI session (skin layout, `ActionMap` key bindings, `LoadPixmap` behavior) — SSH-only testing can confirm the Python imports and HTTP calls but not the actual on-screen rendering.

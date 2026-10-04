@@ -22,6 +22,9 @@ def Plugins(**kwargs):
             name="DreamHub",
             description=_("Open DreamHub on your phone"),
             where=[PluginDescriptor.WHERE_PLUGINMENU, PluginDescriptor.WHERE_EXTENSIONSMENU],
+            # 100x40, the Plugin Browser's classic size; drawn from
+            # ../art/plugin-icon.svg. The Extensions menu shows no icons.
+            icon="plugin.png",
             fnc=main,
         ),
     ]

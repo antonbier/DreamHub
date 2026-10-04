@@ -1,0 +1,28 @@
+<!--
+  DreamHub's plugin icon, the source for ../src/plugin.png (100x40, the
+  Plugin Browser's classic icon size). A hub: one node in the middle,
+  five around it, joined by spokes — DreamHub's hubs around its core —
+  on a `tile` square, next to the name ("Hub" in `accent`). Colors are
+  DESIGN.md's dark tokens. Rendered by render-icon.mjs.
+-->
+<svg xmlns="http://www.w3.org/2000/svg" width="100" height="40" viewBox="0 0 100 40">
+  <rect x="1" y="3" width="34" height="34" rx="8" fill="#161A1F" stroke="#252B32" stroke-width="1"/>
+  <g stroke="#6AA6E8" stroke-width="1.6" stroke-linecap="round" opacity="0.75">
+    <line x1="18" y1="20" x2="18" y2="10"/>
+    <line x1="18" y1="20" x2="27.5" y2="16.9"/>
+    <line x1="18" y1="20" x2="23.9" y2="28.1"/>
+    <line x1="18" y1="20" x2="12.1" y2="28.1"/>
+    <line x1="18" y1="20" x2="8.5" y2="16.9"/>
+  </g>
+  <g fill="#6AA6E8">
+    <circle cx="18" cy="10" r="2.6"/>
+    <circle cx="27.5" cy="16.9" r="2.6"/>
+    <circle cx="23.9" cy="28.1" r="2.6"/>
+    <circle cx="12.1" cy="28.1" r="2.6"/>
+    <circle cx="8.5" cy="16.9" r="2.6"/>
+  </g>
+  <circle cx="18" cy="20" r="4.4" fill="#E6E9EC"/>
+  <text x="38.5" y="24.8" font-family="'Source Sans 3'" font-weight="700" font-size="13" letter-spacing="-0.25">
+    <tspan fill="#E6E9EC">Dream</tspan><tspan fill="#6AA6E8">Hub</tspan>
+  </text>
+</svg>

@@ -47,6 +47,7 @@ done
 for f in __init__.py backend.py plugin.py DreamHubScreen.py DreamHubSetup.py; do
     cp "$ROOT/enigma2-plugin/src/$f" "$PKG/usr/lib/enigma2/python/Plugins/Extensions/DreamHub/$f"
 done
+cp "$ROOT/enigma2-plugin/src/plugin.png" "$PKG/usr/lib/enigma2/python/Plugins/Extensions/DreamHub/plugin.png"
 
 # --- control files ---
 sed "s/@VERSION@/$VERSION/" "$ROOT/packaging/control.in" > "$PKG/DEBIAN/control"

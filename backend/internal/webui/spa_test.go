@@ -14,6 +14,8 @@ func fakeDist() fstest.MapFS {
 		"index.html":            {Data: []byte("<html>shell</html>")},
 		"assets/app-abc123.js":  {Data: []byte("console.log('app')")},
 		"assets/app-abc123.css": {Data: []byte("body{}")},
+		"sw.js":                 {Data: []byte("self.addEventListener('fetch', () => {})")},
+		"manifest.webmanifest":  {Data: []byte(`{"name":"DreamHub"}`)},
 	}
 }
 
@@ -53,5 +55,24 @@ func TestHandler_MissingAssetIs404NotFallback(t *testing.T) {
 	rec := get(t, HandlerFS(fakeDist()), "/assets/does-not-exist.js")
 	if rec.Code != http.StatusNotFound {
 		t.Fatalf("got %d, want 404", rec.Code)
+	}
+}
+
+// The installable app: the service worker and the shell are revalidated on
+// every load (or an installed app keeps an old build), the manifest gets its
+// own MIME type (absent from Go's table and from the box).
+func TestHandler_InstallableAppHeaders(t *testing.T) {
+	h := HandlerFS(fakeDist())
+	for _, p := range []string{"/", "/timers", "/sw.js"} {
+		if got := get(t, h, p).Header().Get("Cache-Control"); got != "no-cache" {
+			t.Errorf("%s: Cache-Control %q, want no-cache", p, got)
+		}
+	}
+	if got := get(t, h, "/assets/app-abc123.js").Header().Get("Cache-Control"); got != "" {
+		t.Errorf("hashed asset: Cache-Control %q, want none", got)
+	}
+	rec := get(t, h, "/manifest.webmanifest")
+	if rec.Code != http.StatusOK || rec.Header().Get("Content-Type") != "application/manifest+json" {
+		t.Fatalf("manifest: got %d %q", rec.Code, rec.Header().Get("Content-Type"))
 	}
 }

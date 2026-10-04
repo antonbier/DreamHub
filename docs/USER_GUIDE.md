@@ -55,7 +55,7 @@ Any of these works:
 - **By name:** `http://<box name>.local:8080` — the box announces itself on the network (mDNS). Most phones and computers find it this way.
 - **By address:** `http://<box IP>:8080`, e.g. `http://192.168.1.43:8080`.
 
-Tip: add it to your phone's home screen from the browser's share menu — it then opens like an app.
+Tip: put it on your phone's home screen — it then opens like an app. See [section 4](#4-dreamhub-as-an-app).
 
 ### The setup assistant
 
@@ -134,7 +134,25 @@ A remote control for the box in the browser, with a live picture of the TV scree
 
 ---
 
-## 4. Notifications on your phone
+## 4. DreamHub as an app
+
+DreamHub can sit on your phone's home screen or your computer's desktop and open in its own window, without the browser's address bar. **Settings → General → DreamHub as an app** tells you what works in the browser you're using, with an **Install** button where the browser offers one.
+
+- **iPhone / iPad:** in Safari, tap **Share → Add to Home Screen**. This works over plain `http://`, no further setup.
+- **Android, Windows, Mac, Linux (Chrome, Edge):** browsers only offer to install over **HTTPS**, and DreamHub on the box is plain `http://` (no certificate a phone would trust can exist for a LAN address). Until it's behind HTTPS, use the browser menu's **Add to home screen**: that gives you an icon, just without the app window.
+
+**Putting DreamHub behind HTTPS** (optional) needs a second device that's always on and a name with a real certificate — for example:
+
+- **Tailscale:** on any always-on machine in your network, `tailscale serve --bg http://192.168.1.43:8080` gives `https://<machine>.<tailnet>.ts.net`, reachable from your devices at home and away.
+- **A reverse proxy** you already run (Caddy, Nginx Proxy Manager, Traefik on a NAS), with a domain that points to it, forwarding to `http://<box IP>:8080`.
+
+Either way, enter that host name under **Settings → Network → Additional allowed host names**, or DreamHub refuses requests addressed to it (protection against DNS rebinding).
+
+When the box is off or out of reach, the app opens anyway and says so, and connects by itself once the box answers again. Nothing from the box is kept on the phone: timers, recordings and the guide are always live.
+
+---
+
+## 5. Notifications on your phone
 
 DreamHub can send a short message to your phone when something happens, through the free **ntfy** app (iPhone and Android; no account needed):
 
@@ -148,7 +166,7 @@ Privacy: a message's text (a recording's or series' title, a channel name) passe
 
 ---
 
-## 5. When something doesn't work
+## 6. When something doesn't work
 
 - **DreamHub doesn't open:** check that the service runs — in the WebAdmin terminal, `systemctl status dreamhub`. Its log: `journalctl -u dreamhub -n 100`.
 - **A hub shows "unavailable" or "degraded":** the sidebar dot and the bell say why and how to fix it (a missing key, a plugin that isn't installed, the box not answering). **System → Diagnostics** lists all of them.

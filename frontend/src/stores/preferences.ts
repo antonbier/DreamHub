@@ -29,6 +29,9 @@ function applyTheme(appearance: Appearance) {
         : 'light'
       : appearance
   document.documentElement.setAttribute('data-theme', resolved)
+  // The browser's / installed app's title bar follows along (index.html
+  // ships the dark value). Same values as --dh-bg in style.css.
+  document.querySelector('meta[name="theme-color"]')?.setAttribute('content', resolved === 'light' ? '#f2f3f5' : '#0f1215')
 }
 
 let systemThemeListenerAttached = false

@@ -5,10 +5,12 @@
   where "the box is unreachable" first becomes visible.
 
   Gated by auth (src/composables/useAuth.ts): while whoami hasn't answered
-  yet, nothing renders; once it has, either LoginScreen or the shell does.
+  yet, nothing renders; once it has, either UnreachableScreen (no answer at
+  all), LoginScreen (a 401) or the shell does.
 -->
 <template>
   <div v-if="!authState.checked" class="h-screen w-screen bg-bg" />
+  <UnreachableScreen v-else-if="authState.unreachable" :check="check" @retry="onRetried" />
   <LoginScreen v-else-if="!authState.authenticated" @success="onAuthenticated" />
   <div v-else class="flex h-screen w-screen overflow-hidden bg-bg text-text">
     <AppSidebar :sections="navigation.navigation?.sections ?? fallbackSections" />
@@ -30,6 +32,7 @@ import AppSidebar from './components/AppSidebar.vue'
 import AppTopBar from './components/AppTopBar.vue'
 import StatusStrip from './components/StatusStrip.vue'
 import LoginScreen from './components/LoginScreen.vue'
+import UnreachableScreen from './components/UnreachableScreen.vue'
 import RemotePanel from './components/control/RemotePanel.vue'
 import { usePreferencesStore } from './stores/preferences'
 import { useNavigationStore } from './stores/navigation'
@@ -65,6 +68,10 @@ onMounted(async () => {
 
 function onAuthenticated() {
   loadShellData()
+}
+
+function onRetried() {
+  if (authState.authenticated) loadShellData()
 }
 
 // A 401 on some later request (e.g. the admin changed the password

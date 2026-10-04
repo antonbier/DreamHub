@@ -39,6 +39,10 @@ export const authState = reactive({
   // not) — lets the shell tell "still deciding" apart from "log in".
   checked: false,
   authenticated: false,
+  // True when that check failed for another reason than a 401 — DreamHub
+  // (or the box it runs on) didn't answer. App.vue shows "can't reach"
+  // with a retry instead of a login form that couldn't work either.
+  unreachable: false,
 })
 
 export function authHeader(): string | undefined {

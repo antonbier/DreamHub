@@ -756,6 +756,15 @@
         "push_invalid": "The server or topic is invalid.",
         "push_failed": "The ntfy server couldn’t be reached or refused it."
       }
+    },
+    "install": {
+      "title": "DreamHub as an app",
+      "button": "Install DreamHub",
+      "standalone": "DreamHub is running as an installed app here.",
+      "prompt": "Put DreamHub on your home screen or desktop: it opens in its own window, without the browser's address bar.",
+      "ios": "In Safari, tap Share, then “Add to Home Screen”. DreamHub then opens full screen like an app.",
+      "needsHttps": "Browsers only offer to install an app over HTTPS, and DreamHub is open over plain http here. On an iPhone or iPad, Share → “Add to Home Screen” works anyway. For Android and desktops, the user guide shows how to put DreamHub behind HTTPS.",
+      "browserMenu": "Use your browser's menu: “Install app” or “Add to home screen”."
     }
   },
   "notFound": {
@@ -967,5 +976,11 @@
       "imdb": "IMDb rating {value} out of 10, {votes} votes",
       "metascore": "Metacritic Metascore: {value} out of 100"
     }
+  },
+  "unreachable": {
+    "title": "Can't reach DreamHub",
+    "body": "The Dreambox isn't answering. Is it switched on (not in deep standby), and is this device on the same network?",
+    "retry": "Try again",
+    "retrying": "Trying…"
   }
 }

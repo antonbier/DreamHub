@@ -39,6 +39,15 @@ func HandlerFS(fsys fs.FS) http.Handler {
 		if p == "" {
 			p = "index.html"
 		}
+		switch p {
+		case "sw.js", "index.html":
+			// The service worker and the shell must be revalidated on every
+			// load, or an installed app would keep running an old build.
+			w.Header().Set("Cache-Control", "no-cache")
+		case "manifest.webmanifest":
+			// Not in Go's built-in MIME table; the box has no /etc/mime.types.
+			w.Header().Set("Content-Type", "application/manifest+json")
+		}
 		looksLikeRoute := !strings.Contains(path.Base(p), ".")
 		if looksLikeRoute {
 			if _, err := fs.Stat(fsys, p); err != nil {
@@ -46,6 +55,7 @@ func HandlerFS(fsys fs.FS) http.Handler {
 				*r2 = *r
 				r2.URL.Path = "/"
 				r = r2
+				w.Header().Set("Cache-Control", "no-cache")
 			}
 		}
 		fileServer.ServeHTTP(w, r)

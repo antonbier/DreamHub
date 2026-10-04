@@ -45,6 +45,7 @@
              Authentication rather than coming from the section loop. -->
         <ApiTokensPanel v-if="section.id === 'auth'" />
         <PushPanel v-if="section.id === 'push'" />
+        <InstallPanel v-if="section.id === 'general'" />
       </template>
     </div>
   </div>
@@ -57,6 +58,7 @@ import { useI18n } from 'vue-i18n'
 import SettingsSectionCard from '@/components/settings/SettingsSectionCard.vue'
 import ApiTokensPanel from '@/components/settings/ApiTokensPanel.vue'
 import PushPanel from '@/components/settings/PushPanel.vue'
+import InstallPanel from '@/components/settings/InstallPanel.vue'
 import { useSettingsForm } from '@/composables/useSettingsForm'
 import { useSettingsText } from '@/composables/useSettingsText'
 

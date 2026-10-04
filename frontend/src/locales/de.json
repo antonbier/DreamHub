@@ -756,6 +756,15 @@
         "push_invalid": "Server oder Thema ist ungültig.",
         "push_failed": "Der ntfy-Server war nicht erreichbar oder hat abgelehnt."
       }
+    },
+    "install": {
+      "title": "DreamHub als App",
+      "button": "DreamHub installieren",
+      "standalone": "DreamHub läuft hier als installierte App.",
+      "prompt": "Leg DreamHub auf den Startbildschirm oder Desktop: Es öffnet sich dann im eigenen Fenster, ohne Adressleiste des Browsers.",
+      "ios": "Tippe in Safari auf „Teilen“ und dann auf „Zum Home-Bildschirm“. DreamHub öffnet sich dann im Vollbild wie eine App.",
+      "needsHttps": "Browser bieten das Installieren nur über HTTPS an, und DreamHub ist hier über einfaches http geöffnet. Auf iPhone und iPad klappt „Teilen“ → „Zum Home-Bildschirm“ trotzdem. Für Android und Computer zeigt das Benutzerhandbuch, wie DreamHub über HTTPS erreichbar wird.",
+      "browserMenu": "Nutze das Menü deines Browsers: „App installieren“ oder „Zum Startbildschirm hinzufügen“."
     }
   },
   "notFound": {
@@ -967,5 +976,11 @@
       "imdb": "IMDb-Bewertung {value} von 10, {votes} Stimmen",
       "metascore": "Metascore von Metacritic: {value} von 100"
     }
+  },
+  "unreachable": {
+    "title": "DreamHub ist nicht erreichbar",
+    "body": "Die Dreambox antwortet nicht. Ist sie eingeschaltet (nicht im Deep-Standby), und ist dieses Gerät im selben Netzwerk?",
+    "retry": "Erneut versuchen",
+    "retrying": "Versuche…"
   }
 }

@@ -16,10 +16,12 @@ export function useAuth() {
     try {
       const who = await api.whoami()
       authState.authenticated = true
+      authState.unreachable = false
       username.value = who.username
       role.value = who.role
-    } catch {
+    } catch (err) {
       authState.authenticated = false
+      authState.unreachable = !(err instanceof ApiError && err.status === 401)
     } finally {
       authState.checked = true
     }

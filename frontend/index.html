@@ -6,6 +6,17 @@
     <!-- No external requests at runtime (PRINCIPLES.md): fonts, icons and
          scripts are all bundled below, nothing loads from a CDN. -->
     <title>DreamHub</title>
+    <!-- Installable app (manifest + public/sw.js, registered by src/lib/pwa.ts).
+         The apple-* tags are what iOS reads for "Add to Home Screen", which
+         works even over plain http. -->
+    <link rel="manifest" href="/manifest.webmanifest" />
+    <link rel="icon" href="/icons/icon.svg" type="image/svg+xml" />
+    <link rel="apple-touch-icon" href="/icons/apple-touch-icon.png" />
+    <meta name="theme-color" content="#0f1215" />
+    <meta name="mobile-web-app-capable" content="yes" />
+    <meta name="apple-mobile-web-app-capable" content="yes" />
+    <meta name="apple-mobile-web-app-status-bar-style" content="black" />
+    <meta name="apple-mobile-web-app-title" content="DreamHub" />
   </head>
   <body>
     <div id="app"></div>

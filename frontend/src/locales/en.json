@@ -488,7 +488,22 @@
         "timers": "1 timer | {n} timers",
         "autoTimers": "1 AutoTimer | {n} AutoTimers"
       }
-    }
+    },
+    "regenerate": "Generate again",
+    "generatedAt": "Generated {time} · {bouquet}",
+    "todayAt": "today, {time}",
+    "today": "Today",
+    "tomorrow": "Tomorrow",
+    "now": "On now",
+    "minutes": "{n} min",
+    "kind": {
+      "movie": "Film",
+      "tv": "Series"
+    },
+    "openDetails": "Details for “{title}”",
+    "close": "Close",
+    "why": "Why it was picked",
+    "noDetails": "The data sources don’t know this title — only the EPG’s details are available."
   },
   "diagnostics": {
     "title": "Diagnostics",

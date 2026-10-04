@@ -366,6 +366,16 @@ export interface Recommendation {
   start: number // Unix seconds, UTC
   duration: number // seconds
   reason: string
+  hasTimer?: boolean // a timer covers it now
+}
+
+// The last generated set (GET /api/v1/discovery/recommendations), kept
+// server-side per user.
+export interface SavedPicks {
+  bouquet: string
+  generatedAt: number // Unix seconds
+  taste?: TasteCounts
+  recommendations: Recommendation[]
 }
 
 // GET /api/v1/discovery/status and the same fields on the POST response.

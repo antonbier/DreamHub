@@ -488,7 +488,22 @@
         "timers": "1 timer | {n} timer",
         "autoTimers": "1 AutoTimer | {n} AutoTimer"
       }
-    }
+    },
+    "regenerate": "Genera di nuovo",
+    "generatedAt": "Generati {time} · {bouquet}",
+    "todayAt": "oggi, {time}",
+    "today": "Oggi",
+    "tomorrow": "Domani",
+    "now": "In onda",
+    "minutes": "{n} min",
+    "kind": {
+      "movie": "Film",
+      "tv": "Serie"
+    },
+    "openDetails": "Dettagli di «{title}»",
+    "close": "Chiudi",
+    "why": "Perché è consigliato",
+    "noDetails": "Le fonti di dati non conoscono questo titolo: ci sono solo i dati dell’EPG."
   },
   "diagnostics": {
     "title": "Diagnostica",

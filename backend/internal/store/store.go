@@ -157,6 +157,18 @@ var migrations = []string{
 		fetched_at INTEGER NOT NULL
 	);
 	`,
+	`
+	-- DiscoveryHub's last recommendations per user (internal/hubs/
+	-- discovery_saved.go): kept so the day's picks are still there after
+	-- leaving the page, a reload, or on another device — generating costs
+	-- an AI call, so it shouldn't have to be repeated. data is the JSON
+	-- answer; replaced on every new generation.
+	CREATE TABLE discovery_picks (
+		user_id      INTEGER PRIMARY KEY REFERENCES users(id) ON DELETE CASCADE,
+		generated_at INTEGER NOT NULL,
+		data         TEXT NOT NULL
+	);
+	`,
 }
 
 func (s *Store) migrate(ctx context.Context) error {

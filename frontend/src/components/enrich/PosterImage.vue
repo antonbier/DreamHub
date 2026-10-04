@@ -9,7 +9,11 @@
   size, so rows don't jump when the picture arrives.
 -->
 <template>
-  <span class="block shrink-0 overflow-hidden rounded-sm bg-field" :style="{ width: `${width}px`, height: `${height}px` }">
+  <span
+    class="block shrink-0 overflow-hidden rounded-sm bg-field"
+    :class="{ 'h-full w-full': fill }"
+    :style="fill ? undefined : { width: `${width}px`, height: `${height}px` }"
+  >
     <img v-if="src" :src="src" :alt="alt" class="h-full w-full object-cover" loading="lazy" />
   </span>
 </template>
@@ -49,6 +53,8 @@ const props = withDefaults(
     width?: number
     height?: number
     alt?: string
+    // Fill the parent instead of a fixed size (a backdrop header).
+    fill?: boolean
   }>(),
   { size: 'w92', width: 36, height: 52, alt: '' },
 )

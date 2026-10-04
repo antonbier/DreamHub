@@ -44,6 +44,7 @@ import type {
   Notification,
   Plan,
   Recommendation,
+  SavedPicks,
   SearchResult,
   SeriesDetail,
   TasteCounts,
@@ -255,8 +256,10 @@ export const api = {
   discovery: {
     status: () => request<DiscoveryStatus>('GET', '/api/v1/discovery/status'),
     taste: () => request<TasteProfile>('GET', '/api/v1/discovery/taste'),
+    // The last generated picks, without a new AI call.
+    saved: () => request<{ saved: SavedPicks | null }>('GET', '/api/v1/discovery/recommendations'),
     generate: (bouquet: string, useTaste: boolean) =>
-      request<DiscoveryStatus & { recommendations: Recommendation[]; taste: TasteCounts }>(
+      request<DiscoveryStatus & { recommendations: Recommendation[]; taste: TasteCounts; bouquet: string; generatedAt: number }>(
         'POST',
         '/api/v1/discovery/recommendations',
         { bouquet, useTaste },

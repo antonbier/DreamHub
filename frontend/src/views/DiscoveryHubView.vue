@@ -7,6 +7,12 @@
   here calls the AI automatically — every real API call costs money, so
   generating is always an explicit click, never on page load.
 
+  The last generated set is kept server-side (GET
+  /api/v1/discovery/recommendations), so leaving the page or reloading
+  shows it again without a new AI call; ended broadcasts drop out. Picks
+  are cards grouped by day; a card opens the details (RecommendationDetail:
+  picture, the data sources' info, why it was picked, Create timer).
+
   "Use my taste" sends what the user records, follows and has planned
   (titles only) along, so the picks fit them. It's the user's own viewing
   data going to an external provider, so it's an explicit, remembered
@@ -48,10 +54,13 @@
           :disabled="generating || !selectedBouquet || budgetExhausted"
           @click="generate"
         >
-          {{ generating ? t('discovery.generating') : t('discovery.generate') }}
+          {{ generating ? t('discovery.generating') : hasGenerated ? t('discovery.regenerate') : t('discovery.generate') }}
         </button>
         <span v-if="budget" class="text-[12.5px] text-muted">{{ t('discovery.budget', { used: budget.usedToday, limit: budget.dailyLimit }) }}</span>
       </div>
+      <p v-if="generatedAt" class="mt-2 text-[12.5px] text-faint">
+        {{ t('discovery.generatedAt', { time: formatGenerated(generatedAt), bouquet: generatedBouquetName }) }}
+      </p>
 
       <div class="mt-3 flex flex-wrap items-center gap-x-3 gap-y-1">
         <label class="flex cursor-pointer items-center gap-2 text-[13.5px] text-text">
@@ -87,60 +96,56 @@
       <p v-else-if="hasGenerated && recommendations.length === 0 && !generating" class="mt-5 text-[14px] text-muted">
         {{ t('discovery.noPicks') }}
       </p>
-      <ul v-else class="mt-5 flex flex-col gap-3">
-        <li v-for="(rec, i) in recommendations" :key="i" class="rounded border border-line bg-tile p-4">
-          <div class="flex items-start justify-between gap-3">
-            <div class="min-w-0">
-              <span class="block truncate text-[14.5px] font-semibold text-text">{{ rec.title }}</span>
-              <span class="block truncate text-[12.5px] text-muted">{{ rec.serviceName }} · {{ formatTime(rec.start) }}</span>
-              <span class="mt-1 block text-[13px] text-text">{{ rec.reason }}</span>
-              <EnrichDetails class="mt-3" :info="enrich.info(rec.title)" :shown-title="rec.title" :poster-width="60" />
-            </div>
-            <button
-              v-if="!timerState[i] || timerState[i]?.status === 'error'"
-              type="button"
-              class="shrink-0 rounded border border-line px-3 py-1.5 text-[13px] text-text hover:bg-field"
-              :disabled="!canCreateTimers"
-              :title="canCreateTimers ? undefined : t('discovery.timerHubUnavailable')"
-              @click="previewTimer(i, rec)"
-            >
-              {{ t('discovery.createTimer') }}
-            </button>
-            <span v-else-if="timerState[i]?.status === 'created'" class="shrink-0 text-[13px] text-ok">{{ t('discovery.created') }}</span>
-          </div>
-
-          <div v-if="timerState[i]?.status === 'previewing'" class="mt-3 rounded border border-line-soft bg-bg p-3">
-            <ul v-if="(timerState[i]?.plan?.warnings.length ?? 0) > 0" class="mb-2 flex flex-col gap-1 text-[12.5px] text-warn">
-              <li v-for="(w, wi) in timerState[i]?.plan?.warnings" :key="wi">{{ describe(w) }}</li>
-            </ul>
-            <div class="flex gap-2">
-              <button type="button" class="rounded bg-accent px-3 py-1.5 text-[13px] font-semibold text-bg" @click="confirmTimer(i)">
-                {{ t('discovery.confirm') }}
-              </button>
-              <button type="button" class="rounded border border-line px-3 py-1.5 text-[13px] text-text hover:bg-field" @click="cancelTimer(i)">
-                {{ t('discovery.cancel') }}
-              </button>
-            </div>
-          </div>
-          <p v-else-if="timerState[i]?.status === 'error'" class="mt-2 text-[12.5px] text-warn">{{ timerState[i]?.error }}</p>
-        </li>
-      </ul>
+      <template v-else>
+        <section v-for="g in groups" :key="g.key" class="mt-6">
+          <h2 class="text-[15.5px] font-semibold text-text">{{ g.label }}</h2>
+          <ul class="mt-2 grid grid-cols-2 gap-3 below-md:grid-cols-1">
+            <li v-for="rec in g.items" :key="keyOf(rec)">
+              <RecommendationCard
+                :rec="rec"
+                :info="enrich.info(rec.title)"
+                :time="formatClock(rec.start)"
+                :now="nowSec"
+                :has-timer="hasTimer(rec)"
+                @open="openKey = keyOf(rec)"
+              />
+            </li>
+          </ul>
+        </section>
+      </template>
     </template>
+
+    <RecommendationDetail
+      v-if="opened"
+      :rec="opened"
+      :info="enrich.info(opened.title)"
+      :when="formatTime(opened.start)"
+      :now="nowSec"
+      :has-timer="hasTimer(opened)"
+      :state="timerState[keyOf(opened)]"
+      :can-create-timers="canCreateTimers"
+      @close="openKey = ''"
+      @preview-timer="previewTimer(opened)"
+      @confirm-timer="confirmTimer(opened)"
+      @cancel-timer="delete timerState[keyOf(opened)]"
+    />
   </div>
 </template>
 
 <script setup lang="ts">
-import { computed, onMounted, reactive, ref, watch } from 'vue'
+import { computed, onBeforeUnmount, onMounted, reactive, ref, watch } from 'vue'
 import { useI18n } from 'vue-i18n'
 import { api, ApiError } from '@/api/client'
 import Icon from '@/components/Icon.vue'
-import EnrichDetails from '@/components/enrich/EnrichDetails.vue'
+import RecommendationCard from '@/components/discovery/RecommendationCard.vue'
+import RecommendationDetail from '@/components/discovery/RecommendationDetail.vue'
+import type { TimerState } from '@/components/discovery/types'
 import { useEnrichStore } from '@/stores/enrich'
 import { useNavigationStore } from '@/stores/navigation'
 import { useProblem } from '@/composables/useProblem'
 import { useDisplayTimeZone } from '@/composables/useDisplayTimeZone'
 import { usePlanError } from '@/composables/usePlanError'
-import type { Bouquet, DiscoveryStatus, Plan, Recommendation, TasteCounts, TasteProfile } from '@/api/types'
+import type { Bouquet, DiscoveryStatus, Recommendation, TasteCounts, TasteProfile } from '@/api/types'
 
 const { t, locale } = useI18n()
 const navigation = useNavigationStore()
@@ -216,8 +221,72 @@ const usedTaste = computed(() => {
   return parts.length ? t('discovery.taste.considered', { list: parts.join(', ') }) : ''
 })
 
-type TimerState = { status: 'previewing' | 'created' | 'error'; plan?: Plan; error?: string }
-const timerState = reactive<Record<number, TimerState>>({})
+// Timer state per recommendation, by channel and start (stable across a
+// reload of the saved set, unlike a list index).
+const keyOf = (r: Recommendation) => `${r.serviceReference}@${r.start}`
+const timerState = reactive<Record<string, TimerState>>({})
+const hasTimer = (r: Recommendation) => !!r.hasTimer || timerState[keyOf(r)]?.status === 'created'
+
+// The detail dialog: which recommendation is open.
+const openKey = ref('')
+const opened = computed(() => recommendations.value.find((r) => keyOf(r) === openKey.value) ?? null)
+
+// When the shown set was generated, and from which bouquet.
+const generatedAt = ref(0)
+const generatedBouquet = ref('')
+const generatedBouquetName = computed(
+  () => bouquets.value.find((b) => b.serviceReference === generatedBouquet.value)?.serviceName ?? '',
+)
+
+// "Now" for the on-air marker, ticking once a minute.
+const nowSec = ref(Math.floor(Date.now() / 1000))
+const ticker = setInterval(() => (nowSec.value = Math.floor(Date.now() / 1000)), 60_000)
+onBeforeUnmount(() => clearInterval(ticker))
+
+// Day of a Unix time in the display zone, as YYYY-MM-DD (for grouping).
+function dayKey(unixSeconds: number): string {
+  return new Intl.DateTimeFormat('en-CA', { year: 'numeric', month: '2-digit', day: '2-digit', timeZone: timeZone.value }).format(unixSeconds * 1000)
+}
+// Picks grouped by day ("Today", "Tomorrow", else the date), in airing order.
+const groups = computed(() => {
+  const today = dayKey(nowSec.value)
+  const tomorrow = dayKey(nowSec.value + 86400)
+  const sorted = [...recommendations.value].sort((a, b) => a.start - b.start)
+  const out: { key: string; label: string; items: Recommendation[] }[] = []
+  for (const r of sorted) {
+    const k = dayKey(r.start)
+    let g = out.find((x) => x.key === k)
+    if (!g) {
+      const label =
+        k === today
+          ? t('discovery.today')
+          : k === tomorrow
+            ? t('discovery.tomorrow')
+            : new Intl.DateTimeFormat(locale.value, { weekday: 'long', day: 'numeric', month: 'long', timeZone: timeZone.value }).format(r.start * 1000)
+      g = { key: k, label, items: [] }
+      out.push(g)
+    }
+    g.items.push(r)
+  }
+  return out
+})
+
+function formatClock(unixSeconds: number): string {
+  return new Intl.DateTimeFormat(locale.value, { timeStyle: 'short', timeZone: timeZone.value }).format(unixSeconds * 1000)
+}
+
+// "today, 07:15" / a full date for an older set.
+function formatGenerated(unixSeconds: number): string {
+  if (dayKey(unixSeconds) === dayKey(nowSec.value)) return t('discovery.todayAt', { time: formatClock(unixSeconds) })
+  return new Intl.DateTimeFormat(locale.value, { dateStyle: 'medium', timeStyle: 'short', timeZone: timeZone.value }).format(unixSeconds * 1000)
+}
+
+function showPicks(recs: Recommendation[], at: number, bouquet: string) {
+  recommendations.value = recs
+  generatedAt.value = at
+  generatedBouquet.value = bouquet
+  hasGenerated.value = true
+}
 
 function translateOrRaw(key: string, raw: string): string {
   const result = t(key)
@@ -236,11 +305,11 @@ async function generate() {
   genError.value = ''
   try {
     const res = await api.discovery.generate(selectedBouquet.value, useTaste.value)
-    recommendations.value = res.recommendations
+    Object.keys(timerState).forEach((k) => delete timerState[k])
+    openKey.value = ''
+    showPicks(res.recommendations, res.generatedAt, res.bouquet)
     lastTaste.value = res.taste ?? null
     budget.value = { usedToday: res.usedToday, dailyLimit: res.dailyLimit }
-    hasGenerated.value = true
-    Object.keys(timerState).forEach((k) => delete timerState[Number(k)])
   } catch (err) {
     const code = err instanceof ApiError ? err.code : 'network_error'
     genError.value = translateOrRaw(`error.discovery.${code}`, code)
@@ -254,7 +323,8 @@ async function generate() {
   }
 }
 
-async function previewTimer(i: number, rec: Recommendation) {
+async function previewTimer(rec: Recommendation) {
+  const k = keyOf(rec)
   try {
     const res = await api.timerPlan({
       serviceReference: rec.serviceReference,
@@ -264,25 +334,23 @@ async function previewTimer(i: number, rec: Recommendation) {
       begin: rec.start,
       end: rec.start + rec.duration,
     })
-    timerState[i] = { status: 'previewing', plan: res.plan }
+    timerState[k] = { status: 'previewing', plan: res.plan }
   } catch (err) {
-    timerState[i] = { status: 'error', error: planErrorMessage(err) }
+    timerState[k] = { status: 'error', error: planErrorMessage(err) }
   }
 }
 
-async function confirmTimer(i: number) {
-  const plan = timerState[i]?.plan
-  if (!plan) return
+async function confirmTimer(rec: Recommendation) {
+  const k = keyOf(rec)
+  const st = timerState[k]
+  if (!st?.plan) return
+  st.busy = true
   try {
-    await api.plans.apply(plan.id)
-    timerState[i] = { status: 'created' }
+    await api.plans.apply(st.plan.id)
+    timerState[k] = { status: 'created' }
   } catch (err) {
-    timerState[i] = { status: 'error', error: planErrorMessage(err) }
+    timerState[k] = { status: 'previewing', plan: st.plan, error: planErrorMessage(err) }
   }
-}
-
-function cancelTimer(i: number) {
-  delete timerState[i]
 }
 
 async function loadStatus() {
@@ -294,11 +362,17 @@ async function loadStatus() {
 }
 
 onMounted(async () => {
-  await loadStatus()
+  const [, saved] = await Promise.all([loadStatus(), api.discovery.saved().catch(() => null)])
+  if (saved?.saved?.recommendations.length) {
+    showPicks(saved.saved.recommendations, saved.saved.generatedAt, saved.saved.bouquet)
+    lastTaste.value = saved.saved.taste ?? null
+  }
   try {
     const res = await api.guide.bouquets()
     bouquets.value = res.bouquets
-    if (res.bouquets.length > 0) selectedBouquet.value = res.bouquets[0].serviceReference
+    const keep = res.bouquets.find((b) => b.serviceReference === generatedBouquet.value)
+    if (keep) selectedBouquet.value = keep.serviceReference
+    else if (res.bouquets.length > 0) selectedBouquet.value = res.bouquets[0].serviceReference
   } catch {
     // Bouquet list unavailable — the generate button stays disabled
     // (selectedBouquet stays empty), no separate error banner needed.

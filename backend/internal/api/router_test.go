@@ -1174,3 +1174,37 @@ func TestSeries_EpisodeGuide(t *testing.T) {
 		t.Errorf("TVmaze off: %s", b)
 	}
 }
+
+func TestDiscovery_PicksAreKept(t *testing.T) {
+	e := newEnv(t)
+	_, b := e.do(t, "GET", "/api/v1/discovery/recommendations", "", nil)
+	if !strings.Contains(string(b), `"saved":null`) {
+		t.Fatalf("nothing generated yet: %s", b)
+	}
+	e.do(t, "PATCH", "/api/v1/settings", `{"values":{"ai.openai.apiKey":"sk-test-1234"}}`, nil)
+	bRef := `1:7:1:0:0:0:0:0:0:0:FROM BOUQUET "userbouquet.favourites.tv" ORDER BY bouquet`
+	_, gen := e.do(t, "POST", "/api/v1/discovery/recommendations", `{"bouquet":`+strconv.Quote(bRef)+`}`, nil)
+
+	resp, b := e.do(t, "GET", "/api/v1/discovery/recommendations", "", nil)
+	var out struct {
+		Saved *struct {
+			Bouquet         string `json:"bouquet"`
+			GeneratedAt     int64  `json:"generatedAt"`
+			Recommendations []struct {
+				Title    string `json:"title"`
+				HasTimer *bool  `json:"hasTimer"`
+			} `json:"recommendations"`
+		} `json:"saved"`
+	}
+	json.Unmarshal(b, &out)
+	if resp.StatusCode != http.StatusOK || out.Saved == nil || out.Saved.Bouquet != bRef || out.Saved.GeneratedAt != fixedNow.Unix() || len(out.Saved.Recommendations) == 0 {
+		t.Fatalf("the last picks come back without a new AI call: %s (generated: %s)", b, gen)
+	}
+	if out.Saved.Recommendations[0].HasTimer == nil {
+		t.Error("each pick says whether a timer covers it")
+	}
+	_, st := e.do(t, "GET", "/api/v1/discovery/status", "", nil)
+	if !strings.Contains(string(st), `"usedToday":1`) {
+		t.Errorf("reading the saved picks costs nothing: %s", st)
+	}
+}

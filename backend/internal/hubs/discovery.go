@@ -37,6 +37,7 @@ type Discovery struct {
 func (h *Discovery) Mount(mux *http.ServeMux) {
 	mux.HandleFunc("GET /api/v1/discovery/status", h.status)
 	mux.HandleFunc("GET /api/v1/discovery/taste", h.getTaste)
+	mux.HandleFunc("GET /api/v1/discovery/recommendations", h.saved)
 	mux.HandleFunc("POST /api/v1/discovery/recommendations", h.generate)
 }
 
@@ -138,5 +139,14 @@ func (h *Discovery) generate(w http.ResponseWriter, r *http.Request) {
 		httpx.WriteError(w, r, http.StatusBadGateway, "ai_unavailable", "could not get recommendations")
 		return
 	}
-	httpx.WriteJSON(w, http.StatusOK, map[string]any{"recommendations": recs, "usedToday": used, "dailyLimit": limit, "taste": tasteCounts(taste)})
+	counts := tasteCounts(taste)
+	saved := savedPicks{Bouquet: req.Bouquet, GeneratedAt: now.Unix(), Recommendations: recs}
+	if req.UseTaste {
+		saved.Taste = &counts
+	}
+	h.savePicks(ctx, user.ID, saved)
+	httpx.WriteJSON(w, http.StatusOK, map[string]any{
+		"recommendations": h.views(ctx, recs), "usedToday": used, "dailyLimit": limit, "taste": counts,
+		"bouquet": req.Bouquet, "generatedAt": saved.GeneratedAt,
+	})
 }

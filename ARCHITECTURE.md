@@ -438,7 +438,7 @@ Confirmed present: `curl`, `wget`, `python` (2.7), `tar`, `unzip`, `sed`, `awk`.
 
 DreamHub reads `media_cache` read-only (`internal/dmi`) as its **first** enrichment source; with the TMDB ID from there, TMDB is only asked for the poster, by ID. Confirmed live: Tatort, FBI, Columbo, The Masked Singer, Twister come from DreamMediaInfo with overview, year and FSK, pictures from TMDB. Recordings mostly aren't in DreamMediaInfo, so they keep coming from TMDB — 34 of 35 top-folder recordings found, after reading the title out of Enigma2's default file name (`20230423 2115 - ORF1 HD - Angel Has Fallen.ts`) for the six recordings without a `.ts.meta` title.
 
-`match_cache` (EPG episode title → `S05E14`) is a candidate for marking which episode a broadcast is (and whether it's missing) — not used yet.
+`match_cache` (EPG episode title → `S05E14`) is read (`dmi.Reader.EpisodeCode`) to mark which episode a broadcast on a series page is, and whether it's missing — the key's exact spelling (whether the title part is the EPG short description as-is) is still to be confirmed on the box.
 
 ## Live write tests (2026-09-28, each reverted)
 

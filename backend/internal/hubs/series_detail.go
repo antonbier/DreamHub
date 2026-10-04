@@ -64,6 +64,13 @@ type seriesBroadcast struct {
 	// HasTimer is true when a timer on the same channel already covers the
 	// broadcast (SerienRecorder's own, or any other).
 	HasTimer bool `json:"hasTimer"`
+	// Season/Episode: which episode this is, when known — from the EPG
+	// itself or DreamMediaInfo (CodeSource); EpisodeStatus whether it's
+	// recorded, planned or missing (series_broadcast_episodes.go).
+	Season        int    `json:"season,omitempty"`
+	Episode       int    `json:"episode,omitempty"`
+	CodeSource    string `json:"codeSource,omitempty"`
+	EpisodeStatus string `json:"episodeStatus,omitempty"`
 }
 
 func (h *Series) detail(w http.ResponseWriter, r *http.Request) {
@@ -105,6 +112,7 @@ func (h *Series) detail(w http.ResponseWriter, r *http.Request) {
 		startYear = out.Info.StartYear()
 	}
 	out.Episodes = h.episodeGuide(r.Context(), *marker, startYear, out.Recordings, out.Upcoming)
+	h.annotateBroadcasts(r.Context(), *marker, out.Broadcasts, out.Recordings, out.Upcoming)
 	out.Cover = h.WC != nil && h.seriesCover(r.Context(), *marker) != ""
 	httpx.WriteJSON(w, http.StatusOK, out)
 }

@@ -89,13 +89,24 @@
           <p class="mt-0.5 text-[12.5px] text-faint">{{ t('series.detail.broadcastsHint') }}</p>
           <p v-if="isUnavailable('broadcasts')" class="mt-2 text-[13.5px] text-muted">{{ t('series.detail.partUnavailable') }}</p>
           <p v-else-if="detail.broadcasts.length === 0" class="mt-2 text-[13.5px] text-muted">{{ t('series.detail.broadcastsEmpty') }}</p>
+          <p v-if="missingAiring > 0" class="mt-2 flex items-center gap-1.5 text-[13.5px] text-warn" role="status">
+            <span class="h-1.5 w-1.5 rounded-full bg-warn" />{{ t('series.detail.missingAiring', { n: missingAiring }, missingAiring) }}
+          </p>
           <ul v-else class="mt-2 flex flex-col">
             <li v-for="b in detail.broadcasts" :key="b.serviceReference + b.start" class="border-b border-line-soft py-2 last:border-none">
               <div class="flex items-center gap-3">
                 <span class="w-36 shrink-0 whitespace-nowrap text-[12.5px] tabular-nums text-faint">{{ formatTime(b.start) }}</span>
                 <span class="min-w-0 flex-1">
-                  <span class="block truncate text-[14px] text-text">{{ b.title }}</span>
-                  <span class="block truncate text-[12.5px] text-muted">{{ b.serviceName }}</span>
+                  <span class="block truncate text-[14px] text-text">
+                    <span v-if="b.episode" class="me-1.5 font-mono text-[12.5px] text-muted">{{ t('series.detail.code', { season: b.season ?? 0, episode: b.episode }) }}</span>{{ b.title }}
+                  </span>
+                  <span class="block truncate text-[12.5px] text-muted">
+                    {{ b.serviceName }}
+                    <template v-if="b.episodeStatus === 'missing' || b.episodeStatus === 'recorded'">
+                      ·
+                      <span :class="b.episodeStatus === 'missing' ? 'text-warn' : 'text-ok'">{{ t(`series.detail.episodeStatus.${b.episodeStatus}`) }}</span>
+                    </template>
+                  </span>
                 </span>
                 <span v-if="b.hasTimer || record[key(b)]?.status === 'created'" class="flex shrink-0 items-center gap-1.5 text-[12.5px] text-ok">
                   <span class="h-1.5 w-1.5 rounded-full bg-ok" />{{ t('series.detail.hasTimer') }}
@@ -266,6 +277,15 @@ const canCreateTimers = computed(
 )
 type RecordState = { status: 'previewing' | 'created' | 'error'; plan?: Plan; busy?: boolean; error?: string }
 const record = reactive<Record<string, RecordState>>({})
+// Broadcasts of episodes the user hasn't recorded yet and nothing plans
+// (series_broadcast_episodes.go) — "this one is missing, and it airs".
+const missingAiring = computed(() => {
+  const seen = new Set<string>()
+  for (const b of detail.value?.broadcasts ?? []) {
+    if (b.episodeStatus === 'missing' && !b.hasTimer && record[key(b)]?.status !== 'created') seen.add(`${b.season}-${b.episode}`)
+  }
+  return seen.size
+})
 const key = (b: SeriesBroadcast) => `${b.serviceReference}@${b.start}`
 
 async function previewRecord(b: SeriesBroadcast) {

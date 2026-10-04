@@ -431,7 +431,12 @@
       "noSeason": "Senza stagione",
       "code": "S{season}E{episode}",
       "partUnavailable": "Non è stato possibile caricarlo adesso.",
-      "cast": "Con {names}"
+      "cast": "Con {names}",
+      "missingAiring": "1 episodio mancante va in onda a breve | {n} episodi mancanti vanno in onda a breve",
+      "episodeStatus": {
+        "missing": "ti manca",
+        "recorded": "già registrato"
+      }
     },
     "guide": {
       "title": "Episodi",

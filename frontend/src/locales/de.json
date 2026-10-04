@@ -431,7 +431,12 @@
       "noSeason": "Ohne Staffelangabe",
       "code": "S{season}E{episode}",
       "partUnavailable": "Konnte gerade nicht geladen werden.",
-      "cast": "Mit {names}"
+      "cast": "Mit {names}",
+      "missingAiring": "1 fehlende Folge läuft demnächst | {n} fehlende Folgen laufen demnächst",
+      "episodeStatus": {
+        "missing": "fehlt dir",
+        "recorded": "schon aufgenommen"
+      }
     },
     "guide": {
       "title": "Folgen",

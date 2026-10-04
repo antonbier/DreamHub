@@ -2,6 +2,7 @@ package hubs
 
 import (
 	"context"
+	"github.com/antonbier/DreamHub/backend/internal/dmi"
 	"net/http"
 	"strconv"
 	"strings"
@@ -34,7 +35,10 @@ type Series struct {
 	TVmaze   tvmaze.Client
 	Store    *store.Store
 	Settings *settings.Service
-	Now      func() time.Time
+	// DMI (optional, read-only) tells which episode a broadcast is
+	// (series_broadcast_episodes.go).
+	DMI *dmi.Reader
+	Now func() time.Time
 }
 
 func (h *Series) now() time.Time {

@@ -21,6 +21,9 @@ func fixture(t *testing.T) string {
 		`CREATE TABLE media_cache (id INTEGER PRIMARY KEY AUTOINCREMENT, key TEXT UNIQUE, title TEXT, type TEXT, data TEXT, ts INTEGER)`,
 		`INSERT INTO media_cache (key, title, type, data, ts) VALUES ('das familiengericht_tv', 'Das Familiengericht', 'tv', '{"_type":"tv","id":121796,"name":"Das Familiengericht","overview":" Gerichtsshow. ","genres":[{"id":10764,"name":"Reality"}],"first_air_date":"2001-05-02","vote_average":6.1,"fsk":"6"}', 1)`,
 		`INSERT INTO media_cache (key, title, type, data, ts) VALUES ('der bestseller - mord auf italienisch_2002_movie', 'Der Bestseller', 'movie', '{"_type":"movie","id":555,"title":"Der Bestseller - Mord auf Italienisch","release_date":"2002-11-08","fsk":"12","genres":[{"name":"Komödie"},{"name":"Krimi"}]}', 1)`,
+		`CREATE TABLE match_cache (key TEXT PRIMARY KEY, se TEXT)`,
+		`INSERT INTO match_cache (key, se) VALUES ('121796|Der verschwundene Vater', 'S03E14')`,
+		`INSERT INTO match_cache (key, se) VALUES ('121796|Kaputt', 'unbekannt')`,
 	} {
 		if _, err := db.Exec(q); err != nil {
 			t.Fatal(err)
@@ -55,5 +58,22 @@ func TestLookup_ColonSpelling(t *testing.T) {
 	db.Close()
 	if e, ok := (&Reader{Path: p}).Lookup(context.Background(), "FBI: Special Crime Unit", "tv"); !ok || e.TMDBID != 77 {
 		t.Errorf("a colon is stored as \" -\": %+v %v", e, ok)
+	}
+}
+
+func TestEpisodeCode(t *testing.T) {
+	r := &Reader{Path: fixture(t)}
+	ctx := context.Background()
+	if s, e, ok := r.EpisodeCode(ctx, 121796, "", "nichts", "der VERSCHWUNDENE vater"); !ok || s != 3 || e != 14 {
+		t.Errorf("found by a later candidate, ignoring case: %d %d %v", s, e, ok)
+	}
+	if _, _, ok := r.EpisodeCode(ctx, 121796, "Kaputt"); ok {
+		t.Error("a value that isn't a code is no match")
+	}
+	if _, _, ok := r.EpisodeCode(ctx, 1, "Der verschwundene Vater"); ok {
+		t.Error("another series' ID must not match")
+	}
+	if _, _, ok := (&Reader{Path: "/nonexistent.db"}).EpisodeCode(ctx, 121796, "Der verschwundene Vater"); ok {
+		t.Error("without the plugin, nothing")
 	}
 }

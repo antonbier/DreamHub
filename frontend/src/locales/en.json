@@ -431,7 +431,12 @@
       "noSeason": "No season given",
       "code": "S{season}E{episode}",
       "partUnavailable": "Couldn't be loaded right now.",
-      "cast": "With {names}"
+      "cast": "With {names}",
+      "missingAiring": "1 missing episode airs soon | {n} missing episodes air soon",
+      "episodeStatus": {
+        "missing": "missing",
+        "recorded": "already recorded"
+      }
     },
     "guide": {
       "title": "Episodes",

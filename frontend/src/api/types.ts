@@ -291,6 +291,11 @@ export interface SeriesBroadcast {
   serviceReference: string
   serviceName: string
   hasTimer: boolean
+  // Which episode this is, when known: from the EPG or DreamMediaInfo.
+  season?: number
+  episode?: number
+  codeSource?: 'epg' | 'dreammediainfo'
+  episodeStatus?: 'recorded' | 'planned' | 'missing' | 'unmatched'
 }
 
 // backend/internal/hubs/series_episodes.go: every episode TVmaze knows.

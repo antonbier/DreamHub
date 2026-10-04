@@ -18,6 +18,8 @@ import (
 	"database/sql"
 	"encoding/json"
 	"os"
+	"regexp"
+	"strconv"
 	"strings"
 	"time"
 
@@ -80,9 +82,7 @@ func (r *Reader) Lookup(ctx context.Context, title, kind string) (Entry, bool) {
 	if fi, err := os.Stat(p); err != nil || !fi.Mode().IsRegular() {
 		return Entry{}, false
 	}
-	// Read-only, and never blocking the plugin for long: it writes to this
-	// database itself.
-	db, err := sql.Open("sqlite", "file:"+p+"?mode=ro&_pragma=busy_timeout(1500)")
+	db, err := open(p)
 	if err != nil {
 		return Entry{}, false
 	}
@@ -129,6 +129,53 @@ func (r *Reader) Lookup(ctx context.Context, title, kind string) (Entry, bool) {
 	}
 	return Entry{}, false
 }
+
+// open opens the database read-only, never blocking the plugin for long:
+// it writes to this database itself.
+func open(p string) (*sql.DB, error) {
+	return sql.Open("sqlite", "file:"+p+"?mode=ro&_pragma=busy_timeout(1500)")
+}
+
+// EpisodeCode is which episode an EPG broadcast is, from DreamMediaInfo's
+// match_cache (key "<tmdb id>|<episode title>", value "S05E14": the EPG
+// episode titles it has already matched against TMDB's episode lists).
+// episodeTitles are the candidates to try in order (the EPG's short
+// description, the part of the title after the series name); the
+// comparison ignores case. ok=false when nothing matched.
+func (r *Reader) EpisodeCode(ctx context.Context, tmdbID int64, episodeTitles ...string) (season, episode int, ok bool) {
+	p := r.path()
+	if fi, err := os.Stat(p); err != nil || !fi.Mode().IsRegular() || tmdbID == 0 {
+		return 0, 0, false
+	}
+	db, err := open(p)
+	if err != nil {
+		return 0, 0, false
+	}
+	defer db.Close()
+	ctx, cancel := context.WithTimeout(ctx, 3*time.Second)
+	defer cancel()
+	for _, t := range episodeTitles {
+		t = strings.TrimSpace(t)
+		if t == "" {
+			continue
+		}
+		var se string
+		key := strconv.FormatInt(tmdbID, 10) + "|" + t
+		if db.QueryRowContext(ctx, "SELECT se FROM match_cache WHERE key = ? COLLATE NOCASE LIMIT 1", key).Scan(&se) != nil {
+			continue
+		}
+		if m := seCode.FindStringSubmatch(se); m != nil {
+			season, _ = strconv.Atoi(m[1])
+			episode, _ = strconv.Atoi(m[2])
+			if episode > 0 {
+				return season, episode, true
+			}
+		}
+	}
+	return 0, 0, false
+}
+
+var seCode = regexp.MustCompile(`(?i)^\s*S(\d{1,4})\s*E(\d{1,4})\s*$`)
 
 func parse(typ, data string) (Entry, bool) {
 	var d struct {

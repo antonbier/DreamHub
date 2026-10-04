@@ -3,6 +3,8 @@ package connector
 import (
 	"context"
 	"errors"
+	"net/url"
+	"regexp"
 
 	"github.com/antonbier/DreamHub/backend/internal/autotimer"
 	"github.com/antonbier/DreamHub/backend/internal/serienrecorder"
@@ -21,6 +23,7 @@ const (
 	IDTVmaze         = "tvmaze"
 	IDOMDb           = "omdb"
 	IDFanart         = "fanart"
+	IDPush           = "push"
 )
 
 // Setting keys owned by connectors.
@@ -39,10 +42,20 @@ const (
 	// Both optional, both only asked for a title's detail view.
 	KeyOMDbAPIKey   = "omdb.apiKey"
 	KeyFanartAPIKey = "fanart.apiKey"
-	KeyAIProvider   = "ai.provider"
-	KeyOpenAIAPIKey = "ai.openai.apiKey"
-	KeyOpenAIModel  = "ai.openai.model"
-	KeyAIDailyLimit = "ai.dailyLimit"
+	// Push notifications through ntfy (internal/push): where to publish,
+	// and which events go out.
+	KeyPushServer            = "push.server"
+	KeyPushTopic             = "push.topic"
+	KeyPushToken             = "push.token"
+	KeyPushRecordingStarted  = "push.events.recordingStarted"
+	KeyPushRecordingFinished = "push.events.recordingFinished"
+	KeyPushDisk              = "push.events.disk"
+	KeyPushConflict          = "push.events.conflict"
+	KeyPushMissingEpisode    = "push.events.missingEpisode"
+	KeyAIProvider            = "ai.provider"
+	KeyOpenAIAPIKey          = "ai.openai.apiKey"
+	KeyOpenAIModel           = "ai.openai.model"
+	KeyAIDailyLimit          = "ai.dailyLimit"
 
 	// Optional credentials for WebControl (and every plugin API behind it,
 	// e.g. SerienRecorder's). Only needed when the box enforces auth for
@@ -247,6 +260,53 @@ func (Fanart) Check(_ context.Context, v settings.Values) Report {
 	}
 	return Report{State: OK}
 }
+
+// --- Push (ntfy) -------------------------------------------------------------
+
+// Push sends notifications to the phone through ntfy. Optional: without a
+// topic nothing is sent.
+type Push struct{}
+
+func (Push) ID() string   { return IDPush }
+func (Push) Name() string { return "ntfy" }
+func (Push) Settings() []settings.Section {
+	return []settings.Section{{
+		ID:    "push",
+		Label: "settings.push",
+		Fields: []settings.Field{
+			{Key: KeyPushServer, Type: settings.TypeString, Scope: settings.ScopeGlobal, Label: "settings.push.server", Default: "https://ntfy.sh"},
+			{Key: KeyPushTopic, Type: settings.TypeString, Scope: settings.ScopeGlobal, Label: "settings.push.topic", Default: ""},
+			{Key: KeyPushToken, Type: settings.TypeSecret, Scope: settings.ScopeGlobal, Label: "settings.push.token"},
+			{Key: KeyPushRecordingFinished, Type: settings.TypeBool, Scope: settings.ScopeGlobal, Label: "settings.push.recordingFinished", Default: true},
+			{Key: KeyPushRecordingStarted, Type: settings.TypeBool, Scope: settings.ScopeGlobal, Label: "settings.push.recordingStarted", Default: false},
+			{Key: KeyPushMissingEpisode, Type: settings.TypeBool, Scope: settings.ScopeGlobal, Label: "settings.push.missingEpisode", Default: true},
+			{Key: KeyPushConflict, Type: settings.TypeBool, Scope: settings.ScopeGlobal, Label: "settings.push.conflict", Default: true},
+			{Key: KeyPushDisk, Type: settings.TypeBool, Scope: settings.ScopeGlobal, Label: "settings.push.disk", Default: true},
+		},
+		Check: func(v settings.Values) map[string]settings.FieldError {
+			errs := map[string]settings.FieldError{}
+			if u, err := url.Parse(v.String(KeyPushServer)); err != nil || (u.Scheme != "https" && u.Scheme != "http") || u.Host == "" {
+				errs[KeyPushServer] = settings.FieldError{Code: "push_server"}
+			}
+			if t := v.String(KeyPushTopic); t != "" && !pushTopic.MatchString(t) {
+				errs[KeyPushTopic] = settings.FieldError{Code: "push_topic"}
+			}
+			if len(errs) == 0 {
+				return nil
+			}
+			return errs
+		},
+	}}
+}
+func (Push) Check(_ context.Context, v settings.Values) Report {
+	if v.String(KeyPushTopic) == "" {
+		return notConfigured("ntfy", "push")
+	}
+	return Report{State: OK}
+}
+
+// pushTopic is ntfy's topic syntax.
+var pushTopic = regexp.MustCompile(`^[A-Za-z0-9_-]{1,64}$`)
 
 // --- OpenAI ---------------------------------------------------------------
 

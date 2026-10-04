@@ -23,6 +23,7 @@ import (
 	"github.com/antonbier/DreamHub/backend/internal/httpx"
 	"github.com/antonbier/DreamHub/backend/internal/hub"
 	"github.com/antonbier/DreamHub/backend/internal/plan"
+	"github.com/antonbier/DreamHub/backend/internal/push"
 	"github.com/antonbier/DreamHub/backend/internal/settings"
 	"github.com/antonbier/DreamHub/backend/internal/store"
 	"github.com/antonbier/DreamHub/backend/internal/webcontrol"
@@ -62,6 +63,8 @@ type Deps struct {
 	// Enrich adds posters, ratings and overviews to titles
 	// (internal/enrich); nil turns /api/v1/enrich off.
 	Enrich *enrich.Service
+	// Push (nil: not wired) sends the test notification.
+	Push   *push.Notifier
 	Mounts []Mount
 	// User is the current user. v1 has exactly one user (an admin); once
 	// profiles exist this comes from the authenticated request instead.
@@ -90,6 +93,7 @@ func NewRouter(d Deps) http.Handler {
 	protected.HandleFunc("GET /api/v1/enrich/image/{size}/{file}", handleEnrichImage(d))
 	protected.HandleFunc("GET /api/v1/enrich/extras", handleEnrichExtras(d))
 	protected.HandleFunc("GET /api/v1/enrich/logo", handleEnrichLogo(d))
+	protected.HandleFunc("POST /api/v1/push/test", handlePushTest(d))
 	protected.HandleFunc("GET /api/v1/dashboard/sources", handleViewSources(d))
 	protected.HandleFunc("POST /api/v1/dashboard/view", handleView(d))
 	protected.HandleFunc("GET /api/v1/search", handleSearch(d))

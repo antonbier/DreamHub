@@ -14,6 +14,8 @@ import (
 	fanartmock "github.com/antonbier/DreamHub/backend/internal/fanart/mock"
 	"github.com/antonbier/DreamHub/backend/internal/omdb"
 	omdbmock "github.com/antonbier/DreamHub/backend/internal/omdb/mock"
+	"github.com/antonbier/DreamHub/backend/internal/push"
+	pushmock "github.com/antonbier/DreamHub/backend/internal/push/mock"
 	"github.com/antonbier/DreamHub/backend/internal/recfs"
 	"github.com/antonbier/DreamHub/backend/internal/tmdb"
 	tmdbmock "github.com/antonbier/DreamHub/backend/internal/tmdb/mock"
@@ -61,6 +63,7 @@ func run(logger *slog.Logger, level *logging.Level) error {
 	var tvmazeClient tvmaze.Client
 	var omdbClient omdb.Client
 	var fanartClient fanart.Client
+	var pushClient push.Client
 	var dmiReader *dmi.Reader
 	var logs journald.Reader
 	switch cfg.Mode {
@@ -87,6 +90,7 @@ func run(logger *slog.Logger, level *logging.Level) error {
 		tvmazeClient = tvmaze.NewHTTPClient()
 		omdbClient = omdb.NewHTTPClient()
 		fanartClient = fanart.NewHTTPClient()
+		pushClient = push.NewHTTPClient()
 		dmiReader = &dmi.Reader{}
 		logs = journald.Exec{}
 		logger.Info("webcontrol client mode", "mode", "live", "url", cfg.WebControlURL, "deviceWrites", cfg.EnableDeviceWrites)
@@ -101,6 +105,7 @@ func run(logger *slog.Logger, level *logging.Level) error {
 		tvmazeClient = tvmazemock.New()
 		omdbClient = omdbmock.New()
 		fanartClient = fanartmock.New()
+		pushClient = pushmock.New()
 		logs = jmock.New()
 		logger.Info("webcontrol client mode", "mode", "mock")
 	}
@@ -114,6 +119,7 @@ func run(logger *slog.Logger, level *logging.Level) error {
 		TVmaze:       tvmazeClient,
 		OMDb:         omdbClient,
 		Fanart:       fanartClient,
+		Push:         pushClient,
 		DMI:          dmiReader,
 		RecordingsFS: recFS,
 		// Same switch as WebControl writes; mock mode always writes.
@@ -144,6 +150,9 @@ func run(logger *slog.Logger, level *logging.Level) error {
 	}
 
 	go a.Poller.Run(context.Background())
+	for _, job := range a.Background {
+		go job(context.Background())
+	}
 
 	logger.Info("dreamhub starting", "version", api.Version, "addr", cfg.ListenAddr, "dataDir", cfg.DataDir)
 	return http.ListenAndServe(cfg.ListenAddr, a.Handler)

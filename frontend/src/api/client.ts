@@ -275,6 +275,10 @@ export const api = {
         { bouquet, useTaste },
       ),
   },
+  push: {
+    // A test notification with the saved settings.
+    test: () => request<{ sent: boolean }>('POST', '/api/v1/push/test'),
+  },
   enrich: {
     // Read-only despite the POST (a batch of titles).
     lookup: (items: EnrichQuery[]) =>

@@ -27,6 +27,7 @@
              not a single setting — so this is placed by hand right after
              Authentication rather than coming from the section loop. -->
         <ApiTokensPanel v-if="section.id === 'auth'" />
+        <PushPanel v-if="section.id === 'push'" />
       </template>
     </div>
   </div>
@@ -38,6 +39,7 @@ import { RouterLink } from 'vue-router'
 import { useI18n } from 'vue-i18n'
 import SettingsSectionCard from '@/components/settings/SettingsSectionCard.vue'
 import ApiTokensPanel from '@/components/settings/ApiTokensPanel.vue'
+import PushPanel from '@/components/settings/PushPanel.vue'
 import { useSettingsForm } from '@/composables/useSettingsForm'
 
 const { t } = useI18n()

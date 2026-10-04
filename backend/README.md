@@ -78,6 +78,7 @@ MediaHub file changes are applied only when DreamHub runs on the box and device 
 | PUT | `/api/v1/dashboard` | saves the layout directly (no preview/apply — DreamHub's own state, not a device change; still recorded in the change log). Array order is display order. `400 invalid_tile` for an unknown type, a duplicate, or a width outside 1–4 |
 | POST | `/api/v1/enrich/lookup` | `{items: [{title, kind?}]}` (≤ 40) → `{enabled, results: [Info \| null]}` in the same order: poster/backdrop path, rating, votes, genres, overview, year from TMDB (`internal/enrich`). Only exact title matches; cached. `enabled: false` (all null, not an error) without a TMDB key or with `tmdb.enrich` off. Read-only despite the POST |
 | GET | `/api/v1/enrich/image/{size}/{file}` | a TMDB poster/backdrop (`size` w92/w185/w342/w780), served from DreamHub's disk cache or fetched once — the browser never talks to TMDB. `404` for anything that isn't a TMDB image name |
+| POST | `/api/v1/push/test` | sends a test notification through ntfy with the saved settings — `{sent: true}`, `409 push_not_configured` without a topic, `502 push_failed` when the server can't be reached |
 | GET | `/api/v1/enrich/extras?kind=movie\|tv&id=<TMDB ID>` | what further databases add to one title, for a detail view: `{extras: {imdbId, imdb, imdbVotes, rottenTomatoes, metascore, logo} \| null}` — ratings from OMDb (by the IMDb ID TMDB supplies), the logo from fanart.tv (films by TMDB ID, series by TheTVDB ID). `null` without an OMDb or fanart.tv key. Cached a week (a miss a day) |
 | GET | `/api/v1/enrich/logo?path=` | one fanart.tv logo (a path from `extras.logo`, fanart.tv's own paths only), from the disk cache or fetched once |
 | GET | `/api/v1/dashboard/sources` | view sources for custom tiles the user can use right now (`internal/hub/view.go`): `{sources: [{id, label, hubId, filters, sorts}]}` |
@@ -144,7 +145,7 @@ Produces a static ARM64 Linux binary (~12–13 MB stripped, including the pure-G
 
 - `cmd/dreamhub/` — entrypoint: reads config, picks the WebControl client (mock or live), starts the app.
 - `internal/app/` — the wiring: store → connectors → hubs → settings schema (core + connector sections + hub switches) → auth → API router. Used by `cmd/dreamhub` and the API tests, so tests run the production wiring.
-- `internal/connector/` — connector registry with cached, time-limited checks, and the built-in connectors (WebControl, SerienRecorder, AutoTimer, OpenAI, TMDB, TVmaze, OMDb, fanart.tv).
+- `internal/connector/` — connector registry with cached, time-limited checks, and the built-in connectors (WebControl, SerienRecorder, AutoTimer, OpenAI, TMDB, TVmaze, OMDb, fanart.tv, ntfy).
 - `internal/hub/` — hub registry: descriptors, requirements, status evaluation, navigation, and the hub contract's search providers (`search.go`) and status-change detection (`watcher.go`, feeds `GET /api/v1/changes`). `v1.go` declares the v1 hubs and device capabilities.
 - `internal/status/` — the shared "available / degraded / unavailable" levels and problem/fix codes.
 - `internal/api/` — the core `/api/v1` routes and the assembly of hub routes behind auth and each hub's enable switch.
@@ -153,6 +154,7 @@ Produces a static ARM64 Linux binary (~12–13 MB stripped, including the pure-G
 - `internal/dashboard/` — the dashboard layout (`GET`/`PUT /api/v1/dashboard`): custom tiles (saved views over a hub's view source, `internal/hub/view.go`) alongside a fixed catalog of built-in tile types (each backed by data an existing endpoint already provides, e.g. TimerHub for "upcoming timers"), reconciled on read/write so a removed type is dropped and a newly added one always shows up. Saved directly, no plan/apply — same exception as settings.
 - `internal/hubs/` — hub behavior (routes): TimerHub (timers, create via plan with conflict check), SystemHub (change log), AdminHub (log level).
 - `internal/enrich/` — enrichment: poster, rating, overview, genres for a title from TMDB (first source), exact-title matches only, cached in SQLite (`enrichment` table) and images on disk (`<data dir>/cache/tmdb`, capped). `internal/titles/` — the shared title normalization and "is this an episode of that series" matching.
+- `internal/push/` — push notifications through ntfy: the client (+ `mock/`), the texts per event in de/en/it (`messages.go`), and the `Notifier` that forwards bus events according to Settings → Push.
 - `internal/omdb/`, `internal/fanart/` — the OMDb (Rotten Tomatoes, IMDb, Metascore by IMDb ID) and fanart.tv (title logos) clients, each with a `mock/`; used only through `enrich.Service.Extras`.
 - `internal/logging/` — runtime log level with automatic revert from debug.
 - `internal/auth/` — auth middleware; `SettingsVerifier` checks Basic Auth against the credentials in settings (bcrypt, cached) or a bearer token against `internal/apitoken` (`TokenVerifier`); `Credentials` is a static verifier for tests.

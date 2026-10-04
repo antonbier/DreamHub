@@ -6,6 +6,7 @@ package app
 import (
 	"context"
 	"github.com/antonbier/DreamHub/backend/internal/omdb"
+	"github.com/antonbier/DreamHub/backend/internal/push"
 	"github.com/antonbier/DreamHub/backend/internal/recfs"
 	"github.com/antonbier/DreamHub/backend/internal/tmdb"
 	"github.com/antonbier/DreamHub/backend/internal/tvmaze"
@@ -56,6 +57,9 @@ type Options struct {
 	TVmaze tvmaze.Client
 	// OMDb and Fanart (optional) add ratings and logos to a title's
 	// detail view (internal/enrich, extras.go).
+	// Push sends notifications to the phone (internal/push); nil turns
+	// them off.
+	Push push.Client
 	// PiconDirs are where channel logos are looked for (GuideHub); nil
 	// means the box's usual places.
 	PiconDirs []string
@@ -112,6 +116,9 @@ type App struct {
 	// process does; tests just use the Bus directly, no background polling.
 	Events *events.Bus
 	Poller *events.Poller
+	// Background are further long-running jobs cmd/dreamhub starts next to
+	// the Poller: push notifications, SeriesHub's missing-episode watch.
+	Background []func(context.Context)
 
 	credMu      sync.Mutex
 	credLoaded  bool
@@ -163,6 +170,7 @@ func New(ctx context.Context, o Options) (*App, error) {
 	conns.Add(connector.TVmaze{})
 	conns.Add(connector.OMDb{})
 	conns.Add(connector.Fanart{})
+	conns.Add(connector.Push{})
 
 	hubs := hub.NewRegistry()
 	for _, d := range hub.V1() {
@@ -243,6 +251,11 @@ func New(ctx context.Context, o Options) (*App, error) {
 	hubs.AddViewProvider(hub.IDSeries, seriesHub)
 	dash.KnownSource = hubs.KnownSource
 
+	var notifier *push.Notifier
+	if o.Push != nil {
+		notifier = &push.Notifier{Bus: eventBus, Settings: svc, User: user, Client: o.Push, Logger: o.Logger}
+	}
+
 	handler := api.NewRouter(api.Deps{
 		WebControl: o.WebControl,
 		Verifier:   auth.NewSettingsVerifier(svc, tokens),
@@ -256,6 +269,7 @@ func New(ctx context.Context, o Options) (*App, error) {
 		Store:      st,
 		Events:     eventBus,
 		Enrich:     enricher,
+		Push:       notifier,
 		Mounts: []api.Mount{
 			{HubID: hub.IDTimer, Prefixes: []string{"/api/v1/timers"}, Register: timerHub.Mount},
 			{HubID: hub.IDMedia, Prefixes: []string{"/api/v1/media"}, Register: mediaHub.Mount},
@@ -280,5 +294,15 @@ func New(ctx context.Context, o Options) (*App, error) {
 		Handler: handler, Store: st, Settings: svc, Connectors: conns, Hubs: hubs,
 		Plans: plans, Dashboard: dash, Tokens: tokens, Level: level, User: user,
 		Events: eventBus, Poller: poller,
+		Background: background(notifier, seriesHub, eventBus, o.Logger),
 	}, nil
+}
+
+// background lists the long-running jobs besides the poller.
+func background(n *push.Notifier, series *hubs_.Series, bus *events.Bus, logger *slog.Logger) []func(context.Context) {
+	jobs := []func(context.Context){func(ctx context.Context) { series.WatchMissing(ctx, bus, logger) }}
+	if n != nil {
+		jobs = append(jobs, n.Run)
+	}
+	return jobs
 }

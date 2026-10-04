@@ -7,6 +7,7 @@ import (
 	"github.com/antonbier/DreamHub/backend/internal/autotimer"
 	atmock "github.com/antonbier/DreamHub/backend/internal/autotimer/mock"
 	fanartmock "github.com/antonbier/DreamHub/backend/internal/fanart/mock"
+	pushmock "github.com/antonbier/DreamHub/backend/internal/push/mock"
 	omdbmock "github.com/antonbier/DreamHub/backend/internal/omdb/mock"
 	"github.com/antonbier/DreamHub/backend/internal/recfs"
 	tmdbmock "github.com/antonbier/DreamHub/backend/internal/tmdb/mock"
@@ -44,6 +45,7 @@ type env struct {
 	store  *store.Store
 	svc    *settings.Service
 	events *events.Bus
+	pushed *pushmock.Client
 }
 
 // newEnv builds the application exactly as production does (internal/app),
@@ -81,12 +83,14 @@ func newEnvWithLogs(t *testing.T, logs journald.Reader) *env {
 
 func newEnvFull(t *testing.T, wc webcontrol.Client, at autotimer.Client, recFS recfs.FS, readOnly bool, logs journald.Reader) *env {
 	t.Helper()
+	pushed := pushmock.New()
 	a, err := app.New(context.Background(), app.Options{
 		ReadOnlyFiles: readOnly,
 		TMDB:          tmdbmock.New(),
 		TVmaze:        tvmazemock.New(),
 		OMDb:          omdbmock.New(),
 		Fanart:        fanartmock.New(),
+		Push:          pushed,
 		DataDir:       t.TempDir(),
 		WebControl:    wc,
 		AutoTimer:     at,
@@ -105,7 +109,14 @@ func newEnvFull(t *testing.T, wc webcontrol.Client, at autotimer.Client, recFS r
 	t.Cleanup(func() { a.Store.Close() })
 	srv := httptest.NewServer(a.Handler)
 	t.Cleanup(srv.Close)
-	return &env{srv: srv, store: a.Store, svc: a.Settings, events: a.Events}
+	// The background jobs (push forwarding, the missing-episode watch) run
+	// like in the real process, stopped with the test.
+	jobs, stop := context.WithCancel(context.Background())
+	t.Cleanup(stop)
+	for _, job := range a.Background {
+		go job(jobs)
+	}
+	return &env{srv: srv, store: a.Store, svc: a.Settings, events: a.Events, pushed: pushed}
 }
 
 func (e *env) do(t *testing.T, method, path, body string, configure func(*http.Request)) (*http.Response, []byte) {
@@ -462,7 +473,7 @@ func TestSettings_GetReturnsCoreSections(t *testing.T) {
 	for _, s := range body.Sections {
 		ids = append(ids, s.ID)
 	}
-	if strings.Join(ids, ",") != "general,auth,network,webcontrol,ai,tmdb,tvmaze,omdb,fanart,media,hubs" {
+	if strings.Join(ids, ",") != "general,auth,network,webcontrol,ai,tmdb,tvmaze,omdb,fanart,push,media,hubs" {
 		t.Fatalf("expected core, connector and hub sections in order, got %v", ids)
 	}
 	if v := body.Sections[0].Fields[0]; v.Key != settings.KeyLanguage || v.Value != "en" {

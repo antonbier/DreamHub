@@ -112,6 +112,9 @@
     },
     "timer": {
       "conflict": "Möglicher Timer-Konflikt: {name} ({service})"
+    },
+    "series": {
+      "missingAiring": "Fehlende Folge läuft: {series} {code} um {time} auf {service}"
     }
   },
   "statusStrip": {
@@ -622,7 +625,8 @@
       "allowedHostsHint": "Kommagetrennte Hostnamen, zusätzlich zu IP-Adressen, localhost und *.local.",
       "runWizard": "Einrichtungsassistent starten",
       "namingHint": "Platzhalter: {'{'}title{'}'} {'{'}year{'}'} {'{'}season{'}'} {'{'}episode{'}'} {'{'}episodeTitle{'}'} {'{'}channel{'}'} {'{'}date{'}'}; Zahlen mit führenden Nullen: {'{'}episode:02{'}'}. Teile in [eckigen Klammern] entfallen, wenn ein Platzhalter darin leer ist, z. B. {'{'}title{'}'}[ ({'{'}year{'}'})].",
-      "folderHint": "Leer = Aufnahmen bleiben, wo sie sind. Sonst ein Pfad unterhalb des Aufnahmeordners mit denselben Platzhaltern, z. B. {'{'}title{'}'}/Staffel {'{'}season:02{'}'} oder Filme."
+      "folderHint": "Leer = Aufnahmen bleiben, wo sie sind. Sonst ein Pfad unterhalb des Aufnahmeordners mit denselben Platzhaltern, z. B. {'{'}title{'}'}/Staffel {'{'}season:02{'}'} oder Filme.",
+      "pushServerHint": "ntfy.sh ist der öffentliche Dienst; wer einen eigenen ntfy-Server betreibt, trägt dessen Adresse ein."
     },
     "general": {
       "title": "Allgemein",
@@ -697,7 +701,9 @@
       "template_no_title": "{'{'}title{'}'} muss vorkommen, und nicht nur in [eckigen Klammern].",
       "template_no_episode": "Das Schema für Folgen braucht {'{'}episode{'}'}.",
       "template_slash": "Keine Schrägstriche — das Schema legt nur den Dateinamen fest, keine Ordner.",
-      "template_folder": "Ein Ordner muss unterhalb des Aufnahmeordners liegen: kein / am Anfang, keine leeren Teile, kein .."
+      "template_folder": "Ein Ordner muss unterhalb des Aufnahmeordners liegen: kein / am Anfang, keine leeren Teile, kein ..",
+      "push_server": "Eine Adresse mit http:// oder https://.",
+      "push_topic": "Nur Buchstaben, Ziffern, - und _, höchstens 64 Zeichen."
     },
     "webcontrol": {
       "title": "WebControl",
@@ -722,6 +728,32 @@
     "fanart": {
       "title": "fanart.tv",
       "apiKey": "Persönlicher API-Schlüssel"
+    },
+    "push": {
+      "title": "Push-Benachrichtigungen (ntfy)",
+      "server": "ntfy-Server",
+      "topic": "Thema (Topic)",
+      "token": "Zugangs-Token (optional)",
+      "recordingFinished": "Aufnahme fertig",
+      "recordingStarted": "Aufnahme gestartet",
+      "missingEpisode": "Fehlende Folge läuft in den nächsten 24 Stunden",
+      "conflict": "Möglicher Timer-Konflikt",
+      "disk": "Festplatte fast voll"
+    },
+    "pushHelp": {
+      "title": "So kommen Benachrichtigungen aufs Handy",
+      "step1": "Die kostenlose App „ntfy“ installieren (iPhone und Android).",
+      "step2": "Oben ein schwer zu erratendes Thema eintragen und speichern – z. B. den Vorschlag unten.",
+      "step3": "In der App dasselbe Thema abonnieren, dann „Test senden“.",
+      "suggestion": "Vorschlag:",
+      "test": "Test senden",
+      "sending": "Wird gesendet…",
+      "sent": "Gesendet – kommt die Nachricht auf dem Handy an?",
+      "errors": {
+        "push_not_configured": "Erst ein Thema eintragen und speichern.",
+        "push_invalid": "Server oder Thema ist ungültig.",
+        "push_failed": "Der ntfy-Server war nicht erreichbar oder hat abgelehnt."
+      }
     }
   },
   "notFound": {

@@ -112,6 +112,9 @@
     },
     "timer": {
       "conflict": "Possibile conflitto timer: {name} ({service})"
+    },
+    "series": {
+      "missingAiring": "Va in onda un episodio mancante: {series} {code} alle {time} su {service}"
     }
   },
   "statusStrip": {
@@ -622,7 +625,8 @@
       "allowedHostsHint": "Nomi host separati da virgola, oltre a indirizzi IP, localhost e *.local.",
       "runWizard": "Avvia la configurazione guidata",
       "namingHint": "Segnaposto: {'{'}title{'}'} {'{'}year{'}'} {'{'}season{'}'} {'{'}episode{'}'} {'{'}episodeTitle{'}'} {'{'}channel{'}'} {'{'}date{'}'}; numeri con zeri iniziali: {'{'}episode:02{'}'}. Le parti tra [parentesi quadre] vengono omesse se un segnaposto al loro interno è vuoto, ad es. {'{'}title{'}'}[ ({'{'}year{'}'})].",
-      "folderHint": "Vuoto = le registrazioni restano dove sono. Altrimenti un percorso sotto la cartella di registrazione con gli stessi segnaposto, ad es. {'{'}title{'}'}/Stagione {'{'}season:02{'}'} o Film."
+      "folderHint": "Vuoto = le registrazioni restano dove sono. Altrimenti un percorso sotto la cartella di registrazione con gli stessi segnaposto, ad es. {'{'}title{'}'}/Stagione {'{'}season:02{'}'} o Film.",
+      "pushServerHint": "ntfy.sh è il servizio pubblico; se usi un tuo server ntfy, inserisci il suo indirizzo."
     },
     "general": {
       "title": "Generale",
@@ -697,7 +701,9 @@
       "template_no_title": "{'{'}title{'}'} deve comparire, e non solo tra [parentesi quadre].",
       "template_no_episode": "Lo schema degli episodi richiede {'{'}episode{'}'}.",
       "template_slash": "Niente barre — lo schema definisce solo il nome del file, non le cartelle.",
-      "template_folder": "Una cartella deve stare sotto la cartella di registrazione: niente / iniziale, niente parti vuote, niente .."
+      "template_folder": "Una cartella deve stare sotto la cartella di registrazione: niente / iniziale, niente parti vuote, niente ..",
+      "push_server": "Un indirizzo che inizia con http:// o https://.",
+      "push_topic": "Solo lettere, cifre, - e _, al massimo 64 caratteri."
     },
     "webcontrol": {
       "title": "WebControl",
@@ -722,6 +728,32 @@
     "fanart": {
       "title": "fanart.tv",
       "apiKey": "Chiave API personale"
+    },
+    "push": {
+      "title": "Notifiche push (ntfy)",
+      "server": "Server ntfy",
+      "topic": "Argomento (topic)",
+      "token": "Token di accesso (facoltativo)",
+      "recordingFinished": "Registrazione terminata",
+      "recordingStarted": "Registrazione avviata",
+      "missingEpisode": "Un episodio mancante va in onda nelle prossime 24 ore",
+      "conflict": "Possibile conflitto di timer",
+      "disk": "Disco quasi pieno"
+    },
+    "pushHelp": {
+      "title": "Ricevere le notifiche sul telefono",
+      "step1": "Installa l’app gratuita “ntfy” (iPhone e Android).",
+      "step2": "Inserisci sopra un argomento difficile da indovinare e salva, ad es. il suggerimento qui sotto.",
+      "step3": "Nell’app iscriviti allo stesso argomento, poi “Invia una prova”.",
+      "suggestion": "Suggerimento:",
+      "test": "Invia una prova",
+      "sending": "Invio…",
+      "sent": "Inviata: arriva sul telefono?",
+      "errors": {
+        "push_not_configured": "Prima inserisci e salva un argomento.",
+        "push_invalid": "Server o argomento non valido.",
+        "push_failed": "Il server ntfy non è raggiungibile o ha rifiutato."
+      }
     }
   },
   "notFound": {

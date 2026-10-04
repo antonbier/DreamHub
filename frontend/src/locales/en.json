@@ -112,6 +112,9 @@
     },
     "timer": {
       "conflict": "Likely timer conflict: {name} ({service})"
+    },
+    "series": {
+      "missingAiring": "Missing episode airs: {series} {code} at {time} on {service}"
     }
   },
   "statusStrip": {
@@ -622,7 +625,8 @@
       "allowedHostsHint": "Comma-separated host names, besides IP addresses, localhost and *.local.",
       "runWizard": "Run setup wizard",
       "namingHint": "Placeholders: {'{'}title{'}'} {'{'}year{'}'} {'{'}season{'}'} {'{'}episode{'}'} {'{'}episodeTitle{'}'} {'{'}channel{'}'} {'{'}date{'}'}; numbers with leading zeros: {'{'}episode:02{'}'}. Parts in [square brackets] are left out when a placeholder in them is empty, e.g. {'{'}title{'}'}[ ({'{'}year{'}'})].",
-      "folderHint": "Empty = recordings stay where they are. Otherwise a path below the recording folder with the same placeholders, e.g. {'{'}title{'}'}/Season {'{'}season:02{'}'} or Films."
+      "folderHint": "Empty = recordings stay where they are. Otherwise a path below the recording folder with the same placeholders, e.g. {'{'}title{'}'}/Season {'{'}season:02{'}'} or Films.",
+      "pushServerHint": "ntfy.sh is the public service; if you run your own ntfy server, enter its address."
     },
     "general": {
       "title": "General",
@@ -697,7 +701,9 @@
       "template_no_title": "{'{'}title{'}'} has to appear, and not only in [square brackets].",
       "template_no_episode": "The episode scheme needs {'{'}episode{'}'}.",
       "template_slash": "No slashes — the scheme sets the file name only, not folders.",
-      "template_folder": "A folder has to be below the recording folder: no leading /, no empty parts, no .."
+      "template_folder": "A folder has to be below the recording folder: no leading /, no empty parts, no ..",
+      "push_server": "An address starting with http:// or https://.",
+      "push_topic": "Letters, digits, - and _ only, at most 64 characters."
     },
     "webcontrol": {
       "title": "WebControl",
@@ -722,6 +728,32 @@
     "fanart": {
       "title": "fanart.tv",
       "apiKey": "Personal API key"
+    },
+    "push": {
+      "title": "Push notifications (ntfy)",
+      "server": "ntfy server",
+      "topic": "Topic",
+      "token": "Access token (optional)",
+      "recordingFinished": "Recording finished",
+      "recordingStarted": "Recording started",
+      "missingEpisode": "A missing episode airs in the next 24 hours",
+      "conflict": "Possible timer conflict",
+      "disk": "Disk almost full"
+    },
+    "pushHelp": {
+      "title": "Getting notifications on your phone",
+      "step1": "Install the free “ntfy” app (iPhone and Android).",
+      "step2": "Enter a hard-to-guess topic above and save — the suggestion below, say.",
+      "step3": "Subscribe to the same topic in the app, then “Send a test”.",
+      "suggestion": "Suggestion:",
+      "test": "Send a test",
+      "sending": "Sending…",
+      "sent": "Sent — does it show up on your phone?",
+      "errors": {
+        "push_not_configured": "Enter and save a topic first.",
+        "push_invalid": "The server or topic is invalid.",
+        "push_failed": "The ntfy server couldn’t be reached or refused it."
+      }
     }
   },
   "notFound": {

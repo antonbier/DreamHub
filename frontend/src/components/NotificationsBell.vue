@@ -54,9 +54,11 @@ import { useNavigationStore } from '@/stores/navigation'
 import { useNotificationsStore } from '@/stores/notifications'
 import { useProblem } from '@/composables/useProblem'
 import { useDeviceStatus, CLOCK_SKEW_WARN_MINUTES } from '@/composables/useDeviceStatus'
+import { useDisplayTimeZone } from '@/composables/useDisplayTimeZone'
 import type { Notification } from '@/api/types'
 
-const { t } = useI18n()
+const { t, locale } = useI18n()
+const { timeZone } = useDisplayTimeZone()
 const navigation = useNavigationStore()
 const notifications = useNotificationsStore()
 const { describe } = useProblem()
@@ -88,8 +90,15 @@ const issues = computed<Issue[]>(() => {
 
 // notification.<key> mirrors problem.<code>'s nested-key convention
 // (useProblem.ts) — key/params from the backend, never finished text.
+// A "start"/"begin" Unix time in params is offered as {time}, in the
+// display zone.
 function describeNotification(n: Notification): string {
-  const translated = t(`notification.${n.key}`, n.params)
+  const params: Record<string, unknown> = { ...(n.params as Record<string, unknown>) }
+  const at = Number(params.start ?? params.begin)
+  if (at > 0) {
+    params.time = new Intl.DateTimeFormat(locale.value, { weekday: 'short', hour: '2-digit', minute: '2-digit', timeZone: timeZone.value }).format(at * 1000)
+  }
+  const translated = t(`notification.${n.key}`, params)
   return translated === `notification.${n.key}` ? n.key : translated
 }
 

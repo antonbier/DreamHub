@@ -69,12 +69,18 @@ type tileType struct {
 	ID           string
 	Label        string
 	DefaultWidth int
+	// First puts the tile at the top when a stored layout is loaded without
+	// it (an upgrade added it), instead of at the end. A layout being saved
+	// without it still gets it at the end, keeping the caller's order.
+	First bool
 }
 
 // catalog is the fixed v1 set of built-in tile types, each backed by data
 // an existing endpoint already provides — no new data sources, only the
 // layout (this type, its width, whether it's hidden, its position) is new.
 var catalog = []tileType{
+	// Backed by ControlHub's GET /api/v1/control/current.
+	{ID: "control.nowPlaying", Label: "dashboard.tile.nowPlaying", DefaultWidth: 2, First: true},
 	{ID: "timers.upcoming", Label: "dashboard.tile.timersUpcoming", DefaultWidth: 2},
 	{ID: "hubs.status", Label: "dashboard.tile.hubsStatus", DefaultWidth: 2},
 	{ID: "media.diskSpace", Label: "dashboard.tile.mediaDiskSpace", DefaultWidth: 1},
@@ -126,7 +132,7 @@ func (s *Service) dashboard(ctx context.Context, u store.User) (store.Dashboard,
 // appends any catalog type missing from the saved layout (a newly added
 // tile type after an upgrade) — so the layout degrades and grows gracefully
 // instead of ever silently losing a tile forever.
-func reconcile(l Layout) Layout {
+func reconcile(l Layout, onLoad bool) Layout {
 	idx := catalogIndex()
 	seen := make(map[string]bool, len(l.Tiles))
 	out := Layout{Tiles: []Tile{}}
@@ -153,11 +159,18 @@ func reconcile(l Layout) Layout {
 		}
 		out.Tiles = append(out.Tiles, Tile{Type: ct.ID, Label: ct.Label, Width: width, Hidden: t.Hidden})
 	}
+	var first []Tile
 	for _, ct := range catalog {
 		if !seen[ct.ID] {
-			out.Tiles = append(out.Tiles, Tile{Type: ct.ID, Label: ct.Label, Width: ct.DefaultWidth, Hidden: false})
+			tile := Tile{Type: ct.ID, Label: ct.Label, Width: ct.DefaultWidth, Hidden: false}
+			if ct.First && onLoad {
+				first = append(first, tile)
+			} else {
+				out.Tiles = append(out.Tiles, tile)
+			}
 		}
 	}
+	out.Tiles = append(first, out.Tiles...)
 	return out
 }
 
@@ -199,7 +212,7 @@ func (s *Service) Get(ctx context.Context, u store.User) (Layout, error) {
 	}
 	var raw Layout
 	_ = json.Unmarshal(d.Layout, &raw) // empty/invalid -> zero value; reconcile fills in the catalog
-	return reconcile(raw), nil
+	return reconcile(raw, true), nil
 }
 
 // Save validates and persists a layout, and records the change (without
@@ -249,7 +262,7 @@ func (s *Service) Save(ctx context.Context, u store.User, l Layout) (Layout, err
 	if err != nil {
 		return Layout{}, err
 	}
-	reconciled := reconcile(l)
+	reconciled := reconcile(l, false)
 	enc, err := json.Marshal(reconciled)
 	if err != nil {
 		return Layout{}, err

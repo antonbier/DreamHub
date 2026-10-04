@@ -447,3 +447,41 @@ func (c *Client) DeleteTimer(ctx context.Context, ref webcontrol.TimerRef) error
 	}
 	return &webcontrol.RejectedError{Op: "timerdelete", Text: "No matching Timer found"}
 }
+
+// Current answers from what Playing is (RTL by default): the service's
+// name from the mock's channel and station lists, now/next from their
+// evening schedules at the mock's clock, a recording by its file name.
+func (c *Client) Current(ctx context.Context) (*webcontrol.CurrentService, error) {
+	ref, _ := c.CurrentServiceReference(ctx)
+	cur := &webcontrol.CurrentService{ServiceReference: ref, Volume: 60}
+	if webcontrol.IsRecordingReference(ref) {
+		name := ref[strings.LastIndex(ref, "/")+1:]
+		cur.ServiceName = strings.TrimSuffix(name, ".ts")
+		return cur, nil
+	}
+	now := at(21, 10)
+	if c.Now != nil {
+		now = c.Now().Unix()
+	}
+	for _, e := range append(epgSchedule(), radioSchedule()...) {
+		if e.ServiceReference != ref {
+			continue
+		}
+		cur.ServiceName = e.ServiceName
+		ev := e
+		switch {
+		case e.Start <= now && now < e.Start+e.Duration:
+			cur.Now = &ev
+		case e.Start > now && (cur.Next == nil || e.Start < cur.Next.Start):
+			cur.Next = &ev
+		}
+	}
+	if cur.ServiceName == "" {
+		for _, s := range []webcontrol.Service{RadioDLF, RadioBayern3, RadioSWR3, RadioKlassik} {
+			if s.ServiceReference == ref {
+				cur.ServiceName = s.ServiceName
+			}
+		}
+	}
+	return cur, nil
+}

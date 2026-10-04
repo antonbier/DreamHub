@@ -91,3 +91,40 @@ func TestControlMessage(t *testing.T) {
 		}
 	}
 }
+
+func TestControlCurrent_TellsChannelRadioAndRecordingApart(t *testing.T) {
+	m := mock.New()
+	e := newEnvWith(t, m)
+	type current struct {
+		ServiceName string `json:"serviceName"`
+		Kind        string `json:"kind"`
+		InStandby   bool   `json:"inStandby"`
+		Now         *struct {
+			Title string `json:"title"`
+		} `json:"now"`
+	}
+	get := func() current {
+		t.Helper()
+		resp, b := e.do(t, "GET", "/api/v1/control/current", "", nil)
+		if resp.StatusCode != http.StatusOK {
+			t.Fatalf("expected 200, got %d: %s", resp.StatusCode, b)
+		}
+		var c current
+		json.Unmarshal(b, &c)
+		return c
+	}
+
+	// The fixture evening at 21:10: RTL still shows Bauer sucht Frau (till 21:15).
+	if c := get(); c.Kind != "tv" || c.ServiceName != "RTL Television" || c.Now == nil || c.Now.Title != "Bauer sucht Frau International" {
+		t.Errorf("live TV: %+v", c)
+	}
+	m.Playing = mock.RadioDLF.ServiceReference
+	if c := get(); c.Kind != "radio" || c.ServiceName != "Deutschlandfunk" {
+		t.Errorf("radio: %+v", c)
+	}
+	m.Playing = "1:0:0:0:0:0:0:0:0:0:/media/hdd/movie/Oskars Kleid.mkv"
+	m.Standby = true
+	if c := get(); c.Kind != "recording" || c.Now != nil || !c.InStandby {
+		t.Errorf("recording in standby: %+v", c)
+	}
+}

@@ -293,6 +293,9 @@ type Client interface {
 	Screenshot(ctx context.Context) ([]byte, error)
 	// InStandby reports whether the box is in standby (ControlHub).
 	InStandby(ctx context.Context) (bool, error)
+	// Current is what the box shows right now, with its now/next and the
+	// volume (/web/getcurrent).
+	Current(ctx context.Context) (*CurrentService, error)
 }
 
 // MovieFolder is one folder of recordings as /web/movielist?dirname=

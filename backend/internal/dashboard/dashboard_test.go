@@ -51,7 +51,7 @@ func TestSave_RoundTripsOrderWidthAndHidden(t *testing.T) {
 	if err != nil {
 		t.Fatal(err)
 	}
-	if len(saved.Tiles) != 5 || saved.Tiles[0].Type != "hubs.status" || saved.Tiles[1].Type != "timers.upcoming" {
+	if len(saved.Tiles) != len(catalog) || saved.Tiles[0].Type != "hubs.status" || saved.Tiles[1].Type != "timers.upcoming" {
 		t.Fatalf("order not preserved: %+v", saved.Tiles)
 	}
 	if !saved.Tiles[0].Hidden || saved.Tiles[0].Width != 4 {
@@ -62,7 +62,7 @@ func TestSave_RoundTripsOrderWidthAndHidden(t *testing.T) {
 	if err != nil {
 		t.Fatal(err)
 	}
-	if len(got.Tiles) != 5 || got.Tiles[0].Type != "hubs.status" || !got.Tiles[0].Hidden || got.Tiles[0].Width != 4 {
+	if len(got.Tiles) != len(catalog) || got.Tiles[0].Type != "hubs.status" || !got.Tiles[0].Hidden || got.Tiles[0].Width != 4 {
 		t.Fatalf("Get after Save = %+v", got.Tiles)
 	}
 }
@@ -112,7 +112,7 @@ func TestReconcile_DropsUnknownTypeAndAppendsMissingCatalogEntries(t *testing.T)
 	l := reconcile(Layout{Tiles: []Tile{
 		{Type: "timers.upcoming", Width: 3, Hidden: true},
 		{Type: "removed.feature", Width: 2}, // simulates a tile type removed from a later catalog
-	}})
+	}}, true)
 	types := map[string]Tile{}
 	for _, t := range l.Tiles {
 		types[t.Type] = t
@@ -129,8 +129,32 @@ func TestReconcile_DropsUnknownTypeAndAppendsMissingCatalogEntries(t *testing.T)
 }
 
 func TestReconcile_ClampsOutOfRangeWidthToDefault(t *testing.T) {
-	l := reconcile(Layout{Tiles: []Tile{{Type: "timers.upcoming", Width: 99}}})
-	if l.Tiles[0].Width != catalog[0].DefaultWidth {
-		t.Errorf("width = %d, want the catalog default %d", l.Tiles[0].Width, catalog[0].DefaultWidth)
+	l := reconcile(Layout{Tiles: []Tile{{Type: "timers.upcoming", Width: 99}}}, false)
+	if want := catalogIndex()["timers.upcoming"].DefaultWidth; l.Tiles[0].Width != want {
+		t.Errorf("width = %d, want the catalog default %d", l.Tiles[0].Width, want)
+	}
+}
+
+// A tile type added by an upgrade shows up in an existing layout — on top
+// for "Now on the box" (First) when loaded; when a layout is saved without
+// it, after the caller's own tiles.
+func TestReconcile_NewFirstTileGoesOnTopOnLoad(t *testing.T) {
+	old := Layout{Tiles: []Tile{{Type: "timers.upcoming", Width: 2}, {Type: "hubs.status", Width: 2}}}
+	got := reconcile(old, true)
+	if got.Tiles[0].Type != "control.nowPlaying" || got.Tiles[1].Type != "timers.upcoming" || got.Tiles[2].Type != "hubs.status" {
+		t.Fatalf("on load: %+v", got.Tiles)
+	}
+	n := 0
+	for _, tile := range got.Tiles {
+		if tile.Type == "control.nowPlaying" {
+			n++
+		}
+	}
+	if n != 1 {
+		t.Fatalf("expected it once, got %d: %+v", n, got.Tiles)
+	}
+	saved := reconcile(old, false)
+	if saved.Tiles[0].Type != "timers.upcoming" || saved.Tiles[1].Type != "hubs.status" || saved.Tiles[2].Type != "control.nowPlaying" {
+		t.Fatalf("on save the caller's order stays first: %+v", saved.Tiles)
 	}
 }

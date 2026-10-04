@@ -823,8 +823,8 @@ func TestDashboard_GetReturnsTheFullCatalogByDefault(t *testing.T) {
 		} `json:"tiles"`
 	}
 	json.Unmarshal(b, &body)
-	if len(body.Tiles) != 5 {
-		t.Fatalf("expected the 5 built-in tiles on a fresh install, got %+v", body.Tiles)
+	if len(body.Tiles) != 6 || body.Tiles[0].Type != "control.nowPlaying" {
+		t.Fatalf("expected the 6 built-in tiles on a fresh install, \"Now on the box\" first, got %+v", body.Tiles)
 	}
 	for _, tile := range body.Tiles {
 		if tile.Hidden || tile.Label == "" || tile.Width < 1 || tile.Width > 4 {
@@ -849,7 +849,7 @@ func TestDashboard_PutRoundTripsAndIsLogged(t *testing.T) {
 		} `json:"tiles"`
 	}
 	json.Unmarshal(b, &body)
-	if len(body.Tiles) != 5 || body.Tiles[0].Type != "hubs.status" || !body.Tiles[0].Hidden || body.Tiles[0].Width != 1 {
+	if len(body.Tiles) != 6 || body.Tiles[0].Type != "hubs.status" || !body.Tiles[0].Hidden || body.Tiles[0].Width != 1 {
 		t.Fatalf("order/width/hidden not preserved: %+v", body.Tiles)
 	}
 
@@ -1000,7 +1000,7 @@ func TestDashboard_CustomTiles(t *testing.T) {
 	}
 	_, b = e.do(t, "GET", "/api/v1/dashboard", "", nil)
 	json.Unmarshal(b, &layout)
-	if len(layout.Tiles) != 6 || layout.Tiles[0].Type != "custom" || layout.Tiles[0].ID == "" ||
+	if len(layout.Tiles) != 7 || layout.Tiles[0].Type != "custom" || layout.Tiles[0].ID == "" ||
 		layout.Tiles[0].Custom == nil || layout.Tiles[0].Custom.Title != "Aufräumen" || layout.Tiles[0].Custom.Query.MinSizeGB != 3 {
 		t.Fatalf("custom tile not saved as expected: %s", b)
 	}

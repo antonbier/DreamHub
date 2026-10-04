@@ -56,6 +56,7 @@
           @remove="dash.removeCustom(tileKey(tile))"
         >
           <CustomTile v-if="tile.custom" :custom="tile.custom" editable @edit="openBuilder(tile)" />
+          <NowPlayingTile v-else-if="tile.type === 'control.nowPlaying'" />
           <TimersUpcomingTile v-else-if="tile.type === 'timers.upcoming'" />
           <HubsStatusTile v-else-if="tile.type === 'hubs.status'" />
           <MediaDiskSpaceTile v-else-if="tile.type === 'media.diskSpace'" />
@@ -91,6 +92,7 @@ import DashboardTileFrame from '@/components/dashboard/DashboardTileFrame.vue'
 import CustomTile from '@/components/dashboard/CustomTile.vue'
 import CustomTileBuilder from '@/components/dashboard/CustomTileBuilder.vue'
 import TimersUpcomingTile from '@/components/dashboard/TimersUpcomingTile.vue'
+import NowPlayingTile from '@/components/dashboard/NowPlayingTile.vue'
 import HubsStatusTile from '@/components/dashboard/HubsStatusTile.vue'
 import MediaDiskSpaceTile from '@/components/dashboard/MediaDiskSpaceTile.vue'
 import SeriesUpcomingTile from '@/components/dashboard/SeriesUpcomingTile.vue'

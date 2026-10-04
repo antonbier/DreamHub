@@ -193,7 +193,8 @@
       "hubsStatus": "Braucht Aufmerksamkeit",
       "mediaDiskSpace": "Speicherplatz",
       "seriesUpcoming": "Anstehende Folgen",
-      "timersConflicts": "Konflikte"
+      "timersConflicts": "Konflikte",
+      "nowPlaying": "Jetzt auf der Box"
     },
     "tileFrame": {
       "hide": "Ausblenden",
@@ -291,6 +292,20 @@
       "save": "Speichern",
       "create": "Kachel anlegen",
       "saveFailed": "Konnte nicht gespeichert werden."
+    },
+    "nowPlaying": {
+      "unavailable": "Die Box sagt gerade nicht, was sie zeigt.",
+      "standby": "Im Standby",
+      "kind": {
+        "tv": "Live-TV",
+        "radio": "Radio",
+        "recording": "Spielt eine Aufnahme"
+      },
+      "wake": "Einschalten",
+      "channelUp": "Nächster Sender",
+      "channelDown": "Vorheriger Sender",
+      "mute": "Stumm",
+      "remote": "Fernbedienung"
     }
   },
   "hubPlaceholder": {

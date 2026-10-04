@@ -27,6 +27,7 @@ type Control struct {
 func (h *Control) Mount(mux *http.ServeMux) {
 	mux.HandleFunc("GET /api/v1/control/screenshot", h.screenshot)
 	mux.HandleFunc("GET /api/v1/control/power", h.getPower)
+	mux.HandleFunc("GET /api/v1/control/current", h.current)
 	mux.HandleFunc("POST /api/v1/control/key", h.sendKey)
 	mux.HandleFunc("POST /api/v1/control/zap", h.zap)
 	mux.HandleFunc("POST /api/v1/control/message", h.message)
@@ -50,6 +51,32 @@ func (h *Control) getPower(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 	httpx.WriteJSON(w, http.StatusOK, map[string]any{"inStandby": standby})
+}
+
+// current is what the box shows right now (the dashboard's "Now on the
+// box" tile): the service, its kind — "tv", "radio" or "recording" (a file
+// being played back) — now/next, volume, and whether it's in standby,
+// where the service is just the one it will wake up to.
+func (h *Control) current(w http.ResponseWriter, r *http.Request) {
+	cur, err := h.WC.Current(r.Context())
+	if err != nil {
+		httpx.WriteError(w, r, http.StatusBadGateway, "webcontrol_unavailable", "could not reach WebControl")
+		return
+	}
+	kind := "tv"
+	switch {
+	case webcontrol.IsRecordingReference(cur.ServiceReference):
+		kind = "recording"
+	case webcontrol.IsRadioService(cur.ServiceReference):
+		kind = "radio"
+	}
+	// Not knowing the power state isn't worth failing the whole answer.
+	standby, _ := h.WC.InStandby(r.Context())
+	httpx.WriteJSON(w, http.StatusOK, struct {
+		*webcontrol.CurrentService
+		Kind      string `json:"kind"`
+		InStandby bool   `json:"inStandby"`
+	}{cur, kind, standby})
 }
 
 // keyBody is {"code": <Linux input-event code>} — the exact codes

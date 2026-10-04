@@ -193,7 +193,8 @@
       "hubsStatus": "Needs attention",
       "mediaDiskSpace": "Disk space",
       "seriesUpcoming": "Upcoming episodes",
-      "timersConflicts": "Conflicts"
+      "timersConflicts": "Conflicts",
+      "nowPlaying": "Now on the box"
     },
     "tileFrame": {
       "hide": "Hide",
@@ -291,6 +292,20 @@
       "save": "Save",
       "create": "Create tile",
       "saveFailed": "Couldn't be saved."
+    },
+    "nowPlaying": {
+      "unavailable": "Can't ask the box what it's showing.",
+      "standby": "In standby",
+      "kind": {
+        "tv": "Live TV",
+        "radio": "Radio",
+        "recording": "Playing a recording"
+      },
+      "wake": "Switch on",
+      "channelUp": "Next channel",
+      "channelDown": "Previous channel",
+      "mute": "Mute",
+      "remote": "Remote"
     }
   },
   "hubPlaceholder": {

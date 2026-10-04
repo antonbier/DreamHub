@@ -614,3 +614,16 @@ export interface BatchRenameItem {
   status: 'rename' | 'unchanged' | 'skipped'
   reason?: string // an error.media code, for skipped
 }
+
+// GET /api/v1/control/current — what the box shows right now.
+export interface CurrentService {
+  serviceReference: string
+  serviceName: string
+  providerName: string
+  kind: 'tv' | 'radio' | 'recording'
+  now: EPGEvent | null
+  next: EPGEvent | null
+  volume: number
+  muted: boolean
+  inStandby: boolean
+}

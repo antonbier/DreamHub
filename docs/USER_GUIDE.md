@@ -86,7 +86,7 @@ If the **DreamMediaInfo** plugin is installed on the box, DreamHub uses what it 
 
 ### Home
 
-A dashboard of tiles: upcoming timers, conflicts, disk space, series episodes coming up, hub status. **Edit** rearranges tiles; **Custom tile** builds your own view ("films from TMDB with a rating above 7 on tonight", say).
+A dashboard of tiles: **Now on the box** (what the box shows, with channel up/down, mute and the remote), upcoming timers, conflicts, disk space, series episodes coming up, hub status. **Edit** rearranges tiles; **Custom tile** builds your own view ("films from TMDB with a rating above 7 on tonight", say).
 
 ### Recordings
 

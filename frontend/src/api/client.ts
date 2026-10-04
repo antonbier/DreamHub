@@ -16,6 +16,7 @@ import type {
   ApiToken,
   AutoTimers,
   BatchRenameItem,
+  CurrentService,
   CoverItem,
   BackupFile,
   ConnectorState,
@@ -351,6 +352,8 @@ export const api = {
   control: {
     screenshot: () => requestBlob('/api/v1/control/screenshot'),
     power: () => request<{ inStandby: boolean }>('GET', '/api/v1/control/power'),
+    // What the box shows right now, with now/next (the "Now on the box" tile).
+    current: () => request<CurrentService>('GET', '/api/v1/control/current'),
     sendKey: (code: number) => request<{ sent: number }>('POST', '/api/v1/control/key', { code }),
     zap: (serviceReference: string) => request<{ zapped: string }>('POST', '/api/v1/control/zap', { serviceReference }),
     message: (text: string, kind: 'info' | 'warning' | 'error', timeout: number) =>

@@ -19,6 +19,8 @@ const (
 	IDTMDB           = "tmdb"
 	IDOpenAI         = "openai"
 	IDTVmaze         = "tvmaze"
+	IDOMDb           = "omdb"
+	IDFanart         = "fanart"
 )
 
 // Setting keys owned by connectors.
@@ -32,10 +34,15 @@ const (
 	// SeriesHub's "missing episodes"); it sends followed series' names to
 	// TVmaze, so it can be turned off.
 	KeyTVmazeEnabled = "tvmaze.enabled"
-	KeyAIProvider    = "ai.provider"
-	KeyOpenAIAPIKey  = "ai.openai.apiKey"
-	KeyOpenAIModel   = "ai.openai.model"
-	KeyAIDailyLimit  = "ai.dailyLimit"
+	// KeyOMDbAPIKey: OMDb's free key, for Rotten Tomatoes, IMDb and
+	// Metacritic ratings; KeyFanartAPIKey: fanart.tv's, for title logos.
+	// Both optional, both only asked for a title's detail view.
+	KeyOMDbAPIKey   = "omdb.apiKey"
+	KeyFanartAPIKey = "fanart.apiKey"
+	KeyAIProvider   = "ai.provider"
+	KeyOpenAIAPIKey = "ai.openai.apiKey"
+	KeyOpenAIModel  = "ai.openai.model"
+	KeyAIDailyLimit = "ai.dailyLimit"
 
 	// Optional credentials for WebControl (and every plugin API behind it,
 	// e.g. SerienRecorder's). Only needed when the box enforces auth for
@@ -194,6 +201,49 @@ func (TVmaze) Settings() []settings.Section {
 func (TVmaze) Check(_ context.Context, v settings.Values) Report {
 	if !v.Bool(KeyTVmazeEnabled) {
 		return notConfigured("TVmaze", "tvmaze")
+	}
+	return Report{State: OK}
+}
+
+// --- OMDb -----------------------------------------------------------------
+
+// OMDb provides ratings TMDB doesn't have: Rotten Tomatoes, IMDb,
+// Metacritic. Optional; needs a free key.
+type OMDb struct{}
+
+func (OMDb) ID() string   { return IDOMDb }
+func (OMDb) Name() string { return "OMDb" }
+func (OMDb) Settings() []settings.Section {
+	return []settings.Section{{
+		ID:     "omdb",
+		Label:  "settings.omdb",
+		Fields: []settings.Field{{Key: KeyOMDbAPIKey, Type: settings.TypeSecret, Scope: settings.ScopeGlobal, Label: "settings.omdb.apiKey"}},
+	}}
+}
+func (OMDb) Check(_ context.Context, v settings.Values) Report {
+	if v.String(KeyOMDbAPIKey) == "" {
+		return notConfigured("OMDb", "omdb")
+	}
+	return Report{State: OK}
+}
+
+// --- fanart.tv ------------------------------------------------------------
+
+// Fanart provides title logos. Optional; needs a free personal key.
+type Fanart struct{}
+
+func (Fanart) ID() string   { return IDFanart }
+func (Fanart) Name() string { return "fanart.tv" }
+func (Fanart) Settings() []settings.Section {
+	return []settings.Section{{
+		ID:     "fanart",
+		Label:  "settings.fanart",
+		Fields: []settings.Field{{Key: KeyFanartAPIKey, Type: settings.TypeSecret, Scope: settings.ScopeGlobal, Label: "settings.fanart.apiKey"}},
+	}}
+}
+func (Fanart) Check(_ context.Context, v settings.Values) Report {
+	if v.String(KeyFanartAPIKey) == "" {
+		return notConfigured("fanart.tv", "fanart")
 	}
 	return Report{State: OK}
 }

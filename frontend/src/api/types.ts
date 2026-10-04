@@ -560,6 +560,16 @@ export interface EnrichInfo {
   backdrop?: string
 }
 
+// What further databases add to one title (GET /api/v1/enrich/extras).
+export interface EnrichExtras {
+  imdbId?: string
+  imdb?: number // 0-10
+  imdbVotes?: number
+  rottenTomatoes?: number // Tomatometer, percent
+  metascore?: number // 0-100
+  logo?: string // fanart.tv image path for /api/v1/enrich/logo
+}
+
 export interface EnrichQuery {
   title: string
   kind?: 'movie' | 'tv'

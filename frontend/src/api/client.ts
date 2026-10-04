@@ -33,6 +33,7 @@ import type {
   DeviceInfo,
   Disk,
   DiscoveryStatus,
+  EnrichExtras,
   EnrichInfo,
   EnrichQuery,
   HealthInfo,
@@ -267,6 +268,10 @@ export const api = {
       request<{ enabled: boolean; results: (EnrichInfo | null)[] }>('POST', '/api/v1/enrich/lookup', { items }),
     // Served by DreamHub from its own cache; the browser never contacts TMDB.
     image: (size: string, path: string) => requestBlob(`/api/v1/enrich/image/${size}${path}`),
+    // Ratings (OMDb) and a logo (fanart.tv) for one title's detail view.
+    extras: (kind: 'movie' | 'tv', id: number) =>
+      request<{ extras: EnrichExtras | null }>('GET', `/api/v1/enrich/extras?kind=${kind}&id=${id}`),
+    logo: (path: string) => requestBlob(`/api/v1/enrich/logo?path=${encodeURIComponent(path)}`),
   },
   dashboard: {
     get: () => request<DashboardLayout>('GET', '/api/v1/dashboard'),

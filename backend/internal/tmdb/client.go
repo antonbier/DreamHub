@@ -46,6 +46,10 @@ type Client interface {
 	// "tv") — for when another source already knows exactly which title
 	// it is, so nothing has to be guessed from a search.
 	Details(ctx context.Context, apiKey, kind string, id int64, language string) (Result, error)
+	// ExternalIDs returns a film's or series' IDs in other databases: the
+	// IMDb ID ("tt0133093", OMDb's key) and, for series, TheTVDB's (what
+	// fanart.tv files series under). Empty/0 when TMDB doesn't know one.
+	ExternalIDs(ctx context.Context, apiKey, kind string, id int64) (imdb string, tvdb int64, err error)
 	// Genres returns TMDB's genre names by ID, movie and TV genres merged.
 	Genres(ctx context.Context, apiKey, language string) (map[int]string, error)
 	// Image fetches one image from TMDB's image server; size is one of
@@ -172,6 +176,20 @@ func (c *HTTPClient) Details(ctx context.Context, apiKey, kind string, id int64,
 		r.GenreIDs = append(r.GenreIDs, g.ID)
 	}
 	return r, nil
+}
+
+func (c *HTTPClient) ExternalIDs(ctx context.Context, apiKey, kind string, id int64) (string, int64, error) {
+	if kind != "movie" && kind != "tv" {
+		return "", 0, fmt.Errorf("tmdb: unknown kind %q", kind)
+	}
+	var d struct {
+		IMDbID string `json:"imdb_id"`
+		TVDBID int64  `json:"tvdb_id"`
+	}
+	if err := c.get(ctx, apiKey, fmt.Sprintf("/%s/%d/external_ids", kind, id), url.Values{}, &d); err != nil {
+		return "", 0, err
+	}
+	return strings.TrimSpace(d.IMDbID), d.TVDBID, nil
 }
 
 func (c *HTTPClient) Genres(ctx context.Context, apiKey, language string) (map[int]string, error) {

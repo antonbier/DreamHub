@@ -5,6 +5,7 @@ package app
 
 import (
 	"context"
+	"github.com/antonbier/DreamHub/backend/internal/omdb"
 	"github.com/antonbier/DreamHub/backend/internal/recfs"
 	"github.com/antonbier/DreamHub/backend/internal/tmdb"
 	"github.com/antonbier/DreamHub/backend/internal/tvmaze"
@@ -24,6 +25,7 @@ import (
 	"github.com/antonbier/DreamHub/backend/internal/dmi"
 	"github.com/antonbier/DreamHub/backend/internal/enrich"
 	"github.com/antonbier/DreamHub/backend/internal/events"
+	"github.com/antonbier/DreamHub/backend/internal/fanart"
 	"github.com/antonbier/DreamHub/backend/internal/hub"
 	hubs_ "github.com/antonbier/DreamHub/backend/internal/hubs"
 	"github.com/antonbier/DreamHub/backend/internal/journald"
@@ -52,6 +54,10 @@ type Options struct {
 	// TVmaze is the TVmaze client (internal/tvmaze), for SeriesHub's
 	// episode lists; nil leaves them out.
 	TVmaze tvmaze.Client
+	// OMDb and Fanart (optional) add ratings and logos to a title's
+	// detail view (internal/enrich, extras.go).
+	OMDb   omdb.Client
+	Fanart fanart.Client
 	// DMI is the optional DreamMediaInfo plugin's database (read-only), the
 	// first enrichment source; nil in mock mode.
 	DMI *dmi.Reader
@@ -152,6 +158,8 @@ func New(ctx context.Context, o Options) (*App, error) {
 	conns.Add(connector.OpenAI{})
 	conns.Add(connector.TMDB{})
 	conns.Add(connector.TVmaze{})
+	conns.Add(connector.OMDb{})
+	conns.Add(connector.Fanart{})
 
 	hubs := hub.NewRegistry()
 	for _, d := range hub.V1() {
@@ -204,7 +212,7 @@ func New(ctx context.Context, o Options) (*App, error) {
 	var enricher *enrich.Service
 	if o.TMDB != nil {
 		enricher = &enrich.Service{
-			DMI: o.DMI, TMDB: o.TMDB, Store: st, Now: now,
+			DMI: o.DMI, TMDB: o.TMDB, OMDb: o.OMDb, Fanart: o.Fanart, Store: st, Now: now,
 			Images: &enrich.ImageCache{Dir: filepath.Join(o.DataDir, "cache", "tmdb"), MaxBytes: enrich.DefaultImageCacheBytes},
 		}
 	}

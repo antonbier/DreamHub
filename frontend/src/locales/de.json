@@ -665,6 +665,14 @@
       "namingEpisode": "Namensschema für Serienfolgen",
       "folderMovie": "Ordner für Filme",
       "folderEpisode": "Ordner für Serienfolgen"
+    },
+    "omdb": {
+      "title": "OMDb",
+      "apiKey": "API-Schlüssel"
+    },
+    "fanart": {
+      "title": "fanart.tv",
+      "apiKey": "Persönlicher API-Schlüssel"
     }
   },
   "notFound": {
@@ -854,6 +862,11 @@
   "enrich": {
     "source": "Infos und Bilder: {source}",
     "ratingTitle": "Bewertung {rating} von 10, {votes} Stimmen",
-    "fsk": "FSK {age}"
+    "fsk": "FSK {age}",
+    "extras": {
+      "rottenTomatoes": "Tomatometer von Rotten Tomatoes: {value} der Kritiken positiv",
+      "imdb": "IMDb-Bewertung {value} von 10, {votes} Stimmen",
+      "metascore": "Metascore von Metacritic: {value} von 100"
+    }
   }
 }

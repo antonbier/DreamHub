@@ -10,6 +10,10 @@ import (
 	"github.com/antonbier/DreamHub/backend/internal/autotimer"
 	atmock "github.com/antonbier/DreamHub/backend/internal/autotimer/mock"
 	"github.com/antonbier/DreamHub/backend/internal/dmi"
+	"github.com/antonbier/DreamHub/backend/internal/fanart"
+	fanartmock "github.com/antonbier/DreamHub/backend/internal/fanart/mock"
+	"github.com/antonbier/DreamHub/backend/internal/omdb"
+	omdbmock "github.com/antonbier/DreamHub/backend/internal/omdb/mock"
 	"github.com/antonbier/DreamHub/backend/internal/recfs"
 	"github.com/antonbier/DreamHub/backend/internal/tmdb"
 	tmdbmock "github.com/antonbier/DreamHub/backend/internal/tmdb/mock"
@@ -55,6 +59,8 @@ func run(logger *slog.Logger, level *logging.Level) error {
 	var recFS recfs.FS
 	var tmdbClient tmdb.Client
 	var tvmazeClient tvmaze.Client
+	var omdbClient omdb.Client
+	var fanartClient fanart.Client
 	var dmiReader *dmi.Reader
 	var logs journald.Reader
 	switch cfg.Mode {
@@ -79,6 +85,8 @@ func run(logger *slog.Logger, level *logging.Level) error {
 		aiClient = ai.NewOpenAIClient()
 		tmdbClient = tmdb.NewHTTPClient()
 		tvmazeClient = tvmaze.NewHTTPClient()
+		omdbClient = omdb.NewHTTPClient()
+		fanartClient = fanart.NewHTTPClient()
 		dmiReader = &dmi.Reader{}
 		logs = journald.Exec{}
 		logger.Info("webcontrol client mode", "mode", "live", "url", cfg.WebControlURL, "deviceWrites", cfg.EnableDeviceWrites)
@@ -91,6 +99,8 @@ func run(logger *slog.Logger, level *logging.Level) error {
 		aiClient = aimock.New()
 		tmdbClient = tmdbmock.New()
 		tvmazeClient = tvmazemock.New()
+		omdbClient = omdbmock.New()
+		fanartClient = fanartmock.New()
 		logs = jmock.New()
 		logger.Info("webcontrol client mode", "mode", "mock")
 	}
@@ -102,6 +112,8 @@ func run(logger *slog.Logger, level *logging.Level) error {
 		AutoTimer:    at,
 		TMDB:         tmdbClient,
 		TVmaze:       tvmazeClient,
+		OMDb:         omdbClient,
+		Fanart:       fanartClient,
 		DMI:          dmiReader,
 		RecordingsFS: recFS,
 		// Same switch as WebControl writes; mock mode always writes.

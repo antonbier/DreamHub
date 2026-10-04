@@ -33,6 +33,8 @@ import (
 	"time"
 
 	"github.com/antonbier/DreamHub/backend/internal/dmi"
+	"github.com/antonbier/DreamHub/backend/internal/fanart"
+	"github.com/antonbier/DreamHub/backend/internal/omdb"
 	"github.com/antonbier/DreamHub/backend/internal/store"
 	"github.com/antonbier/DreamHub/backend/internal/titles"
 	"github.com/antonbier/DreamHub/backend/internal/tmdb"
@@ -80,8 +82,11 @@ const (
 type Service struct {
 	// DMI is the optional DreamMediaInfo plugin's database; nil or absent
 	// just skips it.
-	DMI    *dmi.Reader
-	TMDB   tmdb.Client
+	DMI  *dmi.Reader
+	TMDB tmdb.Client
+	// OMDb and Fanart (optional) supply Extras (extras.go).
+	OMDb   omdb.Client
+	Fanart fanart.Client
 	Store  *store.Store
 	Images *ImageCache
 	Now    func() time.Time

@@ -665,6 +665,14 @@
       "namingEpisode": "Naming scheme for episodes",
       "folderMovie": "Folder for films",
       "folderEpisode": "Folder for episodes"
+    },
+    "omdb": {
+      "title": "OMDb",
+      "apiKey": "API key"
+    },
+    "fanart": {
+      "title": "fanart.tv",
+      "apiKey": "Personal API key"
     }
   },
   "notFound": {
@@ -854,6 +862,11 @@
   "enrich": {
     "source": "Details and images: {source}",
     "ratingTitle": "Rated {rating} out of 10, {votes} votes",
-    "fsk": "FSK {age}"
+    "fsk": "FSK {age}",
+    "extras": {
+      "rottenTomatoes": "Rotten Tomatoes Tomatometer: {value} of reviews positive",
+      "imdb": "IMDb rating {value} out of 10, {votes} votes",
+      "metascore": "Metacritic Metascore: {value} out of 100"
+    }
   }
 }

@@ -4,6 +4,7 @@ package mock
 import (
 	"bytes"
 	"context"
+	"fmt"
 	"hash/fnv"
 	"image"
 	"image/color"
@@ -77,6 +78,17 @@ func (*Client) Details(ctx context.Context, apiKey, kind string, id int64, langu
 		}
 	}
 	return tmdb.Result{Kind: kind, ID: id, Title: "Mock", PosterPath: "/mock-" + strconv.FormatInt(id, 10) + ".png"}, nil
+}
+
+// ExternalIDs makes up stable IDs from the TMDB ID: "tt" + the ID padded
+// to seven digits, like IMDb's, and
+// the ID + 70000 as TheTVDB's for series.
+func (*Client) ExternalIDs(ctx context.Context, apiKey, kind string, id int64) (string, int64, error) {
+	tvdb := int64(0)
+	if kind == "tv" {
+		tvdb = id + 70000
+	}
+	return fmt.Sprintf("tt%07d", id), tvdb, nil
 }
 
 func (*Client) Genres(ctx context.Context, apiKey, language string) (map[int]string, error) {

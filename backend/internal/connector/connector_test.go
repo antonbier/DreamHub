@@ -125,6 +125,8 @@ func TestKeyedConnectors(t *testing.T) {
 	}{
 		{OpenAI{}, KeyOpenAIAPIKey, "ai"},
 		{TMDB{}, KeyTMDBAPIKey, "tmdb"},
+		{OMDb{}, KeyOMDbAPIKey, "omdb"},
+		{Fanart{}, KeyFanartAPIKey, "fanart"},
 	} {
 		rep := c.conn.Check(ctx, settings.Values{})
 		if rep.State != NotConfigured || rep.Problem.FixParams["section"] != c.section {

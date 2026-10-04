@@ -88,6 +88,8 @@ func NewRouter(d Deps) http.Handler {
 	protected.HandleFunc("PUT /api/v1/dashboard", handlePutDashboard(d))
 	protected.HandleFunc("POST /api/v1/enrich/lookup", handleEnrichLookup(d))
 	protected.HandleFunc("GET /api/v1/enrich/image/{size}/{file}", handleEnrichImage(d))
+	protected.HandleFunc("GET /api/v1/enrich/extras", handleEnrichExtras(d))
+	protected.HandleFunc("GET /api/v1/enrich/logo", handleEnrichLogo(d))
 	protected.HandleFunc("GET /api/v1/dashboard/sources", handleViewSources(d))
 	protected.HandleFunc("POST /api/v1/dashboard/view", handleView(d))
 	protected.HandleFunc("GET /api/v1/search", handleSearch(d))

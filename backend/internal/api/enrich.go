@@ -3,10 +3,12 @@ package api
 import (
 	"errors"
 	"net/http"
+	"strconv"
 	"strings"
 
 	"github.com/antonbier/DreamHub/backend/internal/connector"
 	"github.com/antonbier/DreamHub/backend/internal/enrich"
+	"github.com/antonbier/DreamHub/backend/internal/fanart"
 	"github.com/antonbier/DreamHub/backend/internal/httpx"
 	"github.com/antonbier/DreamHub/backend/internal/settings"
 	"github.com/antonbier/DreamHub/backend/internal/tmdb"
@@ -70,6 +72,55 @@ func handleEnrichImage(d Deps) http.HandlerFunc {
 		w.Header().Set("Content-Type", ct)
 		// Image paths are content-addressed by TMDB: the same path is always
 		// the same picture.
+		w.Header().Set("Cache-Control", "private, max-age=2592000, immutable")
+		w.Header().Set("X-Content-Type-Options", "nosniff")
+		w.Write(b)
+	}
+}
+
+// handleEnrichExtras answers ?kind=movie|tv&id=<TMDB ID> with what further
+// databases add (enrich.Extras: Rotten Tomatoes, IMDb, Metascore from
+// OMDb; a logo from fanart.tv) — one title, for a detail view. Like
+// lookup, never an error for "not configured": {"extras": null}.
+func handleEnrichExtras(d Deps) http.HandlerFunc {
+	return func(w http.ResponseWriter, r *http.Request) {
+		kind := r.URL.Query().Get("kind")
+		id, err := strconv.ParseInt(r.URL.Query().Get("id"), 10, 64)
+		if (kind != "movie" && kind != "tv") || err != nil || id <= 0 {
+			httpx.WriteError(w, r, http.StatusBadRequest, "invalid_query", "expected ?kind=movie|tv&id=<TMDB ID>")
+			return
+		}
+		v, err := d.Settings.Values(r.Context(), d.User)
+		if err != nil {
+			httpx.WriteError(w, r, http.StatusInternalServerError, "internal", "could not load settings")
+			return
+		}
+		keys := enrich.ExtrasKeys{TMDB: v.String(connector.KeyTMDBAPIKey), OMDb: v.String(connector.KeyOMDbAPIKey), Fanart: v.String(connector.KeyFanartAPIKey)}
+		if d.Enrich == nil || !v.Bool(connector.KeyTMDBEnrich) || (keys.OMDb == "" && keys.Fanart == "") {
+			httpx.WriteJSON(w, http.StatusOK, map[string]any{"extras": nil})
+			return
+		}
+		x := d.Enrich.Extras(r.Context(), keys, enrich.Language(v.String(settings.KeyLanguage)), kind, id)
+		httpx.WriteJSON(w, http.StatusOK, map[string]any{"extras": x})
+	}
+}
+
+// handleEnrichLogo serves one fanart.tv logo (?path=, as Extras.Logo
+// names it), from DreamHub's disk cache or fetched once — the browser
+// never contacts fanart.tv.
+func handleEnrichLogo(d Deps) http.HandlerFunc {
+	return func(w http.ResponseWriter, r *http.Request) {
+		path := r.URL.Query().Get("path")
+		if d.Enrich == nil || !fanart.ValidImage(path) {
+			httpx.WriteError(w, r, http.StatusNotFound, "not_found", "no such image")
+			return
+		}
+		b, ct, err := d.Enrich.Logo(r.Context(), path)
+		if err != nil {
+			httpx.WriteError(w, r, http.StatusBadGateway, "image_unavailable", "the image could not be fetched")
+			return
+		}
+		w.Header().Set("Content-Type", ct)
 		w.Header().Set("Cache-Control", "private, max-age=2592000, immutable")
 		w.Header().Set("X-Content-Type-Options", "nosniff")
 		w.Write(b)

@@ -6,6 +6,8 @@ import (
 	"encoding/json"
 	"github.com/antonbier/DreamHub/backend/internal/autotimer"
 	atmock "github.com/antonbier/DreamHub/backend/internal/autotimer/mock"
+	fanartmock "github.com/antonbier/DreamHub/backend/internal/fanart/mock"
+	omdbmock "github.com/antonbier/DreamHub/backend/internal/omdb/mock"
 	"github.com/antonbier/DreamHub/backend/internal/recfs"
 	tmdbmock "github.com/antonbier/DreamHub/backend/internal/tmdb/mock"
 	tvmazemock "github.com/antonbier/DreamHub/backend/internal/tvmaze/mock"
@@ -83,6 +85,8 @@ func newEnvFull(t *testing.T, wc webcontrol.Client, at autotimer.Client, recFS r
 		ReadOnlyFiles: readOnly,
 		TMDB:          tmdbmock.New(),
 		TVmaze:        tvmazemock.New(),
+		OMDb:          omdbmock.New(),
+		Fanart:        fanartmock.New(),
 		DataDir:       t.TempDir(),
 		WebControl:    wc,
 		AutoTimer:     at,
@@ -458,7 +462,7 @@ func TestSettings_GetReturnsCoreSections(t *testing.T) {
 	for _, s := range body.Sections {
 		ids = append(ids, s.ID)
 	}
-	if strings.Join(ids, ",") != "general,auth,network,webcontrol,ai,tmdb,tvmaze,media,hubs" {
+	if strings.Join(ids, ",") != "general,auth,network,webcontrol,ai,tmdb,tvmaze,omdb,fanart,media,hubs" {
 		t.Fatalf("expected core, connector and hub sections in order, got %v", ids)
 	}
 	if v := body.Sections[0].Fields[0]; v.Key != settings.KeyLanguage || v.Value != "en" {

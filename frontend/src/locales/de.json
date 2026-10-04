@@ -20,7 +20,8 @@
     "discovery": "Empfehlungen",
     "system": "System",
     "admin": "Admin",
-    "control": "Fernsteuerung"
+    "control": "Fernsteuerung",
+    "radio": "Radio"
   },
   "status": {
     "available": "Verfügbar",
@@ -982,5 +983,23 @@
     "body": "Die Dreambox antwortet nicht. Ist sie eingeschaltet (nicht im Deep-Standby), und ist dieses Gerät im selben Netzwerk?",
     "retry": "Erneut versuchen",
     "retrying": "Versuche…"
+  },
+  "radio": {
+    "intro": "Radio läuft über die Box – auf dem Fernseher oder was daran angeschlossen ist.",
+    "bouquet": "Bouquet",
+    "find": "Sender suchen",
+    "empty": "Keine Radiosender in diesem Bouquet.",
+    "noBouquets": "Die Box hat keine Radio-Bouquets.",
+    "noMatch": "Kein Sender passt zu „{query}“.",
+    "play": "Auf der Box abspielen",
+    "playing": "Läuft",
+    "nowPlaying": "Jetzt auf der Box",
+    "noEpg": "Keine Programminfos",
+    "timers": {
+      "title": "Radio-Aufnahmen",
+      "empty": "Keine Radio-Aufnahmen geplant. Öffne eine Sendung, um sie aufzunehmen.",
+      "manage": "Alle Timer",
+      "running": "nimmt auf"
+    }
   }
 }

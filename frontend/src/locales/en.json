@@ -20,7 +20,8 @@
     "discovery": "Recommendations",
     "system": "System",
     "admin": "Admin",
-    "control": "Remote"
+    "control": "Remote",
+    "radio": "Radio"
   },
   "status": {
     "available": "Available",
@@ -982,5 +983,23 @@
     "body": "The Dreambox isn't answering. Is it switched on (not in deep standby), and is this device on the same network?",
     "retry": "Try again",
     "retrying": "Trying…"
+  },
+  "radio": {
+    "intro": "Radio plays through the box — on your TV or whatever it's connected to.",
+    "bouquet": "Bouquet",
+    "find": "Find a station",
+    "empty": "No radio stations in this bouquet.",
+    "noBouquets": "The box has no radio bouquets.",
+    "noMatch": "No station matches “{query}”.",
+    "play": "Play on the box",
+    "playing": "Playing",
+    "nowPlaying": "Now on the box",
+    "noEpg": "No programme information",
+    "timers": {
+      "title": "Radio recordings",
+      "empty": "No radio recordings planned. Open a programme to record it.",
+      "manage": "All timers",
+      "running": "recording"
+    }
   }
 }

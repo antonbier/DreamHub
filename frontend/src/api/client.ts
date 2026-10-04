@@ -256,6 +256,16 @@ export const api = {
     // The channel's logo from the box (404 when it has none).
     picon: (ref: string, name: string) => requestBlob(`/api/v1/guide/picon?ref=${encodeURIComponent(ref)}&name=${encodeURIComponent(name)}`),
   },
+  radio: {
+    bouquets: () => request<{ bouquets: Bouquet[] }>('GET', '/api/v1/radio/bouquets'),
+    // Every station of a radio bouquet with now/next (null without EPG),
+    // and what the box is playing.
+    stations: (bouquet: string) =>
+      request<{ stations: NowNext[]; playing: string }>('GET', `/api/v1/radio/stations?bouquet=${encodeURIComponent(bouquet)}`),
+    // Radio recordings that haven't ended yet, soonest first.
+    timers: () => request<{ timers: Timer[] }>('GET', '/api/v1/radio/timers'),
+    picon: (ref: string, name: string) => requestBlob(`/api/v1/radio/picon?ref=${encodeURIComponent(ref)}&name=${encodeURIComponent(name)}`),
+  },
   series: {
     markers: () => request<{ markers: SeriesMarker[] }>('GET', '/api/v1/series/markers'),
     detail: (id: number) => request<SeriesDetail>('GET', `/api/v1/series/markers/${id}`),

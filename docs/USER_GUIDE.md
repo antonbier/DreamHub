@@ -116,6 +116,10 @@ Four views, switched at the top; your choice is remembered:
 
 **Films only** and **Rated 7+** filter every view (needs TMDB). Any programme opens its details with **Record** and, while it's on, **Switch now**.
 
+### Radio
+
+Your radio stations, with what's on now and next where the station sends programme information. **Play on the box** switches the box to that station — you listen on the TV or whatever is connected to it; the station playing is shown on top. Any programme opens its details with **Record**; the radio recordings coming up are listed at the bottom. Stations can also be found through the search at the top.
+
 ### Timers
 
 All timers on the box, by day, with likely tuner conflicts marked. **Disable** keeps a timer in the list without recording; **Enable** turns it back on (with a conflict check first). **Delete** removes it — deleting a timer that is recording right now stops that recording, and the preview says so. **AutoTimer** shows the AutoTimer plugin's searches and a dry run of what they would add.

@@ -20,7 +20,8 @@
     "discovery": "Consigliati",
     "system": "Sistema",
     "admin": "Admin",
-    "control": "Telecomando"
+    "control": "Telecomando",
+    "radio": "Radio"
   },
   "status": {
     "available": "Disponibile",
@@ -982,5 +983,23 @@
     "body": "Il Dreambox non risponde. È acceso (non in standby profondo) e questo dispositivo è nella stessa rete?",
     "retry": "Riprova",
     "retrying": "Tentativo…"
+  },
+  "radio": {
+    "intro": "La radio suona tramite il box — sul televisore o su ciò che vi è collegato.",
+    "bouquet": "Bouquet",
+    "find": "Cerca un'emittente",
+    "empty": "Nessuna emittente radio in questo bouquet.",
+    "noBouquets": "Il box non ha bouquet radio.",
+    "noMatch": "Nessuna emittente corrisponde a «{query}».",
+    "play": "Riproduci sul box",
+    "playing": "In onda",
+    "nowPlaying": "Ora sul box",
+    "noEpg": "Nessuna informazione sul programma",
+    "timers": {
+      "title": "Registrazioni radio",
+      "empty": "Nessuna registrazione radio in programma. Apri un programma per registrarlo.",
+      "manage": "Tutti i timer",
+      "running": "in registrazione"
+    }
   }
 }

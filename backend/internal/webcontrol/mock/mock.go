@@ -162,7 +162,31 @@ func (*Client) Bouquets(ctx context.Context) ([]webcontrol.Service, error) {
 	return []webcontrol.Service{favouritesTV}, nil
 }
 
+// FavouritesRadio is the mock's one radio bouquet. No radio list has been
+// captured from the reference box yet, so the stations below are made up
+// (well-formed references with radio service type 2, a heading between
+// them), not recordings of real responses.
+var FavouritesRadio = webcontrol.Service{
+	ServiceReference: `1:7:2:0:0:0:0:0:0:0:FROM BOUQUET "userbouquet.favourites.radio" ORDER BY bouquet`,
+	ServiceName:      "Favourites (Radio)",
+}
+
+// Radio stations of FavouritesRadio, in bouquet order.
+var (
+	RadioBayern3 = webcontrol.Service{ServiceReference: "1:0:2:6F37:44D:1:C00000:0:0:0:", ServiceName: "BAYERN 3"}
+	RadioDLF     = webcontrol.Service{ServiceReference: "1:0:2:6F94:44D:1:C00000:0:0:0:", ServiceName: "Deutschlandfunk"}
+	RadioSWR3    = webcontrol.Service{ServiceReference: "1:0:2:6F9B:44D:1:C00000:0:0:0:", ServiceName: "SWR3"}
+	RadioKlassik = webcontrol.Service{ServiceReference: "1:0:2:7008:453:1:C00000:0:0:0:", ServiceName: "Klassik Radio"}
+	radioMarker  = webcontrol.Service{ServiceReference: "1:64:1:0:0:0:0:0:0:0::— Musik —", ServiceName: "— Musik —"}
+)
+
 func (*Client) Services(ctx context.Context, bouquetRef string) ([]webcontrol.Service, error) {
+	switch bouquetRef {
+	case webcontrol.RadioRoot:
+		return []webcontrol.Service{FavouritesRadio}, nil
+	case FavouritesRadio.ServiceReference:
+		return []webcontrol.Service{RadioDLF, radioMarker, RadioBayern3, RadioSWR3, RadioKlassik}, nil
+	}
 	return []webcontrol.Service{
 		{ServiceReference: "1:0:19:2EE3:441:1:C00000:0:0:0:", ServiceName: "RTL Television"},
 		{ServiceReference: "1:0:19:2B7A:3F3:1:C00000:0:0:0:", ServiceName: "zdf_neo HD"},
@@ -195,9 +219,35 @@ func epgSchedule() []webcontrol.EPGEvent {
 	}
 }
 
+// radioSchedule is the radio bouquet's evening; Klassik Radio sends no
+// EPG at all, as many stations don't.
+func radioSchedule() []webcontrol.EPGEvent {
+	ev := func(id int64, svc webcontrol.Service, h, m, minutes int, title, desc string) webcontrol.EPGEvent {
+		return webcontrol.EPGEvent{ID: id, Start: at(h, m), Duration: int64(minutes) * 60, Title: title, Description: desc,
+			ServiceReference: svc.ServiceReference, ServiceName: svc.ServiceName}
+	}
+	return []webcontrol.EPGEvent{
+		ev(101, RadioDLF, 20, 5, 55, "Konzertdokument der Woche", "Live-Mitschnitte aus Jazz und Pop"),
+		ev(102, RadioDLF, 21, 0, 5, "Nachrichten", ""),
+		ev(103, RadioDLF, 21, 5, 55, "Hörspiel: Der Process", "Nach Franz Kafka. Regie: Klaus Buhlert"),
+		ev(104, RadioDLF, 22, 0, 50, "Musikszene", ""),
+		ev(111, RadioBayern3, 19, 0, 120, "Die Abendshow", "Musik und Gäste"),
+		ev(112, RadioBayern3, 21, 0, 120, "Bayern 3 Nachtmix", ""),
+		ev(121, RadioSWR3, 20, 0, 120, "SWR3 Abendshow", ""),
+		ev(122, RadioSWR3, 22, 0, 120, "SWR3 Pop & Weck", ""),
+	}
+}
+
+func (c *Client) schedule(bouquetRef string) []webcontrol.EPGEvent {
+	if bouquetRef == FavouritesRadio.ServiceReference {
+		return radioSchedule()
+	}
+	return epgSchedule()
+}
+
 func (c *Client) EPGMulti(ctx context.Context, bouquetRef string, start, end int64) ([]webcontrol.EPGEvent, error) {
 	var out []webcontrol.EPGEvent
-	for _, e := range epgSchedule() {
+	for _, e := range c.schedule(bouquetRef) {
 		if e.Start >= start && e.Start < end {
 			out = append(out, e)
 		}
@@ -214,7 +264,15 @@ func (c *Client) EPGNowNext(ctx context.Context, bouquetRef string) ([]webcontro
 	}
 	var out []webcontrol.NowNext
 	index := map[string]int{}
-	for _, e := range epgSchedule() {
+	if bouquetRef == FavouritesRadio.ServiceReference {
+		// Stations without EPG come back with no events (the box's "None"),
+		// in bouquet order.
+		for _, svc := range []webcontrol.Service{RadioDLF, RadioBayern3, RadioSWR3, RadioKlassik} {
+			index[svc.ServiceReference] = len(out)
+			out = append(out, webcontrol.NowNext{ServiceReference: svc.ServiceReference, ServiceName: svc.ServiceName})
+		}
+	}
+	for _, e := range c.schedule(bouquetRef) {
 		i, ok := index[e.ServiceReference]
 		if !ok {
 			i = len(out)

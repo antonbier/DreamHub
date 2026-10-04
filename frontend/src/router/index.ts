@@ -38,6 +38,11 @@ const router = createRouter({
       component: () => import('@/views/GuideHubView.vue'),
     },
     {
+      path: '/radio',
+      name: 'radio',
+      component: () => import('@/views/RadioHubView.vue'),
+    },
+    {
       path: '/series',
       name: 'series',
       component: () => import('@/views/SeriesHubView.vue'),

@@ -54,7 +54,7 @@ From the requirements the core derives each hub's **status**: *available*, *degr
 | **SystemHub** | Device info, diagnostics, backup/restore, change log — for every user | v1 (basic) |
 | **AdminHub** | Logs (v1), service status, terminal (later) — admin role only | v1 (logs) |
 | **ControlHub** | Web remote, screenshot, power | v1 — pulled forward from v1.1: verifying the Enigma2 plugin (WP8) needed a real screenshot/remote-control loop anyway, and GuideHub's "switch to this channel now" needs it too (`docs/V1_PLAN.md`) |
-| **RadioHub** | Radio services, now playing, radio timers | v1.1 |
+| **RadioHub** | Radio services, now playing, radio timers | v1.1 (built early, 2026-10-04) |
 | **ChannelHub** | Bouquets (link/embed the existing BouquetEditor plugin), picons | v1.1 |
 | **StreamHub** | Live TV / radio in the browser | later |
 | **AutomationHub** | Scripts, webhooks, automations — the only place anything happens automatically | later |
@@ -100,7 +100,7 @@ The home page is a **personal dashboard made of tiles** (decided from the mockup
 - **Grouped**, generated from each hub's declared group and order (so regrouping is configuration, not code; user-customizable later):
   - *Dashboard*
   - *Media*: MediaHub, SeriesHub
-  - *Program*: GuideHub, TimerHub, DiscoveryHub, RadioHub
+  - *Program*: GuideHub, RadioHub, TimerHub, DiscoveryHub
   - *Device*: ChannelHub, ControlHub, SystemHub
   - bottom: AdminHub (admins only), Settings
 - **Labels selectable per user**: descriptive names (default, translated) or hub names (MediaHub, TimerHub, …) — similar to how nzb360 names the services it manages. The other name appears as a tooltip.

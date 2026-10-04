@@ -41,7 +41,8 @@
           <span class="tabular-nums">· {{ t('discovery.minutes', { n: Math.round(duration / 60) }) }}</span>
         </p>
 
-        <EnrichDetails v-if="info" class="mt-4" :info="info" :shown-title="title" :poster-width="120" :clamp="false" :recording="recording" />
+        <template v-if="plain" />
+        <EnrichDetails v-else-if="info" class="mt-4" :info="info" :shown-title="title" :poster-width="120" :clamp="false" :recording="recording" />
         <PosterImage v-else-if="recording" class="mt-4" :recording="recording" size="w185" :width="120" :height="180" :alt="title" />
         <p v-else-if="info === null" class="mt-4 text-[13px] text-faint">{{ t('discovery.noDetails') }}</p>
         <p v-else class="mt-4 text-[13px] text-faint">{{ t('common.loading') }}</p>
@@ -75,6 +76,9 @@ const props = defineProps<{
   // cover on the box (preferred over TMDB's poster).
   subtitle?: string
   recording?: string
+  // No film/series details to look up (a radio programme): skips the
+  // details block and its "nothing found" line.
+  plain?: boolean
 }>()
 defineEmits<{ close: [] }>()
 const { t } = useI18n()

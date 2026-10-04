@@ -71,8 +71,12 @@ func piconNames(ref, name string) []string {
 // picon serves ?ref=<service reference>&name=<channel name>: the first
 // picon found, read-only, a real PNG only. 404 off the box or without one
 // — the screen then shows the channel's name alone.
-func (h *Guide) picon(w http.ResponseWriter, r *http.Request) {
-	dirs := h.PiconDirs
+func (h *Guide) picon(w http.ResponseWriter, r *http.Request) { servePicon(w, r, h.PiconDirs) }
+
+// servePicon is the picon lookup shared by GuideHub and RadioHub (each
+// serves it under its own prefix, so neither depends on the other being
+// enabled). nil dirs means DefaultPiconDirs.
+func servePicon(w http.ResponseWriter, r *http.Request, dirs []string) {
 	if dirs == nil {
 		dirs = DefaultPiconDirs
 	}

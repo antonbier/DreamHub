@@ -13,6 +13,7 @@ const ROUTES: Record<string, string> = {
   m: '/media', // Media (Recordings)
   s: '/series', // Series
   g: '/guide', // Guide
+  o: '/radio', // Radio
   t: '/timers', // Timers
   r: '/discovery', // Recommendations
   y: '/system', // System

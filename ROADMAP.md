@@ -299,6 +299,17 @@ Pulled forward from v1.1 (`CONCEPT.md`, `docs/V1_PLAN.md`): verifying the Enigma
 ### RadioHub
 - Radio services, now playing, radio timers. Browser playback belongs in StreamHub (radio often uses MP2 audio, which browsers don't play reliably).
 
+**Done** (2026-10-04, built early against the mock while the box was out of reach — `internal/hubs/radio.go`, `RadioHubView.vue`):
+- [x] Radio bouquets from the radio root (`webcontrol.RadioRoot`, `1:7:2:…FROM BOUQUET "bouquets.radio"…`, through `Services` — `GET /api/v1/radio/bouquets`), headings (`1:64:…`) dropped
+- [x] Stations with now/next (`GET /api/v1/radio/stations?bouquet=`): the bouquet's own list for order and completeness, `/web/epgnownext` for the programmes (stations without EPG stay, as many send none), plus what the box plays (`/web/getcurrent`) — shown on top and marked in the list
+- [x] "Play on the box" — ControlHub's zap, as GuideHub's Switch
+- [x] Radio recordings: timers on radio services (`webcontrol.IsRadioService`: service type 0x02/0x0A, not a list or heading) that haven't ended (`GET /api/v1/radio/timers`); a programme opens the shared details dialog (`plain`: no TMDB lookup) with Record through TimerHub's plan/apply
+- [x] Station logos under RadioHub's own prefix (`/api/v1/radio/picon`, the picon lookup shared with GuideHub) so neither depends on the other hub being on; a search provider over station names (`/radio?bouquet=&station=` highlights it); `g o` opens it
+
+**Open**:
+- [ ] Check on the box (`device-access`): that `Services(RadioRoot)` lists the radio bouquets on DreamOS's WebInterface as on other Enigma2 images, that `/web/epgnownext` answers for a radio bouquet, and what the reference box's radio stations' references and EPG look like — the mock's stations are made up (well-formed), not captured; record a fixture once it answers
+- [ ] Radio text / now-playing song (RDS, DAB+ DLS) — not exposed by WebControl as far as known; look for it on the box before building anything
+
 ### ChannelHub
 - Link to / embed the BouquetEditor plugin (`/bouqueteditor/*`); its write endpoints still need a write-permitted check on the device. Picons from `/data/piconpool`.
 

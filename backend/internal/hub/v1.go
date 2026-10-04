@@ -16,6 +16,7 @@ const (
 	IDSystem    = "system"
 	IDAdmin     = "admin"
 	IDControl   = "control"
+	IDRadio     = "radio"
 )
 
 // CapJournald is the capability to read logs via journalctl (AdminHub).
@@ -26,8 +27,8 @@ const CapJournald = "journald"
 // WP8's Enigma2 plugin needed a real screenshot/remote-control loop
 // anyway (ARCHITECTURE.md, "Real screenshot and remote-control
 // endpoints"), and GuideHub's "switch to this channel now" needs it too.
-// The remaining v1.1 hubs (RadioHub, ChannelHub) are added when they're
-// built.
+// RadioHub (v1.1) was built early too, against the mock while the box was
+// out of reach (2026-10-04); ChannelHub is added when it's built.
 func V1() []Descriptor {
 	wc := Requirement{Connector: connector.IDWebControl}
 	return []Descriptor{
@@ -37,6 +38,9 @@ func V1() []Descriptor {
 			Requires: []Requirement{wc, {Connector: connector.IDSerienRecorder}}},
 		{ID: IDGuide, Name: "GuideHub", Label: "hub.guide", Icon: "guide", Path: "/guide", Group: GroupProgram, Order: 10,
 			Requires: []Requirement{wc, {Connector: connector.IDTMDB, Optional: true}}},
+		// Recording a radio programme needs TimerHub; listening doesn't.
+		{ID: IDRadio, Name: "RadioHub", Label: "hub.radio", Icon: "radio", Path: "/radio", Group: GroupProgram, Order: 15,
+			Requires: []Requirement{wc, {Hub: IDTimer, Optional: true}}},
 		{ID: IDTimer, Name: "TimerHub", Label: "hub.timer", Icon: "timers", Path: "/timers", Group: GroupProgram, Order: 20,
 			Requires: []Requirement{wc}},
 		// Recommendations need an AI provider; creating a timer from one

@@ -144,7 +144,7 @@ func TestNavigation(t *testing.T) {
 		t.Errorf("disabled SeriesHub must be hidden from the media group, got %+v", media)
 	}
 	program := nav.Sections[2].Items
-	if program[0].ID != IDGuide || program[1].ID != IDTimer || program[2].ID != IDDiscovery {
+	if program[0].ID != IDGuide || program[1].ID != IDRadio || program[2].ID != IDTimer || program[3].ID != IDDiscovery {
 		t.Errorf("program group must follow declared order, got %+v", program)
 	}
 	bottom := nav.Sections[4].Items

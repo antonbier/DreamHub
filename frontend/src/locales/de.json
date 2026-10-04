@@ -572,7 +572,11 @@
       "invalid_backup": "Das ist keine DreamHub-Sicherung oder eine mit einer nicht kompatiblen Version.",
       "restore_invalid": "Die Sicherung enthält Einstellungen, die nicht mehr gültig sind.",
       "boxSays": "Die Box meldet: „{text}“",
-      "invalid_message": "Die Nachricht darf nicht leer sein und höchstens 300 Zeichen haben."
+      "invalid_message": "Die Nachricht darf nicht leer sein und höchstens 300 Zeichen haben.",
+      "timer_toggle_running": "Der Timer nimmt gerade auf – Deaktivieren würde die Aufnahme abbrechen.",
+      "timer_toggle_restored": "Die Box hat die Änderung abgelehnt (meist ein Konflikt). Der Timer ist unverändert.",
+      "timer_unchanged": "Der Timer ist schon so eingestellt.",
+      "timer_in_past": "Die Zeit des Timers ist vorbei; er lässt sich nicht mehr aktivieren."
     },
     "media": {
       "not_a_recording": "Diese Aufnahme gibt es nicht (mehr).",
@@ -738,10 +742,7 @@
     "tomorrow": "Morgen",
     "showFinished": "Abgeschlossene Timer anzeigen ({count})",
     "hideFinished": "Abgeschlossene Timer ausblenden",
-    "deleted": "„{name}“ gelöscht.",
     "delete": "Löschen",
-    "confirmDelete": "Timer löschen",
-    "deletePreview": "Der Timer „{name}“ ({channel}, {when}) wird auf der Box gelöscht.",
     "zap": "nur umschalten",
     "repeating": "wiederholend",
     "likelyConflict": "wahrscheinlich Tuner-Konflikt",
@@ -769,6 +770,23 @@
       "disabled": "Aus",
       "simulateEyebrow": "Probelauf · diese Timer würden angelegt, nichts wurde geändert",
       "simulateNone": "Die AutoTimer würden gerade keine neuen Timer anlegen."
+    },
+    "enable": "Aktivieren",
+    "disable": "Deaktivieren",
+    "confirm": {
+      "disable": "Deaktivieren",
+      "enable": "Aktivieren",
+      "delete": "Timer löschen"
+    },
+    "preview": {
+      "disable": "Timer „{name}“ auf {channel}, {when}, wird deaktiviert: Er bleibt in der Liste, nimmt aber nichts auf.",
+      "enable": "Timer „{name}“ auf {channel}, {when}, wird wieder aktiviert.",
+      "delete": "Der Timer „{name}“ ({channel}, {when}) wird auf der Box gelöscht."
+    },
+    "done": {
+      "disable": "„{name}“ ist deaktiviert.",
+      "enable": "„{name}“ ist wieder aktiv.",
+      "delete": "„{name}“ gelöscht."
     }
   },
   "admin": {

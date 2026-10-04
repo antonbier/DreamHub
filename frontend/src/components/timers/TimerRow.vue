@@ -2,14 +2,14 @@
   One timer in TimerHub's list — DESIGN.md's three-column Row: time range
   (leading), name plus channel/source (main), state and a text action
   (trailing). A likely conflict tints the time in `warn` and says so in the
-  secondary line; the state uses a dot, never a pill. The delete preview
-  expands in place below the row (PlanPreview).
+  secondary line; the state uses a dot, never a pill. Disable/enable and
+  delete preview in place below the row (PlanPreview).
 -->
 <template>
   <li class="border-b border-line-soft last:border-none">
     <div class="group flex items-center gap-3 py-2 hover:bg-tile-2 below-sm:flex-wrap">
       <span
-        class="w-28 shrink-0 whitespace-nowrap font-mono text-[12.5px] tabular-nums below-sm:w-auto below-sm:basis-full"
+        class="w-36 shrink-0 whitespace-nowrap font-mono text-[12.5px] tabular-nums below-sm:w-auto below-sm:basis-full"
         :class="timer.conflict ? 'text-warn' : 'text-faint'"
       >
         {{ timeRange }}
@@ -31,6 +31,16 @@
       <!-- Kept in the layout (invisible) while its preview is open, so the
            state column doesn't jump. -->
       <button
+        v-if="toggleable"
+        type="button"
+        class="shrink-0 rounded px-2 py-1 text-[13px] text-accent hover:bg-tile opacity-0 focus:opacity-100 group-hover:opacity-100 below-md:opacity-100"
+        :class="{ invisible: deleting }"
+        :disabled="!!deleting"
+        @click="emit('toggle')"
+      >
+        {{ timer.disabled ? t('timers.enable') : t('timers.disable') }}
+      </button>
+      <button
         type="button"
         class="shrink-0 rounded px-2 py-1 text-[13px] text-accent hover:bg-tile opacity-0 focus:opacity-100 group-hover:opacity-100 below-md:opacity-100"
         :class="{ invisible: deleting }"
@@ -45,14 +55,14 @@
       <PlanPreview
         v-else-if="deleting.plan"
         :plan="deleting.plan"
-        :confirm-label="t('timers.confirmDelete')"
+        :confirm-label="t(`timers.confirm.${deleting.kind}`)"
         :busy="deleting.busy"
         :error="deleting.error"
-        danger
+        :danger="deleting.kind === 'delete'"
         @confirm="emit('confirm')"
         @cancel="emit('cancel')"
       >
-        {{ t('timers.deletePreview', { name: timer.name, channel: timer.serviceName, when: timeRange }) }}
+        {{ t(`timers.preview.${deleting.kind}`, { name: timer.name, channel: timer.serviceName, when: timeRange }) }}
       </PlanPreview>
       <div v-else-if="deleting.error" class="flex items-center gap-3 text-[12.5px] text-warn">
         {{ deleting.error }}
@@ -76,7 +86,7 @@ const props = defineProps<{
   // Finished timers span several days; show the date too.
   showDate?: boolean
 }>()
-const emit = defineEmits<{ delete: []; confirm: []; cancel: [] }>()
+const emit = defineEmits<{ delete: []; toggle: []; confirm: []; cancel: [] }>()
 
 const { t, locale } = useI18n()
 
@@ -106,5 +116,12 @@ const stateKey = computed(() => {
 const dotClass = computed(
   () => ({ recording: 'bg-onair', preparing: 'bg-warn', scheduled: 'bg-ok', done: 'bg-faint', disabled: 'bg-faint' })[stateKey.value],
 )
+// Disable/enable: not while it records (taking it out would stop the
+// recording), and enabling only while its time is still ahead.
+const toggleable = computed(() => {
+  if (stateKey.value === 'recording' || stateKey.value === 'preparing') return false
+  if (props.timer.disabled) return props.timer.end > Date.now() / 1000
+  return stateKey.value === 'scheduled'
+})
 const stateClass = computed(() => (stateKey.value === 'recording' ? 'text-onair' : 'text-muted'))
 </script>

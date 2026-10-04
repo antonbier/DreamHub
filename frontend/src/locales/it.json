@@ -572,7 +572,11 @@
       "invalid_backup": "Non è un file di backup di DreamHub, oppure proviene da una versione incompatibile.",
       "restore_invalid": "Il backup contiene impostazioni non più valide.",
       "boxSays": "Il box dice: \"{text}\"",
-      "invalid_message": "Il messaggio non può essere vuoto né superare i 300 caratteri."
+      "invalid_message": "Il messaggio non può essere vuoto né superare i 300 caratteri.",
+      "timer_toggle_running": "Il timer sta registrando: disattivarlo interromperebbe la registrazione.",
+      "timer_toggle_restored": "Il box ha rifiutato la modifica (di solito un conflitto). Il timer è invariato.",
+      "timer_unchanged": "Il timer è già impostato così.",
+      "timer_in_past": "L’orario del timer è passato; non si può più attivare."
     },
     "media": {
       "not_a_recording": "Questa registrazione non esiste (più).",
@@ -738,10 +742,7 @@
     "tomorrow": "Domani",
     "showFinished": "Mostra timer conclusi ({count})",
     "hideFinished": "Nascondi timer conclusi",
-    "deleted": "\"{name}\" eliminato.",
     "delete": "Elimina",
-    "confirmDelete": "Elimina timer",
-    "deletePreview": "Il timer \"{name}\" ({channel}, {when}) verrà eliminato dal box.",
     "zap": "solo cambio canale",
     "repeating": "ricorrente",
     "likelyConflict": "probabile conflitto di tuner",
@@ -769,6 +770,23 @@
       "disabled": "Spento",
       "simulateEyebrow": "Prova · questi timer verrebbero creati, nulla è cambiato",
       "simulateNone": "Al momento gli AutoTimer non creerebbero nuovi timer."
+    },
+    "enable": "Attiva",
+    "disable": "Disattiva",
+    "confirm": {
+      "disable": "Disattiva",
+      "enable": "Attiva",
+      "delete": "Elimina timer"
+    },
+    "preview": {
+      "disable": "Il timer «{name}» su {channel}, {when}, verrà disattivato: resta nell’elenco ma non registra nulla.",
+      "enable": "Il timer «{name}» su {channel}, {when}, verrà riattivato.",
+      "delete": "Il timer \"{name}\" ({channel}, {when}) verrà eliminato dal box."
+    },
+    "done": {
+      "disable": "«{name}» è disattivato.",
+      "enable": "«{name}» è di nuovo attivo.",
+      "delete": "\"{name}\" eliminato."
     }
   },
   "admin": {

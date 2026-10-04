@@ -354,12 +354,24 @@ func (c *Client) AddTimer(ctx context.Context, t webcontrol.NewTimer) error {
 			return nil
 		}
 	}
+	state := webcontrol.TimerWaiting
+	if t.Disabled {
+		state = webcontrol.TimerEnded // how the box reports a disabled timer
+	}
 	c.timers = append(c.timers, webcontrol.Timer{
 		ServiceReference: t.ServiceReference,
 		Name:             t.Name,
 		Description:      t.Description,
 		Begin:            t.Begin,
 		End:              t.End,
+		EventID:          t.EventID,
+		Disabled:         t.Disabled,
+		JustPlay:         t.JustPlay,
+		AfterEvent:       t.AfterEvent,
+		Location:         t.Dirname,
+		Tags:             t.Tags,
+		Repeated:         t.Repeated,
+		State:            state,
 	})
 	return nil
 }

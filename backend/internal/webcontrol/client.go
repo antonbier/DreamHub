@@ -174,6 +174,11 @@ type Timer struct {
 	Tags string `xml:"e2tags" json:"tags"`
 	// Repeated is a weekday bitmask (bit 0 = Monday); 0 for one-off timers.
 	Repeated int `xml:"e2repeated" json:"repeated"`
+	// AfterEvent ("0" nothing, "1" standby, "2" deep standby, "3" auto)
+	// and Location (the folder it records into) are kept as the box
+	// reports them, so a timer can be put back exactly (disable/enable).
+	AfterEvent string `xml:"e2afterevent" json:"afterEvent,omitempty"`
+	Location   string `xml:"e2location" json:"location,omitempty"`
 	// Filename is the file a running timer records into (empty before it
 	// starts) — how MediaHub knows a recording is still being written.
 	Filename string `xml:"e2filename" json:"filename"`
@@ -221,6 +226,27 @@ type NewTimer struct {
 	// EventID is the EPG event the timer records, if known (0 otherwise). It
 	// lets the box link the timer to its EPG entry.
 	EventID int64
+	// The rest only matters when putting an existing timer back (TimerHub's
+	// disable/enable): zero values give a new timer's defaults.
+	Disabled   bool
+	JustPlay   bool
+	AfterEvent string // "" = "3" (auto)
+	Dirname    string // "" = the box's preferred timer path
+	Tags       string
+	Repeated   int
+}
+
+// AsNewTimer is t as /web/timeradd needs it to recreate it unchanged.
+func (t Timer) AsNewTimer() NewTimer {
+	loc := t.Location
+	if loc == "None" {
+		loc = ""
+	}
+	return NewTimer{
+		ServiceReference: t.ServiceReference, Name: t.Name, Description: t.Description, Begin: t.Begin, End: t.End,
+		EventID: t.EventID, Disabled: t.Disabled, JustPlay: t.JustPlay, AfterEvent: t.AfterEvent, Dirname: loc,
+		Tags: t.Tags, Repeated: t.Repeated,
+	}
 }
 
 // Client is anything that can answer WebControl API calls — implemented by
@@ -603,19 +629,29 @@ func (c *HTTPClient) AddTimer(ctx context.Context, t NewTimer) error {
 	if t.EventID > 0 {
 		eit = strconv.FormatInt(t.EventID, 10)
 	}
+	flag := func(b bool) string {
+		if b {
+			return "1" // only "1" switches it on (ARCHITECTURE.md)
+		}
+		return "0"
+	}
+	afterEvent := t.AfterEvent
+	if afterEvent == "" {
+		afterEvent = "3" // "auto", Enigma2's default
+	}
 	form := url.Values{
 		"sRef":        {t.ServiceReference},
 		"begin":       {strconv.FormatInt(t.Begin, 10)},
 		"end":         {strconv.FormatInt(t.End, 10)},
 		"name":        {t.Name},
 		"description": {t.Description},
-		"repeated":    {"0"},
-		"dirname":     {""}, // the box's own preferred timer path
-		"tags":        {""},
+		"repeated":    {strconv.Itoa(t.Repeated)},
+		"dirname":     {t.Dirname}, // "" = the box's own preferred timer path
+		"tags":        {t.Tags},
 		"eit":         {eit},
-		"disabled":    {"0"},
-		"justplay":    {"0"},
-		"afterevent":  {"3"}, // "auto", Enigma2's default
+		"disabled":    {flag(t.Disabled)},
+		"justplay":    {flag(t.JustPlay)},
+		"afterevent":  {afterEvent},
 	}
 	return c.simpleWrite(ctx, "timeradd", form)
 }

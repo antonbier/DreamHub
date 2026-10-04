@@ -572,7 +572,11 @@
       "invalid_backup": "This isn't a DreamHub backup file, or it's from an incompatible version.",
       "restore_invalid": "The backup contains settings that no longer validate.",
       "boxSays": "The box says: “{text}”",
-      "invalid_message": "The message can't be empty or longer than 300 characters."
+      "invalid_message": "The message can't be empty or longer than 300 characters.",
+      "timer_toggle_running": "The timer is recording right now — disabling it would stop the recording.",
+      "timer_toggle_restored": "The box refused the change (usually a conflict). The timer is unchanged.",
+      "timer_unchanged": "The timer is already set that way.",
+      "timer_in_past": "The timer’s time has passed; it can’t be enabled again."
     },
     "media": {
       "not_a_recording": "This recording doesn't exist (anymore).",
@@ -738,10 +742,7 @@
     "tomorrow": "Tomorrow",
     "showFinished": "Show finished timers ({count})",
     "hideFinished": "Hide finished timers",
-    "deleted": "Deleted “{name}”.",
     "delete": "Delete",
-    "confirmDelete": "Delete timer",
-    "deletePreview": "The timer “{name}” ({channel}, {when}) will be deleted on the box.",
     "zap": "switch channel only",
     "repeating": "repeating",
     "likelyConflict": "likely tuner conflict",
@@ -769,6 +770,23 @@
       "disabled": "Off",
       "simulateEyebrow": "Dry run · these timers would be created, nothing was changed",
       "simulateNone": "The AutoTimers would create no new timers right now."
+    },
+    "enable": "Enable",
+    "disable": "Disable",
+    "confirm": {
+      "disable": "Disable",
+      "enable": "Enable",
+      "delete": "Delete timer"
+    },
+    "preview": {
+      "disable": "Timer “{name}” on {channel}, {when}, will be disabled: it stays in the list but records nothing.",
+      "enable": "Timer “{name}” on {channel}, {when}, will be enabled again.",
+      "delete": "The timer “{name}” ({channel}, {when}) will be deleted on the box."
+    },
+    "done": {
+      "disable": "“{name}” is disabled.",
+      "enable": "“{name}” is enabled again.",
+      "delete": "Deleted “{name}”."
     }
   },
   "admin": {

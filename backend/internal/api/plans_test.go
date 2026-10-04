@@ -500,3 +500,51 @@ func TestCSRF_EveryMutatingRoute(t *testing.T) {
 		}
 	}
 }
+
+func toggleBody(ref string, begin, end int64, enabled bool) string {
+	return fmt.Sprintf(`{"serviceReference":%q,"begin":%d,"end":%d,"enabled":%t}`, ref, begin, end, enabled)
+}
+
+func TestTimerToggle_DisableThenEnable(t *testing.T) {
+	e := newEnv(t)
+	timerDisabled := func() bool {
+		_, b := e.do(t, "GET", "/api/v1/timers", "", nil)
+		var out struct {
+			Timers []struct {
+				Name     string `json:"name"`
+				Disabled bool   `json:"disabled"`
+			} `json:"timers"`
+		}
+		json.Unmarshal(b, &out)
+		for _, tm := range out.Timers {
+			if strings.HasPrefix(tm.Name, "Bauer") {
+				return tm.Disabled
+			}
+		}
+		t.Fatalf("timer gone: %s", b)
+		return false
+	}
+	for _, enabled := range []bool{false, true} {
+		resp, b := e.do(t, "POST", "/api/v1/timers/toggle/plan", toggleBody(rtlRef, ev(20, 15), ev(21, 15), enabled), nil)
+		if resp.StatusCode != http.StatusOK {
+			t.Fatalf("plan (enabled=%v): %d %s", enabled, resp.StatusCode, b)
+		}
+		var p planResp
+		json.Unmarshal(b, &p)
+		if timerDisabled() != enabled { // still the opposite of the target
+			t.Fatal("a preview must not change anything")
+		}
+		if resp, b := e.do(t, "POST", "/api/v1/plans/"+p.Plan.ID+"/apply", "", nil); resp.StatusCode != http.StatusOK {
+			t.Fatalf("apply: %d %s", resp.StatusCode, b)
+		}
+		if timerDisabled() != !enabled {
+			t.Fatalf("after apply, disabled should be %v", !enabled)
+		}
+		if n := e.timerCount(t); n != 2 {
+			t.Fatalf("taken out and put back, still two timers: %d", n)
+		}
+	}
+	if resp, _ := e.do(t, "POST", "/api/v1/timers/toggle/plan", toggleBody(rtlRef, ev(20, 15), ev(21, 15), true), nil); resp.StatusCode != http.StatusConflict {
+		t.Errorf("already enabled: %d", resp.StatusCode)
+	}
+}

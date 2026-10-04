@@ -200,6 +200,9 @@ export const api = {
     eventId?: number
   }) => request<{ plan: Plan }>('POST', '/api/v1/timers/plan', req),
   // Identify the timer exactly as GET /api/v1/timers lists it.
+  // Disable (enabled=false) or enable a timer: preview, then apply.
+  timerTogglePlan: (t: { serviceReference: string; begin: number; end: number }, enabled: boolean) =>
+    request<{ plan: Plan }>('POST', '/api/v1/timers/toggle/plan', { serviceReference: t.serviceReference, begin: t.begin, end: t.end, enabled }),
   timerDeletePlan: (t: { serviceReference: string; begin: number; end: number }) =>
     request<{ plan: Plan }>('POST', '/api/v1/timers/delete/plan', {
       serviceReference: t.serviceReference,

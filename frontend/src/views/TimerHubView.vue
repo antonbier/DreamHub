@@ -53,6 +53,7 @@
             :time-zone="timeZone"
             :deleting="deleting?.key === rowKey(timer) ? deleting : null"
             @delete="previewDelete(timer)"
+            @toggle="previewToggle(timer)"
             @confirm="confirmDelete"
             @cancel="deleting = null"
           />
@@ -72,6 +73,7 @@
             show-date
             :deleting="deleting?.key === rowKey(timer) ? deleting : null"
             @delete="previewDelete(timer)"
+            @toggle="previewToggle(timer)"
             @confirm="confirmDelete"
             @cancel="deleting = null"
           />
@@ -209,12 +211,28 @@ const deleting = ref<DeleteState | null>(null)
 async function previewDelete(timer: Timer) {
   notice.value = ''
   const key = rowKey(timer)
-  deleting.value = { key, busy: true }
+  deleting.value = { key, kind: 'delete', busy: true }
   try {
     const res = await api.timerDeletePlan(timer)
-    if (deleting.value?.key === key) deleting.value = { key, plan: res.plan, busy: false }
+    if (deleting.value?.key === key) deleting.value = { key, kind: 'delete', plan: res.plan, busy: false }
   } catch (err) {
-    if (deleting.value?.key === key) deleting.value = { key, busy: false, error: planErrorMessage(err) }
+    if (deleting.value?.key === key) deleting.value = { key, kind: 'delete', busy: false, error: planErrorMessage(err) }
+  }
+}
+
+// Disable/enable (decision D5): taken out and put back with the other
+// flag, all or nothing — the backend restores the timer if the box
+// refuses (POST /api/v1/timers/toggle/plan).
+async function previewToggle(timer: Timer) {
+  notice.value = ''
+  const key = rowKey(timer)
+  const kind = timer.disabled ? 'enable' : 'disable'
+  deleting.value = { key, kind, busy: true }
+  try {
+    const res = await api.timerTogglePlan(timer, timer.disabled)
+    if (deleting.value?.key === key) deleting.value = { key, kind, plan: res.plan, busy: false }
+  } catch (err) {
+    if (deleting.value?.key === key) deleting.value = { key, kind, busy: false, error: planErrorMessage(err) }
   }
 }
 
@@ -226,11 +244,11 @@ async function confirmDelete() {
     await api.plans.apply(state.plan.id)
     const before = state.plan.changes[0]?.before as Timer | undefined
     deleting.value = null
-    notice.value = t('timers.deleted', { name: before?.name ?? '' })
+    notice.value = t(`timers.done.${state.kind}`, { name: before?.name ?? '' })
     await load()
   } catch (err) {
     // A failed or stale plan is used up — the user previews again.
-    deleting.value = { key: state.key, busy: false, error: planErrorMessage(err) }
+    deleting.value = { key: state.key, kind: state.kind, busy: false, error: planErrorMessage(err) }
   }
 }
 

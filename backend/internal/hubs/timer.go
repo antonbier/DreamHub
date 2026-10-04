@@ -41,6 +41,7 @@ func (h *Timer) Mount(mux *http.ServeMux) {
 	mux.HandleFunc("GET /api/v1/timers", h.list)
 	mux.HandleFunc("POST /api/v1/timers/plan", h.planCreate)
 	mux.HandleFunc("POST /api/v1/timers/delete/plan", h.planDelete)
+	mux.HandleFunc("POST /api/v1/timers/toggle/plan", h.planToggle)
 	mux.HandleFunc("GET /api/v1/timers/autotimers", h.autoTimers)
 	mux.HandleFunc("GET /api/v1/timers/autotimers/simulate", h.autoTimerSimulate)
 }

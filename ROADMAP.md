@@ -131,7 +131,7 @@ Releases: **Foundation** → **v1** → **v1.1** → **Later**. GitHub milestone
 - [x] Verified live against the reference box (read-only test instance): all 7 real timers recognized as SerienRecorder's, no false conflicts, AutoTimer detected with no rules configured
 
 **Open**:
-- [ ] Disable/enable a timer (decision D5 — `timerchange` has a buggy conflict path on the box)
+- [x] Disable/enable a timer (2026-10-04, decision D5, `internal/hubs/timer_toggle.go`): not through `/web/timerchange` (its conflict path is buggy) but by taking the timer out (`timerdelete`) and putting it back (`timeradd`) with only `disabled` changed — folder, tags, after-event, repeat and EPG link carried over (`Timer.AsNewTimer`). All or nothing: if the box refuses the changed timer (a conflict on enabling), the original is put back and the plan reports "unchanged". A recording timer is refused (taking it out would abort the recording); enabling previews the same conflict estimate as creating. Not yet run against the box
 - [ ] Exact conflict dry run through DreamHub's own Enigma2 plugin (D7) — WP8
 
 Notes:

@@ -19,6 +19,8 @@ The home page is a personal, customizable dashboard of tiles. Available in Germa
 
 Hubs get their data through **connectors** (WebControl, SerienRecorder, TMDB, OpenAI, later Plex/Jellyfin/Emby). The value is in how they connect: a recommendation becomes a timer, the timer becomes a recording, the recording gets a clean name — all in one place. Nothing is ever changed without showing you what will change first. See [CONCEPT.md](CONCEPT.md).
 
+**Using it:** [docs/USER_GUIDE.md](docs/USER_GUIDE.md) — installing on the box, first steps, every part explained, push notifications, troubleshooting.
+
 ## Tech stack
 
 - **Backend:** Go, statically compiled for ARM64, runs as a systemd service on port 8080. REST API + WebSockets.

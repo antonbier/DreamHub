@@ -24,4 +24,4 @@ Requires `go`, `msgfmt` (Debian/Ubuntu: `apt install gettext`) and `dpkg-deb`/`f
 
 - An actual apt feed to publish to (decision D4 in `docs/V1_PLAN.md` — package format itself doesn't depend on this)
 - Live install/upgrade/uninstall verified on the reference box
-- User docs: installing via WebAdmin's "Upload new `*-feed.list`" page
+- User docs: done ([`docs/USER_GUIDE.md`](../docs/USER_GUIDE.md)); the feed section names the feed file once it exists

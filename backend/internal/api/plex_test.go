@@ -185,6 +185,9 @@ func TestPlex_PlayOnTheBox(t *testing.T) {
 	if resp.StatusCode != http.StatusOK {
 		t.Fatalf("play: %d %s", resp.StatusCode, b)
 	}
+	if !box.MoviePlayer {
+		t.Error("a Plex film must open the movie player (seeking, pause), not play like a channel")
+	}
 	ref := box.LastZapped
 	const prefix = "4097:0:1:0:0:0:0:0:0:0:http%3a//127.0.0.1%3a8080/api/v1/plex/stream/"
 	if !strings.HasPrefix(ref, prefix) || !strings.HasSuffix(ref, "/file.mkv:Das Boot") || strings.Contains(ref, plexmock.Token) {

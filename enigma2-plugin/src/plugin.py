@@ -4,7 +4,8 @@
 # same screen: the plugin browser (PluginDescriptor's classic entry) and
 # the Extensions ("blue") menu, matching where AutoTimer/AdvancedMovieSelection
 # and the other Extensions plugins referenced in ARCHITECTURE.md put
-# themselves.
+# themselves. A third, at session start, registers /dreamhub/play on the
+# box's web server (webplay.py).
 from Plugins.Plugin import PluginDescriptor
 
 from . import _
@@ -14,6 +15,16 @@ def main(session, **kwargs):
     from .DreamHubScreen import DreamHubScreen
 
     session.open(DreamHubScreen)
+
+
+def sessionstart(reason, session=None, **kwargs):
+    if reason != 0 or session is None:
+        return
+    try:
+        from .webplay import register
+    except ImportError:
+        return  # no WebInterface on this box: nothing to register with
+    register(session)
 
 
 def Plugins(**kwargs):
@@ -27,4 +38,5 @@ def Plugins(**kwargs):
             icon="plugin.png",
             fnc=main,
         ),
+        PluginDescriptor(where=PluginDescriptor.WHERE_SESSIONSTART, fnc=sessionstart),
     ]

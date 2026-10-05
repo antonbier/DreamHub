@@ -6,6 +6,11 @@ Format follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/); version
 
 ## [Unreleased]
 
+## [0.1.7] - 2026-10-05
+
+### Fixed
+- Plex library: a film played on the box opened like a channel — TV infobar, no seeking or pause. WebControl's zap only opens the movie player for files on the box. DreamHub's TV plugin now offers `/dreamhub/play` on the box's web server, which opens the movie player like a recording from the movie list; with an older plugin DreamHub falls back to the plain zap.
+
 ## [0.1.6] - 2026-10-05
 
 ### Fixed

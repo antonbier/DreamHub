@@ -59,7 +59,7 @@ for lang in de it; do
     msgfmt "$ROOT/enigma2-plugin/src/locale/$lang/LC_MESSAGES/DreamHub.po" \
         -o "$PKG/usr/lib/enigma2/python/Plugins/Extensions/DreamHub/locale/$lang/LC_MESSAGES/DreamHub.mo"
 done
-for f in __init__.py backend.py plugin.py DreamHubScreen.py DreamHubSetup.py; do
+for f in __init__.py backend.py plugin.py DreamHubScreen.py DreamHubSetup.py webplay.py; do
     cp "$ROOT/enigma2-plugin/src/$f" "$PKG/usr/lib/enigma2/python/Plugins/Extensions/DreamHub/$f"
 done
 cp "$ROOT/enigma2-plugin/src/plugin.png" "$PKG/usr/lib/enigma2/python/Plugins/Extensions/DreamHub/plugin.png"

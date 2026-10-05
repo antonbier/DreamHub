@@ -42,6 +42,9 @@ type Client struct {
 	LastZapped  string
 	LastKey     int
 	LastMessage string
+	// MoviePlayer: the last play went to the movie player (PlayMovie), not
+	// a plain zap.
+	MoviePlayer bool
 	// screen is the simulated on-screen state Screenshot renders (screen.go).
 	screen screen
 }
@@ -374,6 +377,17 @@ func (c *Client) Zap(ctx context.Context, serviceReference string) error {
 	defer c.mu.Unlock()
 	c.LastZapped = serviceReference
 	c.Playing = serviceReference
+	return nil
+}
+
+// PlayMovie plays the reference like Zap, and records it as played in the
+// movie player.
+func (c *Client) PlayMovie(ctx context.Context, serviceReference, title string) error {
+	c.mu.Lock()
+	defer c.mu.Unlock()
+	c.LastZapped = serviceReference
+	c.Playing = serviceReference
+	c.MoviePlayer = true
 	return nil
 }
 

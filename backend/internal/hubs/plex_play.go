@@ -1,6 +1,7 @@
 package hubs
 
 import (
+	"errors"
 	"io"
 	"net"
 	"net/http"
@@ -9,6 +10,7 @@ import (
 
 	"github.com/antonbier/DreamHub/backend/internal/httpx"
 	"github.com/antonbier/DreamHub/backend/internal/plex"
+	"github.com/antonbier/DreamHub/backend/internal/webcontrol"
 )
 
 // Playing a Plex film on the box: Enigma2's own media player (servicemp4,
@@ -68,8 +70,16 @@ func (h *Plex) play(w http.ResponseWriter, r *http.Request) {
 		ext = "mkv"
 	}
 	streamURL := h.StreamBase + "/api/v1/plex/stream/" + id + "/file." + ext
-	if err := h.WC.Zap(r.Context(), serviceRefForURL(streamURL, displayTitle(it))); err != nil {
-		writeControlError(w, r, "zap", err)
+	// The movie player (seeking, pause), through DreamHub's TV plugin; a
+	// plugin from before 0.1.7 doesn't have it, then a plain zap still
+	// plays the film, just without the movie player's controls.
+	ref := serviceRefForURL(streamURL, displayTitle(it))
+	err = h.WC.PlayMovie(r.Context(), ref, displayTitle(it))
+	if errors.Is(err, webcontrol.ErrNotFound) {
+		err = h.WC.Zap(r.Context(), ref)
+	}
+	if err != nil {
+		writeControlError(w, r, "play", err)
 		return
 	}
 	httpx.WriteJSON(w, http.StatusOK, map[string]any{"playing": displayTitle(it)})

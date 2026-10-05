@@ -18,10 +18,11 @@ src/                        # becomes Extensions/DreamHub/ at install time
   DreamHubScreen.py          # the launcher screen: QR code + backend status
   DreamHubSetup.py           # the settings screen (port, authEnabled)
   backend.py                 # the two HTTP calls to 127.0.0.1, via Twisted's getPage (non-blocking)
+  webplay.py                 # /dreamhub/play on the box's web server: opens the movie player (PlexHub's films)
   locale/<lang>/LC_MESSAGES/DreamHub.po   # translation sources; de and it done, en is gettext's own source text
 ```
 
-Calls `127.0.0.1:<port>` (the local Go backend, default port 8080) only. No business logic of its own. Follows DreamOS's configured system language (`config.osd.language.value`, format `de_DE`) via gettext, confirmed against `PROJECT_PLAN.md`'s researched convention: `PluginLanguageDomain`/`PluginLanguagePath`, `gettext.bindtextdomain()`, re-initialized on every `language.addCallback()` — no separate language setting for the user to maintain.
+Calls `127.0.0.1:<port>` (the local Go backend, default port 8080) only. No business logic of its own. One addition since 0.1.7: at session start it registers `/dreamhub/play` on the box's own web server (WebInterface's `addExternalChild`, like AutoTimer's API, same login as `/web/*`) — it opens Enigma2's movie player for a reference. `/web/zap` only does that for a file path starting with `/`, so a Plex stream URL would otherwise play like a channel, without seeking. Follows DreamOS's configured system language (`config.osd.language.value`, format `de_DE`) via gettext, confirmed against `PROJECT_PLAN.md`'s researched convention: `PluginLanguageDomain`/`PluginLanguagePath`, `gettext.bindtextdomain()`, re-initialized on every `language.addCallback()` — no separate language setting for the user to maintain.
 
 ## Building and installing by hand (the `.deb` does this for you)
 

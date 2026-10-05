@@ -7,6 +7,7 @@ package webcontrol
 import (
 	"bytes"
 	"context"
+	"encoding/json"
 	"encoding/xml"
 	"errors"
 	"fmt"
@@ -284,6 +285,12 @@ type Client interface {
 	CurrentServiceReference(ctx context.Context) (string, error)
 	// Zap switches the live channel (ControlHub, GuideHub's "switch now").
 	Zap(ctx context.Context, serviceReference string) error
+	// PlayMovie plays a reference in Enigma2's movie player — seeking,
+	// pause, the movie infobar — through DreamHub's own TV plugin
+	// (/dreamhub/play). /web/zap only opens the movie player for a path
+	// starting with "/", so a stream URL would play like a channel.
+	// ErrNotFound when the plugin on the box is too old to have it.
+	PlayMovie(ctx context.Context, serviceReference, title string) error
 	// SendKey simulates a remote-control keypress (ControlHub).
 	SendKey(ctx context.Context, code int) error
 	// Message shows a text on the TV (ControlHub): kind is one of the
@@ -316,6 +323,10 @@ var ErrWritesDisabled = errors.New("webcontrol: write operations are disabled (D
 // wrong ones) configured (ARCHITECTURE.md, "WebControl auth for a backend on
 // the box itself").
 var ErrUnauthorized = errors.New("webcontrol: credentials required or rejected")
+
+// ErrNotFound is a 404 from the box: the path doesn't exist there (an
+// endpoint of a plugin that isn't installed, or too old).
+var ErrNotFound = errors.New("webcontrol: not found on the box")
 
 // RejectedError is a write the box refused (e2state=False). Text is the
 // box's own explanation, translated into the box's OSD language — show it,
@@ -725,6 +736,31 @@ func (c *HTTPClient) Zap(ctx context.Context, serviceReference string) error {
 	return nil
 }
 
+// PlayMovie asks DreamHub's TV plugin to open the movie player with the
+// reference (enigma2-plugin/src/webplay.py). A form POST like every other
+// write; the plugin answers {"ok": true} or {"ok": false, "error": "…"}.
+func (c *HTTPClient) PlayMovie(ctx context.Context, serviceReference, title string) error {
+	if !c.AllowWrites {
+		return ErrWritesDisabled
+	}
+	body, err := c.do(ctx, http.MethodPost, "/dreamhub/play", url.Values{"sRef": {serviceReference}, "title": {title}})
+	if err != nil {
+		return err
+	}
+	defer body.Close()
+	var res struct {
+		OK    bool   `json:"ok"`
+		Error string `json:"error"`
+	}
+	if err := json.NewDecoder(io.LimitReader(body, 1<<16)).Decode(&res); err != nil {
+		return fmt.Errorf("webcontrol: /dreamhub/play: %w", err)
+	}
+	if !res.OK {
+		return &RejectedError{Op: "play", Text: res.Error}
+	}
+	return nil
+}
+
 // SendKey simulates a remote-control keypress via /web/remotecontrol
 // (confirmed live 2026-09-25) — standard Linux input-event codes (KEY_OK =
 // 352, KEY_EXIT = 174, KEY_MENU = 139, the arrow/color/power keys — see
@@ -905,6 +941,9 @@ func (c *HTTPClient) do(ctx context.Context, method, path string, form url.Value
 	case http.StatusUnauthorized:
 		resp.Body.Close()
 		return nil, fmt.Errorf("webcontrol: %s: %w", path, ErrUnauthorized)
+	case http.StatusNotFound:
+		resp.Body.Close()
+		return nil, fmt.Errorf("webcontrol: %s: %w", path, ErrNotFound)
 	default:
 		resp.Body.Close()
 		return nil, fmt.Errorf("webcontrol: %s returned status %d", path, resp.StatusCode)

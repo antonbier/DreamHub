@@ -15,7 +15,7 @@
     "Undo" in a short notice; a season or series goes through the preview
     (PlanPreview), listing every episode.
   - "Play on the box" hands the file to the box's own player
-    (experimental, see the backend).
+    through the TV plugin's movie player (see the backend).
 -->
 <template>
   <div class="mx-auto max-w-content p-6 below-md:p-4">

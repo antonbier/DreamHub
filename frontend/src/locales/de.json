@@ -870,7 +870,7 @@
       "title": "Plex",
       "url": "Adresse des Plex-Servers",
       "token": "Plex-Token",
-      "playOnBox": "Filme auf der Box abspielen (experimentell)",
+      "playOnBox": "Filme auf der Box abspielen",
       "libraries": "Angezeigte Bibliotheken",
       "clientId": "Client-Kennung"
     },
@@ -1297,7 +1297,7 @@
     "playOnBox": "Auf der Box abspielen",
     "starting": "Startet …",
     "nowPlaying": "Läuft jetzt auf der Box: {title}",
-    "playHint": "Experimentell: Die Box spielt die Datei direkt vom Plex-Server, von vorn. Ob sie das Format kann, hängt von den Decodern der Box ab.",
+    "playHint": "Die Box spielt die Datei direkt vom Plex-Server im Filmplayer ab, von vorn. Ob sie das Format kann, hängt von den Decodern der Box ab.",
     "offlineAction": "Plex ist offline – Abspielen und Markieren gehen erst wieder, wenn der Server antwortet.",
     "noSummary": "Keine Beschreibung.",
     "file": "Datei",

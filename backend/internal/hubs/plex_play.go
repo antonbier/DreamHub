@@ -22,7 +22,8 @@ import (
 //
 // Whether a file plays depends on the box's decoders (container, video and
 // audio codec); the frontend shows the file's formats next to the button.
-// Experimental until confirmed on the reference box (ROADMAP.md).
+// Confirmed on the reference box with 0.1.7: most files play, with
+// seeking; a few report an unknown codec (ROADMAP.md, PlexHub).
 
 // ticket lets the box fetch one file for a while, without credentials.
 type ticket struct {

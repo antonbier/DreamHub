@@ -870,7 +870,7 @@
       "title": "Plex",
       "url": "Indirizzo del server Plex",
       "token": "Token Plex",
-      "playOnBox": "Riproduci i film sul box (sperimentale)",
+      "playOnBox": "Riproduci i film sul box",
       "libraries": "Librerie mostrate",
       "clientId": "Identificativo client"
     },
@@ -1297,7 +1297,7 @@
     "playOnBox": "Riproduci sul box",
     "starting": "Avvio …",
     "nowPlaying": "In riproduzione sul box: {title}",
-    "playHint": "Sperimentale: il box riproduce il file direttamente dal server Plex, dall’inizio. Se ci riesce dipende dai decoder del box.",
+    "playHint": "Il box riproduce il file direttamente dal server Plex nel suo lettore film, dall’inizio. Se ci riesce dipende dai decoder del box.",
     "offlineAction": "Plex è offline – riproduzione e segnatura tornano disponibili quando il server risponde.",
     "noSummary": "Nessuna descrizione.",
     "file": "File",

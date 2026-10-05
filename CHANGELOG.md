@@ -6,6 +6,9 @@ Format follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/); version
 
 ## [Unreleased]
 
+### Changed
+- Plex library: "Play on the box" is no longer marked experimental — confirmed on the reference box (movie player, seeking, pause).
+
 ## [0.1.7] - 2026-10-05
 
 ### Fixed

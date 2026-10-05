@@ -78,7 +78,7 @@ DreamHub works without any of these; each one adds something. All are entered un
 | --- | --- | --- |
 | **TMDB** (themoviedb.org → Settings → API) | yes | Posters, backdrops, ratings, descriptions everywhere; "Save covers"; name suggestions; the guide's film/rating filters |
 | **OMDb** (omdbapi.com/apikey.aspx) | yes, 1,000 lookups a day | Rotten Tomatoes, IMDb rating and Metascore in a title's details |
-| **fanart.tv** (fanart.tv → profile → API) | yes | The title's logo in the details |
+| **fanart.tv** (fanart.tv → profile → API) | yes | The title's logo above the details: a recording's details, a programme's in the TV guide and Recommendations, a series' page. Needs TMDB too (it finds the title), and fanart.tv doesn't have a logo for every title |
 | **OpenAI** | paid per use, capped by a daily limit you set | AI recommendations (Recommendations) and AI name suggestions |
 | **ntfy** topic | yes | Notifications on your phone — see *Notifications* below |
 
@@ -111,7 +111,7 @@ The films and series of your **Plex** server. Connect it under **Settings → Se
 
 - **Tiles or list** — switch at the top right; filter by text or by watched state, sort by title, recently added, year or rating.
 - **Watched** is Plex's own: marking a film or episode changes it in Plex right away (with **Undo**); a whole season or series shows every episode first.
-- **Play on the box** (experimental) plays the file straight from the Plex server with the box's own player, from the beginning — no Plex app on the box. Whether a file plays depends on its formats, shown in the details.
+- **Play on the box** plays the file straight from the Plex server with the box's own player, from the beginning — no Plex app on the box — in the box's movie player, so you can seek and pause with the remote. Whether a file plays depends on its formats, shown in the details.
 - When the Plex server is off, the library still shows what DreamHub last saw ("Plex offline · as of …"); playing and marking work again once it answers.
 - On **Home**, **Edit** can switch on the tile **Continue watching (Plex)**.
 

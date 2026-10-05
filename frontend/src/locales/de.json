@@ -140,7 +140,8 @@
   "search": {
     "noResults": "Keine Treffer.",
     "hint": "↑↓ zum Navigieren · ↵ zum Öffnen · Esc zum Schließen",
-    "label": "Suche"
+    "label": "Suche",
+    "setting": "Einstellung"
   },
   "onboarding": {
     "back": "Zurück",
@@ -668,7 +669,8 @@
       "namingHint": "Platzhalter: {'{'}title{'}'} {'{'}year{'}'} {'{'}season{'}'} {'{'}episode{'}'} {'{'}episodeTitle{'}'} {'{'}channel{'}'} {'{'}date{'}'}; Zahlen mit führenden Nullen: {'{'}episode:02{'}'}. Teile in [eckigen Klammern] entfallen, wenn ein Platzhalter darin leer ist, z. B. {'{'}title{'}'}[ ({'{'}year{'}'})].",
       "folderHint": "Leer = Aufnahmen bleiben, wo sie sind. Sonst ein Pfad unterhalb des Aufnahmeordners mit denselben Platzhaltern, z. B. {'{'}title{'}'}/Staffel {'{'}season:02{'}'} oder Filme.",
       "pushServerHint": "ntfy.sh ist der öffentliche Dienst; wer einen eigenen ntfy-Server betreibt, trägt dessen Adresse ein.",
-      "jumpTo": "Zum Abschnitt springen"
+      "tabs": "Bereiche der Einstellungen",
+      "leaveUnsaved": "Es gibt ungespeicherte Änderungen. Seite trotzdem verlassen?"
     },
     "general": {
       "title": "Allgemein",
@@ -806,6 +808,37 @@
       "ios": "Tippe in Safari auf „Teilen“ und dann auf „Zum Home-Bildschirm“. DreamHub öffnet sich dann im Vollbild wie eine App.",
       "needsHttps": "Browser bieten das Installieren nur über HTTPS an, und DreamHub ist hier über einfaches http geöffnet. Auf iPhone und iPad klappt „Teilen“ → „Zum Home-Bildschirm“ trotzdem. Für Android und Computer zeigt das Benutzerhandbuch, wie DreamHub über HTTPS erreichbar wird.",
       "browserMenu": "Nutze das Menü deines Browsers: „App installieren“ oder „Zum Startbildschirm hinzufügen“."
+    },
+    "tab": {
+      "general": "Allgemein",
+      "recordings": "Aufnahmen",
+      "services": "Dienste",
+      "notifications": "Benachrichtigungen",
+      "hubs": "Hubs",
+      "access": "Zugriff",
+      "system": "System"
+    },
+    "tabIntro": {
+      "services": "Verbindungen zu Diensten, die DreamHub nutzt. Nur WebControl ist nötig, alles andere ist optional.",
+      "hubs": "Ein ausgeschalteter Hub verschwindet aus der Navigation, der Suche und vom Dashboard."
+    },
+    "connectorState": {
+      "ok": "Verbunden",
+      "not_configured": "Nicht eingerichtet",
+      "unreachable": "Nicht erreichbar",
+      "not_installed": "Nicht installiert",
+      "not_implemented": "Noch nicht verfügbar"
+    },
+    "system": {
+      "diagnostics": {
+        "title": "Diagnose",
+        "body": "Status aller Hubs und der Selbsttest der Box, dessen Bericht sich als ZIP herunterladen lässt.",
+        "open": "Diagnose öffnen"
+      },
+      "wizard": {
+        "title": "Einrichtungsassistent",
+        "body": "Führt noch einmal durch Sprache, Verbindung zur Box, Anmeldung und optionale Dienste. Bestehende Einstellungen bleiben, bis du sie änderst."
+      }
     }
   },
   "notFound": {
@@ -1022,7 +1055,9 @@
       "nothingToRestore": "Diese Datei entspricht dem aktuellen Stand; nichts wiederherzustellen.",
       "confirmRestore": "Wiederherstellen",
       "restorePreview": "0 Änderungen wiederherzustellen | {count} Änderung aus dieser Sicherung vom {date} wiederherstellen. | {count} Änderungen aus dieser Sicherung vom {date} wiederherstellen.",
-      "restored": "Aus der Sicherung wiederhergestellt."
+      "restored": "Aus der Sicherung wiederhergestellt.",
+      "movedHint": "Backup und Wiederherstellen findest du jetzt in den Einstellungen.",
+      "openSettings": "Einstellungen → System"
     },
     "changes": {
       "title": "Änderungsprotokoll",

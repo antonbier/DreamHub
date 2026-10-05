@@ -46,10 +46,26 @@ type Field struct {
 	MinLength int      `json:"minLength,omitempty"`
 }
 
+// Tabs of the settings menu, in the order the menu shows them. A section
+// names its tab; the system tab holds only panels the frontend places
+// itself (backup, diagnostics), no schema sections.
+const (
+	TabGeneral       = "general"
+	TabRecordings    = "recordings"
+	TabServices      = "services"
+	TabNotifications = "notifications"
+	TabHubs          = "hubs"
+	TabAccess        = "access"
+	TabSystem        = "system"
+)
+
 // Section groups fields in the settings menu (general, auth, one per hub…).
 type Section struct {
-	ID     string
-	Label  string
+	ID    string
+	Label string
+	// Tab is the settings tab the section shows on (Tab*); empty means
+	// TabServices, where connectors live.
+	Tab    string
 	Fields []Field
 	// Check validates rules spanning several fields against the values that
 	// would be saved. It returns field key → error.

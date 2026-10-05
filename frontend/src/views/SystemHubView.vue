@@ -1,7 +1,6 @@
 <!--
   SystemHub's real screen (docs/V1_PLAN.md, WP5/WP6): device info
-  (GET /api/v1/deviceinfo), backup/restore of DreamHub's own state
-  (preview-and-confirm, PRINCIPLES.md), the change log
+  (GET /api/v1/deviceinfo), the change log
   (GET /api/v1/changes) with a client-side filter, and — as a second tab —
   diagnostics (GET /api/v1/hubs), which used to be its own core route.
   CONCEPT.md already describes diagnostics as "a diagnostics page in
@@ -68,39 +67,11 @@
           </dl>
         </section>
 
-        <!-- Backup & restore -->
-        <section class="mt-4 rounded border border-line bg-tile p-4">
-          <h2 class="text-[14px] font-semibold text-text">{{ t('system.backup.title') }}</h2>
-          <p class="mt-0.5 text-[12.5px] text-muted">{{ t('system.backup.body') }}</p>
-          <div class="mt-3 flex flex-wrap gap-2">
-            <button type="button" class="rounded border border-line px-3 py-1.5 text-[13px] text-text hover:bg-field" @click="download">
-              {{ t('system.backup.download') }}
-            </button>
-            <button
-              type="button"
-              class="rounded border border-line px-3 py-1.5 text-[13px] text-text hover:bg-field disabled:opacity-60"
-              :disabled="restoring"
-              @click="fileInput?.click()"
-            >
-              {{ restoring ? t('system.backup.restoring') : t('system.backup.restore') }}
-            </button>
-            <input ref="fileInput" type="file" accept="application/json" class="hidden" @change="onFileChosen" />
-          </div>
-          <p v-if="restoreError" class="mt-2 text-[12.5px] text-warn">{{ restoreError }}</p>
-          <p v-if="restored" class="mt-2 text-[12.5px] text-muted">{{ t('system.backup.restored') }}</p>
-          <div v-if="restorePlan" class="mt-3">
-            <PlanPreview
-              :plan="restorePlan"
-              :confirm-label="t('system.backup.confirmRestore')"
-              :busy="applying"
-              :error="applyError"
-              @confirm="applyRestore"
-              @cancel="restorePlan = null"
-            >
-              {{ t('system.backup.restorePreview', { count: restorePlan.changes.length, date: formatDate(restoreExportedAt) }, restorePlan.changes.length) }}
-            </PlanPreview>
-          </div>
-        </section>
+        <!-- Backup & restore moved to Settings → System. -->
+        <p class="mt-4 text-[13px] text-muted">
+          {{ t('system.backup.movedHint') }}
+          <RouterLink to="/settings/system" class="text-accent hover:underline">{{ t('system.backup.openSettings') }}</RouterLink>
+        </p>
 
         <!-- Change log -->
         <section class="mt-4">
@@ -169,16 +140,14 @@
 <script setup lang="ts">
 import { computed, onMounted, ref, watch } from 'vue'
 import { useI18n } from 'vue-i18n'
-import { useRoute, useRouter } from 'vue-router'
+import { RouterLink, useRoute, useRouter } from 'vue-router'
 import { api } from '@/api/client'
 import Icon from '@/components/Icon.vue'
 import SelfTestPanel from '@/components/system/SelfTestPanel.vue'
-import PlanPreview from '@/components/PlanPreview.vue'
 import { useNavigationStore } from '@/stores/navigation'
 import { useProblem } from '@/composables/useProblem'
 import { useDisplayTimeZone } from '@/composables/useDisplayTimeZone'
-import { usePlanError } from '@/composables/usePlanError'
-import type { BackupFile, ChangeEntry, DeviceInfo, HubStatus, Plan } from '@/api/types'
+import type { ChangeEntry, DeviceInfo, HubStatus } from '@/api/types'
 
 const { t, locale } = useI18n()
 const route = useRoute()
@@ -186,7 +155,6 @@ const router = useRouter()
 const navigation = useNavigationStore()
 const { describe, describeFix } = useProblem()
 const { timeZone } = useDisplayTimeZone()
-const { planErrorMessage } = usePlanError()
 
 const item = computed(() => navigation.navigation?.sections.flatMap((s) => s.items).find((i) => i.path === '/system'))
 
@@ -283,68 +251,4 @@ async function loadDiagnostics() {
 }
 
 watch(tab, (t) => { if (t === 'diagnostics') loadDiagnostics() }, { immediate: true })
-
-// Backup: downloaded client-side as a plain JSON file — the browser never
-// needs the endpoint's own Content-Disposition header since fetch() already
-// parsed the body.
-async function download() {
-  const backup = await api.system.backup()
-  const blob = new Blob([JSON.stringify(backup, null, 2)], { type: 'application/json' })
-  const url = URL.createObjectURL(blob)
-  const a = document.createElement('a')
-  a.href = url
-  a.download = `dreamhub-backup-${backup.exportedAt.slice(0, 10)}.json`
-  a.click()
-  URL.revokeObjectURL(url)
-}
-
-const fileInput = ref<HTMLInputElement | null>(null)
-const restoring = ref(false)
-const restoreError = ref('')
-const restored = ref(false)
-const restorePlan = ref<Plan | null>(null)
-const restoreExportedAt = ref('')
-const applying = ref(false)
-const applyError = ref('')
-
-async function onFileChosen(e: Event) {
-  const file = (e.target as HTMLInputElement).files?.[0]
-  if (fileInput.value) fileInput.value.value = ''
-  if (!file) return
-  restoreError.value = ''
-  restored.value = false
-  restorePlan.value = null
-  restoring.value = true
-  try {
-    const text = await file.text()
-    const parsed = JSON.parse(text) as BackupFile
-    const res = await api.system.restorePlan(parsed)
-    if (res.plan.changes.length === 0) {
-      restoreError.value = t('system.backup.nothingToRestore')
-    } else {
-      restorePlan.value = res.plan
-      restoreExportedAt.value = parsed.exportedAt
-    }
-  } catch (err) {
-    restoreError.value = err instanceof SyntaxError ? t('error.plan.invalid_backup') : planErrorMessage(err)
-  } finally {
-    restoring.value = false
-  }
-}
-
-async function applyRestore() {
-  if (!restorePlan.value) return
-  applying.value = true
-  applyError.value = ''
-  try {
-    await api.plans.apply(restorePlan.value.id)
-    restorePlan.value = null
-    restored.value = true
-    await loadChanges()
-  } catch (err) {
-    applyError.value = planErrorMessage(err)
-  } finally {
-    applying.value = false
-  }
-}
 </script>

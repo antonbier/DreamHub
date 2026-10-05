@@ -54,6 +54,8 @@ export interface SettingField {
 export interface SettingSection {
   id: string
   label: string
+  // The settings tab it shows on (src/lib/settingsTabs.ts).
+  tab: string
   fields: SettingField[]
 }
 

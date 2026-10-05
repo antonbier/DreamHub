@@ -3,14 +3,21 @@
   GET /api/v1/settings — every section and field the backend registers
   (general, auth, network, each connector, hubs) shows up here with no
   frontend-side list to keep in sync. See src/composables/useSettingsForm.ts.
+
+  Sections are grouped into tabs (DESIGN.md, "Settings"): each section names
+  its tab in the schema (backend/internal/settings, Section.Tab); the tab
+  order and the panels that aren't schema fields (API tokens, push test,
+  install, backup) are placed here. Every tab has its own address
+  (/settings/services), and /settings/services#tmdb scrolls to a section.
+  The old /settings#tmdb links still land on the right tab.
+
+  Drafts survive switching tabs (one form for the whole page); a tab with
+  unsaved changes carries a dot, and leaving the page with any asks first.
 -->
 <template>
   <div class="mx-auto max-w-content p-6 below-md:p-4">
     <div class="mb-4 flex items-center">
       <h1 class="text-[26px] font-bold">{{ t('settings.page.title') }}</h1>
-      <RouterLink to="/onboarding" class="ms-auto text-[13.5px] text-accent hover:underline">
-        {{ t('settings.page.runWizard') }}
-      </RouterLink>
     </div>
 
     <p v-if="form.loading.value" class="text-[14px] text-muted">{{ t('common.loading') }}</p>
@@ -20,82 +27,148 @@
         {{ t('common.retry') }}
       </button>
     </div>
-    <div v-else class="flex flex-col gap-4">
-      <!-- Twelve sections make a long page: a row of jump links, sticky at
-           the top, scrollable sideways on a phone. /settings#tmdb works too. -->
-      <nav
-        class="sticky top-0 z-10 -mx-6 -mt-2 flex gap-1 overflow-x-auto border-b border-line-soft bg-bg/95 px-6 py-2 backdrop-blur below-md:-mx-4 below-md:px-4"
-        :aria-label="t('settings.page.jumpTo')"
-      >
-        <a
-          v-for="section in form.sections.value"
-          :key="section.id"
-          :href="`#${section.id}`"
-          class="shrink-0 whitespace-nowrap rounded px-2.5 py-1 text-[13px]"
-          :class="current === section.id ? 'bg-tile-2 text-text' : 'text-muted hover:bg-tile-2 hover:text-text'"
-          @click.prevent="jump(section.id)"
+    <template v-else>
+      <!-- Scrollable sideways on a phone rather than wrapping or folding
+           into a menu. -->
+      <nav class="-mx-6 mb-5 flex gap-1 overflow-x-auto border-b border-line-soft px-6 below-md:-mx-4 below-md:px-4" :aria-label="t('settings.page.tabs')">
+        <RouterLink
+          v-for="tab in tabs"
+          :key="tab.id"
+          :to="`/settings/${tab.id}`"
+          class="-mb-px flex shrink-0 items-center gap-1.5 whitespace-nowrap border-b-2 px-3 py-2 text-[14px]"
+          :class="activeTab === tab.id ? 'border-accent text-text' : 'border-transparent text-muted hover:text-text'"
+          :aria-current="activeTab === tab.id ? 'page' : undefined"
         >
-          {{ text.sectionTitle(section) }}
-        </a>
+          {{ t(`settings.tab.${tab.id}`) }}
+          <span v-if="tabDirty(tab.id)" class="h-1.5 w-1.5 rounded-full bg-accent" :title="t('settings.page.unsavedChanges')" />
+          <span v-if="tabDirty(tab.id)" class="sr-only">{{ t('settings.page.unsavedChanges') }}</span>
+        </RouterLink>
       </nav>
-      <template v-for="section in form.sections.value" :key="section.id">
-        <SettingsSectionCard :id="section.id" :section="section" :form="form" class="scroll-mt-14" />
-        <!-- Not a schema field — tokens are a list of their own resources,
-             not a single setting — so this is placed by hand right after
-             Authentication rather than coming from the section loop. -->
-        <ApiTokensPanel v-if="section.id === 'auth'" />
-        <PushPanel v-if="section.id === 'push'" />
-        <InstallPanel v-if="section.id === 'general'" />
-      </template>
-    </div>
+
+      <div class="flex flex-col gap-4">
+        <p v-if="intro" class="text-[13.5px] text-muted">{{ intro }}</p>
+        <template v-for="section in tabSections" :key="section.id">
+          <SettingsSectionCard
+            :id="section.id"
+            :section="section"
+            :form="form"
+            :status="connectorState(section.id)"
+            class="scroll-mt-4"
+          />
+          <!-- Not schema fields — placed by hand next to their section. -->
+          <ApiTokensPanel v-if="section.id === 'auth'" />
+          <PushPanel v-if="section.id === 'push'" />
+          <InstallPanel v-if="section.id === 'general'" />
+        </template>
+
+        <template v-if="activeTab === 'system'">
+          <BackupPanel @restored="form.load()" />
+          <section class="rounded border border-line bg-tile p-5">
+            <h2 class="text-[15.5px] font-semibold">{{ t('settings.system.diagnostics.title') }}</h2>
+            <p class="mt-1 text-[13px] text-muted">{{ t('settings.system.diagnostics.body') }}</p>
+            <RouterLink to="/system?tab=diagnostics" class="mt-3 inline-block text-[13.5px] text-accent hover:underline">
+              {{ t('settings.system.diagnostics.open') }}
+            </RouterLink>
+          </section>
+          <section class="rounded border border-line bg-tile p-5">
+            <h2 class="text-[15.5px] font-semibold">{{ t('settings.system.wizard.title') }}</h2>
+            <p class="mt-1 text-[13px] text-muted">{{ t('settings.system.wizard.body') }}</p>
+            <RouterLink to="/onboarding" class="mt-3 inline-block text-[13.5px] text-accent hover:underline">
+              {{ t('settings.page.runWizard') }}
+            </RouterLink>
+          </section>
+        </template>
+      </div>
+    </template>
   </div>
 </template>
 
 <script setup lang="ts">
-import { nextTick, onBeforeUnmount, onMounted, ref } from 'vue'
-import { RouterLink, useRoute, useRouter } from 'vue-router'
+import { computed, nextTick, onBeforeUnmount, onMounted, ref, watch } from 'vue'
+import { onBeforeRouteLeave, RouterLink, useRoute, useRouter } from 'vue-router'
 import { useI18n } from 'vue-i18n'
 import SettingsSectionCard from '@/components/settings/SettingsSectionCard.vue'
 import ApiTokensPanel from '@/components/settings/ApiTokensPanel.vue'
 import PushPanel from '@/components/settings/PushPanel.vue'
 import InstallPanel from '@/components/settings/InstallPanel.vue'
+import BackupPanel from '@/components/settings/BackupPanel.vue'
+import { api } from '@/api/client'
 import { useSettingsForm } from '@/composables/useSettingsForm'
-import { useSettingsText } from '@/composables/useSettingsText'
+import { SETTINGS_TABS, type SettingsTab } from '@/lib/settingsTabs'
+import type { ConnectorState } from '@/api/types'
 
-const { t } = useI18n()
-const text = useSettingsText()
+const { t, te } = useI18n()
 const form = useSettingsForm()
 const route = useRoute()
 const router = useRouter()
 
-// The section at the top of the scroll area, highlighted in the jump row:
-// the last one whose top has passed just under the sticky row.
-const current = ref('')
-let scroller: HTMLElement | null = null
+const tabs = computed(() => SETTINGS_TABS.map((id) => ({ id })))
+const activeTab = computed<SettingsTab>(() => {
+  const p = route.params.tab
+  return typeof p === 'string' && (SETTINGS_TABS as readonly string[]).includes(p) ? (p as SettingsTab) : 'general'
+})
+const tabSections = computed(() => form.sections.value.filter((s) => s.tab === activeTab.value))
+const intro = computed(() => (te(`settings.tabIntro.${activeTab.value}`) ? t(`settings.tabIntro.${activeTab.value}`) : ''))
 
-function updateCurrent() {
-  const top = (scroller?.getBoundingClientRect().top ?? 0) + 80
-  let found = form.sections.value[0]?.id ?? ''
-  for (const s of form.sections.value) {
-    const el = document.getElementById(s.id)
-    if (el && el.getBoundingClientRect().top <= top) found = s.id
+function tabDirty(tab: SettingsTab): boolean {
+  return form.sections.value.some((s) => s.tab === tab && form.sectionDirty(s))
+}
+const anyDirty = computed(() => form.sections.value.some((s) => form.sectionDirty(s)))
+
+// A connector's state next to its section on the services tab. Section ids
+// match connector ids except for the AI provider.
+const connectors = ref<ConnectorState[]>([])
+const connectorIds: Record<string, string> = { ai: 'openai' }
+function connectorState(sectionId: string): ConnectorState['state'] | undefined {
+  if (activeTab.value !== 'services') return undefined
+  const id = connectorIds[sectionId] ?? sectionId
+  return connectors.value.find((c) => c.id === id)?.state
+}
+async function loadConnectors() {
+  try {
+    connectors.value = (await api.connectors()).connectors
+  } catch {
+    connectors.value = []
   }
-  current.value = found
 }
 
-function jump(id: string) {
-  document.getElementById(id)?.scrollIntoView({ behavior: 'smooth', block: 'start' })
-  router.replace({ hash: `#${id}` })
+// Saving a section can change a connector's state (a key entered).
+watch(
+  () => form.savingSection.value,
+  (now, before) => {
+    if (before && !now) void loadConnectors()
+  },
+)
+
+async function scrollToHash() {
+  const id = route.hash.slice(1)
+  if (!id) return
+  await nextTick()
+  document.getElementById(id)?.scrollIntoView({ block: 'start' })
+}
+
+watch(() => route.fullPath, scrollToHash)
+
+// The old one-page links (/settings#tmdb): the tab that holds the section.
+function redirectOldHash() {
+  if (route.params.tab || !route.hash) return
+  const section = form.sections.value.find((s) => s.id === route.hash.slice(1))
+  if (section) void router.replace({ path: `/settings/${section.tab}`, hash: route.hash })
+}
+
+onBeforeRouteLeave(() => {
+  if (anyDirty.value && !window.confirm(t('settings.page.leaveUnsaved'))) return false
+  return true
+})
+function onBeforeUnload(e: BeforeUnloadEvent) {
+  if (anyDirty.value) e.preventDefault()
 }
 
 onMounted(async () => {
-  await form.load()
-  await nextTick()
-  scroller = document.querySelector('main')
-  scroller?.addEventListener('scroll', updateCurrent, { passive: true })
-  const wanted = route.hash.slice(1)
-  if (wanted) document.getElementById(wanted)?.scrollIntoView({ block: 'start' })
-  updateCurrent()
+  window.addEventListener('beforeunload', onBeforeUnload)
+  await Promise.all([form.load(), loadConnectors()])
+  redirectOldHash()
+  await scrollToHash()
 })
-onBeforeUnmount(() => scroller?.removeEventListener('scroll', updateCurrent))
+onBeforeUnmount(() => window.removeEventListener('beforeunload', onBeforeUnload))
 </script>

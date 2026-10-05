@@ -140,7 +140,8 @@
   "search": {
     "noResults": "No matches.",
     "hint": "↑↓ to navigate · ↵ to go · esc to close",
-    "label": "Search"
+    "label": "Search",
+    "setting": "Setting"
   },
   "onboarding": {
     "back": "Back",
@@ -668,7 +669,8 @@
       "namingHint": "Placeholders: {'{'}title{'}'} {'{'}year{'}'} {'{'}season{'}'} {'{'}episode{'}'} {'{'}episodeTitle{'}'} {'{'}channel{'}'} {'{'}date{'}'}; numbers with leading zeros: {'{'}episode:02{'}'}. Parts in [square brackets] are left out when a placeholder in them is empty, e.g. {'{'}title{'}'}[ ({'{'}year{'}'})].",
       "folderHint": "Empty = recordings stay where they are. Otherwise a path below the recording folder with the same placeholders, e.g. {'{'}title{'}'}/Season {'{'}season:02{'}'} or Films.",
       "pushServerHint": "ntfy.sh is the public service; if you run your own ntfy server, enter its address.",
-      "jumpTo": "Jump to section"
+      "tabs": "Settings areas",
+      "leaveUnsaved": "There are unsaved changes. Leave the page anyway?"
     },
     "general": {
       "title": "General",
@@ -806,6 +808,37 @@
       "ios": "In Safari, tap Share, then “Add to Home Screen”. DreamHub then opens full screen like an app.",
       "needsHttps": "Browsers only offer to install an app over HTTPS, and DreamHub is open over plain http here. On an iPhone or iPad, Share → “Add to Home Screen” works anyway. For Android and desktops, the user guide shows how to put DreamHub behind HTTPS.",
       "browserMenu": "Use your browser's menu: “Install app” or “Add to home screen”."
+    },
+    "tab": {
+      "general": "General",
+      "recordings": "Recordings",
+      "services": "Services",
+      "notifications": "Notifications",
+      "hubs": "Hubs",
+      "access": "Access",
+      "system": "System"
+    },
+    "tabIntro": {
+      "services": "Connections to services DreamHub uses. Only WebControl is required; everything else is optional.",
+      "hubs": "A hub that is switched off disappears from the navigation, search and the dashboard."
+    },
+    "connectorState": {
+      "ok": "Connected",
+      "not_configured": "Not set up",
+      "unreachable": "Not reachable",
+      "not_installed": "Not installed",
+      "not_implemented": "Not available yet"
+    },
+    "system": {
+      "diagnostics": {
+        "title": "Diagnostics",
+        "body": "The status of every hub and the box self-test, whose report can be downloaded as a ZIP.",
+        "open": "Open diagnostics"
+      },
+      "wizard": {
+        "title": "Setup wizard",
+        "body": "Walks through language, the connection to the box, login and optional services again. Existing settings stay until you change them."
+      }
     }
   },
   "notFound": {
@@ -1022,7 +1055,9 @@
       "nothingToRestore": "This file matches the current state; nothing to restore.",
       "confirmRestore": "Restore",
       "restorePreview": "0 changes to restore | Restore {count} change from this backup, made {date}. | Restore {count} changes from this backup, made {date}.",
-      "restored": "Restored from the backup."
+      "restored": "Restored from the backup.",
+      "movedHint": "Backup and restore are in the settings now.",
+      "openSettings": "Settings → System"
     },
     "changes": {
       "title": "Change log",

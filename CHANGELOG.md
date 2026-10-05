@@ -6,6 +6,13 @@ Format follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/); version
 
 ## [Unreleased]
 
+### Changed
+- Settings are split into tabs: General, Recordings, Services, Notifications, Hubs, Access, System. Each tab has its own address (`/settings/services`); old `/settings#tmdb` links still work. Services shows each connector's state; System now holds backup & restore (moved from SystemHub), Diagnostics and the setup wizard. Settings are findable with Ctrl+K.
+- MediaHub marks a recording the box is writing or playing right now ("Recording" / "Playing on the TV") and offers no file actions for it; the dashboard's timer tile marks a running timer. Found during a live recording on the box: the refusals were right, the list just didn't say so up front.
+
+### Fixed
+- TimerHub: the state column lines up for timers that can't be toggled (a running one).
+
 ## [0.1.0] - 2026-10-04
 
 First release. Packages: `dreamhub_0.1.0_arm64.deb` (Dreambox One/Two — tested on a Dreambox One, DreamOS 2.6) and `dreamhub_0.1.0_armhf.deb` (DM900/DM920 — built, not yet tested on such a box). Install and first steps: `docs/USER_GUIDE.md`.

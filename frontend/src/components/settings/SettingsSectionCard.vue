@@ -5,7 +5,14 @@
 -->
 <template>
   <section class="rounded border border-line bg-tile p-5">
-    <h2 class="mb-4 text-[15.5px] font-semibold">{{ sectionTitle(section) }}</h2>
+    <div class="mb-4 flex items-center gap-3">
+      <h2 class="text-[15.5px] font-semibold">{{ sectionTitle(section) }}</h2>
+      <!-- A connector's state, on the services tab. -->
+      <span v-if="status" class="ms-auto flex shrink-0 items-center gap-1.5 text-[12.5px]" :class="statusClass">
+        <span class="h-1.5 w-1.5 rounded-full" :class="statusDot" />
+        {{ t(`settings.connectorState.${status}`) }}
+      </span>
+    </div>
     <div class="flex flex-col gap-4">
       <SettingsFieldInput
         v-for="field in visibleFields"
@@ -49,17 +56,31 @@ import type { useSettingsForm } from '@/composables/useSettingsForm'
 import { usePreferencesStore } from '@/stores/preferences'
 import { useNavigationStore } from '@/stores/navigation'
 import { isSupportedLocale } from '@/i18n'
-import type { SettingSection } from '@/api/types'
+import type { ConnectorState, SettingSection } from '@/api/types'
 
 const props = defineProps<{
   section: SettingSection
   form: ReturnType<typeof useSettingsForm>
+  // The section's connector state (services tab); absent elsewhere.
+  status?: ConnectorState['state']
 }>()
 
 const { t } = useI18n()
 const { sectionTitle } = useSettingsText()
 const preferences = usePreferencesStore()
 const navigation = useNavigationStore()
+
+const statusClass = computed(() => (props.status === 'unreachable' ? 'text-warn' : 'text-muted'))
+const statusDot = computed(() => {
+  switch (props.status) {
+    case 'ok':
+      return 'bg-ok'
+    case 'unreachable':
+      return 'bg-warn'
+    default:
+      return 'bg-faint'
+  }
+})
 
 // general.timezone only matters in "fixed" mode — hidden otherwise rather
 // than shown disabled, since it has nothing to say the rest of the time.

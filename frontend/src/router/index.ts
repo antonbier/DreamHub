@@ -15,7 +15,9 @@ const router = createRouter({
       component: () => import('@/views/DashboardView.vue'),
     },
     {
-      path: '/settings',
+      // /settings/<tab>, the tab ids of src/lib/settingsTabs.ts; plain
+      // /settings opens the first one.
+      path: '/settings/:tab?',
       name: 'settings',
       component: () => import('@/views/SettingsView.vue'),
     },

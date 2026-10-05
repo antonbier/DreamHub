@@ -274,6 +274,7 @@ func (Push) Settings() []settings.Section {
 	return []settings.Section{{
 		ID:    "push",
 		Label: "settings.push",
+		Tab:   settings.TabNotifications,
 		Fields: []settings.Field{
 			{Key: KeyPushServer, Type: settings.TypeString, Scope: settings.ScopeGlobal, Label: "settings.push.server", Default: "https://ntfy.sh"},
 			{Key: KeyPushTopic, Type: settings.TypeString, Scope: settings.ScopeGlobal, Label: "settings.push.topic", Default: ""},

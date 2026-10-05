@@ -63,12 +63,12 @@ Tip: put it on your phone's home screen — it then opens like an app. See [sect
 
 ### The setup assistant
 
-The first visit starts a short assistant: language, connection to the box, a password for DreamHub, which hubs to show, your channel list, and optionally an AI key. Everything in it can be changed later under **Settings**, and **Settings → Run setup assistant** starts it again.
+The first visit starts a short assistant: language, connection to the box, a password for DreamHub, which hubs to show, your channel list, and optionally an AI key. Everything in it can be changed later under **Settings**, and **Settings → System → Run setup wizard** starts it again. Settings are split into tabs — General, Recordings, Services, Notifications, Hubs, Access, System — and any setting can be found with **Ctrl+K**.
 
 ### Recommended: protect your network access
 
-- **Set a DreamHub password** (Settings → Authentication). Without one, anyone on your home network can use DreamHub.
-- **Lock down the box's own web interface too.** By default many boxes let every device on the home network use WebControl (port 80) without a password, even when one is set — DreamHub can't change that for you. In the box's own web interface settings, set **`localauth`** to *on* (`config.plugins.Webinterface.localauth=true`). If you do, enter the box's login under **Settings → WebControl** so DreamHub can still reach it.
+- **Set a DreamHub password** (Settings → Access → Authentication). Without one, anyone on your home network can use DreamHub.
+- **Lock down the box's own web interface too.** By default many boxes let every device on the home network use WebControl (port 80) without a password, even when one is set — DreamHub can't change that for you. In the box's own web interface settings, set **`localauth`** to *on* (`config.plugins.Webinterface.localauth=true`). If you do, enter the box's login under **Settings → Services → WebControl** so DreamHub can still reach it.
 
 ### Optional keys
 
@@ -154,7 +154,7 @@ DreamHub can sit on your phone's home screen or your computer's desktop and open
 - **Tailscale:** on any always-on machine in your network, `tailscale serve --bg http://192.168.1.43:8080` gives `https://<machine>.<tailnet>.ts.net`, reachable from your devices at home and away.
 - **A reverse proxy** you already run (Caddy, Nginx Proxy Manager, Traefik on a NAS), with a domain that points to it, forwarding to `http://<box IP>:8080`.
 
-Either way, enter that host name under **Settings → Network → Additional allowed host names**, or DreamHub refuses requests addressed to it (protection against DNS rebinding).
+Either way, enter that host name under **Settings → Access → Network → Additional allowed host names**, or DreamHub refuses requests addressed to it (protection against DNS rebinding).
 
 When the box is off or out of reach, the app opens anyway and says so, and connects by itself once the box answers again. Nothing from the box is kept on the phone: timers, recordings and the guide are always live.
 
@@ -165,7 +165,7 @@ When the box is off or out of reach, the app opens anyway and says so, and conne
 DreamHub can send a short message to your phone when something happens, through the free **ntfy** app (iPhone and Android; no account needed):
 
 1. Install **ntfy** on your phone.
-2. In DreamHub, **Settings → Push notifications**: enter a **topic** — a name that's hard to guess; the page suggests one — and save.
+2. In DreamHub, **Settings → Notifications**: enter a **topic** — a name that's hard to guess; the page suggests one — and save.
 3. In the ntfy app, subscribe to the same topic (server `ntfy.sh` unless you run your own), then press **Send a test** in DreamHub.
 
 Choose which events send a message: a recording finished (on), a recording started (off), **a missing episode of one of your series airs in the next 24 hours** (on), a possible timer conflict (on), the disk is almost full (on), **a service on the box goes down or comes back** (on — Samba, the softcam, enigma2 itself; DreamHub checks every minute and only reports a service that stays down). The bell at the top of DreamHub shows all of these too, with or without push.
@@ -179,9 +179,9 @@ Privacy: a message's text (a recording's or series' title, a channel name) passe
 - **Not sure what works on your box?** **System → Diagnostics → Run self-test** asks the box everything DreamHub needs, without changing anything, and marks each answer: fine, worth a look, failed, or not applicable. **Download the box's answers** gives a zip that helps when reporting a problem.
 - **DreamHub doesn't open:** check that the service runs — in the WebAdmin terminal, `systemctl status dreamhub`. Its log: `journalctl -u dreamhub -n 100`.
 - **A hub shows "unavailable" or "degraded":** the sidebar dot and the bell say why and how to fix it (a missing key, a plugin that isn't installed, the box not answering). **System → Diagnostics** lists all of them.
-- **"Could not reach WebControl":** the box's interface is restarting or busy (after an update, enigma2 takes a moment), or it now asks for a login — enter it under **Settings → WebControl**.
+- **"Could not reach WebControl":** the box's interface is restarting or busy (after an update, enigma2 takes a moment), or it now asks for a login — enter it under **Settings → Services → WebControl**.
 - **File actions are missing in Recordings:** they need DreamHub to run on the box itself; the page says so when they're not available.
-- **No pictures:** add a TMDB key and make sure *Load pictures, ratings and overviews* is on (Settings → TMDB).
+- **No pictures:** add a TMDB key and make sure *Load pictures, ratings and overviews* is on (Settings → Services → TMDB).
 - **More detail for a bug report:** **Admin → Logs**, set the level to *debug* for a while (it switches back by itself).
 
 Problems and ideas: the repository's issue tracker on GitHub.

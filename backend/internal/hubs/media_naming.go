@@ -32,6 +32,7 @@ func MediaSettingsSection() settings.Section {
 	return settings.Section{
 		ID:    "media",
 		Label: "settings.media",
+		Tab:   settings.TabRecordings,
 		Fields: []settings.Field{
 			{Key: KeyNamingMovie, Type: settings.TypeString, Scope: settings.ScopeGlobal, Label: "settings.media.namingMovie", Default: naming.DefaultMovieTemplate},
 			{Key: KeyNamingEpisode, Type: settings.TypeString, Scope: settings.ScopeGlobal, Label: "settings.media.namingEpisode", Default: naming.DefaultEpisodeTemplate},

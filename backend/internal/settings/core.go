@@ -38,6 +38,7 @@ func CoreSections() []Section {
 		{
 			ID:    "general",
 			Label: "settings.general",
+			Tab:   TabGeneral,
 			Fields: []Field{
 				{Key: KeyLanguage, Type: TypeEnum, Scope: ScopeUser, Label: "settings.general.language", Default: "en", Options: []string{"de", "it", "en"}},
 				{Key: KeyTimezoneMode, Type: TypeEnum, Scope: ScopeUser, Label: "settings.general.timezoneMode", Default: "box", Options: []string{"box", "browser", "fixed"}},
@@ -55,6 +56,7 @@ func CoreSections() []Section {
 		{
 			ID:    "auth",
 			Label: "settings.auth",
+			Tab:   TabAccess,
 			Fields: []Field{
 				{Key: KeyAuthEnabled, Type: TypeBool, Scope: ScopeGlobal, Label: "settings.auth.enabled", Default: false},
 				{Key: KeyAuthUsername, Type: TypeString, Scope: ScopeGlobal, Label: "settings.auth.username", Default: ""},
@@ -78,6 +80,7 @@ func CoreSections() []Section {
 		{
 			ID:    "network",
 			Label: "settings.network",
+			Tab:   TabAccess,
 			Fields: []Field{
 				{Key: KeyAllowedHosts, Type: TypeString, Scope: ScopeGlobal, Label: "settings.network.allowedHosts", Default: ""},
 			},

@@ -111,7 +111,7 @@ func EnabledKey(hubID string) string { return "hubs." + hubID + ".enabled" }
 // registered hub (used by the settings menu and the onboarding wizard).
 // Call it after all hubs are added.
 func (r *Registry) SettingsSection() settings.Section {
-	sec := settings.Section{ID: "hubs", Label: "settings.hubs"}
+	sec := settings.Section{ID: "hubs", Label: "settings.hubs", Tab: settings.TabHubs}
 	for _, d := range r.hubs {
 		sec.Fields = append(sec.Fields, settings.Field{
 			Key: EnabledKey(d.ID), Type: settings.TypeBool, Scope: settings.ScopeGlobal, Label: d.Label, Default: true,

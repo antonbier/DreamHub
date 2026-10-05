@@ -140,7 +140,8 @@
   "search": {
     "noResults": "Nessun risultato.",
     "hint": "↑↓ per navigare · ↵ per aprire · Esc per chiudere",
-    "label": "Cerca"
+    "label": "Cerca",
+    "setting": "Impostazione"
   },
   "onboarding": {
     "back": "Indietro",
@@ -668,7 +669,8 @@
       "namingHint": "Segnaposto: {'{'}title{'}'} {'{'}year{'}'} {'{'}season{'}'} {'{'}episode{'}'} {'{'}episodeTitle{'}'} {'{'}channel{'}'} {'{'}date{'}'}; numeri con zeri iniziali: {'{'}episode:02{'}'}. Le parti tra [parentesi quadre] vengono omesse se un segnaposto al loro interno è vuoto, ad es. {'{'}title{'}'}[ ({'{'}year{'}'})].",
       "folderHint": "Vuoto = le registrazioni restano dove sono. Altrimenti un percorso sotto la cartella di registrazione con gli stessi segnaposto, ad es. {'{'}title{'}'}/Stagione {'{'}season:02{'}'} o Film.",
       "pushServerHint": "ntfy.sh è il servizio pubblico; se usi un tuo server ntfy, inserisci il suo indirizzo.",
-      "jumpTo": "Vai alla sezione"
+      "tabs": "Aree delle impostazioni",
+      "leaveUnsaved": "Ci sono modifiche non salvate. Lasciare comunque la pagina?"
     },
     "general": {
       "title": "Generale",
@@ -806,6 +808,37 @@
       "ios": "In Safari tocca Condividi, poi «Aggiungi alla schermata Home». DreamHub si aprirà a schermo intero come un'app.",
       "needsHttps": "I browser offrono l'installazione solo via HTTPS, e qui DreamHub è aperto in semplice http. Su iPhone o iPad, Condividi → «Aggiungi alla schermata Home» funziona comunque. Per Android e computer, la guida spiega come rendere DreamHub raggiungibile via HTTPS.",
       "browserMenu": "Usa il menu del browser: «Installa app» o «Aggiungi a schermata Home»."
+    },
+    "tab": {
+      "general": "Generale",
+      "recordings": "Registrazioni",
+      "services": "Servizi",
+      "notifications": "Notifiche",
+      "hubs": "Hub",
+      "access": "Accesso",
+      "system": "Sistema"
+    },
+    "tabIntro": {
+      "services": "Collegamenti ai servizi usati da DreamHub. Solo WebControl è necessario, tutto il resto è facoltativo.",
+      "hubs": "Un hub disattivato scompare dalla navigazione, dalla ricerca e dalla dashboard."
+    },
+    "connectorState": {
+      "ok": "Connesso",
+      "not_configured": "Non configurato",
+      "unreachable": "Non raggiungibile",
+      "not_installed": "Non installato",
+      "not_implemented": "Non ancora disponibile"
+    },
+    "system": {
+      "diagnostics": {
+        "title": "Diagnostica",
+        "body": "Lo stato di ogni hub e l’autotest del box, il cui rapporto si può scaricare come ZIP.",
+        "open": "Apri la diagnostica"
+      },
+      "wizard": {
+        "title": "Configurazione guidata",
+        "body": "Ripercorre lingua, collegamento al box, accesso e servizi facoltativi. Le impostazioni esistenti restano finché non le cambi."
+      }
     }
   },
   "notFound": {
@@ -1022,7 +1055,9 @@
       "nothingToRestore": "Questo file corrisponde allo stato attuale; nulla da ripristinare.",
       "confirmRestore": "Ripristina",
       "restorePreview": "0 modifiche da ripristinare | Ripristina {count} modifica da questo backup del {date}. | Ripristina {count} modifiche da questo backup del {date}.",
-      "restored": "Ripristinato dal backup."
+      "restored": "Ripristinato dal backup.",
+      "movedHint": "Backup e ripristino ora si trovano nelle impostazioni.",
+      "openSettings": "Impostazioni → Sistema"
     },
     "changes": {
       "title": "Registro modifiche",

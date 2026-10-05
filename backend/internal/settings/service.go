@@ -82,6 +82,7 @@ type FieldView struct {
 type SectionView struct {
 	ID     string      `json:"id"`
 	Label  string      `json:"label"`
+	Tab    string      `json:"tab"`
 	Fields []FieldView `json:"fields"`
 }
 
@@ -162,7 +163,11 @@ func (s *Service) View(ctx context.Context, u store.User) ([]SectionView, error)
 	vals, isSet := s.effective(stored, u)
 	out := []SectionView{}
 	for _, sec := range s.reg.Sections() {
-		sv := SectionView{ID: sec.ID, Label: sec.Label, Fields: []FieldView{}}
+		tab := sec.Tab
+		if tab == "" {
+			tab = TabServices
+		}
+		sv := SectionView{ID: sec.ID, Label: sec.Label, Tab: tab, Fields: []FieldView{}}
 		for _, f := range sec.Fields {
 			fv := FieldView{Field: f, HasValue: isSet[f.Key], IsDefault: !isSet[f.Key]}
 			switch f.Type {

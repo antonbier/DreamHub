@@ -1,8 +1,10 @@
 <!--
   Global search (CONCEPT.md, "Global search"): opened with `/` or
   Cmd/Ctrl+K (DESIGN.md, Interaction), closed with Escape or a backdrop
-  click. Two sources, merged into one list: the sidebar's own pages
-  (Dashboard, Settings, every hub) matched locally, and GET /api/v1/search
+  click. Three sources, merged into one list: the sidebar's own pages
+  (Dashboard, Settings, every hub) and every setting (section titles and
+  field labels, from GET /api/v1/settings, loaded once per opening)
+  matched locally, and GET /api/v1/search
   (debounced) for hub-contributed content — TimerHub is the first real
   provider (ROADMAP.md, hub contract); more hubs join as they implement
   hub.SearchProvider.
@@ -64,6 +66,8 @@ import Icon from './Icon.vue'
 import { api } from '@/api/client'
 import { useNavigationStore } from '@/stores/navigation'
 import { useFocusTrap } from '@/composables/useFocusTrap'
+import { useSettingsText } from '@/composables/useSettingsText'
+import type { SettingSection } from '@/api/types'
 
 const { t } = useI18n()
 const router = useRouter()
@@ -92,6 +96,36 @@ const allItems = computed<ResultItem[]>(
       .flatMap((s) => s.items)
       .map((i) => ({ key: `page:${i.path}`, path: i.path, label: t(i.label), icon: i.icon })) ?? [],
 )
+
+// Settings: a section matches by its title or any of its field labels and
+// opens on its tab, scrolled to the section.
+const settingsText = useSettingsText()
+const settingSections = ref<SettingSection[]>([])
+async function loadSettings() {
+  try {
+    settingSections.value = (await api.settings.get()).sections
+  } catch {
+    settingSections.value = []
+  }
+}
+const settingResults = computed<ResultItem[]>(() => {
+  const q = query.value.trim().toLowerCase()
+  if (q.length < 2) return []
+  const out: ResultItem[] = []
+  for (const sec of settingSections.value) {
+    const title = settingsText.sectionTitle(sec)
+    const field = sec.fields.map((f) => settingsText.fieldLabel(f)).find((l) => l.toLowerCase().includes(q))
+    if (!title.toLowerCase().includes(q) && !field) continue
+    out.push({
+      key: `setting:${sec.id}`,
+      path: `/settings/${sec.tab}#${sec.id}`,
+      label: field && !title.toLowerCase().includes(q) ? field : title,
+      subtitle: [t('search.setting'), t(`settings.tab.${sec.tab}`), field && !title.toLowerCase().includes(q) ? title : ''].filter(Boolean).join(' · '),
+      icon: 'settings',
+    })
+  }
+  return out
+})
 
 // Hub-contributed content (GET /api/v1/search) — debounced, and only while
 // the palette is open and there's something to search for.
@@ -123,7 +157,7 @@ watch(query, (q) => {
 const results = computed(() => {
   const q = query.value.trim().toLowerCase()
   const pages = q === '' ? allItems.value : allItems.value.filter((i) => i.label.toLowerCase().includes(q))
-  return [...pages, ...hubResults.value].slice(0, 8)
+  return [...pages, ...settingResults.value, ...hubResults.value].slice(0, 8)
 })
 
 function show() {
@@ -132,6 +166,7 @@ function show() {
   query.value = ''
   hubResults.value = []
   active.value = 0
+  void loadSettings()
   void nextTick(() => inputEl.value?.focus())
 }
 function close() {

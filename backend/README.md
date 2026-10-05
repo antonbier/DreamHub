@@ -69,7 +69,7 @@ Then open `http://<box>:8090`. Stop with `kill $(pidof dreamhub)` and remove `/t
 | POST | `/api/v1/media/trash/empty/plan` | `{paths}`: preview deleting trashed recordings for good. Lists every file and returns `bytes`. MediaHub's only real delete |
 
 MediaHub file changes are applied only when DreamHub runs on the box and device writes are on. With `DREAMHUB_ENABLE_DEVICE_WRITES=0`, previews still work and applying answers `409 writes_disabled`. Every apply re-checks that the file isn't being recorded or played.
-| GET | `/api/v1/settings` | all sections with effective values; secrets masked, passwords never returned (`hasValue` only) |
+| GET | `/api/v1/settings` | all sections with effective values; secrets masked, passwords never returned (`hasValue` only). Each section names its `tab` in the settings menu (`general`, `recordings`, `services`, `notifications`, `hubs`, `access`; `settings.Tab*`) |
 | PATCH | `/api/v1/settings` | `{"values": {"<key>": <value or null>}}` — `null` resets to default. All-or-nothing; on failure `400 validation_failed` with a code per field in `error.details` |
 | GET | `/api/v1/navigation` | the sidebar for the current user: sections (`main`, `media`, `program`, `device`, `bottom`), each hub with `name` (MediaHub…), `label` (i18n key), `status` and `problems`; disabled hubs and hubs the role can't see are omitted; `labels` is the user's `descriptive`/`hub` choice |
 | GET | `/api/v1/hubs` | diagnostics: every hub the user may see, including disabled ones, with status, problems, requirements and `emits` — the event keys from its area (`internal/events/keys.go`) |

@@ -486,6 +486,35 @@ func TestSettings_GetReturnsCoreSections(t *testing.T) {
 	}
 }
 
+func TestSettings_EverySectionHasItsTab(t *testing.T) {
+	e := newEnv(t)
+	_, b := e.do(t, "GET", "/api/v1/settings", "", nil)
+	var body struct {
+		Sections []struct {
+			ID  string `json:"id"`
+			Tab string `json:"tab"`
+		} `json:"sections"`
+	}
+	if err := json.Unmarshal(b, &body); err != nil {
+		t.Fatal(err)
+	}
+	want := map[string]string{
+		"general": settings.TabGeneral, "auth": settings.TabAccess, "network": settings.TabAccess,
+		"webcontrol": settings.TabServices, "ai": settings.TabServices, "tmdb": settings.TabServices,
+		"push": settings.TabNotifications, "media": settings.TabRecordings, "hubs": settings.TabHubs,
+	}
+	known := map[string]bool{settings.TabGeneral: true, settings.TabRecordings: true, settings.TabServices: true,
+		settings.TabNotifications: true, settings.TabHubs: true, settings.TabAccess: true}
+	for _, s := range body.Sections {
+		if !known[s.Tab] {
+			t.Errorf("section %s: unknown tab %q", s.ID, s.Tab)
+		}
+		if w, ok := want[s.ID]; ok && s.Tab != w {
+			t.Errorf("section %s: tab %q, want %q", s.ID, s.Tab, w)
+		}
+	}
+}
+
 func TestSettings_PatchInvalidSavesNothing(t *testing.T) {
 	e := newEnv(t)
 	resp, b := e.do(t, "PATCH", "/api/v1/settings",

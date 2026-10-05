@@ -6,6 +6,9 @@ Format follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/); version
 
 ## [Unreleased]
 
+### Added
+- Plex library: the title's logo from Plex (its "clearLogo", transparent PNG) above a film's details and on a series page — no fanart.tv key needed.
+
 ### Changed
 - Plex library: "Play on the box" is no longer marked experimental — confirmed on the reference box (movie player, seeking, pause).
 

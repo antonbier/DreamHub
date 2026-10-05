@@ -19,7 +19,7 @@ const sectionsJSON = `{"MediaContainer":{"size":3,"Directory":[
 const moviesJSON = `{"MediaContainer":{"size":1,"Metadata":[{"ratingKey":"101","key":"/library/metadata/101","type":"movie",
  "title":"Das Boot","year":1981,"summary":"U 96.","thumb":"/library/metadata/101/thumb/1699999999","art":"/library/metadata/101/art/1699999999",
  "audienceRating":8.4,"rating":7.9,"Rating":[{"image":"imdb://image.rating","type":"audience","value":8.4},{"image":"rottentomatoes://image.rating.ripe","type":"critic","value":9.8}],
- "Image":[{"alt":"Das Boot","type":"coverPoster","url":"/library/metadata/101/thumb/1699999999"}],"Guid":[{"id":"imdb://tt0082096"}],
+ "Image":[{"alt":"Das Boot","type":"coverPoster","url":"/library/metadata/101/thumb/1699999999"},{"alt":"Das Boot","type":"clearLogo","url":"/library/metadata/101/clearLogo/1699999999"}],"Guid":[{"id":"imdb://tt0082096"}],
  "UltraBlurColors":{"topLeft":"1a2b3c"},"contentRating":"de/12","duration":8940000,"viewCount":2,"lastViewedAt":1790000000,"addedAt":1600000000,
  "originallyAvailableAt":"1981-09-17","Genre":[{"tag":"Drama"},{"tag":"War"}],
  "Media":[{"id":1,"duration":8940000,"bitrate":9500,"audioChannels":6,"audioCodec":"ac3","videoCodec":"h264","videoResolution":"1080","container":"mkv",
@@ -83,7 +83,7 @@ func TestHTTPClient_LibraryAndItems(t *testing.T) {
 		t.Fatalf("films: %+v %v", films, err)
 	}
 	f := films[0]
-	if f.Title != "Das Boot" || f.Year != 1981 || f.Rating != 8.4 || !f.Watched() || len(f.Genres) != 2 || f.Aired != "1981-09-17" ||
+	if f.Title != "Das Boot" || f.Year != 1981 || f.Rating != 8.4 || !f.Watched() || len(f.Genres) != 2 || f.Aired != "1981-09-17" || f.Logo != "/library/metadata/101/clearLogo/1699999999" ||
 		len(f.Media) != 1 || f.Media[0].VideoCodec != "h264" || f.Media[0].Parts[0].Key != "/library/parts/555/1699999999/file.mkv" {
 		t.Errorf("film: %+v", f)
 	}

@@ -51,7 +51,7 @@ func New() *Client {
 	movie := func(key, title string, year int, minutes int64, viewed int, offset int64, genres ...string) {
 		c.items[key] = &plex.Item{RatingKey: key, Type: "movie", Title: title, Year: year, Duration: minutes * 60000,
 			ViewCount: viewed, ViewOffset: offset, Genres: genres, Rating: 7.4, Thumb: "/library/metadata/" + key + "/thumb/1",
-			Art: "/library/metadata/" + key + "/art/1", AddedAt: 1790000000 - int64(len(c.items))*86400,
+			Art: "/library/metadata/" + key + "/art/1", Logo: "/library/metadata/" + key + "/clearLogo/1", AddedAt: 1790000000 - int64(len(c.items))*86400,
 			Summary: "A film from the mock Plex library.",
 			Media: []plex.Media{{Container: "mkv", VideoCodec: "h264", AudioCodec: "ac3", AudioChannels: 6, VideoResolution: "1080", Bitrate: 8000,
 				Parts: []plex.Part{{ID: 9000 + int64(len(c.items)), Key: "/library/parts/" + key + "/1/file.mkv", Size: 4_200_000_000, Container: "mkv"}}}}}

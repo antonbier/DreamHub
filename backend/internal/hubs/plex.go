@@ -570,7 +570,7 @@ func (h *Plex) onDeck(w http.ResponseWriter, r *http.Request) {
 
 // imagePath is the only kind of path the image proxy passes on: an item's
 // own pictures on the Plex server.
-var imagePath = regexp.MustCompile(`^/library/metadata/\d+/(thumb|art|banner)(/\d+)?$`)
+var imagePath = regexp.MustCompile(`^/library/metadata/\d+/(thumb|art|banner|clearLogo)(/\d+)?$`)
 
 // imageWidths are the sizes the frontend asks for.
 var imageWidths = map[int]bool{120: true, 240: true, 360: true, 720: true, 1280: true}
@@ -587,8 +587,11 @@ func (h *Plex) image(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 	height := width * 3 / 2 // posters
-	if strings.Contains(path, "/art") {
+	switch {
+	case strings.Contains(path, "/art"):
 		height = width * 9 / 16
+	case strings.Contains(path, "/clearLogo"):
+		height = width * 3 / 8 // logos are wide; the server keeps the ratio
 	}
 	size := "w" + strconv.Itoa(width)
 	if h.Images != nil {

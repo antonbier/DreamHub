@@ -109,6 +109,7 @@ Files are only changed when DreamHub runs on the box itself, and never while a r
 
 The films and series of your **Plex** server. Connect it under **Settings → Services → Plex → Sign in with Plex**: open plex.tv/link, enter the code shown, then pick your server and the address the box should use (one in your home network is fastest, or type your own, e.g. a reverse proxy). Choose which libraries to show in the same place.
 
+- Details and series pages show the title's logo from Plex when the server has one.
 - **Tiles or list** — switch at the top right; filter by text or by watched state, sort by title, recently added, year or rating.
 - **Watched** is Plex's own: marking a film or episode changes it in Plex right away (with **Undo**); a whole season or series shows every episode first.
 - **Play on the box** plays the file straight from the Plex server with the box's own player, from the beginning — no Plex app on the box — in the box's movie player, so you can seek and pause with the remote. Whether a file plays depends on its formats, shown in the details.

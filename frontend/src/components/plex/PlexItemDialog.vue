@@ -31,6 +31,8 @@
       </button>
 
       <div class="p-5" :class="{ 'relative -mt-12': item.art }">
+        <!-- The title's logo from Plex, like the enrichment logo elsewhere. -->
+        <PosterImage v-if="item.logo" :plex="item.logo" :plex-width="360" logo :width="220" :height="36" :alt="item.title" class="mb-2" />
         <p v-if="item.type === 'episode'" class="text-[13px] text-muted">{{ item.showTitle }} · {{ text.episodeCode(item) }}</p>
         <h2 id="plex-item-title" class="pe-20 text-[21px] font-bold leading-tight text-text">{{ item.title }}</h2>
         <p class="mt-1 flex flex-wrap items-center gap-x-1.5 text-[13.5px] text-muted">

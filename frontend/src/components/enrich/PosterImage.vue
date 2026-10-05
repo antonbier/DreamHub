@@ -15,11 +15,11 @@
 <template>
   <span
     ref="box"
-    class="block shrink-0 overflow-hidden rounded-sm bg-field"
-    :class="{ 'h-full w-full': fill }"
+    class="block shrink-0 overflow-hidden"
+    :class="[{ 'h-full w-full': fill }, logo ? '' : 'rounded-sm bg-field']"
     :style="fill ? undefined : { width: `${width}px`, height: `${height}px` }"
   >
-    <img v-if="src" :src="src" :alt="alt" class="h-full w-full object-cover" loading="lazy" />
+    <img v-if="src" :src="src" :alt="alt" class="h-full w-full" :class="logo ? 'object-contain object-left' : 'object-cover'" loading="lazy" />
   </span>
 </template>
 
@@ -65,6 +65,8 @@ const props = withDefaults(
     plexWidth?: 120 | 240 | 360 | 720 | 1280
     // Fetch only once visible.
     lazy?: boolean
+    // A title logo: no placeholder box, scaled to fit, left-aligned.
+    logo?: boolean
   }>(),
   { size: 'w92', width: 36, height: 52, alt: '', plexWidth: 240 },
 )

@@ -691,6 +691,7 @@ export interface PlexItem {
   summary?: string
   thumb?: string
   art?: string
+  logo?: string // transparent title logo (Plex's clearLogo)
   genres?: string[]
   rating?: number
   contentRating?: string

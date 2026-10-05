@@ -57,6 +57,7 @@
       <section class="mt-3 flex gap-5 below-sm:flex-col">
         <PosterImage :plex="show.thumb" :plex-width="360" :width="140" :height="210" alt="" />
         <div class="min-w-0 flex-1">
+          <PosterImage v-if="show.logo" :plex="show.logo" :plex-width="360" logo :width="220" :height="36" :alt="show.title" class="mb-2" />
           <h2 class="text-[22px] font-bold leading-tight">{{ show.title }}</h2>
           <p class="mt-1 text-[13.5px] text-muted">
             {{ text.details(show) }}

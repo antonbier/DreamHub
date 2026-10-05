@@ -83,12 +83,15 @@ type Item struct {
 	SeasonTitle string `json:"seasonTitle,omitempty"`
 	// Index: an episode's number or a season's; ParentIndex: an episode's
 	// season.
-	Index         int      `json:"index,omitempty"`
-	ParentIndex   int      `json:"parentIndex,omitempty"`
-	Year          int      `json:"year,omitempty"`
-	Summary       string   `json:"summary,omitempty"`
-	Thumb         string   `json:"thumb,omitempty"` // server path, served through DreamHub
-	Art           string   `json:"art,omitempty"`
+	Index       int    `json:"index,omitempty"`
+	ParentIndex int    `json:"parentIndex,omitempty"`
+	Year        int    `json:"year,omitempty"`
+	Summary     string `json:"summary,omitempty"`
+	Thumb       string `json:"thumb,omitempty"` // server path, served through DreamHub
+	Art         string `json:"art,omitempty"`
+	// Logo is the title's transparent logo (Plex's "clearLogo"), when the
+	// server has one.
+	Logo          string   `json:"logo,omitempty"`
 	Genres        []string `json:"genres,omitempty"`
 	Rating        float64  `json:"rating,omitempty"` // audience rating 0-10, when the agent has one
 	ContentRating string   `json:"contentRating,omitempty"`
@@ -320,6 +323,10 @@ type metadata struct {
 	Genre                 []struct {
 		Tag string `json:"tag"`
 	} `json:"Genre"`
+	Image []struct {
+		Type string `json:"type"`
+		URL  string `json:"url"`
+	} `json:"Image"`
 	Media []struct {
 		Container       string `json:"container"`
 		VideoCodec      string `json:"videoCodec"`
@@ -371,6 +378,11 @@ func (m metadata) item() Item {
 		it.ShowTitle, it.ShowKey = m.ParentTitle, m.ParentRatingKey
 		if it.Thumb == "" {
 			it.Thumb = m.ParentThumb
+		}
+	}
+	for _, img := range m.Image {
+		if img.Type == "clearLogo" {
+			it.Logo = img.URL
 		}
 	}
 	for _, g := range m.Genre {
@@ -435,6 +447,9 @@ func (h *HTTPClient) Image(ctx context.Context, c Conn, path string, width, heig
 	q := url.Values{
 		"url": {path}, "width": {strconv.Itoa(width)}, "height": {strconv.Itoa(height)},
 		"minSize": {"1"}, "upscale": {"1"}, "format": {"jpeg"},
+	}
+	if strings.Contains(path, "/clearLogo") {
+		q.Set("format", "png") // keeps the transparency
 	}
 	req, err := http.NewRequestWithContext(ctx, http.MethodGet, strings.TrimRight(c.URL, "/")+"/photo/:/transcode?"+q.Encode(), nil)
 	if err != nil {

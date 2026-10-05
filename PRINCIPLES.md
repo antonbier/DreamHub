@@ -74,7 +74,7 @@ Mirrors a pattern this project already found and validated on the platform itsel
 
 - **Core (shell)**: auth, API router, settings, event bus, notifications, global search, home page, onboarding, diagnostics, capability detection. Nothing hub-specific lives here.
 - **Hubs** (MediaHub, TimerHub, GuideHub, …) register with the core through the hub contract (routes, settings schema, search provider, home contributions, events, requirements).
-- **Connectors** (WebControl, SerienRecorder, TMDB, AI providers, later Plex/Jellyfin/Emby) are the only way hubs reach data or external services.
+- **Connectors** (WebControl, SerienRecorder, TMDB, AI providers, Plex, later Jellyfin/Emby) are the only way hubs reach data or external services.
 - Each hub must be **independently disableable** without breaking any other hub. Hubs never import each other's code — they talk through the core API and core events.
 - The frontend mirrors this: each hub owns its own routed UI section, hidden entirely when the hub is disabled.
 

@@ -18,7 +18,7 @@ When deciding whether a feature belongs in DreamHub, the question is: does it ge
 |---|---|---|
 | **Core (shell)** | Everything shared across hubs | dashboard, navigation, global search, notifications, settings, onboarding, diagnostics, auth, profiles & roles, i18n, time zones |
 | **Hubs** | User-facing feature areas | MediaHub, TimerHub, GuideHub, … (see below) |
-| **Connectors** | Data sources and external services | WebControl `/web/*` API, SerienRecorder web API, TMDB, OpenAI, later Plex/Jellyfin/Emby |
+| **Connectors** | Data sources and external services | WebControl `/web/*` API, SerienRecorder web API, TMDB, OpenAI, Plex, later Jellyfin/Emby |
 
 Rules between them:
 

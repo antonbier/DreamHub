@@ -114,7 +114,7 @@ const settingResults = computed<ResultItem[]>(() => {
   const out: ResultItem[] = []
   for (const sec of settingSections.value) {
     const title = settingsText.sectionTitle(sec)
-    const field = sec.fields.map((f) => settingsText.fieldLabel(f)).find((l) => l.toLowerCase().includes(q))
+    const field = sec.fields.filter((f) => !f.hidden).map((f) => settingsText.fieldLabel(f)).find((l) => l.toLowerCase().includes(q))
     if (!title.toLowerCase().includes(q) && !field) continue
     out.push({
       key: `setting:${sec.id}`,

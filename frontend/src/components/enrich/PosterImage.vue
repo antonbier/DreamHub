@@ -7,9 +7,14 @@
   session, so the same poster in two places is fetched once. Without a
   path, or while loading, it's a plain `field`-colored box of the same
   size, so rows don't jump when the picture arrives.
+
+  `plex` is a Plex picture path (GET /api/v1/plex/image, scaled to
+  `plexWidth`). `lazy` waits until the box scrolls into view before
+  fetching — for a library of hundreds of posters.
 -->
 <template>
   <span
+    ref="box"
     class="block shrink-0 overflow-hidden rounded-sm bg-field"
     :class="{ 'h-full w-full': fill }"
     :style="fill ? undefined : { width: `${width}px`, height: `${height}px` }"
@@ -40,7 +45,7 @@ function load(key: string, fetchBlob: () => Promise<Blob>): Promise<string | nul
 </script>
 
 <script setup lang="ts">
-import { ref, watch } from 'vue'
+import { onBeforeUnmount, onMounted, ref, watch } from 'vue'
 
 const props = withDefaults(
   defineProps<{
@@ -55,22 +60,50 @@ const props = withDefaults(
     alt?: string
     // Fill the parent instead of a fixed size (a backdrop header).
     fill?: boolean
+    // A Plex picture path, and the width to ask the server for.
+    plex?: string
+    plexWidth?: 120 | 240 | 360 | 720 | 1280
+    // Fetch only once visible.
+    lazy?: boolean
   }>(),
-  { size: 'w92', width: 36, height: 52, alt: '' },
+  { size: 'w92', width: 36, height: 52, alt: '', plexWidth: 240 },
 )
 
 const src = ref<string | null>(null)
+const box = ref<HTMLElement | null>(null)
+const visible = ref(!props.lazy)
+let observer: IntersectionObserver | null = null
+onMounted(() => {
+  if (visible.value || !box.value || typeof IntersectionObserver === 'undefined') {
+    visible.value = true
+    return
+  }
+  observer = new IntersectionObserver(
+    (entries) => {
+      if (entries.some((e) => e.isIntersecting)) {
+        visible.value = true
+        observer?.disconnect()
+      }
+    },
+    { rootMargin: '300px' },
+  )
+  observer.observe(box.value)
+})
+onBeforeUnmount(() => observer?.disconnect())
+
 watch(
-  () => [props.recording, props.series, props.path, props.size],
+  () => [props.recording, props.series, props.path, props.size, props.plex, props.plexWidth, visible.value],
   async () => {
     src.value = null
-    const { recording, series, path, size } = props
+    if (!visible.value) return
+    const { recording, series, path, size, plex, plexWidth } = props
     let url: string | null = null
     if (recording) url = await load(`rec:${recording}`, () => api.media.cover(recording))
     else if (series !== undefined) url = await load(`series:${series}`, () => api.series.cover(series))
+    else if (plex) url = await load(`plex:${plexWidth}:${plex}`, () => api.plex.image(plex, plexWidth))
     else if (path) url = await load(`${size}${path}`, () => api.enrich.image(size, path))
     else return
-    if (props.recording === recording && props.series === series && props.path === path) src.value = url
+    if (props.recording === recording && props.series === series && props.path === path && props.plex === plex) src.value = url
   },
   { immediate: true },
 )

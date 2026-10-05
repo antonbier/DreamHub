@@ -169,6 +169,18 @@ var migrations = []string{
 		data         TEXT NOT NULL
 	);
 	`,
+	`
+	-- PlexHub's copy of what the Plex server last said (internal/hubs/
+	-- plex.go): the library list, each library's films or series, a
+	-- series' seasons and episodes — so the library is still there while
+	-- the server is switched off. key names the list ("libraries",
+	-- "items:<library>", "children:<ratingKey>"), data is its JSON.
+	CREATE TABLE plex_cache (
+		key       TEXT PRIMARY KEY,
+		data      TEXT NOT NULL,
+		synced_at INTEGER NOT NULL
+	);
+	`,
 }
 
 func (s *Store) migrate(ctx context.Context) error {

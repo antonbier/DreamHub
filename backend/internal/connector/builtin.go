@@ -7,6 +7,7 @@ import (
 	"regexp"
 
 	"github.com/antonbier/DreamHub/backend/internal/autotimer"
+	"github.com/antonbier/DreamHub/backend/internal/plex"
 	"github.com/antonbier/DreamHub/backend/internal/serienrecorder"
 	"github.com/antonbier/DreamHub/backend/internal/settings"
 	"github.com/antonbier/DreamHub/backend/internal/status"
@@ -24,6 +25,7 @@ const (
 	IDOMDb           = "omdb"
 	IDFanart         = "fanart"
 	IDPush           = "push"
+	IDPlex           = "plex"
 )
 
 // Setting keys owned by connectors.
@@ -53,10 +55,20 @@ const (
 	KeyPushConflict          = "push.events.conflict"
 	KeyPushMissingEpisode    = "push.events.missingEpisode"
 	KeyPushService           = "push.events.service"
-	KeyAIProvider            = "ai.provider"
-	KeyOpenAIAPIKey          = "ai.openai.apiKey"
-	KeyOpenAIModel           = "ai.openai.model"
-	KeyAIDailyLimit          = "ai.dailyLimit"
+	// Plex (internal/plex): the server's address and token — usually set
+	// by signing in with a code at plex.tv/link (PlexHub), or by hand —
+	// which libraries to show (comma-separated IDs, empty = every film and
+	// series library), whether films may be played on the box, and the
+	// identifier DreamHub signs in to Plex with (made once).
+	KeyPlexURL       = "plex.url"
+	KeyPlexToken     = "plex.token"
+	KeyPlexLibraries = "plex.libraries"
+	KeyPlexPlayOnBox = "plex.playOnBox"
+	KeyPlexClientID  = "plex.clientId"
+	KeyAIProvider    = "ai.provider"
+	KeyOpenAIAPIKey  = "ai.openai.apiKey"
+	KeyOpenAIModel   = "ai.openai.model"
+	KeyAIDailyLimit  = "ai.dailyLimit"
 
 	// Optional credentials for WebControl (and every plugin API behind it,
 	// e.g. SerienRecorder's). Only needed when the box enforces auth for
@@ -168,6 +180,58 @@ func notInstalled(plugin string) Report {
 		Fix:       status.FixInstallPlugin,
 		FixParams: map[string]any{"plugin": plugin},
 	}}
+}
+
+// --- Plex -----------------------------------------------------------------
+
+// Plex is a Plex Media Server (internal/plex). Optional; the server is
+// often not always on, so "unreachable" only degrades PlexHub, which keeps
+// showing its cache (hub.Requirement.Cached).
+type Plex struct{ Client plex.Client }
+
+func (Plex) ID() string   { return IDPlex }
+func (Plex) Name() string { return "Plex" }
+func (Plex) Settings() []settings.Section {
+	return []settings.Section{{
+		ID:    "plex",
+		Label: "settings.plex",
+		Fields: []settings.Field{
+			{Key: KeyPlexURL, Type: settings.TypeString, Scope: settings.ScopeGlobal, Label: "settings.plex.url", Default: ""},
+			{Key: KeyPlexToken, Type: settings.TypeSecret, Scope: settings.ScopeGlobal, Label: "settings.plex.token"},
+			{Key: KeyPlexPlayOnBox, Type: settings.TypeBool, Scope: settings.ScopeGlobal, Label: "settings.plex.playOnBox", Default: true},
+			{Key: KeyPlexLibraries, Type: settings.TypeString, Scope: settings.ScopeGlobal, Label: "settings.plex.libraries", Default: "", Hidden: true},
+			{Key: KeyPlexClientID, Type: settings.TypeString, Scope: settings.ScopeGlobal, Label: "settings.plex.clientId", Default: "", Hidden: true},
+		},
+		Check: func(v settings.Values) map[string]settings.FieldError {
+			u := v.String(KeyPlexURL)
+			if u == "" {
+				return nil
+			}
+			if p, err := url.Parse(u); err != nil || (p.Scheme != "http" && p.Scheme != "https") || p.Host == "" {
+				return map[string]settings.FieldError{KeyPlexURL: {Code: settings.ErrInvalidURL}}
+			}
+			return nil
+		},
+	}}
+}
+func (p Plex) Check(ctx context.Context, v settings.Values) Report {
+	if v.String(KeyPlexURL) == "" || v.String(KeyPlexToken) == "" {
+		return notConfigured("Plex", "plex")
+	}
+	_, err := p.Client.Server(ctx, plex.Conn{URL: v.String(KeyPlexURL), Token: v.String(KeyPlexToken)})
+	switch {
+	case errors.Is(err, plex.ErrUnauthorized):
+		return Report{State: NotConfigured, Problem: &status.Problem{
+			Code: status.CodeConnectorAuthRequired, Params: map[string]any{"connector": "Plex"},
+			Fix: status.FixConfigureInSettings, FixParams: map[string]any{"section": "plex"},
+		}}
+	case err != nil:
+		return Report{State: Unreachable, Problem: &status.Problem{
+			Code: status.CodeConnectorUnreachable, Params: map[string]any{"connector": "Plex"},
+			Fix: "fix.plexOffline",
+		}}
+	}
+	return Report{State: OK}
 }
 
 // --- TMDB -----------------------------------------------------------------

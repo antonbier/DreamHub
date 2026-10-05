@@ -40,6 +40,13 @@ const router = createRouter({
       component: () => import('@/views/GuideHubView.vue'),
     },
     {
+      // PlexHub, "Plex Mediathek": ?library= picks the library, ?item= opens
+      // a series/season page or a film's details.
+      path: '/plex',
+      name: 'plex',
+      component: () => import('@/views/PlexHubView.vue'),
+    },
+    {
       path: '/radio',
       name: 'radio',
       component: () => import('@/views/RadioHubView.vue'),

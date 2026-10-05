@@ -22,7 +22,8 @@
     "system": "System",
     "admin": "Admin",
     "control": "Remote",
-    "radio": "Radio"
+    "radio": "Radio",
+    "plex": "Plex library"
   },
   "status": {
     "available": "Available",
@@ -62,7 +63,8 @@
     "capability": {
       "journald": "journald isn't available on this machine."
     },
-    "installPlugin": "Optional: install {plugin} from the box's Addon Manager to use this."
+    "installPlugin": "Optional: install {plugin} from the box's Addon Manager to use this.",
+    "plexOffline": "Is the Plex server switched on? Until then DreamHub shows what it last knew."
   },
   "sidebar": {
     "collapse": "Collapse sidebar",
@@ -207,7 +209,8 @@
       "mediaDiskSpace": "Disk space",
       "seriesUpcoming": "Upcoming episodes",
       "timersConflicts": "Conflicts",
-      "nowPlaying": "Now on the box"
+      "nowPlaying": "Now on the box",
+      "plexContinue": "Continue watching (Plex)"
     },
     "tileFrame": {
       "hide": "Hide",
@@ -323,6 +326,13 @@
       "channelDown": "Previous channel",
       "mute": "Mute",
       "remote": "Remote"
+    },
+    "plexTile": {
+      "notConfigured": "Plex isn’t set up yet.",
+      "setUp": "Set up",
+      "unavailable": "Plex can’t be reached right now.",
+      "empty": "Nothing started.",
+      "offline": "Plex offline – last known state."
     }
   },
   "hubPlaceholder": {
@@ -621,7 +631,20 @@
       "service_restart_failed": "systemd couldn't restart the service — its log below says why.",
       "service_not_found": "This box has no such service.",
       "systemd_unavailable": "Service status needs systemd — only on the box.",
-      "systemd_failed": "Couldn't read the service's state."
+      "systemd_failed": "Couldn't read the service's state.",
+      "plex_offline": "The Plex server isn’t answering. Nothing was changed.",
+      "plex_unauthorized": "The Plex server refuses access. Please sign in again in Settings.",
+      "plex_not_found": "This title is no longer on the Plex server.",
+      "plex_not_configured": "Plex isn’t set up yet.",
+      "plex_play_unavailable": "Playing on the box is switched off or not possible (DreamHub has to run on the box).",
+      "plex_no_file": "There’s no playable file for this title.",
+      "plex_nothing_to_change": "Every episode is already marked that way.",
+      "plex_tv_unavailable": "plex.tv isn’t answering right now. Please try again later.",
+      "plex_login_expired": "The sign-in expired. Please sign in again.",
+      "plex_unknown_server": "This server doesn’t belong to the signed-in account.",
+      "plex_wrong_server": "A different Plex server answers at this address.",
+      "plex_unreachable_at": "The server doesn’t answer at this address. Please choose another.",
+      "invalid_url": "Enter a full address starting with http:// or https://."
     },
     "media": {
       "not_a_recording": "This recording doesn't exist (anymore).",
@@ -670,7 +693,8 @@
       "folderHint": "Empty = recordings stay where they are. Otherwise a path below the recording folder with the same placeholders, e.g. {'{'}title{'}'}/Season {'{'}season:02{'}'} or Films.",
       "pushServerHint": "ntfy.sh is the public service; if you run your own ntfy server, enter its address.",
       "tabs": "Settings areas",
-      "leaveUnsaved": "There are unsaved changes. Leave the page anyway?"
+      "leaveUnsaved": "There are unsaved changes. Leave the page anyway?",
+      "plexUrlHint": "Easiest with “Sign in with Plex” below. By hand: the address the box reaches the server at, e.g. http://192.168.1.10:32400 or https://plex.example.org."
     },
     "general": {
       "title": "General",
@@ -747,7 +771,8 @@
       "template_slash": "No slashes — the scheme sets the file name only, not folders.",
       "template_folder": "A folder has to be below the recording folder: no leading /, no empty parts, no ..",
       "push_server": "An address starting with http:// or https://.",
-      "push_topic": "Letters, digits, - and _ only, at most 64 characters."
+      "push_topic": "Letters, digits, - and _ only, at most 64 characters.",
+      "invalid_url": "Enter a full address starting with http:// or https://."
     },
     "webcontrol": {
       "title": "WebControl",
@@ -838,6 +863,41 @@
       "wizard": {
         "title": "Setup wizard",
         "body": "Walks through language, the connection to the box, login and optional services again. Existing settings stay until you change them."
+      }
+    },
+    "plex": {
+      "title": "Plex",
+      "url": "Plex server address",
+      "token": "Plex token",
+      "playOnBox": "Play films on the box (experimental)",
+      "libraries": "Libraries shown",
+      "clientId": "Client identifier"
+    },
+    "plexPanel": {
+      "title": "Connect Plex",
+      "intro": "Sign DreamHub in to your Plex account – with a short code, like a TV app. Then pick the server and its address.",
+      "signIn": "Sign in with Plex",
+      "manualHint": "Or enter address and token above by hand.",
+      "enterCode": "Open plex.tv/link, sign in there and enter this code:",
+      "waiting": "Waiting for the code … (this page notices by itself)",
+      "expired": "The code has expired.",
+      "newCode": "Get a new code",
+      "chooseServer": "Signed in. Which address should the box reach the server at?",
+      "noServers": "No Plex server found in this account.",
+      "local": "home network",
+      "remote": "internet",
+      "otherAddress": "Another address:",
+      "addressHint": "DreamHub checks that the server answers at this address before saving. A home-network address is usually fastest.",
+      "connect": "Connect",
+      "connecting": "Checking …",
+      "connected": "Connected to {name}.",
+      "offline": "The server at {url} isn’t answering right now.",
+      "libraries": "Libraries shown:",
+      "atLeastOne": "Choose at least one library.",
+      "signInAgain": "Sign in again or choose another server",
+      "kind": {
+        "movie": "Films",
+        "show": "Series"
       }
     }
   },
@@ -1175,5 +1235,72 @@
       "running": "recording"
     },
     "allStations": "All radio stations"
+  },
+  "plex": {
+    "server": "Plex server",
+    "state": {
+      "offline": "Plex offline",
+      "unauthorized": "Plex refuses access"
+    },
+    "syncedAt": "as of {when}",
+    "syncNow": "Sync now",
+    "syncing": "Syncing …",
+    "setup": {
+      "title": "Plex isn’t connected yet",
+      "body": "The Plex library shows your Plex server’s films and series, keeps “watched” in sync with Plex and plays films straight on the box. Connect it in Settings with a short code.",
+      "action": "Connect Plex"
+    },
+    "back": "Back",
+    "noLibraries": "No film or series library chosen.",
+    "filterPlaceholder": "Filter this library",
+    "filter": {
+      "label": "Watched state",
+      "all": "All",
+      "unwatched": "Unwatched",
+      "started": "Started",
+      "watched": "Watched"
+    },
+    "sort": {
+      "label": "Sort",
+      "title": "Title",
+      "added": "Recently added",
+      "year": "Year",
+      "rating": "Rating"
+    },
+    "view": {
+      "label": "View",
+      "grid": "Tiles",
+      "list": "List"
+    },
+    "count": "{n} title | {n} titles",
+    "empty": "Nothing found.",
+    "minutes": "{n} min",
+    "seasons": "{n} season | {n} seasons",
+    "episodesSeen": "{seen} of {total} episodes watched",
+    "watched": "Watched",
+    "started": "Started",
+    "startedAt": "Started, at {minutes} min",
+    "markWatched": "Mark as watched",
+    "markUnwatched": "Mark as unwatched",
+    "showWatched": "Mark the whole series as watched …",
+    "showUnwatched": "Mark the whole series as unwatched …",
+    "seasonWatched": "Mark season as watched …",
+    "seasonUnwatched": "Mark season as unwatched …",
+    "confirmWatched": "Change {count} episode | Change {count} episodes",
+    "previewWatched": "Mark as watched in Plex – {count} episode: | Mark as watched in Plex – {count} episodes:",
+    "previewUnwatched": "Mark as unwatched in Plex – {count} episode: | Mark as unwatched in Plex – {count} episodes:",
+    "planApplied": "{count} episode changed in Plex. | {count} episodes changed in Plex.",
+    "markedWatched": "Marked “{title}” as watched.",
+    "markedUnwatched": "Marked “{title}” as unwatched.",
+    "undo": "Undo",
+    "playOnBox": "Play on the box",
+    "starting": "Starting …",
+    "nowPlaying": "Now playing on the box: {title}",
+    "playHint": "Experimental: the box plays the file straight from the Plex server, from the start. Whether it can depends on the box’s decoders.",
+    "offlineAction": "Plex is offline – playing and marking work again once the server answers.",
+    "noSummary": "No description.",
+    "file": "File",
+    "open": "Open {title}",
+    "openWatched": "Open {title} (watched)"
   }
 }

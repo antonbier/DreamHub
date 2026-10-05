@@ -16,6 +16,7 @@ The most important rule in this document. DreamHub operates as root on a device 
 - **The AI only proposes.** A recommendation never creates a timer by itself.
 - **Dashboard tiles only show.** A tile never triggers an action on its own.
 - **DreamHub's own settings** don't touch recordings, timers or the system, so they're saved directly with an explicit "Save" rather than the two-step `plan` → `apply` — but they're validated all-or-nothing and every save is recorded in the change log (without secret values).
+- **Watched state in Plex** (PlexHub) belongs to the Plex server, not the box: marking *one* film or episode seen or unseen happens directly, with "Undo" right after and an entry in the change log — it changes nothing on the box and is undone with one click. Marking a whole season or series touches many episodes at once and goes through `plan` → `apply`, listing every episode. Only while the server answers: nothing is queued to be sent later on its own.
 - **The one exception is the terminal** (AdminHub, later): a shell can't preview its commands. It gets guardrails instead — off by default, can only be enabled while auth is on, admin role only, password re-entered before opening, a clear warning, session start/end recorded in the change log.
 
 ## Multilingual by construction

@@ -42,8 +42,18 @@ type Mount struct {
 	Register func(*http.ServeMux)
 }
 
+// PublicRoute is a hub route outside DreamHub's login — only for a client
+// that can't have one (the box's own media player); its handler does its
+// own checks. Still answers 404 hub_disabled when the hub is off.
+type PublicRoute struct {
+	HubID   string
+	Pattern string
+	Handler http.Handler
+}
+
 // Deps are the router's dependencies.
 type Deps struct {
+	Public     []PublicRoute
 	WebControl webcontrol.Client
 	Verifier   auth.Verifier
 	Settings   *settings.Service
@@ -122,6 +132,9 @@ func NewRouter(d Deps) http.Handler {
 	// (docs/V1_PLAN.md, WP8) shows this before any credentials exist, and
 	// it encodes nothing secret — just the URL to open on a phone.
 	mux.HandleFunc("GET /api/v1/qr.png", handleQR(d))
+	for _, p := range d.Public {
+		mux.Handle(p.Pattern, hubEnabledGuard(d, p.HubID, p.Handler))
+	}
 	mux.Handle("/api/v1/", auth.Middleware(d.Verifier, protected))
 
 	allowedHosts := func(r *http.Request) []string {

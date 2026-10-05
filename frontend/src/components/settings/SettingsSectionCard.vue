@@ -86,7 +86,7 @@ const statusDot = computed(() => {
 // than shown disabled, since it has nothing to say the rest of the time.
 const visibleFields = computed(() =>
   props.section.fields.filter(
-    (f) => f.key !== 'general.timezone' || props.form.drafts['general.timezoneMode'] === 'fixed',
+    (f) => !f.hidden && (f.key !== 'general.timezone' || props.form.drafts['general.timezoneMode'] === 'fixed'),
   ),
 )
 

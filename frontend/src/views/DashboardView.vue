@@ -62,6 +62,7 @@
           <MediaDiskSpaceTile v-else-if="tile.type === 'media.diskSpace'" />
           <SeriesUpcomingTile v-else-if="tile.type === 'series.upcoming'" />
           <TimersConflictsTile v-else-if="tile.type === 'timers.conflicts'" />
+          <PlexContinueTile v-else-if="tile.type === 'plex.continue'" />
         </DashboardTileFrame>
       </div>
 
@@ -97,6 +98,7 @@ import HubsStatusTile from '@/components/dashboard/HubsStatusTile.vue'
 import MediaDiskSpaceTile from '@/components/dashboard/MediaDiskSpaceTile.vue'
 import SeriesUpcomingTile from '@/components/dashboard/SeriesUpcomingTile.vue'
 import TimersConflictsTile from '@/components/dashboard/TimersConflictsTile.vue'
+import PlexContinueTile from '@/components/dashboard/PlexContinueTile.vue'
 import { tileKey, useDashboard } from '@/composables/useDashboard'
 import type { CustomTileView, DashboardTile } from '@/api/types'
 

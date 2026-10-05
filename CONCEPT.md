@@ -99,7 +99,7 @@ The home page is a **personal dashboard made of tiles** (decided from the mockup
 - **Mobile**: the same sidebar as a drawer opened from the top-left button. **No bottom tab bar** — one navigation concept everywhere.
 - **Grouped**, generated from each hub's declared group and order (so regrouping is configuration, not code; user-customizable later):
   - *Dashboard*
-  - *Media*: MediaHub, SeriesHub
+  - *Media*: MediaHub, SeriesHub, PlexHub ("Plex Mediathek")
   - *Program*: GuideHub, RadioHub, TimerHub, DiscoveryHub
   - *Device*: ChannelHub, ControlHub, SystemHub
   - bottom: AdminHub (admins only), Settings
@@ -174,9 +174,10 @@ Prepared, not built. The data model attaches preferences, language, time zone se
 | TMDB | MediaHub, GuideHub | v1 |
 | OpenAI | DiscoveryHub (first AI provider) | v1 |
 | Other AI providers (Claude, Gemini, local models) | same interface | later |
-| Plex / Jellyfin / Emby | MediaHub, search | later |
+| Plex | PlexHub ("Plex Mediathek"), search, dashboard tile | built 2026-10-05 |
+| Jellyfin / Emby | same shape as Plex | later |
 
-**External media servers are optional and must degrade gracefully.** The reference setup's Plex runs on a server that isn't on 24/7 — with the connector model that's acceptable: DreamHub caches the last known library state and shows "Plex offline, last synced yesterday 21:30"; everything else keeps working.
+**External media servers are optional and must degrade gracefully.** The reference setup's Plex runs on a server that isn't on 24/7 — with the connector model that's acceptable: DreamHub caches the last known library state and shows "Plex offline, last synced yesterday 21:30"; everything else keeps working. A hub requirement can say so (`hub.Requirement.Cached`): an unreachable connector then only degrades the hub instead of making it unavailable.
 
 ## Enigma2 TV plugin
 
@@ -208,4 +209,4 @@ DreamHub is a tool for getting things done, not a media center for browsing. Ple
 
 - **v1**: the complete core (dashboard with customizable and custom tiles, navigation, global search, notifications inbox, settings, onboarding, diagnostics, auth, i18n DE/IT/EN, time zone handling, profile- and role-ready data model) + MediaHub, TimerHub, GuideHub, DiscoveryHub, SeriesHub (basic), SystemHub (basic), AdminHub (logs), ControlHub (remote, screenshot, power — pulled forward from v1.1) + the TV launcher plugin + `.deb` packaging.
 - **v1.1**: RadioHub, ChannelHub, MediaHub trimming, AdminHub service status, ControlHub's "message to TV" (`/web/message`). Built early and confirmed on the box: RadioHub, service status, message to TV (release 0.1.0); still to build: ChannelHub, trimming.
-- **Later**: StreamHub, AutomationHub, AdminHub terminal, external notification channels, Plex/Jellyfin/Emby connectors, more AI providers, profile/role UI, multiple dashboards UI, additional languages incl. RTL.
+- **Later**: StreamHub, AutomationHub, AdminHub terminal, external notification channels, Jellyfin/Emby connectors (Plex built early), more AI providers, profile/role UI, multiple dashboards UI, additional languages incl. RTL.

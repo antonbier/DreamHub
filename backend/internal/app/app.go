@@ -6,6 +6,7 @@ package app
 import (
 	"context"
 	"github.com/antonbier/DreamHub/backend/internal/omdb"
+	"github.com/antonbier/DreamHub/backend/internal/plex"
 	"github.com/antonbier/DreamHub/backend/internal/push"
 	"github.com/antonbier/DreamHub/backend/internal/recfs"
 	"github.com/antonbier/DreamHub/backend/internal/tmdb"
@@ -61,6 +62,13 @@ type Options struct {
 	// Push sends notifications to the phone (internal/push); nil turns
 	// them off.
 	Push push.Client
+	// Plex is the Plex client (internal/plex) for PlexHub; nil turns the
+	// connector into "not configured" for good.
+	Plex plex.Client
+	// StreamBase is how the box reaches this DreamHub ("http://127.0.0.1:
+	// 8080"), set only when DreamHub runs on the box; PlexHub plays films
+	// there through it.
+	StreamBase string
 	// PiconDirs are where channel logos are looked for (GuideHub); nil
 	// means the box's usual places.
 	PiconDirs []string
@@ -175,6 +183,7 @@ func New(ctx context.Context, o Options) (*App, error) {
 	conns.Add(connector.OMDb{})
 	conns.Add(connector.Fanart{})
 	conns.Add(connector.Push{})
+	conns.Add(connector.Plex{Client: o.Plex})
 
 	hubs := hub.NewRegistry()
 	for _, d := range hub.V1() {
@@ -245,6 +254,9 @@ func New(ctx context.Context, o Options) (*App, error) {
 	adminHub := &hubs_.Admin{Store: st, Level: level, Logs: o.Logs, FS: o.RecordingsFS,
 		Systemd: o.Systemd, Plans: plans, WC: o.WebControl, Now: now, ReadOnly: o.ReadOnlyFiles}
 	controlHub := &hubs_.Control{WC: o.WebControl}
+	plexHub := &hubs_.Plex{Client: o.Plex, Settings: svc, Store: st, Plans: plans, WC: o.WebControl, User: user,
+		Images:     &enrich.ImageCache{Dir: filepath.Join(o.DataDir, "cache", "plex"), MaxBytes: enrich.DefaultImageCacheBytes},
+		StreamBase: o.StreamBase, Now: now, Logger: o.Logger}
 
 	// Search providers (internal/hub/search.go): every hub with content of
 	// its own; ControlHub has none (its results would be actions).
@@ -256,6 +268,7 @@ func New(ctx context.Context, o Options) (*App, error) {
 	hubs.AddSearchProvider(hub.IDDiscovery, discoveryHub)
 	hubs.AddSearchProvider(hub.IDSystem, systemHub)
 	hubs.AddSearchProvider(hub.IDAdmin, adminHub)
+	hubs.AddSearchProvider(hub.IDPlex, plexHub)
 	// View sources for custom dashboard tiles (internal/hub/view.go).
 	hubs.AddViewProvider(hub.IDMedia, mediaHub)
 	hubs.AddViewProvider(hub.IDTimer, timerHub)
@@ -294,7 +307,12 @@ func New(ctx context.Context, o Options) (*App, error) {
 			{HubID: hub.IDSystem, Prefixes: []string{"/api/v1/changes", "/api/v1/system"}, Register: systemHub.Mount},
 			{HubID: hub.IDAdmin, Prefixes: []string{"/api/v1/admin"}, Register: adminHub.Mount},
 			{HubID: hub.IDControl, Prefixes: []string{"/api/v1/control"}, Register: controlHub.Mount},
+			{HubID: hub.IDPlex, Prefixes: []string{"/api/v1/plex"}, Register: plexHub.Mount},
 		},
+		// The box's media player fetches a Plex film without a DreamHub
+		// login; the handler itself admits only the box (loopback) with a
+		// ticket.
+		Public: []api.PublicRoute{{HubID: hub.IDPlex, Pattern: "GET /api/v1/plex/stream/{ticket}/{name}", Handler: http.HandlerFunc(plexHub.Stream)}},
 		User:   user,
 		Logger: o.Logger,
 		Now:    now,
@@ -309,15 +327,18 @@ func New(ctx context.Context, o Options) (*App, error) {
 		Handler: handler, Store: st, Settings: svc, Connectors: conns, Hubs: hubs,
 		Plans: plans, Dashboard: dash, Tokens: tokens, Level: level, User: user,
 		Events: eventBus, Poller: poller,
-		Background: background(notifier, seriesHub, adminHub, eventBus, o.Logger),
+		Background: background(notifier, seriesHub, adminHub, plexHub, eventBus, o.Logger),
 	}, nil
 }
 
 // background lists the long-running jobs besides the poller.
-func background(n *push.Notifier, series *hubs_.Series, admin *hubs_.Admin, bus *events.Bus, logger *slog.Logger) []func(context.Context) {
+func background(n *push.Notifier, series *hubs_.Series, admin *hubs_.Admin, plexHub *hubs_.Plex, bus *events.Bus, logger *slog.Logger) []func(context.Context) {
 	jobs := []func(context.Context){
 		func(ctx context.Context) { series.WatchMissing(ctx, bus, logger) },
 		func(ctx context.Context) { admin.WatchServices(ctx, bus, logger) },
+	}
+	if plexHub.Client != nil {
+		jobs = append(jobs, plexHub.Watch)
 	}
 	if n != nil {
 		jobs = append(jobs, n.Run)

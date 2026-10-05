@@ -88,7 +88,7 @@ Only read/list calls were observed (no add/move/remove button was clicked, to av
 | `AdvancedMovieSelection` | Phase 2 FilmHub grid/list view | Investigate — may already provide a better recordings browser than WebControl's default. |
 | `CutListEditor` | Phase 2 FilmHub lossless trimmer | Investigate — may already do cut-marker editing; DreamHub might only need to add the `ffmpeg -c copy` execution step. |
 | `GPT-Plugin` | Phase 6 AI Discovery | **Investigate first, specifically** — the name suggests an existing LLM integration. If it already does EPG-based AI recommendations, Phase 6 may be redundant or need to build on top of it instead of starting fresh. |
-| `PlexDream` | (out of scope — media browsing) | No action — confirms Plex on the box itself is already covered, consistent with the "out of scope" decision. |
+| `PlexDream` | PlexHub | A Plex client for the TV remote. Not used: PlexHub (2026-10-05) plays a Plex file with Enigma2's own player instead (a `4097` reference to a local URL DreamHub passes on to the server) — PlexDream is slow, and DreamHub shouldn't depend on another plugin. |
 
 Other plugins present, listed for completeness (no direct overlap identified): `2IB`, `AutoTimer`, `Browser`, `ChannelSelectionPlus`, `DreamExplorer`, `DreamMediaInfo`, `EasyInfo`, `EasyMedia`, `Emission`, `EPGRefresh`, `EventDataManager`, `GithubPluginUpdater`, `HbbTV`, `IMDb`, `MediaPortal`, `MediaRenderer`, `MediaScanner`, `MenuSort`, `MetrixStyle`, `PluginAssistance`, `SkinReloader`, `SvenHPlugins`, `WebAdmin`, `WebInterface`, `WetterCom`/`WetterComComponent`, `mpgz`, `serienrecorder` (confirms Phase 3's SQLite assumption).
 
@@ -457,3 +457,16 @@ Found with DreamHub's own self-test (System → Diagnostics, `internal/hubs/self
 - **systemd 232 specifics**: `systemctl show --property=…,NRestarts` exits 1 and stops after the first unit (the property arrived in 235); there's no memory accounting (`MemoryCurrent=18446744073709551615`). `systemctl_show_232.txt`.
 - **32-bit ARM binaries run** on the Dreambox One (ARMv8 with AArch32 compatibility): DreamHub's `armhf` build started, opened its SQLite database and answered in mock mode. That says nothing yet about a real DM900/DM920.
 - Everything else the self-test asks answered as DreamHub expects: TV bouquets (2, 46 channels in "Free TV", 21 with EPG at the time), `getcurrent`, timers, recording folder with file operations, SerienRecorder 4.8.0-beta (API 2.12, 9 series), AutoTimer (0), DreamMediaInfo's database.
+
+## Live checks during a recording (2026-10-05)
+
+With a SerienRecorder timer recording (state 2) and someone watching another channel, DreamHub 0.1.0 on the box was asked for previews only (no apply):
+
+- Rename, trash and batch rename of the file being written: refused with `409 media_in_use` (`reason: recording`), the batch lists it as skipped. Deleting the running timer: a preview with the `timer.deleteRunning` warning. Disabling it: refused (`timer_toggle_running`).
+- Gaps found and fixed in the code afterwards (not yet on the box): MediaHub's list didn't mark the file being written, the dashboard's timer tile didn't mark the running timer, TimerHub's state column shifted for a timer that can't be toggled.
+- SSH from the development machine was refused (no key there); HTTP to WebControl and DreamHub worked.
+
+## Plex (owner's server, 2026-10-05)
+
+- The owner's Plex Media Server (on the Unraid machine, behind their own HTTPS reverse proxy) answers `GET /identity` without a token: `{"MediaContainer":{"claimed":true,"machineIdentifier":"…","version":"1.43.4.10903-e5521bd8c"}}`; everything else answers `401` without one. GDM discovery (UDP 32414) from the LAN got no answer while the server was off.
+- Not yet confirmed: Enigma2's player playing a Plex file through PlexHub's local stream (`ROADMAP.md`, PlexHub).

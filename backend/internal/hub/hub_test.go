@@ -33,7 +33,7 @@ func v1Registry(t *testing.T, journalctl bool) *Registry {
 // allOK returns connector reports where everything works.
 func allOK() map[string]connector.Report {
 	out := map[string]connector.Report{}
-	for _, id := range []string{connector.IDWebControl, connector.IDSerienRecorder, connector.IDOpenAI, connector.IDTMDB} {
+	for _, id := range []string{connector.IDWebControl, connector.IDSerienRecorder, connector.IDOpenAI, connector.IDTMDB, connector.IDPlex} {
 		out[id] = connector.Report{ID: id, State: connector.OK}
 	}
 	return out
@@ -61,6 +61,19 @@ func TestStatuses_AllAvailable(t *testing.T) {
 		if s.Level != status.Available || len(s.Problems) != 0 {
 			t.Errorf("%s: expected available, got %s %+v", s.ID, s.Level, s.Problems)
 		}
+	}
+}
+
+func TestStatuses_CachedConnectorOfflineOnlyDegrades(t *testing.T) {
+	r := v1Registry(t, true)
+	reps := allOK()
+	reps[connector.IDPlex] = connector.Report{State: connector.Unreachable, Problem: &status.Problem{Code: status.CodeConnectorUnreachable}}
+	if got := byID(r.Statuses(allEnabled(r), reps))[IDPlex].Level; got != status.Degraded {
+		t.Errorf("Plex switched off: PlexHub shows its cache, want degraded, got %s", got)
+	}
+	reps[connector.IDPlex] = connector.Report{State: connector.NotConfigured, Problem: &status.Problem{Code: status.CodeConnectorNotConfigured}}
+	if got := byID(r.Statuses(allEnabled(r), reps))[IDPlex].Level; got != status.Unavailable {
+		t.Errorf("Plex not set up: want unavailable, got %s", got)
 	}
 }
 
@@ -140,7 +153,7 @@ func TestNavigation(t *testing.T) {
 		t.Errorf("dashboard must come first, got %+v", first)
 	}
 	media := nav.Sections[1].Items
-	if len(media) != 1 || media[0].ID != IDMedia {
+	if len(media) != 2 || media[0].ID != IDMedia || media[1].ID != IDPlex {
 		t.Errorf("disabled SeriesHub must be hidden from the media group, got %+v", media)
 	}
 	program := nav.Sections[2].Items

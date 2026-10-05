@@ -315,6 +315,18 @@ Pulled forward from v1.1 (`CONCEPT.md`, `docs/V1_PLAN.md`): verifying the Enigma
 - [x] Checked on the box (2026-10-04, with the self-test): the radio root works as on other Enigma2 images (fixture `getservices_radio_root.xml`); the reference box's radio favourites are **empty**, so RadioHub adds "All radio stations" (`webcontrol.RadioAll`, `(type == 2) || (type == 10) ORDER BY name`: 664 entries, 0.06 s; epgnownext over it 0.25 s) as the last list and switches to it when the bouquet it picked by itself is empty. That list has every transponder's copy of a station and data services named "." or "10796V SID 0x3dae" — dropped, one entry per name (502 stations left, fixture `getservices_radio_all.xml`). `/web/epgnownext` on an **empty** bouquet makes the box's WebInterface fail with a traceback (ARCHITECTURE.md), so it isn't asked then
 - [ ] Radio text / now-playing song (RDS, DAB+ DLS) — not exposed by WebControl as far as known; look for it on the box before building anything
 
+### PlexHub ("Plex Mediathek", built early)
+- [x] Connector and client (2026-10-05, `internal/plex`): a Plex Media Server's libraries, items, seasons/episodes, "continue watching" (`/library/onDeck`), watched state (`/:/scrobble`, `/:/unscrobble`), pictures scaled by the server (`/photo/:/transcode`) and files (Range passed on); plex.tv's PIN sign-in (`strong=false`, the code the user enters at plex.tv/link) and the account's servers (`/api/v2/resources`). Settings → Services → Plex: address, token, play on the box; libraries shown and DreamHub's client identifier are hidden fields edited by the panel. Nothing about a particular server is built in
+- [x] Cache (`plex_cache` table): libraries, every shown library's films/series, opened series/seasons/items, "continue watching". Reads try the server (10 s) and fall back to the cache; after a failure they go straight to the cache for a minute. A background sync every 15 min. A different server (machine identifier) starts the cache over. Pictures go through DreamHub's disk cache (own 100 MB cap). PlexHub's requirement on the connector is `Cached`: Plex switched off only degrades the hub
+- [x] PlexHub screen (`PlexHubView.vue`): status line (server, offline + last sync, "Sync now"), library tabs, filter (text, unwatched/started/watched), sort (title, recently added, year, rating), tiles or list (remembered per browser), film details dialog with the file's formats, series page with season tabs and episode rows. Search finds cached films and series
+- [x] Watched state (PRINCIPLES.md): one film/episode directly with Undo and a change-log entry; a season or series through preview (every episode that changes) and apply. Only while the server answers
+- [x] Play on the box (experimental): a zap to `4097:…:<URL>:<title>` — Enigma2's gstreamer player fetches `http://127.0.0.1:<port>/api/v1/plex/stream/<ticket>/file.<ext>` from DreamHub, which passes it on to Plex with the token (Range included). The route is outside DreamHub's login but only answers loopback requests with a ticket (12 h). Offered only when DreamHub runs on the box
+- [x] Dashboard tile "Continue watching (Plex)" — a cover row, hidden until switched on in edit mode
+- [ ] **Confirm on the box** (`device-access`): does the box's player play a typical file (MKV, H.264/HEVC, AC3/E-AC3/DTS) over the local stream, and does seeking work? Then drop "experimental"
+- [ ] Resume where Plex left off (the player starts from the beginning), and report the position back to Plex (`/:/timeline`) — the box's position would have to be read while it plays
+- [ ] Films in several parts (only the first part plays), several versions of a film (the first is used)
+- [ ] Cross-references: "already in Plex" next to a broadcast in GuideHub/DiscoveryHub
+
 ### ChannelHub
 - Link to / embed the BouquetEditor plugin (`/bouqueteditor/*`); its write endpoints still need a write-permitted check on the device. Picons from `/data/piconpool`.
 
@@ -355,7 +367,8 @@ Pulled forward from v1.1 (`CONCEPT.md`, `docs/V1_PLAN.md`): verifying the Enigma
 - Off by default; can only be enabled while auth is on; admin only; password re-entered before opening; warning; session start/end in the change log.
 
 ### Other
-- Plex / Jellyfin / Emby connectors (optional, cached last-known state, graceful degradation when the server is off)
+- Jellyfin / Emby connectors (same shape as Plex: optional, cached last-known state, graceful degradation when the server is off)
+- ~~Plex~~ — built early 2026-10-05, see "PlexHub" under v1.1
 - More AI providers behind the same interface
 - Profile/role UI (multi-user), multiple dashboards UI
 - Additional languages, incl. RTL (the CSS is prepared for it)

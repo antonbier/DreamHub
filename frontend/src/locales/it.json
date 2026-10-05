@@ -22,7 +22,8 @@
     "system": "Sistema",
     "admin": "Admin",
     "control": "Telecomando",
-    "radio": "Radio"
+    "radio": "Radio",
+    "plex": "Mediateca Plex"
   },
   "status": {
     "available": "Disponibile",
@@ -62,7 +63,8 @@
     "capability": {
       "journald": "journald non è disponibile su questa macchina."
     },
-    "installPlugin": "Facoltativo: installa {plugin} dall'Addon Manager del box per usare questa funzione."
+    "installPlugin": "Facoltativo: installa {plugin} dall'Addon Manager del box per usare questa funzione.",
+    "plexOffline": "Il server Plex è acceso? Fino ad allora DreamHub mostra l’ultimo stato noto."
   },
   "sidebar": {
     "collapse": "Comprimi barra laterale",
@@ -207,7 +209,8 @@
       "mediaDiskSpace": "Spazio su disco",
       "seriesUpcoming": "Prossimi episodi",
       "timersConflicts": "Conflitti",
-      "nowPlaying": "Ora sul box"
+      "nowPlaying": "Ora sul box",
+      "plexContinue": "Continua a guardare (Plex)"
     },
     "tileFrame": {
       "hide": "Nascondi",
@@ -323,6 +326,13 @@
       "channelDown": "Canale precedente",
       "mute": "Muto",
       "remote": "Telecomando"
+    },
+    "plexTile": {
+      "notConfigured": "Plex non è ancora configurato.",
+      "setUp": "Configura",
+      "unavailable": "Plex non è raggiungibile al momento.",
+      "empty": "Niente iniziato.",
+      "offline": "Plex offline – ultimo stato noto."
     }
   },
   "hubPlaceholder": {
@@ -621,7 +631,20 @@
       "service_restart_failed": "systemd non è riuscito a riavviare il servizio — il suo log qui sotto spiega perché.",
       "service_not_found": "Questo box non ha questo servizio.",
       "systemd_unavailable": "Lo stato dei servizi richiede systemd — solo sul box.",
-      "systemd_failed": "Impossibile leggere lo stato del servizio."
+      "systemd_failed": "Impossibile leggere lo stato del servizio.",
+      "plex_offline": "Il server Plex non risponde. Non è stato modificato nulla.",
+      "plex_unauthorized": "Il server Plex rifiuta l’accesso. Accedi di nuovo nelle impostazioni.",
+      "plex_not_found": "Questo titolo non è più sul server Plex.",
+      "plex_not_configured": "Plex non è ancora configurato.",
+      "plex_play_unavailable": "La riproduzione sul box è disattivata o non possibile (DreamHub deve girare sul box).",
+      "plex_no_file": "Per questo titolo non c’è un file riproducibile.",
+      "plex_nothing_to_change": "Tutti gli episodi sono già segnati così.",
+      "plex_tv_unavailable": "plex.tv non risponde al momento. Riprova più tardi.",
+      "plex_login_expired": "L’accesso è scaduto. Accedi di nuovo.",
+      "plex_unknown_server": "Questo server non appartiene all’account collegato.",
+      "plex_wrong_server": "A questo indirizzo risponde un altro server Plex.",
+      "plex_unreachable_at": "Il server non risponde a questo indirizzo. Scegline un altro.",
+      "invalid_url": "Inserisci un indirizzo completo con http:// o https://."
     },
     "media": {
       "not_a_recording": "Questa registrazione non esiste (più).",
@@ -670,7 +693,8 @@
       "folderHint": "Vuoto = le registrazioni restano dove sono. Altrimenti un percorso sotto la cartella di registrazione con gli stessi segnaposto, ad es. {'{'}title{'}'}/Stagione {'{'}season:02{'}'} o Film.",
       "pushServerHint": "ntfy.sh è il servizio pubblico; se usi un tuo server ntfy, inserisci il suo indirizzo.",
       "tabs": "Aree delle impostazioni",
-      "leaveUnsaved": "Ci sono modifiche non salvate. Lasciare comunque la pagina?"
+      "leaveUnsaved": "Ci sono modifiche non salvate. Lasciare comunque la pagina?",
+      "plexUrlHint": "Il modo più semplice è «Accedi con Plex» qui sotto. A mano: l’indirizzo con cui il box raggiunge il server, ad es. http://192.168.1.10:32400 o https://plex.example.org."
     },
     "general": {
       "title": "Generale",
@@ -747,7 +771,8 @@
       "template_slash": "Niente barre — lo schema definisce solo il nome del file, non le cartelle.",
       "template_folder": "Una cartella deve stare sotto la cartella di registrazione: niente / iniziale, niente parti vuote, niente ..",
       "push_server": "Un indirizzo che inizia con http:// o https://.",
-      "push_topic": "Solo lettere, cifre, - e _, al massimo 64 caratteri."
+      "push_topic": "Solo lettere, cifre, - e _, al massimo 64 caratteri.",
+      "invalid_url": "Inserisci un indirizzo completo con http:// o https://."
     },
     "webcontrol": {
       "title": "WebControl",
@@ -838,6 +863,41 @@
       "wizard": {
         "title": "Configurazione guidata",
         "body": "Ripercorre lingua, collegamento al box, accesso e servizi facoltativi. Le impostazioni esistenti restano finché non le cambi."
+      }
+    },
+    "plex": {
+      "title": "Plex",
+      "url": "Indirizzo del server Plex",
+      "token": "Token Plex",
+      "playOnBox": "Riproduci i film sul box (sperimentale)",
+      "libraries": "Librerie mostrate",
+      "clientId": "Identificativo client"
+    },
+    "plexPanel": {
+      "title": "Collega Plex",
+      "intro": "Collega DreamHub al tuo account Plex – con un codice breve, come un’app per TV. Poi scegli il server e l’indirizzo.",
+      "signIn": "Accedi con Plex",
+      "manualHint": "In alternativa inserisci a mano indirizzo e token qui sopra.",
+      "enterCode": "Apri plex.tv/link, accedi e inserisci questo codice:",
+      "waiting": "In attesa del codice … (la pagina se ne accorge da sola)",
+      "expired": "Il codice è scaduto.",
+      "newCode": "Nuovo codice",
+      "chooseServer": "Accesso eseguito. A quale indirizzo il box deve raggiungere il server?",
+      "noServers": "Nessun server Plex in questo account.",
+      "local": "rete di casa",
+      "remote": "internet",
+      "otherAddress": "Altro indirizzo:",
+      "addressHint": "Prima di salvare DreamHub verifica che il server risponda a questo indirizzo. Un indirizzo della rete di casa di solito è il più veloce.",
+      "connect": "Collega",
+      "connecting": "Verifica …",
+      "connected": "Collegato a {name}.",
+      "offline": "Il server a {url} non risponde al momento.",
+      "libraries": "Librerie mostrate:",
+      "atLeastOne": "Scegli almeno una libreria.",
+      "signInAgain": "Accedi di nuovo o scegli un altro server",
+      "kind": {
+        "movie": "Film",
+        "show": "Serie"
       }
     }
   },
@@ -1175,5 +1235,72 @@
       "running": "in registrazione"
     },
     "allStations": "Tutte le emittenti radio"
+  },
+  "plex": {
+    "server": "Server Plex",
+    "state": {
+      "offline": "Plex offline",
+      "unauthorized": "Plex rifiuta l’accesso"
+    },
+    "syncedAt": "aggiornato {when}",
+    "syncNow": "Sincronizza ora",
+    "syncing": "Sincronizzazione …",
+    "setup": {
+      "title": "Plex non è ancora collegato",
+      "body": "La Mediateca Plex mostra film e serie del tuo server Plex, sincronizza «visto» con Plex e riproduce i film direttamente sul box. Si collega nelle impostazioni con un codice breve.",
+      "action": "Collega Plex"
+    },
+    "back": "Indietro",
+    "noLibraries": "Nessuna libreria di film o serie scelta.",
+    "filterPlaceholder": "Filtra questa libreria",
+    "filter": {
+      "label": "Stato visto",
+      "all": "Tutti",
+      "unwatched": "Non visti",
+      "started": "Iniziati",
+      "watched": "Visti"
+    },
+    "sort": {
+      "label": "Ordina",
+      "title": "Titolo",
+      "added": "Aggiunti di recente",
+      "year": "Anno",
+      "rating": "Valutazione"
+    },
+    "view": {
+      "label": "Vista",
+      "grid": "Riquadri",
+      "list": "Elenco"
+    },
+    "count": "{n} titolo | {n} titoli",
+    "empty": "Nessun risultato.",
+    "minutes": "{n} min",
+    "seasons": "{n} stagione | {n} stagioni",
+    "episodesSeen": "{seen} di {total} episodi visti",
+    "watched": "Visto",
+    "started": "Iniziato",
+    "startedAt": "Iniziato, a {minutes} min",
+    "markWatched": "Segna come visto",
+    "markUnwatched": "Segna come non visto",
+    "showWatched": "Segna tutta la serie come vista …",
+    "showUnwatched": "Segna tutta la serie come non vista …",
+    "seasonWatched": "Segna la stagione come vista …",
+    "seasonUnwatched": "Segna la stagione come non vista …",
+    "confirmWatched": "Modifica {count} episodio | Modifica {count} episodi",
+    "previewWatched": "Segna come visto in Plex – {count} episodio: | Segna come visti in Plex – {count} episodi:",
+    "previewUnwatched": "Segna come non visto in Plex – {count} episodio: | Segna come non visti in Plex – {count} episodi:",
+    "planApplied": "{count} episodio modificato in Plex. | {count} episodi modificati in Plex.",
+    "markedWatched": "«{title}» segnato come visto.",
+    "markedUnwatched": "«{title}» segnato come non visto.",
+    "undo": "Annulla",
+    "playOnBox": "Riproduci sul box",
+    "starting": "Avvio …",
+    "nowPlaying": "In riproduzione sul box: {title}",
+    "playHint": "Sperimentale: il box riproduce il file direttamente dal server Plex, dall’inizio. Se ci riesce dipende dai decoder del box.",
+    "offlineAction": "Plex è offline – riproduzione e segnatura tornano disponibili quando il server risponde.",
+    "noSummary": "Nessuna descrizione.",
+    "file": "File",
+    "open": "Apri {title}",
+    "openWatched": "Apri {title} (visto)"
   }
 }

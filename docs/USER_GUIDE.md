@@ -105,6 +105,16 @@ Every recording folder on the box, folder by folder.
 
 Files are only changed when DreamHub runs on the box itself, and never while a recording is still being written or played.
 
+### Plex library
+
+The films and series of your **Plex** server. Connect it under **Settings → Services → Plex → Sign in with Plex**: open plex.tv/link, enter the code shown, then pick your server and the address the box should use (one in your home network is fastest, or type your own, e.g. a reverse proxy). Choose which libraries to show in the same place.
+
+- **Tiles or list** — switch at the top right; filter by text or by watched state, sort by title, recently added, year or rating.
+- **Watched** is Plex's own: marking a film or episode changes it in Plex right away (with **Undo**); a whole season or series shows every episode first.
+- **Play on the box** (experimental) plays the file straight from the Plex server with the box's own player, from the beginning — no Plex app on the box. Whether a file plays depends on its formats, shown in the details.
+- When the Plex server is off, the library still shows what DreamHub last saw ("Plex offline · as of …"); playing and marking work again once it answers.
+- On **Home**, **Edit** can switch on the tile **Continue watching (Plex)**.
+
 ### Series
 
 Your series from **SerienRecorder**. A series' page shows planned episodes, further broadcasts in the guide — each with its episode number and whether you're **missing** it — your recordings by season, and (with TVmaze, on by default) the full episode list with what's recorded, planned, missing or still to come. "Missing" is only shown when your recordings carry episode numbers like `S01E02`.

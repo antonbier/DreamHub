@@ -38,6 +38,10 @@ type Requirement struct {
 	Capability string `json:"capability,omitempty"`
 	Hub        string `json:"hub,omitempty"`
 	Optional   bool   `json:"optional,omitempty"`
+	// Cached: the hub keeps working from its own cache while the connector
+	// is set up but can't be reached (a Plex server that's switched off),
+	// so that only degrades it.
+	Cached bool `json:"cached,omitempty"`
 }
 
 // Descriptor declares a hub.
@@ -176,7 +180,11 @@ func (r *Registry) Statuses(v settings.Values, reports map[string]connector.Repo
 					continue
 				}
 				if rep.State != connector.OK {
-					st.Level = worse(st.Level, failLevel(req))
+					level := failLevel(req)
+					if req.Cached && rep.State == connector.Unreachable {
+						level = status.Degraded
+					}
+					st.Level = worse(st.Level, level)
 					if rep.Problem != nil {
 						st.Problems = append(st.Problems, *rep.Problem)
 					}

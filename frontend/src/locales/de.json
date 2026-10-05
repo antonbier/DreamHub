@@ -22,7 +22,8 @@
     "system": "System",
     "admin": "Admin",
     "control": "Fernsteuerung",
-    "radio": "Radio"
+    "radio": "Radio",
+    "plex": "Plex Mediathek"
   },
   "status": {
     "available": "Verfügbar",
@@ -62,7 +63,8 @@
     "capability": {
       "journald": "journald ist auf diesem Rechner nicht verfügbar."
     },
-    "installPlugin": "Optional: {plugin} über den Addon-Manager der Box installieren, um das zu nutzen."
+    "installPlugin": "Optional: {plugin} über den Addon-Manager der Box installieren, um das zu nutzen.",
+    "plexOffline": "Ist der Plex-Server eingeschaltet? Bis dahin zeigt DreamHub den letzten bekannten Stand."
   },
   "sidebar": {
     "collapse": "Seitenleiste einklappen",
@@ -207,7 +209,8 @@
       "mediaDiskSpace": "Speicherplatz",
       "seriesUpcoming": "Anstehende Folgen",
       "timersConflicts": "Konflikte",
-      "nowPlaying": "Jetzt auf der Box"
+      "nowPlaying": "Jetzt auf der Box",
+      "plexContinue": "Weiterschauen (Plex)"
     },
     "tileFrame": {
       "hide": "Ausblenden",
@@ -323,6 +326,13 @@
       "channelDown": "Vorheriger Sender",
       "mute": "Stumm",
       "remote": "Fernbedienung"
+    },
+    "plexTile": {
+      "notConfigured": "Plex ist noch nicht eingerichtet.",
+      "setUp": "Einrichten",
+      "unavailable": "Plex ist gerade nicht erreichbar.",
+      "empty": "Nichts angefangen.",
+      "offline": "Plex offline – letzter bekannter Stand."
     }
   },
   "hubPlaceholder": {
@@ -621,7 +631,20 @@
       "service_restart_failed": "systemd konnte den Dienst nicht neu starten – sein Log unten sagt, warum.",
       "service_not_found": "Diesen Dienst gibt es auf dieser Box nicht.",
       "systemd_unavailable": "Der Dienststatus braucht systemd – gibt es nur auf der Box.",
-      "systemd_failed": "Der Zustand des Dienstes ließ sich nicht lesen."
+      "systemd_failed": "Der Zustand des Dienstes ließ sich nicht lesen.",
+      "plex_offline": "Der Plex-Server antwortet nicht. Es wurde nichts geändert.",
+      "plex_unauthorized": "Der Plex-Server lehnt den Zugang ab. Bitte in den Einstellungen neu anmelden.",
+      "plex_not_found": "Diesen Titel gibt es auf dem Plex-Server nicht mehr.",
+      "plex_not_configured": "Plex ist noch nicht eingerichtet.",
+      "plex_play_unavailable": "Abspielen auf der Box ist ausgeschaltet oder nicht möglich (DreamHub muss auf der Box laufen).",
+      "plex_no_file": "Zu diesem Titel gibt es keine abspielbare Datei.",
+      "plex_nothing_to_change": "Alle Folgen sind schon so markiert.",
+      "plex_tv_unavailable": "plex.tv antwortet gerade nicht. Bitte später erneut versuchen.",
+      "plex_login_expired": "Die Anmeldung ist abgelaufen. Bitte neu anmelden.",
+      "plex_unknown_server": "Dieser Server gehört nicht zum angemeldeten Konto.",
+      "plex_wrong_server": "Unter dieser Adresse antwortet ein anderer Plex-Server.",
+      "plex_unreachable_at": "Der Server antwortet unter dieser Adresse nicht. Bitte eine andere wählen.",
+      "invalid_url": "Bitte eine vollständige Adresse mit http:// oder https:// angeben."
     },
     "media": {
       "not_a_recording": "Diese Aufnahme gibt es nicht (mehr).",
@@ -670,7 +693,8 @@
       "folderHint": "Leer = Aufnahmen bleiben, wo sie sind. Sonst ein Pfad unterhalb des Aufnahmeordners mit denselben Platzhaltern, z. B. {'{'}title{'}'}/Staffel {'{'}season:02{'}'} oder Filme.",
       "pushServerHint": "ntfy.sh ist der öffentliche Dienst; wer einen eigenen ntfy-Server betreibt, trägt dessen Adresse ein.",
       "tabs": "Bereiche der Einstellungen",
-      "leaveUnsaved": "Es gibt ungespeicherte Änderungen. Seite trotzdem verlassen?"
+      "leaveUnsaved": "Es gibt ungespeicherte Änderungen. Seite trotzdem verlassen?",
+      "plexUrlHint": "Am einfachsten über „Mit Plex anmelden“ unten. Von Hand: die Adresse, unter der die Box den Server erreicht, z. B. http://192.168.1.10:32400 oder https://plex.example.org."
     },
     "general": {
       "title": "Allgemein",
@@ -747,7 +771,8 @@
       "template_slash": "Keine Schrägstriche — das Schema legt nur den Dateinamen fest, keine Ordner.",
       "template_folder": "Ein Ordner muss unterhalb des Aufnahmeordners liegen: kein / am Anfang, keine leeren Teile, kein ..",
       "push_server": "Eine Adresse mit http:// oder https://.",
-      "push_topic": "Nur Buchstaben, Ziffern, - und _, höchstens 64 Zeichen."
+      "push_topic": "Nur Buchstaben, Ziffern, - und _, höchstens 64 Zeichen.",
+      "invalid_url": "Bitte eine vollständige Adresse mit http:// oder https:// angeben."
     },
     "webcontrol": {
       "title": "WebControl",
@@ -838,6 +863,41 @@
       "wizard": {
         "title": "Einrichtungsassistent",
         "body": "Führt noch einmal durch Sprache, Verbindung zur Box, Anmeldung und optionale Dienste. Bestehende Einstellungen bleiben, bis du sie änderst."
+      }
+    },
+    "plex": {
+      "title": "Plex",
+      "url": "Adresse des Plex-Servers",
+      "token": "Plex-Token",
+      "playOnBox": "Filme auf der Box abspielen (experimentell)",
+      "libraries": "Angezeigte Bibliotheken",
+      "clientId": "Client-Kennung"
+    },
+    "plexPanel": {
+      "title": "Plex verbinden",
+      "intro": "Melde DreamHub bei deinem Plex-Konto an – wie bei einer TV-App mit einem kurzen Code. Danach wählst du den Server und die Adresse.",
+      "signIn": "Mit Plex anmelden",
+      "manualHint": "Alternativ Adresse und Token oben von Hand eintragen.",
+      "enterCode": "Öffne plex.tv/link, melde dich dort an und gib diesen Code ein:",
+      "waiting": "Warte auf die Eingabe … (die Seite merkt es von selbst)",
+      "expired": "Der Code ist abgelaufen.",
+      "newCode": "Neuen Code holen",
+      "chooseServer": "Angemeldet. Unter welcher Adresse soll die Box den Server erreichen?",
+      "noServers": "In diesem Konto ist kein Plex-Server zu finden.",
+      "local": "im Heimnetz",
+      "remote": "aus dem Internet",
+      "otherAddress": "Andere Adresse:",
+      "addressHint": "DreamHub prüft vor dem Speichern, ob der Server unter dieser Adresse antwortet. Eine Adresse im Heimnetz ist meist am schnellsten.",
+      "connect": "Verbinden",
+      "connecting": "Wird geprüft …",
+      "connected": "Verbunden mit {name}.",
+      "offline": "Der Server unter {url} antwortet gerade nicht.",
+      "libraries": "Angezeigte Bibliotheken:",
+      "atLeastOne": "Mindestens eine Bibliothek auswählen.",
+      "signInAgain": "Neu anmelden oder anderen Server wählen",
+      "kind": {
+        "movie": "Filme",
+        "show": "Serien"
       }
     }
   },
@@ -1175,5 +1235,72 @@
       "running": "nimmt auf"
     },
     "allStations": "Alle Radiosender"
+  },
+  "plex": {
+    "server": "Plex-Server",
+    "state": {
+      "offline": "Plex offline",
+      "unauthorized": "Plex lehnt den Zugang ab"
+    },
+    "syncedAt": "Stand {when}",
+    "syncNow": "Jetzt synchronisieren",
+    "syncing": "Synchronisiere …",
+    "setup": {
+      "title": "Plex ist noch nicht verbunden",
+      "body": "Die Plex Mediathek zeigt Filme und Serien deines Plex-Servers, synchronisiert „gesehen“ mit Plex und spielt Filme direkt auf der Box ab. Verbinden geht in den Einstellungen mit einem kurzen Code.",
+      "action": "Plex verbinden"
+    },
+    "back": "Zurück",
+    "noLibraries": "Keine Film- oder Serienbibliothek ausgewählt.",
+    "filterPlaceholder": "In dieser Bibliothek filtern",
+    "filter": {
+      "label": "Gesehen-Status",
+      "all": "Alle",
+      "unwatched": "Ungesehen",
+      "started": "Angefangen",
+      "watched": "Gesehen"
+    },
+    "sort": {
+      "label": "Sortierung",
+      "title": "Titel",
+      "added": "Zuletzt hinzugefügt",
+      "year": "Jahr",
+      "rating": "Bewertung"
+    },
+    "view": {
+      "label": "Ansicht",
+      "grid": "Kacheln",
+      "list": "Liste"
+    },
+    "count": "{n} Titel | {n} Titel",
+    "empty": "Nichts gefunden.",
+    "minutes": "{n} Min.",
+    "seasons": "{n} Staffel | {n} Staffeln",
+    "episodesSeen": "{seen} von {total} Folgen gesehen",
+    "watched": "Gesehen",
+    "started": "Angefangen",
+    "startedAt": "Angefangen, bei {minutes} Min.",
+    "markWatched": "Als gesehen markieren",
+    "markUnwatched": "Als ungesehen markieren",
+    "showWatched": "Ganze Serie als gesehen markieren …",
+    "showUnwatched": "Ganze Serie als ungesehen markieren …",
+    "seasonWatched": "Staffel als gesehen markieren …",
+    "seasonUnwatched": "Staffel als ungesehen markieren …",
+    "confirmWatched": "{count} Folge ändern | {count} Folgen ändern",
+    "previewWatched": "In Plex als gesehen markieren – {count} Folge: | In Plex als gesehen markieren – {count} Folgen:",
+    "previewUnwatched": "In Plex als ungesehen markieren – {count} Folge: | In Plex als ungesehen markieren – {count} Folgen:",
+    "planApplied": "{count} Folge in Plex geändert. | {count} Folgen in Plex geändert.",
+    "markedWatched": "„{title}“ als gesehen markiert.",
+    "markedUnwatched": "„{title}“ als ungesehen markiert.",
+    "undo": "Rückgängig",
+    "playOnBox": "Auf der Box abspielen",
+    "starting": "Startet …",
+    "nowPlaying": "Läuft jetzt auf der Box: {title}",
+    "playHint": "Experimentell: Die Box spielt die Datei direkt vom Plex-Server, von vorn. Ob sie das Format kann, hängt von den Decodern der Box ab.",
+    "offlineAction": "Plex ist offline – Abspielen und Markieren gehen erst wieder, wenn der Server antwortet.",
+    "noSummary": "Keine Beschreibung.",
+    "file": "Datei",
+    "open": "{title} öffnen",
+    "openWatched": "{title} öffnen (gesehen)"
   }
 }

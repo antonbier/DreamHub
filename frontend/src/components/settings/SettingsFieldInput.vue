@@ -78,6 +78,9 @@
       <p v-else-if="field.key === 'push.server'" class="mt-1 text-[12.5px] text-faint">
         {{ t('settings.page.pushServerHint') }}
       </p>
+      <p v-else-if="field.key === 'plex.url'" class="mt-1 text-[12.5px] text-faint">
+        {{ t('settings.page.plexUrlHint') }}
+      </p>
       <p v-else-if="field.key.startsWith('media.naming.folder')" class="mt-1 text-[12.5px] text-faint">
         {{ t('settings.page.folderHint') }}
       </p>

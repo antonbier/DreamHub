@@ -14,6 +14,8 @@ import (
 	fanartmock "github.com/antonbier/DreamHub/backend/internal/fanart/mock"
 	"github.com/antonbier/DreamHub/backend/internal/omdb"
 	omdbmock "github.com/antonbier/DreamHub/backend/internal/omdb/mock"
+	"github.com/antonbier/DreamHub/backend/internal/plex"
+	plexmock "github.com/antonbier/DreamHub/backend/internal/plex/mock"
 	"github.com/antonbier/DreamHub/backend/internal/push"
 	pushmock "github.com/antonbier/DreamHub/backend/internal/push/mock"
 	"github.com/antonbier/DreamHub/backend/internal/recfs"
@@ -22,6 +24,7 @@ import (
 	"github.com/antonbier/DreamHub/backend/internal/tvmaze"
 	tvmazemock "github.com/antonbier/DreamHub/backend/internal/tvmaze/mock"
 	"log/slog"
+	"net"
 	"net/http"
 	"os"
 	"os/exec"
@@ -66,6 +69,8 @@ func run(logger *slog.Logger, level *logging.Level) error {
 	var omdbClient omdb.Client
 	var fanartClient fanart.Client
 	var pushClient push.Client
+	var plexClient plex.Client
+	var streamBase string
 	var dmiReader *dmi.Reader
 	var logs journald.Reader
 	var services systemd.Manager
@@ -94,6 +99,12 @@ func run(logger *slog.Logger, level *logging.Level) error {
 		omdbClient = omdb.NewHTTPClient()
 		fanartClient = fanart.NewHTTPClient()
 		pushClient = push.NewHTTPClient()
+		plexClient = plex.NewHTTPClient(api.Version)
+		// The box's media player reaches DreamHub on the same machine —
+		// only when DreamHub runs on the box (its enigma2 config is here).
+		if _, err := os.Stat("/etc/enigma2"); err == nil {
+			streamBase = "http://127.0.0.1:" + listenPort(cfg.ListenAddr)
+		}
 		dmiReader = &dmi.Reader{}
 		logs = journald.Exec{}
 		services = systemd.Exec{}
@@ -110,6 +121,9 @@ func run(logger *slog.Logger, level *logging.Level) error {
 		omdbClient = omdbmock.New()
 		fanartClient = fanartmock.New()
 		pushClient = pushmock.New()
+		plexClient = plexmock.New()
+		// The mock box "plays" whatever it's given.
+		streamBase = "http://127.0.0.1:" + listenPort(cfg.ListenAddr)
 		logs = jmock.New()
 		services = sdmock.New()
 		logger.Info("webcontrol client mode", "mode", "mock")
@@ -125,6 +139,8 @@ func run(logger *slog.Logger, level *logging.Level) error {
 		OMDb:         omdbClient,
 		Fanart:       fanartClient,
 		Push:         pushClient,
+		Plex:         plexClient,
+		StreamBase:   streamBase,
 		DMI:          dmiReader,
 		RecordingsFS: recFS,
 		// Same switch as WebControl writes; mock mode always writes.
@@ -162,4 +178,12 @@ func run(logger *slog.Logger, level *logging.Level) error {
 
 	logger.Info("dreamhub starting", "version", api.Version, "addr", cfg.ListenAddr, "dataDir", cfg.DataDir)
 	return http.ListenAndServe(cfg.ListenAddr, a.Handler)
+}
+
+// listenPort is the port of a listen address (":8080", "0.0.0.0:8080").
+func listenPort(addr string) string {
+	if _, port, err := net.SplitHostPort(addr); err == nil && port != "" {
+		return port
+	}
+	return "8080"
 }

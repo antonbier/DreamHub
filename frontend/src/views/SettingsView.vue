@@ -7,7 +7,7 @@
   Sections are grouped into tabs (DESIGN.md, "Settings"): each section names
   its tab in the schema (backend/internal/settings, Section.Tab); the tab
   order and the panels that aren't schema fields (API tokens, push test,
-  install, backup) are placed here. Every tab has its own address
+  install, backup, Plex sign-in) are placed here. Every tab has its own address
   (/settings/services), and /settings/services#tmdb scrolls to a section.
   The old /settings#tmdb links still land on the right tab.
 
@@ -59,6 +59,7 @@
           <ApiTokensPanel v-if="section.id === 'auth'" />
           <PushPanel v-if="section.id === 'push'" />
           <InstallPanel v-if="section.id === 'general'" />
+          <PlexPanel v-if="section.id === 'plex'" @changed="form.load()" />
         </template>
 
         <template v-if="activeTab === 'system'">
@@ -92,6 +93,7 @@ import ApiTokensPanel from '@/components/settings/ApiTokensPanel.vue'
 import PushPanel from '@/components/settings/PushPanel.vue'
 import InstallPanel from '@/components/settings/InstallPanel.vue'
 import BackupPanel from '@/components/settings/BackupPanel.vue'
+import PlexPanel from '@/components/settings/PlexPanel.vue'
 import { api } from '@/api/client'
 import { useSettingsForm } from '@/composables/useSettingsForm'
 import { SETTINGS_TABS, type SettingsTab } from '@/lib/settingsTabs'

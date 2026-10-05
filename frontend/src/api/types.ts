@@ -46,6 +46,8 @@ export interface SettingField {
   min?: number
   max?: number
   minLength?: number
+  // Edited by a panel of its own (or by nobody), not the generic form.
+  hidden?: boolean
   value: unknown
   hasValue: boolean
   isDefault: boolean
@@ -657,4 +659,85 @@ export interface SelfTestReport {
   startedAt: string
   checks: SelfTestCheck[]
   captured: string[] // files kept next to the report (none in mock mode)
+}
+
+// backend/internal/plex and internal/hubs/plex.go — PlexHub, "Plex Mediathek".
+export interface PlexPart {
+  id: number
+  key: string
+  size?: number
+  container?: string
+}
+export interface PlexMedia {
+  container?: string
+  videoCodec?: string
+  audioCodec?: string
+  audioChannels?: number
+  videoResolution?: string
+  bitrate?: number
+  parts?: PlexPart[]
+}
+export interface PlexItem {
+  ratingKey: string
+  type: 'movie' | 'show' | 'season' | 'episode'
+  title: string
+  showKey?: string
+  seasonKey?: string
+  showTitle?: string
+  seasonTitle?: string
+  index?: number
+  parentIndex?: number
+  year?: number
+  summary?: string
+  thumb?: string
+  art?: string
+  genres?: string[]
+  rating?: number
+  contentRating?: string
+  duration?: number // ms
+  viewCount?: number
+  viewOffset?: number // ms
+  lastViewedAt?: number
+  leafCount?: number
+  viewedLeafCount?: number
+  childCount?: number
+  addedAt?: number // Unix seconds
+  aired?: string
+  media?: PlexMedia[]
+  watched: boolean
+}
+// Where an answer's data came from: the server just now (online) or the
+// cache from syncedAt.
+export interface PlexMeta {
+  online: boolean
+  syncedAt?: number
+}
+export interface PlexLibrary {
+  id: string
+  title: string
+  type: 'movie' | 'show'
+  count: number
+  selected: boolean
+}
+export interface PlexStatus {
+  configured: boolean
+  canPlay: boolean
+  online?: boolean
+  error?: '' | 'unreachable' | 'unauthorized'
+  server?: { name: string; version: string }
+  syncedAt?: number
+  syncing?: boolean
+  url?: string
+}
+export interface PlexServerChoice {
+  name: string
+  id: string
+  owned: boolean
+  connections: { uri: string; local: boolean }[]
+}
+export interface PlexPin {
+  id: number
+  code: string
+  expiresAt: string
+  linkUrl: string
 }

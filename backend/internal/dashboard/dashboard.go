@@ -73,6 +73,9 @@ type tileType struct {
 	// it (an upgrade added it), instead of at the end. A layout being saved
 	// without it still gets it at the end, keeping the caller's order.
 	First bool
+	// Hidden: offered in edit mode but not shown until switched on — a
+	// cover row isn't part of the default layout (CONCEPT.md, DESIGN.md).
+	Hidden bool
 }
 
 // catalog is the fixed v1 set of built-in tile types, each backed by data
@@ -87,6 +90,9 @@ var catalog = []tileType{
 	{ID: "series.upcoming", Label: "dashboard.tile.seriesUpcoming", DefaultWidth: 2},
 	// Backed by GET /api/v1/timers' per-timer conflict estimate.
 	{ID: "timers.conflicts", Label: "dashboard.tile.timersConflicts", DefaultWidth: 2},
+	// Backed by PlexHub's GET /api/v1/plex/ondeck: a cover row, so hidden
+	// until switched on.
+	{ID: "plex.continue", Label: "dashboard.tile.plexContinue", DefaultWidth: 4, Hidden: true},
 }
 
 func catalogIndex() map[string]tileType {
@@ -162,7 +168,7 @@ func reconcile(l Layout, onLoad bool) Layout {
 	var first []Tile
 	for _, ct := range catalog {
 		if !seen[ct.ID] {
-			tile := Tile{Type: ct.ID, Label: ct.Label, Width: ct.DefaultWidth, Hidden: false}
+			tile := Tile{Type: ct.ID, Label: ct.Label, Width: ct.DefaultWidth, Hidden: ct.Hidden}
 			if ct.First && onLoad {
 				first = append(first, tile)
 			} else {

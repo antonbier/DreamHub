@@ -21,7 +21,7 @@ func newTestService(t *testing.T) (*Service, store.User) {
 	return NewService(st), u
 }
 
-func TestGet_FreshUserGetsTheFullCatalogVisible(t *testing.T) {
+func TestGet_FreshUserGetsTheFullCatalog(t *testing.T) {
 	s, u := newTestService(t)
 	l, err := s.Get(context.Background(), u)
 	if err != nil {
@@ -31,8 +31,8 @@ func TestGet_FreshUserGetsTheFullCatalogVisible(t *testing.T) {
 		t.Fatalf("got %d tiles, want %d (the full catalog)", len(l.Tiles), len(catalog))
 	}
 	for _, tile := range l.Tiles {
-		if tile.Hidden {
-			t.Errorf("tile %q is hidden by default, want visible", tile.Type)
+		if want := tile.Type == "plex.continue"; tile.Hidden != want {
+			t.Errorf("tile %q: hidden %v, want %v (only the cover row starts hidden)", tile.Type, tile.Hidden, want)
 		}
 		if tile.Label == "" {
 			t.Errorf("tile %q has no label", tile.Type)

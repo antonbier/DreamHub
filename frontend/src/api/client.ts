@@ -61,6 +61,12 @@ import type {
   ViewResult,
   ViewSource,
   WhoAmI,
+  PlexItem,
+  PlexLibrary,
+  PlexMeta,
+  PlexPin,
+  PlexServerChoice,
+  PlexStatus,
 } from './types'
 
 export class ApiError extends Error {
@@ -360,6 +366,34 @@ export const api = {
   notifications: {
     list: (limit = 20) => request<{ notifications: Notification[]; unread: number }>('GET', `/api/v1/notifications?limit=${limit}`),
     markRead: () => request<{ unread: number }>('POST', '/api/v1/notifications/read'),
+  },
+  plex: {
+    status: () => request<PlexStatus>('GET', '/api/v1/plex/status'),
+    sync: () => request<PlexStatus>('POST', '/api/v1/plex/sync'),
+    libraries: () => request<{ libraries: PlexLibrary[]; meta: PlexMeta }>('GET', '/api/v1/plex/libraries'),
+    selectLibraries: (selected: string[]) =>
+      request<{ libraries: PlexLibrary[]; meta: PlexMeta }>('PUT', '/api/v1/plex/libraries', { selected }),
+    items: (library: string) =>
+      request<{ items: PlexItem[]; meta: PlexMeta }>('GET', `/api/v1/plex/libraries/${encodeURIComponent(library)}/items`),
+    item: (key: string) =>
+      request<{ item: PlexItem; children?: PlexItem[]; meta: PlexMeta }>('GET', `/api/v1/plex/items/${encodeURIComponent(key)}`),
+    onDeck: () => request<{ items: PlexItem[]; meta: PlexMeta }>('GET', '/api/v1/plex/ondeck'),
+    image: (path: string, width: number) =>
+      requestBlob(`/api/v1/plex/image?path=${encodeURIComponent(path)}&w=${width}`),
+    // One film or episode, directly (undo = the inverse call).
+    setWatched: (key: string, watched: boolean) =>
+      request<{ item: PlexItem }>('POST', `/api/v1/plex/items/${encodeURIComponent(key)}/watched`, { watched }),
+    // A series or season: a preview, applied through plans.apply.
+    watchedPlan: (key: string, watched: boolean) =>
+      request<{ plan: Plan }>('POST', `/api/v1/plex/items/${encodeURIComponent(key)}/watched/plan`, { watched }),
+    play: (key: string) => request<{ playing: string }>('POST', `/api/v1/plex/items/${encodeURIComponent(key)}/play`),
+    login: {
+      start: () => request<PlexPin>('POST', '/api/v1/plex/login'),
+      check: (id: number) =>
+        request<{ state: 'waiting' | 'linked' | 'expired'; servers?: PlexServerChoice[] }>('GET', `/api/v1/plex/login/${id}`),
+      use: (id: number, serverId: string, url: string) =>
+        request<{ connected: string; url: string }>('POST', `/api/v1/plex/login/${id}/use`, { serverId, url }),
+    },
   },
   control: {
     screenshot: () => requestBlob('/api/v1/control/screenshot'),

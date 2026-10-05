@@ -44,6 +44,10 @@ type Field struct {
 	Min       *int64   `json:"min,omitempty"`
 	Max       *int64   `json:"max,omitempty"`
 	MinLength int      `json:"minLength,omitempty"`
+	// Hidden fields are kept and validated like any other but not shown by
+	// the generic settings form: a panel of their own edits them (Plex's
+	// library choice) or nobody does (an identifier made once).
+	Hidden bool `json:"hidden,omitempty"`
 }
 
 // Tabs of the settings menu, in the order the menu shows them. A section
@@ -97,6 +101,7 @@ const (
 	ErrTooShort        = "too_short"
 	ErrInvalidTimezone = "invalid_timezone"
 	ErrRequired        = "required"
+	ErrInvalidURL      = "invalid_url"
 )
 
 // Registry holds all registered sections, in registration order.

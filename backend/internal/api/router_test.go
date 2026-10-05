@@ -8,6 +8,7 @@ import (
 	atmock "github.com/antonbier/DreamHub/backend/internal/autotimer/mock"
 	fanartmock "github.com/antonbier/DreamHub/backend/internal/fanart/mock"
 	omdbmock "github.com/antonbier/DreamHub/backend/internal/omdb/mock"
+	plexmock "github.com/antonbier/DreamHub/backend/internal/plex/mock"
 	pushmock "github.com/antonbier/DreamHub/backend/internal/push/mock"
 	"github.com/antonbier/DreamHub/backend/internal/recfs"
 	sdmock "github.com/antonbier/DreamHub/backend/internal/systemd/mock"
@@ -49,6 +50,8 @@ type env struct {
 	pushed *pushmock.Client
 	// systemd is AdminHub's service manager (in-memory).
 	systemd *sdmock.Manager
+	// plex is PlexHub's server (in-memory).
+	plex *plexmock.Client
 }
 
 // newEnv builds the application exactly as production does (internal/app),
@@ -88,6 +91,7 @@ func newEnvFull(t *testing.T, wc webcontrol.Client, at autotimer.Client, recFS r
 	t.Helper()
 	pushed := pushmock.New()
 	services := sdmock.New()
+	plexServer := plexmock.New()
 	a, err := app.New(context.Background(), app.Options{
 		ReadOnlyFiles: readOnly,
 		TMDB:          tmdbmock.New(),
@@ -95,6 +99,8 @@ func newEnvFull(t *testing.T, wc webcontrol.Client, at autotimer.Client, recFS r
 		OMDb:          omdbmock.New(),
 		Fanart:        fanartmock.New(),
 		Push:          pushed,
+		Plex:          plexServer,
+		StreamBase:    "http://127.0.0.1:8080",
 		DataDir:       t.TempDir(),
 		WebControl:    wc,
 		AutoTimer:     at,
@@ -121,7 +127,7 @@ func newEnvFull(t *testing.T, wc webcontrol.Client, at autotimer.Client, recFS r
 	for _, job := range a.Background {
 		go job(jobs)
 	}
-	return &env{srv: srv, store: a.Store, svc: a.Settings, events: a.Events, pushed: pushed, systemd: services}
+	return &env{srv: srv, store: a.Store, svc: a.Settings, events: a.Events, pushed: pushed, systemd: services, plex: plexServer}
 }
 
 func (e *env) do(t *testing.T, method, path, body string, configure func(*http.Request)) (*http.Response, []byte) {
@@ -478,7 +484,7 @@ func TestSettings_GetReturnsCoreSections(t *testing.T) {
 	for _, s := range body.Sections {
 		ids = append(ids, s.ID)
 	}
-	if strings.Join(ids, ",") != "general,auth,network,webcontrol,ai,tmdb,tvmaze,omdb,fanart,push,media,hubs" {
+	if strings.Join(ids, ",") != "general,auth,network,webcontrol,ai,tmdb,tvmaze,omdb,fanart,push,plex,media,hubs" {
 		t.Fatalf("expected core, connector and hub sections in order, got %v", ids)
 	}
 	if v := body.Sections[0].Fields[0]; v.Key != settings.KeyLanguage || v.Value != "en" {
@@ -857,11 +863,11 @@ func TestDashboard_GetReturnsTheFullCatalogByDefault(t *testing.T) {
 		} `json:"tiles"`
 	}
 	json.Unmarshal(b, &body)
-	if len(body.Tiles) != 6 || body.Tiles[0].Type != "control.nowPlaying" {
-		t.Fatalf("expected the 6 built-in tiles on a fresh install, \"Now on the box\" first, got %+v", body.Tiles)
+	if len(body.Tiles) != 7 || body.Tiles[0].Type != "control.nowPlaying" {
+		t.Fatalf("expected the 7 built-in tiles on a fresh install, \"Now on the box\" first, got %+v", body.Tiles)
 	}
 	for _, tile := range body.Tiles {
-		if tile.Hidden || tile.Label == "" || tile.Width < 1 || tile.Width > 4 {
+		if tile.Hidden != (tile.Type == "plex.continue") || tile.Label == "" || tile.Width < 1 || tile.Width > 4 {
 			t.Errorf("unexpected default tile: %+v", tile)
 		}
 	}
@@ -883,7 +889,7 @@ func TestDashboard_PutRoundTripsAndIsLogged(t *testing.T) {
 		} `json:"tiles"`
 	}
 	json.Unmarshal(b, &body)
-	if len(body.Tiles) != 6 || body.Tiles[0].Type != "hubs.status" || !body.Tiles[0].Hidden || body.Tiles[0].Width != 1 {
+	if len(body.Tiles) != 7 || body.Tiles[0].Type != "hubs.status" || !body.Tiles[0].Hidden || body.Tiles[0].Width != 1 {
 		t.Fatalf("order/width/hidden not preserved: %+v", body.Tiles)
 	}
 
@@ -1034,7 +1040,7 @@ func TestDashboard_CustomTiles(t *testing.T) {
 	}
 	_, b = e.do(t, "GET", "/api/v1/dashboard", "", nil)
 	json.Unmarshal(b, &layout)
-	if len(layout.Tiles) != 7 || layout.Tiles[0].Type != "custom" || layout.Tiles[0].ID == "" ||
+	if len(layout.Tiles) != 8 || layout.Tiles[0].Type != "custom" || layout.Tiles[0].ID == "" ||
 		layout.Tiles[0].Custom == nil || layout.Tiles[0].Custom.Title != "Aufräumen" || layout.Tiles[0].Custom.Query.MinSizeGB != 3 {
 		t.Fatalf("custom tile not saved as expected: %s", b)
 	}

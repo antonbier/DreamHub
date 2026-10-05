@@ -18,6 +18,7 @@ const (
 	IDAdmin     = "admin"
 	IDControl   = "control"
 	IDRadio     = "radio"
+	IDPlex      = "plex"
 )
 
 // CapJournald is the capability to read logs via journalctl (AdminHub).
@@ -39,6 +40,10 @@ func V1() []Descriptor {
 		{ID: IDSeries, Name: "SeriesHub", Label: "hub.series", Icon: "series", Path: "/series", Group: GroupMedia, Order: 20,
 			Requires: []Requirement{wc, {Connector: connector.IDSerienRecorder}},
 			Emits:    []string{events.MissingAiring}},
+		// Plex Mediathek: a Plex server's films and series. Built from the
+		// cache while the server is off (CONCEPT.md, "Connectors").
+		{ID: IDPlex, Name: "PlexHub", Label: "hub.plex", Icon: "library", Path: "/plex", Group: GroupMedia, Order: 30,
+			Requires: []Requirement{{Connector: connector.IDPlex, Cached: true}, {Hub: IDControl, Optional: true}}},
 		{ID: IDGuide, Name: "GuideHub", Label: "hub.guide", Icon: "guide", Path: "/guide", Group: GroupProgram, Order: 10,
 			Requires: []Requirement{wc, {Connector: connector.IDTMDB, Optional: true}}},
 		// Recording a radio programme needs TimerHub; listening doesn't.

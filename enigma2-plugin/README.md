@@ -23,7 +23,7 @@ src/                        # becomes Extensions/DreamHub/ at install time
 
 Calls `127.0.0.1:<port>` (the local Go backend, default port 8080) only. No business logic of its own. Follows DreamOS's configured system language (`config.osd.language.value`, format `de_DE`) via gettext, confirmed against `PROJECT_PLAN.md`'s researched convention: `PluginLanguageDomain`/`PluginLanguagePath`, `gettext.bindtextdomain()`, re-initialized on every `language.addCallback()` — no separate language setting for the user to maintain.
 
-## Building and installing (manual, until WP9's `.deb`)
+## Building and installing by hand (the `.deb` does this for you)
 
 `.po` files compile to `.mo` via `msgfmt`, into the same `locale/<lang>/LC_MESSAGES/` layout:
 

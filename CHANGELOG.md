@@ -6,6 +6,8 @@ Format follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/); version
 
 ## [Unreleased]
 
+## [0.1.5] - 2026-10-05
+
 ### Added
 - **Plex library** (PlexHub): your Plex server's films and series as tiles or a list, filtered and sorted; series pages with seasons and episodes. Watched state is Plex's own — one film or episode with Undo, a whole season or series after a preview. Films play on the box straight from the server with Enigma2's own player (experimental). Connect with a code at plex.tv/link (any server, any address); while the server is off, the last known library stays visible. Search finds Plex titles; an optional dashboard tile shows "Continue watching".
 

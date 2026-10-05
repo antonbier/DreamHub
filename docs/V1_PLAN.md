@@ -1,6 +1,6 @@
 # v1 plan (draft for discussion)
 
-> **Status 2026-10-04 (release 0.1.0):** this plan was written on 2026-09-24 and its "Where we are" describes that day. Since then WP1–WP9 are done and confirmed on the reference box, ControlHub, RadioHub and AdminHub's service status were built early, and live updates use Server-Sent Events rather than WebSockets. What's left is WP10 (hardening) and the feed (D4). `ROADMAP.md` is the authoritative status; the decisions below still hold.
+> **Status 2026-10-04 (release 0.1.0):** this plan was written on 2026-09-24 and its "Where we are" describes that day. Since then WP1–WP9 are done and confirmed on the reference box, ControlHub, RadioHub and AdminHub's service status were built early, and live updates use Server-Sent Events rather than WebSockets. What's left is WP10 (hardening) and the feed (D4). Release 0.1.5 (2026-10-05) added settings tabs and PlexHub, built early. `ROADMAP.md` is the authoritative status; the decisions below still hold.
 
 Plan for getting from today's state to a released **DreamHub 1.0.0**. It builds on `ROADMAP.md` (authoritative status) and the device findings of 2026-09-24 in `ARCHITECTURE.md`. Once the open decisions below are settled, the work packages become GitHub issues under the existing milestones and this file is folded into `ROADMAP.md`.
 

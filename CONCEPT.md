@@ -51,10 +51,11 @@ From the requirements the core derives each hub's **status**: *available*, *degr
 | **GuideHub** | EPG as a TV-guide grid ("TV-Zeitschrift") | v1 (basic) |
 | **DiscoveryHub** | AI recommendations, one click → TimerHub (with confirmation); optionally shaped by the user's taste (recordings, followed series, timers, AutoTimers — opt-in, since it sends viewing data to the AI provider) | v1 |
 | **SeriesHub** | SerienRecorder: episodes on disk, missing episodes, upcoming | v1 (basic) |
-| **SystemHub** | Device info, diagnostics, backup/restore, change log — for every user | v1 (basic) |
+| **SystemHub** | Device info, diagnostics, change log — for every user (backup/restore moved to Settings → System, 2026-10-05) | v1 (basic) |
 | **AdminHub** | Logs (v1), service status, terminal (later) — admin role only | v1 (logs) |
 | **ControlHub** | Web remote, screenshot, power | v1 — pulled forward from v1.1: verifying the Enigma2 plugin (WP8) needed a real screenshot/remote-control loop anyway, and GuideHub's "switch to this channel now" needs it too (`docs/V1_PLAN.md`) |
 | **RadioHub** | Radio services, now playing, radio timers | v1.1 (built early, 2026-10-04) |
+| **PlexHub** ("Plex Mediathek") | A Plex server's films and series (tiles or list), watched state in Plex, play on the box — optional, cached while the server is off | built early, 2026-10-05 |
 | **ChannelHub** | Bouquets (link/embed the existing BouquetEditor plugin), picons | v1.1 |
 | **StreamHub** | Live TV / radio in the browser | later |
 | **AutomationHub** | Scripts, webhooks, automations — the only place anything happens automatically | later |
@@ -120,7 +121,7 @@ Every hub can contribute a search provider; results are grouped by hub. Keyboard
 
 ### Settings
 
-One central settings menu: general (language, time zone, appearance, auth, network, AI provider) first, then one section per hub, generated from each hub's settings schema. Search within settings, "test connection" buttons. Everything in the UI is also available through the API.
+One central settings menu in tabs — General, Recordings, Services (every connector with its state), Notifications, Hubs, Access, System (backup/restore, diagnostics, setup wizard) — generated from the settings schema, where each section names its tab. Every setting is findable from the global search; "test connection" buttons where a service has one (push). Everything in the UI is also available through the API.
 
 ### Onboarding wizard
 

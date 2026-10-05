@@ -31,7 +31,7 @@ curl -X PATCH http://127.0.0.1:8080/api/v1/settings -H 'X-DreamHub-Request: 1' \
 
 **Writes to a real box are on by default** since the timer write endpoints (`/web/timeradd`, `/web/timerdelete`) were verified live on the reference device (`ARCHITECTURE.md`, "Timer write endpoints"). Set `DREAMHUB_ENABLE_DEVICE_WRITES=0` for a read-only run; applying a plan then answers `409 writes_disabled`. Every write still goes through preview-and-confirm, is sent as a form-encoded `POST` with every parameter, and is **verified against `/web/timerlist` afterwards**, because the box reports success for a timer it silently dropped as a duplicate.
 
-**Box login**: if the box enforces auth for DreamHub's requests (`localauth=true` together with `streamauth=true`, see `ARCHITECTURE.md`), set Settings → WebControl (`webcontrol.username`, `webcontrol.password`). The same login is used for SerienRecorder's API, which sits behind WebControl. Without it the WebControl connector reports `connector.authRequired`.
+**Box login**: if the box enforces auth for DreamHub's requests (`localauth=true` together with `streamauth=true`, see `ARCHITECTURE.md`), set Settings → Services → WebControl (`webcontrol.username`, `webcontrol.password`). The same login is used for SerienRecorder's API, which sits behind WebControl. Without it the WebControl connector reports `connector.authRequired`.
 
 Enabling auth without a username and password is rejected (it would lock everyone out). `/api/v1/health` always stays public.
 
@@ -175,7 +175,7 @@ Produces a static ARM64 Linux binary (~12–13 MB stripped, including the pure-G
 - `internal/hubs/` — hub behavior (routes): TimerHub (timers, create via plan with conflict check), SystemHub (change log), AdminHub (log level).
 - `internal/enrich/` — enrichment: poster, rating, overview, genres for a title from TMDB (first source), exact-title matches only, cached in SQLite (`enrichment` table) and images on disk (`<data dir>/cache/tmdb`, capped). `internal/titles/` — the shared title normalization and "is this an episode of that series" matching.
 - `internal/plex/` — the Plex connector's client (+ `mock/`): a Plex Media Server's libraries, items, watched state, pictures and files, and plex.tv's PIN sign-in and server list. PlexHub (`internal/hubs/plex*.go`) caches what it reads in the store (`plex_cache`).
-- `internal/push/` — push notifications through ntfy: the client (+ `mock/`), the texts per event in de/en/it (`messages.go`), and the `Notifier` that forwards bus events according to Settings → Push.
+- `internal/push/` — push notifications through ntfy: the client (+ `mock/`), the texts per event in de/en/it (`messages.go`), and the `Notifier` that forwards bus events according to Settings → Notifications.
 - `internal/omdb/`, `internal/fanart/` — the OMDb (Rotten Tomatoes, IMDb, Metascore by IMDb ID) and fanart.tv (title logos) clients, each with a `mock/`; used only through `enrich.Service.Extras`.
 - `internal/logging/` — runtime log level with automatic revert from debug.
 - `internal/auth/` — auth middleware; `SettingsVerifier` checks Basic Auth against the credentials in settings (bcrypt, cached) or a bearer token against `internal/apitoken` (`TokenVerifier`); `Credentials` is a static verifier for tests.

@@ -228,3 +228,20 @@ func TestPlex_ChooseLibraries(t *testing.T) {
 		t.Errorf("every library chosen is stored as empty (new ones show up too): %s", b)
 	}
 }
+
+func TestPlex_AnUnreadableAnswerIsNotOffline(t *testing.T) {
+	e := newEnv(t)
+	connectPlex(t, e)
+	e.plex.Unreadable = true
+	resp, b := e.do(t, "GET", "/api/v1/plex/items/102", "", nil)
+	if code, _, _ := errCode(t, b); resp.StatusCode != http.StatusBadGateway || code != "plex_bad_answer" {
+		t.Fatalf("an unreadable answer: %d %s", resp.StatusCode, b)
+	}
+	e.plex.Unreadable = false
+	// The server is still taken as there: the next item comes from it, not
+	// from a cache that doesn't have it.
+	resp, b = e.do(t, "GET", "/api/v1/plex/items/103", "", nil)
+	if resp.StatusCode != http.StatusOK || !strings.Contains(string(b), `"online":true`) {
+		t.Errorf("after an unreadable answer: %d %s", resp.StatusCode, b)
+	}
+}

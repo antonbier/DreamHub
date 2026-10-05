@@ -644,7 +644,8 @@
       "plex_unknown_server": "Dieser Server gehört nicht zum angemeldeten Konto.",
       "plex_wrong_server": "Unter dieser Adresse antwortet ein anderer Plex-Server.",
       "plex_unreachable_at": "Der Server antwortet unter dieser Adresse nicht. Bitte eine andere wählen.",
-      "invalid_url": "Bitte eine vollständige Adresse mit http:// oder https:// angeben."
+      "invalid_url": "Bitte eine vollständige Adresse mit http:// oder https:// angeben.",
+      "plex_bad_answer": "Der Plex-Server hat geantwortet, aber DreamHub konnte die Antwort nicht lesen. Bitte melde das als Fehler."
     },
     "media": {
       "not_a_recording": "Diese Aufnahme gibt es nicht (mehr).",

@@ -66,8 +66,10 @@ func (h *Plex) writeWriteError(w http.ResponseWriter, r *http.Request, err error
 		httpx.WriteError(w, r, http.StatusNotFound, CodePlexNotFound, "no such item on the Plex server")
 	case errors.Is(err, plex.ErrUnauthorized):
 		httpx.WriteError(w, r, http.StatusBadGateway, CodePlexUnauthorized, "the Plex server rejected the token")
-	default:
+	case errors.Is(err, plex.ErrUnreachable):
 		httpx.WriteError(w, r, http.StatusConflict, CodePlexOffline, "the Plex server doesn't answer; nothing was changed")
+	default:
+		httpx.WriteError(w, r, http.StatusBadGateway, CodePlexBadAnswer, "the Plex server's answer couldn't be used: "+err.Error())
 	}
 }
 

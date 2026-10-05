@@ -7,6 +7,7 @@ package mock
 import (
 	"bytes"
 	"context"
+	"errors"
 	"hash/fnv"
 	"image"
 	"image/color"
@@ -37,6 +38,9 @@ type Client struct {
 	pinCalls int
 	// Watched records SetWatched calls, for tests.
 	Watched []string
+	// Unreadable makes Item answer with something that can't be read, as
+	// a server with a newer answer format would — not offline.
+	Unreadable bool
 }
 
 var _ plex.Client = (*Client)(nil)
@@ -170,6 +174,9 @@ func (c *Client) Items(_ context.Context, conn plex.Conn, libraryID string) ([]p
 func (c *Client) Item(_ context.Context, conn plex.Conn, key string) (plex.Item, error) {
 	if err := c.check(conn); err != nil {
 		return plex.Item{}, err
+	}
+	if c.Unreadable {
+		return plex.Item{}, errors.New("json: cannot unmarshal array into Go struct field .rating of type float64")
 	}
 	c.mu.Lock()
 	defer c.mu.Unlock()

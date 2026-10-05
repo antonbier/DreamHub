@@ -290,33 +290,33 @@ func (h *HTTPClient) Libraries(ctx context.Context, c Conn) ([]Library, error) {
 
 // metadata is Plex's JSON for one item.
 type metadata struct {
-	RatingKey             string  `json:"ratingKey"`
-	ParentRatingKey       string  `json:"parentRatingKey"`
-	GrandparentRatingKey  string  `json:"grandparentRatingKey"`
-	Type                  string  `json:"type"`
-	Title                 string  `json:"title"`
-	ParentTitle           string  `json:"parentTitle"`
-	GrandparentTitle      string  `json:"grandparentTitle"`
-	Index                 int     `json:"index"`
-	ParentIndex           int     `json:"parentIndex"`
-	Year                  int     `json:"year"`
-	Summary               string  `json:"summary"`
-	Thumb                 string  `json:"thumb"`
-	ParentThumb           string  `json:"parentThumb"`
-	GrandparentThumb      string  `json:"grandparentThumb"`
-	Art                   string  `json:"art"`
-	AudienceRating        float64 `json:"audienceRating"`
-	Rating                float64 `json:"rating"`
-	ContentRating         string  `json:"contentRating"`
-	Duration              int64   `json:"duration"`
-	ViewCount             int     `json:"viewCount"`
-	ViewOffset            int64   `json:"viewOffset"`
-	LastViewedAt          int64   `json:"lastViewedAt"`
-	LeafCount             int     `json:"leafCount"`
-	ViewedLeafCount       int     `json:"viewedLeafCount"`
-	ChildCount            int     `json:"childCount"`
-	AddedAt               int64   `json:"addedAt"`
-	OriginallyAvailableAt string  `json:"originallyAvailableAt"`
+	RatingKey             string `json:"ratingKey"`
+	ParentRatingKey       string `json:"parentRatingKey"`
+	GrandparentRatingKey  string `json:"grandparentRatingKey"`
+	Type                  string `json:"type"`
+	Title                 string `json:"title"`
+	ParentTitle           string `json:"parentTitle"`
+	GrandparentTitle      string `json:"grandparentTitle"`
+	Index                 int    `json:"index"`
+	ParentIndex           int    `json:"parentIndex"`
+	Year                  int    `json:"year"`
+	Summary               string `json:"summary"`
+	Thumb                 string `json:"thumb"`
+	ParentThumb           string `json:"parentThumb"`
+	GrandparentThumb      string `json:"grandparentThumb"`
+	Art                   string `json:"art"`
+	AudienceRating        number `json:"audienceRating"`
+	Rating                number `json:"rating"`
+	ContentRating         string `json:"contentRating"`
+	Duration              int64  `json:"duration"`
+	ViewCount             int    `json:"viewCount"`
+	ViewOffset            int64  `json:"viewOffset"`
+	LastViewedAt          int64  `json:"lastViewedAt"`
+	LeafCount             int    `json:"leafCount"`
+	ViewedLeafCount       int    `json:"viewedLeafCount"`
+	ChildCount            int    `json:"childCount"`
+	AddedAt               int64  `json:"addedAt"`
+	OriginallyAvailableAt string `json:"originallyAvailableAt"`
 	Genre                 []struct {
 		Tag string `json:"tag"`
 	} `json:"Genre"`
@@ -331,6 +331,21 @@ type metadata struct {
 	} `json:"Media"`
 }
 
+// number is a JSON number that ignores anything else under its key.
+// Needed because encoding/json matches keys without regard to case: newer
+// servers send "rating" (a number) and "Rating" (a list of rating sources
+// — IMDb, Rotten Tomatoes …) side by side, and the list would otherwise
+// fail the whole answer.
+type number float64
+
+func (n *number) UnmarshalJSON(b []byte) error {
+	var f float64
+	if json.Unmarshal(b, &f) == nil {
+		*n = number(f)
+	}
+	return nil
+}
+
 func (m metadata) item() Item {
 	it := Item{
 		RatingKey: m.RatingKey, Type: m.Type, Title: m.Title, Index: m.Index, ParentIndex: m.ParentIndex,
@@ -339,9 +354,9 @@ func (m metadata) item() Item {
 		LeafCount: m.LeafCount, ViewedLeafCount: m.ViewedLeafCount, ChildCount: m.ChildCount,
 		AddedAt: m.AddedAt, Aired: m.OriginallyAvailableAt,
 	}
-	it.Rating = m.AudienceRating
+	it.Rating = float64(m.AudienceRating)
 	if it.Rating == 0 {
-		it.Rating = m.Rating
+		it.Rating = float64(m.Rating)
 	}
 	switch m.Type {
 	case "episode":

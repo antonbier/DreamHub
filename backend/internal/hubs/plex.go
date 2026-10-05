@@ -67,6 +67,7 @@ const (
 	CodePlexOffline       = "plex_offline"
 	CodePlexUnauthorized  = "plex_unauthorized"
 	CodePlexNotFound      = "plex_not_found"
+	CodePlexBadAnswer     = "plex_bad_answer"
 )
 
 // offlineBackoff: after a failed request, further reads go straight to the
@@ -129,8 +130,15 @@ func (h *Plex) note(err error) {
 	h.mu.Lock()
 	defer h.mu.Unlock()
 	h.lastTry = h.Now()
-	if errors.Is(err, plex.ErrNotFound) {
-		err = nil // the server answered
+	// Only "no connection" and "token refused" mean offline. Anything else
+	// — not found, an answer DreamHub can't read, a server error — came
+	// from a server that's there; it's logged, not taken for offline (that
+	// would send every read to the cache for a minute).
+	if err != nil && !errors.Is(err, plex.ErrUnreachable) && !errors.Is(err, plex.ErrUnauthorized) {
+		if !errors.Is(err, plex.ErrNotFound) && h.Logger != nil {
+			h.Logger.Warn("plex answer not usable", "err", err)
+		}
+		err = nil
 	}
 	h.lastErr = err
 }
@@ -347,8 +355,10 @@ func (h *Plex) writeReadError(w http.ResponseWriter, r *http.Request, err error)
 		httpx.WriteError(w, r, http.StatusNotFound, CodePlexNotFound, "no such item on the Plex server")
 	case errors.Is(err, plex.ErrUnauthorized):
 		httpx.WriteError(w, r, http.StatusBadGateway, CodePlexUnauthorized, "the Plex server rejected the token")
-	default:
+	case errors.Is(err, plex.ErrUnreachable):
 		httpx.WriteError(w, r, http.StatusBadGateway, CodePlexOffline, "the Plex server doesn't answer and nothing is cached yet")
+	default:
+		httpx.WriteError(w, r, http.StatusBadGateway, CodePlexBadAnswer, "the Plex server's answer couldn't be used: "+err.Error())
 	}
 }
 

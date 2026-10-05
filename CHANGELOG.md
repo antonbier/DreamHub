@@ -6,6 +6,11 @@ Format follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/); version
 
 ## [Unreleased]
 
+## [0.1.6] - 2026-10-05
+
+### Fixed
+- Plex library: opening a film or series said "the Plex server doesn't answer" although it did. Newer Plex servers send a list of rating sources ("Rating") next to the rating number ("rating"), and the JSON reader matches names regardless of case, so the whole answer failed. That failure was then taken for "offline", sending every read to the cache for a minute. Ratings are read tolerantly now, only a missing connection or a refused token counts as offline, and an answer that can't be read gets its own message and a log line.
+
 ## [0.1.5] - 2026-10-05
 
 ### Added

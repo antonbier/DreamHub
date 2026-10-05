@@ -644,7 +644,8 @@
       "plex_unknown_server": "This server doesn’t belong to the signed-in account.",
       "plex_wrong_server": "A different Plex server answers at this address.",
       "plex_unreachable_at": "The server doesn’t answer at this address. Please choose another.",
-      "invalid_url": "Enter a full address starting with http:// or https://."
+      "invalid_url": "Enter a full address starting with http:// or https://.",
+      "plex_bad_answer": "The Plex server answered, but DreamHub couldn’t read the answer. Please report this as a bug."
     },
     "media": {
       "not_a_recording": "This recording doesn't exist (anymore).",

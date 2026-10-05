@@ -469,5 +469,6 @@ With a SerienRecorder timer recording (state 2) and someone watching another cha
 ## Plex (owner's server, 2026-10-05)
 
 - The owner's Plex Media Server (on the Unraid machine, behind their own HTTPS reverse proxy) answers `GET /identity` without a token: `{"MediaContainer":{"claimed":true,"machineIdentifier":"…","version":"1.43.4.10903-e5521bd8c"}}`; everything else answers `401` without one. GDM discovery (UDP 32414) from the LAN got no answer while the server was off.
+- Plex Media Server 1.43's JSON carries, besides `rating`/`audienceRating` (numbers), list-valued keys of the same names in other case: `Rating` (`[{image, type, value}]`, the rating sources), `Image`, `Guid`, plus `UltraBlurColors`, `Role`, `Director`, `Writer`, `Country`, `Producer`. Go's `encoding/json` matches keys case-insensitively, so a number field tagged `rating` must tolerate the list (`plex.number`). Found on the box with 0.1.5: every `/library/metadata/<id>` answer failed.
 - Not yet confirmed: Enigma2's player playing a Plex file through PlexHub's local stream (`ROADMAP.md`, PlexHub).
 - 2026-10-05: release 0.1.5 installed over 0.1.0 with `dpkg -i` (enigma2 restarted by `postinst` for the plugin, no recording running); the self-test afterwards was all green (14 checks). PlexHub reports `canPlay: true` on the box (`/etc/enigma2` present, so the local stream base is set).

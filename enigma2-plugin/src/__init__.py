@@ -19,7 +19,7 @@ from Tools.Directories import SCOPE_PLUGINS, resolveFilename
 
 # Kept in sync by hand with backend/internal/api.Version — DreamHubScreen
 # shows a mismatch warning rather than silently assuming compatibility.
-PluginVersion = "0.1.5"
+PluginVersion = "0.1.6"
 
 PluginLanguageDomain = "DreamHub"
 PluginLanguagePath = "Extensions/DreamHub/locale"

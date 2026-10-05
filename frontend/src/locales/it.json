@@ -644,7 +644,8 @@
       "plex_unknown_server": "Questo server non appartiene all’account collegato.",
       "plex_wrong_server": "A questo indirizzo risponde un altro server Plex.",
       "plex_unreachable_at": "Il server non risponde a questo indirizzo. Scegline un altro.",
-      "invalid_url": "Inserisci un indirizzo completo con http:// o https://."
+      "invalid_url": "Inserisci un indirizzo completo con http:// o https://.",
+      "plex_bad_answer": "Il server Plex ha risposto, ma DreamHub non è riuscito a leggere la risposta. Segnalalo come errore."
     },
     "media": {
       "not_a_recording": "Questa registrazione non esiste (più).",

@@ -15,10 +15,11 @@
     @click="ui.closeMobileNav()"
   />
   <aside
+    ref="asideEl"
+    :inert="narrow && !ui.mobileNavOpen"
     class="z-30 flex h-full shrink-0 flex-col border-e border-line bg-side transition-[width] duration-150 below-md:fixed below-md:inset-y-0 below-md:start-0 below-md:w-[260px] below-md:transition-transform below-md:duration-200 below-md:ease-out"
     :class="ui.mobileNavOpen ? 'below-md:translate-x-0' : 'below-md:-translate-x-full below-md:rtl:translate-x-full'"
     :style="{ width: collapsed ? '60px' : '232px' }"
-    @keydown.esc="ui.closeMobileNav()"
   >
     <div class="flex items-center gap-2 p-3">
       <button
@@ -67,17 +68,45 @@
 </template>
 
 <script setup lang="ts">
-import { computed, defineComponent, h, ref } from 'vue'
+import { computed, defineComponent, h, nextTick, onBeforeUnmount, onMounted, ref, watch } from 'vue'
 import { RouterLink, useRoute } from 'vue-router'
 import { useI18n } from 'vue-i18n'
 import Icon from './Icon.vue'
 import { useProblem } from '@/composables/useProblem'
 import { useUiStore } from '@/stores/ui'
+import { useFocusTrap } from '@/composables/useFocusTrap'
 import type { NavItem, NavSection } from '@/api/types'
 
 const props = defineProps<{ sections: NavSection[] }>()
 const { t } = useI18n()
 const ui = useUiStore()
+
+// As a drawer (below 900 px) the sidebar is a modal while open — Tab stays
+// in it, Escape closes it, focus moves in and back — and out of reach
+// while closed: off screen, but without `inert` its links would still be
+// Tab stops nobody can see.
+const asideEl = ref<HTMLElement | null>(null)
+const narrowQuery = window.matchMedia('(max-width: 900px)')
+const narrow = ref(narrowQuery.matches)
+const onNarrowChange = (e: MediaQueryListEvent) => (narrow.value = e.matches)
+onMounted(() => narrowQuery.addEventListener('change', onNarrowChange))
+onBeforeUnmount(() => narrowQuery.removeEventListener('change', onNarrowChange))
+useFocusTrap(asideEl, { active: () => narrow.value && ui.mobileNavOpen, onEscape: () => ui.closeMobileNav() })
+let drawerOpener: HTMLElement | null = null
+watch(
+  () => ui.mobileNavOpen,
+  async (open) => {
+    if (!narrow.value) return
+    if (open) {
+      drawerOpener = document.activeElement as HTMLElement | null
+      await nextTick()
+      // The first one actually shown (the collapse button is hidden here).
+      Array.from(asideEl.value?.querySelectorAll<HTMLElement>('a[href], button') ?? []).find((el) => el.offsetParent !== null)?.focus()
+    } else {
+      drawerOpener?.focus()
+    }
+  },
+)
 
 // Collapsed-to-icons is a desktop-only affordance (DESIGN.md: "no
 // collapsed state" below 900px) — the drawer's own open/closed state lives

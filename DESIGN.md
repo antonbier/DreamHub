@@ -21,11 +21,13 @@ All colors are tokens. Dark is the default appearance; light and "follow system"
 | `line-soft` | `#1E2329` | `#EAEDF0` | row separators |
 | `text` | `#E6E9EC` | `#15191D` | primary text |
 | `muted` | `#9BA4AE` | `#505A64` | secondary text |
-| `faint` | `#6C7580` | `#7B858F` | meta, captions |
+| `faint` | `#818A94` | `#626C76` | meta, captions |
 | `accent` | `#6AA6E8` | `#1F64C8` | links, actions, focus, primary buttons |
-| `onair` | `#F2564A` | `#D23A2E` | live / now marker, progress |
-| `warn` | `#E0A23B` | `#B7730F` | conflicts, disk nearly full |
-| `ok` | `#4FBF7F` | `#2C8150` | resolved, in sync |
+| `onair` | `#F2564A` | `#C5372B` | live / now marker, progress |
+| `warn` | `#E0A23B` | `#975E0B` | conflicts, disk nearly full |
+| `ok` | `#4FBF7F` | `#29794B` | resolved, in sync |
+
+Every text color reaches WCAG AA — 4.5:1 for small text — on every surface of its theme (side, bg, tile, tile-2, field). `faint`, and in light also `onair`, `warn` and `ok`, were darkened/lightened for this in the accessibility pass (2026-10-05); the approved mockup in `docs/design/` keeps the earlier values.
 
 ## Typography
 
@@ -90,6 +92,12 @@ All colors are tokens. Dark is the default appearance; light and "follow system"
 
 - Keyboard: `/` or `Cmd/Ctrl+K` search, `g` + letter jumps to a hub, `Esc` closes dialogs, menus and the drawer.
 - Focus is always visible (2 px `accent` outline).
+- **Keyboard and screen readers** (accessibility pass 2026-10-05; checked with axe-core on every page in both themes — no violations of WCAG 2.1 AA — and by keyboard):
+  - "Skip to content" is the first Tab stop; changing pages moves focus to the page's content.
+  - Every modal (details dialog, search palette, tile builder, the sidebar as a phone drawer) keeps Tab inside, closes with Escape wherever the focus is, and returns focus to what opened it (`useFocusTrap`). The phone drawer is `inert` while closed.
+  - Every page has one `h1`; tiles and sections are `h2`; the status line is a labelled region.
+  - Every form control has a name (a label, or `aria-label` where the design shows only a placeholder).
+  - Dimming is done with color tokens, never opacity on text — opacity would drop it below AA.
 - Dialogs focus their primary action on open and return focus on close.
 - Motion is minimal (toast fade, drawer slide) and disabled under `prefers-reduced-motion`.
 

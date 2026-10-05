@@ -26,7 +26,10 @@
   --dh-line-soft: #1e2329;
   --dh-text: #e6e9ec;
   --dh-muted: #9ba4ae;
-  --dh-faint: #6c7580;
+  /* faint, onair, ok and warn reach WCAG AA (4.5:1) for small text on
+     every surface of their theme — side, bg, tile, tile-2, field
+     (accessibility pass 2026-10-05; DESIGN.md, "Design tokens"). */
+  --dh-faint: #818a94;
   --dh-accent: #6aa6e8;
   --dh-onair: #f2564a;
   --dh-warn: #e0a23b;
@@ -47,11 +50,11 @@
   --dh-line-soft: #eaedf0;
   --dh-text: #15191d;
   --dh-muted: #505a64;
-  --dh-faint: #7b858f;
+  --dh-faint: #626c76;
   --dh-accent: #1f64c8;
-  --dh-onair: #d23a2e;
-  --dh-warn: #b7730f;
-  --dh-ok: #2c8150;
+  --dh-onair: #c5372b;
+  --dh-warn: #975e0b;
+  --dh-ok: #29794b;
 }
 
 * {

@@ -4,7 +4,8 @@
   art on the box if there is one, else TMDB's when enrichment is on),
   title with channel · time · length · genres, rating, size, and
   text actions that appear on hover (always visible below 900 px). A
-  non-recording (a manually copied .mkv) is dimmed and labeled, never
+  non-recording (a manually copied .mkv) is shown in `muted` (not by opacity, which
+  would drop it below AA contrast) and labeled, never
   offered file actions.
 
   The title opens the recording's details (MediaHubView's ProgrammeDialog).
@@ -14,7 +15,7 @@
   trash previews the same way; the parent view owns the API calls.
 -->
 <template>
-  <li class="border-b border-line-soft last:border-none" :class="{ 'opacity-60': !movie.isRecording }">
+  <li class="border-b border-line-soft last:border-none">
     <div class="group flex items-center gap-3 py-2.5 hover:bg-tile-2 below-sm:flex-wrap below-sm:gap-y-1">
       <input
         v-if="selectable"
@@ -40,7 +41,7 @@
         >
           {{ shownTitle }}
         </button>
-        <span v-else class="block truncate text-[14px] text-text" :title="movie.title">{{ shownTitle }}</span>
+        <span v-else class="block truncate text-[14px] text-muted" :title="movie.title">{{ shownTitle }}</span>
         <span class="block truncate text-[12.5px] text-muted">
           <template v-if="movie.isRecording">{{ details }}</template>
           <template v-else>{{ t('media.notARecording') }}</template>

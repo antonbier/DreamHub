@@ -19,7 +19,7 @@
         class="shrink-0 cursor-grab text-faint"
         :title="t('dashboard.tileFrame.dragHandle')"
       />
-      <h3 class="truncate text-[15.5px] font-semibold">{{ title }}</h3>
+      <h2 class="truncate text-[15.5px] font-semibold">{{ title }}</h2>
       <span v-if="editing && tile.hidden" class="ms-1 text-[11.5px] text-faint">{{ t('dashboard.tileFrame.hidden') }}</span>
       <span v-if="!editing && meta" class="ms-auto shrink-0 text-[12.5px] text-faint">{{ meta }}</span>
 

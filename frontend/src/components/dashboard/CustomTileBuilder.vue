@@ -12,11 +12,11 @@
 <template>
   <div class="fixed inset-0 z-40 flex items-start justify-center overflow-y-auto bg-black/50 px-4 py-[8vh]" @click.self="$emit('close')">
     <form
+      ref="dialogEl"
       role="dialog"
       aria-modal="true"
       aria-labelledby="builder-title"
       class="w-full max-w-[520px] rounded-lg border border-line bg-tile p-5 shadow-lg"
-      @keydown.esc.stop="$emit('close')"
       @submit.prevent="save"
     >
       <p class="text-[12px] text-faint">{{ t('dashboard.builder.eyebrow') }}</p>
@@ -135,10 +135,11 @@
 </template>
 
 <script setup lang="ts">
-import { computed, nextTick, onMounted, reactive, ref, watch } from 'vue'
+import { computed, nextTick, onBeforeUnmount, onMounted, reactive, ref, watch } from 'vue'
 import { useI18n } from 'vue-i18n'
 import { api } from '@/api/client'
 import { useViewText } from '@/composables/useViewText'
+import { useFocusTrap } from '@/composables/useFocusTrap'
 import type { Bouquet, CustomTileView, ViewQuery, ViewResult, ViewSource } from '@/api/types'
 
 const props = defineProps<{ initial?: CustomTileView }>()
@@ -236,6 +237,12 @@ function saveFailed() {
 defineExpose({ saveFailed })
 
 const nameInput = ref<HTMLInputElement | null>(null)
+const dialogEl = ref<HTMLElement | null>(null)
+// Tab stays in the builder; Escape closes it; focus returns to the button
+// that opened it.
+useFocusTrap(dialogEl, { onEscape: () => emit('close') })
+const opener = document.activeElement as HTMLElement | null
+onBeforeUnmount(() => opener?.focus())
 onMounted(async () => {
   try {
     sources.value = (await api.dashboard.sources()).sources

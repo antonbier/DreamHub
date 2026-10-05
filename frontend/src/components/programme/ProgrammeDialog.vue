@@ -6,17 +6,17 @@
   poster, logo, year, genres, ratings, FSK, the full overview, credited),
   then the caller's own sections (default slot: the EPG text, why the AI
   picked it, a recording's description) and actions (slot "actions": record, switch now). Escape, the
-  close button and the backdrop close it; Close gets focus on open, and
-  focus goes back to whatever opened it. Full screen below sm.
+  close button and the backdrop close it; Close gets focus on open, Tab
+  stays inside (useFocusTrap), and focus goes back to whatever opened it. Full screen below sm.
 -->
 <template>
   <div class="fixed inset-0 z-40 flex items-start justify-center overflow-y-auto bg-black/60 px-4 py-[6vh] below-sm:px-0 below-sm:py-0" @click.self="$emit('close')">
     <div
+      ref="dialogEl"
       role="dialog"
       aria-modal="true"
       aria-labelledby="programme-title"
       class="relative w-full max-w-[680px] overflow-hidden rounded-lg border border-line bg-tile shadow-lg below-sm:min-h-full below-sm:rounded-none below-sm:border-0"
-      @keydown.esc.stop="$emit('close')"
     >
       <div v-if="info?.backdrop" class="relative h-[220px] below-sm:h-[180px]">
         <PosterImage :path="info.backdrop" size="w780" fill alt="" />
@@ -62,6 +62,7 @@ import { computed, onBeforeUnmount, onMounted, ref } from 'vue'
 import { useI18n } from 'vue-i18n'
 import PosterImage from '@/components/enrich/PosterImage.vue'
 import EnrichDetails from '@/components/enrich/EnrichDetails.vue'
+import { useFocusTrap } from '@/composables/useFocusTrap'
 import type { EnrichInfo } from '@/api/types'
 
 const props = defineProps<{
@@ -80,12 +81,14 @@ const props = defineProps<{
   // details block and its "nothing found" line.
   plain?: boolean
 }>()
-defineEmits<{ close: [] }>()
+const emit = defineEmits<{ close: [] }>()
 const { t } = useI18n()
 
 const airingNow = computed(() => props.start <= props.now && props.now < props.start + props.duration)
 
 const closeButton = ref<HTMLButtonElement | null>(null)
+const dialogEl = ref<HTMLElement | null>(null)
+useFocusTrap(dialogEl, { onEscape: () => emit('close') })
 let opener: HTMLElement | null = null
 onMounted(() => {
   opener = document.activeElement as HTMLElement | null

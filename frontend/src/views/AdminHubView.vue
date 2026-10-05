@@ -87,10 +87,11 @@
             v-model="logUnit"
             type="text"
             :placeholder="t('admin.logs.unitPlaceholder')"
+            :aria-label="t('admin.logs.unitPlaceholder')"
             class="w-56 max-w-full rounded border border-line bg-field px-2.5 py-1.5 text-[13px] text-text"
             @change="onFilterChange"
           />
-          <select v-model="logLevelFilter" class="rounded border border-line bg-field px-2.5 py-1.5 text-[13px] text-text" @change="onFilterChange">
+          <select v-model="logLevelFilter" :aria-label="t('admin.logs.levelFilter')" class="rounded border border-line bg-field px-2.5 py-1.5 text-[13px] text-text" @change="onFilterChange">
             <option value="">{{ t('admin.logs.levelAny') }}</option>
             <option v-for="lv in logLevels" :key="lv" :value="lv">{{ t(`admin.logs.level.${lv}`) }}</option>
           </select>
@@ -98,6 +99,7 @@
             v-model="logText"
             type="search"
             :placeholder="t('admin.logs.textPlaceholder')"
+            :aria-label="t('admin.logs.textPlaceholder')"
             class="w-56 max-w-full rounded border border-line bg-field px-2.5 py-1.5 text-[13px] text-text"
             @change="onFilterChange"
           />

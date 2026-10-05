@@ -13,7 +13,14 @@
     class="fixed inset-0 z-40 flex items-start justify-center bg-black/50 pt-[15vh]"
     @click.self="close"
   >
-    <div class="w-full max-w-[480px] rounded-lg border border-line bg-tile shadow-lg" @keydown="onKeydown">
+    <div
+      ref="panelEl"
+      role="dialog"
+      aria-modal="true"
+      :aria-label="t('search.label')"
+      class="w-full max-w-[480px] rounded-lg border border-line bg-tile shadow-lg"
+      @keydown="onKeydown"
+    >
       <label class="relative block border-b border-line-soft">
         <Icon name="search" :size="16" class="pointer-events-none absolute start-3 top-1/2 -translate-y-1/2 text-faint" />
         <input
@@ -21,6 +28,7 @@
           v-model="query"
           type="text"
           :placeholder="t('topbar.searchPlaceholder')"
+          :aria-label="t('search.label')"
           class="w-full bg-transparent py-3 ps-10 pe-3 text-[14.5px] text-text outline-none"
         />
       </label>
@@ -31,6 +39,7 @@
             class="flex w-full items-center gap-2.5 px-3 py-2 text-start text-[14px]"
             :class="i === active ? 'bg-tile-2 text-text' : 'text-muted'"
             @mouseenter="active = i"
+            @focus="active = i"
             @click="go(item)"
           >
             <Icon :name="item.icon" :size="16" />
@@ -54,6 +63,7 @@ import { useRouter } from 'vue-router'
 import Icon from './Icon.vue'
 import { api } from '@/api/client'
 import { useNavigationStore } from '@/stores/navigation'
+import { useFocusTrap } from '@/composables/useFocusTrap'
 
 const { t } = useI18n()
 const router = useRouter()
@@ -63,6 +73,10 @@ const open = ref(false)
 const query = ref('')
 const active = ref(0)
 const inputEl = ref<HTMLInputElement | null>(null)
+const panelEl = ref<HTMLElement | null>(null)
+// Tab stays in the palette while it's open; Escape closes it from anywhere.
+useFocusTrap(panelEl, { active: () => open.value, onEscape: () => close() })
+let opener: HTMLElement | null = null
 
 interface ResultItem {
   key: string
@@ -113,6 +127,7 @@ const results = computed(() => {
 })
 
 function show() {
+  if (!open.value) opener = document.activeElement as HTMLElement | null
   open.value = true
   query.value = ''
   hubResults.value = []
@@ -121,15 +136,15 @@ function show() {
 }
 function close() {
   open.value = false
+  // Back to where the user was (the search field in the top bar, say).
+  void nextTick(() => opener?.focus())
 }
 function go(item: ResultItem) {
-  close()
+  open.value = false
   void router.push(item.path)
 }
 function onKeydown(e: KeyboardEvent) {
-  if (e.key === 'Escape') {
-    close()
-  } else if (e.key === 'ArrowDown') {
+  if (e.key === 'ArrowDown') {
     e.preventDefault()
     active.value = Math.min(active.value + 1, results.value.length - 1)
   } else if (e.key === 'ArrowUp') {

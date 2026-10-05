@@ -1,6 +1,7 @@
 {
   "app": {
-    "name": "DreamHub"
+    "name": "DreamHub",
+    "skipToContent": "Skip to content"
   },
   "nav": {
     "dashboard": "Dashboard",
@@ -133,11 +134,13 @@
     "clockOk": "Clock OK",
     "clockOff": "Clock off by {minutes} min",
     "issueSingular": "1 hub needs attention",
-    "issuePlural": "{count} hubs need attention"
+    "issuePlural": "{count} hubs need attention",
+    "label": "Connection status"
   },
   "search": {
     "noResults": "No matches.",
-    "hint": "↑↓ to navigate · ↵ to go · esc to close"
+    "hint": "↑↓ to navigate · ↵ to go · esc to close",
+    "label": "Search"
   },
   "onboarding": {
     "back": "Back",
@@ -892,7 +895,8 @@
         "notice": "Notice",
         "info": "Info",
         "debug": "Debug"
-      }
+      },
+      "levelFilter": "Minimum level"
     },
     "crashLogs": {
       "title": "Crash logs",

@@ -14,6 +14,8 @@
       {{ t('series.detail.back') }}
     </RouterLink>
 
+    <!-- Until the series is known, the page is still headed by its hub. -->
+    <h1 v-if="!detail" class="sr-only">{{ t('hub.series') }}</h1>
     <p v-if="loading" class="mt-5 text-[14px] text-muted" aria-live="polite">{{ t('common.loading') }}</p>
     <p v-else-if="notFound" class="mt-5 text-[14px] text-muted">{{ t('series.detail.notFound') }}</p>
     <p v-else-if="!detail" class="mt-5 text-[14px] text-muted">{{ t('common.backendUnreachable') }}</p>

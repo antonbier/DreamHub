@@ -13,11 +13,19 @@
   <UnreachableScreen v-else-if="authState.unreachable" :check="check" @retry="onRetried" />
   <LoginScreen v-else-if="!authState.authenticated" @success="onAuthenticated" />
   <div v-else class="flex h-screen w-screen overflow-hidden bg-bg text-text">
+    <!-- First stop for keyboard users: past sidebar and top bar. -->
+    <a
+      href="#main"
+      class="sr-only focus:not-sr-only focus:fixed focus:start-3 focus:top-3 focus:z-50 focus:rounded focus:bg-accent focus:px-3 focus:py-2 focus:text-[13.5px] focus:font-semibold focus:text-bg"
+      @click.prevent="focusMain"
+    >
+      {{ t('app.skipToContent') }}
+    </a>
     <AppSidebar :sections="navigation.navigation?.sections ?? fallbackSections" />
     <div class="flex min-w-0 flex-1 flex-col">
       <AppTopBar />
       <StatusStrip />
-      <main class="flex-1 overflow-y-auto">
+      <main id="main" ref="mainEl" tabindex="-1" class="flex-1 overflow-y-auto focus:outline-none">
         <RouterView />
       </main>
     </div>
@@ -26,8 +34,9 @@
 </template>
 
 <script setup lang="ts">
-import { onMounted, watch } from 'vue'
-import { RouterView } from 'vue-router'
+import { nextTick, onMounted, ref, watch } from 'vue'
+import { RouterView, useRoute, useRouter } from 'vue-router'
+import { useI18n } from 'vue-i18n'
 import AppSidebar from './components/AppSidebar.vue'
 import AppTopBar from './components/AppTopBar.vue'
 import StatusStrip from './components/StatusStrip.vue'
@@ -46,6 +55,30 @@ const navigation = useNavigationStore()
 const notifications = useNotificationsStore()
 const { authState, check } = useAuth()
 useGlobalShortcuts()
+const { t } = useI18n()
+
+// The skip link and page changes put the keyboard (and a screen reader) at
+// the start of the page's content, not back at the top of the sidebar —
+// without scrolling, so a deep link like /settings#push keeps its place.
+const mainEl = ref<HTMLElement | null>(null)
+function focusMain() {
+  mainEl.value?.focus({ preventScroll: true })
+}
+const route = useRoute()
+const router = useRouter()
+// Not on the first page load: the skip link should be the first Tab stop.
+let firstPageShown = false
+void router.isReady().then(() => {
+  firstPageShown = true
+})
+watch(
+  () => route.path,
+  async (path, before) => {
+    if (!firstPageShown || before === undefined || path === before) return
+    await nextTick()
+    focusMain()
+  },
+)
 
 // Shown only while the backend has never answered yet, so the sidebar
 // isn't just empty — Dashboard and Settings always exist.

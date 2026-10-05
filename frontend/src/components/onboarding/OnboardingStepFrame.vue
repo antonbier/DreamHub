@@ -1,7 +1,7 @@
 <!-- Shared chrome for every onboarding step: title, body slot, footer nav. -->
 <template>
   <div>
-    <h2 class="mb-1.5 text-[21px] font-bold">{{ title }}</h2>
+    <h1 class="mb-1.5 text-[21px] font-bold">{{ title }}</h1>
     <p v-if="subtitle" class="mb-5 max-w-[440px] text-[13.5px] text-muted">{{ subtitle }}</p>
     <div v-else class="mb-5" />
     <div class="mb-6">

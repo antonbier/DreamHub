@@ -45,7 +45,7 @@ DreamHub itself must support multiple languages at runtime:
 
 ## Repo conventions
 
-- GitHub milestones: **Foundation**, **v1 — hubs**, **v1 — release & packaging**, **v1.1**, **Later** (matching `ROADMAP.md`). Phase 0 (spikes) is closed.
+- GitHub milestones: **Foundation**, **v1 — hubs**, **v1 — release & packaging**, **v1.1**, **Later** (matching `ROADMAP.md`). Phase 0 (spikes), Foundation and v1 — hubs are closed; every open ROADMAP item links its issue.
 - Issues labeled `device-access` need a reachable Dreambox; everything else should be doable against the mock (`backend/internal/webcontrol/mock`).
 - Project board (Kanban): https://github.com/users/antonbier/projects/1
 - When a new device fact is confirmed, update `ARCHITECTURE.md`; when a scope or architecture decision is made, update `PROJECT_PLAN.md`, `CONCEPT.md` or `PRINCIPLES.md`. Someone without access to the original planning conversation must be able to reconstruct every decision from these files.

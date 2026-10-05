@@ -12,7 +12,7 @@
       :key="i"
       class="flex items-center gap-3 border-b border-line-soft py-2 last:border-none"
     >
-      <span class="w-24 shrink-0 whitespace-nowrap text-[12.5px] font-mono tabular-nums text-faint">{{ formatTime(ep.startTime) }}</span>
+      <span class="w-32 shrink-0 whitespace-nowrap text-[12.5px] font-mono tabular-nums text-faint">{{ formatTime(ep.startTime) }}</span>
       <span class="min-w-0 flex-1">
         <span class="block truncate text-[14px] text-text">{{ ep.series }}</span>
         <span class="block truncate text-[12.5px] text-muted">{{ ep.channel }}</span>

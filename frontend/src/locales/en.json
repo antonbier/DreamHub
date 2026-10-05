@@ -121,6 +121,10 @@
     },
     "series": {
       "missingAiring": "Missing episode airs: {series} {code} at {time} on {service}"
+    },
+    "service": {
+      "failed": "Service down on the box: {name}",
+      "recovered": "Service running again: {name}"
     }
   },
   "statusStrip": {
@@ -245,7 +249,9 @@
       "recordings": "Recordings",
       "timers": "Timers",
       "guide": "TV guide",
-      "seriesUpcoming": "Series episodes"
+      "seriesUpcoming": "Series episodes",
+      "discoveryPicks": "Today's recommendations",
+      "radioNow": "On the radio now"
     },
     "criteria": {
       "text": "contains “{text}”",
@@ -255,7 +261,8 @@
       "withinDays": "in the next 24 hours | in the next {n} days",
       "fromTime": "from {time}",
       "minDuration": "at least {n} min",
-      "warnOnly": "conflicts only"
+      "warnOnly": "conflicts only",
+      "withoutTimer": "without a timer"
     },
     "sort": {
       "newest": "newest first",
@@ -272,7 +279,8 @@
       "withinDays": "Time span",
       "fromTime": "Starting from (time)",
       "minDuration": "Minimum length (minutes)",
-      "warnOnly": "Likely conflicts only"
+      "warnOnly": "Likely conflicts only",
+      "withoutTimer": "Only ones without a timer yet"
     },
     "builder": {
       "eyebrow": "Custom tile",
@@ -765,7 +773,8 @@
       "recordingStarted": "Recording started",
       "missingEpisode": "A missing episode airs in the next 24 hours",
       "conflict": "Possible timer conflict",
-      "disk": "Disk almost full"
+      "disk": "Disk almost full",
+      "service": "A service on the box goes down or comes back"
     },
     "pushHelp": {
       "title": "Getting notifications on your phone",

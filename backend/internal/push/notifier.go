@@ -7,6 +7,7 @@ import (
 	"time"
 
 	"github.com/antonbier/DreamHub/backend/internal/connector"
+	"github.com/antonbier/DreamHub/backend/internal/events"
 	"github.com/antonbier/DreamHub/backend/internal/settings"
 	"github.com/antonbier/DreamHub/backend/internal/store"
 )
@@ -28,11 +29,13 @@ type Notifier struct {
 
 // eventSwitch is the setting that turns each event kind's push on.
 var eventSwitch = map[string]string{
-	"recording.started":    connector.KeyPushRecordingStarted,
-	"recording.finished":   connector.KeyPushRecordingFinished,
-	"disk.aboveThreshold":  connector.KeyPushDisk,
-	"timer.conflict":       connector.KeyPushConflict,
-	"series.missingAiring": connector.KeyPushMissingEpisode,
+	events.RecordingStarted:  connector.KeyPushRecordingStarted,
+	events.RecordingFinished: connector.KeyPushRecordingFinished,
+	events.DiskAboveLimit:    connector.KeyPushDisk,
+	events.TimerConflict:     connector.KeyPushConflict,
+	events.MissingAiring:     connector.KeyPushMissingEpisode,
+	events.ServiceFailed:     connector.KeyPushService,
+	events.ServiceRecovered:  connector.KeyPushService,
 }
 
 // Run forwards until ctx is done; meant for its own goroutine.

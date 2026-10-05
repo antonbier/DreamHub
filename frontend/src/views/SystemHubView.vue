@@ -209,7 +209,17 @@ const deviceRows = computed(() => {
 })
 const changes = ref<ChangeEntry[]>([])
 const changesLimit = ref(50)
-const filter = ref('')
+// A search result (?changes=) opens the change log already filtered.
+const filter = ref(typeof route.query.changes === 'string' ? route.query.changes : '')
+watch(
+  () => route.query.changes,
+  (q) => {
+    if (typeof q === 'string') {
+      filter.value = q
+      tab.value = 'overview'
+    }
+  },
+)
 const loading = ref(true)
 const loadFailed = ref(false)
 

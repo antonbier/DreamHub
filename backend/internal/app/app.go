@@ -246,18 +246,23 @@ func New(ctx context.Context, o Options) (*App, error) {
 		Systemd: o.Systemd, Plans: plans, WC: o.WebControl, Now: now, ReadOnly: o.ReadOnlyFiles}
 	controlHub := &hubs_.Control{WC: o.WebControl}
 
-	// TimerHub is the hub contract's first real search provider
-	// (internal/hub/search.go) — add more here as other hubs implement it.
+	// Search providers (internal/hub/search.go): every hub with content of
+	// its own; ControlHub has none (its results would be actions).
 	hubs.AddSearchProvider(hub.IDTimer, timerHub)
 	hubs.AddSearchProvider(hub.IDMedia, mediaHub)
 	hubs.AddSearchProvider(hub.IDSeries, seriesHub)
 	hubs.AddSearchProvider(hub.IDGuide, guideHub)
 	hubs.AddSearchProvider(hub.IDRadio, radioHub)
+	hubs.AddSearchProvider(hub.IDDiscovery, discoveryHub)
+	hubs.AddSearchProvider(hub.IDSystem, systemHub)
+	hubs.AddSearchProvider(hub.IDAdmin, adminHub)
 	// View sources for custom dashboard tiles (internal/hub/view.go).
 	hubs.AddViewProvider(hub.IDMedia, mediaHub)
 	hubs.AddViewProvider(hub.IDTimer, timerHub)
 	hubs.AddViewProvider(hub.IDGuide, guideHub)
 	hubs.AddViewProvider(hub.IDSeries, seriesHub)
+	hubs.AddViewProvider(hub.IDDiscovery, discoveryHub)
+	hubs.AddViewProvider(hub.IDRadio, radioHub)
 	dash.KnownSource = hubs.KnownSource
 
 	var notifier *push.Notifier
@@ -304,13 +309,16 @@ func New(ctx context.Context, o Options) (*App, error) {
 		Handler: handler, Store: st, Settings: svc, Connectors: conns, Hubs: hubs,
 		Plans: plans, Dashboard: dash, Tokens: tokens, Level: level, User: user,
 		Events: eventBus, Poller: poller,
-		Background: background(notifier, seriesHub, eventBus, o.Logger),
+		Background: background(notifier, seriesHub, adminHub, eventBus, o.Logger),
 	}, nil
 }
 
 // background lists the long-running jobs besides the poller.
-func background(n *push.Notifier, series *hubs_.Series, bus *events.Bus, logger *slog.Logger) []func(context.Context) {
-	jobs := []func(context.Context){func(ctx context.Context) { series.WatchMissing(ctx, bus, logger) }}
+func background(n *push.Notifier, series *hubs_.Series, admin *hubs_.Admin, bus *events.Bus, logger *slog.Logger) []func(context.Context) {
+	jobs := []func(context.Context){
+		func(ctx context.Context) { series.WatchMissing(ctx, bus, logger) },
+		func(ctx context.Context) { admin.WatchServices(ctx, bus, logger) },
+	}
 	if n != nil {
 		jobs = append(jobs, n.Run)
 	}

@@ -52,6 +52,11 @@ type Descriptor struct {
 	// Role is the minimum role that can see the hub.
 	Role     store.Role
 	Requires []Requirement
+	// Emits are the event keys (internal/events, the notification inbox
+	// and push) that come from this hub's area — the hub contract's
+	// "events it emits" (CONCEPT.md). Recording and conflict events are
+	// detected by the core's poller on TimerHub's behalf.
+	Emits []string
 }
 
 // Capability is something on the device a hub may need (a binary, a
@@ -128,6 +133,7 @@ type Status struct {
 	Level    status.Level     `json:"status"`
 	Problems []status.Problem `json:"problems"`
 	Requires []Requirement    `json:"requires"`
+	Emits    []string         `json:"emits"`
 }
 
 func worse(a, b status.Level) status.Level {
@@ -155,7 +161,7 @@ func (r *Registry) Statuses(v settings.Values, reports map[string]connector.Repo
 	for _, d := range r.hubs {
 		st := Status{
 			ID: d.ID, Name: d.Name, Label: d.Label, Icon: d.Icon, Path: d.Path, Group: d.Group, Role: d.Role,
-			Enabled: v.Bool(EnabledKey(d.ID)), Level: status.Available, Problems: []status.Problem{}, Requires: d.Requires,
+			Enabled: v.Bool(EnabledKey(d.ID)), Level: status.Available, Problems: []status.Problem{}, Requires: d.Requires, Emits: append([]string{}, d.Emits...),
 		}
 		if st.Requires == nil {
 			st.Requires = []Requirement{}

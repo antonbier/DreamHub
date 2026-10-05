@@ -40,6 +40,16 @@ var catalog = map[string]map[string]texts{
 		"en": {"Missing episode airs", "{series} {code} “{title}” — {time} on {service}"},
 		"it": {"Va in onda un episodio mancante", "{series} {code} «{title}» – {time} su {service}"},
 	},
+	"service.failed": {
+		"de": {"Dienst ausgefallen", "{name} auf der Box läuft nicht mehr."},
+		"en": {"Service down", "{name} on the box stopped running."},
+		"it": {"Servizio fermo", "{name} sul box non è più in esecuzione."},
+	},
+	"service.recovered": {
+		"de": {"Dienst läuft wieder", "{name} auf der Box läuft wieder."},
+		"en": {"Service back", "{name} on the box is running again."},
+		"it": {"Servizio ripristinato", "{name} sul box è di nuovo in esecuzione."},
+	},
 	"push.test": {
 		"de": {"DreamHub", "Benachrichtigungen kommen an."},
 		"en": {"DreamHub", "Notifications are arriving."},
@@ -53,6 +63,8 @@ var tags = map[string][]string{
 	"disk.aboveThreshold":  {"warning"},
 	"timer.conflict":       {"warning"},
 	"series.missingAiring": {"tv"},
+	"service.failed":       {"rotating_light"},
+	"service.recovered":    {"white_check_mark"},
 	"push.test":            {"tada"},
 }
 

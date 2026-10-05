@@ -2,6 +2,7 @@ package hub
 
 import (
 	"github.com/antonbier/DreamHub/backend/internal/connector"
+	"github.com/antonbier/DreamHub/backend/internal/events"
 	"github.com/antonbier/DreamHub/backend/internal/status"
 	"github.com/antonbier/DreamHub/backend/internal/store"
 )
@@ -33,16 +34,18 @@ func V1() []Descriptor {
 	wc := Requirement{Connector: connector.IDWebControl}
 	return []Descriptor{
 		{ID: IDMedia, Name: "MediaHub", Label: "hub.media", Icon: "recordings", Path: "/media", Group: GroupMedia, Order: 10,
-			Requires: []Requirement{wc, {Connector: connector.IDTMDB, Optional: true}}},
+			Requires: []Requirement{wc, {Connector: connector.IDTMDB, Optional: true}},
+			Emits:    []string{events.DiskAboveLimit}},
 		{ID: IDSeries, Name: "SeriesHub", Label: "hub.series", Icon: "series", Path: "/series", Group: GroupMedia, Order: 20,
-			Requires: []Requirement{wc, {Connector: connector.IDSerienRecorder}}},
+			Requires: []Requirement{wc, {Connector: connector.IDSerienRecorder}},
+			Emits:    []string{events.MissingAiring}},
 		{ID: IDGuide, Name: "GuideHub", Label: "hub.guide", Icon: "guide", Path: "/guide", Group: GroupProgram, Order: 10,
 			Requires: []Requirement{wc, {Connector: connector.IDTMDB, Optional: true}}},
 		// Recording a radio programme needs TimerHub; listening doesn't.
 		{ID: IDRadio, Name: "RadioHub", Label: "hub.radio", Icon: "radio", Path: "/radio", Group: GroupProgram, Order: 15,
 			Requires: []Requirement{wc, {Hub: IDTimer, Optional: true}}},
 		{ID: IDTimer, Name: "TimerHub", Label: "hub.timer", Icon: "timers", Path: "/timers", Group: GroupProgram, Order: 20,
-			Requires: []Requirement{wc}},
+			Requires: []Requirement{wc}, Emits: []string{events.RecordingStarted, events.RecordingFinished, events.TimerConflict}},
 		// Recommendations need an AI provider; creating a timer from one
 		// needs TimerHub, so without it DiscoveryHub still works, but degraded.
 		{ID: IDDiscovery, Name: "DiscoveryHub", Label: "hub.discovery", Icon: "recommendations", Path: "/discovery", Group: GroupProgram, Order: 30,
@@ -52,7 +55,8 @@ func V1() []Descriptor {
 		{ID: IDControl, Name: "ControlHub", Label: "hub.control", Icon: "control", Path: "/control", Group: GroupDevice, Order: 20,
 			Requires: []Requirement{wc}},
 		{ID: IDAdmin, Name: "AdminHub", Label: "hub.admin", Icon: "admin", Path: "/admin", Group: GroupBottom, Order: 10,
-			Role: store.RoleAdmin, Requires: []Requirement{{Capability: CapJournald}}},
+			Role: store.RoleAdmin, Requires: []Requirement{{Capability: CapJournald}},
+			Emits: []string{events.ServiceFailed, events.ServiceRecovered}},
 	}
 }
 

@@ -13,6 +13,8 @@ export const SOURCE_LABELS: Record<string, string> = {
   'media.recordings': 'dashboard.source.recordings',
   'timers.upcoming': 'dashboard.source.timers',
   'guide.broadcasts': 'dashboard.source.guide',
+  'discovery.picks': 'dashboard.source.discoveryPicks',
+  'radio.now': 'dashboard.source.radioNow',
   'series.upcoming': 'dashboard.source.seriesUpcoming',
 }
 
@@ -37,7 +39,7 @@ export function useViewText() {
     if (q.withinDays) parts.push(t('dashboard.criteria.withinDays', { n: num(q.withinDays) }, q.withinDays))
     if (q.fromTime) parts.push(t('dashboard.criteria.fromTime', { time: q.fromTime }))
     if (q.minDuration) parts.push(t('dashboard.criteria.minDuration', { n: num(q.minDuration) }))
-    if (q.warnOnly) parts.push(t('dashboard.criteria.warnOnly'))
+    if (q.warnOnly) parts.push(t(source === 'discovery.picks' ? 'dashboard.criteria.withoutTimer' : 'dashboard.criteria.warnOnly'))
     if (q.sort) parts.push(t(`dashboard.sort.${q.sort}`))
     return parts.join(' · ')
   }

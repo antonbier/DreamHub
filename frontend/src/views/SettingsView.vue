@@ -68,34 +68,34 @@ const form = useSettingsForm()
 const route = useRoute()
 const router = useRouter()
 
-// The section nearest the top of the scroll area, highlighted in the jump row.
+// The section at the top of the scroll area, highlighted in the jump row:
+// the last one whose top has passed just under the sticky row.
 const current = ref('')
-let observer: IntersectionObserver | undefined
+let scroller: HTMLElement | null = null
+
+function updateCurrent() {
+  const top = (scroller?.getBoundingClientRect().top ?? 0) + 80
+  let found = form.sections.value[0]?.id ?? ''
+  for (const s of form.sections.value) {
+    const el = document.getElementById(s.id)
+    if (el && el.getBoundingClientRect().top <= top) found = s.id
+  }
+  current.value = found
+}
 
 function jump(id: string) {
   document.getElementById(id)?.scrollIntoView({ behavior: 'smooth', block: 'start' })
-  current.value = id
   router.replace({ hash: `#${id}` })
 }
 
 onMounted(async () => {
   await form.load()
   await nextTick()
-  const visible = new Map<string, boolean>()
-  observer = new IntersectionObserver(
-    (entries) => {
-      for (const e of entries) visible.set(e.target.id, e.isIntersecting)
-      const first = form.sections.value.find((s) => visible.get(s.id))
-      if (first) current.value = first.id
-    },
-    { rootMargin: '-60px 0px -60% 0px' },
-  )
-  for (const s of form.sections.value) {
-    const el = document.getElementById(s.id)
-    if (el) observer.observe(el)
-  }
+  scroller = document.querySelector('main')
+  scroller?.addEventListener('scroll', updateCurrent, { passive: true })
   const wanted = route.hash.slice(1)
   if (wanted) document.getElementById(wanted)?.scrollIntoView({ block: 'start' })
+  updateCurrent()
 })
-onBeforeUnmount(() => observer?.disconnect())
+onBeforeUnmount(() => scroller?.removeEventListener('scroll', updateCurrent))
 </script>

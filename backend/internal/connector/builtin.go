@@ -52,6 +52,7 @@ const (
 	KeyPushDisk              = "push.events.disk"
 	KeyPushConflict          = "push.events.conflict"
 	KeyPushMissingEpisode    = "push.events.missingEpisode"
+	KeyPushService           = "push.events.service"
 	KeyAIProvider            = "ai.provider"
 	KeyOpenAIAPIKey          = "ai.openai.apiKey"
 	KeyOpenAIModel           = "ai.openai.model"
@@ -282,6 +283,7 @@ func (Push) Settings() []settings.Section {
 			{Key: KeyPushMissingEpisode, Type: settings.TypeBool, Scope: settings.ScopeGlobal, Label: "settings.push.missingEpisode", Default: true},
 			{Key: KeyPushConflict, Type: settings.TypeBool, Scope: settings.ScopeGlobal, Label: "settings.push.conflict", Default: true},
 			{Key: KeyPushDisk, Type: settings.TypeBool, Scope: settings.ScopeGlobal, Label: "settings.push.disk", Default: true},
+			{Key: KeyPushService, Type: settings.TypeBool, Scope: settings.ScopeGlobal, Label: "settings.push.service", Default: true},
 		},
 		Check: func(v settings.Values) map[string]settings.FieldError {
 			errs := map[string]settings.FieldError{}

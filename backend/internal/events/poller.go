@@ -108,7 +108,7 @@ func (p *Poller) checkConflicts(ctx context.Context, timers []webcontrol.Timer, 
 		k := key(t)
 		current[k] = true
 		if p.conflicting != nil && !p.conflicting[k] {
-			p.Bus.Publish(ctx, "timer.conflict", map[string]any{"name": t.Name, "service": t.ServiceName, "begin": t.Begin})
+			p.Bus.Publish(ctx, TimerConflict, map[string]any{"name": t.Name, "service": t.ServiceName, "begin": t.Begin})
 		}
 	}
 	p.conflicting = current
@@ -122,9 +122,9 @@ func (p *Poller) checkRecordings(ctx context.Context, timers []webcontrol.Timer)
 		seen[k] = recording
 		wasRecording := p.running[k]
 		if recording && !wasRecording {
-			p.Bus.Publish(ctx, "recording.started", map[string]any{"name": t.Name, "service": t.ServiceName})
+			p.Bus.Publish(ctx, RecordingStarted, map[string]any{"name": t.Name, "service": t.ServiceName})
 		} else if wasRecording && !recording {
-			p.Bus.Publish(ctx, "recording.finished", map[string]any{"name": t.Name, "service": t.ServiceName})
+			p.Bus.Publish(ctx, RecordingFinished, map[string]any{"name": t.Name, "service": t.ServiceName})
 		}
 	}
 	// A timer that disappeared entirely (deleted) while recording also
@@ -132,7 +132,7 @@ func (p *Poller) checkRecordings(ctx context.Context, timers []webcontrol.Timer)
 	// way.
 	for k, was := range p.running {
 		if was && !seenContains(seen, k) {
-			p.Bus.Publish(ctx, "recording.finished", map[string]any{})
+			p.Bus.Publish(ctx, RecordingFinished, map[string]any{})
 		}
 	}
 	p.running = seen
@@ -157,7 +157,7 @@ func (p *Poller) checkDisk(ctx context.Context, info *webcontrol.DeviceInfo) {
 		switch {
 		case pct >= diskThreshold && !p.diskAbove[hd.Model]:
 			p.diskAbove[hd.Model] = true
-			p.Bus.Publish(ctx, "disk.aboveThreshold", map[string]any{"model": hd.Model, "percent": pct})
+			p.Bus.Publish(ctx, DiskAboveLimit, map[string]any{"model": hd.Model, "percent": pct})
 		case pct < diskReset:
 			p.diskAbove[hd.Model] = false
 		}

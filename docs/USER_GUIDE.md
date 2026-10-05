@@ -168,7 +168,7 @@ DreamHub can send a short message to your phone when something happens, through 
 2. In DreamHub, **Settings → Push notifications**: enter a **topic** — a name that's hard to guess; the page suggests one — and save.
 3. In the ntfy app, subscribe to the same topic (server `ntfy.sh` unless you run your own), then press **Send a test** in DreamHub.
 
-Choose which events send a message: a recording finished (on), a recording started (off), **a missing episode of one of your series airs in the next 24 hours** (on), a possible timer conflict (on), the disk is almost full (on). The bell at the top of DreamHub shows all of these too, with or without push.
+Choose which events send a message: a recording finished (on), a recording started (off), **a missing episode of one of your series airs in the next 24 hours** (on), a possible timer conflict (on), the disk is almost full (on), **a service on the box goes down or comes back** (on — Samba, the softcam, enigma2 itself; DreamHub checks every minute and only reports a service that stays down). The bell at the top of DreamHub shows all of these too, with or without push.
 
 Privacy: a message's text (a recording's or series' title, a channel name) passes through the ntfy server. On the public `ntfy.sh` anyone who knows your topic could read it — that's why it should be hard to guess. For full control, run your own ntfy server and enter its address.
 

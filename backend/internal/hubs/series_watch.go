@@ -8,6 +8,7 @@ import (
 	"strings"
 	"time"
 
+	"github.com/antonbier/DreamHub/backend/internal/events"
 	"github.com/antonbier/DreamHub/backend/internal/store"
 )
 
@@ -21,7 +22,7 @@ import (
 // Detection, not automation: it never sets a timer itself.
 
 // EventMissingAiring is the event key.
-const EventMissingAiring = "series.missingAiring"
+const EventMissingAiring = events.MissingAiring
 
 const (
 	missingWatchInterval = 3 * time.Hour

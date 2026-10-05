@@ -121,6 +121,10 @@
     },
     "series": {
       "missingAiring": "Va in onda un episodio mancante: {series} {code} alle {time} su {service}"
+    },
+    "service": {
+      "failed": "Servizio fermo sul box: {name}",
+      "recovered": "Servizio di nuovo in esecuzione: {name}"
     }
   },
   "statusStrip": {
@@ -245,7 +249,9 @@
       "recordings": "Registrazioni",
       "timers": "Timer",
       "guide": "Guida TV",
-      "seriesUpcoming": "Episodi delle serie"
+      "seriesUpcoming": "Episodi delle serie",
+      "discoveryPicks": "Consigli del giorno",
+      "radioNow": "Ora alla radio"
     },
     "criteria": {
       "text": "contiene «{text}»",
@@ -255,7 +261,8 @@
       "withinDays": "nelle prossime 24 ore | nei prossimi {n} giorni",
       "fromTime": "dalle {time}",
       "minDuration": "almeno {n} min",
-      "warnOnly": "solo conflitti"
+      "warnOnly": "solo conflitti",
+      "withoutTimer": "senza timer"
     },
     "sort": {
       "newest": "più recenti prima",
@@ -272,7 +279,8 @@
       "withinDays": "Periodo",
       "fromTime": "Inizio dalle (ora)",
       "minDuration": "Durata minima (minuti)",
-      "warnOnly": "Solo possibili conflitti"
+      "warnOnly": "Solo possibili conflitti",
+      "withoutTimer": "Solo quelli senza timer"
     },
     "builder": {
       "eyebrow": "Riquadro personalizzato",
@@ -765,7 +773,8 @@
       "recordingStarted": "Registrazione avviata",
       "missingEpisode": "Un episodio mancante va in onda nelle prossime 24 ore",
       "conflict": "Possibile conflitto di timer",
-      "disk": "Disco quasi pieno"
+      "disk": "Disco quasi pieno",
+      "service": "Un servizio sul box si ferma o riparte"
     },
     "pushHelp": {
       "title": "Ricevere le notifiche sul telefono",

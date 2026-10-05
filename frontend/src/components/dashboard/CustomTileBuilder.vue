@@ -90,7 +90,7 @@
           <p v-if="has('minDuration')" class="text-[12px] text-faint">{{ t('dashboard.builder.minDurationHint') }}</p>
           <label v-if="has('warnOnly')" class="flex items-center gap-2 text-[13.5px] text-text">
             <input v-model="q.warnOnly" type="checkbox" class="rounded" />
-            {{ t('dashboard.criteriaField.warnOnly') }}
+            {{ t(sourceId === 'discovery.picks' ? 'dashboard.criteriaField.withoutTimer' : 'dashboard.criteriaField.warnOnly') }}
           </label>
           <p v-if="sourceId === 'media.recordings'" class="text-[12px] text-faint">{{ t('dashboard.builder.topFolderOnly') }}</p>
         </fieldset>

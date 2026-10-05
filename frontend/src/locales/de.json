@@ -121,6 +121,10 @@
     },
     "series": {
       "missingAiring": "Fehlende Folge läuft: {series} {code} um {time} auf {service}"
+    },
+    "service": {
+      "failed": "Dienst auf der Box ausgefallen: {name}",
+      "recovered": "Dienst läuft wieder: {name}"
     }
   },
   "statusStrip": {
@@ -245,7 +249,9 @@
       "recordings": "Aufnahmen",
       "timers": "Timer",
       "guide": "TV-Programm",
-      "seriesUpcoming": "Serienfolgen"
+      "seriesUpcoming": "Serienfolgen",
+      "discoveryPicks": "Empfehlungen des Tages",
+      "radioNow": "Jetzt im Radio"
     },
     "criteria": {
       "text": "enthält „{text}“",
@@ -255,7 +261,8 @@
       "withinDays": "in den nächsten 24 Stunden | in den nächsten {n} Tagen",
       "fromTime": "ab {time}",
       "minDuration": "ab {n} Min.",
-      "warnOnly": "nur Konflikte"
+      "warnOnly": "nur Konflikte",
+      "withoutTimer": "ohne Timer"
     },
     "sort": {
       "newest": "neueste zuerst",
@@ -272,7 +279,8 @@
       "withinDays": "Zeitraum",
       "fromTime": "Beginn ab (Uhrzeit)",
       "minDuration": "Mindestdauer (Minuten)",
-      "warnOnly": "Nur mögliche Konflikte"
+      "warnOnly": "Nur mögliche Konflikte",
+      "withoutTimer": "Nur ohne Timer"
     },
     "builder": {
       "eyebrow": "Eigene Kachel",
@@ -765,7 +773,8 @@
       "recordingStarted": "Aufnahme gestartet",
       "missingEpisode": "Fehlende Folge läuft in den nächsten 24 Stunden",
       "conflict": "Möglicher Timer-Konflikt",
-      "disk": "Festplatte fast voll"
+      "disk": "Festplatte fast voll",
+      "service": "Ein Dienst auf der Box fällt aus oder läuft wieder"
     },
     "pushHelp": {
       "title": "So kommen Benachrichtigungen aufs Handy",

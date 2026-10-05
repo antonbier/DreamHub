@@ -73,12 +73,12 @@ Releases: **Foundation** → **v1** → **v1.1** → **Later**. GitHub milestone
 - [x] Installable app (2026-10-04, pulled forward from Later): `manifest.webmanifest`, icons (`frontend/public/icons`, rendered from SVG by `frontend/art/render-icons.mjs`), `public/sw.js` caching only the shell — never `/api/*` — and registered only in a secure context (`src/lib/pwa.ts`); Settings → General explains per browser how to install (Install button where offered, iOS share-sheet steps, why plain http blocks the prompt); `sw.js` and the shell are served `no-cache`. HTTPS in front stays the user's choice (USER_GUIDE.md §4)
 - [x] "Can't reach DreamHub" instead of the login form when the first `whoami` gets no answer at all (box off, app opened away from home) — it used to look like a password problem; retries on `online` and every 15 s (`UnreachableScreen.vue`)
 - [x] Accessibility pass (2026-10-05): axe-core over every page in both themes — no WCAG 2.1 AA violations left (contrast: `faint`, and in light `onair`/`warn`/`ok`, retuned to 4.5:1 on every surface; headings; landmarks; names for every control) — plus keyboard checks: a skip link, focus moved to the content on page changes, focus traps with Escape and focus return for the details dialog, search palette, tile builder and the phone drawer (inert while closed). See DESIGN.md, Interaction
-- [ ] Runtime drop-in locales (`/data/dreamhub/locales/`)
+- [ ] Runtime drop-in locales (`/data/dreamhub/locales/`) (#40)
 - [x] Italian strings complete (checked 2026-09-28): every key of the web UI's `en.json` exists in `it.json` (and `de.json`), the only identical values being names and formats (SerienRecorder, `S{season}E{episode}`, "Enigma2 {version}"); the Enigma2 plugin's `it` catalog translates all 14 messages. A native speaker's read-through is still worth doing
 - [x] Time zones: the per-user display zone setting (`general.timezoneMode`: box/browser/fixed, `general.timezone`) already existed but nothing consumed it — resolved via a new `useDisplayTimeZone.ts` composable (mode 'fixed' → the configured IANA zone; mode 'box' → the device's own zone; mode 'browser', the previous behavior, or an unresolved 'box' → Intl's runtime default). "Box" needed a new data source: WebControl's API has no timezone field (confirmed, ARCHITECTURE.md), so `GET /api/v1/health` now also reports `serverTimeZone`, read from the `/etc/localtime` symlink target (the one place this is derivable without SSH — works on Linux and macOS, useful for local dev too). Wired into every place that formats a time: the timers/series dashboard tiles, MediaHub/SeriesHub/GuideHub/DiscoveryHub screens, API tokens, and the status strip (which now shows the *effective* zone, not just the browser's)
 - [x] Keyboard shortcuts beyond search: `g` + letter global navigation (`useGlobalShortcuts.ts`, mounted once in `App.vue`, same "not while typing" guard as the search palette's own Cmd/Ctrl+K) — `g d` dashboard, `g m` recordings, `g s` series, `g g` guide, `g t` timers, `g r` recommendations, `g y` system, `g c` control, `g a` admin, `g ,` settings. Accessible contrast and labels audit still open
 - [x] Diagnostics: grouping every hub the user may see — including disabled ones — into Unavailable/Degraded/Disabled/Available, each with the same translated problem/fix text as everywhere else. No new backend needed: `GET /api/v1/hubs`'s own doc comment already called it "the diagnostics view". Originally its own core nav entry (`/diagnostics`, `DiagnosticsView.vue`); folded into SystemHub as a tab in WP6 (see SystemHub, below) since `CONCEPT.md` already described it as "a diagnostics page in SystemHub" — `/diagnostics` now redirects to `/system?tab=diagnostics`
-- [ ] mDNS advertisement via a service file in `/etc/avahi/services/` (`avahi-daemon` already runs and is used this way by an existing companion app — see `ARCHITECTURE.md`)
+- [x] mDNS advertisement via a service file (shipped in the `.deb`: `/etc/avahi/services/dreamhub.service`) in `/etc/avahi/services/` (`avahi-daemon` already runs and is used this way by an existing companion app — see `ARCHITECTURE.md`)
 - [x] Capture real fixtures (#14): done 2026-09-24, see `backend/testdata/fixtures/` and `ARCHITECTURE.md`
 
 ## v1 — hubs
@@ -115,7 +115,7 @@ Releases: **Foundation** → **v1** → **v1.1** → **Later**. GitHub milestone
 - [x] Never touch a file that is currently being recorded or played — cross-reference `/web/timerlist` against the current time (already resolved conceptually, #12; not yet wired into a mutating MediaHub endpoint since none exist yet)
 - [x] Naming schemes and batch rename (2026-09-28): Settings → Recordings holds one scheme for films and one for episodes (`media.naming.movie`/`.episode`, `internal/naming/template.go`): placeholders `{title} {year} {season} {episode} {episodeTitle} {channel} {date}`, zero padding `{episode:02}`, optional parts in `[…]` dropped when a placeholder in them is empty; checked on save (must contain `{title}`, episodes `{episode}`, no slashes). The defaults reproduce the previous fixed names exactly. Single-rename suggestions now follow the scheme; `POST /api/v1/media/rename/batch/plan` renames a whole selection ("Select all" + "Rename by scheme" in the selection bar): every recording before → after, and what's left alone and why (already named so, name taken, two aiming at the same name, in use); optionally completed by TMDB (a film's year, an episode's title — exact matches only). One confirm, all or nothing: a failure renames every recording back. `{date}` is the recording's day from `.ts.meta`, in the box's own zone
 - [x] Sorting into folders by scheme (2026-10-04): two folder schemes in Settings → Recordings (`media.naming.folderMovie`/`.folderEpisode`, e.g. `{title}/Staffel {season:02}` or `Filme`), same placeholders as the name schemes, always relative to the recording folder (no leading `/`, no empty or `..` segment, checked on save; empty = don't move). The batch rename preview has "Sort into folders": each recording shows its target folder, and the new folders are listed. On apply the missing folders are created (mode 0755) and every file of a recording moves along, all or nothing — a failure moves everything back and removes the folders it made. A path through a link is refused. Moves stay within the recording folder, i.e. one file system
-- [ ] Bulk actions via a background queue (only needed once something takes longer than one request — the batch rename is a series of renames within one file system, well under a second)
+- [ ] Bulk actions via a background queue (only needed once something takes longer than one request — the batch rename is a series of renames within one file system, well under a second) (#41)
 - [ ] `.ts.meta` format: line 1 service reference, line 2 title, line 3 title+description+genre, line 4 unix timestamp — parse only where the API doesn't already provide the field (not needed yet — `/web/movielist` already covers everything the current read-only screen shows)
 - [ ] Reference implementation: `AdvancedMovieSelection` (`Rename.py`, `SearchTMDb*.py`) — native on-screen plugin, not web-based, CC BY-NC-SA licensed: read for approach, don't copy code
 
@@ -139,7 +139,7 @@ Releases: **Foundation** → **v1** → **v1.1** → **Later**. GitHub milestone
 
 **Open**:
 - [x] Disable/enable a timer (2026-10-04, decision D5, `internal/hubs/timer_toggle.go`): not through `/web/timerchange` (its conflict path is buggy) but by taking the timer out (`timerdelete`) and putting it back (`timeradd`) with only `disabled` changed — folder, tags, after-event, repeat and EPG link carried over (`Timer.AsNewTimer`). All or nothing: if the box refuses the changed timer (a conflict on enabling), the original is put back and the plan reports "unchanged". A recording timer is refused (taking it out would abort the recording); enabling previews the same conflict estimate as creating. Not yet run against the box
-- [ ] Exact conflict dry run through DreamHub's own Enigma2 plugin (D7) — WP8
+- [ ] Exact conflict dry run through DreamHub's own Enigma2 plugin (D7) — WP8 (#33)
 
 Notes:
 - Timers via `/web/timerlist`; AutoTimer.
@@ -188,8 +188,8 @@ Notes:
 - [x] Cards and details (2026-10-04): picks grouped by day as poster cards (film/series, year, rating, "on now"); a card opens a detail dialog with the backdrop, everything the data sources know (poster, logo, ratings incl. Rotten Tomatoes/IMDb, FSK, full overview), why the AI picked it, and Create timer
 
 **Open**:
-- [ ] Check the taste-based picks against the real box's recordings and a real OpenAI key (only the mock AI was exercised, box offline)
-- [ ] Swapping to a different AI provider (the interface is provider-agnostic already, only `OpenAIClient` exists)
+- [ ] Check the taste-based picks against the real box's recordings and a real OpenAI key (only the mock AI was exercised, box offline) (#24)
+- [ ] Swapping to a different AI provider (the interface is provider-agnostic already, only `OpenAIClient` exists) (#38)
 - [ ] Per-user channel-level filtering finer than a whole bouquet, if a bouquet ever proves too coarse in practice
 
 ### SeriesHub
@@ -204,8 +204,8 @@ Notes:
 **Open**:
 - [x] SerienRecorder not installed → connector state `not_installed` with an install hint instead of "unreachable" (v1 plan rule 1: optional plugins never break DreamHub)
 - [x] Episode guide with missing episodes (2026-09-28): a new optional connector, **TVmaze** (`internal/tvmaze`, public API, no key; Settings → Services → TVmaze, on by default, since it sends followed series' names), supplies every episode; the series page lists them per season (newest first, open) as recorded (a recording carries the S01E02 code), planned (SerienRecorder has timered it), still to come, or missing. **"Missing" is only claimed when the series' recordings carry episode codes at all** — otherwise every aired episode would look missing, so it just says "aired" and explains why. The show must match the series name exactly (normalized), so "Tatort-Reiniger" is never taken for "Tatort". Show matches are cached 30 days (misses 3), episode lists 12 h, and a stale list is still used while TVmaze is down
-- [ ] Check the guide on the box: how many followed series TVmaze finds by name (German titles), and whether SerienRecorder's recordings carry their S01E02 codes where `/web/movielist` reports them (title or description). SerienRecorder's own `transmissions` endpoint remains an alternative source once its format is captured
-- [ ] Check the detail view's recording match against real SerienRecorder recordings on the box (how SR names its timers/files there, whether its `S01E02` codes land in the title or description)
+- [ ] Check the guide on the box: how many followed series TVmaze finds by name (German titles), and whether SerienRecorder's recordings carry their S01E02 codes where `/web/movielist` reports them (title or description). SerienRecorder's own `transmissions` endpoint remains an alternative source once its format is captured (#25)
+- [ ] Check the detail view's recording match against real SerienRecorder recordings on the box (how SR names its timers/files there, whether its `S01E02` codes land in the title or description) (#25)
 
 **Done** — series detail view (2026-09-28, mock only, box was offline):
 - [x] `GET /api/v1/series/markers/{id}` (`internal/hubs/series_detail.go`): the marker (now with `seasons` and `recordfolder`, both in the live fixture), its timered episodes (filtered by `fsid`), its recordings on disk and further EPG broadcasts. Each part from a different source, failing on its own (`unavailable: [...]`) instead of failing the view; WebControl is optional for SeriesHub
@@ -291,12 +291,12 @@ Pulled forward from v1.1 (`CONCEPT.md`, `docs/V1_PLAN.md`): verifying the Enigma
 
 **Open**:
 - [x] **Release 0.1.0** (2026-10-04): packages for `arm64` (Dreambox One/Two — tested) and `armhf` (DM900/DM920 — built, smoke-tested on the One's 32-bit compatibility, not on such a box) attached to the GitHub release; `ARCH=` in `packaging/build-deb.sh`, CI builds both. MIPS (`mipsel`: DM7080, DM820, DM520, DM525) can't be built yet: `modernc.org/sqlite` has no `linux/mipsle` port — a cgo SQLite driver with a MIPS toolchain, or another store, would be needed
-- [ ] An actual apt feed to publish to (decision D4, `docs/V1_PLAN.md`) — the `.deb` itself doesn't depend on this being decided
+- [ ] An actual apt feed to publish to (decision D4, `docs/V1_PLAN.md`) — the `.deb` itself doesn't depend on this being decided (#21)
 - [x] Live install and in-place upgrade verified on the reference box (2026-09-28, ARCHITECTURE.md); upgrades only restart enigma2 when the launcher plugin changed
-- [ ] Uninstall/purge on the box (not run: the box keeps DreamHub installed)
+- [ ] Uninstall/purge on the box (not run: the box keeps DreamHub installed) (#22)
 - [x] User docs (2026-10-04): [`docs/USER_GUIDE.md`](docs/USER_GUIDE.md) — installing the `.deb` by hand today (CI artifact → box → `dpkg -i` in WebAdmin's browser terminal, no SSH client needed), the feed route via WebAdmin's "Upload new `*-feed.list`" once D4 is decided, first steps (TV plugin QR code, `.local` name, setup assistant), recommended DreamHub password and `localauth=true`, the optional keys, every hub, push notifications, troubleshooting
 - [x] WP10 security pass, first round (2026-09-28): **fixed** — file operations only checked paths lexically, so a symbolic link to a folder inside the recording folders ("movie/x -> /etc") would have let rename/trash/empty reach outside them; `recfs.CleanIn` now refuses any path whose folders below the recording folder aren't real folders. Writing a `.ts.meta` title refuses a meta file that isn't a regular file (a link would have copied the target's content into the recording folder), and the recording index doesn't read linked meta files. A written `.ts.meta` keeps its mode despite DreamHub's umask 077. **Confirmed by a test** — every mutating route (including the read-only POSTs added today) refuses a missing CSRF header and a foreign `Origin`; plan ownership, expiry and staleness were already covered (`internal/plan`); the TMDB image proxy accepts only TMDB's own image names and fixed sizes, so it can't be pointed elsewhere
-- [ ] WP10 remaining: resource measurement on the box under real use, DST test days, a run with none of the optional plugins installed, dogfooding (D6) → 1.0.0
+- [ ] WP10 remaining: resource measurement on the box under real use, DST test days, a run with none of the optional plugins installed, dogfooding (D6) → 1.0.0 (#23)
 - [ ] If GPL codecs are ever needed: bundle a self-contained ffmpeg like `ffmpeg-mp` does under `/data/mediaportal/extra/ffmpeg/`, never replace the system one — not needed yet, nothing in v1 transcodes
 
 ## v1.1
@@ -313,7 +313,7 @@ Pulled forward from v1.1 (`CONCEPT.md`, `docs/V1_PLAN.md`): verifying the Enigma
 
 **Open**:
 - [x] Checked on the box (2026-10-04, with the self-test): the radio root works as on other Enigma2 images (fixture `getservices_radio_root.xml`); the reference box's radio favourites are **empty**, so RadioHub adds "All radio stations" (`webcontrol.RadioAll`, `(type == 2) || (type == 10) ORDER BY name`: 664 entries, 0.06 s; epgnownext over it 0.25 s) as the last list and switches to it when the bouquet it picked by itself is empty. That list has every transponder's copy of a station and data services named "." or "10796V SID 0x3dae" — dropped, one entry per name (502 stations left, fixture `getservices_radio_all.xml`). `/web/epgnownext` on an **empty** bouquet makes the box's WebInterface fail with a traceback (ARCHITECTURE.md), so it isn't asked then
-- [ ] Radio text / now-playing song (RDS, DAB+ DLS) — not exposed by WebControl as far as known; look for it on the box before building anything
+- [ ] Radio text / now-playing song (RDS, DAB+ DLS) — not exposed by WebControl as far as known; look for it on the box before building anything (#28)
 
 ### PlexHub ("Plex Mediathek", built early)
 - [x] Connector and client (2026-10-05, `internal/plex`): a Plex Media Server's libraries, items, seasons/episodes, "continue watching" (`/library/onDeck`), watched state (`/:/scrobble`, `/:/unscrobble`), pictures scaled by the server (`/photo/:/transcode`) and files (Range passed on); plex.tv's PIN sign-in (`strong=false`, the code the user enters at plex.tv/link) and the account's servers (`/api/v2/resources`). Settings → Services → Plex: address, token, play on the box; libraries shown and DreamHub's client identifier are hidden fields edited by the panel. Nothing about a particular server is built in
@@ -322,10 +322,10 @@ Pulled forward from v1.1 (`CONCEPT.md`, `docs/V1_PLAN.md`): verifying the Enigma
 - [x] Watched state (PRINCIPLES.md): one film/episode directly with Undo and a change-log entry; a season or series through preview (every episode that changes) and apply. Only while the server answers
 - [x] Play on the box (experimental): a zap to `4097:…:<URL>:<title>` — Enigma2's gstreamer player fetches `http://127.0.0.1:<port>/api/v1/plex/stream/<ticket>/file.<ext>` from DreamHub, which passes it on to Plex with the token (Range included). The route is outside DreamHub's login but only answers loopback requests with a ticket (12 h). Offered only when DreamHub runs on the box
 - [x] Dashboard tile "Continue watching (Plex)" — a cover row, hidden until switched on in edit mode
-- [ ] **Confirm on the box** (`device-access`): does the box's player play a typical file (MKV, H.264/HEVC, AC3/E-AC3/DTS) over the local stream, and does seeking work? Then drop "experimental"
-- [ ] Resume where Plex left off (the player starts from the beginning), and report the position back to Plex (`/:/timeline`) — the box's position would have to be read while it plays
-- [ ] Films in several parts (only the first part plays), several versions of a film (the first is used)
-- [ ] Cross-references: "already in Plex" next to a broadcast in GuideHub/DiscoveryHub
+- [ ] **Confirm on the box** (`device-access`): does the box's player play a typical file (MKV, H.264/HEVC, AC3/E-AC3/DTS) over the local stream, and does seeking work? Then drop "experimental" (#29)
+- [ ] Resume where Plex left off (the player starts from the beginning), and report the position back to Plex (`/:/timeline`) — the box's position would have to be read while it plays (#30)
+- [ ] Films in several parts (only the first part plays), several versions of a film (the first is used) (#31)
+- [ ] Cross-references: "already in Plex" next to a broadcast in GuideHub/DiscoveryHub (#32)
 
 ### ChannelHub
 - Link to / embed the BouquetEditor plugin (`/bouqueteditor/*`); its write endpoints still need a write-permitted check on the device. Picons from `/data/piconpool`.

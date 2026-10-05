@@ -164,8 +164,8 @@
               :key="movie.filename"
               :movie="movie"
               :time-zone="timeZone"
-              :actions="fileOpsAvailable && movie.isRecording"
-              :selectable="fileOpsAvailable && movie.isRecording"
+              :actions="fileOpsAvailable && movie.isRecording && !movie.inUse"
+              :selectable="fileOpsAvailable && movie.isRecording && !movie.inUse"
               :selected="selection.has(movie.filename)"
               :state="rowStates[movie.filename] ?? null"
               :sources="suggestSources"
@@ -465,9 +465,9 @@ function toggle(filename: string) {
 }
 
 // "Select all": every recording in this folder that file actions apply to.
-const selectableCount = computed(() => folder.value?.movies.filter((m) => m.isRecording).length ?? 0)
+const selectableCount = computed(() => folder.value?.movies.filter((m) => m.isRecording && !m.inUse).length ?? 0)
 function selectAll() {
-  for (const m of folder.value?.movies ?? []) if (m.isRecording) selection.add(m.filename)
+  for (const m of folder.value?.movies ?? []) if (m.isRecording && !m.inUse) selection.add(m.filename)
 }
 
 // --- bulk: rename the selection by the naming scheme ---------------------------

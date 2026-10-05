@@ -70,26 +70,39 @@ func (h *Media) requireFileOps(w http.ResponseWriter, r *http.Request) ([]string
 // inUse reports why tsPath must not be touched right now: "recording" (a
 // running timer writes it) or "playing" (the box plays it), else "".
 func (h *Media) inUse(ctx context.Context, tsPath string) (string, error) {
-	timers, err := h.WC.TimerList(ctx)
+	busy, err := h.inUseSet(ctx)
 	if err != nil {
 		return "", err
 	}
+	return busy[tsPath], nil
+}
+
+// inUseSet maps every .ts path the box is writing or playing right now to
+// the reason, "recording" or "playing" — two WebControl calls, however many
+// paths are checked against it.
+func (h *Media) inUseSet(ctx context.Context) (map[string]string, error) {
+	timers, err := h.WC.TimerList(ctx)
+	if err != nil {
+		return nil, err
+	}
+	busy := map[string]string{}
 	for _, t := range timers {
-		if t.State == webcontrol.TimerRunning && !t.Disabled && !t.JustPlay && t.Filename != "" &&
-			path.Clean("/"+strings.TrimLeft(t.Filename, "/")) == tsPath {
-			return "recording", nil
+		if t.State == webcontrol.TimerRunning && !t.Disabled && !t.JustPlay && t.Filename != "" {
+			busy[path.Clean("/"+strings.TrimLeft(t.Filename, "/"))] = "recording"
 		}
 	}
 	playing, err := h.WC.CurrentServiceReference(ctx)
 	if err != nil {
-		return "", err
+		return nil, err
 	}
 	// A recording's reference carries its path after the ten numeric fields:
 	// "1:0:0:0:0:0:0:0:0:0:/media/hdd/movie/x.ts".
-	if i := strings.Index(playing, ":/"); i >= 0 && path.Clean(playing[i+1:]) == tsPath {
-		return "playing", nil
+	if i := strings.Index(playing, ":/"); i >= 0 {
+		if p := path.Clean(playing[i+1:]); busy[p] == "" {
+			busy[p] = "playing"
+		}
 	}
-	return "", nil
+	return busy, nil
 }
 
 // checkNotInUse answers the request when a path is in use (or can't be

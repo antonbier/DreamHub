@@ -6,7 +6,9 @@
   text actions that appear on hover (always visible below 900 px). A
   non-recording (a manually copied .mkv) is shown in `muted` (not by opacity, which
   would drop it below AA contrast) and labeled, never
-  offered file actions.
+  offered file actions. A recording the box is writing or playing right
+  now (`inUse`) says so with a dot, like TimerHub's state; the parent
+  offers it no file actions until it's done.
 
   The title opens the recording's details (MediaHubView's ProgrammeDialog).
   Rename expands in place: an input with the current file name, then the
@@ -46,6 +48,10 @@
           <template v-if="movie.isRecording">{{ details }}</template>
           <template v-else>{{ t('media.notARecording') }}</template>
         </span>
+      </span>
+      <span v-if="movie.inUse" class="flex shrink-0 items-center gap-1.5 text-[12.5px]" :class="movie.inUse === 'recording' ? 'text-onair' : 'text-muted'">
+        <span class="h-1.5 w-1.5 rounded-full" :class="movie.inUse === 'recording' ? 'bg-onair' : 'bg-accent'" />
+        {{ t(`media.inUse.${movie.inUse}`) }}
       </span>
       <RatingBadge v-if="info" class="shrink-0 text-[12.5px] below-sm:hidden" :rating="info.rating" :votes="info.votes" />
       <span class="shrink-0 whitespace-nowrap font-mono text-[12.5px] tabular-nums text-faint">{{ formatBytes(movie.fileSize, locale) }}</span>

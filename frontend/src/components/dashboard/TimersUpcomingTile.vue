@@ -3,7 +3,8 @@
   (GET /api/v1/timers). Times are formatted from the API's Unix timestamps
   via Intl in the browser's own zone (PRINCIPLES.md: UTC inside, local only
   on screen, never derived from file names) — a per-user display zone
-  setting is a separate open item (ROADMAP.md).
+  setting is a separate open item (ROADMAP.md). A timer that is recording
+  right now says so with TimerHub's dot.
 -->
 <template>
   <p v-if="loading" class="text-[13px] text-faint">{{ t('common.loading') }}</p>
@@ -19,6 +20,10 @@
       <span class="min-w-0 flex-1">
         <span class="block truncate text-[14px] text-text">{{ timer.name }}</span>
         <span class="block truncate text-[12.5px] text-muted">{{ timer.serviceName }}</span>
+      </span>
+      <span v-if="timer.state === 2" class="flex shrink-0 items-center gap-1.5 text-[12.5px] text-onair">
+        <span class="h-1.5 w-1.5 rounded-full bg-onair" />
+        {{ t('timers.state.recording') }}
       </span>
     </li>
   </ul>

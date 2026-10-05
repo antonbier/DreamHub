@@ -184,6 +184,9 @@ export interface Movie {
   // served by GET /api/v1/media/cover; only known when DreamHub runs on the box.
   cover?: boolean
   backdrop?: boolean
+  // The box is writing ("recording") or playing it right now; no file
+  // actions until it's done.
+  inUse?: 'recording' | 'playing'
 }
 
 // backend/internal/hubs.list — one folder of recordings, GET /api/v1/media/movies?dir=.

@@ -28,14 +28,15 @@
         <span class="h-1.5 w-1.5 rounded-full" :class="dotClass" :title="t(`timers.state.${stateKey}`)" />
         <span class="below-sm:sr-only">{{ t(`timers.state.${stateKey}`) }}</span>
       </span>
-      <!-- Kept in the layout (invisible) while its preview is open, so the
-           state column doesn't jump. -->
+      <!-- Kept in the layout (invisible) while its preview is open or when
+           the timer can't be toggled, so the state column lines up with
+           the other rows. -->
       <button
-        v-if="toggleable"
         type="button"
         class="shrink-0 rounded px-2 py-1 text-[13px] text-accent hover:bg-tile opacity-0 focus:opacity-100 group-hover:opacity-100 below-md:opacity-100"
-        :class="{ invisible: deleting }"
-        :disabled="!!deleting"
+        :class="{ invisible: deleting || !toggleable }"
+        :disabled="!!deleting || !toggleable"
+        :aria-hidden="!toggleable || undefined"
         @click="emit('toggle')"
       >
         {{ timer.disabled ? t('timers.enable') : t('timers.disable') }}

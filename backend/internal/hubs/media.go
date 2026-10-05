@@ -89,6 +89,11 @@ type MovieView struct {
 	// DreamHub runs on the box.
 	Cover    bool `json:"cover,omitempty"`
 	Backdrop bool `json:"backdrop,omitempty"`
+	// InUse: "recording" or "playing" while the box writes or plays the
+	// file — the list says so up front instead of only refusing a rename
+	// or delete later (media_files.go). Best effort: empty when the timer
+	// list can't be read.
+	InUse string `json:"inUse,omitempty"`
 }
 
 // Search implements hub.SearchProvider: a case-insensitive substring match
@@ -164,9 +169,13 @@ func (h *Media) list(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 	onBox := recfs.Available(h.FS, roots)
+	busy, _ := h.inUseSet(ctx)
 	views := make([]MovieView, len(folder.Movies))
 	for i, m := range folder.Movies {
 		views[i] = MovieView{Movie: m, IsRecording: isRecording(m.Filename)}
+		if views[i].IsRecording {
+			views[i].InUse = busy[path.Clean("/"+strings.TrimLeft(m.Filename, "/"))]
+		}
 		if onBox && views[i].IsRecording {
 			if p, err := recfs.CleanIn(h.FS, m.Filename, roots); err == nil {
 				poster, backdrop := recfs.Covers(h.FS, p)

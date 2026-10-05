@@ -332,6 +332,10 @@
     "diskFree": "{free} frei von {capacity}",
     "empty": "Keine Aufnahmen.",
     "notARecording": "Keine Dreambox-Aufnahme",
+    "inUse": {
+      "recording": "Nimmt auf",
+      "playing": "Läuft am Fernseher"
+    },
     "select": "„{title}“ auswählen",
     "rename": "Umbenennen",
     "moveToTrash": "In den Papierkorb",

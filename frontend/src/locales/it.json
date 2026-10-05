@@ -332,6 +332,10 @@
     "diskFree": "{free} liberi su {capacity}",
     "empty": "Nessuna registrazione.",
     "notARecording": "Non è una registrazione Dreambox",
+    "inUse": {
+      "recording": "In registrazione",
+      "playing": "In riproduzione sulla TV"
+    },
     "select": "Seleziona \"{title}\"",
     "rename": "Rinomina",
     "moveToTrash": "Sposta nel cestino",

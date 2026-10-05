@@ -27,6 +27,7 @@ type folderResp struct {
 		Title       string `json:"title"`
 		Filename    string `json:"filename"`
 		IsRecording bool   `json:"isRecording"`
+		InUse       string `json:"inUse"`
 	} `json:"movies"`
 	FileOps struct {
 		Available bool   `json:"available"`
@@ -132,6 +133,34 @@ func TestMedia_InUseIsRefused(t *testing.T) {
 	_, status, b = e.plan(t, "/api/v1/media/trash/plan", fmt.Sprintf(`{"paths":[%q]}`, bauerTS))
 	if code, _, _ := errCode(t, b); status != http.StatusConflict || code != "media_in_use" || !strings.Contains(string(b), `"recording"`) {
 		t.Fatalf("trashing a recording being written must be refused, got %d %s", status, b)
+	}
+}
+
+func TestMedia_ListMarksInUse(t *testing.T) {
+	inUse := func(e *env) map[string]string {
+		out := map[string]string{}
+		for _, m := range e.folder(t, "").Movies {
+			out[strings.TrimPrefix(m.Filename, "/")] = m.InUse
+		}
+		return out
+	}
+
+	box := mock.New()
+	box.Playing = "1:0:0:0:0:0:0:0:0:0:" + bauerTS
+	got := inUse(newEnvWith(t, box))
+	if got[bauerTS] != "playing" {
+		t.Errorf("a recording played on the box must be marked playing, got %q", got[bauerTS])
+	}
+	for f, why := range got {
+		if f != bauerTS && why != "" {
+			t.Errorf("only the played recording may be marked, %s is %q", f, why)
+		}
+	}
+
+	writing := mock.New()
+	got = inUse(newEnvWithOptions(t, recordingInto{writing, bauerTS}, atmock.New(), writing.FS))
+	if got[bauerTS] != "recording" {
+		t.Errorf("a recording being written must be marked recording, got %q", got[bauerTS])
 	}
 }
 

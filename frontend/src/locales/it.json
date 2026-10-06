@@ -211,7 +211,8 @@
       "seriesUpcoming": "Prossimi episodi",
       "timersConflicts": "Conflitti",
       "nowPlaying": "Ora sul box",
-      "plexContinue": "Continua a guardare (Plex)"
+      "plexContinue": "Continua a guardare (Plex)",
+      "liveTv": "TV in diretta"
     },
     "tileFrame": {
       "hide": "Nascondi",

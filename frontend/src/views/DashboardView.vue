@@ -63,6 +63,7 @@
           <SeriesUpcomingTile v-else-if="tile.type === 'series.upcoming'" />
           <TimersConflictsTile v-else-if="tile.type === 'timers.conflicts'" />
           <PlexContinueTile v-else-if="tile.type === 'plex.continue'" />
+          <LiveTvTile v-else-if="tile.type === 'stream.channels'" />
         </DashboardTileFrame>
       </div>
 
@@ -94,6 +95,7 @@ import CustomTile from '@/components/dashboard/CustomTile.vue'
 import CustomTileBuilder from '@/components/dashboard/CustomTileBuilder.vue'
 import TimersUpcomingTile from '@/components/dashboard/TimersUpcomingTile.vue'
 import NowPlayingTile from '@/components/dashboard/NowPlayingTile.vue'
+import LiveTvTile from '@/components/dashboard/LiveTvTile.vue'
 import HubsStatusTile from '@/components/dashboard/HubsStatusTile.vue'
 import MediaDiskSpaceTile from '@/components/dashboard/MediaDiskSpaceTile.vue'
 import SeriesUpcomingTile from '@/components/dashboard/SeriesUpcomingTile.vue'

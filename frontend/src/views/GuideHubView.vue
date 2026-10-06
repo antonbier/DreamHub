@@ -155,6 +155,13 @@
             >
               {{ zapped ? t('guide.switchedNow') : t('guide.switchNow') }}
             </button>
+            <RouterLink
+              v-if="selectedLive && streamHubOn"
+              :to="{ path: '/stream', query: { ref: selected!.serviceReference } }"
+              class="rounded border border-line px-3.5 py-1.5 text-[13.5px] text-text hover:bg-field"
+            >
+              {{ t('media.detail.watchInBrowser') }}
+            </RouterLink>
           </div>
           <p v-if="record.error" class="mt-2 text-[12.5px] text-warn">{{ record.error }}</p>
           <p v-if="zapError" class="mt-2 text-[12.5px] text-warn">{{ zapError }}</p>
@@ -167,7 +174,7 @@
 <script setup lang="ts">
 import { computed, onMounted, ref, watch } from 'vue'
 import { useI18n } from 'vue-i18n'
-import { useRoute } from 'vue-router'
+import { RouterLink, useRoute } from 'vue-router'
 import { api } from '@/api/client'
 import Icon from '@/components/Icon.vue'
 import PlanPreview from '@/components/PlanPreview.vue'
@@ -253,6 +260,11 @@ onMounted(async () => {
 // --- the selected programme: details, record, switch ------------------------
 
 // Recording needs TimerHub; GuideHub itself works without it.
+// "Watch in the browser" is StreamHub's; offered while it's there.
+const streamHubOn = computed(() => {
+  const h = navigation.navigation?.sections.flatMap((x) => x.items).find((i) => i.id === 'stream')
+  return !!h && h.status !== 'unavailable'
+})
 const canRecord = computed(() => navigation.navigation?.sections.flatMap((s) => s.items).find((i) => i.id === 'timer')?.status !== 'unavailable')
 
 const selected = ref<EPGEvent | null>(null)

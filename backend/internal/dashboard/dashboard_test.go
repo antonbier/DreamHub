@@ -31,8 +31,8 @@ func TestGet_FreshUserGetsTheFullCatalog(t *testing.T) {
 		t.Fatalf("got %d tiles, want %d (the full catalog)", len(l.Tiles), len(catalog))
 	}
 	for _, tile := range l.Tiles {
-		if want := tile.Type == "plex.continue"; tile.Hidden != want {
-			t.Errorf("tile %q: hidden %v, want %v (only the cover row starts hidden)", tile.Type, tile.Hidden, want)
+		if want := tile.Type == "plex.continue" || tile.Type == "stream.channels"; tile.Hidden != want {
+			t.Errorf("tile %q: hidden %v, want %v (only the optional tiles start hidden)", tile.Type, tile.Hidden, want)
 		}
 		if tile.Label == "" {
 			t.Errorf("tile %q has no label", tile.Type)

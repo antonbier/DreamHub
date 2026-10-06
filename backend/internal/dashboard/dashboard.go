@@ -93,6 +93,9 @@ var catalog = []tileType{
 	// Backed by PlexHub's GET /api/v1/plex/ondeck: a cover row, so hidden
 	// until switched on.
 	{ID: "plex.continue", Label: "dashboard.tile.plexContinue", DefaultWidth: 4, Hidden: true},
+	// Backed by StreamHub's GET /api/v1/stream/channels: channels to start
+	// in the browser; hidden until switched on.
+	{ID: "stream.channels", Label: "dashboard.tile.liveTv", DefaultWidth: 2, Hidden: true},
 }
 
 func catalogIndex() map[string]tileType {

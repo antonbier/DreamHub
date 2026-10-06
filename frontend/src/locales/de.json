@@ -211,7 +211,8 @@
       "seriesUpcoming": "Anstehende Folgen",
       "timersConflicts": "Konflikte",
       "nowPlaying": "Jetzt auf der Box",
-      "plexContinue": "Weiterschauen (Plex)"
+      "plexContinue": "Weiterschauen (Plex)",
+      "liveTv": "Live-TV"
     },
     "tileFrame": {
       "hide": "Ausblenden",

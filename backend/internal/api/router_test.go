@@ -863,11 +863,11 @@ func TestDashboard_GetReturnsTheFullCatalogByDefault(t *testing.T) {
 		} `json:"tiles"`
 	}
 	json.Unmarshal(b, &body)
-	if len(body.Tiles) != 7 || body.Tiles[0].Type != "control.nowPlaying" {
-		t.Fatalf("expected the 7 built-in tiles on a fresh install, \"Now on the box\" first, got %+v", body.Tiles)
+	if len(body.Tiles) != 8 || body.Tiles[0].Type != "control.nowPlaying" {
+		t.Fatalf("expected the 8 built-in tiles on a fresh install, \"Now on the box\" first, got %+v", body.Tiles)
 	}
 	for _, tile := range body.Tiles {
-		if tile.Hidden != (tile.Type == "plex.continue") || tile.Label == "" || tile.Width < 1 || tile.Width > 4 {
+		if tile.Hidden != (tile.Type == "plex.continue" || tile.Type == "stream.channels") || tile.Label == "" || tile.Width < 1 || tile.Width > 4 {
 			t.Errorf("unexpected default tile: %+v", tile)
 		}
 	}
@@ -889,7 +889,7 @@ func TestDashboard_PutRoundTripsAndIsLogged(t *testing.T) {
 		} `json:"tiles"`
 	}
 	json.Unmarshal(b, &body)
-	if len(body.Tiles) != 7 || body.Tiles[0].Type != "hubs.status" || !body.Tiles[0].Hidden || body.Tiles[0].Width != 1 {
+	if len(body.Tiles) != 8 || body.Tiles[0].Type != "hubs.status" || !body.Tiles[0].Hidden || body.Tiles[0].Width != 1 {
 		t.Fatalf("order/width/hidden not preserved: %+v", body.Tiles)
 	}
 
@@ -1040,7 +1040,7 @@ func TestDashboard_CustomTiles(t *testing.T) {
 	}
 	_, b = e.do(t, "GET", "/api/v1/dashboard", "", nil)
 	json.Unmarshal(b, &layout)
-	if len(layout.Tiles) != 8 || layout.Tiles[0].Type != "custom" || layout.Tiles[0].ID == "" ||
+	if len(layout.Tiles) != 9 || layout.Tiles[0].Type != "custom" || layout.Tiles[0].ID == "" ||
 		layout.Tiles[0].Custom == nil || layout.Tiles[0].Custom.Title != "Aufräumen" || layout.Tiles[0].Custom.Query.MinSizeGB != 3 {
 		t.Fatalf("custom tile not saved as expected: %s", b)
 	}

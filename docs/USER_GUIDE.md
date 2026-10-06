@@ -135,7 +135,7 @@ Four views, switched at the top; your choice is remembered:
 
 TV channels right in the browser — on the phone, tablet or PC, no app needed. Pick a channel from the list; **Same as the TV** shows what the box is showing. The box sends its signal unchanged and your device decodes it, so the box itself does no extra work. **Space** pauses, **M** mutes, **F** or a double click switches to full screen; with several audio tracks (another language, Dolby) you choose one under the picture.
 
-The box has one tuner: another channel only works while the TV and any recording are on the same frequency. Otherwise the picture says so — **Same as the TV** always works. In **Recordings**, **Watch in the browser** plays a recording, with a bar to jump anywhere in it.
+The box has one tuner: another channel only works while the TV and any recording are on the same frequency. Otherwise the picture says so — **Same as the TV** always works. In the **TV guide**, a programme that's on now has **Watch in the browser** too, and **Home** can show a **Live TV** tile with your channels (switch it on under **Edit**). In **Recordings**, **Watch in the browser** plays a recording, with a bar to jump anywhere in it.
 
 Works in current Chrome, Edge, Firefox and Safari. HD channels use your device's own video decoder; older or very small devices may stutter on HD.
 

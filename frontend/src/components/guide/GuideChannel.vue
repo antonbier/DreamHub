@@ -33,9 +33,10 @@
             <span class="block text-[14px] text-text">{{ e.title }}</span>
             <span v-if="e.description" class="block truncate text-[12.5px] text-muted">{{ e.description }}</span>
           </span>
-          <span v-if="info(e)" class="flex shrink-0 items-center gap-2 text-[12px] text-muted below-sm:hidden">
-            <span>{{ t(`discovery.kind.${info(e)!.kind}`) }}</span>
-            <RatingBadge :rating="info(e)!.rating" :votes="info(e)!.votes" />
+          <span v-if="info(e) || e.inPlex" class="flex shrink-0 items-center gap-2 text-[12px] text-muted below-sm:hidden">
+            <span v-if="info(e)">{{ t(`discovery.kind.${info(e)!.kind}`) }}</span>
+            <RatingBadge v-if="info(e)" :rating="info(e)!.rating" :votes="info(e)!.votes" />
+            <span v-if="e.inPlex">{{ t('discovery.inPlex') }}</span>
           </span>
         </button>
       </li>

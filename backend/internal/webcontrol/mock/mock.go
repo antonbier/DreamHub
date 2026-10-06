@@ -49,6 +49,9 @@ type Client struct {
 	// MoviePlayer: the last play went to the movie player (PlayMovie), not
 	// a plain zap.
 	MoviePlayer bool
+	// LastPlayStartMs is the resume position the last PlayMovie call asked
+	// the plugin to seek to (0: played from the start).
+	LastPlayStartMs int64
 	// screen is the simulated on-screen state Screenshot renders (screen.go).
 	screen screen
 }
@@ -385,13 +388,14 @@ func (c *Client) Zap(ctx context.Context, serviceReference string) error {
 }
 
 // PlayMovie plays the reference like Zap, and records it as played in the
-// movie player.
-func (c *Client) PlayMovie(ctx context.Context, serviceReference, title string) error {
+// movie player, plus the start position asked for (LastPlayStartMs).
+func (c *Client) PlayMovie(ctx context.Context, serviceReference, title string, startMs int64) error {
 	c.mu.Lock()
 	defer c.mu.Unlock()
 	c.LastZapped = serviceReference
 	c.Playing = serviceReference
 	c.MoviePlayer = true
+	c.LastPlayStartMs = startMs
 	return nil
 }
 

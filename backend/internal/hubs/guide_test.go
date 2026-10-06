@@ -1,6 +1,7 @@
 package hubs
 
 import (
+	"context"
 	"testing"
 
 	"github.com/antonbier/DreamHub/backend/internal/webcontrol"
@@ -14,7 +15,7 @@ func TestGroupByChannel(t *testing.T) {
 		{Title: "The Rookie", ServiceReference: "zdfneo", ServiceName: "zdf_neo HD"},
 		{Title: "Undercover Boss", ServiceReference: "rtl", ServiceName: "RTL Television"},
 	}
-	got := groupByChannel(events)
+	got := (&Guide{}).groupByChannel(context.Background(), events)
 	if len(got) != 2 {
 		t.Fatalf("expected 2 channels, got %d: %+v", len(got), got)
 	}

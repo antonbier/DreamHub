@@ -24,10 +24,12 @@ type savedPicks struct {
 	Taste           *tasteCountsView    `json:"taste,omitempty"`
 }
 
-// pickView is a recommendation as served: with whether a timer covers it.
+// pickView is a recommendation as served: with whether a timer covers it
+// and whether the film is already in the Plex library (#32).
 type pickView struct {
 	ai.Recommendation
 	HasTimer bool `json:"hasTimer"`
+	InPlex   bool `json:"inPlex,omitempty"`
 }
 
 func (h *Discovery) savePicks(ctx context.Context, userID int64, p savedPicks) {
@@ -46,7 +48,8 @@ func (h *Discovery) views(ctx context.Context, recs []ai.Recommendation) []pickV
 			continue
 		}
 		e := webcontrol.EPGEvent{ServiceReference: r.ServiceReference, Start: r.Start, Duration: r.Duration}
-		out = append(out, pickView{Recommendation: r, HasTimer: coveredByTimer(e, timers)})
+		inPlex := h.Plex != nil && h.Plex.InLibrary(ctx, r.Title)
+		out = append(out, pickView{Recommendation: r, HasTimer: coveredByTimer(e, timers), InPlex: inPlex})
 	}
 	return out
 }

@@ -12,6 +12,8 @@ Format follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/); version
 - **Live TV** (StreamHub): TV channels and recordings right in the browser, on phones too, with no app. The box sends its stream unchanged — it can't convert anything — and the browser decodes it: FFmpeg compiled to WebAssembly for MPEG-2 video (SD channels) and MP2/AC3/AAC sound, the device's own decoder (WebCodecs) for H.264. Channel list with what's on, "Same as the TV", audio track choice, volume, full screen. A channel that needs the box's only tuner while it's busy elsewhere says so. In Recordings, "Watch in the browser" plays a recording with a seek bar.
 - TV guide: "Watch in the browser" for a programme that's on now. Dashboard: an optional tile "Live TV" with your channels, one click to watch (switch it on in edit mode).
 - Radio in the browser: a speaker button next to each station plays it right here, through Live TV's player.
+- Plex: "Play on the box" resumes where you left off instead of always starting at the beginning, and reports playback progress back to Plex so "continue watching" stays current — best effort, via the stream proxy's own byte offsets rather than a position read from the box (#30). Films in several parts or versions get a picker in the details dialog instead of always playing the first (#31).
+- GuideHub and DiscoveryHub mark a broadcast "Already in Plex" when a film with the same title is already in the library (#32).
 
 ## [0.1.8] - 2026-10-06
 

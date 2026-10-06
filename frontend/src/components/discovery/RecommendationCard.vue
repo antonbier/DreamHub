@@ -12,6 +12,7 @@
     :now="now"
     :info="info"
     :has-timer="hasTimer"
+    :in-plex="rec.inPlex"
     @open="$emit('open')"
   >
     {{ rec.reason }}

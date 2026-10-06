@@ -35,6 +35,9 @@ type Discovery struct {
 	// Loc is the box's zone, for "the evening" (candidates); nil: the
 	// process's own, which on the box is the box's.
 	Loc *time.Location
+	// Plex flags recommendations already in the library (#32); nil (Plex
+	// not set up) just means the flag is never set.
+	Plex *Plex
 }
 
 // Mount registers DiscoveryHub's routes.

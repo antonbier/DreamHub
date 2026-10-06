@@ -750,6 +750,37 @@ func (h *Plex) Search(ctx context.Context, query string) ([]hub.SearchResult, er
 	return out, nil
 }
 
+// InLibrary reports whether a film with exactly this title is already in a
+// shown Plex library (#32, "already in Plex" next to broadcasts in
+// GuideHub/DiscoveryHub) — cached, like Search, so it works while the
+// server is off too. Exact match only, the same rule MediaHub's own
+// enrichment lookup uses; a broadcast's EPG title and Plex's rarely agree
+// on anything looser (subtitles, year suffixes) without false positives.
+func (h *Plex) InLibrary(ctx context.Context, title string) bool {
+	if title == "" {
+		return false
+	}
+	c, err := h.config(ctx)
+	if err != nil || !c.configured() {
+		return false
+	}
+	var libs []plex.Library
+	h.cacheGet(ctx, "libraries", &libs)
+	for _, l := range libs {
+		if l.Type != "movie" || !shown(l, c) {
+			continue
+		}
+		var items []plex.Item
+		h.cacheGet(ctx, "items:"+l.ID, &items)
+		for _, it := range items {
+			if strings.EqualFold(it.Title, title) {
+				return true
+			}
+		}
+	}
+	return false
+}
+
 func jsonMarshal(v any) (string, error) {
 	b, err := json.Marshal(v)
 	return string(b), err

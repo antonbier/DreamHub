@@ -167,6 +167,11 @@ type Client interface {
 	// Open requests a file (a Part's Key) for streaming, forwarding the
 	// Range header; the caller closes the body.
 	Open(ctx context.Context, c Conn, partKey, rangeHeader string) (*http.Response, error)
+	// Timeline reports playback progress (PlexHub, #30): Plex's /:/timeline,
+	// the same call its own clients poll while playing. state is "playing",
+	// "paused" or "stopped"; timeMs/durationMs are the position and the
+	// item's total length.
+	Timeline(ctx context.Context, c Conn, ratingKey, state string, timeMs, durationMs int64) error
 
 	CreatePin(ctx context.Context, clientID string) (Pin, error)
 	// CheckPin returns the account token once the code was entered, "" before.
@@ -491,6 +496,20 @@ func (h *HTTPClient) Open(ctx context.Context, c Conn, partKey, rangeHeader stri
 		return nil, ErrUnauthorized
 	}
 	return resp, nil
+}
+
+// Timeline is best effort: the box's player isn't a Plex client and never
+// confirms playback ended, so DreamHub only ever reports "playing", driven
+// by the box actually fetching bytes of the file through the stream proxy
+// (internal/hubs/plex_play.go) — a failed call here just means Plex's
+// "continue watching" position is a sync behind, not that playback failed.
+func (h *HTTPClient) Timeline(ctx context.Context, c Conn, ratingKey, state string, timeMs, durationMs int64) error {
+	q := url.Values{
+		"ratingKey": {ratingKey}, "key": {"/library/metadata/" + ratingKey},
+		"state": {state}, "time": {strconv.FormatInt(timeMs, 10)}, "duration": {strconv.FormatInt(durationMs, 10)},
+		"identifier": {"com.plexapp.plugins.library"},
+	}
+	return h.server(ctx, c, "/:/timeline?"+q.Encode(), nil)
 }
 
 func (h *HTTPClient) CreatePin(ctx context.Context, clientID string) (Pin, error) {

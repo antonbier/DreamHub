@@ -28,8 +28,9 @@
         <RatingBadge :rating="info.rating" :votes="info.votes" />
       </span>
       <span v-if="$slots.default" class="mt-1.5 line-clamp-3 text-[13px] text-text"><slot /></span>
-      <span v-if="hasTimer" class="mt-auto flex items-center gap-1.5 pt-1.5 text-[12.5px] text-ok">
-        <span class="h-1.5 w-1.5 rounded-full bg-ok" />{{ t('discovery.created') }}
+      <span v-if="hasTimer || inPlex" class="mt-auto flex flex-wrap items-center gap-x-3 pt-1.5 text-[12.5px]">
+        <span v-if="hasTimer" class="flex items-center gap-1.5 text-ok"><span class="h-1.5 w-1.5 rounded-full bg-ok" />{{ t('discovery.created') }}</span>
+        <span v-if="inPlex" class="flex items-center gap-1.5 text-muted"><span class="h-1.5 w-1.5 rounded-full bg-muted" />{{ t('discovery.inPlex') }}</span>
       </span>
     </span>
   </button>
@@ -53,6 +54,7 @@ const props = defineProps<{
   now: number
   info?: EnrichInfo | null
   hasTimer?: boolean
+  inPlex?: boolean
 }>()
 defineEmits<{ open: [] }>()
 const { t } = useI18n()

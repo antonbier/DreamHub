@@ -26,6 +26,7 @@
           :time="clock(e.start)"
           :now="nowSec"
           :info="enrich.info(e.title)"
+          :in-plex="e.inPlex"
           @open="$emit('select', e)"
         >
           {{ e.description }}

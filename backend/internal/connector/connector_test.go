@@ -85,7 +85,7 @@ func (f failingClient) MovieDir(context.Context, string) (webcontrol.MovieFolder
 }
 func (f failingClient) CurrentServiceReference(context.Context) (string, error) { return "", f.fail() }
 func (f failingClient) Zap(context.Context, string) error                       { return f.fail() }
-func (f failingClient) PlayMovie(context.Context, string, string) error         { return f.fail() }
+func (f failingClient) PlayMovie(context.Context, string, string, int64) error  { return f.fail() }
 func (f failingClient) SendKey(context.Context, int) error                      { return f.fail() }
 func (f failingClient) Message(context.Context, string, int, int) error         { return f.fail() }
 func (f failingClient) Screenshot(context.Context) ([]byte, error)              { return nil, f.fail() }

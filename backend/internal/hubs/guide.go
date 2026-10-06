@@ -23,6 +23,9 @@ type Guide struct {
 	// PiconDirs are searched for channel logos (guide_views.go); nil
 	// means DefaultPiconDirs.
 	PiconDirs []string
+	// Plex flags broadcasts already in the library (#32), from its own
+	// cache; nil (Plex not set up) just means the flag is never set.
+	Plex *Plex
 }
 
 // maxGuideResults caps the search provider's answer; the palette shows a
@@ -79,16 +82,22 @@ func (h *Guide) bouquets(w http.ResponseWriter, r *http.Request) {
 
 // ChannelSchedule is one channel's events within the requested window.
 type ChannelSchedule struct {
-	ServiceReference string                `json:"serviceReference"`
-	ServiceName      string                `json:"serviceName"`
-	Events           []webcontrol.EPGEvent `json:"events"`
+	ServiceReference string         `json:"serviceReference"`
+	ServiceName      string         `json:"serviceName"`
+	Events           []EPGEventView `json:"events"`
+}
+
+// EPGEventView is one broadcast with whether it's already in Plex (#32).
+type EPGEventView struct {
+	webcontrol.EPGEvent
+	InPlex bool `json:"inPlex,omitempty"`
 }
 
 // groupByChannel turns epgmulti's flat event list into one entry per
 // channel, preserving each channel's first-seen order and each channel's
 // own chronological event order (epgmulti already returns events in start
 // order per channel — confirmed live, ARCHITECTURE.md).
-func groupByChannel(events []webcontrol.EPGEvent) []ChannelSchedule {
+func (h *Guide) groupByChannel(ctx context.Context, events []webcontrol.EPGEvent) []ChannelSchedule {
 	var order []string
 	byChannel := map[string]*ChannelSchedule{}
 	for i := range events {
@@ -99,7 +108,8 @@ func groupByChannel(events []webcontrol.EPGEvent) []ChannelSchedule {
 			byChannel[e.ServiceReference] = ch
 			order = append(order, e.ServiceReference)
 		}
-		ch.Events = append(ch.Events, e)
+		inPlex := h.Plex != nil && h.Plex.InLibrary(ctx, e.Title)
+		ch.Events = append(ch.Events, EPGEventView{EPGEvent: e, InPlex: inPlex})
 	}
 	out := make([]ChannelSchedule, 0, len(order))
 	for _, ref := range order {
@@ -133,5 +143,5 @@ func (h *Guide) grid(w http.ResponseWriter, r *http.Request) {
 		}
 		events = kept
 	}
-	httpx.WriteJSON(w, http.StatusOK, map[string]any{"channels": groupByChannel(events)})
+	httpx.WriteJSON(w, http.StatusOK, map[string]any{"channels": h.groupByChannel(r.Context(), events)})
 }

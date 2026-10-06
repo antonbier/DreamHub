@@ -252,6 +252,9 @@ export interface EPGEvent {
   description: string
   serviceReference: string
   serviceName: string
+  // Set by GET /api/v1/guide/grid only: the title matches a film already
+  // in the Plex library (#32).
+  inPlex?: boolean
 }
 
 // backend/internal/hubs.ChannelSchedule, as returned by GET /api/v1/guide/grid:
@@ -387,6 +390,7 @@ export interface Recommendation {
   duration: number // seconds
   reason: string
   hasTimer?: boolean // a timer covers it now
+  inPlex?: boolean // the film's title matches one already in the Plex library (#32)
 }
 
 // The last generated set (GET /api/v1/discovery/recommendations), kept

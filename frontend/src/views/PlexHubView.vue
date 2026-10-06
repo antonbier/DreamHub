@@ -218,7 +218,7 @@
       :playing="playingKey === dialogItem.ratingKey"
       :error="dialogError"
       @close="closeDialog"
-      @play="play(dialogItem)"
+      @play="play(dialogItem, $event)"
       @toggle-watched="toggleWatched(dialogItem)"
     />
 
@@ -540,11 +540,11 @@ async function applyPlan() {
 
 // --- play on the box ---
 const playingKey = ref('')
-async function play(it: PlexItem) {
+async function play(it: PlexItem, choice?: { media: number; part: number }) {
   playingKey.value = it.ratingKey
   dialogError.value = ''
   try {
-    const res = await api.plex.play(it.ratingKey)
+    const res = await api.plex.play(it.ratingKey, choice)
     showNotice({ text: t('plex.nowPlaying', { title: res.playing }) })
   } catch (err) {
     const message = planErrorMessage(err)

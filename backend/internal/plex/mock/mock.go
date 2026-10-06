@@ -41,6 +41,14 @@ type Client struct {
 	// Unreadable makes Item answer with something that can't be read, as
 	// a server with a newer answer format would — not offline.
 	Unreadable bool
+	// Timelines records Timeline calls, for tests.
+	Timelines []TimelineCall
+}
+
+// TimelineCall is one recorded Timeline call.
+type TimelineCall struct {
+	RatingKey, State   string
+	TimeMs, DurationMs int64
 }
 
 var _ plex.Client = (*Client)(nil)
@@ -277,6 +285,16 @@ func (c *Client) Open(_ context.Context, conn plex.Conn, partKey, rangeHeader st
 	body := "mock media " + partKey
 	return &http.Response{StatusCode: http.StatusOK, Header: http.Header{"Content-Type": {"video/x-matroska"}},
 		Body: io.NopCloser(strings.NewReader(body)), ContentLength: int64(len(body))}, nil
+}
+
+func (c *Client) Timeline(_ context.Context, conn plex.Conn, ratingKey, state string, timeMs, durationMs int64) error {
+	if err := c.check(conn); err != nil {
+		return err
+	}
+	c.mu.Lock()
+	defer c.mu.Unlock()
+	c.Timelines = append(c.Timelines, TimelineCall{RatingKey: ratingKey, State: state, TimeMs: timeMs, DurationMs: durationMs})
+	return nil
 }
 
 func (c *Client) CreatePin(context.Context, string) (plex.Pin, error) {

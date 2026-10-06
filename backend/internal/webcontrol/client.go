@@ -290,8 +290,11 @@ type Client interface {
 	// pause, the movie infobar — through DreamHub's own TV plugin
 	// (/dreamhub/play). /web/zap only opens the movie player for a path
 	// starting with "/", so a stream URL would play like a channel.
-	// ErrNotFound when the plugin on the box is too old to have it.
-	PlayMovie(ctx context.Context, serviceReference, title string) error
+	// ErrNotFound when the plugin on the box is too old to have it. startMs
+	// > 0 asks the plugin to seek there once playback opens (PlexHub's
+	// resume, #30); a plugin from before it was added just ignores the
+	// parameter and starts at the beginning.
+	PlayMovie(ctx context.Context, serviceReference, title string, startMs int64) error
 	// SendKey simulates a remote-control keypress (ControlHub).
 	SendKey(ctx context.Context, code int) error
 	// Message shows a text on the TV (ControlHub): kind is one of the
@@ -766,11 +769,15 @@ func (c *HTTPClient) Zap(ctx context.Context, serviceReference string) error {
 // PlayMovie asks DreamHub's TV plugin to open the movie player with the
 // reference (enigma2-plugin/src/webplay.py). A form POST like every other
 // write; the plugin answers {"ok": true} or {"ok": false, "error": "…"}.
-func (c *HTTPClient) PlayMovie(ctx context.Context, serviceReference, title string) error {
+func (c *HTTPClient) PlayMovie(ctx context.Context, serviceReference, title string, startMs int64) error {
 	if !c.AllowWrites {
 		return ErrWritesDisabled
 	}
-	body, err := c.do(ctx, http.MethodPost, "/dreamhub/play", url.Values{"sRef": {serviceReference}, "title": {title}})
+	form := url.Values{"sRef": {serviceReference}, "title": {title}}
+	if startMs > 0 {
+		form.Set("t", strconv.FormatInt(startMs, 10))
+	}
+	body, err := c.do(ctx, http.MethodPost, "/dreamhub/play", form)
 	if err != nil {
 		return err
 	}

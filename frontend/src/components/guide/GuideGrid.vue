@@ -63,9 +63,10 @@
             class="absolute top-1 bottom-1 overflow-hidden text-ellipsis whitespace-nowrap rounded px-1.5 py-1 text-start text-[12px] text-text hover:bg-tile-2"
             :class="[isSelected(e) ? 'bg-tile-2 ring-1 ring-accent' : 'bg-tile', { 'opacity-35': filterActive && !passes(e.title) }]"
             :style="eventStyle(e)"
-            :title="e.title"
+            :title="e.inPlex ? `${e.title} · ${t('discovery.inPlex')}` : e.title"
             @click="$emit('select', e)"
           >
+            <span v-if="e.inPlex" class="me-1 inline-block h-1.5 w-1.5 shrink-0 rounded-full bg-muted align-middle" aria-hidden="true" />
             {{ e.title }}
           </button>
         </div>

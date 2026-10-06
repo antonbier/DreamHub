@@ -1,10 +1,12 @@
 package hubs
 
 import (
+	"context"
 	"errors"
 	"io"
 	"net"
 	"net/http"
+	"strconv"
 	"strings"
 	"time"
 
@@ -25,11 +27,20 @@ import (
 // Confirmed on the reference box with 0.1.7: most files play, with
 // seeking; a few report an unknown codec (ROADMAP.md, PlexHub).
 
-// ticket lets the box fetch one file for a while, without credentials.
+// ticket lets the box fetch one file for a while, without credentials. The
+// duration and size, when known, let the stream proxy turn the box's own
+// Range requests into an approximate playback position for Timeline
+// (progress.go, #30) — only an approximation (it assumes a roughly constant
+// bitrate), but better than reporting nothing while Plex is off a sync.
 type ticket struct {
-	conn    plex.Conn
-	partKey string
-	expires time.Time
+	conn       plex.Conn
+	partKey    string
+	expires    time.Time
+	ratingKey  string
+	durationMs int64
+	size       int64
+	// lastReportAt throttles Timeline calls for this ticket (progress.go).
+	lastReportAt time.Time
 }
 
 // ticketLife covers a long film with pauses.
@@ -38,11 +49,22 @@ const ticketLife = 12 * time.Hour
 // maxTickets bounds the table; the oldest go first.
 const maxTickets = 20
 
+// resumeMargin: close to the start or the end isn't worth resuming for.
+const resumeMargin = 30_000 // ms
+
 // Error codes.
 const (
 	CodePlexPlayUnavailable = "plex_play_unavailable"
 	CodePlexNoFile          = "plex_no_file"
 )
+
+// playRequest picks which of an item's media versions and parts to play
+// (#31: a film in several parts or versions) — the first of each when
+// omitted, as before.
+type playRequest struct {
+	Media int `json:"media"`
+	Part  int `json:"part"`
+}
 
 func (h *Plex) play(w http.ResponseWriter, r *http.Request) {
 	c, ok := h.requireConfig(w, r)
@@ -53,6 +75,13 @@ func (h *Plex) play(w http.ResponseWriter, r *http.Request) {
 		httpx.WriteError(w, r, http.StatusConflict, CodePlexPlayUnavailable, "playing on the box needs DreamHub on the box and Settings → Plex → play on the box")
 		return
 	}
+	var req playRequest
+	if r.ContentLength > 0 {
+		if err := httpx.DecodeJSON(r, &req); err != nil {
+			httpx.WriteError(w, r, http.StatusBadRequest, "invalid_body", `expected {} or {"media": <index>, "part": <index>}`)
+			return
+		}
+	}
 	key := r.PathValue("key")
 	it, err := h.Client.Item(r.Context(), c.conn, key)
 	h.note(err)
@@ -60,12 +89,29 @@ func (h *Plex) play(w http.ResponseWriter, r *http.Request) {
 		h.writeWriteError(w, r, err)
 		return
 	}
-	if (it.Type != "movie" && it.Type != "episode") || len(it.Media) == 0 || len(it.Media[0].Parts) == 0 {
-		httpx.WriteError(w, r, http.StatusConflict, CodePlexNoFile, "nothing playable: not a film or episode, or no file")
+	if it.Type != "movie" && it.Type != "episode" {
+		httpx.WriteError(w, r, http.StatusConflict, CodePlexNoFile, "nothing playable: not a film or episode")
 		return
 	}
-	part := it.Media[0].Parts[0]
-	id := h.newTicket(ticket{conn: c.conn, partKey: part.Key, expires: h.Now().Add(ticketLife)})
+	if req.Media < 0 || req.Media >= len(it.Media) {
+		httpx.WriteError(w, r, http.StatusConflict, CodePlexNoFile, "no such version of this item")
+		return
+	}
+	media := it.Media[req.Media]
+	if req.Part < 0 || req.Part >= len(media.Parts) {
+		httpx.WriteError(w, r, http.StatusConflict, CodePlexNoFile, "no such part of this item")
+		return
+	}
+	part := media.Parts[req.Part]
+	// Resume where Plex left off, the file's first part only — Plex keeps
+	// one ViewOffset per item, not per part, so it can't say which part it
+	// was in; a later part always starts at its own beginning.
+	var startMs int64
+	if req.Part == 0 && it.ViewOffset > resumeMargin && it.ViewOffset < it.Duration-resumeMargin {
+		startMs = it.ViewOffset
+	}
+	id := h.newTicket(ticket{conn: c.conn, partKey: part.Key, expires: h.Now().Add(ticketLife),
+		ratingKey: it.RatingKey, durationMs: it.Duration, size: part.Size})
 	ext := part.Container
 	if ext == "" {
 		ext = "mkv"
@@ -73,9 +119,10 @@ func (h *Plex) play(w http.ResponseWriter, r *http.Request) {
 	streamURL := h.StreamBase + "/api/v1/plex/stream/" + id + "/file." + ext
 	// The movie player (seeking, pause), through DreamHub's TV plugin; a
 	// plugin from before 0.1.7 doesn't have it, then a plain zap still
-	// plays the film, just without the movie player's controls.
+	// plays the film, just without the movie player's controls (and without
+	// resume: the seek-on-open parameter needs the plugin too).
 	ref := serviceRefForURL(streamURL, displayTitle(it))
-	err = h.WC.PlayMovie(r.Context(), ref, displayTitle(it))
+	err = h.WC.PlayMovie(r.Context(), ref, displayTitle(it), startMs)
 	if errors.Is(err, webcontrol.ErrNotFound) {
 		err = h.WC.Zap(r.Context(), ref)
 	}
@@ -120,6 +167,10 @@ func (h *Plex) newTicket(t ticket) string {
 	return id
 }
 
+// progressThrottle: how often one ticket's Timeline update is sent — far
+// less often than the box's own Range requests while it buffers or seeks.
+const progressThrottle = 10 * time.Second
+
 // Stream passes one ticket's file on to the box's player. Public route
 // (no DreamHub login: the box's player has none) but only for requests
 // from the machine itself, with a valid ticket.
@@ -129,12 +180,21 @@ func (h *Plex) Stream(w http.ResponseWriter, r *http.Request) {
 		httpx.WriteError(w, r, http.StatusForbidden, "forbidden", "only the box itself plays from here")
 		return
 	}
+	id := r.PathValue("ticket")
 	h.mu.Lock()
-	t, ok := h.tickets[r.PathValue("ticket")]
+	t, ok := h.tickets[id]
+	report := ok && h.Now().Sub(t.lastReportAt) > progressThrottle
+	if report {
+		t.lastReportAt = h.Now()
+		h.tickets[id] = t
+	}
 	h.mu.Unlock()
 	if !ok || h.Now().After(t.expires) {
 		httpx.WriteError(w, r, http.StatusNotFound, "not_found", "unknown or expired ticket")
 		return
+	}
+	if report {
+		h.reportProgress(t, r.Header.Get("Range"))
 	}
 	resp, err := h.Client.Open(r.Context(), t.conn, t.partKey, r.Header.Get("Range"))
 	if err != nil {
@@ -152,4 +212,46 @@ func (h *Plex) Stream(w http.ResponseWriter, r *http.Request) {
 	if r.Method != http.MethodHead {
 		io.Copy(w, resp.Body)
 	}
+}
+
+// reportProgress turns the byte offset the box just asked for into an
+// approximate playback position (constant-bitrate assumption — the best
+// DreamHub can do without decoding the file) and reports it to Plex as
+// "playing" (#30). Fire-and-forget: a Plex server that's gone offline mid-
+// film must not slow down or break the stream itself; it just means
+// "continue watching" falls a sync behind, same as everything else cached.
+func (h *Plex) reportProgress(t ticket, rangeHeader string) {
+	if t.size <= 0 || t.durationMs <= 0 || t.ratingKey == "" {
+		return
+	}
+	start := rangeStart(rangeHeader)
+	if start < 0 {
+		start = 0 // no Range: the box opened the file from the very start
+	}
+	timeMs := int64(float64(start) / float64(t.size) * float64(t.durationMs))
+	if timeMs > t.durationMs {
+		timeMs = t.durationMs
+	}
+	conn, ratingKey, durationMs := t.conn, t.ratingKey, t.durationMs
+	go func() {
+		ctx, cancel := context.WithTimeout(context.Background(), 10*time.Second)
+		defer cancel()
+		_ = h.Client.Timeline(ctx, conn, ratingKey, "playing", timeMs, durationMs)
+	}()
+}
+
+// rangeStart reads the first byte of a "Range: bytes=N-" request header, or
+// -1 when there's no usable Range (a plain GET from the start, or a
+// multi-range request DreamHub doesn't need to support here).
+func rangeStart(header string) int64 {
+	const prefix = "bytes="
+	if !strings.HasPrefix(header, prefix) {
+		return -1
+	}
+	first := strings.SplitN(strings.TrimPrefix(header, prefix), ",", 2)[0]
+	n, err := strconv.ParseInt(strings.SplitN(first, "-", 2)[0], 10, 64)
+	if err != nil {
+		return -1
+	}
+	return n
 }

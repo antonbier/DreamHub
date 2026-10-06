@@ -9,10 +9,25 @@
 # (SwitchService.py on the box, ARCHITECTURE.md). Registered through
 # WebInterface's addExternalChild, like AutoTimer's API, so it sits behind
 # the same login as /web/*. Only the backend on the same box calls it.
+#
+# Optional "t" parameter (milliseconds): resume where Plex left off (#30).
+# There is no API to start playback already seeked, so this opens the file
+# from the beginning and then seeks once the service's own seek interface
+# is ready — the same two-step dance CutListEditor's own resume-point
+# prompt does with a .ts.cuts file, just without a cuts file to read the
+# position from. Not yet confirmed on the box (no device access at the
+# time this was written) — if the service isn't seekable yet after the
+# delay below, the seek is silently skipped and the film just plays from
+# the start, same as before this existed.
 import json
 
-from enigma import eServiceReference
+from enigma import eServiceReference, eTimer
 from twisted.web import resource
+
+# How long to wait for the stream to open before seeking. Long enough for
+# DreamHub's own proxy and the Plex server to answer the first request;
+# too short and the seek lands before there's anything to seek in.
+_SEEK_DELAY_MS = 2500
 
 
 class PlayResource(resource.Resource):
@@ -29,6 +44,7 @@ class PlayResource(resource.Resource):
         request.setHeader("Content-Type", "application/json; charset=utf-8")
         ref = request.args.get("sRef", [""])[0]
         title = request.args.get("title", [""])[0]
+        start_ms = request.args.get("t", [""])[0]
         if not ref:
             request.setResponseCode(400)
             return json.dumps({"ok": False, "error": "sRef missing"})
@@ -46,7 +62,30 @@ class PlayResource(resource.Resource):
             # The movie player remembers the channel and goes back to it
             # when it's closed.
             self.session.open(MoviePlayer, eref)
+        if start_ms:
+            self._seekOnceReady(int(start_ms))
         return json.dumps({"ok": True})
+
+    def _seekOnceReady(self, start_ms):
+        timer = eTimer()
+
+        def seek():
+            # Keep the timer alive until it fires; dropping the only
+            # reference here would let it (and the callback) be collected
+            # first (PRINCIPLES.md: don't guess, so this is written
+            # defensively rather than assumed safe without a real device).
+            self._seekTimer = None
+            service = self.session.nav.getCurrentService()
+            if service is None:
+                return
+            seekable = service.seek()
+            if seekable is None:
+                return  # not every service (or not yet) supports seeking
+            seekable.seekTo(start_ms * 90)  # pts: a 90kHz clock
+
+        timer.callback.append(seek)
+        self._seekTimer = timer
+        timer.start(_SEEK_DELAY_MS, True)
 
 
 def register(session):

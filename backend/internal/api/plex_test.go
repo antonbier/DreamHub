@@ -1,15 +1,30 @@
 package api_test
 
 import (
+	"context"
 	"encoding/json"
 	"io"
 	"net/http"
 	"strings"
 	"testing"
+	"time"
 
 	plexmock "github.com/antonbier/DreamHub/backend/internal/plex/mock"
+	"github.com/antonbier/DreamHub/backend/internal/webcontrol"
 	"github.com/antonbier/DreamHub/backend/internal/webcontrol/mock"
 )
+
+// boxWithEPGTitle answers every EPGMulti call with a single broadcast of
+// the given title — enough to test GuideHub's "already in Plex" flag
+// (#32) without depending on the mock's fixed schedule fixtures.
+type boxWithEPGTitle struct {
+	*mock.Client
+	title string
+}
+
+func (b boxWithEPGTitle) EPGMulti(_ context.Context, _ string, start, end int64) ([]webcontrol.EPGEvent, error) {
+	return []webcontrol.EPGEvent{{Title: b.title, ServiceReference: "svc1", ServiceName: "Test TV", Start: start, Duration: 3600}}, nil
+}
 
 // connectPlex signs in through the plex.tv code flow against the mock and
 // picks the mock server's local address.
@@ -212,6 +227,98 @@ func TestPlex_PlayOnTheBox(t *testing.T) {
 		t.Errorf("an unknown ticket: %d", res.StatusCode)
 	}
 	res.Body.Close()
+}
+
+func TestPlex_ResumeAndChooseVersionOrPart(t *testing.T) {
+	box := mock.New()
+	e := newEnvWith(t, box)
+	connectPlex(t, e)
+
+	// "Das Boot" (101) is already fully watched, offset 0: no resume.
+	resp, b := e.do(t, "POST", "/api/v1/plex/items/101/play", "", nil)
+	if resp.StatusCode != http.StatusOK {
+		t.Fatalf("play: %d %s", resp.StatusCode, b)
+	}
+	if box.LastPlayStartMs != 0 {
+		t.Errorf("a finished film doesn't resume: got %d", box.LastPlayStartMs)
+	}
+
+	// "Lola rennt" (102) was stopped 30 minutes in: resume there (#30).
+	resp, b = e.do(t, "POST", "/api/v1/plex/items/102/play", "", nil)
+	if resp.StatusCode != http.StatusOK {
+		t.Fatalf("play: %d %s", resp.StatusCode, b)
+	}
+	if box.LastPlayStartMs != 1_800_000 {
+		t.Errorf("resume at the item's viewOffset: got %d", box.LastPlayStartMs)
+	}
+
+	// There's only one version and one part fixtures-wise; asking for a
+	// version or part that doesn't exist is rejected, not a panic.
+	resp, b = e.do(t, "POST", "/api/v1/plex/items/101/play", `{"media":1,"part":0}`, nil)
+	if code, _, _ := errCode(t, b); resp.StatusCode != http.StatusConflict || code != "plex_no_file" {
+		t.Errorf("no such version: %d %s", resp.StatusCode, b)
+	}
+	resp, b = e.do(t, "POST", "/api/v1/plex/items/101/play", `{"media":0,"part":5}`, nil)
+	if code, _, _ := errCode(t, b); resp.StatusCode != http.StatusConflict || code != "plex_no_file" {
+		t.Errorf("no such part: %d %s", resp.StatusCode, b)
+	}
+}
+
+func TestPlex_StreamReportsProgressToPlex(t *testing.T) {
+	box := mock.New()
+	e := newEnvWith(t, box)
+	connectPlex(t, e)
+
+	resp, b := e.do(t, "POST", "/api/v1/plex/items/101/play", "", nil)
+	if resp.StatusCode != http.StatusOK {
+		t.Fatalf("play: %d %s", resp.StatusCode, b)
+	}
+	ref := box.LastZapped
+	const prefix = "4097:0:1:0:0:0:0:0:0:0:http%3a//127.0.0.1%3a8080/api/v1/plex/stream/"
+	streamPath := "/api/v1/plex/stream/" + strings.TrimSuffix(strings.TrimPrefix(ref, prefix), ":Das Boot")
+
+	req, _ := http.NewRequest("GET", e.srv.URL+streamPath, nil)
+	req.Header.Set("Range", "bytes=2100000000-") // halfway through the 4.2 GB fixture file
+	res, err := http.DefaultClient.Do(req)
+	if err != nil {
+		t.Fatal(err)
+	}
+	res.Body.Close()
+
+	deadline := time.Now().Add(2 * time.Second)
+	for len(e.plex.Timelines) == 0 && time.Now().Before(deadline) {
+		time.Sleep(10 * time.Millisecond)
+	}
+	if len(e.plex.Timelines) != 1 {
+		t.Fatalf("one Timeline call for the Range request: %+v", e.plex.Timelines)
+	}
+	tl := e.plex.Timelines[0]
+	if tl.RatingKey != "101" || tl.State != "playing" || tl.DurationMs != 149*60000 {
+		t.Errorf("timeline call: %+v", tl)
+	}
+	// Half the 4.2 GB file ≈ half the 149-minute duration.
+	if tl.TimeMs < 70*60000 || tl.TimeMs > 76*60000 {
+		t.Errorf("approximate position from the byte offset: %+v", tl)
+	}
+}
+
+func TestPlex_AlreadyInPlexFlagsBroadcasts(t *testing.T) {
+	box := boxWithEPGTitle{Client: mock.New(), title: "Das Boot"} // exact title of fixture 101
+	e := newEnvWith(t, box)
+	connectPlex(t, e)
+
+	resp, b := e.do(t, "GET", "/api/v1/guide/grid?bouquet=x&start=0&end=999999999999", "", nil)
+	if resp.StatusCode != http.StatusOK || !strings.Contains(string(b), `"title":"Das Boot"`) || !strings.Contains(string(b), `"inPlex":true`) {
+		t.Errorf("a broadcast matching a Plex film's title is flagged: %s", b)
+	}
+
+	box2 := boxWithEPGTitle{Client: mock.New(), title: "Not In Plex"}
+	e2 := newEnvWith(t, box2)
+	connectPlex(t, e2)
+	resp, b = e2.do(t, "GET", "/api/v1/guide/grid?bouquet=x&start=0&end=999999999999", "", nil)
+	if resp.StatusCode != http.StatusOK || strings.Contains(string(b), `"inPlex"`) {
+		t.Errorf("no match, no flag at all (omitempty): %s", b)
+	}
 }
 
 func TestPlex_ChooseLibraries(t *testing.T) {

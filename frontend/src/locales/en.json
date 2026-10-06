@@ -556,6 +556,7 @@
     "confirm": "Confirm",
     "cancel": "Cancel",
     "created": "Timer created",
+    "inPlex": "Already in Plex",
     "taste": {
       "use": "Take my taste into account",
       "show": "What gets sent?",
@@ -1349,10 +1350,12 @@
     "playOnBox": "Play on the box",
     "starting": "Starting …",
     "nowPlaying": "Now playing on the box: {title}",
-    "playHint": "The box plays the file straight from the Plex server in its movie player, from the start. Whether it can depends on the box’s decoders.",
+    "playHint": "The box plays the file straight from the Plex server in its movie player, resuming where you left off. Whether it can depends on the box’s decoders.",
     "offlineAction": "Plex is offline – playing and marking work again once the server answers.",
     "noSummary": "No description.",
     "file": "File",
+    "version": "Version",
+    "part": "Part",
     "open": "Open {title}",
     "openWatched": "Open {title} (watched)"
   }

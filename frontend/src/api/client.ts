@@ -395,7 +395,11 @@ export const api = {
     // A series or season: a preview, applied through plans.apply.
     watchedPlan: (key: string, watched: boolean) =>
       request<{ plan: Plan }>('POST', `/api/v1/plex/items/${encodeURIComponent(key)}/watched/plan`, { watched }),
-    play: (key: string) => request<{ playing: string }>('POST', `/api/v1/plex/items/${encodeURIComponent(key)}/play`),
+    // media/part pick a version/part other than the first (#31: a film in
+    // several versions or parts); omitted, the backend plays the first of
+    // each, as before.
+    play: (key: string, choice?: { media: number; part: number }) =>
+      request<{ playing: string }>('POST', `/api/v1/plex/items/${encodeURIComponent(key)}/play`, choice),
     login: {
       start: () => request<PlexPin>('POST', '/api/v1/plex/login'),
       check: (id: number) =>

@@ -50,13 +50,30 @@
         </div>
         <p v-if="formats" class="mt-3 text-[12.5px] text-faint">{{ t('plex.file') }}: {{ formats }}</p>
 
+        <!-- A film in several versions or parts (#31): pick before playing;
+             one version/part, this never shows and play() gets {0,0}. -->
+        <div v-if="hasChoice" class="mt-3 flex flex-wrap gap-3 text-[13px]">
+          <label v-if="versions.length > 1" class="flex items-center gap-1.5 text-muted">
+            {{ t('plex.version') }}
+            <select v-model.number="mediaIndex" class="rounded border border-line bg-tile-2 px-1.5 py-0.5 text-text">
+              <option v-for="(m, i) in versions" :key="i" :value="i">{{ versionLabel(m) }}</option>
+            </select>
+          </label>
+          <label v-if="parts.length > 1" class="flex items-center gap-1.5 text-muted">
+            {{ t('plex.part') }}
+            <select v-model.number="partIndex" class="rounded border border-line bg-tile-2 px-1.5 py-0.5 text-text">
+              <option v-for="(_, i) in parts" :key="i" :value="i">{{ i + 1 }}</option>
+            </select>
+          </label>
+        </div>
+
         <div class="mt-5 flex flex-wrap items-center gap-3">
           <button
             v-if="canPlay"
             type="button"
             class="rounded bg-accent px-3.5 py-1.5 text-[13.5px] font-semibold text-bg disabled:opacity-60"
             :disabled="!online || playing"
-            @click="$emit('play')"
+            @click="$emit('play', { media: mediaIndex, part: partIndex })"
           >
             {{ playing ? t('plex.starting') : t('plex.playOnBox') }}
           </button>
@@ -78,12 +95,12 @@
 </template>
 
 <script setup lang="ts">
-import { computed, onBeforeUnmount, onMounted, ref } from 'vue'
+import { computed, onBeforeUnmount, onMounted, ref, watch } from 'vue'
 import { useI18n } from 'vue-i18n'
 import PosterImage from '@/components/enrich/PosterImage.vue'
 import { useFocusTrap } from '@/composables/useFocusTrap'
 import { usePlexText } from '@/composables/usePlexText'
-import type { PlexItem } from '@/api/types'
+import type { PlexItem, PlexMedia } from '@/api/types'
 
 const props = defineProps<{
   item: PlexItem
@@ -93,7 +110,7 @@ const props = defineProps<{
   playing?: boolean
   error?: string
 }>()
-const emit = defineEmits<{ close: []; play: []; toggleWatched: [] }>()
+const emit = defineEmits<{ close: []; play: [choice: { media: number; part: number }]; toggleWatched: [] }>()
 const { t } = useI18n()
 const text = usePlexText()
 
@@ -106,7 +123,28 @@ const line = computed(() =>
   ].filter(Boolean),
 )
 const progress = computed(() => text.progress(props.item))
-const formats = computed(() => text.formats(props.item.media?.[0]))
+
+// Version/part choice (#31).
+const versions = computed(() => props.item.media ?? [])
+const mediaIndex = ref(0)
+const parts = computed(() => versions.value[mediaIndex.value]?.parts ?? [])
+const partIndex = ref(0)
+const hasChoice = computed(() => versions.value.length > 1 || parts.value.length > 1)
+watch(mediaIndex, () => {
+  partIndex.value = 0
+})
+watch(
+  () => props.item.ratingKey,
+  () => {
+    mediaIndex.value = 0
+    partIndex.value = 0
+  },
+)
+function versionLabel(m: PlexMedia): string {
+  return text.formats(m) || t('plex.version')
+}
+
+const formats = computed(() => text.formats(versions.value[mediaIndex.value]))
 
 const closeButton = ref<HTMLButtonElement | null>(null)
 const dialogEl = ref<HTMLElement | null>(null)

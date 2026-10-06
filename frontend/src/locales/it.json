@@ -556,6 +556,7 @@
     "confirm": "Conferma",
     "cancel": "Annulla",
     "created": "Timer creato",
+    "inPlex": "Già in Plex",
     "taste": {
       "use": "Tieni conto dei miei gusti",
       "show": "Cosa viene inviato?",
@@ -1349,10 +1350,12 @@
     "playOnBox": "Riproduci sul box",
     "starting": "Avvio …",
     "nowPlaying": "In riproduzione sul box: {title}",
-    "playHint": "Il box riproduce il file direttamente dal server Plex nel suo lettore film, dall’inizio. Se ci riesce dipende dai decoder del box.",
+    "playHint": "Il box riproduce il file direttamente dal server Plex nel suo lettore film, riprendendo da dove si era interrotto. Se ci riesce dipende dai decoder del box.",
     "offlineAction": "Plex è offline – riproduzione e segnatura tornano disponibili quando il server risponde.",
     "noSummary": "Nessuna descrizione.",
     "file": "File",
+    "version": "Versione",
+    "part": "Parte",
     "open": "Apri {title}",
     "openWatched": "Apri {title} (visto)"
   }

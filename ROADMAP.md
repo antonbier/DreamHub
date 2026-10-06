@@ -7,7 +7,7 @@ Releases: **Foundation** → **v1** → **v1.1** → **Later**. GitHub milestone
 ## Phase 0 — Spikes (done)
 
 - [x] **Bouquet editing** — don't reimplement. The existing BouquetEditor webif plugin already provides a complete UI and its own API (`/bouqueteditor/*`, see `ARCHITECTURE.md`).
-- [x] **Hardware transcoding** — confirmed unavailable on this hardware.
+- [x] **Hardware transcoding** — not available: the S922X has an H.264 encoder and the kernel loads its driver, but nothing in the image can use it (re-checked 2026-10-06, ARCHITECTURE.md). StreamHub decodes in the browser instead (spike 2026-10-06).
 - [x] **ffmpeg availability** — available via the standard feed (package `ffmpeg`; the box uses `apt`/`dpkg`, not opkg). Declare it as a `.deb` dependency rather than assuming it's preinstalled.
 - [x] **Enigma2 language mechanism** — `PluginLanguageDomain`/`PluginLanguagePath` + `gettext.bindtextdomain()` + `language.addCallback()`, `.po`→`.mo` via `msgfmt`. Reference: [`opendreambox/enigma2-plugins`](https://github.com/opendreambox/enigma2-plugins), [`opendreambox/enigma2-po`](https://github.com/opendreambox/enigma2-po).
 - [x] **Recording sidecar files** — confirmed on-device: `.ts`, `.ts.meta`, `.ts.ap`, `.ts.sc`, `.ts.cuts`, `.eit`.
@@ -353,9 +353,11 @@ Pulled forward from v1.1 (`CONCEPT.md`, `docs/V1_PLAN.md`): verifying the Enigma
 ## Later
 
 ### StreamHub
-- No software transcoding (no hardware encoder; CPU transcoding is too heavy).
-- Browsers don't play raw MPEG-TS natively — needs a library (e.g. mpegts.js) or a remux to HLS/fMP4. On top of that: AC3 audio isn't playable in HTML5 `<video>`, and some channels use HEVC, which browser support covers only partially.
-- Fallback for anything the browser can't play: "open in VLC" (`.m3u` link to the native app).
+- No transcoding on the box (its hardware encoder isn't usable in this image, the CPU is too weak — ARCHITECTURE.md, "Hardware encoder").
+- Browsers don't play raw MPEG-TS natively, nor MPEG-2 video (SD channels), MP2 or (mostly) AC3 audio.
+- **Approach (spike 2026-10-06, [`spikes/streamhub-player/`](spikes/streamhub-player/README.md))**: the browser decodes. The box passes the stream through unchanged; FFmpeg in WebAssembly (libav.js, an own build with the DVB codecs, 2 MB) demuxes and decodes MPEG-2 and the audio, H.264 goes to the device's hardware through WebCodecs. Measured on the development machine: SD MPEG-2 4 ms per frame (of 40), HD H.264 even in software 13 ms (of 20), audio and video within 20 ms of each other; a recording streamed from the box starts in under a second. Works with any box that streams — the box does no work
+- [ ] Phones (MPEG-2 in WebAssembly on a mid-range phone), deinterlacing for SD, live specifics (channel change, audio track choice, tuner use), recordings in MediaHub ("watch in the browser"), the threaded build if needed (#34)
+- Fallback for anything the browser can't play (HEVC without a device decoder): "open in VLC" (`.m3u` link to the native app).
 - No browser-plugin embedding (NPAPI VLC and Chrome's "VXG" are dead).
 
 ### AutomationHub

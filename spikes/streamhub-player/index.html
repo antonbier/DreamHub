@@ -1,0 +1,25 @@
+<!doctype html>
+<meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<title>TS player spike</title>
+<style>body{background:#111;color:#ddd;font:14px system-ui;margin:16px}canvas{max-width:100%;background:#000;display:block}pre{font-size:12px}</style>
+<p><select id="src"><option>sd-rtl.ts</option><option>hd-zdf.ts</option></select>
+<label><input type="checkbox" id="nowc"> no WebCodecs</label> <button id="go">Play</button></p>
+<canvas id="c" width="720" height="405"></canvas>
+<pre id="s"></pre>
+<script type="module">
+import { play, stats } from './player.js';
+window.stats = stats;
+const q = new URLSearchParams(location.search);
+async function go(src) {
+  window.player = await play(src.startsWith('/box') ? src : 'samples/' + src, document.getElementById('c'), { noWebCodecs: document.getElementById('nowc').checked || q.has('nowc'), audioPref: q.get('audio') ? [q.get('audio')] : undefined });
+}
+document.getElementById('go').onclick = () => go(document.getElementById('src').value);
+if (q.get('src')) go(q.get('src')).catch((e) => stats.errors.push(e.message));
+setInterval(() => {
+  const s = { ...stats };
+  s.wallSeconds = s.startedAt ? ((performance.now() - s.startedAt) / 1000).toFixed(1) : 0;
+  s.fps = s.startedAt ? (s.shownFrames / ((performance.now() - s.startedAt) / 1000)).toFixed(1) : 0;
+  s.msPerDecodedFrame = s.videoDecodeCalls ? (s.videoDecodeMs / s.videoDecodeCalls).toFixed(2) : '-';
+  document.getElementById('s').textContent = JSON.stringify(s, null, 1);
+}, 500);
+</script>

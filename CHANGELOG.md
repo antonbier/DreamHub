@@ -6,6 +6,8 @@ Format follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/); version
 
 ## [Unreleased]
 
+## [0.1.9] - not released yet (built 2026-10-06, waiting for a test on the box)
+
 ### Added
 - **Live TV** (StreamHub): TV channels and recordings right in the browser, on phones too, with no app. The box sends its stream unchanged — it can't convert anything — and the browser decodes it: FFmpeg compiled to WebAssembly for MPEG-2 video (SD channels) and MP2/AC3/AAC sound, the device's own decoder (WebCodecs) for H.264. Channel list with what's on, "Same as the TV", audio track choice, volume, full screen. A channel that needs the box's only tuner while it's busy elsewhere says so. In Recordings, "Watch in the browser" plays a recording with a seek bar.
 - TV guide: "Watch in the browser" for a programme that's on now. Dashboard: an optional tile "Live TV" with your channels, one click to watch (switch it on in edit mode).

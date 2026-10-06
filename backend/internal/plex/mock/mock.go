@@ -297,6 +297,15 @@ func (c *Client) Timeline(_ context.Context, conn plex.Conn, ratingKey, state st
 	return nil
 }
 
+// TimelineSnapshot copies Timelines under the lock — Timeline calls run in
+// their own goroutine (internal/hubs/plex_play.go's reportProgress), so a
+// test reading the field directly races with it.
+func (c *Client) TimelineSnapshot() []TimelineCall {
+	c.mu.Lock()
+	defer c.mu.Unlock()
+	return append([]TimelineCall(nil), c.Timelines...)
+}
+
 func (c *Client) CreatePin(context.Context, string) (plex.Pin, error) {
 	c.mu.Lock()
 	c.pinCalls = 0

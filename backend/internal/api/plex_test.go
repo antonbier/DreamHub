@@ -286,13 +286,18 @@ func TestPlex_StreamReportsProgressToPlex(t *testing.T) {
 	res.Body.Close()
 
 	deadline := time.Now().Add(2 * time.Second)
-	for len(e.plex.Timelines) == 0 && time.Now().Before(deadline) {
+	var calls []plexmock.TimelineCall
+	for {
+		calls = e.plex.TimelineSnapshot()
+		if len(calls) != 0 || !time.Now().Before(deadline) {
+			break
+		}
 		time.Sleep(10 * time.Millisecond)
 	}
-	if len(e.plex.Timelines) != 1 {
-		t.Fatalf("one Timeline call for the Range request: %+v", e.plex.Timelines)
+	if len(calls) != 1 {
+		t.Fatalf("one Timeline call for the Range request: %+v", calls)
 	}
-	tl := e.plex.Timelines[0]
+	tl := calls[0]
 	if tl.RatingKey != "101" || tl.State != "playing" || tl.DurationMs != 149*60000 {
 		t.Errorf("timeline call: %+v", tl)
 	}

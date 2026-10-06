@@ -1224,7 +1224,7 @@
     "retrying": "Versuche…"
   },
   "radio": {
-    "intro": "Radio läuft über die Box – auf dem Fernseher oder was daran angeschlossen ist.",
+    "intro": "Radio über die Box – am Fernseher oder was daran angeschlossen ist – oder mit dem Lautsprecher-Knopf direkt im Browser.",
     "bouquet": "Bouquet",
     "find": "Sender suchen",
     "empty": "Keine Radiosender in diesem Bouquet.",
@@ -1240,7 +1240,10 @@
       "manage": "Alle Timer",
       "running": "nimmt auf"
     },
-    "allStations": "Alle Radiosender"
+    "allStations": "Alle Radiosender",
+    "listen": "{station} im Browser hören",
+    "inBrowser": "Im Browser",
+    "noTuner": "Die Box liefert diesen Sender gerade nicht – vermutlich ist der Tuner auf einer anderen Frequenz belegt."
   },
   "stream": {
     "intro": "Fernsehen und Aufnahmen direkt im Browser – die Box schickt ihr Signal unverändert, dein Gerät dekodiert es.",

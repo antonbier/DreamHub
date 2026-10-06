@@ -2,9 +2,9 @@
   RadioHub (/radio): the box's radio stations with what's on now and next,
   the station the box is playing on top, and the radio recordings coming
   up. "Play on the box" is ControlHub's zap — a live input like the remote,
-  not a plan — and listening happens through the box: playback in the
-  browser belongs to StreamHub (radio is often MP2, which browsers don't
-  play reliably). A programme opens the shared ProgrammeDialog (no film
+  not a plan. Listening in the browser uses StreamHub's player (the box's
+  stream, decoded here — radio is mostly MP2, which browsers don't play
+  themselves), offered while StreamHub is there. A programme opens the shared ProgrammeDialog (no film
   details to look up: plain) with the EPG text and Record, through
   TimerHub's plan/apply like everywhere else.
 
@@ -62,6 +62,30 @@
             </div>
             <div class="mt-1 text-end text-[12px] tabular-nums text-faint">{{ range(playingStation.now) }}</div>
           </div>
+        </section>
+
+        <!-- Listening in the browser (StreamHub's player, sound only). -->
+        <section v-if="listening" class="mt-5 flex flex-wrap items-center gap-3 rounded border border-accent bg-tile p-3" :aria-label="t('radio.inBrowser')">
+          <ChannelLogo source="radio" :service-reference="listening" :service-name="listeningStation?.serviceName ?? ''" :height="28" />
+          <div class="min-w-0 flex-1" aria-live="polite">
+            <div class="text-[12px] text-faint">{{ t('radio.inBrowser') }}</div>
+            <div class="truncate text-[14.5px] font-semibold text-text">{{ listeningStation?.serviceName ?? listening }}</div>
+            <div v-if="listenState === 'loading'" class="text-[12.5px] text-muted">{{ t('stream.loading') }}</div>
+            <div v-else-if="listenState === 'error'" class="text-[12.5px] text-warn">{{ listenErrorText }}</div>
+            <div v-else-if="listeningStation?.now" class="truncate text-[12.5px] text-muted">{{ listeningStation.now.title }}</div>
+          </div>
+          <input
+            type="range"
+            min="0"
+            max="100"
+            :value="Math.round(listenVolume * 100)"
+            class="h-1 w-28 accent-[var(--dh-accent)]"
+            :aria-label="t('stream.volume')"
+            @input="setListenVolume(($event.target as HTMLInputElement).valueAsNumber / 100)"
+          />
+          <button type="button" class="rounded border border-line px-2.5 py-1 text-[12.5px] text-text hover:bg-field" @click="stopListening">
+            {{ t('stream.stop') }}
+          </button>
         </section>
 
         <div class="mt-5 flex flex-wrap items-center gap-3">
@@ -135,6 +159,17 @@
               @click="play(st.serviceReference)"
             >
               {{ t('radio.play') }}
+            </button>
+            <button
+              v-if="streamHubOn"
+              type="button"
+              class="flex h-7 w-7 shrink-0 items-center justify-center rounded border border-line text-text hover:bg-field"
+              :class="{ 'border-accent text-accent': listening === st.serviceReference }"
+              :aria-label="t('radio.listen', { station: st.serviceName })"
+              :aria-pressed="listening === st.serviceReference"
+              @click="listening === st.serviceReference ? stopListening() : listen(st.serviceReference)"
+            >
+              <Icon :name="listening === st.serviceReference ? 'stop' : 'volume-up'" :size="14" />
             </button>
           </li>
         </ul>
@@ -228,7 +263,7 @@
 import { computed, nextTick, onBeforeUnmount, onMounted, ref, watch } from 'vue'
 import { useI18n } from 'vue-i18n'
 import { RouterLink, useRoute } from 'vue-router'
-import { api } from '@/api/client'
+import { api, ApiError } from '@/api/client'
 import Icon from '@/components/Icon.vue'
 import PlanPreview from '@/components/PlanPreview.vue'
 import ProgrammeDialog from '@/components/programme/ProgrammeDialog.vue'
@@ -238,6 +273,7 @@ import { useNavigationStore } from '@/stores/navigation'
 import { useProblem } from '@/composables/useProblem'
 import { useDisplayTimeZone } from '@/composables/useDisplayTimeZone'
 import { formatWhen } from '@/lib/format'
+import { TsPlayer, type PlayerState } from '@/streaming/tsPlayer'
 import type { Bouquet, EPGEvent, NowNext, Plan, Timer } from '@/api/types'
 
 const BOUQUET_KEY = 'dreamhub.radioBouquet'
@@ -401,6 +437,69 @@ const ticker = setInterval(() => {
   if (stations.value.some((s) => s.now && s.now.start + s.now.duration <= nowSec.value)) void loadStations()
 }, 30_000)
 onBeforeUnmount(() => clearInterval(ticker))
+
+// --- listen in the browser (StreamHub's player) ---------------------------
+// The box's radio stream, unchanged, decoded here (MP2 mostly); offered
+// while StreamHub is there, whose endpoint it uses. Needs a tuner like
+// any stream: "same as the box" always works.
+
+const streamHubOn = computed(() => {
+  const s = navItems.value.find((i) => i.id === 'stream')
+  return !!s && s.status !== 'unavailable'
+})
+const listening = ref('')
+const listenState = ref<PlayerState | 'idle'>('idle')
+const listenError = ref<Error | null>(null)
+const listeningStation = computed(() => stations.value.find((s) => s.serviceReference === listening.value) ?? null)
+const VOLUME_KEY = 'dreamhub.streamVolume'
+const listenVolume = ref(readVolume())
+function readVolume() {
+  try {
+    const v = Number(localStorage.getItem(VOLUME_KEY) ?? '1')
+    return Number.isFinite(v) ? Math.min(1, Math.max(0, v)) : 1
+  } catch {
+    return 1
+  }
+}
+let radioPlayer: TsPlayer | null = null
+function listen(ref_: string) {
+  radioPlayer?.stop()
+  listening.value = ref_
+  listenError.value = null
+  // Sound only: the player draws nowhere visible.
+  const p = new TsPlayer(document.createElement('canvas'), {
+    state: (st, err) => {
+      if (radioPlayer !== p) return
+      listenState.value = st
+      if (err) listenError.value = err
+    },
+  })
+  radioPlayer = p
+  p.setVolume(listenVolume.value)
+  void p.play({ kind: 'live', ref: ref_ })
+}
+function stopListening() {
+  radioPlayer?.stop()
+  radioPlayer = null
+  listening.value = ''
+  listenState.value = 'idle'
+}
+function setListenVolume(v: number) {
+  listenVolume.value = v
+  radioPlayer?.setVolume(v)
+  try {
+    localStorage.setItem(VOLUME_KEY, String(v))
+  } catch {
+    /* not remembered */
+  }
+}
+const listenErrorText = computed(() => {
+  const e = listenError.value
+  if (e instanceof ApiError && e.code === 'stream_no_tuner') return t('radio.noTuner')
+  if (e instanceof ApiError && e.code === 'stream_busy') return t('stream.error.busy')
+  return t('stream.error.generic')
+})
+onBeforeUnmount(() => radioPlayer?.stop())
 
 // --- play on the box (ControlHub's zap) ------------------------------------
 

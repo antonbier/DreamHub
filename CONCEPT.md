@@ -57,7 +57,7 @@ From the requirements the core derives each hub's **status**: *available*, *degr
 | **RadioHub** | Radio services, now playing, radio timers | v1.1 (built early, 2026-10-04) |
 | **PlexHub** ("Plex Mediathek") | A Plex server's films and series (tiles or list), watched state in Plex, play on the box — optional, cached while the server is off | built early, 2026-10-05 |
 | **ChannelHub** | Bouquets (link/embed the existing BouquetEditor plugin), picons | v1.1 |
-| **StreamHub** ("Live-TV") | Live TV and recordings in the browser: the box streams unchanged, the browser decodes (FFmpeg in WebAssembly, WebCodecs) | built early, 2026-10-06 — radio still to come |
+| **StreamHub** ("Live-TV") | Live TV and recordings in the browser: the box streams unchanged, the browser decodes (FFmpeg in WebAssembly, WebCodecs) | built early, 2026-10-06, radio included (RadioHub's speaker button) |
 | **AutomationHub** | Scripts, webhooks, automations — the only place anything happens automatically | later |
 
 Notes that affect several hubs:

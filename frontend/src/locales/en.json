@@ -1224,7 +1224,7 @@
     "retrying": "Trying…"
   },
   "radio": {
-    "intro": "Radio plays through the box — on your TV or whatever it's connected to.",
+    "intro": "Radio through the box — on your TV or whatever it's connected to — or, with the speaker button, right in the browser.",
     "bouquet": "Bouquet",
     "find": "Find a station",
     "empty": "No radio stations in this bouquet.",
@@ -1240,7 +1240,10 @@
       "manage": "All timers",
       "running": "recording"
     },
-    "allStations": "All radio stations"
+    "allStations": "All radio stations",
+    "listen": "Listen to {station} in the browser",
+    "inBrowser": "In the browser",
+    "noTuner": "The box isn't sending this station right now — the tuner is probably busy on another frequency."
   },
   "stream": {
     "intro": "TV and recordings right in the browser — the box sends its signal unchanged, your device decodes it.",

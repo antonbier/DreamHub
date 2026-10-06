@@ -141,7 +141,7 @@ Works in current Chrome, Edge, Firefox and Safari. HD channels use your device's
 
 ### Radio
 
-Your radio stations, with what's on now and next where the station sends programme information. **Play on the box** switches the box to that station — you listen on the TV or whatever is connected to it; the station playing is shown on top. Any programme opens its details with **Record**; the radio recordings coming up are listed at the bottom. Stations can also be found through the search at the top.
+Your radio stations, with what's on now and next where the station sends programme information. **Play on the box** switches the box to that station — you listen on the TV or whatever is connected to it; the station playing is shown on top. The **speaker button** plays a station right in the browser instead (like Live TV, it needs the tuner to be free or on the same frequency). Any programme opens its details with **Record**; the radio recordings coming up are listed at the bottom. Stations can also be found through the search at the top.
 
 ### Timers
 

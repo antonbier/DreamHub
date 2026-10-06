@@ -1224,7 +1224,7 @@
     "retrying": "Tentativo…"
   },
   "radio": {
-    "intro": "La radio suona tramite il box — sul televisore o su ciò che vi è collegato.",
+    "intro": "La radio tramite il box, sulla TV o su ciò che vi è collegato, oppure con il pulsante dell’altoparlante direttamente nel browser.",
     "bouquet": "Bouquet",
     "find": "Cerca un'emittente",
     "empty": "Nessuna emittente radio in questo bouquet.",
@@ -1240,7 +1240,10 @@
       "manage": "Tutti i timer",
       "running": "in registrazione"
     },
-    "allStations": "Tutte le emittenti radio"
+    "allStations": "Tutte le emittenti radio",
+    "listen": "Ascolta {station} nel browser",
+    "inBrowser": "Nel browser",
+    "noTuner": "Il box al momento non invia questa stazione: probabilmente il sintonizzatore è occupato su un’altra frequenza."
   },
   "stream": {
     "intro": "TV e registrazioni direttamente nel browser: il box invia il segnale così com’è, il tuo dispositivo lo decodifica.",

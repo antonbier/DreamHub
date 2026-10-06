@@ -248,3 +248,34 @@ func TestPlex_AnUnreadableAnswerIsNotOffline(t *testing.T) {
 		t.Errorf("after an unreadable answer: %d %s", resp.StatusCode, b)
 	}
 }
+
+func TestPlex_FailoverToAnotherAddress(t *testing.T) {
+	e := newEnv(t)
+	connectPlex(t, e)
+	_, b := e.do(t, "GET", "/api/v1/settings", "", nil)
+	if !strings.Contains(string(b), `"https://plex.example.org"`) {
+		t.Fatalf("sign-in saves the server's other addresses as fallbacks: %s", b)
+	}
+
+	// The chosen address stops answering (here: never did); the fallback is
+	// the same server.
+	resp, b := e.do(t, "PATCH", "/api/v1/settings", `{"values":{"plex.url":"https://plex.example.org","plex.fallbackUrls":"`+plexmock.URL+`"}}`, nil)
+	if resp.StatusCode != http.StatusOK {
+		t.Fatalf("settings: %d %s", resp.StatusCode, b)
+	}
+	if resp, b := e.do(t, "POST", "/api/v1/plex/sync", "", nil); resp.StatusCode != http.StatusOK {
+		t.Fatalf("sync through the fallback: %d %s", resp.StatusCode, b)
+	}
+	_, b = e.do(t, "GET", "/api/v1/plex/status", "", nil)
+	if !strings.Contains(string(b), `"online":true`) || !strings.Contains(string(b), `"url":"`+plexmock.URL+`"`) {
+		t.Errorf("online at the fallback: %s", b)
+	}
+	if films := e.plexItems(t, "1"); !films.Meta.Online || len(films.Items) != 6 {
+		t.Errorf("reads go to the fallback: %+v", films.Meta)
+	}
+
+	resp, b = e.do(t, "PATCH", "/api/v1/settings", `{"values":{"plex.fallbackUrls":"ftp://nope"}}`, nil)
+	if resp.StatusCode != http.StatusBadRequest {
+		t.Errorf("a fallback must be an http(s) address: %d %s", resp.StatusCode, b)
+	}
+}

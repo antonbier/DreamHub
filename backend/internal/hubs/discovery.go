@@ -2,6 +2,7 @@ package hubs
 
 import (
 	"net/http"
+	"sort"
 	"strings"
 	"time"
 
@@ -31,6 +32,9 @@ type Discovery struct {
 	Store    *store.Store
 	Settings *settings.Service
 	Now      func() time.Time
+	// Loc is the box's zone, for "the evening" (candidates); nil: the
+	// process's own, which on the box is the box's.
+	Loc *time.Location
 }
 
 // Mount registers DiscoveryHub's routes.
@@ -121,6 +125,7 @@ func (h *Discovery) generate(w http.ResponseWriter, r *http.Request) {
 			ServiceName: e.ServiceName, Start: e.Start, Duration: e.Duration,
 		})
 	}
+	items = candidates(items, ai.MaxItems, h.Loc)
 	var taste ai.Taste
 	if req.UseTaste {
 		taste = h.taste(ctx)
@@ -149,4 +154,60 @@ func (h *Discovery) generate(w http.ResponseWriter, r *http.Request) {
 		"recommendations": h.views(ctx, recs), "usedToday": used, "dailyLimit": limit, "taste": counts,
 		"bouquet": req.Bouquet, "generatedAt": saved.GeneratedAt,
 	})
+}
+
+// candidates picks at most n broadcasts for the model, fairly: the box
+// lists a bouquet's EPG channel by channel, so cutting the list at n
+// dropped the bouquet's last channels entirely. Instead the channels take
+// turns, and within a channel prime time (20:00–23:00 on the box's clock)
+// comes first, then the rest of the evening, then the day. The result is
+// in time order.
+func candidates(items []ai.EPGItem, n int, loc *time.Location) []ai.EPGItem {
+	if len(items) <= n {
+		return items
+	}
+	if loc == nil {
+		loc = time.Local
+	}
+	rank := func(it ai.EPGItem) int {
+		switch h := time.Unix(it.Start, 0).In(loc).Hour(); {
+		case h >= 20 && h < 23:
+			return 0
+		case h >= 18:
+			return 1
+		}
+		return 2
+	}
+	var order []string
+	byChannel := map[string][]ai.EPGItem{}
+	for _, it := range items {
+		if _, ok := byChannel[it.ServiceReference]; !ok {
+			order = append(order, it.ServiceReference)
+		}
+		byChannel[it.ServiceReference] = append(byChannel[it.ServiceReference], it)
+	}
+	for _, ch := range order {
+		list := byChannel[ch]
+		sort.SliceStable(list, func(i, j int) bool {
+			if ri, rj := rank(list[i]), rank(list[j]); ri != rj {
+				return ri < rj
+			}
+			return list[i].Start < list[j].Start
+		})
+	}
+	out := make([]ai.EPGItem, 0, n)
+	for round := 0; len(out) < n; round++ {
+		added := false
+		for _, ch := range order {
+			if list := byChannel[ch]; round < len(list) && len(out) < n {
+				out = append(out, list[round])
+				added = true
+			}
+		}
+		if !added {
+			break
+		}
+	}
+	sort.SliceStable(out, func(i, j int) bool { return out[i].Start < out[j].Start })
+	return out
 }

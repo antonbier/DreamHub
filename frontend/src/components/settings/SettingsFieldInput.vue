@@ -81,6 +81,9 @@
       <p v-else-if="field.key === 'plex.url'" class="mt-1 text-[12.5px] text-faint">
         {{ t('settings.page.plexUrlHint') }}
       </p>
+      <p v-else-if="field.key === 'plex.fallbackUrls'" class="mt-1 text-[12.5px] text-faint">
+        {{ t('settings.page.plexFallbackUrlsHint') }}
+      </p>
       <p v-else-if="field.key.startsWith('media.naming.folder')" class="mt-1 text-[12.5px] text-faint">
         {{ t('settings.page.folderHint') }}
       </p>

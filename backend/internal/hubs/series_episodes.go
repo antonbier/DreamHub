@@ -44,11 +44,18 @@ const (
 )
 
 type episodeGuide struct {
-	State     string        `json:"state"`
-	Source    string        `json:"source,omitempty"` // "tvmaze"
-	ShowName  string        `json:"showName,omitempty"`
-	Matchable bool          `json:"matchable"`
-	Seasons   []guideSeason `json:"seasons"`
+	State     string `json:"state"`
+	Source    string `json:"source,omitempty"` // "tvmaze"
+	ShowName  string `json:"showName,omitempty"`
+	Matchable bool   `json:"matchable"`
+	// Absolute: matched by absolute episode number (absoluteNumbering) —
+	// SerienRecorder's S00E8610 is TVmaze's episode 8610, whatever season
+	// TVmaze files it under.
+	Absolute bool          `json:"absolute,omitempty"`
+	Seasons  []guideSeason `json:"seasons"`
+
+	absFrom  int            // the lowest recorded absolute number
+	absNames map[string]int // normalized episode title → absolute number
 }
 
 type guideSeason struct {
@@ -119,6 +126,23 @@ func (h *Series) episodeGuide(ctx context.Context, m serienrecorder.Marker, star
 			break
 		}
 	}
+	if !g.Matchable {
+		if from, ok := absoluteNumbering(eps, recs); ok {
+			g.Matchable, g.Absolute, g.absFrom = true, true, from
+			g.absNames = map[string]int{}
+			for _, e := range eps {
+				if n := titles.Normalize(e.Name); n != "" && e.Number > 0 {
+					g.absNames[n] = e.Number
+				}
+			}
+		}
+	}
+	key := func(e tvmaze.Episode) se {
+		if g.Absolute {
+			return se{0, e.Number}
+		}
+		return se{e.Season, e.Number}
+	}
 	planned := map[se]bool{}
 	for _, u := range upcoming {
 		s, err1 := strconv.Atoi(u.Season)
@@ -134,14 +158,14 @@ func (h *Series) episodeGuide(ctx context.Context, m serienrecorder.Marker, star
 	for _, e := range eps {
 		ge := guideEpisode{Season: e.Season, Number: e.Number, Name: e.Name, Airdate: e.Airdate, Airstamp: e.Airstamp}
 		aired := (e.Airstamp > 0 && e.Airstamp <= now.Unix()) || (e.Airstamp == 0 && e.Airdate != "" && e.Airdate <= today)
-		switch k := (se{e.Season, e.Number}); {
+		switch k := key(e); {
 		case recorded[k]:
 			ge.Status = EpisodeRecorded
 		case planned[k]:
 			ge.Status = EpisodePlanned
 		case !aired:
 			ge.Status = EpisodeUpcoming
-		case g.Matchable:
+		case g.Matchable && (!g.Absolute || e.Number >= g.absFrom):
 			ge.Status = EpisodeMissing
 		default:
 			ge.Status = EpisodeAired
@@ -169,6 +193,57 @@ func (h *Series) episodeGuide(ctx context.Context, m serienrecorder.Marker, star
 	}
 	sort.Slice(g.Seasons, func(i, j int) bool { return g.Seasons[i].Season > g.Seasons[j].Season }) // newest first
 	return g
+}
+
+// absoluteNumbering tells whether SerienRecorder numbers the series
+// absolutely (S00E8610) the way TVmaze counts its episodes: TVmaze files a
+// daily soap under years ("2026") but keeps counting (8610) — confirmed for
+// "Gute Zeiten, schlechte Zeiten" on the reference box. Two signals have to
+// agree: TVmaze's numbers are unique across its seasons, and a recording's
+// number carries the same episode title on TVmaze. It also returns the
+// lowest recorded number: episodes before it aired before the user started
+// recording the series — not missing, just not theirs.
+func absoluteNumbering(eps []tvmaze.Episode, recs []seriesRecording) (int, bool) {
+	byNumber := map[int]string{}
+	for _, e := range eps {
+		if e.Number <= 0 {
+			continue
+		}
+		if _, dup := byNumber[e.Number]; dup {
+			return 0, false
+		}
+		byNumber[e.Number] = titles.Normalize(e.Name)
+	}
+	from, agree := 0, false
+	for _, r := range recs {
+		if r.Season != 0 || r.Episode <= 0 {
+			continue
+		}
+		if from == 0 || r.Episode < from {
+			from = r.Episode
+		}
+		if name := byNumber[r.Episode]; name != "" && name == titles.Normalize(recordingEpisodeTitle(r)) {
+			agree = true
+		}
+	}
+	return from, agree
+}
+
+// recordingEpisodeTitle is the episode title after a recording's code, as
+// SerienRecorder writes it ("S00E8610 - Gefährliche Anziehung"), "" when
+// there's no code.
+func recordingEpisodeTitle(r seriesRecording) string {
+	for _, s := range []string{r.Description, r.Title} {
+		loc := episodeCode.FindStringIndex(s)
+		if loc == nil {
+			continue
+		}
+		rest, _, _ := strings.Cut(s[loc[1]:], "\n")
+		if rest = strings.TrimSpace(strings.TrimLeft(strings.TrimSpace(rest), "-–:")); rest != "" {
+			return rest
+		}
+	}
+	return ""
 }
 
 // findShow looks the series up on TVmaze by name — an exact (normalized)

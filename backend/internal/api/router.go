@@ -32,7 +32,7 @@ import (
 
 // Version is DreamHub's own version, following SemVer per PRINCIPLES.md.
 // Reported by /api/v1/health so the Enigma2 plugin can detect a mismatch.
-const Version = "0.1.7"
+const Version = "0.1.8"
 
 // Mount is a hub's set of routes. The core serves them under the given
 // path prefixes, behind auth and the hub's enable switch.

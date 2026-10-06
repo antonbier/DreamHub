@@ -44,7 +44,7 @@ Packages are attached to each [release](https://github.com/antonbier/DreamHub/re
 
 ## Status
 
-**0.1.7** is the current release (0.1.0 was the first). Every hub above works against the real box — confirmed on the reference Dreambox One with the self-test (System → Diagnostics), Plex playback on the box included — and against a mock for development, so no Dreambox is needed to work on it. [ROADMAP.md](ROADMAP.md) has exactly what's done and what's open, [CHANGELOG.md](CHANGELOG.md) what changed, [PROJECT_PLAN.md](PROJECT_PLAN.md) why the project exists, and [backend/README.md](backend/README.md) / [frontend/README.md](frontend/README.md) how to run it locally.
+**0.1.8** is the current release (0.1.0 was the first). Every hub above works against the real box — confirmed on the reference Dreambox One with the self-test (System → Diagnostics), Plex playback on the box included — and against a mock for development, so no Dreambox is needed to work on it. [ROADMAP.md](ROADMAP.md) has exactly what's done and what's open, [CHANGELOG.md](CHANGELOG.md) what changed, [PROJECT_PLAN.md](PROJECT_PLAN.md) why the project exists, and [backend/README.md](backend/README.md) / [frontend/README.md](frontend/README.md) how to run it locally.
 
 ## License
 

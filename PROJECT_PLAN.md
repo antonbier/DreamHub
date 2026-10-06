@@ -64,8 +64,6 @@ See [`CONCEPT.md`](CONCEPT.md) for the hub list and release scope (v1 / v1.1 / l
 
 ## 7. Current status
 
-Phase 0 spikes are resolved. The Foundation (core + shell) is largely built: the Go backend (API, SQLite-backed settings/dashboards/change log, auth incl. revocable API tokens, connector and hub registries) and the Vue frontend (sidebar, dashboard tiles, the schema-driven settings menu, global search, notifications, an onboarding wizard, the status strip) both work end to end against the mock WebControl client — see `ROADMAP.md`'s Foundation section for the itemized list and `backend/README.md`/`frontend/README.md` to run it locally. TimerHub is the first real hub built on top of that; MediaHub, GuideHub, DiscoveryHub, SeriesHub and the rest of AdminHub are next (`ROADMAP.md`, "v1 — hubs").
-
-The reference Dreambox is currently unreachable, so anything needing real device access (captured fixtures, verifying the SerienRecorder/EPG endpoints, real-box timer writes — see `ARCHITECTURE.md`'s open questions and the `device-access`-labeled issues) is paused, not abandoned; everything else is built mock-first per `PRINCIPLES.md` and doesn't wait on it.
+Released (0.1.0 on 2026-10-04, currently 0.1.8) and running on the reference box: the core shell and every v1 hub, plus RadioHub, ControlHub, AdminHub's service status and PlexHub, built early — each confirmed on the real box (the self-test on System → Diagnostics), each also running against the mocks for development. What's open on the way to 1.0.0 is hardening (WP10: DST days, a box without the optional plugins, dogfooding), the apt feed (D4) and uninstall/purge; after that v1.1 (ChannelHub, trimming) and the later hubs. `ROADMAP.md` is the itemized, authoritative status; every open item links its GitHub issue.
 
 Project board: https://github.com/users/antonbier/projects/1

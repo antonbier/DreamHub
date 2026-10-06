@@ -107,7 +107,7 @@ func (h *Series) checkMissing(ctx context.Context, bus Publisher, seen map[strin
 		if err != nil {
 			continue
 		}
-		h.annotateBroadcasts(ctx, m, casts, recs, upcoming)
+		h.annotateBroadcasts(ctx, m, casts, recs, upcoming, nil)
 		for _, b := range casts {
 			if b.EpisodeStatus != BroadcastMissing || b.HasTimer || b.Start < now.Unix() || b.Start > now.Add(missingWatchAhead).Unix() {
 				continue

@@ -204,15 +204,35 @@ func (h *Plex) loginUse(w http.ResponseWriter, r *http.Request) {
 	user, _ := httpx.User(r.Context())
 	rawURL, _ := json.Marshal(u)
 	rawToken, _ := json.Marshal(token)
-	if err := h.Settings.Update(r.Context(), user, map[string]json.RawMessage{connector.KeyPlexURL: rawURL, connector.KeyPlexToken: rawToken}); err != nil {
+	rawFallbacks, _ := json.Marshal(strings.Join(fallbackAddresses(res.Connections, u), ","))
+	if err := h.Settings.Update(r.Context(), user, map[string]json.RawMessage{connector.KeyPlexURL: rawURL, connector.KeyPlexToken: rawToken, connector.KeyPlexFallbackURLs: rawFallbacks}); err != nil {
 		httpx.WriteError(w, r, http.StatusBadRequest, "validation_failed", err.Error())
 		return
 	}
 	_ = h.Store.AppendChange(r.Context(), store.ChangeEntry{UserID: user.ID, Action: "plex.connect", Summary: "Connected Plex server " + res.Name + " at " + u})
 	h.mu.Lock()
 	delete(h.pins, p.pin.ID)
-	h.lastErr, h.lastTry = nil, time.Time{}
+	h.lastErr, h.lastTry, h.active = nil, time.Time{}, ""
 	h.mu.Unlock()
 	go h.Sync(context.WithoutCancel(r.Context()))
 	httpx.WriteJSON(w, http.StatusOK, map[string]any{"connected": res.Name, "url": u})
+}
+
+// fallbackAddresses are the server's other addresses plex.tv lists (no
+// relay: slow and capped), the LAN ones first — tried when the chosen one
+// doesn't answer.
+func fallbackAddresses(conns []plex.Connection, chosen string) []string {
+	var local, remote []string
+	for _, c := range conns {
+		u := strings.TrimRight(c.URI, "/")
+		if c.Relay || u == "" || u == chosen || contains(local, u) || contains(remote, u) {
+			continue
+		}
+		if c.Local {
+			local = append(local, u)
+		} else {
+			remote = append(remote, u)
+		}
+	}
+	return append(local, remote...)
 }

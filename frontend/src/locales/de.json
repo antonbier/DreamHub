@@ -514,6 +514,7 @@
       "partUnavailable": "Konnte gerade nicht geladen werden.",
       "cast": "Mit {names}",
       "missingAiring": "1 fehlende Folge läuft demnächst | {n} fehlende Folgen laufen demnächst",
+      "alsoOn": "auch auf 1 weiteren Sender | auch auf {n} weiteren Sendern",
       "episodeStatus": {
         "missing": "fehlt dir",
         "recorded": "schon aufgenommen"
@@ -695,7 +696,8 @@
       "pushServerHint": "ntfy.sh ist der öffentliche Dienst; wer einen eigenen ntfy-Server betreibt, trägt dessen Adresse ein.",
       "tabs": "Bereiche der Einstellungen",
       "leaveUnsaved": "Es gibt ungespeicherte Änderungen. Seite trotzdem verlassen?",
-      "plexUrlHint": "Am einfachsten über „Mit Plex anmelden“ unten. Von Hand: die Adresse, unter der die Box den Server erreicht, z. B. http://192.168.1.10:32400 oder https://plex.example.org."
+      "plexUrlHint": "Am einfachsten über „Mit Plex anmelden“ unten. Von Hand: die Adresse, unter der die Box den Server erreicht, z. B. http://192.168.1.10:32400 oder https://plex.example.org.",
+      "plexFallbackUrlsHint": "Werden der Reihe nach versucht, wenn die Adresse oben nicht antwortet – z. B. die Adresse im Heimnetz (http://192.168.1.10:32400) neben einer Domain. Die Anmeldung mit Plex trägt sie selbst ein; mehrere durch Komma trennen."
     },
     "general": {
       "title": "Allgemein",
@@ -869,6 +871,7 @@
     "plex": {
       "title": "Plex",
       "url": "Adresse des Plex-Servers",
+      "fallbackUrls": "Weitere Adressen des Servers",
       "token": "Plex-Token",
       "playOnBox": "Filme auf der Box abspielen",
       "libraries": "Angezeigte Bibliotheken",

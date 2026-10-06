@@ -5,6 +5,7 @@ import (
 	"errors"
 	"net/url"
 	"regexp"
+	"strings"
 
 	"github.com/antonbier/DreamHub/backend/internal/autotimer"
 	"github.com/antonbier/DreamHub/backend/internal/plex"
@@ -65,10 +66,14 @@ const (
 	KeyPlexLibraries = "plex.libraries"
 	KeyPlexPlayOnBox = "plex.playOnBox"
 	KeyPlexClientID  = "plex.clientId"
-	KeyAIProvider    = "ai.provider"
-	KeyOpenAIAPIKey  = "ai.openai.apiKey"
-	KeyOpenAIModel   = "ai.openai.model"
-	KeyAIDailyLimit  = "ai.dailyLimit"
+	// KeyPlexFallbackURLs: the server's other addresses (comma-separated),
+	// tried in order when plex.url doesn't answer — filled in at sign-in
+	// from plex.tv's list (the LAN one first), or typed.
+	KeyPlexFallbackURLs = "plex.fallbackUrls"
+	KeyAIProvider       = "ai.provider"
+	KeyOpenAIAPIKey     = "ai.openai.apiKey"
+	KeyOpenAIModel      = "ai.openai.model"
+	KeyAIDailyLimit     = "ai.dailyLimit"
 
 	// Optional credentials for WebControl (and every plugin API behind it,
 	// e.g. SerienRecorder's). Only needed when the box enforces auth for
@@ -197,28 +202,57 @@ func (Plex) Settings() []settings.Section {
 		Label: "settings.plex",
 		Fields: []settings.Field{
 			{Key: KeyPlexURL, Type: settings.TypeString, Scope: settings.ScopeGlobal, Label: "settings.plex.url", Default: ""},
+			{Key: KeyPlexFallbackURLs, Type: settings.TypeString, Scope: settings.ScopeGlobal, Label: "settings.plex.fallbackUrls", Default: ""},
 			{Key: KeyPlexToken, Type: settings.TypeSecret, Scope: settings.ScopeGlobal, Label: "settings.plex.token"},
 			{Key: KeyPlexPlayOnBox, Type: settings.TypeBool, Scope: settings.ScopeGlobal, Label: "settings.plex.playOnBox", Default: true},
 			{Key: KeyPlexLibraries, Type: settings.TypeString, Scope: settings.ScopeGlobal, Label: "settings.plex.libraries", Default: "", Hidden: true},
 			{Key: KeyPlexClientID, Type: settings.TypeString, Scope: settings.ScopeGlobal, Label: "settings.plex.clientId", Default: "", Hidden: true},
 		},
 		Check: func(v settings.Values) map[string]settings.FieldError {
-			u := v.String(KeyPlexURL)
-			if u == "" {
+			errs := map[string]settings.FieldError{}
+			if u := v.String(KeyPlexURL); u != "" && !httpURL(u) {
+				errs[KeyPlexURL] = settings.FieldError{Code: settings.ErrInvalidURL}
+			}
+			for _, u := range PlexFallbackURLs(v.String(KeyPlexFallbackURLs)) {
+				if !httpURL(u) {
+					errs[KeyPlexFallbackURLs] = settings.FieldError{Code: settings.ErrInvalidURL}
+				}
+			}
+			if len(errs) == 0 {
 				return nil
 			}
-			if p, err := url.Parse(u); err != nil || (p.Scheme != "http" && p.Scheme != "https") || p.Host == "" {
-				return map[string]settings.FieldError{KeyPlexURL: {Code: settings.ErrInvalidURL}}
-			}
-			return nil
+			return errs
 		},
 	}}
 }
+
+// PlexFallbackURLs splits plex.fallbackUrls into addresses, without a
+// trailing slash.
+func PlexFallbackURLs(raw string) []string {
+	var out []string
+	for _, u := range strings.FieldsFunc(raw, func(r rune) bool { return r == ',' || r == ' ' || r == '\n' }) {
+		out = append(out, strings.TrimRight(u, "/"))
+	}
+	return out
+}
+
+func httpURL(u string) bool {
+	p, err := url.Parse(u)
+	return err == nil && (p.Scheme == "http" || p.Scheme == "https") && p.Host != ""
+}
+
 func (p Plex) Check(ctx context.Context, v settings.Values) Report {
 	if v.String(KeyPlexURL) == "" || v.String(KeyPlexToken) == "" {
 		return notConfigured("Plex", "plex")
 	}
-	_, err := p.Client.Server(ctx, plex.Conn{URL: v.String(KeyPlexURL), Token: v.String(KeyPlexToken)})
+	// Any of the server's addresses will do: PlexHub switches to the one
+	// that answers.
+	var err error
+	for _, u := range append([]string{v.String(KeyPlexURL)}, PlexFallbackURLs(v.String(KeyPlexFallbackURLs))...) {
+		if _, err = p.Client.Server(ctx, plex.Conn{URL: u, Token: v.String(KeyPlexToken)}); !errors.Is(err, plex.ErrUnreachable) {
+			break
+		}
+	}
 	switch {
 	case errors.Is(err, plex.ErrUnauthorized):
 		return Report{State: NotConfigured, Problem: &status.Problem{

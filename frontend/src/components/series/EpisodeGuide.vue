@@ -28,7 +28,7 @@
         </button>
         <ul v-if="isOpen(s.season, i)" class="mt-1 flex flex-col">
           <li v-for="e in s.episodes" :key="e.number" class="flex items-center gap-3 py-1.5 ps-6">
-            <span class="w-16 shrink-0 font-mono text-[12.5px] tabular-nums text-faint">{{ code(e) }}</span>
+            <span class="min-w-16 shrink-0 font-mono text-[12.5px] tabular-nums text-faint">{{ code(e) }}</span>
             <span class="min-w-0 flex-1 truncate text-[13.5px] text-text">{{ e.name }}</span>
             <span class="w-24 shrink-0 text-end text-[12.5px] tabular-nums text-faint below-sm:hidden">{{ date(e) }}</span>
             <span class="flex w-28 shrink-0 items-center gap-1.5 text-[12.5px]" :class="STATUS[e.status].text">
@@ -80,7 +80,10 @@ function tally(s: GuideSeason) {
 }
 
 function code(e: GuideEpisode) {
-  return `S${String(e.season).padStart(2, '0')}E${String(e.number).padStart(2, '0')}`
+  // Numbered straight through (a daily soap): SerienRecorder's S00E8613,
+  // as on the recordings, not TVmaze's year-season.
+  const season = props.guide.absolute ? 0 : e.season
+  return `S${String(season).padStart(2, '0')}E${String(e.number).padStart(2, '0')}`
 }
 
 // A first air date is a calendar date, not an instant: shown as that date.

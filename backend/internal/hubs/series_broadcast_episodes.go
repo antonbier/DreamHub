@@ -19,7 +19,11 @@ import (
 // Like the episode guide, "missing" is only claimed when it can be told:
 // the series' recordings carry season codes (season 1 or later) at all.
 // SerienRecorder numbers some series absolutely (S00E8615, a daily soap),
-// TMDB by season — then codes don't line up and nothing is claimed.
+// TMDB by season — then codes don't line up and nothing is claimed, unless
+// the episode guide found the absolute numbering to agree with TVmaze's
+// (absoluteNumbering): then a broadcast is matched by its episode title —
+// against SerienRecorder's timers, the recordings and TVmaze's list — since
+// TMDB's season codes would be the wrong numbering.
 
 // Broadcast episode states.
 const (
@@ -29,9 +33,14 @@ const (
 	BroadcastUnmatched = "unmatched" // code known, but recordings can't be matched
 )
 
-// annotateBroadcasts fills in Season/Episode/EpisodeStatus on bs.
-func (h *Series) annotateBroadcasts(ctx context.Context, m serienrecorder.Marker, bs []seriesBroadcast, recs []seriesRecording, upcoming []serienrecorder.UpcomingEpisode) {
+// annotateBroadcasts fills in Season/Episode/EpisodeStatus on bs. guide
+// is the series' episode guide, nil when there is none.
+func (h *Series) annotateBroadcasts(ctx context.Context, m serienrecorder.Marker, bs []seriesBroadcast, recs []seriesRecording, upcoming []serienrecorder.UpcomingEpisode, guide *episodeGuide) {
 	if len(bs) == 0 {
+		return
+	}
+	if guide != nil && guide.Absolute {
+		annotateAbsolute(m, bs, recs, upcoming, guide)
 		return
 	}
 	type se struct{ s, e int }
@@ -84,6 +93,61 @@ func (h *Series) annotateBroadcasts(ctx context.Context, m serienrecorder.Marker
 		case planned[k] || b.HasTimer:
 			b.EpisodeStatus = BroadcastPlanned
 		case matchable && s > 0:
+			b.EpisodeStatus = BroadcastMissing
+		default:
+			b.EpisodeStatus = BroadcastUnmatched
+		}
+	}
+}
+
+// annotateAbsolute is annotateBroadcasts for an absolutely numbered series:
+// a broadcast's number comes from its episode title.
+func annotateAbsolute(m serienrecorder.Marker, bs []seriesBroadcast, recs []seriesRecording, upcoming []serienrecorder.UpcomingEpisode, guide *episodeGuide) {
+	type source struct {
+		number int
+		from   string
+	}
+	byName := map[string]source{}
+	for n, number := range guide.absNames {
+		byName[n] = source{number, "tvmaze"}
+	}
+	recorded := map[int]bool{}
+	for _, r := range recs {
+		if r.Season == 0 && r.Episode > 0 {
+			recorded[r.Episode] = true
+			if n := titles.Normalize(recordingEpisodeTitle(r)); n != "" {
+				byName[n] = source{r.Episode, "recording"}
+			}
+		}
+	}
+	planned := map[int]bool{}
+	for _, u := range upcoming {
+		if e, err := strconv.Atoi(u.Episode); err == nil && e > 0 && strings.TrimSpace(u.Season) == "0" {
+			planned[e] = true
+			if n := titles.Normalize(u.Title); n != "" {
+				byName[n] = source{e, "serienrecorder"}
+			}
+		}
+	}
+	for i := range bs {
+		b := &bs[i]
+		var src source
+		for _, c := range episodeTitleCandidates(b.Title, b.Description, m.Name) {
+			if s, ok := byName[titles.Normalize(c)]; ok {
+				src = s
+				break
+			}
+		}
+		if src.number == 0 {
+			continue
+		}
+		b.Season, b.Episode, b.CodeSource = 0, src.number, src.from
+		switch {
+		case recorded[src.number]:
+			b.EpisodeStatus = BroadcastRecorded
+		case planned[src.number] || b.HasTimer:
+			b.EpisodeStatus = BroadcastPlanned
+		case src.number >= guide.absFrom:
 			b.EpisodeStatus = BroadcastMissing
 		default:
 			b.EpisodeStatus = BroadcastUnmatched

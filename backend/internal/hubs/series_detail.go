@@ -64,6 +64,10 @@ type seriesBroadcast struct {
 	// HasTimer is true when a timer on the same channel already covers the
 	// broadcast (SerienRecorder's own, or any other).
 	HasTimer bool `json:"hasTimer"`
+	// AlsoOn names the other channels showing the same broadcast at the
+	// same time (regional variants: RTL sends one programme on seven
+	// channels — "RTL Bayern", "RTL HH SH", …, on the reference box).
+	AlsoOn []string `json:"alsoOn,omitempty"`
 	// Season/Episode: which episode this is, when known — from the EPG
 	// itself or DreamMediaInfo (CodeSource); EpisodeStatus whether it's
 	// recorded, planned or missing (series_broadcast_episodes.go).
@@ -112,7 +116,7 @@ func (h *Series) detail(w http.ResponseWriter, r *http.Request) {
 		startYear = out.Info.StartYear()
 	}
 	out.Episodes = h.episodeGuide(r.Context(), *marker, startYear, out.Recordings, out.Upcoming)
-	h.annotateBroadcasts(r.Context(), *marker, out.Broadcasts, out.Recordings, out.Upcoming)
+	h.annotateBroadcasts(r.Context(), *marker, out.Broadcasts, out.Recordings, out.Upcoming, &out.Episodes)
 	out.Cover = h.WC != nil && h.seriesCover(r.Context(), *marker) != ""
 	httpx.WriteJSON(w, http.StatusOK, out)
 }
@@ -402,8 +406,60 @@ func (h *Series) seriesBroadcasts(ctx context.Context, name string) ([]seriesBro
 		}
 		out = append(out, b)
 	}
-	sort.Slice(out, func(i, j int) bool { return out[i].Start < out[j].Start })
-	return out, nil
+	sort.SliceStable(out, func(i, j int) bool { return out[i].Start < out[j].Start })
+	return mergeSimulcasts(out, seriesChannels(timers, name)), nil
+}
+
+// mergeSimulcasts folds broadcasts that are the same programme at the same
+// time on several channels into one, listing the others in AlsoOn. The one
+// kept is the one a timer covers, else one on a channel the series already
+// records from (so "Record" picks the user's usual channel), else the
+// first in the box's order.
+func mergeSimulcasts(bs []seriesBroadcast, usual map[string]bool) []seriesBroadcast {
+	type key struct {
+		start, duration int64
+		title, desc     string
+	}
+	rank := func(b seriesBroadcast) int {
+		switch {
+		case b.HasTimer:
+			return 2
+		case usual[b.ServiceReference]:
+			return 1
+		}
+		return 0
+	}
+	at := map[key]int{}
+	out := make([]seriesBroadcast, 0, len(bs))
+	for _, b := range bs {
+		k := key{b.Start, b.Duration, titles.Normalize(b.Title), titles.Normalize(b.Description)}
+		i, seen := at[k]
+		if !seen {
+			at[k] = len(out)
+			out = append(out, b)
+			continue
+		}
+		kept := &out[i]
+		if rank(b) > rank(*kept) {
+			b.AlsoOn = append(append(kept.AlsoOn, kept.ServiceName), b.AlsoOn...)
+			b.HasTimer = b.HasTimer || kept.HasTimer
+			*kept = b
+			continue
+		}
+		kept.AlsoOn = append(kept.AlsoOn, b.ServiceName)
+	}
+	return out
+}
+
+// seriesChannels are the channels the series' timers record from.
+func seriesChannels(timers []webcontrol.Timer, series string) map[string]bool {
+	out := map[string]bool{}
+	for _, t := range timers {
+		if matchesSeries(t.Name, series) {
+			out[t.ServiceReference] = true
+		}
+	}
+	return out
 }
 
 func matchesSeries(title, series string) bool { return titles.Matches(title, series) }

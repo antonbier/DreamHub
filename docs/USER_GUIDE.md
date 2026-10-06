@@ -107,7 +107,7 @@ Files are only changed when DreamHub runs on the box itself, and never while a r
 
 ### Plex library
 
-The films and series of your **Plex** server. Connect it under **Settings → Services → Plex → Sign in with Plex**: open plex.tv/link, enter the code shown, then pick your server and the address the box should use (one in your home network is fastest, or type your own, e.g. a reverse proxy). Choose which libraries to show in the same place.
+The films and series of your **Plex** server. Connect it under **Settings → Services → Plex → Sign in with Plex**: open plex.tv/link, enter the code shown, then pick your server and the address the box should use (one in your home network is fastest, or type your own, e.g. a reverse proxy). The server's other addresses are kept as **fallbacks**: if the one in use stops answering, DreamHub switches to the next one that answers as the same server. You can edit them under "The server's other addresses". Choose which libraries to show in the same place.
 
 - Details and series pages show the title's logo from Plex when the server has one.
 - **Tiles or list** — switch at the top right; filter by text or by watched state, sort by title, recently added, year or rating.
@@ -118,7 +118,7 @@ The films and series of your **Plex** server. Connect it under **Settings → Se
 
 ### Series
 
-Your series from **SerienRecorder**. A series' page shows planned episodes, further broadcasts in the guide — each with its episode number and whether you're **missing** it — your recordings by season, and (with TVmaze, on by default) the full episode list with what's recorded, planned, missing or still to come. "Missing" is only shown when your recordings carry episode numbers like `S01E02`.
+Your series from **SerienRecorder**. A series' page shows planned episodes, further broadcasts in the guide — each with its episode number and whether you're **missing** it — your recordings by season, and (with TVmaze, on by default) the full episode list with what's recorded, planned, missing or still to come. "Missing" is only shown when your recordings carry episode numbers like `S01E02`. Daily soaps that SerienRecorder numbers straight through (`S00E8622`) are matched by that number; only episodes from your first recording on count as missing. A broadcast shown on several regional channels at once (RTL's, for example) is listed once.
 
 ### TV guide
 

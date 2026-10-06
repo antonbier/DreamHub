@@ -17,8 +17,8 @@ jobs:
   backend:
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v4
-      - uses: actions/setup-go@v5
+      - uses: actions/checkout@v7
+      - uses: actions/setup-go@v7
         with:
           go-version: "1.27"
       - name: Vet
@@ -31,10 +31,10 @@ jobs:
   frontend:
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v4
-      - uses: actions/setup-node@v4
+      - uses: actions/checkout@v7
+      - uses: actions/setup-node@v7
         with:
-          node-version: "20"
+          node-version: "22"
           cache: npm
           cache-dependency-path: frontend/package-lock.json
       - name: Install
@@ -47,7 +47,7 @@ jobs:
       # (go:embed's source) — carry that forward so the packaging job below
       # doesn't need to rebuild it and can't drift from what was just
       # type-checked here.
-      - uses: actions/upload-artifact@v4
+      - uses: actions/upload-artifact@v7
         with:
           name: webui-dist
           path: backend/internal/webui/dist
@@ -56,11 +56,11 @@ jobs:
     runs-on: ubuntu-latest
     needs: [backend, frontend]
     steps:
-      - uses: actions/checkout@v4
-      - uses: actions/setup-go@v5
+      - uses: actions/checkout@v7
+      - uses: actions/setup-go@v7
         with:
           go-version: "1.27"
-      - uses: actions/download-artifact@v4
+      - uses: actions/download-artifact@v8
         with:
           name: webui-dist
           path: backend/internal/webui/dist
@@ -70,7 +70,7 @@ jobs:
         run: |
           ARCH=arm64 sh packaging/build-deb.sh dist
           ARCH=armhf sh packaging/build-deb.sh dist
-      - uses: actions/upload-artifact@v4
+      - uses: actions/upload-artifact@v7
         with:
           name: dreamhub-deb
           path: dist/*.deb

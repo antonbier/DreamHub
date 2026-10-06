@@ -95,54 +95,56 @@
           <p class="mt-0.5 text-[12.5px] text-faint">{{ t('series.detail.broadcastsHint') }}</p>
           <p v-if="isUnavailable('broadcasts')" class="mt-2 text-[13.5px] text-muted">{{ t('series.detail.partUnavailable') }}</p>
           <p v-else-if="detail.broadcasts.length === 0" class="mt-2 text-[13.5px] text-muted">{{ t('series.detail.broadcastsEmpty') }}</p>
-          <p v-if="missingAiring > 0" class="mt-2 flex items-center gap-1.5 text-[13.5px] text-warn" role="status">
-            <span class="h-1.5 w-1.5 rounded-full bg-warn" />{{ t('series.detail.missingAiring', { n: missingAiring }, missingAiring) }}
-          </p>
-          <ul v-else class="mt-2 flex flex-col">
-            <li v-for="b in detail.broadcasts" :key="b.serviceReference + b.start" class="border-b border-line-soft py-2 last:border-none">
-              <div class="flex items-center gap-3">
-                <span class="w-36 shrink-0 whitespace-nowrap text-[12.5px] tabular-nums text-faint">{{ formatTime(b.start) }}</span>
-                <span class="min-w-0 flex-1">
-                  <span class="block truncate text-[14px] text-text">
-                    <span v-if="b.episode" class="me-1.5 font-mono text-[12.5px] text-muted">{{ t('series.detail.code', { season: b.season ?? 0, episode: b.episode }) }}</span>{{ b.title }}
+          <template v-else>
+            <p v-if="missingAiring > 0" class="mt-2 flex items-center gap-1.5 text-[13.5px] text-warn" role="status">
+              <span class="h-1.5 w-1.5 rounded-full bg-warn" />{{ t('series.detail.missingAiring', { n: missingAiring }, missingAiring) }}
+            </p>
+            <ul class="mt-2 flex flex-col">
+              <li v-for="b in detail.broadcasts" :key="b.serviceReference + b.start" class="border-b border-line-soft py-2 last:border-none">
+                <div class="flex items-center gap-3">
+                  <span class="w-36 shrink-0 whitespace-nowrap text-[12.5px] tabular-nums text-faint">{{ formatTime(b.start) }}</span>
+                  <span class="min-w-0 flex-1">
+                    <span class="block truncate text-[14px] text-text">
+                      <span v-if="b.episode" class="me-1.5 font-mono text-[12.5px] text-muted">{{ t('series.detail.code', { season: b.season ?? 0, episode: b.episode }) }}</span>{{ b.title }}
+                    </span>
+                    <span class="block truncate text-[12.5px] text-muted">
+                      {{ b.serviceName }}<span v-if="b.alsoOn?.length" :title="b.alsoOn.join(', ')"> · {{ t('series.detail.alsoOn', { n: b.alsoOn.length }, b.alsoOn.length) }}</span>
+                      <template v-if="b.episodeStatus === 'missing' || b.episodeStatus === 'recorded'">
+                        ·
+                        <span :class="b.episodeStatus === 'missing' ? 'text-warn' : 'text-ok'">{{ t(`series.detail.episodeStatus.${b.episodeStatus}`) }}</span>
+                      </template>
+                    </span>
                   </span>
-                  <span class="block truncate text-[12.5px] text-muted">
-                    {{ b.serviceName }}
-                    <template v-if="b.episodeStatus === 'missing' || b.episodeStatus === 'recorded'">
-                      ·
-                      <span :class="b.episodeStatus === 'missing' ? 'text-warn' : 'text-ok'">{{ t(`series.detail.episodeStatus.${b.episodeStatus}`) }}</span>
-                    </template>
+                  <span v-if="b.hasTimer || record[key(b)]?.status === 'created'" class="flex shrink-0 items-center gap-1.5 text-[12.5px] text-ok">
+                    <span class="h-1.5 w-1.5 rounded-full bg-ok" />{{ t('series.detail.hasTimer') }}
                   </span>
-                </span>
-                <span v-if="b.hasTimer || record[key(b)]?.status === 'created'" class="flex shrink-0 items-center gap-1.5 text-[12.5px] text-ok">
-                  <span class="h-1.5 w-1.5 rounded-full bg-ok" />{{ t('series.detail.hasTimer') }}
-                </span>
-                <button
-                  v-else-if="record[key(b)]?.status !== 'previewing'"
-                  type="button"
-                  class="shrink-0 rounded px-2 py-1 text-[13px] text-accent hover:bg-tile-2 disabled:text-faint"
-                  :disabled="!canCreateTimers"
-                  :title="canCreateTimers ? undefined : t('discovery.timerHubUnavailable')"
-                  @click="previewRecord(b)"
+                  <button
+                    v-else-if="record[key(b)]?.status !== 'previewing'"
+                    type="button"
+                    class="shrink-0 rounded px-2 py-1 text-[13px] text-accent hover:bg-tile-2 disabled:text-faint"
+                    :disabled="!canCreateTimers"
+                    :title="canCreateTimers ? undefined : t('discovery.timerHubUnavailable')"
+                    @click="previewRecord(b)"
+                  >
+                    {{ t('series.detail.record') }}
+                  </button>
+                </div>
+                <PlanPreview
+                  v-if="record[key(b)]?.status === 'previewing' && record[key(b)]?.plan"
+                  class="mt-2"
+                  :plan="record[key(b)]!.plan!"
+                  :confirm-label="t('series.detail.createTimer')"
+                  :busy="record[key(b)]?.busy"
+                  :error="record[key(b)]?.error"
+                  @confirm="applyRecord(b)"
+                  @cancel="delete record[key(b)]"
                 >
-                  {{ t('series.detail.record') }}
-                </button>
-              </div>
-              <PlanPreview
-                v-if="record[key(b)]?.status === 'previewing' && record[key(b)]?.plan"
-                class="mt-2"
-                :plan="record[key(b)]!.plan!"
-                :confirm-label="t('series.detail.createTimer')"
-                :busy="record[key(b)]?.busy"
-                :error="record[key(b)]?.error"
-                @confirm="applyRecord(b)"
-                @cancel="delete record[key(b)]"
-              >
-                {{ t('series.detail.recordSummary', { title: b.title, channel: b.serviceName, time: formatTime(b.start) }) }}
-              </PlanPreview>
-              <p v-else-if="record[key(b)]?.status === 'error'" class="mt-1 text-[12.5px] text-warn">{{ record[key(b)]?.error }}</p>
-            </li>
-          </ul>
+                  {{ t('series.detail.recordSummary', { title: b.title, channel: b.serviceName, time: formatTime(b.start) }) }}
+                </PlanPreview>
+                <p v-else-if="record[key(b)]?.status === 'error'" class="mt-1 text-[12.5px] text-warn">{{ record[key(b)]?.error }}</p>
+              </li>
+            </ul>
+          </template>
         </section>
       </div>
 

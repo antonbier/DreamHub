@@ -16,10 +16,11 @@ import (
 // ErrNotConfigured is returned when no API key was supplied.
 var ErrNotConfigured = errors.New("ai: no API key configured")
 
-// maxItems caps the candidate list sent to the model — a full day across
-// 30 channels can be several hundred events; DiscoveryHub already narrows
-// to a bouquet and a time window, this is a last-resort ceiling.
-const maxItems = 300
+// MaxItems caps the candidate list sent to the model — a full day across
+// 30 channels can be several hundred events; DiscoveryHub narrows to a
+// bouquet and a time window and picks fairly across its channels up to
+// this many, so the cut here is a last-resort ceiling.
+const MaxItems = 300
 
 // maxPicks caps how many recommendations a single response can return,
 // regardless of what the model claims.
@@ -94,8 +95,8 @@ func (c *OpenAIClient) Recommend(ctx context.Context, apiKey, model string, item
 	if len(items) == 0 {
 		return nil, nil
 	}
-	if len(items) > maxItems {
-		items = items[:maxItems]
+	if len(items) > MaxItems {
+		items = items[:MaxItems]
 	}
 
 	prompts := make([]promptItem, len(items))

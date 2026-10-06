@@ -345,7 +345,7 @@ func TestSeries_MarkersAndUpcoming(t *testing.T) {
 		} `json:"markers"`
 	}
 	json.Unmarshal(b, &markers)
-	if len(markers.Markers) != 3 || markers.Markers[0].Name != "And Just Like That..." {
+	if len(markers.Markers) != 4 || markers.Markers[0].Name != "Gute Zeiten, schlechte Zeiten" {
 		t.Fatalf("unexpected markers: %+v", markers.Markers)
 	}
 
@@ -1069,8 +1069,8 @@ func TestDiscovery_TasteProfile(t *testing.T) {
 		Timers     []string `json:"timers"`
 	}
 	json.Unmarshal(b, &taste)
-	if len(taste.Recordings) == 0 || len(taste.Series) != 3 || len(taste.Timers) == 0 {
-		t.Fatalf("expected recordings, the mock's 3 active series and upcoming timers: %s", b)
+	if len(taste.Recordings) == 0 || len(taste.Series) != 4 || len(taste.Timers) == 0 {
+		t.Fatalf("expected recordings, the mock's 4 active series and upcoming timers: %s", b)
 	}
 
 	e.do(t, "PATCH", "/api/v1/settings", `{"values":{"ai.openai.apiKey":"sk-test-1234"}}`, nil)
@@ -1085,7 +1085,7 @@ func TestDiscovery_TasteProfile(t *testing.T) {
 	}
 	_, b = e.do(t, "POST", "/api/v1/discovery/recommendations", `{"bouquet":`+strconv.Quote(bRef)+`,"useTaste":true}`, nil)
 	json.Unmarshal(b, &out)
-	if out.Taste.Series != 3 {
+	if out.Taste.Series != 4 {
 		t.Errorf("useTaste must send the profile along: %s", b)
 	}
 	for _, r := range out.Recommendations {
@@ -1173,6 +1173,9 @@ func TestSeries_EpisodeGuide(t *testing.T) {
 	base := mock.Root + "20231005 2015 - RTL - Die Verräter"
 	box.FS.Put(base+".ts", "recording")
 	box.FS.Put(base+".ts.meta", "1:0:19:2EE3:441:1:C00000:0:0:0:\nDie Verräter - Vertraue Niemandem!\nS01E01 - Die Burg\n1696532400\n")
+	soap := mock.Root + "Gute Zeiten, schlechte Zeiten (1992)/Season 0/20260921 1932 - RTL Television - Gute Zeiten, schlechte Zeiten - S00E8613 - (K)Ein Abschied"
+	box.FS.Put(soap+".ts", "recording")
+	box.FS.Put(soap+".ts.meta", "1:0:1:2EE3:441:1:C00000:0:0:0:\nGute Zeiten, schlechte Zeiten - S00E8613 - (K)Ein Abschied\nS00E8613 - (K)Ein Abschied\n1790011920\n")
 	e := newEnvWith(t, box)
 
 	type guide struct {
@@ -1214,6 +1217,38 @@ func TestSeries_EpisodeGuide(t *testing.T) {
 	eps := g.Episodes.Seasons[0].Episodes
 	if eps[0].Status != "aired" || eps[1].Status != "planned" {
 		t.Errorf("Tatort: E30 aired (unmatchable), E31 planned: %+v", eps)
+	}
+
+	// A daily soap numbered absolutely (S00E8613): matched by number
+	// across TVmaze's year-seasons; only episodes from the first recording
+	// on can be missing.
+	var abs struct {
+		Episodes struct {
+			Matchable bool `json:"matchable"`
+			Absolute  bool `json:"absolute"`
+			Seasons   []struct {
+				Season   int `json:"season"`
+				Missing  int `json:"missing"`
+				Episodes []struct {
+					Number int    `json:"number"`
+					Status string `json:"status"`
+				} `json:"episodes"`
+			} `json:"seasons"`
+		} `json:"episodes"`
+	}
+	_, b = e.do(t, "GET", "/api/v1/series/markers/8", "", nil)
+	json.Unmarshal(b, &abs)
+	if !abs.Episodes.Matchable || !abs.Episodes.Absolute || len(abs.Episodes.Seasons) != 2 {
+		t.Fatalf("GZSZ guide: %s", b)
+	}
+	status := map[int]string{}
+	for _, s := range abs.Episodes.Seasons {
+		for _, ep := range s.Episodes {
+			status[ep.Number] = ep.Status
+		}
+	}
+	if status[1] != "aired" || status[8613] != "recorded" || status[8614] != "missing" || status[8615] != "planned" {
+		t.Errorf("GZSZ: before the first recording aired, then recorded/missing/planned: %v", status)
 	}
 
 	// Switched off: nothing is asked.

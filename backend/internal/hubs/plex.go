@@ -59,6 +59,10 @@ type Plex struct {
 	pins     map[int64]*pinState
 	tickets  map[string]ticket
 	clientID string
+	// active is the address in use when it isn't plex.url: a fallback
+	// that answered when plex.url didn't (failover).
+	active  string
+	probing bool
 }
 
 // Error codes.
@@ -96,7 +100,9 @@ func (h *Plex) Mount(mux *http.ServeMux) {
 
 // config is what the Plex settings say right now.
 type plexConfig struct {
-	conn      plex.Conn
+	conn plex.Conn
+	// addresses: plex.url, then the fallbacks — conn.URL is one of them.
+	addresses []string
 	libraries map[string]bool // nil: every film and series library
 	playOnBox bool
 }
@@ -112,6 +118,19 @@ func (h *Plex) config(ctx context.Context) (plexConfig, error) {
 		conn:      plex.Conn{URL: strings.TrimRight(v.String(connector.KeyPlexURL), "/"), Token: v.String(connector.KeyPlexToken)},
 		playOnBox: v.Bool(connector.KeyPlexPlayOnBox),
 	}
+	if c.conn.URL != "" {
+		c.addresses = []string{c.conn.URL}
+		for _, u := range connector.PlexFallbackURLs(v.String(connector.KeyPlexFallbackURLs)) {
+			if !contains(c.addresses, u) {
+				c.addresses = append(c.addresses, u)
+			}
+		}
+	}
+	h.mu.Lock()
+	if h.active != "" && contains(c.addresses, h.active) {
+		c.conn.URL = h.active
+	}
+	h.mu.Unlock()
 	if ids := strings.TrimSpace(v.String(connector.KeyPlexLibraries)); ids != "" {
 		c.libraries = map[string]bool{}
 		for _, id := range strings.Split(ids, ",") {
@@ -141,6 +160,63 @@ func (h *Plex) note(err error) {
 		err = nil
 	}
 	h.lastErr = err
+}
+
+// failover looks for an address the server answers at when the one in use
+// doesn't: plex.url first, then the fallbacks — the server's LAN address
+// next to one behind a reverse proxy, say (on the reference box, the
+// public address stopped answering the box for an hour after a reboot
+// while the server itself was fine). An address only counts when the same
+// server answers there. It returns the address now in use.
+func (h *Plex) failover(ctx context.Context, c plexConfig) (string, bool) {
+	var known string
+	h.cacheGet(ctx, "machine", &known)
+	for _, u := range c.addresses {
+		if u == c.conn.URL {
+			continue
+		}
+		pctx, cancel := context.WithTimeout(ctx, 5*time.Second)
+		id, err := h.Client.Identity(pctx, plex.Conn{URL: u, Token: c.conn.Token})
+		cancel()
+		if err != nil || (known != "" && id.MachineIdentifier != known) {
+			continue
+		}
+		h.mu.Lock()
+		h.active = u
+		h.lastErr, h.lastTry = nil, time.Time{}
+		h.mu.Unlock()
+		if h.Logger != nil {
+			h.Logger.Info("plex: switched address", "from", c.conn.URL, "to", u)
+		}
+		return u, true
+	}
+	return "", false
+}
+
+// failoverSoon runs failover in the background after a read found the
+// server unreachable, once at a time; the read itself answers from the
+// cache meanwhile.
+func (h *Plex) failoverSoon(c plexConfig) {
+	if len(c.addresses) < 2 {
+		return
+	}
+	h.mu.Lock()
+	if h.probing {
+		h.mu.Unlock()
+		return
+	}
+	h.probing = true
+	h.mu.Unlock()
+	go func() {
+		defer func() {
+			h.mu.Lock()
+			h.probing = false
+			h.mu.Unlock()
+		}()
+		ctx, cancel := context.WithTimeout(context.Background(), 30*time.Second)
+		defer cancel()
+		h.failover(ctx, c)
+	}()
 }
 
 // worthTrying reports whether to ask the server now, or go straight to the
@@ -209,6 +285,9 @@ func read[T any](ctx context.Context, h *Plex, c plexConfig, key string, fetch f
 		if errors.Is(ferr, plex.ErrNotFound) {
 			return data, 0, false, ferr
 		}
+		if errors.Is(ferr, plex.ErrUnreachable) {
+			h.failoverSoon(c)
+		}
 		err = ferr
 	}
 	if at, ok := h.cacheGet(ctx, key, &data); ok {
@@ -250,6 +329,12 @@ func (h *Plex) Sync(ctx context.Context) error {
 	}()
 
 	id, err := h.Client.Identity(ctx, c.conn)
+	if errors.Is(err, plex.ErrUnreachable) {
+		if u, ok := h.failover(ctx, c); ok {
+			c.conn.URL = u
+			id, err = h.Client.Identity(ctx, c.conn)
+		}
+	}
 	if err != nil {
 		h.note(err)
 		return err

@@ -6,11 +6,21 @@ Format follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/); version
 
 ## [Unreleased]
 
+## [0.1.8] - 2026-10-06
+
 ### Added
 - Plex library: the title's logo from Plex (its "clearLogo", transparent PNG) above a film's details and on a series page — no fanart.tv key needed.
+- Plex: the server's other addresses (Settings → Services → Plex, "The server's other addresses"). Signing in with Plex fills them in from plex.tv's list, the home-network one first; when the address in use stops answering, DreamHub switches to the next one that answers as the same server. Found on the reference box: after a reboot the server's public address didn't answer the box for over an hour while the server itself was fine.
+- SeriesHub: a broadcast shown on several channels at once (RTL's seven regional variants) is listed once, with "also on 6 more channels"; the one kept is the channel a timer or the series' recordings use.
 
 ### Changed
 - Plex library: "Play on the box" is no longer marked experimental — confirmed on the reference box (movie player, seeking, pause).
+- DiscoveryHub: the broadcasts sent to the AI are picked fairly across the bouquet's channels, prime time first. The box lists the EPG channel by channel, so the cap of 300 used to drop a large bouquet's last channels entirely.
+- CI: current major versions of GitHub's actions, Node 22.
+
+### Fixed
+- SeriesHub: missing episodes of a daily soap were never found. SerienRecorder numbers it absolutely ("S00E8622"), TVmaze files it under years but counts the same way (episode 8622) — confirmed for "Gute Zeiten, schlechte Zeiten" on the reference box. When the numbers and episode titles agree, episodes are matched by number, broadcasts by their episode title, and only episodes from the first recording on count as missing.
+- SeriesHub: the list of further broadcasts disappeared exactly when "missing episodes air soon" was shown.
 
 ## [0.1.7] - 2026-10-05
 

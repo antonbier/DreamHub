@@ -24,6 +24,9 @@ func (*Client) Info(ctx context.Context) (*serienrecorder.Info, error) {
 
 func (*Client) Markers(ctx context.Context) ([]serienrecorder.Marker, error) {
 	return []serienrecorder.Marker{
+		// A daily soap: SerienRecorder numbers it absolutely (S00E8615),
+		// as on the reference box.
+		{ID: 8, Name: "Gute Zeiten, schlechte Zeiten", FSID: "gute-zeiten-schlechte-zeiten", WLID: "5164", Active: true, Info: "D 1992-", Channels: "Alle", NumberOfRecords: 1, Seasons: "Alle (inkl. Specials)", RecordFolder: "/media/hdd/movie/"},
 		{ID: 9, Name: "And Just Like That...", FSID: "and-just-like-that", WLID: "42185", Active: true, Info: "USA 2021-2025", Channels: "Alle", NumberOfRecords: 1, Seasons: "Alle (inkl. Specials)", RecordFolder: "/media/hdd/movie/"},
 		{ID: 10, Name: "Die Verräter - Vertraue Niemandem!", FSID: "die-verraeter-vertraue-niemandem", WLID: "47241", Active: true, Info: "D 2023-", Channels: "Alle", NumberOfRecords: 1, Seasons: "Alle (inkl. Specials)", RecordFolder: "/media/hdd/movie/"},
 		// Matches the mock box's "Tatort/" recording folder and its EPG,

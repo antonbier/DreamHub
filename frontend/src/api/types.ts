@@ -307,10 +307,13 @@ export interface SeriesBroadcast {
   serviceReference: string
   serviceName: string
   hasTimer: boolean
-  // Which episode this is, when known: from the EPG or DreamMediaInfo.
+  // The other channels showing the same broadcast (regional variants).
+  alsoOn?: string[]
+  // Which episode this is, when known: from the EPG or DreamMediaInfo, or —
+  // for an absolutely numbered series — matched by its episode title.
   season?: number
   episode?: number
-  codeSource?: 'epg' | 'dreammediainfo'
+  codeSource?: 'epg' | 'dreammediainfo' | 'tvmaze' | 'recording' | 'serienrecorder'
   episodeStatus?: 'recorded' | 'planned' | 'missing' | 'unmatched'
 }
 
@@ -337,6 +340,7 @@ export interface EpisodeGuide {
   source?: string
   showName?: string
   matchable: boolean // recordings carry episode codes, so "missing" means something
+  absolute?: boolean // matched by absolute episode number (S00E8610 = TVmaze's 8610)
   seasons: GuideSeason[]
 }
 

@@ -70,11 +70,16 @@ class PlayResource(resource.Resource):
         timer = eTimer()
 
         def seek():
-            # Keep the timer alive until it fires; dropping the only
-            # reference here would let it (and the callback) be collected
-            # first (PRINCIPLES.md: don't guess, so this is written
-            # defensively rather than assumed safe without a real device).
+            # Keep the timer and its connection alive until they fire —
+            # dropping the only reference here would let them be collected
+            # first. Confirmed on the reference box (2026-10-06): this
+            # image's eTimer takes callbacks via timeout.connect(), not
+            # callback.append() (a different Enigma2 fork's API) — the
+            # earlier version of this method raised AttributeError here,
+            # after the service had already opened, so playback still
+            # started but the HTTP response back to DreamHub never did.
             self._seekTimer = None
+            self._seekConn = None
             service = self.session.nav.getCurrentService()
             if service is None:
                 return
@@ -83,7 +88,7 @@ class PlayResource(resource.Resource):
                 return  # not every service (or not yet) supports seeking
             seekable.seekTo(start_ms * 90)  # pts: a 90kHz clock
 
-        timer.callback.append(seek)
+        self._seekConn = timer.timeout.connect(seek)
         self._seekTimer = timer
         timer.start(_SEEK_DELAY_MS, True)
 

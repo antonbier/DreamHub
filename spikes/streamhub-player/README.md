@@ -1,5 +1,7 @@
 # Spike: live TV and recordings in the browser, no transcoding
 
+StreamHub was built on this (2026-10-06): `frontend/src/streaming/tsPlayer.ts`.
+
 Result of the StreamHub spike (2026-10-06). The question: can a browser play
 what the box sends — MPEG-TS with MPEG-2 or H.264 video and MP2, AC3 or AAC
 audio — without the box converting anything? The box can't: no usable
@@ -40,8 +42,8 @@ phones and real browsers still need measuring (see below).
 
 ## Not done yet
 
-- **Deinterlacing**: SD is 576i, and combing shows on fine edges. FFmpeg's
-  `bwdif`/`yadif` (add `filter-bwdif` to the variant) or a shader.
+- ~~Deinterlacing~~: done in StreamHub's player (a linear blend in
+  JavaScript; FFmpeg's yadif crashed the page in this single-threaded build).
 - Phones: decoding speed of MPEG-2 in WebAssembly on a mid-range phone;
   the threaded build (`.thr`, needs the page cross-origin isolated —
   COOP/COEP headers) if a single thread is too slow.

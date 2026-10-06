@@ -352,11 +352,13 @@ Pulled forward from v1.1 (`CONCEPT.md`, `docs/V1_PLAN.md`): verifying the Enigma
 
 ## Later
 
-### StreamHub
+### StreamHub ("Live TV", built early)
 - No transcoding on the box (its hardware encoder isn't usable in this image, the CPU is too weak — ARCHITECTURE.md, "Hardware encoder").
 - Browsers don't play raw MPEG-TS natively, nor MPEG-2 video (SD channels), MP2 or (mostly) AC3 audio.
 - **Approach (spike 2026-10-06, [`spikes/streamhub-player/`](spikes/streamhub-player/README.md))**: the browser decodes. The box passes the stream through unchanged; FFmpeg in WebAssembly (libav.js, an own build with the DVB codecs, 2 MB) demuxes and decodes MPEG-2 and the audio, H.264 goes to the device's hardware through WebCodecs. Measured on the development machine: SD MPEG-2 4 ms per frame (of 40), HD H.264 even in software 13 ms (of 20), audio and video within 20 ms of each other; a recording streamed from the box starts in under a second. Works with any box that streams — the box does no work
-- [ ] Phones (MPEG-2 in WebAssembly on a mid-range phone), deinterlacing for SD, live specifics (channel change, audio track choice, tuner use), recordings in MediaHub ("watch in the browser"), the threaded build if needed (#34)
+- [x] **Built** (2026-10-06, "Live TV", `internal/hubs/stream.go`, `StreamHubView.vue`, `src/streaming/tsPlayer.ts`): channel list with now/next and "same as the TV"; `/api/v1/stream/live` passes the box's port-8001 stream through, waiting for the first data so "no tuner free" becomes `503 stream_no_tuner` with an explanation (max. two streams); recordings with seeking (`/api/v1/stream/recording`, Range — from disk on the box, else WebControl's `/file`), "Watch in the browser" in MediaHub; audio track choice (language, Dolby), volume, pause, full screen, keys; SD deinterlaced by a linear blend in the player (FFmpeg's yadif crashed the page in the single-threaded build). libav.js build in `frontend/public/libav/` (2 MB, embedded — no external requests). Tested in mock mode with real recordings from the box (SD MPEG-2 + MP2, HD H.264 + MP2/AC3)
+- [ ] On the box and on phones: a live channel through port 8001 with the TV on the same/another transponder, a recording from disk, a mid-range phone (#34)
+- [ ] Radio in the browser (MP2 is decoded already; a player without video), the threaded build if phones need it, HEVC/UHD channels (WebCodecs only)
 - Fallback for anything the browser can't play (HEVC without a device decoder): "open in VLC" (`.m3u` link to the native app).
 - No browser-plugin embedding (NPAPI VLC and Chrome's "VXG" are dead).
 

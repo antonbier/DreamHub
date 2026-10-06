@@ -131,6 +131,14 @@ Four views, switched at the top; your choice is remembered:
 
 **Films only** and **Rated 7+** filter every view (needs TMDB). Any programme opens its details with **Record** and, while it's on, **Switch now**.
 
+### Live TV
+
+TV channels right in the browser — on the phone, tablet or PC, no app needed. Pick a channel from the list; **Same as the TV** shows what the box is showing. The box sends its signal unchanged and your device decodes it, so the box itself does no extra work. **Space** pauses, **M** mutes, **F** or a double click switches to full screen; with several audio tracks (another language, Dolby) you choose one under the picture.
+
+The box has one tuner: another channel only works while the TV and any recording are on the same frequency. Otherwise the picture says so — **Same as the TV** always works. In **Recordings**, **Watch in the browser** plays a recording, with a bar to jump anywhere in it.
+
+Works in current Chrome, Edge, Firefox and Safari. HD channels use your device's own video decoder; older or very small devices may stutter on HD.
+
 ### Radio
 
 Your radio stations, with what's on now and next where the station sends programme information. **Play on the box** switches the box to that station — you listen on the TV or whatever is connected to it; the station playing is shown on top. Any programme opens its details with **Record**; the radio recordings coming up are listed at the bottom. Stations can also be found through the search at the top.

@@ -19,6 +19,7 @@ const (
 	IDControl   = "control"
 	IDRadio     = "radio"
 	IDPlex      = "plex"
+	IDStream    = "stream"
 )
 
 // CapJournald is the capability to read logs via journalctl (AdminHub).
@@ -30,7 +31,9 @@ const CapJournald = "journald"
 // anyway (ARCHITECTURE.md, "Real screenshot and remote-control
 // endpoints"), and GuideHub's "switch to this channel now" needs it too.
 // RadioHub (v1.1) was built early too, against the mock while the box was
-// out of reach (2026-10-04); ChannelHub is added when it's built.
+// out of reach (2026-10-04), and StreamHub ("later") once a spike showed
+// the browser can decode what the box sends (2026-10-06); ChannelHub is
+// added when it's built.
 func V1() []Descriptor {
 	wc := Requirement{Connector: connector.IDWebControl}
 	return []Descriptor{
@@ -49,6 +52,9 @@ func V1() []Descriptor {
 		// Recording a radio programme needs TimerHub; listening doesn't.
 		{ID: IDRadio, Name: "RadioHub", Label: "hub.radio", Icon: "radio", Path: "/radio", Group: GroupProgram, Order: 15,
 			Requires: []Requirement{wc, {Hub: IDTimer, Optional: true}}},
+		// Live TV and recordings in the browser (built early, 2026-10-06).
+		{ID: IDStream, Name: "StreamHub", Label: "hub.stream", Icon: "stream", Path: "/stream", Group: GroupProgram, Order: 12,
+			Requires: []Requirement{wc}},
 		{ID: IDTimer, Name: "TimerHub", Label: "hub.timer", Icon: "timers", Path: "/timers", Group: GroupProgram, Order: 20,
 			Requires: []Requirement{wc}, Emits: []string{events.RecordingStarted, events.RecordingFinished, events.TimerConflict}},
 		// Recommendations need an AI provider; creating a timer from one

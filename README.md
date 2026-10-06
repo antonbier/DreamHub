@@ -10,13 +10,14 @@ DreamHub is a **core** (dashboard, global search, notifications, settings in tab
 - **SeriesHub** — SerienRecorder: followed series, episode guide with what's missing (TVmaze), what's coming
 - **GuideHub** — the TV guide in four views (grid, now & next, tonight, one channel), channel logos, record or switch from any programme
 - **RadioHub** — radio stations with what's on, play on the box, radio recordings
+- **Live TV** (StreamHub) — TV channels and recordings right in the browser: the box sends its stream unchanged, your phone or PC decodes it (SD and HD, Dolby sound), no app needed
 - **TimerHub** — timers, disabling/enabling, AutoTimer, conflict detection
 - **DiscoveryHub** — AI recommendations from the EPG, optionally matched to your taste, one tap to a timer
 - **ControlHub** — a remote with the live picture, on every page; messages to the TV
 - **SystemHub** — device info, diagnostics with a box self-test, change log
 - **PlexHub** ("Plex Mediathek") — your Plex server's films and series as tiles or a list, watched state synced with Plex, films played on the box's own player; the library stays visible while the server is off
 - **AdminHub** — the box's services with restart, logs (live), crash logs — admins only
-- later: ChannelHub, StreamHub, AutomationHub (see [ROADMAP.md](ROADMAP.md))
+- later: ChannelHub, AutomationHub (see [ROADMAP.md](ROADMAP.md))
 
 The dashboard is a personal set of tiles ("Now on the box", timers, conflicts, disk space, episodes, your own saved views). Details come from the box's own cover art and DreamMediaInfo first, then TMDB, OMDb (Rotten Tomatoes, IMDb, Metascore) and fanart.tv. Push notifications to the phone go through ntfy. Available in German, Italian and English.
 

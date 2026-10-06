@@ -4,6 +4,7 @@ import (
 	"context"
 	"errors"
 	"fmt"
+	"io"
 	"net/http"
 	"net/http/httptest"
 	"sync/atomic"
@@ -55,6 +56,12 @@ func TestReports_CachedAndInvalidatedBySettingsVersion(t *testing.T) {
 type failingClient struct{ err error }
 
 func (f failingClient) DeviceInfo(context.Context) (*webcontrol.DeviceInfo, error) {
+	return nil, f.fail()
+}
+func (f failingClient) LiveStream(context.Context, string) (io.ReadCloser, error) {
+	return nil, f.fail()
+}
+func (f failingClient) RecordingFile(context.Context, string, string) (*webcontrol.FileResponse, error) {
 	return nil, f.fail()
 }
 func (f failingClient) MovieList(context.Context) ([]webcontrol.Movie, error) {

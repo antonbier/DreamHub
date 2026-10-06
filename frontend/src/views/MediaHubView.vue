@@ -259,6 +259,13 @@
           >
             {{ played ? t('media.detail.playing') : t('media.detail.play') }}
           </button>
+          <RouterLink
+            v-if="streamHubOn && openMovie.filename.endsWith('.ts')"
+            :to="{ path: '/stream', query: { recording: openMovie.filename, title: openMovie.title, length: openMovie.length, channel: openMovie.serviceName } }"
+            class="rounded border border-line px-3.5 py-1.5 text-[13.5px] text-text hover:bg-field"
+          >
+            {{ t('media.detail.watchInBrowser') }}
+          </RouterLink>
         </div>
         <p v-if="playError" class="mt-2 text-[12.5px] text-warn">{{ playError }}</p>
       </template>
@@ -268,7 +275,7 @@
 
 <script setup lang="ts">
 import { computed, onMounted, reactive, ref, watch } from 'vue'
-import { useRoute } from 'vue-router'
+import { RouterLink, useRoute } from 'vue-router'
 import { useI18n } from 'vue-i18n'
 import { api } from '@/api/client'
 import Icon from '@/components/Icon.vue'
@@ -296,6 +303,11 @@ const { timeZone } = useDisplayTimeZone()
 const enrich = useEnrichStore()
 
 const item = computed(() => navigation.navigation?.sections.flatMap((s) => s.items).find((i) => i.path === '/media'))
+// "Watch in the browser" is StreamHub's; offered while it's there.
+const streamHubOn = computed(() => {
+  const s = navigation.navigation?.sections.flatMap((x) => x.items).find((i) => i.id === 'stream')
+  return !!s && s.status !== 'unavailable'
+})
 
 const disks = ref<Disk[]>([])
 const folder = ref<MediaFolder | null>(null)

@@ -23,6 +23,7 @@
     "admin": "Admin",
     "control": "Fernsteuerung",
     "radio": "Radio",
+    "stream": "Live-TV",
     "plex": "Plex Mediathek"
   },
   "status": {
@@ -437,7 +438,8 @@
       "fromRecording": "Aus der Aufnahme",
       "play": "Auf dem TV abspielen",
       "playing": "Läuft auf dem TV",
-      "length": "{length} Min."
+      "length": "{length} Min.",
+      "watchInBrowser": "Im Browser ansehen"
     }
   },
   "guide": {
@@ -1239,6 +1241,49 @@
       "running": "nimmt auf"
     },
     "allStations": "Alle Radiosender"
+  },
+  "stream": {
+    "intro": "Fernsehen und Aufnahmen direkt im Browser – die Box schickt ihr Signal unverändert, dein Gerät dekodiert es.",
+    "player": "Player",
+    "pick": "Wähle einen Sender.",
+    "loading": "Verbinde mit der Box …",
+    "ended": "Zu Ende.",
+    "retry": "Nochmal versuchen",
+    "live": "Live",
+    "nothing": "Kein Sender gewählt",
+    "position": "Position",
+    "pause": "Pause",
+    "resume": "Weiter",
+    "stop": "Stopp",
+    "mute": "Ton aus",
+    "unmute": "Ton an",
+    "volume": "Lautstärke",
+    "audioTrack": "Tonspur",
+    "track": "Tonspur {n}",
+    "info": "Technik",
+    "fullscreen": "Vollbild",
+    "channels": "Sender",
+    "bouquet": "Senderliste",
+    "find": "Sender suchen",
+    "sameAsTv": "Wie am Fernseher",
+    "onTv": "Läuft am Fernseher",
+    "tunerHint": "Ein anderer Sender braucht einen freien Tuner. Mit einem Tuner geht das nur, solange Fernseher und Aufnahmen auf derselben Frequenz sind – „Wie am Fernseher“ klappt immer.",
+    "unsupported": "Dieser Browser kann den Stream nicht abspielen (ihm fehlen WebAssembly oder WebCodecs). Aktuelle Versionen von Chrome, Edge, Firefox und Safari können es.",
+    "error": {
+      "noTuner": "Die Box liefert für diesen Sender gerade kein Bild.",
+      "noTunerHint": "Vermutlich ist der Tuner belegt – der Fernseher oder eine Aufnahme läuft auf einer anderen Frequenz. „Wie am Fernseher“ geht immer.",
+      "busy": "Es laufen schon zwei Streams von der Box.",
+      "notFound": "Die Aufnahme gibt es nicht (mehr).",
+      "network": "DreamHub ist nicht erreichbar.",
+      "generic": "Der Stream ließ sich nicht abspielen."
+    },
+    "stats": {
+      "video": "Bild",
+      "audio": "Ton",
+      "data": "Daten",
+      "frames": "Bilder (gezeigt / übersprungen · im Puffer)",
+      "sync": "Versatz · Tonaussetzer"
+    }
   },
   "plex": {
     "server": "Plex-Server",

@@ -22,6 +22,7 @@ package recfs
 
 import (
 	"errors"
+	"io"
 	"io/fs"
 	"os"
 	"path"
@@ -48,8 +49,17 @@ type FS interface {
 	Create(name string, data []byte) error
 }
 
+// Opener is an FS that opens a file for reading in place — StreamHub
+// plays recordings from it, seeking by byte range, without reading them
+// whole. OS and Mem have it.
+type Opener interface {
+	Open(name string) (io.ReadSeekCloser, error)
+}
+
 // OS is the real file system.
 type OS struct{}
+
+func (OS) Open(name string) (io.ReadSeekCloser, error) { return os.Open(name) }
 
 func (OS) ReadDir(name string) ([]fs.DirEntry, error) { return os.ReadDir(name) }
 func (OS) Lstat(name string) (fs.FileInfo, error)     { return os.Lstat(name) }

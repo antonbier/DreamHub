@@ -47,6 +47,13 @@ const router = createRouter({
       component: () => import('@/views/PlexHubView.vue'),
     },
     {
+      // StreamHub: live TV in the browser; ?ref= starts a channel,
+      // ?recording=<path>&title= plays a recording.
+      path: '/stream',
+      name: 'stream',
+      component: () => import('@/views/StreamHubView.vue'),
+    },
+    {
       path: '/radio',
       name: 'radio',
       component: () => import('@/views/RadioHubView.vue'),

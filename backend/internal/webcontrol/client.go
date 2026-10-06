@@ -12,6 +12,7 @@ import (
 	"errors"
 	"fmt"
 	"io"
+	"net"
 	"net/http"
 	"net/url"
 	"regexp"
@@ -303,7 +304,28 @@ type Client interface {
 	// Current is what the box shows right now, with its now/next and the
 	// volume (/web/getcurrent).
 	Current(ctx context.Context) (*CurrentService, error)
+	// LiveStream opens the box's own, untranscoded stream of a service:
+	// enigma2's stream proxy on port 8001 (ARCHITECTURE.md). It tunes
+	// only when a tuner is free for it — it never switches the TV. The
+	// caller reads and closes it; once data flows there's no timeout.
+	LiveStream(ctx context.Context, serviceReference string) (io.ReadCloser, error)
+	// RecordingFile opens a recording through WebControl's /file, passing
+	// rangeHeader ("bytes=…", or "") on — for StreamHub when DreamHub
+	// doesn't run on the box and can't read the file itself.
+	RecordingFile(ctx context.Context, path, rangeHeader string) (*FileResponse, error)
 }
+
+// FileResponse is a file as the box serves it: 200 with the whole file or
+// 206 with the requested range (ContentRange set).
+type FileResponse struct {
+	Status        int
+	ContentLength int64 // -1 when unknown
+	ContentRange  string
+	Body          io.ReadCloser
+}
+
+// StreamPort is enigma2's stream proxy (streamproxy.socket).
+const StreamPort = "8001"
 
 // MovieFolder is one folder of recordings as /web/movielist?dirname=
 // reports it.
@@ -355,6 +377,10 @@ type HTTPClient struct {
 	// Credentials, if set, supplies Basic Auth for every request.
 	Credentials Credentials
 
+	// Streams is the client for streams (LiveStream, RecordingFile): no
+	// overall timeout, only one for the answer to start.
+	Streams *http.Client
+
 	mu        sync.Mutex
 	sessionID string
 
@@ -378,6 +404,7 @@ func NewHTTPClient(baseURL string) *HTTPClient {
 	return &HTTPClient{
 		BaseURL:  baseURL,
 		HTTP:     &http.Client{Timeout: 5 * time.Second},
+		Streams:  &http.Client{Transport: streamTransport()},
 		inflight: map[string]*inflightGet{},
 	}
 }
@@ -1039,4 +1066,77 @@ func decodeXML(r io.Reader, path string, v any) error {
 		return fmt.Errorf("webcontrol: parsing %s response: %w", path, err)
 	}
 	return nil
+}
+
+func streamTransport() http.RoundTripper {
+	t := http.DefaultTransport.(*http.Transport).Clone()
+	t.ResponseHeaderTimeout = 15 * time.Second
+	return t
+}
+
+// LiveStream: see Client. The stream proxy answers 200 at once and then
+// sends nothing when it can't get a tuner; the caller notices that.
+func (c *HTTPClient) LiveStream(ctx context.Context, serviceReference string) (io.ReadCloser, error) {
+	u, err := url.Parse(c.BaseURL)
+	if err != nil {
+		return nil, fmt.Errorf("webcontrol: base URL: %w", err)
+	}
+	u.Host = net.JoinHostPort(u.Hostname(), StreamPort)
+	u.Path, u.RawQuery = "/"+serviceReference, ""
+	resp, err := c.stream(ctx, u.String(), "")
+	if err != nil {
+		return nil, err
+	}
+	if resp.StatusCode != http.StatusOK {
+		resp.Body.Close()
+		return nil, statusError("stream", resp.StatusCode)
+	}
+	return resp.Body, nil
+}
+
+// RecordingFile: see Client.
+func (c *HTTPClient) RecordingFile(ctx context.Context, path, rangeHeader string) (*FileResponse, error) {
+	resp, err := c.stream(ctx, c.BaseURL+"/file?"+url.Values{"file": {path}}.Encode(), rangeHeader)
+	if err != nil {
+		return nil, err
+	}
+	if resp.StatusCode != http.StatusOK && resp.StatusCode != http.StatusPartialContent {
+		resp.Body.Close()
+		return nil, statusError("/file", resp.StatusCode)
+	}
+	return &FileResponse{Status: resp.StatusCode, ContentLength: resp.ContentLength, ContentRange: resp.Header.Get("Content-Range"), Body: resp.Body}, nil
+}
+
+func (c *HTTPClient) stream(ctx context.Context, rawURL, rangeHeader string) (*http.Response, error) {
+	req, err := http.NewRequestWithContext(ctx, http.MethodGet, rawURL, nil)
+	if err != nil {
+		return nil, fmt.Errorf("webcontrol: building stream request: %w", err)
+	}
+	if rangeHeader != "" {
+		req.Header.Set("Range", rangeHeader)
+	}
+	if c.Credentials != nil {
+		if user, pass := c.Credentials(); user != "" {
+			req.SetBasicAuth(user, pass)
+		}
+	}
+	hc := c.Streams
+	if hc == nil {
+		hc = &http.Client{Transport: streamTransport()}
+	}
+	resp, err := hc.Do(req)
+	if err != nil {
+		return nil, fmt.Errorf("webcontrol: stream: %w", err)
+	}
+	return resp, nil
+}
+
+func statusError(what string, status int) error {
+	switch status {
+	case http.StatusUnauthorized:
+		return fmt.Errorf("webcontrol: %s: %w", what, ErrUnauthorized)
+	case http.StatusNotFound:
+		return fmt.Errorf("webcontrol: %s: %w", what, ErrNotFound)
+	}
+	return fmt.Errorf("webcontrol: %s returned status %d", what, status)
 }

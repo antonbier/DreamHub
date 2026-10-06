@@ -111,6 +111,13 @@ func run(logger *slog.Logger, level *logging.Level) error {
 		logger.Info("webcontrol client mode", "mode", "live", "url", cfg.WebControlURL, "deviceWrites", cfg.EnableDeviceWrites)
 	default:
 		m := mock.New()
+		// A real MPEG-TS file to "stream live" in mock mode (StreamHub);
+		// none ships with the repository.
+		m.StreamFile = os.Getenv("DREAMHUB_MOCK_STREAM")
+		// …and the same file as a recording, to try playing one.
+		if b, err := os.ReadFile(m.StreamFile); m.StreamFile != "" && err == nil {
+			m.FS.Put(mock.Root+"20260923 2015 - ZDF HD - Stream sample.ts", string(b))
+		}
 		wc = m
 		recFS = m.FS
 		sr = srmock.New()

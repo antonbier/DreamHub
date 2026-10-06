@@ -1,6 +1,8 @@
 package recfs
 
 import (
+	"bytes"
+	"io"
 	"io/fs"
 	"sort"
 	"strings"
@@ -52,6 +54,19 @@ func (s *Mem) ReadFile(name string) ([]byte, error) {
 	defer s.mu.RUnlock()
 	return fs.ReadFile(s.m, key(name))
 }
+
+// Open reads a copy of the file, so a later write doesn't change it.
+func (s *Mem) Open(name string) (io.ReadSeekCloser, error) {
+	b, err := s.ReadFile(name)
+	if err != nil {
+		return nil, err
+	}
+	return nopSeekCloser{bytes.NewReader(b)}, nil
+}
+
+type nopSeekCloser struct{ *bytes.Reader }
+
+func (nopSeekCloser) Close() error { return nil }
 
 func (s *Mem) Rename(from, to string) error {
 	s.mu.Lock()

@@ -57,14 +57,14 @@ From the requirements the core derives each hub's **status**: *available*, *degr
 | **RadioHub** | Radio services, now playing, radio timers | v1.1 (built early, 2026-10-04) |
 | **PlexHub** ("Plex Mediathek") | A Plex server's films and series (tiles or list), watched state in Plex, play on the box — optional, cached while the server is off | built early, 2026-10-05 |
 | **ChannelHub** | Bouquets (link/embed the existing BouquetEditor plugin), picons | v1.1 |
-| **StreamHub** | Live TV / radio in the browser | later |
+| **StreamHub** ("Live-TV") | Live TV and recordings in the browser: the box streams unchanged, the browser decodes (FFmpeg in WebAssembly, WebCodecs) | built early, 2026-10-06 — radio still to come |
 | **AutomationHub** | Scripts, webhooks, automations — the only place anything happens automatically | later |
 
 Notes that affect several hubs:
 
 - **Single tuner.** The reference device has exactly one tuner (`Si2169D`, "Tuner A" in `/web/deviceinfo`). Overlapping timers are a real, common conflict — TimerHub's conflict handling and DiscoveryHub's "create timer" flow both have to take this seriously.
 - **SerienRecorder has its own web interface** (`config.plugins.serienRec.enableWebinterface=true`). SeriesHub should use its API rather than reading `SerienRecorder.db` directly. Needs verification on the device.
-- **Radio in the browser** isn't automatically easier than TV: radio services often use MP2 audio, which browsers don't reliably play. Playback belongs in StreamHub, later.
+- **Radio in the browser** isn't automatically easier than TV: radio services often use MP2 audio, which browsers don't play natively. StreamHub's player decodes MP2 itself (WebAssembly), so radio can follow.
 
 ## AdminHub
 
@@ -210,4 +210,4 @@ DreamHub is a tool for getting things done, not a media center for browsing. Ple
 
 - **v1**: the complete core (dashboard with customizable and custom tiles, navigation, global search, notifications inbox, settings, onboarding, diagnostics, auth, i18n DE/IT/EN, time zone handling, profile- and role-ready data model) + MediaHub, TimerHub, GuideHub, DiscoveryHub, SeriesHub (basic), SystemHub (basic), AdminHub (logs), ControlHub (remote, screenshot, power — pulled forward from v1.1) + the TV launcher plugin + `.deb` packaging.
 - **v1.1**: RadioHub, ChannelHub, MediaHub trimming, AdminHub service status, ControlHub's "message to TV" (`/web/message`). Built early and confirmed on the box: RadioHub, service status, message to TV (release 0.1.0); still to build: ChannelHub, trimming.
-- **Later**: StreamHub, AutomationHub, AdminHub terminal, external notification channels, Jellyfin/Emby connectors (Plex built early), more AI providers, profile/role UI, multiple dashboards UI, additional languages incl. RTL.
+- **Later**: AutomationHub, AdminHub terminal, external notification channels, Jellyfin/Emby connectors (Plex built early), more AI providers, profile/role UI, multiple dashboards UI, additional languages incl. RTL.

@@ -246,6 +246,7 @@ func New(ctx context.Context, o Options) (*App, error) {
 		Settings: svc, Store: st, AI: o.AI, TMDB: o.TMDB, Enrich: enricher, Now: now}
 	guideHub := &hubs_.Guide{WC: o.WebControl, Now: now, PiconDirs: o.PiconDirs}
 	radioHub := &hubs_.Radio{WC: o.WebControl, Now: now, PiconDirs: o.PiconDirs}
+	streamHub := &hubs_.Stream{WC: o.WebControl, FS: o.RecordingsFS, PiconDirs: o.PiconDirs}
 	seriesHub := &hubs_.Series{SR: o.Series, WC: o.WebControl, FS: o.RecordingsFS, TVmaze: o.TVmaze, Store: st, Settings: svc, DMI: o.DMI, Now: now}
 	discoveryHub := &hubs_.Discovery{WC: o.WebControl, SR: o.Series, AT: o.AutoTimer, AI: o.AI, Store: st, Settings: svc, Now: now}
 	systemHub := &hubs_.System{Store: st, Settings: svc, Dashboard: dash, Plans: plans, Now: now,
@@ -302,6 +303,7 @@ func New(ctx context.Context, o Options) (*App, error) {
 			{HubID: hub.IDMedia, Prefixes: []string{"/api/v1/media"}, Register: mediaHub.Mount},
 			{HubID: hub.IDGuide, Prefixes: []string{"/api/v1/guide"}, Register: guideHub.Mount},
 			{HubID: hub.IDRadio, Prefixes: []string{"/api/v1/radio"}, Register: radioHub.Mount},
+			{HubID: hub.IDStream, Prefixes: []string{"/api/v1/stream"}, Register: streamHub.Mount},
 			{HubID: hub.IDSeries, Prefixes: []string{"/api/v1/series"}, Register: seriesHub.Mount},
 			{HubID: hub.IDDiscovery, Prefixes: []string{"/api/v1/discovery"}, Register: discoveryHub.Mount},
 			{HubID: hub.IDSystem, Prefixes: []string{"/api/v1/changes", "/api/v1/system"}, Register: systemHub.Mount},

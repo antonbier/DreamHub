@@ -1,6 +1,7 @@
 <!--
   A channel's logo (picon) from the box (GET /api/v1/guide/picon, or
-  /api/v1/radio/picon for a radio station), fetched
+  /api/v1/radio/picon for a radio station, /api/v1/stream/picon in
+  StreamHub), fetched
   with the app's auth header and shared per channel for the session.
   Renders nothing while loading or when the box has none — the channel's
   name next to it carries the meaning, so the logo is decorative (alt="").
@@ -14,8 +15,9 @@ import { api } from '@/api/client'
 
 const cache = new Map<string, Promise<string | null>>()
 // source: which hub serves the logo — GuideHub's for TV channels,
-// RadioHub's for stations, so neither screen depends on the other hub.
-function piconURL(ref: string, name: string, source: 'guide' | 'radio') {
+// RadioHub's for stations, StreamHub's for its own list — so no screen
+// depends on another hub.
+function piconURL(ref: string, name: string, source: 'guide' | 'radio' | 'stream') {
   let p = cache.get(ref)
   if (!p) {
     p = api[source]
@@ -31,7 +33,7 @@ function piconURL(ref: string, name: string, source: 'guide' | 'radio') {
 <script setup lang="ts">
 import { ref, watch } from 'vue'
 
-const props = withDefaults(defineProps<{ serviceReference: string; serviceName: string; height?: number; source?: 'guide' | 'radio' }>(), {
+const props = withDefaults(defineProps<{ serviceReference: string; serviceName: string; height?: number; source?: 'guide' | 'radio' | 'stream' }>(), {
   height: 20,
   source: 'guide',
 })

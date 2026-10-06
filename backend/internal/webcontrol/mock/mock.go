@@ -35,6 +35,10 @@ type Client struct {
 	Playing string
 	// Standby is what InStandby reports (ControlHub).
 	Standby bool
+	// StreamFile is the MPEG-TS file LiveStream plays (stream.go); empty:
+	// no live streams. LastStreamed is the last service asked for.
+	StreamFile   string
+	LastStreamed string
 	// Now is the mock's clock for EPGNowNext; nil = the fixture evening.
 	Now func() time.Time
 	// LastZapped and LastKey record the most recent ControlHub action, for

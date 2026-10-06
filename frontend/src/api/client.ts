@@ -276,6 +276,15 @@ export const api = {
     timers: () => request<{ timers: Timer[] }>('GET', '/api/v1/radio/timers'),
     picon: (ref: string, name: string) => requestBlob(`/api/v1/radio/picon?ref=${encodeURIComponent(ref)}&name=${encodeURIComponent(name)}`),
   },
+  stream: {
+    // The TV bouquets (no headings).
+    bouquets: () => request<{ bouquets: Bouquet[] }>('GET', '/api/v1/stream/bouquets'),
+    // A bouquet's channels with now/next, and what the box shows.
+    channels: (bouquet: string) =>
+      request<{ channels: NowNext[]; playing: string }>('GET', `/api/v1/stream/channels?bouquet=${encodeURIComponent(bouquet)}`),
+    picon: (ref: string, name: string) => requestBlob(`/api/v1/stream/picon?ref=${encodeURIComponent(ref)}&name=${encodeURIComponent(name)}`),
+    // The streams themselves are read by src/streaming/tsPlayer.ts.
+  },
   series: {
     markers: () => request<{ markers: SeriesMarker[] }>('GET', '/api/v1/series/markers'),
     detail: (id: number) => request<SeriesDetail>('GET', `/api/v1/series/markers/${id}`),

@@ -23,6 +23,7 @@
     "admin": "Admin",
     "control": "Telecomando",
     "radio": "Radio",
+    "stream": "TV in diretta",
     "plex": "Mediateca Plex"
   },
   "status": {
@@ -437,7 +438,8 @@
       "fromRecording": "Dalla registrazione",
       "play": "Riproduci sulla TV",
       "playing": "In riproduzione sulla TV",
-      "length": "{length} min"
+      "length": "{length} min",
+      "watchInBrowser": "Guarda nel browser"
     }
   },
   "guide": {
@@ -1239,6 +1241,49 @@
       "running": "in registrazione"
     },
     "allStations": "Tutte le emittenti radio"
+  },
+  "stream": {
+    "intro": "TV e registrazioni direttamente nel browser: il box invia il segnale così com’è, il tuo dispositivo lo decodifica.",
+    "player": "Player",
+    "pick": "Scegli un canale.",
+    "loading": "Connessione al box …",
+    "ended": "Fine.",
+    "retry": "Riprova",
+    "live": "Live",
+    "nothing": "Nessun canale scelto",
+    "position": "Posizione",
+    "pause": "Pausa",
+    "resume": "Riprendi",
+    "stop": "Stop",
+    "mute": "Audio off",
+    "unmute": "Audio on",
+    "volume": "Volume",
+    "audioTrack": "Traccia audio",
+    "track": "Traccia {n}",
+    "info": "Dettagli",
+    "fullscreen": "Schermo intero",
+    "channels": "Canali",
+    "bouquet": "Lista canali",
+    "find": "Cerca un canale",
+    "sameAsTv": "Come sulla TV",
+    "onTv": "In onda sulla TV",
+    "tunerHint": "Un altro canale richiede un sintonizzatore libero. Con un solo sintonizzatore funziona solo finché TV e registrazioni sono sulla stessa frequenza; «Come sulla TV» funziona sempre.",
+    "unsupported": "Questo browser non può riprodurre lo stream (mancano WebAssembly o WebCodecs). Le versioni attuali di Chrome, Edge, Firefox e Safari ci riescono.",
+    "error": {
+      "noTuner": "Il box al momento non invia immagini per questo canale.",
+      "noTunerHint": "Probabilmente il sintonizzatore è occupato: la TV o una registrazione è su un’altra frequenza. «Come sulla TV» funziona sempre.",
+      "busy": "Sono già in corso due stream dal box.",
+      "notFound": "La registrazione non esiste (più).",
+      "network": "DreamHub non è raggiungibile.",
+      "generic": "Non è stato possibile riprodurre lo stream."
+    },
+    "stats": {
+      "video": "Video",
+      "audio": "Audio",
+      "data": "Dati",
+      "frames": "Fotogrammi (mostrati / saltati · in buffer)",
+      "sync": "Scarto · interruzioni audio"
+    }
   },
   "plex": {
     "server": "Server Plex",

@@ -37,6 +37,8 @@ const ICONS: Record<string, string> = {
   guide:
     '<rect x="3" y="4" width="18" height="16" rx="2"/><path d="M3 9.5h18M8 4v-1.2M16 4v-1.2"/><path d="M6.5 13h2M6.5 16.5h2M11 13h2M11 16.5h2M15.5 13h2M15.5 16.5h2"/>',
   folder: '<path d="M3 7a2 2 0 0 1 2-2h4l2 2h8a2 2 0 0 1 2 2v8a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/>',
+  fullscreen: '<path d="M4 9V4h5M15 4h5v5M20 15v5h-5M9 20H4v-5"/>',
+  stream: '<rect x="2.5" y="4.5" width="19" height="13" rx="2"/><path d="M10 8.5l5 2.5-5 2.5z"/><path d="M8 21h8"/>',
   radio: '<rect x="3" y="8" width="18" height="12" rx="2"/><path d="M7 8l10-5"/><circle cx="15.5" cy="14" r="3"/><path d="M6.5 12h3M6.5 15h3M6.5 18h3"/>',
   timers: '<circle cx="12" cy="13" r="8"/><path d="M12 9v4l3 2M9.5 2h5"/>',
   recommendations:

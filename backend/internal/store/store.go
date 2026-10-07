@@ -181,6 +181,36 @@ var migrations = []string{
 		synced_at INTEGER NOT NULL
 	);
 	`,
+	`
+	-- Profiles (docs/PROFILES_PLAN.md): an optional PIN (bcrypt), a color
+	-- for the picker, and the admin's per-profile permission switches as a
+	-- JSON object {"<perm>": true|false}. role 'user' is the viewer role.
+	ALTER TABLE users ADD COLUMN pin_hash TEXT NOT NULL DEFAULT '';
+	ALTER TABLE users ADD COLUMN color TEXT NOT NULL DEFAULT '';
+	ALTER TABLE users ADD COLUMN overrides TEXT NOT NULL DEFAULT '{}';
+
+	-- A device's chosen profile: the frontend sends the token, only its
+	-- SHA-256 is stored. Remembered until signed out, the profile is
+	-- deleted, or its PIN changes.
+	CREATE TABLE profile_sessions (
+		id           INTEGER PRIMARY KEY,
+		user_id      INTEGER NOT NULL REFERENCES users(id) ON DELETE CASCADE,
+		token_hash   TEXT NOT NULL UNIQUE,
+		created_at   TEXT NOT NULL,
+		last_used_at TEXT NOT NULL
+	);
+
+	-- Which profile made a timer through DreamHub, so a viewer can delete
+	-- their own timers but nobody else's. The box's timers have no owner;
+	-- one is identified by channel and start time, like everywhere else.
+	CREATE TABLE timer_owners (
+		service_ref TEXT NOT NULL,
+		begin_at    INTEGER NOT NULL,
+		user_id     INTEGER NOT NULL REFERENCES users(id) ON DELETE CASCADE,
+		created_at  TEXT NOT NULL,
+		PRIMARY KEY (service_ref, begin_at)
+	);
+	`,
 }
 
 func (s *Store) migrate(ctx context.Context) error {

@@ -29,7 +29,7 @@ type Radio struct {
 }
 
 // Mount registers RadioHub's routes.
-func (h *Radio) Mount(mux *http.ServeMux) {
+func (h *Radio) Mount(mux httpx.Mux) {
 	mux.HandleFunc("GET /api/v1/radio/bouquets", h.bouquets)
 	mux.HandleFunc("GET /api/v1/radio/stations", h.stations)
 	mux.HandleFunc("GET /api/v1/radio/timers", h.timers)

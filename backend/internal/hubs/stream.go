@@ -55,7 +55,7 @@ const (
 )
 
 // Mount registers StreamHub's routes.
-func (h *Stream) Mount(mux *http.ServeMux) {
+func (h *Stream) Mount(mux httpx.Mux) {
 	mux.HandleFunc("GET /api/v1/stream/bouquets", h.bouquets)
 	mux.HandleFunc("GET /api/v1/stream/channels", h.channels)
 	mux.HandleFunc("GET /api/v1/stream/picon", h.picon)

@@ -100,3 +100,10 @@ func DecodeJSON(r *http.Request, dst any) error {
 	}
 	return nil
 }
+
+// Mux is what a hub registers its routes on: an *http.ServeMux, or the
+// core's wrapper that adds each route's permission check (internal/api).
+type Mux interface {
+	HandleFunc(pattern string, handler func(http.ResponseWriter, *http.Request))
+	Handle(pattern string, handler http.Handler)
+}

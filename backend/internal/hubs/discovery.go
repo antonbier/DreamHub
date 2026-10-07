@@ -10,6 +10,7 @@ import (
 	"github.com/antonbier/DreamHub/backend/internal/autotimer"
 	"github.com/antonbier/DreamHub/backend/internal/connector"
 	"github.com/antonbier/DreamHub/backend/internal/httpx"
+	"github.com/antonbier/DreamHub/backend/internal/perm"
 	"github.com/antonbier/DreamHub/backend/internal/serienrecorder"
 	"github.com/antonbier/DreamHub/backend/internal/settings"
 	"github.com/antonbier/DreamHub/backend/internal/store"
@@ -40,8 +41,15 @@ type Discovery struct {
 	Plex *Plex
 }
 
+// Perms are DiscoveryHub's route permissions beyond the hub's own (internal/perm).
+func (h *Discovery) Perms() map[string]perm.Perm {
+	return map[string]perm.Perm{
+		"POST /api/v1/discovery/recommendations": perm.Discovery,
+	}
+}
+
 // Mount registers DiscoveryHub's routes.
-func (h *Discovery) Mount(mux *http.ServeMux) {
+func (h *Discovery) Mount(mux httpx.Mux) {
 	mux.HandleFunc("GET /api/v1/discovery/status", h.status)
 	mux.HandleFunc("GET /api/v1/discovery/taste", h.getTaste)
 	mux.HandleFunc("GET /api/v1/discovery/recommendations", h.saved)

@@ -13,6 +13,7 @@ import (
 	"github.com/antonbier/DreamHub/backend/internal/enrich"
 	"github.com/antonbier/DreamHub/backend/internal/httpx"
 	"github.com/antonbier/DreamHub/backend/internal/hub"
+	"github.com/antonbier/DreamHub/backend/internal/perm"
 	"github.com/antonbier/DreamHub/backend/internal/plan"
 	"github.com/antonbier/DreamHub/backend/internal/recfs"
 	"github.com/antonbier/DreamHub/backend/internal/settings"
@@ -54,8 +55,21 @@ type Media struct {
 	index recIndex
 }
 
+// Perms are MediaHub's route permissions beyond the hub's own (internal/perm).
+func (h *Media) Perms() map[string]perm.Perm {
+	return map[string]perm.Perm{
+		"POST /api/v1/media/covers/plan":        perm.RecordingsManage,
+		"POST /api/v1/media/rename/batch/plan":  perm.RecordingsManage,
+		"POST /api/v1/media/rename/plan":        perm.RecordingsManage,
+		"POST /api/v1/media/rename/suggest":     perm.RecordingsManage,
+		"POST /api/v1/media/trash/empty/plan":   perm.RecordingsManage,
+		"POST /api/v1/media/trash/plan":         perm.RecordingsManage,
+		"POST /api/v1/media/trash/restore/plan": perm.RecordingsManage,
+	}
+}
+
 // Mount registers MediaHub's routes.
-func (h *Media) Mount(mux *http.ServeMux) {
+func (h *Media) Mount(mux httpx.Mux) {
 	mux.HandleFunc("GET /api/v1/media/movies", h.list)
 	mux.HandleFunc("GET /api/v1/media/disk", h.disk)
 	mux.HandleFunc("GET /api/v1/media/cover", h.cover)

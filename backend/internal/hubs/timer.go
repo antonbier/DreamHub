@@ -18,8 +18,10 @@ import (
 	"github.com/antonbier/DreamHub/backend/internal/autotimer"
 	"github.com/antonbier/DreamHub/backend/internal/httpx"
 	"github.com/antonbier/DreamHub/backend/internal/hub"
+	"github.com/antonbier/DreamHub/backend/internal/perm"
 	"github.com/antonbier/DreamHub/backend/internal/plan"
 	"github.com/antonbier/DreamHub/backend/internal/status"
+	"github.com/antonbier/DreamHub/backend/internal/store"
 	"github.com/antonbier/DreamHub/backend/internal/tuner"
 	"github.com/antonbier/DreamHub/backend/internal/webcontrol"
 )
@@ -34,10 +36,43 @@ type Timer struct {
 	// AT is the AutoTimer plugin's API; nil or "not installed" just hides
 	// that section (the plugin is optional, docs/V1_PLAN.md rule 1).
 	AT autotimer.Client
+	// Owners records which profile made a timer through DreamHub, so a
+	// profile without perm.TimersManage can delete or switch off its own
+	// timers but no one else's (docs/PROFILES_PLAN.md). nil: nobody owns
+	// anything.
+	Owners TimerOwners
+}
+
+// TimerOwners is where timer ownership is kept (internal/store).
+type TimerOwners interface {
+	SetTimerOwner(ctx context.Context, serviceRef string, begin, userID int64) error
+	TimerOwner(ctx context.Context, serviceRef string, begin int64) (int64, error)
+}
+
+// Perms are TimerHub's route permissions (internal/perm).
+func (h *Timer) Perms() map[string]perm.Perm {
+	return map[string]perm.Perm{
+		"POST /api/v1/timers/plan":        perm.TimersPlan,
+		"POST /api/v1/timers/delete/plan": perm.TimersPlan, // and mayChange
+		"POST /api/v1/timers/toggle/plan": perm.TimersPlan, // and mayChange
+	}
+}
+
+// mayChange reports whether user may delete or switch off t: anyone with
+// perm.TimersManage, else only the profile that made it through DreamHub.
+func (h *Timer) mayChange(ctx context.Context, user store.User, t webcontrol.Timer) bool {
+	if perm.For(user).Has(perm.TimersManage) {
+		return true
+	}
+	if h.Owners == nil {
+		return false
+	}
+	owner, err := h.Owners.TimerOwner(ctx, t.ServiceReference, t.Begin)
+	return err == nil && owner == user.ID
 }
 
 // Mount registers TimerHub's routes.
-func (h *Timer) Mount(mux *http.ServeMux) {
+func (h *Timer) Mount(mux httpx.Mux) {
 	mux.HandleFunc("GET /api/v1/timers", h.list)
 	mux.HandleFunc("POST /api/v1/timers/plan", h.planCreate)
 	mux.HandleFunc("POST /api/v1/timers/delete/plan", h.planDelete)
@@ -76,6 +111,7 @@ const (
 	CodeTimerNotCreated = "timer_not_created"
 	CodeTimerNotDeleted = "timer_not_deleted"
 	CodeTimerNotFound   = "timer_not_found"
+	CodeTimerNotYours   = "timer_not_yours" // a viewer may only delete or switch off timers it made
 )
 
 // Search implements hub.SearchProvider: a case-insensitive substring match
@@ -109,6 +145,9 @@ type TimerView struct {
 	webcontrol.Timer
 	Source   string `json:"source,omitempty"`
 	Conflict bool   `json:"conflict"`
+	// MayChange: the current profile may delete or switch off this timer
+	// (set by the list only).
+	MayChange bool `json:"mayChange"`
 }
 
 // timerSource reads the creator from the tags: SerienRecorder always tags
@@ -145,7 +184,12 @@ func (h *Timer) list(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 	info, _ := h.WC.DeviceInfo(r.Context())
-	httpx.WriteJSON(w, http.StatusOK, map[string]any{"timers": timerViews(timers, info), "tuners": info.Tuners()})
+	views := timerViews(timers, info)
+	user, _ := httpx.User(r.Context())
+	for i := range views {
+		views[i].MayChange = h.mayChange(r.Context(), user, views[i].Timer)
+	}
+	httpx.WriteJSON(w, http.StatusOK, map[string]any{"timers": views, "tuners": info.Tuners()})
 }
 
 // autoTimers lists the AutoTimer plugin's configuration. A box without the
@@ -385,8 +429,13 @@ func (h *Timer) planCreate(w http.ResponseWriter, r *http.Request) {
 			if err != nil {
 				return err
 			}
-			if _, ok := findTimer(after, webcontrol.TimerRef{ServiceReference: p.ServiceReference, Begin: p.RecordBegin, End: p.RecordEnd}); !ok {
+			made, ok := findTimer(after, webcontrol.TimerRef{ServiceReference: p.ServiceReference, Begin: p.RecordBegin, End: p.RecordEnd})
+			if !ok {
 				return &plan.Failure{Status: http.StatusConflict, Code: CodeTimerNotCreated, Message: "the box reported success, but the timer isn't in its list — usually one on the same channel with the same start already exists"}
+			}
+			if h.Owners != nil {
+				// Best effort: without the record only an admin can delete it.
+				_ = h.Owners.SetTimerOwner(ctx, made.ServiceReference, made.Begin, user.ID)
 			}
 			return nil
 		},
@@ -420,6 +469,10 @@ func (h *Timer) planDelete(w http.ResponseWriter, r *http.Request) {
 	t, ok := findTimer(timers, ref)
 	if !ok {
 		httpx.WriteError(w, r, http.StatusNotFound, CodeTimerNotFound, "no timer with this service reference, begin and end")
+		return
+	}
+	if !h.mayChange(ctx, user, t) {
+		httpx.WriteError(w, r, http.StatusForbidden, CodeTimerNotYours, "this profile may only delete timers it made")
 		return
 	}
 

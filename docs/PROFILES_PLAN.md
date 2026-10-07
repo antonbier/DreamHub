@@ -97,8 +97,8 @@ P1 and P2 come first (P2 depends on P1). P3–P5 can follow in any order; P4 is 
 - **Plex watched state per profile** (Plex Home users). Until then all profiles share the one Plex account's watched state and "continue watching".
 - **Native/Capacitor app and HTTPS via an own domain** — parked until this plan is through (owner's decision 2026-10-07). Its trigger: whether HD H.264 channels stutter on phones over plain `http://`, where WebCodecs isn't available.
 
-## Open questions for the owner
+## Answered by the owner (2026-10-07)
 
-1. Viewer deleting timers they created themselves — yes (assumed above)?
-2. Profile picker: remember on the device (assumed) or ask every time the app opens?
-3. Should a viewer be allowed to switch the TV's channel while a recording runs on the single tuner (the box refuses some switches anyway), or only when nothing records?
+1. Viewers may delete timers they created themselves through DreamHub — yes.
+2. The chosen profile is remembered on the device; switching is in the user menu.
+3. Viewers may switch the TV's channel any time, recording or not: the box itself refuses switches the tuner can't serve, so nothing breaks.

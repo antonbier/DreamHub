@@ -7,6 +7,7 @@ import (
 	"unicode/utf8"
 
 	"github.com/antonbier/DreamHub/backend/internal/httpx"
+	"github.com/antonbier/DreamHub/backend/internal/perm"
 	"github.com/antonbier/DreamHub/backend/internal/webcontrol"
 )
 
@@ -23,8 +24,17 @@ type Control struct {
 	WC webcontrol.Client
 }
 
+// Perms are ControlHub's route permissions beyond the hub's own (internal/perm).
+func (h *Control) Perms() map[string]perm.Perm {
+	return map[string]perm.Perm{
+		"POST /api/v1/control/key":     perm.Control,
+		"POST /api/v1/control/message": perm.Control,
+		"POST /api/v1/control/zap":     perm.Control,
+	}
+}
+
 // Mount registers ControlHub's routes.
-func (h *Control) Mount(mux *http.ServeMux) {
+func (h *Control) Mount(mux httpx.Mux) {
 	mux.HandleFunc("GET /api/v1/control/screenshot", h.screenshot)
 	mux.HandleFunc("GET /api/v1/control/power", h.getPower)
 	mux.HandleFunc("GET /api/v1/control/current", h.current)

@@ -12,9 +12,9 @@ import (
 	"sort"
 
 	"github.com/antonbier/DreamHub/backend/internal/connector"
+	"github.com/antonbier/DreamHub/backend/internal/perm"
 	"github.com/antonbier/DreamHub/backend/internal/settings"
 	"github.com/antonbier/DreamHub/backend/internal/status"
-	"github.com/antonbier/DreamHub/backend/internal/store"
 )
 
 // Group is a navigation group. The order of groupOrder is the order in the
@@ -53,8 +53,9 @@ type Descriptor struct {
 	Path  string // frontend route
 	Group Group
 	Order int
-	// Role is the minimum role that can see the hub.
-	Role     store.Role
+	// Perm is the permission needed to see the hub and use its routes
+	// (internal/perm); perm.Watch when empty.
+	Perm     perm.Perm
 	Requires []Requirement
 	// Emits are the event keys (internal/events, the notification inbox
 	// and push) that come from this hub's area — the hub contract's
@@ -97,8 +98,8 @@ func (r *Registry) Add(d Descriptor) error {
 	if !valid {
 		return fmt.Errorf("hub: %q has unknown group %q", d.ID, d.Group)
 	}
-	if d.Role == "" {
-		d.Role = store.RoleUser
+	if d.Perm == "" {
+		d.Perm = perm.Watch
 	}
 	r.hubs = append(r.hubs, d)
 	r.byID[d.ID] = d
@@ -132,7 +133,7 @@ type Status struct {
 	Icon     string           `json:"icon"`
 	Path     string           `json:"path"`
 	Group    Group            `json:"group"`
-	Role     store.Role       `json:"role"`
+	Perm     perm.Perm        `json:"permission"`
 	Enabled  bool             `json:"enabled"`
 	Level    status.Level     `json:"status"`
 	Problems []status.Problem `json:"problems"`
@@ -164,7 +165,7 @@ func (r *Registry) Statuses(v settings.Values, reports map[string]connector.Repo
 	idx := map[string]int{}
 	for _, d := range r.hubs {
 		st := Status{
-			ID: d.ID, Name: d.Name, Label: d.Label, Icon: d.Icon, Path: d.Path, Group: d.Group, Role: d.Role,
+			ID: d.ID, Name: d.Name, Label: d.Label, Icon: d.Icon, Path: d.Path, Group: d.Group, Perm: d.Perm,
 			Enabled: v.Bool(EnabledKey(d.ID)), Level: status.Available, Problems: []status.Problem{}, Requires: d.Requires, Emits: append([]string{}, d.Emits...),
 		}
 		if st.Requires == nil {
@@ -232,8 +233,16 @@ func (r *Registry) Statuses(v settings.Values, reports map[string]connector.Repo
 	return out
 }
 
-// Visible reports whether a user with role can see hubs requiring min.
-func Visible(min, role store.Role) bool { return min != store.RoleAdmin || role == store.RoleAdmin }
+// Visible reports whether a user with perms can see a hub needing need.
+func Visible(need perm.Perm, perms perm.Set) bool { return perms.Has(need) }
+
+// Perm returns the permission a hub needs, perm.System for an unknown hub.
+func (r *Registry) Perm(id string) perm.Perm {
+	if d, ok := r.byID[id]; ok {
+		return d.Perm
+	}
+	return perm.System
+}
 
 // NavItem is one entry in the sidebar.
 type NavItem struct {
@@ -265,10 +274,10 @@ type Navigation struct {
 // order, then the bottom section with AdminHub and Settings. Disabled hubs
 // and hubs the role can't see are left out; unavailable hubs stay in (the
 // UI greys them out and shows why). Empty groups are omitted.
-func (r *Registry) Navigation(statuses []Status, role store.Role, labels string) Navigation {
+func (r *Registry) Navigation(statuses []Status, perms perm.Set, labels string) Navigation {
 	byGroup := map[Group][]Status{}
 	for _, s := range statuses {
-		if !s.Enabled || !Visible(s.Role, role) {
+		if !s.Enabled || !Visible(s.Perm, perms) {
 			continue
 		}
 		byGroup[s.Group] = append(byGroup[s.Group], s)

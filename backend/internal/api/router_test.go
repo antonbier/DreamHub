@@ -4,6 +4,16 @@ import (
 	"bytes"
 	"context"
 	"encoding/json"
+	"io"
+	"log/slog"
+	"net/http"
+	"net/http/httptest"
+	"net/url"
+	"strconv"
+	"strings"
+	"testing"
+	"time"
+
 	"github.com/antonbier/DreamHub/backend/internal/autotimer"
 	atmock "github.com/antonbier/DreamHub/backend/internal/autotimer/mock"
 	fanartmock "github.com/antonbier/DreamHub/backend/internal/fanart/mock"
@@ -14,15 +24,6 @@ import (
 	sdmock "github.com/antonbier/DreamHub/backend/internal/systemd/mock"
 	tmdbmock "github.com/antonbier/DreamHub/backend/internal/tmdb/mock"
 	tvmazemock "github.com/antonbier/DreamHub/backend/internal/tvmaze/mock"
-	"io"
-	"log/slog"
-	"net/http"
-	"net/http/httptest"
-	"net/url"
-	"strconv"
-	"strings"
-	"testing"
-	"time"
 
 	aimock "github.com/antonbier/DreamHub/backend/internal/ai/mock"
 	"github.com/antonbier/DreamHub/backend/internal/api"
@@ -52,6 +53,8 @@ type env struct {
 	systemd *sdmock.Manager
 	// plex is PlexHub's server (in-memory).
 	plex *plexmock.Client
+	// routes are the protected routes with their permissions.
+	routes []api.Route
 }
 
 // newEnv builds the application exactly as production does (internal/app),
@@ -127,7 +130,7 @@ func newEnvFull(t *testing.T, wc webcontrol.Client, at autotimer.Client, recFS r
 	for _, job := range a.Background {
 		go job(jobs)
 	}
-	return &env{srv: srv, store: a.Store, svc: a.Settings, events: a.Events, pushed: pushed, systemd: services, plex: plexServer}
+	return &env{srv: srv, store: a.Store, svc: a.Settings, events: a.Events, pushed: pushed, systemd: services, plex: plexServer, routes: a.Routes}
 }
 
 func (e *env) do(t *testing.T, method, path, body string, configure func(*http.Request)) (*http.Response, []byte) {

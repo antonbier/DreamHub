@@ -5,6 +5,7 @@ import (
 	"testing"
 
 	"github.com/antonbier/DreamHub/backend/internal/connector"
+	"github.com/antonbier/DreamHub/backend/internal/perm"
 	"github.com/antonbier/DreamHub/backend/internal/settings"
 	"github.com/antonbier/DreamHub/backend/internal/status"
 	"github.com/antonbier/DreamHub/backend/internal/store"
@@ -132,7 +133,7 @@ func TestNavigation(t *testing.T) {
 	v[EnabledKey(IDSeries)] = false
 	statuses := r.Statuses(v, allOK())
 
-	nav := r.Navigation(statuses, store.RoleAdmin, "hub")
+	nav := r.Navigation(statuses, perm.ForRole(store.RoleAdmin), "hub")
 	if nav.Labels != "hub" {
 		t.Errorf("labels mode must be passed through, got %q", nav.Labels)
 	}
@@ -165,7 +166,7 @@ func TestNavigation(t *testing.T) {
 		t.Errorf("bottom must be AdminHub then Settings, got %+v", bottom)
 	}
 
-	userNav := r.Navigation(statuses, store.RoleUser, "descriptive")
+	userNav := r.Navigation(statuses, perm.ForRole(store.RoleUser), "descriptive")
 	for _, s := range userNav.Sections {
 		for _, it := range s.Items {
 			if it.ID == IDAdmin {
@@ -180,7 +181,7 @@ func TestNavigation_OmitsEmptyGroups(t *testing.T) {
 	v := allEnabled(r)
 	v[EnabledKey(IDSystem)] = false
 	v[EnabledKey(IDControl)] = false
-	for _, s := range r.Navigation(r.Statuses(v, allOK()), store.RoleAdmin, "descriptive").Sections {
+	for _, s := range r.Navigation(r.Statuses(v, allOK()), perm.ForRole(store.RoleAdmin), "descriptive").Sections {
 		if s.ID == string(GroupDevice) {
 			t.Fatal("device group has no enabled hub and must be omitted")
 		}

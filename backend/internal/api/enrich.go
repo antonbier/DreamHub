@@ -33,7 +33,7 @@ func handleEnrichLookup(d Deps) http.HandlerFunc {
 			return
 		}
 		results := make([]*enrich.Info, len(body.Items))
-		v, err := d.Settings.Values(r.Context(), d.User)
+		v, err := d.Settings.Values(r.Context(), current(r))
 		if err != nil {
 			httpx.WriteError(w, r, http.StatusInternalServerError, "internal", "could not load settings")
 			return
@@ -90,7 +90,7 @@ func handleEnrichExtras(d Deps) http.HandlerFunc {
 			httpx.WriteError(w, r, http.StatusBadRequest, "invalid_query", "expected ?kind=movie|tv&id=<TMDB ID>")
 			return
 		}
-		v, err := d.Settings.Values(r.Context(), d.User)
+		v, err := d.Settings.Values(r.Context(), current(r))
 		if err != nil {
 			httpx.WriteError(w, r, http.StatusInternalServerError, "internal", "could not load settings")
 			return

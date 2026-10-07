@@ -136,3 +136,15 @@ func (s *Service) Verify(ctx context.Context, secret string) bool {
 	_, err := s.store.APITokenByHash(ctx, hash(secret))
 	return err == nil
 }
+
+// Owner returns the ID of the profile a valid token belongs to.
+func (s *Service) Owner(ctx context.Context, secret string) (int64, bool) {
+	if secret == "" {
+		return 0, false
+	}
+	t, err := s.store.APITokenByHash(ctx, hash(secret))
+	if err != nil {
+		return 0, false
+	}
+	return t.UserID, true
+}

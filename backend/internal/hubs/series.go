@@ -49,7 +49,7 @@ func (h *Series) now() time.Time {
 }
 
 // Mount registers SeriesHub's routes.
-func (h *Series) Mount(mux *http.ServeMux) {
+func (h *Series) Mount(mux httpx.Mux) {
 	mux.HandleFunc("GET /api/v1/series/markers", h.markers)
 	mux.HandleFunc("GET /api/v1/series/markers/{id}", h.detail)
 	mux.HandleFunc("GET /api/v1/series/markers/{id}/cover", h.cover)

@@ -9,9 +9,9 @@ import (
 	"time"
 
 	"github.com/antonbier/DreamHub/backend/internal/connector"
+	"github.com/antonbier/DreamHub/backend/internal/perm"
 	"github.com/antonbier/DreamHub/backend/internal/settings"
 	"github.com/antonbier/DreamHub/backend/internal/status"
-	"github.com/antonbier/DreamHub/backend/internal/store"
 )
 
 // Views are the hub contract's data source for custom dashboard tiles
@@ -134,7 +134,7 @@ func (r *Registry) sourceHub(sourceID string) (string, bool) {
 
 // ViewSources lists the sources the user can use right now, in navigation
 // order — same visibility rule as Search.
-func (r *Registry) ViewSources(v settings.Values, reports map[string]connector.Report, role store.Role) []ViewSource {
+func (r *Registry) ViewSources(v settings.Values, reports map[string]connector.Report, perms perm.Set) []ViewSource {
 	statuses := r.Statuses(v, reports)
 	order := map[string]int{}
 	for _, d := range r.hubs {
@@ -143,7 +143,7 @@ func (r *Registry) ViewSources(v settings.Values, reports map[string]connector.R
 	sort.SliceStable(statuses, func(i, j int) bool { return order[statuses[i].ID] < order[statuses[j].ID] })
 	out := []ViewSource{}
 	for _, s := range statuses {
-		if !s.Enabled || !Visible(s.Role, role) || s.Level == status.Unavailable {
+		if !s.Enabled || !Visible(s.Perm, perms) || s.Level == status.Unavailable {
 			continue
 		}
 		p, ok := r.views[s.ID]
@@ -158,15 +158,15 @@ func (r *Registry) ViewSources(v settings.Values, reports map[string]connector.R
 	return out
 }
 
-// View evaluates q against sourceID for a user with role.
-func (r *Registry) View(ctx context.Context, v settings.Values, reports map[string]connector.Report, role store.Role, sourceID string, q ViewQuery, now time.Time, loc *time.Location) (ViewResult, error) {
+// View evaluates q against sourceID for a user with perms.
+func (r *Registry) View(ctx context.Context, v settings.Values, reports map[string]connector.Report, perms perm.Set, sourceID string, q ViewQuery, now time.Time, loc *time.Location) (ViewResult, error) {
 	hubID, ok := r.sourceHub(sourceID)
 	if !ok {
 		return ViewResult{}, ErrUnknownSource
 	}
 	var src ViewSource
 	usable := false
-	for _, s := range r.ViewSources(v, reports, role) {
+	for _, s := range r.ViewSources(v, reports, perms) {
 		if s.ID == sourceID {
 			src, usable = s, true
 		}

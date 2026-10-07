@@ -22,7 +22,9 @@ import (
 	"github.com/antonbier/DreamHub/backend/internal/events"
 	"github.com/antonbier/DreamHub/backend/internal/httpx"
 	"github.com/antonbier/DreamHub/backend/internal/hub"
+	"github.com/antonbier/DreamHub/backend/internal/perm"
 	"github.com/antonbier/DreamHub/backend/internal/plan"
+	"github.com/antonbier/DreamHub/backend/internal/profile"
 	"github.com/antonbier/DreamHub/backend/internal/push"
 	"github.com/antonbier/DreamHub/backend/internal/settings"
 	"github.com/antonbier/DreamHub/backend/internal/store"
@@ -39,7 +41,10 @@ const Version = "0.1.9"
 type Mount struct {
 	HubID    string
 	Prefixes []string
-	Register func(*http.ServeMux)
+	Register func(httpx.Mux)
+	// Perms are the routes' permissions beyond the hub's own, by pattern;
+	// a changing route without one is admin-only (guardMux).
+	Perms map[string]perm.Perm
 }
 
 // PublicRoute is a hub route outside DreamHub's login — only for a client
@@ -76,8 +81,11 @@ type Deps struct {
 	// Push (nil: not wired) sends the test notification.
 	Push   *push.Notifier
 	Mounts []Mount
-	// User is the current user. v1 has exactly one user (an admin); once
-	// profiles exist this comes from the authenticated request instead.
+	// Profiles picks the profile behind each request (identity.go).
+	Profiles *profile.Service
+	// User is the first admin, for reading global settings outside any
+	// request's profile (the Host check). A request's own profile comes
+	// from current(r).
 	User   store.User
 	Logger *slog.Logger
 	Now    func() time.Time
@@ -85,38 +93,56 @@ type Deps struct {
 
 // NewRouter builds the full /api/v1 handler tree.
 func NewRouter(d Deps) http.Handler {
+	h, _ := NewRouterWithRoutes(d)
+	return h
+}
+
+// NewRouterWithRoutes also returns every protected route with the
+// permissions it needs — for the test that every changing route declares
+// one, and for documentation.
+func NewRouterWithRoutes(d Deps) (http.Handler, []Route) {
 	if d.Now == nil {
 		d.Now = time.Now
 	}
 
 	protected := http.NewServeMux()
-	protected.HandleFunc("GET /api/v1/whoami", handleWhoami(d))
-	protected.HandleFunc("GET /api/v1/deviceinfo", handleDeviceInfo(d))
-	protected.HandleFunc("GET /api/v1/settings", handleGetSettings(d))
-	protected.HandleFunc("PATCH /api/v1/settings", handlePatchSettings(d))
-	protected.HandleFunc("GET /api/v1/navigation", handleNavigation(d))
-	protected.HandleFunc("GET /api/v1/hubs", handleHubs(d))
-	protected.HandleFunc("GET /api/v1/connectors", handleConnectors(d))
-	protected.HandleFunc("GET /api/v1/dashboard", handleGetDashboard(d))
-	protected.HandleFunc("PUT /api/v1/dashboard", handlePutDashboard(d))
-	protected.HandleFunc("POST /api/v1/enrich/lookup", handleEnrichLookup(d))
-	protected.HandleFunc("GET /api/v1/enrich/image/{size}/{file}", handleEnrichImage(d))
-	protected.HandleFunc("GET /api/v1/enrich/extras", handleEnrichExtras(d))
-	protected.HandleFunc("GET /api/v1/enrich/logo", handleEnrichLogo(d))
-	protected.HandleFunc("POST /api/v1/push/test", handlePushTest(d))
-	protected.HandleFunc("GET /api/v1/dashboard/sources", handleViewSources(d))
-	protected.HandleFunc("POST /api/v1/dashboard/view", handleView(d))
-	protected.HandleFunc("GET /api/v1/search", handleSearch(d))
-	protected.HandleFunc("GET /api/v1/tokens", handleListTokens(d))
-	protected.HandleFunc("POST /api/v1/tokens", handleCreateToken(d))
-	protected.HandleFunc("DELETE /api/v1/tokens/{id}", handleDeleteToken(d))
-	protected.HandleFunc("POST /api/v1/plans/{id}/apply", handleApplyPlan(d))
-	protected.HandleFunc("GET /api/v1/notifications", handleNotifications(d))
-	protected.HandleFunc("POST /api/v1/notifications/read", handleMarkNotificationsRead(d))
-	protected.HandleFunc("GET /api/v1/events/stream", handleEventsStream(d))
+	var routes []Route
+	core := guardMux{mux: protected, hub: perm.Watch, routes: corePerms, seen: &routes}
+	core.HandleFunc("GET /api/v1/whoami", handleWhoami(d))
+	core.HandleFunc("GET /api/v1/deviceinfo", handleDeviceInfo(d))
+	core.HandleFunc("GET /api/v1/settings", handleGetSettings(d))
+	core.HandleFunc("PATCH /api/v1/settings", handlePatchSettings(d))
+	core.HandleFunc("GET /api/v1/navigation", handleNavigation(d))
+	core.HandleFunc("GET /api/v1/hubs", handleHubs(d))
+	core.HandleFunc("GET /api/v1/connectors", handleConnectors(d))
+	core.HandleFunc("GET /api/v1/dashboard", handleGetDashboard(d))
+	core.HandleFunc("PUT /api/v1/dashboard", handlePutDashboard(d))
+	core.HandleFunc("POST /api/v1/enrich/lookup", handleEnrichLookup(d))
+	core.HandleFunc("GET /api/v1/enrich/image/{size}/{file}", handleEnrichImage(d))
+	core.HandleFunc("GET /api/v1/enrich/extras", handleEnrichExtras(d))
+	core.HandleFunc("GET /api/v1/enrich/logo", handleEnrichLogo(d))
+	core.HandleFunc("POST /api/v1/push/test", handlePushTest(d))
+	core.HandleFunc("GET /api/v1/dashboard/sources", handleViewSources(d))
+	core.HandleFunc("POST /api/v1/dashboard/view", handleView(d))
+	core.HandleFunc("GET /api/v1/search", handleSearch(d))
+	core.HandleFunc("GET /api/v1/tokens", handleListTokens(d))
+	core.HandleFunc("POST /api/v1/tokens", handleCreateToken(d))
+	core.HandleFunc("DELETE /api/v1/tokens/{id}", handleDeleteToken(d))
+	core.HandleFunc("POST /api/v1/plans/{id}/apply", handleApplyPlan(d))
+	core.HandleFunc("GET /api/v1/notifications", handleNotifications(d))
+	core.HandleFunc("POST /api/v1/notifications/read", handleMarkNotificationsRead(d))
+	core.HandleFunc("GET /api/v1/events/stream", handleEventsStream(d))
+	core.HandleFunc("POST /api/v1/profiles", handleCreateProfile(d))
+	core.HandleFunc("PATCH /api/v1/profiles/{id}", handleUpdateProfile(d))
+	core.HandleFunc("DELETE /api/v1/profiles/{id}", handleDeleteProfile(d))
+	core.HandleFunc("PUT /api/v1/profiles/me/pin", handleUpdateMyPin(d))
+	checkDeclared(corePerms, routes)
 	for _, m := range d.Mounts {
 		sub := http.NewServeMux()
-		m.Register(sub)
+		var hubRoutes []Route
+		m.Register(guardMux{mux: sub, hub: d.Hubs.Perm(m.HubID), routes: m.Perms, seen: &hubRoutes})
+		checkDeclared(m.Perms, hubRoutes)
+		routes = append(routes, hubRoutes...)
 		guarded := hubEnabledGuard(d, m.HubID, sub)
 		for _, p := range m.Prefixes {
 			protected.Handle(p, guarded)
@@ -135,7 +161,11 @@ func NewRouter(d Deps) http.Handler {
 	for _, p := range d.Public {
 		mux.Handle(p.Pattern, hubEnabledGuard(d, p.HubID, p.Handler))
 	}
-	mux.Handle("/api/v1/", auth.Middleware(d.Verifier, protected))
+	// The profile picker: behind the door, but before a profile is chosen.
+	mux.Handle("GET /api/v1/profiles", auth.Middleware(d.Verifier, handleListProfiles(d)))
+	mux.Handle("POST /api/v1/profiles/{id}/session", auth.Middleware(d.Verifier, handleStartSession(d)))
+	mux.Handle("DELETE /api/v1/profiles/session", auth.Middleware(d.Verifier, handleEndSession(d)))
+	mux.Handle("/api/v1/", auth.Middleware(d.Verifier, identify(d, protected)))
 
 	allowedHosts := func(r *http.Request) []string {
 		v, err := d.Settings.Values(r.Context(), d.User)
@@ -144,12 +174,30 @@ func NewRouter(d Deps) http.Handler {
 		}
 		return v.AllowedHosts()
 	}
-	withUser := http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-		mux.ServeHTTP(w, r.WithContext(httpx.WithUser(r.Context(), d.User)))
-	})
 	return httpx.RequestIDAndLogging(d.Logger, d.Now,
 		httpx.HostCheck(allowedHosts,
-			httpx.CSRF(withUser)))
+			httpx.CSRF(mux))), routes
+}
+
+// corePerms are the core routes' permissions beyond perm.Watch; the
+// changing ones that every profile may use say so explicitly (a changing
+// route without an entry would be admin-only).
+var corePerms = map[string]perm.Perm{
+	"PATCH /api/v1/settings":          perm.Watch, // per field: global ones need perm.SettingsGlobal (internal/settings)
+	"PUT /api/v1/dashboard":           perm.Watch, // the profile's own
+	"POST /api/v1/enrich/lookup":      perm.Watch, // a read with a body
+	"POST /api/v1/dashboard/view":     perm.Watch, // a read with a body
+	"POST /api/v1/plans/{id}/apply":   perm.Watch, // the plan's creator, who needed the permission to plan it
+	"POST /api/v1/notifications/read": perm.Watch,
+	"PUT /api/v1/profiles/me/pin":     perm.Watch,
+	"POST /api/v1/push/test":          perm.System,
+	"GET /api/v1/tokens":              perm.System,
+	"POST /api/v1/tokens":             perm.System,
+	"DELETE /api/v1/tokens/{id}":      perm.System,
+	"GET /api/v1/connectors":          perm.SettingsGlobal,
+	"POST /api/v1/profiles":           perm.Profiles,
+	"PATCH /api/v1/profiles/{id}":     perm.Profiles,
+	"DELETE /api/v1/profiles/{id}":    perm.Profiles,
 }
 
 // hubEnabledGuard answers 404 hub_disabled for a hub switched off in
@@ -228,16 +276,26 @@ func handleHealth(d Deps) http.HandlerFunc {
 	}
 }
 
-// handleWhoami reports the current user. Protected (behind auth), so it
-// doubles as a credentials check: the web UI's login screen submits a
-// username/password as a Basic Auth header here and treats 200 as success,
-// 401 as a wrong password (see frontend/src/composables/useAuth.ts). v1 has
-// exactly one user, so this doesn't vary by who actually authenticated.
+// handleWhoami reports the request's profile and what it may do. Protected
+// (behind auth), so it doubles as a credentials check: the web UI's login
+// screen submits a username/password as a Basic Auth header here and
+// treats 200 as success, 401 as a wrong password (see
+// frontend/src/composables/useAuth.ts); a 401 profile_required means the
+// door opened and a profile must be picked next.
 func handleWhoami(d Deps) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
-		httpx.WriteJSON(w, http.StatusOK, map[string]string{
-			"username": d.User.Name,
-			"role":     string(d.User.Role),
+		me := current(r)
+		_, single, _ := d.Profiles.Single(r.Context())
+		httpx.WriteJSON(w, http.StatusOK, map[string]any{
+			"id":          me.ID,
+			"username":    me.Name,
+			"role":        string(me.Role),
+			"color":       me.Color,
+			"hasPin":      me.HasPin(),
+			"permissions": perm.For(me).List(),
+			// Whether this household picks profiles at all (else there's
+			// nothing to switch to and no "switch profile" menu entry).
+			"profiles": !single,
 		})
 	}
 }
@@ -256,7 +314,7 @@ func handleDeviceInfo(d Deps) http.HandlerFunc {
 
 func handleGetSettings(d Deps) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
-		view, err := d.Settings.View(r.Context(), d.User)
+		view, err := d.Settings.View(r.Context(), current(r))
 		if err != nil {
 			d.Logger.Error("settings view failed", "requestId", httpx.RequestID(r.Context()), "error", err)
 			httpx.WriteError(w, r, http.StatusInternalServerError, "internal", "could not load settings")
@@ -275,7 +333,7 @@ func handlePatchSettings(d Deps) http.HandlerFunc {
 			httpx.WriteError(w, r, http.StatusBadRequest, "invalid_body", `expected {"values": {"<key>": <value>, ...}}`)
 			return
 		}
-		if err := d.Settings.Update(r.Context(), d.User, body.Values); err != nil {
+		if err := d.Settings.Update(r.Context(), current(r), body.Values); err != nil {
 			if verr, ok := settings.IsValidation(err); ok {
 				httpx.WriteErrorDetails(w, r, http.StatusBadRequest, "validation_failed", "one or more settings are invalid; nothing was saved", verr.Fields)
 				return
@@ -284,7 +342,7 @@ func handlePatchSettings(d Deps) http.HandlerFunc {
 			httpx.WriteError(w, r, http.StatusInternalServerError, "internal", "could not save settings")
 			return
 		}
-		view, err := d.Settings.View(r.Context(), d.User)
+		view, err := d.Settings.View(r.Context(), current(r))
 		if err != nil {
 			httpx.WriteError(w, r, http.StatusInternalServerError, "internal", "saved, but could not reload settings")
 			return
@@ -295,7 +353,7 @@ func handlePatchSettings(d Deps) http.HandlerFunc {
 
 // hubStatuses evaluates every hub for the current user.
 func hubStatuses(d Deps, r *http.Request) ([]hub.Status, settings.Values, error) {
-	v, err := d.Settings.Values(r.Context(), d.User)
+	v, err := d.Settings.Values(r.Context(), current(r))
 	if err != nil {
 		return nil, nil, err
 	}
@@ -332,7 +390,7 @@ func handleNavigation(d Deps) http.HandlerFunc {
 			httpx.WriteError(w, r, http.StatusInternalServerError, "internal", "could not build navigation")
 			return
 		}
-		httpx.WriteJSON(w, http.StatusOK, d.Hubs.Navigation(statuses, d.User.Role, v.String(settings.KeyNavLabels)))
+		httpx.WriteJSON(w, http.StatusOK, d.Hubs.Navigation(statuses, perms(r), v.String(settings.KeyNavLabels)))
 	}
 }
 
@@ -348,7 +406,7 @@ func handleHubs(d Deps) http.HandlerFunc {
 		}
 		visible := make([]hub.Status, 0, len(statuses))
 		for _, s := range statuses {
-			if hub.Visible(s.Role, d.User.Role) {
+			if hub.Visible(s.Perm, perms(r)) {
 				visible = append(visible, s)
 			}
 		}
@@ -358,7 +416,7 @@ func handleHubs(d Deps) http.HandlerFunc {
 
 func handleConnectors(d Deps) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
-		v, err := d.Settings.Values(r.Context(), d.User)
+		v, err := d.Settings.Values(r.Context(), current(r))
 		if err != nil {
 			d.Logger.Error("connector status failed", "requestId", httpx.RequestID(r.Context()), "error", err)
 			httpx.WriteError(w, r, http.StatusInternalServerError, "internal", "could not evaluate connectors")
@@ -372,7 +430,7 @@ func handleConnectors(d Deps) http.HandlerFunc {
 // reconciled against the built-in tile catalog (internal/dashboard).
 func handleGetDashboard(d Deps) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
-		layout, err := d.Dashboard.Get(r.Context(), d.User)
+		layout, err := d.Dashboard.Get(r.Context(), current(r))
 		if err != nil {
 			d.Logger.Error("dashboard get failed", "requestId", httpx.RequestID(r.Context()), "error", err)
 			httpx.WriteError(w, r, http.StatusInternalServerError, "internal", "could not load the dashboard")
@@ -392,7 +450,7 @@ func handlePutDashboard(d Deps) http.HandlerFunc {
 			httpx.WriteError(w, r, http.StatusBadRequest, "invalid_body", `expected {"tiles": [{"type", "width", "hidden"}, ...]}`)
 			return
 		}
-		layout, err := d.Dashboard.Save(r.Context(), d.User, body)
+		layout, err := d.Dashboard.Save(r.Context(), current(r), body)
 		if err != nil {
 			if errors.Is(err, dashboard.ErrInvalidTile) {
 				httpx.WriteError(w, r, http.StatusBadRequest, "invalid_tile", err.Error())
@@ -417,14 +475,14 @@ func handleSearch(d Deps) http.HandlerFunc {
 			httpx.WriteJSON(w, http.StatusOK, map[string]any{"results": []hub.SearchResult{}})
 			return
 		}
-		v, err := d.Settings.Values(r.Context(), d.User)
+		v, err := d.Settings.Values(r.Context(), current(r))
 		if err != nil {
 			d.Logger.Error("search failed", "requestId", httpx.RequestID(r.Context()), "error", err)
 			httpx.WriteError(w, r, http.StatusInternalServerError, "internal", "could not search")
 			return
 		}
 		reports := d.Connectors.Reports(r.Context(), v, d.Settings.Version())
-		results := d.Hubs.Search(r.Context(), v, reports, d.User.Role, q)
+		results := d.Hubs.Search(r.Context(), v, reports, perms(r), q)
 		httpx.WriteJSON(w, http.StatusOK, map[string]any{"results": results})
 	}
 }
@@ -433,13 +491,13 @@ func handleSearch(d Deps) http.HandlerFunc {
 // right now (internal/hub/view.go) — only hubs the user can currently see.
 func handleViewSources(d Deps) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
-		v, err := d.Settings.Values(r.Context(), d.User)
+		v, err := d.Settings.Values(r.Context(), current(r))
 		if err != nil {
 			httpx.WriteError(w, r, http.StatusInternalServerError, "internal", "could not load settings")
 			return
 		}
 		reports := d.Connectors.Reports(r.Context(), v, d.Settings.Version())
-		httpx.WriteJSON(w, http.StatusOK, map[string]any{"sources": d.Hubs.ViewSources(v, reports, d.User.Role)})
+		httpx.WriteJSON(w, http.StatusOK, map[string]any{"sources": d.Hubs.ViewSources(v, reports, perms(r))})
 	}
 }
 
@@ -467,13 +525,13 @@ func handleView(d Deps) http.HandlerFunc {
 				loc = l
 			}
 		}
-		v, err := d.Settings.Values(r.Context(), d.User)
+		v, err := d.Settings.Values(r.Context(), current(r))
 		if err != nil {
 			httpx.WriteError(w, r, http.StatusInternalServerError, "internal", "could not load settings")
 			return
 		}
 		reports := d.Connectors.Reports(r.Context(), v, d.Settings.Version())
-		res, err := d.Hubs.View(r.Context(), v, reports, d.User.Role, body.Source, body.Query, d.Now(), loc)
+		res, err := d.Hubs.View(r.Context(), v, reports, perms(r), body.Source, body.Query, d.Now(), loc)
 		switch {
 		case errors.Is(err, hub.ErrUnknownSource):
 			httpx.WriteError(w, r, http.StatusNotFound, "unknown_source", "no hub offers this source")
@@ -491,7 +549,7 @@ func handleView(d Deps) http.HandlerFunc {
 // itself (internal/apitoken).
 func handleListTokens(d Deps) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
-		tokens, err := d.Tokens.List(r.Context(), d.User)
+		tokens, err := d.Tokens.List(r.Context(), current(r))
 		if err != nil {
 			d.Logger.Error("listing tokens failed", "requestId", httpx.RequestID(r.Context()), "error", err)
 			httpx.WriteError(w, r, http.StatusInternalServerError, "internal", "could not list tokens")
@@ -512,7 +570,7 @@ func handleCreateToken(d Deps) http.HandlerFunc {
 			httpx.WriteError(w, r, http.StatusBadRequest, "invalid_body", `expected {"name": "..."}`)
 			return
 		}
-		created, err := d.Tokens.Create(r.Context(), d.User, body.Name)
+		created, err := d.Tokens.Create(r.Context(), current(r), body.Name)
 		if err != nil {
 			if errors.Is(err, apitoken.ErrNameRequired) {
 				httpx.WriteErrorDetails(w, r, http.StatusBadRequest, "validation_failed", "a name is required",
@@ -537,7 +595,7 @@ func handleDeleteToken(d Deps) http.HandlerFunc {
 			httpx.WriteError(w, r, http.StatusBadRequest, "invalid_id", "id must be a number")
 			return
 		}
-		if err := d.Tokens.Revoke(r.Context(), d.User, id); err != nil {
+		if err := d.Tokens.Revoke(r.Context(), current(r), id); err != nil {
 			if errors.Is(err, store.ErrNotFound) {
 				httpx.WriteError(w, r, http.StatusNotFound, "token_not_found", "no such token")
 				return
@@ -554,7 +612,7 @@ func handleDeleteToken(d Deps) http.HandlerFunc {
 // every change (PRINCIPLES.md, "Preview and confirm").
 func handleApplyPlan(d Deps) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
-		res, err := d.Plans.Apply(r.Context(), d.User, r.PathValue("id"))
+		res, err := d.Plans.Apply(r.Context(), current(r), r.PathValue("id"))
 		var failure *plan.Failure
 		switch {
 		case err == nil:

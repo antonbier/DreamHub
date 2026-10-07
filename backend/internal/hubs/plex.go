@@ -19,6 +19,7 @@ import (
 	"github.com/antonbier/DreamHub/backend/internal/enrich"
 	"github.com/antonbier/DreamHub/backend/internal/httpx"
 	"github.com/antonbier/DreamHub/backend/internal/hub"
+	"github.com/antonbier/DreamHub/backend/internal/perm"
 	"github.com/antonbier/DreamHub/backend/internal/plan"
 	"github.com/antonbier/DreamHub/backend/internal/plex"
 	"github.com/antonbier/DreamHub/backend/internal/settings"
@@ -78,10 +79,24 @@ const (
 // cache for this long instead of waiting for the server each time.
 const offlineBackoff = time.Minute
 
+// Perms are PlexHub's route permissions beyond the hub's own (internal/perm).
+func (h *Plex) Perms() map[string]perm.Perm {
+	return map[string]perm.Perm{
+		"POST /api/v1/plex/items/{key}/play":         perm.PlexUse,
+		"POST /api/v1/plex/items/{key}/watched":      perm.PlexUse,
+		"POST /api/v1/plex/items/{key}/watched/plan": perm.PlexUse,
+		"POST /api/v1/plex/sync":                     perm.PlexUse,
+		"PUT /api/v1/plex/libraries":                 perm.SettingsGlobal,
+		"POST /api/v1/plex/login":                    perm.SettingsGlobal,
+		"GET /api/v1/plex/login/{id}":                perm.SettingsGlobal,
+		"POST /api/v1/plex/login/{id}/use":           perm.SettingsGlobal,
+	}
+}
+
 // syncEvery is the background sync's period while the server answers.
 const syncEvery = 15 * time.Minute
 
-func (h *Plex) Mount(mux *http.ServeMux) {
+func (h *Plex) Mount(mux httpx.Mux) {
 	mux.HandleFunc("GET /api/v1/plex/status", h.status)
 	mux.HandleFunc("POST /api/v1/plex/sync", h.syncNow)
 	mux.HandleFunc("GET /api/v1/plex/libraries", h.libraries)

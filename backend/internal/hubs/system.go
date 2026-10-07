@@ -36,7 +36,7 @@ func (h *System) now() time.Time {
 }
 
 // Mount registers SystemHub's routes.
-func (h *System) Mount(mux *http.ServeMux) {
+func (h *System) Mount(mux httpx.Mux) {
 	mux.HandleFunc("GET /api/v1/changes", h.changes)
 	mux.HandleFunc("GET /api/v1/system/backup", h.backup)
 	mux.HandleFunc("POST /api/v1/system/backup/restore", h.planRestore)

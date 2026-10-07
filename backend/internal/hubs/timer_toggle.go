@@ -59,6 +59,10 @@ func (h *Timer) planToggle(w http.ResponseWriter, r *http.Request) {
 		httpx.WriteError(w, r, http.StatusNotFound, CodeTimerNotFound, "no timer with this service reference, begin and end")
 		return
 	}
+	if !h.mayChange(ctx, user, t) {
+		httpx.WriteError(w, r, http.StatusForbidden, CodeTimerNotYours, "this profile may only change timers it made")
+		return
+	}
 	if t.Disabled == !req.Enabled {
 		httpx.WriteError(w, r, http.StatusConflict, "timer_unchanged", "the timer is already in that state")
 		return

@@ -5,17 +5,19 @@ package app
 
 import (
 	"context"
-	"github.com/antonbier/DreamHub/backend/internal/omdb"
-	"github.com/antonbier/DreamHub/backend/internal/plex"
-	"github.com/antonbier/DreamHub/backend/internal/push"
-	"github.com/antonbier/DreamHub/backend/internal/recfs"
-	"github.com/antonbier/DreamHub/backend/internal/tmdb"
-	"github.com/antonbier/DreamHub/backend/internal/tvmaze"
 	"log/slog"
 	"net/http"
 	"path/filepath"
 	"sync"
 	"time"
+
+	"github.com/antonbier/DreamHub/backend/internal/omdb"
+	"github.com/antonbier/DreamHub/backend/internal/plex"
+	"github.com/antonbier/DreamHub/backend/internal/profile"
+	"github.com/antonbier/DreamHub/backend/internal/push"
+	"github.com/antonbier/DreamHub/backend/internal/recfs"
+	"github.com/antonbier/DreamHub/backend/internal/tmdb"
+	"github.com/antonbier/DreamHub/backend/internal/tvmaze"
 
 	"github.com/antonbier/DreamHub/backend/internal/ai"
 	"github.com/antonbier/DreamHub/backend/internal/api"
@@ -121,8 +123,11 @@ type App struct {
 	Plans      *plan.Service
 	Dashboard  *dashboard.Service
 	Tokens     *apitoken.Service
-	Level      *logging.Level
-	User       store.User
+	Profiles   *profile.Service
+	// Routes are the protected API routes with their permissions.
+	Routes []api.Route
+	Level  *logging.Level
+	User   store.User
 	// Events is the core event bus (internal/events, docs/V1_PLAN.md WP7).
 	// Poller isn't started here — cmd/dreamhub runs it as long as the
 	// process does; tests just use the Bus directly, no background polling.
@@ -229,6 +234,7 @@ func New(ctx context.Context, o Options) (*App, error) {
 	plans := plan.NewService(st, now)
 	dash := dashboard.NewService(st)
 	tokens := apitoken.NewService(st, now)
+	profiles := profile.NewService(st, now)
 	watcher := hub.NewStatusWatcher()
 	eventBus := events.NewBus(st, now)
 	poller := &events.Poller{WC: o.WebControl, Bus: eventBus, Logger: o.Logger, Now: now}
@@ -241,7 +247,7 @@ func New(ctx context.Context, o Options) (*App, error) {
 		}
 	}
 
-	timerHub := &hubs_.Timer{WC: o.WebControl, Plans: plans, Now: now, AT: o.AutoTimer}
+	timerHub := &hubs_.Timer{WC: o.WebControl, Plans: plans, Now: now, AT: o.AutoTimer, Owners: st}
 	mediaHub := &hubs_.Media{WC: o.WebControl, Plans: plans, FS: o.RecordingsFS, ReadOnly: o.ReadOnlyFiles,
 		Settings: svc, Store: st, AI: o.AI, TMDB: o.TMDB, Enrich: enricher, Now: now}
 	// Built before GuideHub/DiscoveryHub: both flag a broadcast already in
@@ -286,7 +292,7 @@ func New(ctx context.Context, o Options) (*App, error) {
 		notifier = &push.Notifier{Bus: eventBus, Settings: svc, User: user, Client: o.Push, Logger: o.Logger}
 	}
 
-	handler := api.NewRouter(api.Deps{
+	handler, routes := api.NewRouterWithRoutes(api.Deps{
 		WebControl: o.WebControl,
 		Verifier:   auth.NewSettingsVerifier(svc, tokens),
 		Settings:   svc,
@@ -295,23 +301,24 @@ func New(ctx context.Context, o Options) (*App, error) {
 		Plans:      plans,
 		Dashboard:  dash,
 		Tokens:     tokens,
+		Profiles:   profiles,
 		Watcher:    watcher,
 		Store:      st,
 		Events:     eventBus,
 		Enrich:     enricher,
 		Push:       notifier,
 		Mounts: []api.Mount{
-			{HubID: hub.IDTimer, Prefixes: []string{"/api/v1/timers"}, Register: timerHub.Mount},
-			{HubID: hub.IDMedia, Prefixes: []string{"/api/v1/media"}, Register: mediaHub.Mount},
+			{HubID: hub.IDTimer, Prefixes: []string{"/api/v1/timers"}, Register: timerHub.Mount, Perms: timerHub.Perms()},
+			{HubID: hub.IDMedia, Prefixes: []string{"/api/v1/media"}, Register: mediaHub.Mount, Perms: mediaHub.Perms()},
 			{HubID: hub.IDGuide, Prefixes: []string{"/api/v1/guide"}, Register: guideHub.Mount},
 			{HubID: hub.IDRadio, Prefixes: []string{"/api/v1/radio"}, Register: radioHub.Mount},
 			{HubID: hub.IDStream, Prefixes: []string{"/api/v1/stream"}, Register: streamHub.Mount},
 			{HubID: hub.IDSeries, Prefixes: []string{"/api/v1/series"}, Register: seriesHub.Mount},
-			{HubID: hub.IDDiscovery, Prefixes: []string{"/api/v1/discovery"}, Register: discoveryHub.Mount},
+			{HubID: hub.IDDiscovery, Prefixes: []string{"/api/v1/discovery"}, Register: discoveryHub.Mount, Perms: discoveryHub.Perms()},
 			{HubID: hub.IDSystem, Prefixes: []string{"/api/v1/changes", "/api/v1/system"}, Register: systemHub.Mount},
 			{HubID: hub.IDAdmin, Prefixes: []string{"/api/v1/admin"}, Register: adminHub.Mount},
-			{HubID: hub.IDControl, Prefixes: []string{"/api/v1/control"}, Register: controlHub.Mount},
-			{HubID: hub.IDPlex, Prefixes: []string{"/api/v1/plex"}, Register: plexHub.Mount},
+			{HubID: hub.IDControl, Prefixes: []string{"/api/v1/control"}, Register: controlHub.Mount, Perms: controlHub.Perms()},
+			{HubID: hub.IDPlex, Prefixes: []string{"/api/v1/plex"}, Register: plexHub.Mount, Perms: plexHub.Perms()},
 		},
 		// The box's media player fetches a Plex film without a DreamHub
 		// login; the handler itself admits only the box (loopback) with a
@@ -329,7 +336,7 @@ func New(ctx context.Context, o Options) (*App, error) {
 	}
 	return &App{
 		Handler: handler, Store: st, Settings: svc, Connectors: conns, Hubs: hubs,
-		Plans: plans, Dashboard: dash, Tokens: tokens, Level: level, User: user,
+		Plans: plans, Dashboard: dash, Tokens: tokens, Profiles: profiles, Routes: routes, Level: level, User: user,
 		Events: eventBus, Poller: poller,
 		Background: background(notifier, seriesHub, adminHub, plexHub, eventBus, o.Logger),
 	}, nil

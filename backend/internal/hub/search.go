@@ -5,9 +5,9 @@ import (
 	"sort"
 
 	"github.com/antonbier/DreamHub/backend/internal/connector"
+	"github.com/antonbier/DreamHub/backend/internal/perm"
 	"github.com/antonbier/DreamHub/backend/internal/settings"
 	"github.com/antonbier/DreamHub/backend/internal/status"
-	"github.com/antonbier/DreamHub/backend/internal/store"
 )
 
 // SearchResult is one match from a hub's search provider (CONCEPT.md,
@@ -37,7 +37,7 @@ func (r *Registry) AddSearchProvider(hubID string, p SearchProvider) {
 // the sidebar itself would show. A provider that errors is skipped rather
 // than failing the whole search (CONCEPT.md: hubs degrade gracefully).
 // Results are grouped by hub, in the hub's own navigation order.
-func (r *Registry) Search(ctx context.Context, v settings.Values, reports map[string]connector.Report, role store.Role, query string) []SearchResult {
+func (r *Registry) Search(ctx context.Context, v settings.Values, reports map[string]connector.Report, perms perm.Set, query string) []SearchResult {
 	statuses := r.Statuses(v, reports)
 	order := map[string]int{}
 	for _, d := range r.hubs {
@@ -47,7 +47,7 @@ func (r *Registry) Search(ctx context.Context, v settings.Values, reports map[st
 
 	var out []SearchResult
 	for _, s := range statuses {
-		if !s.Enabled || !Visible(s.Role, role) || s.Level == status.Unavailable {
+		if !s.Enabled || !Visible(s.Perm, perms) || s.Level == status.Unavailable {
 			continue
 		}
 		p, ok := r.search[s.ID]

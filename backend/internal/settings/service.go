@@ -12,6 +12,7 @@ import (
 	"golang.org/x/crypto/bcrypt"
 
 	"github.com/antonbier/DreamHub/backend/internal/auth"
+	"github.com/antonbier/DreamHub/backend/internal/perm"
 	"github.com/antonbier/DreamHub/backend/internal/store"
 )
 
@@ -154,8 +155,11 @@ func mask(secret string) string {
 	return "••••" + string(r[len(r)-4:])
 }
 
-// View returns all sections with the user's effective values.
+// View returns all sections with the user's effective values — for a
+// profile without perm.SettingsGlobal only its personal fields, and only
+// the sections that have any.
 func (s *Service) View(ctx context.Context, u store.User) ([]SectionView, error) {
+	global := perm.For(u).Has(perm.SettingsGlobal)
 	stored, err := s.stored(ctx, u)
 	if err != nil {
 		return nil, err
@@ -169,6 +173,9 @@ func (s *Service) View(ctx context.Context, u store.User) ([]SectionView, error)
 		}
 		sv := SectionView{ID: sec.ID, Label: sec.Label, Tab: tab, Fields: []FieldView{}}
 		for _, f := range sec.Fields {
+			if f.Scope == ScopeGlobal && !global {
+				continue
+			}
 			fv := FieldView{Field: f, HasValue: isSet[f.Key], IsDefault: !isSet[f.Key]}
 			switch f.Type {
 			case TypePassword:
@@ -182,7 +189,9 @@ func (s *Service) View(ctx context.Context, u store.User) ([]SectionView, error)
 			}
 			sv.Fields = append(sv.Fields, fv)
 		}
-		out = append(out, sv)
+		if len(sv.Fields) > 0 {
+			out = append(out, sv)
+		}
 	}
 	return out, nil
 }
@@ -204,7 +213,7 @@ func (s *Service) Update(ctx context.Context, u store.User, raw map[string]json.
 			errs[key] = FieldError{Code: ErrUnknown}
 			continue
 		}
-		if f.Scope == ScopeGlobal && u.Role != store.RoleAdmin {
+		if f.Scope == ScopeGlobal && !perm.For(u).Has(perm.SettingsGlobal) {
 			errs[key] = FieldError{Code: ErrForbidden}
 			continue
 		}

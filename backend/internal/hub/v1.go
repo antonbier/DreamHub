@@ -3,8 +3,8 @@ package hub
 import (
 	"github.com/antonbier/DreamHub/backend/internal/connector"
 	"github.com/antonbier/DreamHub/backend/internal/events"
+	"github.com/antonbier/DreamHub/backend/internal/perm"
 	"github.com/antonbier/DreamHub/backend/internal/status"
-	"github.com/antonbier/DreamHub/backend/internal/store"
 )
 
 // IDs of the v1 hubs (CONCEPT.md, "Hubs").
@@ -62,11 +62,11 @@ func V1() []Descriptor {
 		{ID: IDDiscovery, Name: "DiscoveryHub", Label: "hub.discovery", Icon: "recommendations", Path: "/discovery", Group: GroupProgram, Order: 30,
 			Requires: []Requirement{wc, {Connector: connector.IDOpenAI}, {Hub: IDTimer, Optional: true}}},
 		{ID: IDSystem, Name: "SystemHub", Label: "hub.system", Icon: "system", Path: "/system", Group: GroupDevice, Order: 10,
-			Requires: []Requirement{wc}},
+			Perm: perm.System, Requires: []Requirement{wc}},
 		{ID: IDControl, Name: "ControlHub", Label: "hub.control", Icon: "control", Path: "/control", Group: GroupDevice, Order: 20,
 			Requires: []Requirement{wc}},
 		{ID: IDAdmin, Name: "AdminHub", Label: "hub.admin", Icon: "admin", Path: "/admin", Group: GroupBottom, Order: 10,
-			Role: store.RoleAdmin, Requires: []Requirement{{Capability: CapJournald}},
+			Perm: perm.System, Requires: []Requirement{{Capability: CapJournald}},
 			Emits: []string{events.ServiceFailed, events.ServiceRecovered}},
 	}
 }

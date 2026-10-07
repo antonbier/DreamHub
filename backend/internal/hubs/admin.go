@@ -12,6 +12,7 @@ import (
 	"github.com/antonbier/DreamHub/backend/internal/httpx"
 	"github.com/antonbier/DreamHub/backend/internal/journald"
 	"github.com/antonbier/DreamHub/backend/internal/logging"
+	"github.com/antonbier/DreamHub/backend/internal/perm"
 	"github.com/antonbier/DreamHub/backend/internal/plan"
 	"github.com/antonbier/DreamHub/backend/internal/recfs"
 	"github.com/antonbier/DreamHub/backend/internal/store"
@@ -58,7 +59,7 @@ func (h *Admin) now() time.Time {
 const crashLogDir = "/media/hdd"
 
 // Mount registers AdminHub's routes.
-func (h *Admin) Mount(mux *http.ServeMux) {
+func (h *Admin) Mount(mux httpx.Mux) {
 	mux.HandleFunc("GET /api/v1/admin/log-level", adminOnly(h.getLevel))
 	mux.HandleFunc("PUT /api/v1/admin/log-level", adminOnly(h.putLevel))
 	mux.HandleFunc("GET /api/v1/admin/logs", adminOnly(h.logs))
@@ -74,8 +75,8 @@ const DefaultDebugMinutes = 60
 
 func adminOnly(next http.HandlerFunc) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
-		if u, ok := httpx.User(r.Context()); !ok || u.Role != store.RoleAdmin {
-			httpx.WriteError(w, r, http.StatusForbidden, "forbidden", "this requires the admin role")
+		if u, ok := httpx.User(r.Context()); !ok || !perm.For(u).Has(perm.System) {
+			httpx.WriteError(w, r, http.StatusForbidden, "forbidden", "this profile may not do this")
 			return
 		}
 		next(w, r)

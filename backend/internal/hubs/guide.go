@@ -64,7 +64,7 @@ func (h *Guide) Search(ctx context.Context, query string) ([]hub.SearchResult, e
 }
 
 // Mount registers GuideHub's routes.
-func (h *Guide) Mount(mux *http.ServeMux) {
+func (h *Guide) Mount(mux httpx.Mux) {
 	mux.HandleFunc("GET /api/v1/guide/bouquets", h.bouquets)
 	mux.HandleFunc("GET /api/v1/guide/grid", h.grid)
 	mux.HandleFunc("GET /api/v1/guide/nownext", h.nowNext)

@@ -750,20 +750,26 @@ func (h *Plex) Search(ctx context.Context, query string) ([]hub.SearchResult, er
 	return out, nil
 }
 
-// InLibrary reports whether a film with exactly this title is already in a
-// shown Plex library (#32, "already in Plex" next to broadcasts in
-// GuideHub/DiscoveryHub) — cached, like Search, so it works while the
-// server is off too. Exact match only, the same rule MediaHub's own
-// enrichment lookup uses; a broadcast's EPG title and Plex's rarely agree
-// on anything looser (subtitles, year suffixes) without false positives.
-func (h *Plex) InLibrary(ctx context.Context, title string) bool {
-	if title == "" {
-		return false
+// InLibrary returns a check for whether a film with exactly this title is
+// already in a shown Plex library (#32, "already in Plex" next to
+// broadcasts in GuideHub/DiscoveryHub) — cached, like Search, so it works
+// while the server is off too. Exact match only, the same rule MediaHub's
+// own enrichment lookup uses; a broadcast's EPG title and Plex's rarely
+// agree on anything looser (subtitles, year suffixes) without false
+// positives. The cache is read once per call, not once per title: a guide
+// grid asks for every broadcast, and decoding the libraries per broadcast
+// made a 26-channel grid take 4 s on the reference box. A nil Plex (not
+// set up) never matches.
+func (h *Plex) InLibrary(ctx context.Context) func(title string) bool {
+	never := func(string) bool { return false }
+	if h == nil {
+		return never
 	}
 	c, err := h.config(ctx)
 	if err != nil || !c.configured() {
-		return false
+		return never
 	}
+	titles := map[string]bool{}
 	var libs []plex.Library
 	h.cacheGet(ctx, "libraries", &libs)
 	for _, l := range libs {
@@ -773,12 +779,10 @@ func (h *Plex) InLibrary(ctx context.Context, title string) bool {
 		var items []plex.Item
 		h.cacheGet(ctx, "items:"+l.ID, &items)
 		for _, it := range items {
-			if strings.EqualFold(it.Title, title) {
-				return true
-			}
+			titles[strings.ToLower(it.Title)] = true
 		}
 	}
-	return false
+	return func(title string) bool { return title != "" && titles[strings.ToLower(title)] }
 }
 
 func jsonMarshal(v any) (string, error) {

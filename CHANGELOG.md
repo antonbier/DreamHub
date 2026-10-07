@@ -15,6 +15,11 @@ Format follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/); version
 - Plex: "Play on the box" resumes where you left off instead of always starting at the beginning, and reports playback progress back to Plex so "continue watching" stays current — best effort, via the stream proxy's own byte offsets rather than a position read from the box (#30). Films in several parts or versions get a picker in the details dialog instead of always playing the first (#31).
 - GuideHub and DiscoveryHub mark a broadcast "Already in Plex" when a film with the same title is already in the library (#32).
 
+### Fixed
+- TV guide: "Already in Plex" read and decoded the whole Plex library once per broadcast — a 26-channel, 4-hour grid took 4.2 s on the reference box instead of 0.1 s. The library is now read once per request.
+- Live TV: the limit of two streams at once could be bypassed by two requests arriving together.
+- TV plugin: a malformed resume position no longer keeps the play call from answering.
+
 ## [0.1.8] - 2026-10-06
 
 ### Added

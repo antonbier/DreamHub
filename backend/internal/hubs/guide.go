@@ -100,6 +100,7 @@ type EPGEventView struct {
 func (h *Guide) groupByChannel(ctx context.Context, events []webcontrol.EPGEvent) []ChannelSchedule {
 	var order []string
 	byChannel := map[string]*ChannelSchedule{}
+	inPlex := h.Plex.InLibrary(ctx)
 	for i := range events {
 		e := events[i]
 		ch, ok := byChannel[e.ServiceReference]
@@ -108,8 +109,7 @@ func (h *Guide) groupByChannel(ctx context.Context, events []webcontrol.EPGEvent
 			byChannel[e.ServiceReference] = ch
 			order = append(order, e.ServiceReference)
 		}
-		inPlex := h.Plex != nil && h.Plex.InLibrary(ctx, e.Title)
-		ch.Events = append(ch.Events, EPGEventView{EPGEvent: e, InPlex: inPlex})
+		ch.Events = append(ch.Events, EPGEventView{EPGEvent: e, InPlex: inPlex(e.Title)})
 	}
 	out := make([]ChannelSchedule, 0, len(order))
 	for _, ref := range order {

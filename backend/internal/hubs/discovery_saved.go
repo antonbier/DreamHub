@@ -43,13 +43,13 @@ func (h *Discovery) views(ctx context.Context, recs []ai.Recommendation) []pickV
 	timers, _ := h.WC.TimerList(ctx) // no flags is better than no picks
 	now := h.Now().Unix()
 	out := make([]pickView, 0, len(recs))
+	inPlex := h.Plex.InLibrary(ctx)
 	for _, r := range recs {
 		if r.Start+r.Duration <= now {
 			continue
 		}
 		e := webcontrol.EPGEvent{ServiceReference: r.ServiceReference, Start: r.Start, Duration: r.Duration}
-		inPlex := h.Plex != nil && h.Plex.InLibrary(ctx, r.Title)
-		out = append(out, pickView{Recommendation: r, HasTimer: coveredByTimer(e, timers), InPlex: inPlex})
+		out = append(out, pickView{Recommendation: r, HasTimer: coveredByTimer(e, timers), InPlex: inPlex(r.Title)})
 	}
 	return out
 }

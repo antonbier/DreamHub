@@ -62,7 +62,10 @@ class PlayResource(resource.Resource):
             # The movie player remembers the channel and goes back to it
             # when it's closed.
             self.session.open(MoviePlayer, eref)
-        if start_ms:
+        if start_ms.isdigit():
+            # A malformed value is just ignored: an exception here would,
+            # like the eTimer bug below, keep the answer from going out
+            # although the film already plays.
             self._seekOnceReady(int(start_ms))
         return json.dumps({"ok": True})
 

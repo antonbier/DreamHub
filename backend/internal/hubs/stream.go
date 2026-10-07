@@ -9,6 +9,7 @@ import (
 	"regexp"
 	"strconv"
 	"strings"
+	"sync"
 	"time"
 
 	"github.com/antonbier/DreamHub/backend/internal/httpx"
@@ -39,7 +40,8 @@ type Stream struct {
 	// as "no tuner"; 0 means 12 s.
 	FirstData time.Duration
 
-	slots chan struct{}
+	slotsOnce sync.Once
+	slots     chan struct{}
 }
 
 // maxLiveStreams: each stream is 3–15 Mbit/s out of the box, and every
@@ -108,9 +110,7 @@ var dvbRef = regexp.MustCompile(`^1:0:[0-9A-Fa-f]{1,8}(:[0-9A-Fa-f]{1,8}){7}:(0:
 func ValidLiveRef(ref string) bool { return dvbRef.MatchString(ref) }
 
 func (h *Stream) acquire() bool {
-	if h.slots == nil {
-		h.slots = make(chan struct{}, maxLiveStreams)
-	}
+	h.slotsOnce.Do(func() { h.slots = make(chan struct{}, maxLiveStreams) })
 	select {
 	case h.slots <- struct{}{}:
 		return true

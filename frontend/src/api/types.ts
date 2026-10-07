@@ -75,10 +75,61 @@ export interface HealthInfo {
   serverTimeZone: string
 }
 
+// What a profile may do (backend/internal/perm).
+export type Permission =
+  | 'watch'
+  | 'control'
+  | 'plex.use'
+  | 'discovery'
+  | 'timers.plan'
+  | 'timers.manage'
+  | 'recordings.manage'
+  | 'settings.global'
+  | 'system'
+  | 'profiles'
+
+// 'user' is the viewer role ("Zuschauer").
+export type Role = 'admin' | 'user'
+
 // GET /api/v1/whoami.
 export interface WhoAmI {
+  id: number
   username: string
-  role: 'admin' | 'user'
+  role: Role
+  color: string
+  hasPin: boolean
+  permissions: Permission[]
+  // Whether this household picks profiles at all.
+  profiles: boolean
+}
+
+// backend/internal/profile.Profile.
+export interface Profile {
+  id: number
+  name: string
+  role: Role
+  color: string
+  hasPin: boolean
+  // The admin's per-profile switches (perm.Switchable): on/off.
+  overrides: Partial<Record<Permission, boolean>>
+  permissions: Permission[]
+}
+
+// GET /api/v1/profiles — the picker.
+export interface ProfileList {
+  profiles: Profile[]
+  pickerNeeded: boolean
+  current: number
+  colors: string[]
+}
+
+// The fields to create or change; pin "" removes the PIN.
+export interface ProfileInput {
+  name?: string
+  role?: Role
+  color?: string
+  pin?: string
+  overrides?: Partial<Record<Permission, boolean>>
 }
 
 // backend/internal/webcontrol.Frontend / .DeviceInfo.
@@ -148,6 +199,9 @@ export interface Timer {
   // Likely clashes with another timer on this box's tuners (an estimate —
   // the box has the final word when a timer is saved).
   conflict: boolean
+  // This profile may delete or switch off the timer: admins every one,
+  // viewers those they made through DreamHub.
+  mayChange: boolean
 }
 
 // backend/internal/autotimer — the optional AutoTimer plugin, read-only.

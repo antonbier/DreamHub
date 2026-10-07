@@ -29,14 +29,15 @@
         <span class="below-sm:sr-only">{{ t(`timers.state.${stateKey}`) }}</span>
       </span>
       <!-- Kept in the layout (invisible) while its preview is open or when
-           the timer can't be toggled, so the state column lines up with
-           the other rows. -->
+           the timer can't be toggled — or this profile may not change it
+           (a viewer's are only their own) — so the state column lines up
+           with the other rows. -->
       <button
         type="button"
         class="shrink-0 rounded px-2 py-1 text-[13px] text-accent hover:bg-tile opacity-0 focus:opacity-100 group-hover:opacity-100 below-md:opacity-100"
-        :class="{ invisible: deleting || !toggleable }"
-        :disabled="!!deleting || !toggleable"
-        :aria-hidden="!toggleable || undefined"
+        :class="{ invisible: deleting || !toggleable || !timer.mayChange }"
+        :disabled="!!deleting || !toggleable || !timer.mayChange"
+        :aria-hidden="!toggleable || !timer.mayChange || undefined"
         @click="emit('toggle')"
       >
         {{ timer.disabled ? t('timers.enable') : t('timers.disable') }}
@@ -44,8 +45,9 @@
       <button
         type="button"
         class="shrink-0 rounded px-2 py-1 text-[13px] text-accent hover:bg-tile opacity-0 focus:opacity-100 group-hover:opacity-100 below-md:opacity-100"
-        :class="{ invisible: deleting }"
-        :disabled="!!deleting"
+        :class="{ invisible: deleting || !timer.mayChange }"
+        :disabled="!!deleting || !timer.mayChange"
+        :aria-hidden="!timer.mayChange || undefined"
         @click="emit('delete')"
       >
         {{ t('timers.delete') }}

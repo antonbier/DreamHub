@@ -6,6 +6,15 @@ Format follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/); version
 
 ## [Unreleased]
 
+### Added
+- Profiles: one per person, picked on each device ("Who's watching?") and remembered there; a profile can have a PIN. Settings → Profiles: your own PIN for everyone, managing profiles for admins. A household with a single profile without PIN sees no change.
+- Roles: admin and viewer. Viewers watch live TV, recordings and Plex, use the guide and the remote, and plan recordings; they don't delete or rename recordings, change other people's timers, see settings beyond their own, or the system and admin pages. An admin can switch "plan recordings" and "rename and delete recordings" per viewer. The server enforces all of it, not just the screen.
+- A viewer can delete or switch off the timers they made themselves.
+- New profiles start with the language and appearance of whoever created them; the profile picker and login speak the device's last language.
+
+### Changed
+- Setup hints (the box's clock, hubs missing a key, "Needs attention") are shown to admins only.
+
 ## [0.1.9] - not released yet (built 2026-10-06, waiting for a test on the box)
 
 ### Added

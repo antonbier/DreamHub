@@ -62,6 +62,14 @@ func (s *Store) EnsureDefaultUser(ctx context.Context) (User, error) {
 
 // CreateUser adds a profile with an empty default dashboard.
 func (s *Store) CreateUser(ctx context.Context, u User) (User, error) {
+	return s.CreateUserLike(ctx, u, 0)
+}
+
+// CreateUserLike adds a profile that starts with the personal settings of
+// the profile likeID (language, appearance, display time zone — whoever
+// sets up a profile for someone in the household usually shares them);
+// likeID 0 starts from the defaults.
+func (s *Store) CreateUserLike(ctx context.Context, u User, likeID int64) (User, error) {
 	tx, err := s.db.BeginTx(ctx, nil)
 	if err != nil {
 		return User{}, err
@@ -86,6 +94,13 @@ func (s *Store) CreateUser(ctx context.Context, u User) (User, error) {
 		`INSERT INTO dashboards (user_id, name, position, layout, created_at, updated_at) VALUES (?, ?, 0, '[]', ?, ?)`,
 		id, "Dashboard", now, now); err != nil {
 		return User{}, fmt.Errorf("store: creating default dashboard: %w", err)
+	}
+	if likeID > 0 {
+		if _, err := tx.ExecContext(ctx,
+			`INSERT INTO settings (user_id, key, value, updated_at) SELECT ?, key, value, ? FROM settings WHERE user_id = ?`,
+			id, now, likeID); err != nil {
+			return User{}, fmt.Errorf("store: copying personal settings: %w", err)
+		}
 	}
 	if err := tx.Commit(); err != nil {
 		return User{}, err

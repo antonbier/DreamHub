@@ -90,7 +90,8 @@
       "hub": "Hub names"
     },
     "settings": "Settings",
-    "signOut": "Sign out"
+    "signOut": "Sign out",
+    "switchProfile": "Switch profile"
   },
   "common": {
     "loading": "Loading…",
@@ -650,7 +651,9 @@
       "plex_wrong_server": "A different Plex server answers at this address.",
       "plex_unreachable_at": "The server doesn’t answer at this address. Please choose another.",
       "invalid_url": "Enter a full address starting with http:// or https://.",
-      "plex_bad_answer": "The Plex server answered, but DreamHub couldn’t read the answer. Please report this as a bug."
+      "plex_bad_answer": "The Plex server answered, but DreamHub couldn’t read the answer. Please report this as a bug.",
+      "forbidden": "Your profile may not do this. An admin can allow it under Settings → Profiles.",
+      "timer_not_yours": "This timer was made by another profile; only an admin can change it."
     },
     "media": {
       "not_a_recording": "This recording doesn't exist (anymore).",
@@ -843,6 +846,7 @@
     },
     "tab": {
       "general": "General",
+      "profiles": "Profiles",
       "recordings": "Recordings",
       "services": "Services",
       "notifications": "Notifications",
@@ -1358,5 +1362,90 @@
     "part": "Part",
     "open": "Open {title}",
     "openWatched": "Open {title} (watched)"
+  },
+  "profiles": {
+    "picker": {
+      "title": "Who's watching?",
+      "loadFailed": "The profiles couldn't be loaded.",
+      "pin": "PIN",
+      "checking": "Checking…",
+      "open": "Open",
+      "back": "Other profile",
+      "hasPin": "With PIN",
+      "wrongPin": "Wrong PIN.",
+      "locked": "Too many wrong PINs. Wait a moment and try again.",
+      "failed": "That didn't work. Try again."
+    },
+    "myPin": {
+      "title": "Your PIN",
+      "hasPin": "Your profile is protected by a PIN.",
+      "noPin": "Anyone in your home can open your profile. A PIN keeps it yours.",
+      "newPin": "New PIN",
+      "pin": "PIN",
+      "save": "Save PIN",
+      "remove": "Remove PIN",
+      "saved": "PIN saved.",
+      "removed": "PIN removed."
+    },
+    "pinFormat": "4 to 8 digits.",
+    "error": {
+      "adminPinRequired": "Admin profiles need a PIN once there is more than one profile. Set your own PIN first.",
+      "lastAdmin": "At least one admin profile must remain.",
+      "self": "You can't delete your own profile.",
+      "notFound": "This profile no longer exists.",
+      "nameTaken": "Another profile already has this name.",
+      "name": "Enter a name of up to 30 characters.",
+      "generic": "That didn't work. Try again."
+    },
+    "manage": {
+      "title": "Profiles",
+      "subtitle": "One profile per person. Viewers watch TV and films, use the remote and plan recordings — deleting, settings and system stay with admins.",
+      "withPin": "PIN",
+      "withoutPin": "no PIN",
+      "custom": "custom permissions",
+      "edit": "Edit",
+      "add": "Add profile",
+      "adminPinFirst": "Before the first other profile, set a PIN for your own profile above."
+    },
+    "role": {
+      "admin": "Admin",
+      "user": "Viewer"
+    },
+    "roleHint": {
+      "admin": "Everything, including settings, system and deleting recordings.",
+      "user": "Live TV, recordings, Plex, guide, remote, planning recordings. No deleting, no settings beyond their own."
+    },
+    "form": {
+      "name": "Name",
+      "color": "Color",
+      "role": "Role",
+      "switches": "Permissions",
+      "notDefault": "differs from the role",
+      "newPin": "New PIN (optional)",
+      "pin": "PIN (optional)",
+      "removePin": "Remove the PIN",
+      "adminPinHint": "Admins need a PIN once there is more than one profile. 4 to 8 digits.",
+      "save": "Save",
+      "delete": "Delete profile",
+      "confirmDelete": "Really delete {name}?"
+    },
+    "switch": {
+      "timers": {
+        "plan": "Plan recordings"
+      },
+      "recordings": {
+        "manage": "Rename and delete recordings"
+      }
+    },
+    "color": {
+      "blue": "Blue",
+      "green": "Green",
+      "amber": "Amber",
+      "red": "Red",
+      "violet": "Violet",
+      "teal": "Teal",
+      "pink": "Pink",
+      "slate": "Grey"
+    }
   }
 }

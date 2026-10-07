@@ -46,6 +46,7 @@
 </template>
 
 <script setup lang="ts">
+import { useAuth } from '@/composables/useAuth'
 import { computed, onMounted } from 'vue'
 import { useI18n } from 'vue-i18n'
 import Icon from './Icon.vue'
@@ -74,8 +75,12 @@ interface Issue {
   level: 'warn' | 'muted'
 }
 
+// Setup problems (a hub's missing key, the box's clock) are the admin's to
+// fix; a viewer wouldn't know what to do with them.
+const { can } = useAuth()
 const issues = computed<Issue[]>(() => {
   const out: Issue[] = []
+  if (!can('settings.global')) return out
   if (clockSkew.value !== null && clockSkew.value >= CLOCK_SKEW_WARN_MINUTES) {
     out.push({ text: t('notifications.clockSkew', { minutes: clockSkew.value }), level: 'warn' })
   }

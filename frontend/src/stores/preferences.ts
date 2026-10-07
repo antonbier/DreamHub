@@ -9,7 +9,7 @@
 // `reachable` drives the "can't reach the backend" banner in AppShell.vue.
 import { defineStore } from 'pinia'
 import { api, ApiError } from '@/api/client'
-import { i18n, isSupportedLocale, type Locale } from '@/i18n'
+import { i18n, isSupportedLocale, rememberDeviceLanguage, type Locale } from '@/i18n'
 
 export type Appearance = 'dark' | 'light' | 'system'
 export type NavLabels = 'descriptive' | 'hub'
@@ -96,6 +96,7 @@ export const usePreferencesStore = defineStore('preferences', {
     setLanguage(locale: Locale, opts: { persist?: boolean } = {}) {
       this.language = locale
       i18n.global.locale.value = locale
+      rememberDeviceLanguage(locale)
       document.documentElement.lang = locale
       if (opts.persist !== false) void this.save(KEY_LANGUAGE, locale)
     },

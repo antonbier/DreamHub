@@ -82,10 +82,15 @@
           class="flex h-8 w-8 items-center justify-center rounded-full bg-tile-2 text-muted hover:text-text"
           :class="{ 'ring-2 ring-accent': open }"
         >
-          <Icon name="user" :size="17" />
+          <ProfileAvatar v-if="me?.profiles" :name="me.username" :color="me.color" :size="32" />
+          <Icon v-else name="user" :size="17" />
         </button>
       </template>
       <template #panel>
+        <div v-if="me?.profiles" class="flex items-center gap-2.5 border-b border-line-soft px-3 pb-2.5 pt-1.5">
+          <ProfileAvatar :name="me.username" :color="me.color" :size="28" />
+          <span class="min-w-0 flex-1 truncate text-[14px] font-semibold text-text">{{ me.username }}</span>
+        </div>
         <div class="px-3 pb-2 pt-1">
           <div class="mb-1.5 text-[12.5px] text-faint">{{ t('userMenu.appearance.label') }}</div>
           <div class="flex gap-1 rounded bg-field p-1">
@@ -133,6 +138,14 @@
           {{ t('userMenu.settings') }}
         </RouterLink>
         <button
+          v-if="me?.profiles"
+          type="button"
+          class="block w-full px-3 py-1.5 text-start text-[13.5px] text-muted hover:bg-tile-2 hover:text-text"
+          @click="switchProfile()"
+        >
+          {{ t('userMenu.switchProfile') }}
+        </button>
+        <button
           v-if="authState.credentials"
           type="button"
           class="block w-full px-3 py-1.5 text-start text-[13.5px] text-muted hover:bg-tile-2 hover:text-text"
@@ -151,6 +164,7 @@ import { RouterLink, useRoute } from 'vue-router'
 import { useI18n } from 'vue-i18n'
 import Icon from './Icon.vue'
 import DropdownMenu from './DropdownMenu.vue'
+import ProfileAvatar from './profiles/ProfileAvatar.vue'
 import SearchPalette from './SearchPalette.vue'
 import NotificationsBell from './NotificationsBell.vue'
 import { usePreferencesStore } from '@/stores/preferences'
@@ -166,7 +180,7 @@ const ui = useUiStore()
 const remote = useRemoteStore()
 const route = useRoute()
 const { available: controlAvailable } = useControlHub()
-const { authState, logout } = useAuth()
+const { authState, me, logout, switchProfile } = useAuth()
 
 const searchPalette = ref<InstanceType<typeof SearchPalette> | null>(null)
 const shortcutHint = /Mac/.test(navigator.platform) ? '⌘K' : 'Ctrl+K'

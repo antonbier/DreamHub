@@ -15,12 +15,12 @@
       {{ status.reachable.value ? t('statusStrip.connected') : t('statusStrip.unreachable') }}
     </span>
 
-    <span v-if="status.clockSkew.value !== null" class="flex items-center gap-1.5" :class="status.clockOk.value ? 'text-muted' : 'text-warn'">
+    <span v-if="admin && status.clockSkew.value !== null" class="flex items-center gap-1.5" :class="status.clockOk.value ? 'text-muted' : 'text-warn'">
       <span class="h-1.5 w-1.5 rounded-full" :class="status.clockOk.value ? 'bg-ok' : 'bg-warn'" />
       {{ status.clockOk.value ? t('statusStrip.clockOk') : t('statusStrip.clockOff', { minutes: status.clockSkew.value }) }}
     </span>
 
-    <span v-if="status.issueCount.value > 0" class="flex items-center gap-1.5 text-warn">
+    <span v-if="admin && status.issueCount.value > 0" class="flex items-center gap-1.5 text-warn">
       <span class="h-1.5 w-1.5 rounded-full bg-warn" />
       {{ status.issueCount.value === 1 ? t('statusStrip.issueSingular') : t('statusStrip.issuePlural', { count: status.issueCount.value }) }}
     </span>
@@ -32,11 +32,14 @@
 <script setup lang="ts">
 import { computed, onMounted } from 'vue'
 import { useI18n } from 'vue-i18n'
+import { useAuth } from '@/composables/useAuth'
 import { useDeviceStatus } from '@/composables/useDeviceStatus'
 import { useDisplayTimeZone } from '@/composables/useDisplayTimeZone'
 
 const { t } = useI18n()
 const status = useDeviceStatus()
+// The clock and hub problems are the admin's to fix (docs/PROFILES_PLAN.md).
+const admin = computed(() => useAuth().can('settings.global'))
 const { timeZone: displayTimeZone } = useDisplayTimeZone()
 onMounted(status.checkClock)
 

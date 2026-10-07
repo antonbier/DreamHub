@@ -7,7 +7,7 @@
 // see that handler's own doc comment for why SSE instead of a real
 // WebSocket. Auto-reconnects with a fixed backoff; call the returned
 // function to stop for good.
-import { authHeader } from '@/api/authState'
+import { authHeaders } from '@/api/authState'
 
 export interface StreamEvent {
   event: string
@@ -35,8 +35,7 @@ export function openEventStream(path: string, onEvent: (e: StreamEvent) => void)
 
   async function connectOnce() {
     const headers: Record<string, string> = { Accept: 'text/event-stream' }
-    const auth = authHeader()
-    if (auth) headers['Authorization'] = auth
+    Object.assign(headers, authHeaders())
     const res = await fetch(path, { headers, signal: controller.signal })
     if (!res.ok || !res.body) throw new Error(`event stream ${path}: ${res.status}`)
     const reader = res.body.getReader()

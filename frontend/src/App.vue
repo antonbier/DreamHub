@@ -6,12 +6,14 @@
 
   Gated by auth (src/composables/useAuth.ts): while whoami hasn't answered
   yet, nothing renders; once it has, either UnreachableScreen (no answer at
-  all), LoginScreen (a 401) or the shell does.
+  all), LoginScreen (a 401), ProfilePicker (the door is open, but this
+  device hasn't picked a profile) or the shell does.
 -->
 <template>
   <div v-if="!authState.checked" class="h-screen w-screen bg-bg" />
   <UnreachableScreen v-else-if="authState.unreachable" :check="check" @retry="onRetried" />
   <LoginScreen v-else-if="!authState.authenticated" @success="onAuthenticated" />
+  <ProfilePicker v-else-if="authState.profileRequired" @chosen="onProfileChosen" />
   <div v-else class="flex h-screen w-screen overflow-hidden bg-bg text-text">
     <!-- First stop for keyboard users: past sidebar and top bar. -->
     <a
@@ -41,6 +43,7 @@ import AppSidebar from './components/AppSidebar.vue'
 import AppTopBar from './components/AppTopBar.vue'
 import StatusStrip from './components/StatusStrip.vue'
 import LoginScreen from './components/LoginScreen.vue'
+import ProfilePicker from './components/profiles/ProfilePicker.vue'
 import UnreachableScreen from './components/UnreachableScreen.vue'
 import RemotePanel from './components/control/RemotePanel.vue'
 import { usePreferencesStore } from './stores/preferences'
@@ -95,16 +98,23 @@ function loadShellData() {
 }
 
 onMounted(async () => {
-  await check()
-  if (authState.authenticated) loadShellData()
+  // The router's first guard usually checked already.
+  if (!authState.checked) await check()
+  if (authState.authenticated && !authState.profileRequired) loadShellData()
 })
 
 function onAuthenticated() {
-  loadShellData()
+  if (!authState.profileRequired) loadShellData()
+}
+
+// A fresh start under the new profile: no view or store keeps the
+// previous profile's data.
+function onProfileChosen() {
+  window.location.reload()
 }
 
 function onRetried() {
-  if (authState.authenticated) loadShellData()
+  if (authState.authenticated && !authState.profileRequired) loadShellData()
 }
 
 // A 401 on some later request (e.g. the admin changed the password
@@ -114,9 +124,9 @@ function onRetried() {
 // event stream does need telling explicitly, though — it would otherwise
 // keep quietly retrying a stream it no longer has credentials for.
 watch(
-  () => authState.authenticated,
-  (authenticated) => {
-    if (!authenticated) notifications.disconnect()
+  () => authState.authenticated && !authState.profileRequired,
+  (inShell) => {
+    if (!inShell) notifications.disconnect()
   },
 )
 

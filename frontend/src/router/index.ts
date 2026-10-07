@@ -3,6 +3,8 @@
 // settings). Every v1 hub now has a real screen. Diagnostics used to be its
 // own core route; it's now a tab inside SystemHubView.vue, so /diagnostics
 // redirects there instead of 404ing an old bookmark or link.
+import type { Permission } from '@/api/types'
+import { useAuth } from '@/composables/useAuth'
 import { createRouter, createWebHistory } from 'vue-router'
 import { isOnboardingComplete } from '@/lib/onboarding'
 
@@ -25,6 +27,7 @@ const router = createRouter({
       path: '/onboarding',
       name: 'onboarding',
       component: () => import('@/views/OnboardingView.vue'),
+      meta: { perm: 'settings.global' },
     },
     {
       // MediaHub, GuideHub and SeriesHub have their own real screens
@@ -87,11 +90,13 @@ const router = createRouter({
       path: '/system',
       name: 'system',
       component: () => import('@/views/SystemHubView.vue'),
+      meta: { perm: 'system' },
     },
     {
       path: '/admin',
       name: 'admin',
       component: () => import('@/views/AdminHubView.vue'),
+      meta: { perm: 'system' },
     },
     {
       path: '/control',
@@ -109,7 +114,17 @@ const router = createRouter({
 // First visit on this browser (CONCEPT.md, "Onboarding wizard: on first
 // start"): send everything to /onboarding until it finishes. Re-running it
 // later is a deliberate navigation from Settings, not this guard.
-router.beforeEach((to) => {
+// A profile is known before the first page is chosen, so the guards below
+// can ask what it may do (the server refuses anyway — this only keeps a
+// viewer from landing on a page that can't show them anything).
+router.beforeEach(async (to) => {
+  const { authState, me, can, check } = useAuth()
+  if (!authState.checked) await check()
+  const signedIn = me.value !== null
+  const need = to.meta.perm as Permission | undefined
+  if (signedIn && need && !can(need)) return { path: '/' }
+  // The wizard sets up the box for the household: only for those who may.
+  if (signedIn && !can('settings.global')) return
   if (to.name !== 'onboarding' && to.name !== 'not-found' && !isOnboardingComplete()) {
     return { name: 'onboarding' }
   }

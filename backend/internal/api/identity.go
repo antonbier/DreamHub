@@ -61,6 +61,7 @@ func identify(d Deps, next http.Handler) http.Handler {
 		case errors.Is(err, errProfileSession):
 			httpx.WriteError(w, r, http.StatusUnauthorized, "profile_session_invalid", "this device's profile session ended; choose a profile again")
 		case err != nil:
+			d.Logger.Error("identifying the profile failed", "requestId", httpx.RequestID(r.Context()), "error", err)
 			httpx.WriteError(w, r, http.StatusInternalServerError, "internal", "could not identify the profile")
 		default:
 			next.ServeHTTP(w, r.WithContext(httpx.WithUser(r.Context(), u)))
@@ -205,6 +206,7 @@ func handleStartSession(d Deps) http.HandlerFunc {
 		case errors.Is(err, profile.ErrNotFound):
 			httpx.WriteError(w, r, http.StatusNotFound, "profile_not_found", "no such profile")
 		case err != nil:
+			d.Logger.Error("starting a profile session failed", "requestId", httpx.RequestID(r.Context()), "error", err)
 			httpx.WriteError(w, r, http.StatusInternalServerError, "internal", "could not start the session")
 		default:
 			httpx.WriteJSON(w, http.StatusOK, map[string]any{"token": token, "profile": profile.View(u)})

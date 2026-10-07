@@ -56,13 +56,18 @@
             class="scroll-mt-4"
           />
           <!-- Not schema fields — placed by hand next to their section. -->
-          <ApiTokensPanel v-if="section.id === 'auth'" />
+          <ApiTokensPanel v-if="section.id === 'auth' && can('system')" />
           <PushPanel v-if="section.id === 'push'" />
           <InstallPanel v-if="section.id === 'general'" />
           <PlexPanel v-if="section.id === 'plex'" @changed="form.load()" />
         </template>
 
-        <template v-if="activeTab === 'system'">
+        <template v-if="activeTab === 'profiles'">
+          <MyPinPanel />
+          <ProfilesPanel v-if="can('profiles')" />
+        </template>
+
+        <template v-if="activeTab === 'system' && can('system')">
           <BackupPanel @restored="form.load()" />
           <section class="rounded border border-line bg-tile p-5">
             <h2 class="text-[15.5px] font-semibold">{{ t('settings.system.diagnostics.title') }}</h2>
@@ -94,6 +99,9 @@ import PushPanel from '@/components/settings/PushPanel.vue'
 import InstallPanel from '@/components/settings/InstallPanel.vue'
 import BackupPanel from '@/components/settings/BackupPanel.vue'
 import PlexPanel from '@/components/settings/PlexPanel.vue'
+import MyPinPanel from '@/components/profiles/MyPinPanel.vue'
+import ProfilesPanel from '@/components/profiles/ProfilesPanel.vue'
+import { useAuth } from '@/composables/useAuth'
 import { api } from '@/api/client'
 import { useSettingsForm } from '@/composables/useSettingsForm'
 import { SETTINGS_TABS, type SettingsTab } from '@/lib/settingsTabs'
@@ -104,7 +112,14 @@ const form = useSettingsForm()
 const route = useRoute()
 const router = useRouter()
 
-const tabs = computed(() => SETTINGS_TABS.map((id) => ({ id })))
+const { can } = useAuth()
+// A viewer sees only the tabs with something of theirs: personal settings
+// and their PIN (the server sends them only their own fields).
+const tabs = computed(() =>
+  SETTINGS_TABS.filter((id) => id === 'profiles' || (id === 'system' ? can('system') : form.sections.value.some((s) => s.tab === id))).map(
+    (id) => ({ id }),
+  ),
+)
 const activeTab = computed<SettingsTab>(() => {
   const p = route.params.tab
   return typeof p === 'string' && (SETTINGS_TABS as readonly string[]).includes(p) ? (p as SettingsTab) : 'general'
@@ -127,6 +142,7 @@ function connectorState(sectionId: string): ConnectorState['state'] | undefined 
   return connectors.value.find((c) => c.id === id)?.state
 }
 async function loadConnectors() {
+  if (!can('settings.global')) return
   try {
     connectors.value = (await api.connectors()).connectors
   } catch {

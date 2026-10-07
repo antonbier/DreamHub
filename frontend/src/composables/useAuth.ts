@@ -1,12 +1,25 @@
-// Drives the login gate (App.vue) and LoginScreen.vue against
-// GET /api/v1/whoami — see src/api/authState.ts for why the app manages
-// Basic Auth itself instead of the browser's native prompt.
-import { ref } from 'vue'
+// Drives the login gate (App.vue), LoginScreen.vue and the profile picker
+// against GET /api/v1/whoami — see src/api/authState.ts for why the app
+// manages Basic Auth itself instead of the browser's native prompt, and
+// docs/PROFILES_PLAN.md for profiles.
+import { computed, ref } from 'vue'
 import { api, ApiError } from '@/api/client'
-import { authState, clearCredentials, setCredentials } from '@/api/authState'
+import { authState, clearCredentials, setCredentials, setProfileToken } from '@/api/authState'
+import type { Permission, WhoAmI } from '@/api/types'
 
-const username = ref<string | null>(null)
-const role = ref<'admin' | 'user' | null>(null)
+const me = ref<WhoAmI | null>(null)
+const username = computed(() => me.value?.username ?? null)
+const role = computed(() => me.value?.role ?? null)
+
+// can asks what the server will allow — to leave out buttons it would
+// refuse. The server checks anyway; this is only so viewers don't see them.
+function can(p: Permission): boolean {
+  return me.value?.permissions.includes(p) ?? false
+}
+
+function isProfileError(err: unknown): boolean {
+  return err instanceof ApiError && err.status === 401 && (err.code === 'profile_required' || err.code === 'profile_session_invalid')
+}
 
 export function useAuth() {
   // Tries whoami with whatever credentials (if any) are already on hand —
@@ -14,13 +27,14 @@ export function useAuth() {
   // credential from an earlier login this tab session is still good.
   async function check() {
     try {
-      const who = await api.whoami()
+      me.value = await api.whoami()
       authState.authenticated = true
+      authState.profileRequired = false
       authState.unreachable = false
-      username.value = who.username
-      role.value = who.role
     } catch (err) {
-      authState.authenticated = false
+      // The door opened, but this device has no profile yet.
+      authState.authenticated = isProfileError(err)
+      authState.profileRequired = isProfileError(err)
       authState.unreachable = !(err instanceof ApiError && err.status === 401)
     } finally {
       authState.checked = true
@@ -32,12 +46,15 @@ export function useAuth() {
   async function login(user: string, password: string): Promise<{ ok: true } | { ok: false; message: string }> {
     setCredentials({ username: user, password })
     try {
-      const who = await api.whoami()
+      me.value = await api.whoami()
       authState.authenticated = true
-      username.value = who.username
-      role.value = who.role
       return { ok: true }
     } catch (err) {
+      if (isProfileError(err)) {
+        authState.authenticated = true
+        authState.profileRequired = true
+        return { ok: true }
+      }
       clearCredentials()
       authState.authenticated = false
       if (err instanceof ApiError && err.status === 401) {
@@ -50,9 +67,21 @@ export function useAuth() {
   function logout() {
     clearCredentials()
     authState.authenticated = false
-    username.value = null
-    role.value = null
+    me.value = null
   }
 
-  return { authState, username, role, check, login, logout }
+  // Leaves the profile on this device and shows the picker again; the page
+  // reloads after the next pick so no view keeps the old profile's data.
+  async function switchProfile() {
+    try {
+      await api.profiles.endSession()
+    } catch {
+      // Signed out locally either way.
+    }
+    setProfileToken(null)
+    me.value = null
+    authState.profileRequired = true
+  }
+
+  return { authState, me, username, role, can, check, login, logout, switchProfile }
 }

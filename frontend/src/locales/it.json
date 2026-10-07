@@ -90,7 +90,8 @@
       "hub": "Nomi degli hub"
     },
     "settings": "Impostazioni",
-    "signOut": "Esci"
+    "signOut": "Esci",
+    "switchProfile": "Cambia profilo"
   },
   "common": {
     "loading": "Caricamento…",
@@ -650,7 +651,9 @@
       "plex_wrong_server": "A questo indirizzo risponde un altro server Plex.",
       "plex_unreachable_at": "Il server non risponde a questo indirizzo. Scegline un altro.",
       "invalid_url": "Inserisci un indirizzo completo con http:// o https://.",
-      "plex_bad_answer": "Il server Plex ha risposto, ma DreamHub non è riuscito a leggere la risposta. Segnalalo come errore."
+      "plex_bad_answer": "Il server Plex ha risposto, ma DreamHub non è riuscito a leggere la risposta. Segnalalo come errore.",
+      "forbidden": "Il tuo profilo non può farlo. Un admin può consentirlo in Impostazioni → Profili.",
+      "timer_not_yours": "Questo timer è stato creato da un altro profilo; solo un admin può modificarlo."
     },
     "media": {
       "not_a_recording": "Questa registrazione non esiste (più).",
@@ -843,6 +846,7 @@
     },
     "tab": {
       "general": "Generale",
+      "profiles": "Profili",
       "recordings": "Registrazioni",
       "services": "Servizi",
       "notifications": "Notifiche",
@@ -1358,5 +1362,90 @@
     "part": "Parte",
     "open": "Apri {title}",
     "openWatched": "Apri {title} (visto)"
+  },
+  "profiles": {
+    "picker": {
+      "title": "Chi guarda?",
+      "loadFailed": "Impossibile caricare i profili.",
+      "pin": "PIN",
+      "checking": "Verifica in corso…",
+      "open": "Apri",
+      "back": "Altro profilo",
+      "hasPin": "Con PIN",
+      "wrongPin": "PIN errato.",
+      "locked": "Troppi PIN errati. Attendi un momento e riprova.",
+      "failed": "Non è andato a buon fine. Riprova."
+    },
+    "myPin": {
+      "title": "Il tuo PIN",
+      "hasPin": "Il tuo profilo è protetto da un PIN.",
+      "noPin": "Chiunque in casa può aprire il tuo profilo. Con un PIN resta tuo.",
+      "newPin": "Nuovo PIN",
+      "pin": "PIN",
+      "save": "Salva PIN",
+      "remove": "Rimuovi PIN",
+      "saved": "PIN salvato.",
+      "removed": "PIN rimosso."
+    },
+    "pinFormat": "Da 4 a 8 cifre.",
+    "error": {
+      "adminPinRequired": "I profili admin richiedono un PIN quando c’è più di un profilo. Imposta prima il tuo PIN.",
+      "lastAdmin": "Deve restare almeno un profilo admin.",
+      "self": "Non puoi eliminare il tuo profilo.",
+      "notFound": "Questo profilo non esiste più.",
+      "nameTaken": "Un altro profilo ha già questo nome.",
+      "name": "Inserisci un nome di massimo 30 caratteri.",
+      "generic": "Non è andato a buon fine. Riprova."
+    },
+    "manage": {
+      "title": "Profili",
+      "subtitle": "Un profilo per persona. Gli spettatori guardano TV e film, usano il telecomando e programmano registrazioni — eliminare, impostazioni e sistema restano agli admin.",
+      "withPin": "PIN",
+      "withoutPin": "nessun PIN",
+      "custom": "permessi personalizzati",
+      "edit": "Modifica",
+      "add": "Aggiungi profilo",
+      "adminPinFirst": "Prima del primo altro profilo, imposta qui sopra un PIN per il tuo profilo."
+    },
+    "role": {
+      "admin": "Admin",
+      "user": "Spettatore"
+    },
+    "roleHint": {
+      "admin": "Tutto, incluse impostazioni, sistema ed eliminazione delle registrazioni.",
+      "user": "TV in diretta, registrazioni, Plex, guida, telecomando, programmare registrazioni. Niente eliminazioni, nessuna impostazione oltre alle proprie."
+    },
+    "form": {
+      "name": "Nome",
+      "color": "Colore",
+      "role": "Ruolo",
+      "switches": "Permessi",
+      "notDefault": "diverso dal ruolo",
+      "newPin": "Nuovo PIN (facoltativo)",
+      "pin": "PIN (facoltativo)",
+      "removePin": "Rimuovi il PIN",
+      "adminPinHint": "Gli admin richiedono un PIN quando c’è più di un profilo. Da 4 a 8 cifre.",
+      "save": "Salva",
+      "delete": "Elimina profilo",
+      "confirmDelete": "Eliminare davvero {name}?"
+    },
+    "switch": {
+      "timers": {
+        "plan": "Programmare registrazioni"
+      },
+      "recordings": {
+        "manage": "Rinominare ed eliminare registrazioni"
+      }
+    },
+    "color": {
+      "blue": "Blu",
+      "green": "Verde",
+      "amber": "Ambra",
+      "red": "Rosso",
+      "violet": "Viola",
+      "teal": "Ottanio",
+      "pink": "Rosa",
+      "slate": "Grigio"
+    }
   }
 }

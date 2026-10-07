@@ -11,8 +11,11 @@
 //   useAuth.ts's login()), every request carries them; a 401 from any
 //   endpoint means they're gone or wrong, so they're dropped and the app
 //   falls back to the login screen — see App.vue.
-import { authHeader, authState, clearCredentials } from './authState'
+import { authHeaders, handleUnauthorized } from './authState'
 import type {
+  Profile,
+  ProfileInput,
+  ProfileList,
   ApiToken,
   AutoTimers,
   BatchRenameItem,
@@ -101,8 +104,7 @@ async function request<T>(method: string, path: string, body?: unknown): Promise
   if (body !== undefined) {
     headers['Content-Type'] = 'application/json'
   }
-  const auth = authHeader()
-  if (auth) headers['Authorization'] = auth
+  Object.assign(headers, authHeaders())
 
   let res: Response
   try {
@@ -130,9 +132,9 @@ async function request<T>(method: string, path: string, body?: unknown): Promise
 
   if (res.status === 401) {
     // Wrong, revoked or (for a request sent before any login) simply
-    // absent credentials — either way, the login screen decides next.
-    clearCredentials()
-    authState.authenticated = false
+    // absent credentials — the login screen decides next; or no profile
+    // chosen on this device — the profile picker does.
+    handleUnauthorized((json as { error?: { code?: string } })?.error?.code)
   }
 
   if (!res.ok) {
@@ -152,18 +154,12 @@ async function request<T>(method: string, path: string, body?: unknown): Promise
 // set as a plain <img src> so it carries the same Authorization header as
 // every other request — an <img> can't, and would just 401 with auth on.
 async function requestBlob(path: string): Promise<Blob> {
-  const headers: Record<string, string> = {}
-  const auth = authHeader()
-  if (auth) headers['Authorization'] = auth
+  const headers = authHeaders()
   let res: Response
   try {
     res = await fetch(path, { headers, cache: 'no-store' })
   } catch (err) {
     throw new ApiError(0, 'network_error', err instanceof Error ? err.message : String(err))
-  }
-  if (res.status === 401) {
-    clearCredentials()
-    authState.authenticated = false
   }
   if (!res.ok) {
     let envelope: { code?: string; message?: string } | undefined
@@ -172,6 +168,7 @@ async function requestBlob(path: string): Promise<Blob> {
     } catch {
       envelope = undefined
     }
+    if (res.status === 401) handleUnauthorized(envelope?.code)
     throw new ApiError(res.status, envelope?.code ?? 'unknown', envelope?.message ?? res.statusText, res.headers.get('X-Request-ID') ?? undefined)
   }
   return res.blob()
@@ -180,6 +177,16 @@ async function requestBlob(path: string): Promise<Blob> {
 export const api = {
   health: () => request<HealthInfo>('GET', '/api/v1/health'),
   whoami: () => request<WhoAmI>('GET', '/api/v1/whoami'),
+  profiles: {
+    list: () => request<ProfileList>('GET', '/api/v1/profiles'),
+    startSession: (id: number, pin?: string) =>
+      request<{ token: string; profile: Profile }>('POST', `/api/v1/profiles/${id}/session`, pin ? { pin } : undefined),
+    endSession: () => request<void>('DELETE', '/api/v1/profiles/session'),
+    create: (input: ProfileInput) => request<Profile>('POST', '/api/v1/profiles', input),
+    update: (id: number, input: ProfileInput) => request<Profile>('PATCH', `/api/v1/profiles/${id}`, input),
+    remove: (id: number) => request<void>('DELETE', `/api/v1/profiles/${id}`),
+    setMyPin: (pin: string) => request<Profile>('PUT', '/api/v1/profiles/me/pin', { pin }),
+  },
   deviceInfo: () => request<DeviceInfo>('GET', '/api/v1/deviceinfo'),
   navigation: () => request<Navigation>('GET', '/api/v1/navigation'),
   settings: {

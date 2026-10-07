@@ -13,7 +13,7 @@
 // Demuxing, audio and video decoding run in three workers (one libav.js
 // instance each), so a slow video decoder never starves the audio.
 
-import { authHeader } from '@/api/authState'
+import { authHeaders } from '@/api/authState'
 import { ApiError } from '@/api/client'
 
 // libav.js ships no types for a custom build.
@@ -163,8 +163,7 @@ export class TsPlayer {
 
   private async fetchStream(src: Source): Promise<ReadableStreamDefaultReader<Uint8Array>> {
     const headers: Record<string, string> = {}
-    const auth = authHeader()
-    if (auth) headers['Authorization'] = auth
+    Object.assign(headers, authHeaders())
     let url: string
     if (src.kind === 'live') {
       url = `/api/v1/stream/live?ref=${encodeURIComponent(src.ref)}`

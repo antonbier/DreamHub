@@ -198,6 +198,16 @@ func TestProfiles_ViewerDeletesOnlyOwnTimers(t *testing.T) {
 	}
 }
 
+func TestProfiles_NewProfileStartsWithTheCreatorsLanguage(t *testing.T) {
+	e := newEnv(t)
+	e.json(t, "PATCH", "/api/v1/settings", `{"values":{"general.language":"it"}}`, nil, 200, nil)
+	_, viewer, _ := e.household(t)
+	_, b := e.do(t, "GET", "/api/v1/settings", "", withProfile(viewer))
+	if !strings.Contains(string(b), `"value":"it"`) {
+		t.Fatalf("the new profile's language isn't the creator's: %s", b)
+	}
+}
+
 func TestProfiles_SwitchesAndInvariants(t *testing.T) {
 	e := newEnv(t)
 	admin, viewer, benID := e.household(t)

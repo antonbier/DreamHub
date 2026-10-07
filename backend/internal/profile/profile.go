@@ -247,7 +247,7 @@ func (s *Service) Create(ctx context.Context, actor store.User, in Input) (Profi
 	if err := checkInvariants(append(users, u)); err != nil {
 		return Profile{}, err
 	}
-	created, err := s.store.CreateUser(ctx, u)
+	created, err := s.store.CreateUserLike(ctx, u, actor.ID)
 	if errors.Is(err, store.ErrNameTaken) {
 		return Profile{}, &ValidationError{Fields: map[string]string{"name": "taken"}}
 	}

@@ -1,6 +1,6 @@
 # Profiles, roles and the viewer UI — plan
 
-Status: **concept, agreed in direction with the owner on 2026-10-07, not built.** Tracks issue #39. Once a package lands, its status moves to `ROADMAP.md` like the `V1_PLAN.md` packages did.
+Status: **P1 and P2 built 2026-10-07** (with the parts of P3 and P5 that needed no extra design: navigation, settings and destructive buttons by permission, the two switches, timer ownership); P3's plain-language error pass and P4 open. Tracks issue #39. Once a package lands, its status moves to `ROADMAP.md` like the `V1_PLAN.md` packages did.
 
 ## Why now
 

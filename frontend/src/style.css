@@ -34,6 +34,16 @@
   --dh-onair: #f2564a;
   --dh-warn: #e0a23b;
   --dh-ok: #4fbf7f;
+  /* Profile colors (the picker's initials): bright on the dark theme,
+     with the page background as the letter color. */
+  --dh-profile-blue: #6aa6e8;
+  --dh-profile-green: #4fbf7f;
+  --dh-profile-amber: #e0a23b;
+  --dh-profile-red: #f2766b;
+  --dh-profile-violet: #a98ff0;
+  --dh-profile-teal: #3fbfb6;
+  --dh-profile-pink: #ee86b8;
+  --dh-profile-slate: #9ba4ae;
   /* Native controls (checkboxes, selects, scrollbars, date pickers) follow
      the theme instead of staying browser-white on the dark surfaces. */
   color-scheme: dark;
@@ -55,6 +65,14 @@
   --dh-onair: #c5372b;
   --dh-warn: #975e0b;
   --dh-ok: #29794b;
+  --dh-profile-blue: #1f64c8;
+  --dh-profile-green: #29794b;
+  --dh-profile-amber: #975e0b;
+  --dh-profile-red: #b8382d;
+  --dh-profile-violet: #6a4fc4;
+  --dh-profile-teal: #147a73;
+  --dh-profile-pink: #a83c74;
+  --dh-profile-slate: #505a64;
 }
 
 * {

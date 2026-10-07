@@ -90,7 +90,8 @@
       "hub": "Hub-Namen"
     },
     "settings": "Einstellungen",
-    "signOut": "Abmelden"
+    "signOut": "Abmelden",
+    "switchProfile": "Profil wechseln"
   },
   "common": {
     "loading": "Wird geladen…",
@@ -650,7 +651,9 @@
       "plex_wrong_server": "Unter dieser Adresse antwortet ein anderer Plex-Server.",
       "plex_unreachable_at": "Der Server antwortet unter dieser Adresse nicht. Bitte eine andere wählen.",
       "invalid_url": "Bitte eine vollständige Adresse mit http:// oder https:// angeben.",
-      "plex_bad_answer": "Der Plex-Server hat geantwortet, aber DreamHub konnte die Antwort nicht lesen. Bitte melde das als Fehler."
+      "plex_bad_answer": "Der Plex-Server hat geantwortet, aber DreamHub konnte die Antwort nicht lesen. Bitte melde das als Fehler.",
+      "forbidden": "Dein Profil darf das nicht. Ein Admin kann es unter Einstellungen → Profile erlauben.",
+      "timer_not_yours": "Diesen Timer hat ein anderes Profil angelegt; ändern kann ihn nur ein Admin."
     },
     "media": {
       "not_a_recording": "Diese Aufnahme gibt es nicht (mehr).",
@@ -843,6 +846,7 @@
     },
     "tab": {
       "general": "Allgemein",
+      "profiles": "Profile",
       "recordings": "Aufnahmen",
       "services": "Dienste",
       "notifications": "Benachrichtigungen",
@@ -1358,5 +1362,90 @@
     "part": "Teil",
     "open": "{title} öffnen",
     "openWatched": "{title} öffnen (gesehen)"
+  },
+  "profiles": {
+    "picker": {
+      "title": "Wer schaut?",
+      "loadFailed": "Die Profile konnten nicht geladen werden.",
+      "pin": "PIN",
+      "checking": "Wird geprüft …",
+      "open": "Öffnen",
+      "back": "Anderes Profil",
+      "hasPin": "Mit PIN",
+      "wrongPin": "Falsche PIN.",
+      "locked": "Zu viele falsche PINs. Bitte kurz warten und noch einmal versuchen.",
+      "failed": "Das hat nicht geklappt. Bitte noch einmal versuchen."
+    },
+    "myPin": {
+      "title": "Deine PIN",
+      "hasPin": "Dein Profil ist mit einer PIN geschützt.",
+      "noPin": "Jeder bei dir zu Hause kann dein Profil öffnen. Mit einer PIN bleibt es deins.",
+      "newPin": "Neue PIN",
+      "pin": "PIN",
+      "save": "PIN speichern",
+      "remove": "PIN entfernen",
+      "saved": "PIN gespeichert.",
+      "removed": "PIN entfernt."
+    },
+    "pinFormat": "4 bis 8 Ziffern.",
+    "error": {
+      "adminPinRequired": "Admin-Profile brauchen eine PIN, sobald es mehr als ein Profil gibt. Lege zuerst deine eigene PIN fest.",
+      "lastAdmin": "Mindestens ein Admin-Profil muss bleiben.",
+      "self": "Dein eigenes Profil kannst du nicht löschen.",
+      "notFound": "Dieses Profil gibt es nicht mehr.",
+      "nameTaken": "Ein anderes Profil heißt schon so.",
+      "name": "Bitte einen Namen mit höchstens 30 Zeichen eingeben.",
+      "generic": "Das hat nicht geklappt. Bitte noch einmal versuchen."
+    },
+    "manage": {
+      "title": "Profile",
+      "subtitle": "Ein Profil pro Person. Zuschauer sehen fern und Filme, nutzen die Fernbedienung und planen Aufnahmen — Löschen, Einstellungen und System bleiben bei Admins.",
+      "withPin": "PIN",
+      "withoutPin": "keine PIN",
+      "custom": "angepasste Rechte",
+      "edit": "Bearbeiten",
+      "add": "Profil hinzufügen",
+      "adminPinFirst": "Lege vor dem ersten weiteren Profil oben eine PIN für dein eigenes Profil fest."
+    },
+    "role": {
+      "admin": "Admin",
+      "user": "Zuschauer"
+    },
+    "roleHint": {
+      "admin": "Alles, auch Einstellungen, System und das Löschen von Aufnahmen.",
+      "user": "Live-TV, Aufnahmen, Plex, Programm, Fernbedienung, Aufnahmen planen. Kein Löschen, keine Einstellungen außer den eigenen."
+    },
+    "form": {
+      "name": "Name",
+      "color": "Farbe",
+      "role": "Rolle",
+      "switches": "Rechte",
+      "notDefault": "weicht von der Rolle ab",
+      "newPin": "Neue PIN (optional)",
+      "pin": "PIN (optional)",
+      "removePin": "PIN entfernen",
+      "adminPinHint": "Admins brauchen eine PIN, sobald es mehr als ein Profil gibt. 4 bis 8 Ziffern.",
+      "save": "Speichern",
+      "delete": "Profil löschen",
+      "confirmDelete": "{name} wirklich löschen?"
+    },
+    "switch": {
+      "timers": {
+        "plan": "Aufnahmen planen"
+      },
+      "recordings": {
+        "manage": "Aufnahmen umbenennen und löschen"
+      }
+    },
+    "color": {
+      "blue": "Blau",
+      "green": "Grün",
+      "amber": "Bernstein",
+      "red": "Rot",
+      "violet": "Violett",
+      "teal": "Petrol",
+      "pink": "Rosa",
+      "slate": "Grau"
+    }
   }
 }

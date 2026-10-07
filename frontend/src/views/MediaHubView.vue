@@ -87,7 +87,7 @@
           </template>
         </nav>
 
-        <p v-if="folder && !folder.fileOps.available" class="mt-2 text-[13px] text-faint">{{ t(`media.fileOps.${folder.fileOps.reason ?? 'notOnBox'}`) }}</p>
+        <p v-if="folder && !folder.fileOps.available && can('recordings.manage')" class="mt-2 text-[13px] text-faint">{{ t(`media.fileOps.${folder.fileOps.reason ?? 'notOnBox'}`) }}</p>
 
         <div v-if="selection.size > 0" class="mt-3 flex flex-wrap items-center gap-3 rounded border border-line bg-tile px-3 py-2 text-[13.5px]">
           <span class="text-text">{{ t('media.selected', { count: selection.size }, selection.size) }}</span>
@@ -274,6 +274,7 @@
 </template>
 
 <script setup lang="ts">
+import { useAuth } from '@/composables/useAuth'
 import { computed, onMounted, reactive, ref, watch } from 'vue'
 import { RouterLink, useRoute } from 'vue-router'
 import { useI18n } from 'vue-i18n'
@@ -314,7 +315,10 @@ const folder = ref<MediaFolder | null>(null)
 const loading = ref(true)
 const loadFailed = ref(false)
 const notice = ref('')
-const fileOpsAvailable = computed(() => folder.value?.fileOps.available ?? false)
+// Renaming and the trash need the box's files and the profile's permission
+// (a viewer just watches; docs/PROFILES_PLAN.md).
+const { can } = useAuth()
+const fileOpsAvailable = computed(() => can('recordings.manage') && (folder.value?.fileOps.available ?? false))
 
 // --- tabs -------------------------------------------------------------------
 

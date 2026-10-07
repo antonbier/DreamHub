@@ -21,6 +21,7 @@ import (
 	"unicode/utf8"
 
 	"github.com/antonbier/DreamHub/backend/internal/hub"
+	"github.com/antonbier/DreamHub/backend/internal/perm"
 	"github.com/antonbier/DreamHub/backend/internal/store"
 )
 
@@ -76,6 +77,8 @@ type tileType struct {
 	// Hidden: offered in edit mode but not shown until switched on — a
 	// cover row isn't part of the default layout (CONCEPT.md, DESIGN.md).
 	Hidden bool
+	// Perm, when set, is needed to see the tile at all (internal/perm).
+	Perm perm.Perm
 }
 
 // catalog is the fixed v1 set of built-in tile types, each backed by data
@@ -85,7 +88,8 @@ var catalog = []tileType{
 	// Backed by ControlHub's GET /api/v1/control/current.
 	{ID: "control.nowPlaying", Label: "dashboard.tile.nowPlaying", DefaultWidth: 2, First: true},
 	{ID: "timers.upcoming", Label: "dashboard.tile.timersUpcoming", DefaultWidth: 2},
-	{ID: "hubs.status", Label: "dashboard.tile.hubsStatus", DefaultWidth: 2},
+	// Setup problems are the admin's to fix.
+	{ID: "hubs.status", Label: "dashboard.tile.hubsStatus", DefaultWidth: 2, Perm: perm.SettingsGlobal},
 	{ID: "media.diskSpace", Label: "dashboard.tile.mediaDiskSpace", DefaultWidth: 1},
 	{ID: "series.upcoming", Label: "dashboard.tile.seriesUpcoming", DefaultWidth: 2},
 	// Backed by GET /api/v1/timers' per-timer conflict estimate.
@@ -183,6 +187,20 @@ func reconcile(l Layout, onLoad bool) Layout {
 	return out
 }
 
+// visible leaves out the tiles a profile may not see; they stay in the
+// stored layout, so a profile that gains the permission gets them back.
+func visible(l Layout, p perm.Set) Layout {
+	idx := catalogIndex()
+	out := Layout{Tiles: []Tile{}}
+	for _, t := range l.Tiles {
+		if ct, ok := idx[t.Type]; ok && ct.Perm != "" && !p.Has(ct.Perm) {
+			continue
+		}
+		out.Tiles = append(out.Tiles, t)
+	}
+	return out
+}
+
 func (s *Service) validateCustom(c *Custom) error {
 	if c == nil {
 		return fmt.Errorf("%w: custom tile without a view", ErrInvalidTile)
@@ -221,7 +239,7 @@ func (s *Service) Get(ctx context.Context, u store.User) (Layout, error) {
 	}
 	var raw Layout
 	_ = json.Unmarshal(d.Layout, &raw) // empty/invalid -> zero value; reconcile fills in the catalog
-	return reconcile(raw, true), nil
+	return visible(reconcile(raw, true), perm.For(u)), nil
 }
 
 // Save validates and persists a layout, and records the change (without
@@ -284,5 +302,5 @@ func (s *Service) Save(ctx context.Context, u store.User, l Layout) (Layout, err
 	}); err != nil {
 		return Layout{}, err
 	}
-	return reconciled, nil
+	return visible(reconciled, perm.For(u)), nil
 }

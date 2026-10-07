@@ -18,6 +18,20 @@
 import { reactive } from 'vue'
 
 const STORAGE_KEY = 'dreamhub.credentials'
+// The device's profile session (docs/PROFILES_PLAN.md): kept in
+// localStorage, unlike the door's password — "remember the profile on this
+// device" was the owner's choice. The token only picks a profile; it opens
+// nothing the door hasn't already opened.
+const PROFILE_KEY = 'dreamhub.profile'
+export const PROFILE_HEADER = 'X-DreamHub-Profile'
+
+function loadProfileToken(): string | null {
+  try {
+    return localStorage.getItem(PROFILE_KEY)
+  } catch {
+    return null
+  }
+}
 
 export interface Credentials {
   username: string
@@ -43,12 +57,49 @@ export const authState = reactive({
   // (or the box it runs on) didn't answer. App.vue shows "can't reach"
   // with a retry instead of a login form that couldn't work either.
   unreachable: false,
+  // The door is open but no profile is chosen on this device (a 401
+  // profile_required / profile_session_invalid) — App.vue shows the picker.
+  profileRequired: false,
+  profileToken: loadProfileToken(),
 })
 
 export function authHeader(): string | undefined {
   if (!authState.credentials) return undefined
   const { username, password } = authState.credentials
   return 'Basic ' + btoa(`${username}:${password}`)
+}
+
+// Every header a request to DreamHub needs to say who it is: the door's
+// credentials and the device's profile. Used by every fetch — JSON, images,
+// the live-TV stream and the event stream.
+export function authHeaders(): Record<string, string> {
+  const headers: Record<string, string> = {}
+  const auth = authHeader()
+  if (auth) headers['Authorization'] = auth
+  if (authState.profileToken) headers[PROFILE_HEADER] = authState.profileToken
+  return headers
+}
+
+export function setProfileToken(token: string | null) {
+  authState.profileToken = token
+  try {
+    if (token) localStorage.setItem(PROFILE_KEY, token)
+    else localStorage.removeItem(PROFILE_KEY)
+  } catch {
+    // See setCredentials.
+  }
+}
+
+// handleUnauthorized decides what a 401 means: the profile's session is
+// missing or over (pick a profile) or the door's credentials are (log in).
+export function handleUnauthorized(code: string | undefined) {
+  if (code === 'profile_required' || code === 'profile_session_invalid') {
+    setProfileToken(null)
+    authState.profileRequired = true
+    return
+  }
+  clearCredentials()
+  authState.authenticated = false
 }
 
 export function setCredentials(c: Credentials) {

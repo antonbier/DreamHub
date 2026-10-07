@@ -24,6 +24,18 @@
         {{ formatNumber(result.total) }}
       </p>
       <p v-else-if="result.items.length === 0" class="text-[13.5px] text-muted">{{ t('dashboard.custom.noMatches') }}</p>
+      <!-- A row of covers (Plex libraries): the look of "Continue watching". -->
+      <ul v-else-if="custom.display === 'posters'" class="flex gap-3 overflow-x-auto pb-1">
+        <li v-for="(item, i) in result.items" :key="i" class="w-[96px] shrink-0">
+          <RouterLink :to="item.path ?? '/'" class="group block" :title="item.title">
+            <span class="relative block aspect-[2/3] w-full overflow-hidden rounded border border-line-soft bg-field group-hover:border-accent">
+              <PosterImage v-if="item.image" :plex="item.image" :plex-width="240" fill lazy alt="" />
+            </span>
+            <span class="mt-1 block truncate text-[12.5px] text-text group-hover:text-accent">{{ item.title }}</span>
+            <span v-if="item.subtitle" class="block truncate text-[11.5px] text-muted">{{ item.subtitle }}</span>
+          </RouterLink>
+        </li>
+      </ul>
       <ul v-else class="flex flex-col">
         <li v-for="(item, i) in result.items" :key="i" class="border-b border-line-soft last:border-none">
           <component
@@ -58,6 +70,7 @@ import { computed, onMounted, onUnmounted, ref, watch } from 'vue'
 import { RouterLink } from 'vue-router'
 import { useI18n } from 'vue-i18n'
 import { api } from '@/api/client'
+import PosterImage from '@/components/enrich/PosterImage.vue'
 import { formatBytes } from '@/lib/format'
 import { useDisplayTimeZone } from '@/composables/useDisplayTimeZone'
 import { useViewText } from '@/composables/useViewText'

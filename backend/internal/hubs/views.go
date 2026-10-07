@@ -42,7 +42,7 @@ func (h *Media) View(ctx context.Context, sourceID string, q hub.ViewQuery, now 
 	if entries, ok := h.recordingIndex(ctx); ok {
 		out := make([]hub.ViewItem, 0, len(entries))
 		for _, e := range entries {
-			out = append(out, hub.ViewItem{Title: e.Title, Subtitle: folderLabel(e.Folder), Time: e.Time, Size: e.Size, Path: "/media?dir=" + url.QueryEscape(e.Folder)})
+			out = append(out, hub.ViewItem{Title: e.Title, Subtitle: folderLabel(e.Folder), Time: e.Time, Size: e.Size, Path: "/media?dir=" + url.QueryEscape(e.Folder), Recording: e.Path})
 		}
 		return out, nil
 	}
@@ -52,7 +52,7 @@ func (h *Media) View(ctx context.Context, sourceID string, q hub.ViewQuery, now 
 	}
 	out := make([]hub.ViewItem, 0, len(movies))
 	for _, m := range movies {
-		out = append(out, hub.ViewItem{Title: m.Title, Subtitle: m.ServiceName, Time: int64(m.Time), Size: int64(m.FileSize), Path: "/media"})
+		out = append(out, hub.ViewItem{Title: m.Title, Subtitle: m.ServiceName, Time: int64(m.Time), Size: int64(m.FileSize), Path: "/media", Recording: m.Filename})
 	}
 	return out, nil
 }

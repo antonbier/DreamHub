@@ -213,7 +213,8 @@
       "timersConflicts": "Konflikte",
       "nowPlaying": "Jetzt auf der Box",
       "plexContinue": "Weiterschauen (Plex)",
-      "liveTv": "Live-TV"
+      "liveTv": "Jetzt im TV",
+      "mediaRecent": "Neueste Aufnahmen"
     },
     "tileFrame": {
       "hide": "Ausblenden",
@@ -261,7 +262,8 @@
       "guide": "TV-Programm",
       "seriesUpcoming": "Serienfolgen",
       "discoveryPicks": "Empfehlungen des Tages",
-      "radioNow": "Jetzt im Radio"
+      "radioNow": "Jetzt im Radio",
+      "plexLibrary": "Plex-Bibliothek"
     },
     "criteria": {
       "text": "enthält „{text}“",
@@ -272,7 +274,8 @@
       "fromTime": "ab {time}",
       "minDuration": "ab {n} Min.",
       "warnOnly": "nur Konflikte",
-      "withoutTimer": "ohne Timer"
+      "withoutTimer": "ohne Timer",
+      "unwatched": "noch nicht gesehen"
     },
     "sort": {
       "newest": "neueste zuerst",
@@ -290,7 +293,8 @@
       "fromTime": "Beginn ab (Uhrzeit)",
       "minDuration": "Mindestdauer (Minuten)",
       "warnOnly": "Nur mögliche Konflikte",
-      "withoutTimer": "Nur ohne Timer"
+      "withoutTimer": "Nur ohne Timer",
+      "unwatched": "Nur noch nicht gesehen"
     },
     "builder": {
       "eyebrow": "Eigene Kachel",
@@ -314,7 +318,8 @@
       "note": "Eine Kachel zeigt nur an und löst nie selbst etwas aus.",
       "save": "Speichern",
       "create": "Kachel anlegen",
-      "saveFailed": "Konnte nicht gespeichert werden."
+      "saveFailed": "Konnte nicht gespeichert werden.",
+      "displayPosters": "Poster-Reihe"
     },
     "nowPlaying": {
       "unavailable": "Die Box sagt gerade nicht, was sie zeigt.",
@@ -336,6 +341,15 @@
       "unavailable": "Plex ist gerade nicht erreichbar.",
       "empty": "Nichts angefangen.",
       "offline": "Plex offline – letzter bekannter Stand."
+    },
+    "template": {
+      "title": "Startseite für Zuschauer",
+      "reset": "Zurück zur gemeinsamen Startseite",
+      "explain": "Du gestaltest die Startseite, die jeder Zuschauer sieht, bis er seine eigene anpasst. Änderungen werden sofort gespeichert.",
+      "back": "Zurück zu den Profilen"
+    },
+    "recent": {
+      "empty": "Noch keine Aufnahmen."
     }
   },
   "hubPlaceholder": {
@@ -1405,7 +1419,10 @@
       "custom": "angepasste Rechte",
       "edit": "Bearbeiten",
       "add": "Profil hinzufügen",
-      "adminPinFirst": "Lege vor dem ersten weiteren Profil oben eine PIN für dein eigenes Profil fest."
+      "adminPinFirst": "Lege vor dem ersten weiteren Profil oben eine PIN für dein eigenes Profil fest.",
+      "templateTitle": "Startseite für Zuschauer",
+      "templateHint": "Was ein Zuschauer zuerst sieht, bis er seine eigene Startseite anpasst. Zuschauer können jederzeit dorthin zurück.",
+      "templateOpen": "Startseite gestalten"
     },
     "role": {
       "admin": "Admin",

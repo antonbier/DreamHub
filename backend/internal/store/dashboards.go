@@ -2,6 +2,7 @@ package store
 
 import (
 	"context"
+	"database/sql"
 	"encoding/json"
 	"errors"
 	"time"
@@ -61,3 +62,29 @@ func (s *Store) SaveDashboardLayout(ctx context.Context, userID, dashboardID int
 
 // ErrInvalidLayout is returned when a dashboard layout isn't valid JSON.
 var ErrInvalidLayout = errors.New("store: layout is not valid JSON")
+
+// DashboardTemplate returns the start page designed for a role; ok is
+// false when none was saved.
+func (s *Store) DashboardTemplate(ctx context.Context, role Role) (json.RawMessage, bool, error) {
+	var layout string
+	err := s.db.QueryRowContext(ctx, `SELECT layout FROM dashboard_templates WHERE role = ?`, string(role)).Scan(&layout)
+	if errors.Is(err, sql.ErrNoRows) {
+		return nil, false, nil
+	}
+	if err != nil {
+		return nil, false, err
+	}
+	return json.RawMessage(layout), true, nil
+}
+
+// SaveDashboardTemplate replaces the start page designed for a role.
+func (s *Store) SaveDashboardTemplate(ctx context.Context, role Role, layout json.RawMessage) error {
+	if !json.Valid(layout) {
+		return ErrInvalidLayout
+	}
+	_, err := s.db.ExecContext(ctx,
+		`INSERT INTO dashboard_templates (role, layout, updated_at) VALUES (?, ?, ?)
+		 ON CONFLICT (role) DO UPDATE SET layout = excluded.layout, updated_at = excluded.updated_at`,
+		string(role), string(layout), s.timestamp())
+	return err
+}

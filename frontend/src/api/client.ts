@@ -329,6 +329,10 @@ export const api = {
   dashboard: {
     get: () => request<DashboardLayout>('GET', '/api/v1/dashboard'),
     save: (layout: DashboardLayout) => request<DashboardLayout>('PUT', '/api/v1/dashboard', layout),
+    reset: () => request<DashboardLayout>('DELETE', '/api/v1/dashboard'),
+    // The viewers' start page, designed by an admin.
+    template: () => request<DashboardLayout>('GET', '/api/v1/dashboard/template'),
+    saveTemplate: (layout: DashboardLayout) => request<DashboardLayout>('PUT', '/api/v1/dashboard/template', layout),
     sources: () => request<{ sources: ViewSource[] }>('GET', '/api/v1/dashboard/sources'),
     // Read-only despite the POST (structured criteria, not a query string).
     view: (source: string, query: ViewQuery, timeZone: string) =>

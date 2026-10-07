@@ -31,7 +31,8 @@ export function useViewText() {
   }
 
   function describe(source: string, q: ViewQuery): string {
-    const parts = [t(SOURCE_LABELS[source] ?? source)]
+    const label = SOURCE_LABELS[source] ?? (source.startsWith('plex.library.') ? 'dashboard.source.plexLibrary' : source)
+    const parts = [t(label)]
     if (q.text) parts.push(t('dashboard.criteria.text', { text: q.text }))
     if (q.olderThanDays) parts.push(t('dashboard.criteria.olderThanDays', { n: num(q.olderThanDays) }, q.olderThanDays))
     if (q.newerThanDays) parts.push(t('dashboard.criteria.newerThanDays', { n: num(q.newerThanDays) }, q.newerThanDays))
@@ -40,6 +41,7 @@ export function useViewText() {
     if (q.fromTime) parts.push(t('dashboard.criteria.fromTime', { time: q.fromTime }))
     if (q.minDuration) parts.push(t('dashboard.criteria.minDuration', { n: num(q.minDuration) }))
     if (q.warnOnly) parts.push(t(source === 'discovery.picks' ? 'dashboard.criteria.withoutTimer' : 'dashboard.criteria.warnOnly'))
+    if (q.unwatched) parts.push(t('dashboard.criteria.unwatched'))
     if (q.sort) parts.push(t(`dashboard.sort.${q.sort}`))
     return parts.join(' · ')
   }

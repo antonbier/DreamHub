@@ -213,7 +213,8 @@
       "timersConflicts": "Conflicts",
       "nowPlaying": "Now on the box",
       "plexContinue": "Continue watching (Plex)",
-      "liveTv": "Live TV"
+      "liveTv": "Now on TV",
+      "mediaRecent": "Recent recordings"
     },
     "tileFrame": {
       "hide": "Hide",
@@ -261,7 +262,8 @@
       "guide": "TV guide",
       "seriesUpcoming": "Series episodes",
       "discoveryPicks": "Today's recommendations",
-      "radioNow": "On the radio now"
+      "radioNow": "On the radio now",
+      "plexLibrary": "Plex library"
     },
     "criteria": {
       "text": "contains “{text}”",
@@ -272,7 +274,8 @@
       "fromTime": "from {time}",
       "minDuration": "at least {n} min",
       "warnOnly": "conflicts only",
-      "withoutTimer": "without a timer"
+      "withoutTimer": "without a timer",
+      "unwatched": "not seen yet"
     },
     "sort": {
       "newest": "newest first",
@@ -290,7 +293,8 @@
       "fromTime": "Starting from (time)",
       "minDuration": "Minimum length (minutes)",
       "warnOnly": "Likely conflicts only",
-      "withoutTimer": "Only ones without a timer yet"
+      "withoutTimer": "Only ones without a timer yet",
+      "unwatched": "Only not seen yet"
     },
     "builder": {
       "eyebrow": "Custom tile",
@@ -314,7 +318,8 @@
       "note": "A tile only shows things; it never acts on its own.",
       "save": "Save",
       "create": "Create tile",
-      "saveFailed": "Couldn't be saved."
+      "saveFailed": "Couldn't be saved.",
+      "displayPosters": "Row of posters"
     },
     "nowPlaying": {
       "unavailable": "Can't ask the box what it's showing.",
@@ -336,6 +341,15 @@
       "unavailable": "Plex can’t be reached right now.",
       "empty": "Nothing started.",
       "offline": "Plex offline – last known state."
+    },
+    "template": {
+      "title": "Start page for viewers",
+      "reset": "Back to the shared start page",
+      "explain": "You are designing the start page every viewer sees until they change their own. Changes are saved right away.",
+      "back": "Back to profiles"
+    },
+    "recent": {
+      "empty": "No recordings yet."
     }
   },
   "hubPlaceholder": {
@@ -1405,7 +1419,10 @@
       "custom": "custom permissions",
       "edit": "Edit",
       "add": "Add profile",
-      "adminPinFirst": "Before the first other profile, set a PIN for your own profile above."
+      "adminPinFirst": "Before the first other profile, set a PIN for your own profile above.",
+      "templateTitle": "Start page for viewers",
+      "templateHint": "What a viewer sees first, until they change their own start page. Viewers can always go back to it.",
+      "templateOpen": "Design the start page"
     },
     "role": {
       "admin": "Admin",

@@ -49,7 +49,7 @@ type Custom struct {
 	Title   string        `json:"title"`
 	Source  string        `json:"source"`
 	Query   hub.ViewQuery `json:"query"`
-	Display string        `json:"display"` // "list" or "count"
+	Display string        `json:"display"` // "list", "count" or "posters" (items with a picture)
 }
 
 // key identifies a tile within a layout: its type for built-ins, its ID
@@ -64,6 +64,9 @@ func (t Tile) key() string {
 // Layout is a dashboard's tiles, in display order.
 type Layout struct {
 	Tiles []Tile `json:"tiles"`
+	// FromTemplate: the profile hasn't made its own start page yet and sees
+	// the one an admin designed for its role (docs/PROFILES_PLAN.md, P4).
+	FromTemplate bool `json:"fromTemplate,omitempty"`
 }
 
 type tileType struct {
@@ -97,6 +100,9 @@ var catalog = []tileType{
 	// Backed by PlexHub's GET /api/v1/plex/ondeck: a cover row, so hidden
 	// until switched on.
 	{ID: "plex.continue", Label: "dashboard.tile.plexContinue", DefaultWidth: 4, Hidden: true},
+	// The newest recordings, to watch in the browser — a custom tile's
+	// "recordings, newest first" with a fixed look (POST /dashboard/view).
+	{ID: "media.recent", Label: "dashboard.tile.mediaRecent", DefaultWidth: 2, Hidden: true},
 	// Backed by StreamHub's GET /api/v1/stream/channels: channels to start
 	// in the browser; hidden until switched on.
 	{ID: "stream.channels", Label: "dashboard.tile.liveTv", DefaultWidth: 2, Hidden: true},
@@ -212,8 +218,8 @@ func (s *Service) validateCustom(c *Custom) error {
 	if c.Source == "" || (s.KnownSource != nil && !s.KnownSource(c.Source)) {
 		return fmt.Errorf("%w: unknown source %q", ErrInvalidTile, c.Source)
 	}
-	if c.Display != "list" && c.Display != "count" {
-		return fmt.Errorf("%w: display must be list or count", ErrInvalidTile)
+	if c.Display != "list" && c.Display != "count" && c.Display != "posters" {
+		return fmt.Errorf("%w: display must be list, count or posters", ErrInvalidTile)
 	}
 	if c.Query.Limit < 0 || c.Query.Limit > hub.MaxViewLimit {
 		return fmt.Errorf("%w: limit must be 1-%d", ErrInvalidTile, hub.MaxViewLimit)
@@ -239,7 +245,67 @@ func (s *Service) Get(ctx context.Context, u store.User) (Layout, error) {
 	}
 	var raw Layout
 	_ = json.Unmarshal(d.Layout, &raw) // empty/invalid -> zero value; reconcile fills in the catalog
-	return visible(reconcile(raw, true), perm.For(u)), nil
+	fromTemplate := false
+	if len(raw.Tiles) == 0 && u.Role != store.RoleAdmin {
+		// Never customized: the role's template, when an admin made one.
+		tpl, ok, err := s.store.DashboardTemplate(ctx, u.Role)
+		if err != nil {
+			return Layout{}, err
+		}
+		if ok {
+			_ = json.Unmarshal(tpl, &raw)
+			fromTemplate = true
+		}
+	}
+	l := visible(reconcile(raw, true), perm.For(u))
+	l.FromTemplate = fromTemplate
+	return l, nil
+}
+
+// Reset drops the profile's own start page, back to its role's template
+// (or the built-in default) — "a messed-up start page is one tap from
+// fixed".
+func (s *Service) Reset(ctx context.Context, u store.User) (Layout, error) {
+	d, err := s.dashboard(ctx, u)
+	if err != nil {
+		return Layout{}, err
+	}
+	if err := s.store.SaveDashboardLayout(ctx, u.ID, d.ID, json.RawMessage(`[]`)); err != nil {
+		return Layout{}, err
+	}
+	_ = s.store.AppendChange(ctx, store.ChangeEntry{UserID: u.ID, Action: "dashboard.reset", Summary: "Reset dashboard to the template"})
+	return s.Get(ctx, u)
+}
+
+// Template returns the start page for viewers: the saved template, or the
+// built-in default as a viewer would see it.
+func (s *Service) Template(ctx context.Context) (Layout, error) {
+	var raw Layout
+	tpl, ok, err := s.store.DashboardTemplate(ctx, store.RoleUser)
+	if err != nil {
+		return Layout{}, err
+	}
+	if ok {
+		_ = json.Unmarshal(tpl, &raw)
+	}
+	return visible(reconcile(raw, true), perm.ForRole(store.RoleUser)), nil
+}
+
+// SaveTemplate validates and stores the viewers' start page.
+func (s *Service) SaveTemplate(ctx context.Context, actor store.User, l Layout) (Layout, error) {
+	if err := s.validate(&l); err != nil {
+		return Layout{}, err
+	}
+	reconciled := reconcile(l, false)
+	enc, err := json.Marshal(reconciled)
+	if err != nil {
+		return Layout{}, err
+	}
+	if err := s.store.SaveDashboardTemplate(ctx, store.RoleUser, enc); err != nil {
+		return Layout{}, err
+	}
+	_ = s.store.AppendChange(ctx, store.ChangeEntry{UserID: actor.ID, Action: "dashboard.template", Summary: "Updated the viewers' start page"})
+	return visible(reconciled, perm.ForRole(store.RoleUser)), nil
 }
 
 // Save validates and persists a layout, and records the change (without
@@ -247,44 +313,9 @@ func (s *Service) Get(ctx context.Context, u store.User) (Layout, error) {
 // is the display order; a caller-supplied Label is ignored and recomputed
 // from the catalog.
 func (s *Service) Save(ctx context.Context, u store.User, l Layout) (Layout, error) {
-	idx := catalogIndex()
-	seen := make(map[string]bool, len(l.Tiles))
-	customs := 0
-	for i := range l.Tiles {
-		t := &l.Tiles[i]
-		if t.Type == TypeCustom {
-			customs++
-			if customs > MaxCustomTiles {
-				return Layout{}, fmt.Errorf("%w: at most %d custom tiles", ErrInvalidTile, MaxCustomTiles)
-			}
-			if t.ID == "" {
-				t.ID = newTileID() // a tile just created in the builder
-			}
-			if seen[t.key()] {
-				return Layout{}, fmt.Errorf("%w: duplicate custom tile %q", ErrInvalidTile, t.ID)
-			}
-			seen[t.key()] = true
-			if err := s.validateCustom(t.Custom); err != nil {
-				return Layout{}, err
-			}
-			if t.Width < 1 || t.Width > 4 {
-				return Layout{}, fmt.Errorf("%w: width must be 1-4, got %d for custom tile", ErrInvalidTile, t.Width)
-			}
-			continue
-		}
-		ct, ok := idx[t.Type]
-		if !ok {
-			return Layout{}, fmt.Errorf("%w: unknown type %q", ErrInvalidTile, t.Type)
-		}
-		if seen[t.Type] {
-			return Layout{}, fmt.Errorf("%w: duplicate type %q", ErrInvalidTile, t.Type)
-		}
-		seen[t.Type] = true
-		if t.Width < 1 || t.Width > 4 {
-			return Layout{}, fmt.Errorf("%w: width must be 1-4, got %d for %q", ErrInvalidTile, t.Width, ct.ID)
-		}
+	if err := s.validate(&l); err != nil {
+		return Layout{}, err
 	}
-
 	d, err := s.dashboard(ctx, u)
 	if err != nil {
 		return Layout{}, err
@@ -303,4 +334,47 @@ func (s *Service) Save(ctx context.Context, u store.User, l Layout) (Layout, err
 		return Layout{}, err
 	}
 	return visible(reconciled, perm.For(u)), nil
+}
+
+// validate checks a layout to save and gives new custom tiles their IDs.
+func (s *Service) validate(l *Layout) error {
+	idx := catalogIndex()
+	seen := make(map[string]bool, len(l.Tiles))
+	customs := 0
+	for i := range l.Tiles {
+		t := &l.Tiles[i]
+		if t.Type == TypeCustom {
+			customs++
+			if customs > MaxCustomTiles {
+				return fmt.Errorf("%w: at most %d custom tiles", ErrInvalidTile, MaxCustomTiles)
+			}
+			if t.ID == "" {
+				t.ID = newTileID() // a tile just created in the builder
+			}
+			if seen[t.key()] {
+				return fmt.Errorf("%w: duplicate custom tile %q", ErrInvalidTile, t.ID)
+			}
+			seen[t.key()] = true
+			if err := s.validateCustom(t.Custom); err != nil {
+				return err
+			}
+			if t.Width < 1 || t.Width > 4 {
+				return fmt.Errorf("%w: width must be 1-4, got %d for custom tile", ErrInvalidTile, t.Width)
+			}
+			continue
+		}
+		ct, ok := idx[t.Type]
+		if !ok {
+			return fmt.Errorf("%w: unknown type %q", ErrInvalidTile, t.Type)
+		}
+		if seen[t.Type] {
+			return fmt.Errorf("%w: duplicate type %q", ErrInvalidTile, t.Type)
+		}
+		seen[t.Type] = true
+		if t.Width < 1 || t.Width > 4 {
+			return fmt.Errorf("%w: width must be 1-4, got %d for %q", ErrInvalidTile, t.Width, ct.ID)
+		}
+	}
+
+	return nil
 }

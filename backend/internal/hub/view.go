@@ -35,6 +35,7 @@ const (
 	FilterMinDuration   = "minDuration"   // End - Time at least N minutes
 	FilterWarnOnly      = "warnOnly"      // only items flagged Warn (e.g. timer conflicts)
 	FilterBouquet       = "bouquet"       // which bouquet (GuideHub); used by the hub itself
+	FilterUnwatched     = "unwatched"     // only items not seen yet (Plex)
 )
 
 // Sort orders a source can support.
@@ -47,8 +48,11 @@ const (
 
 // ViewSource describes one source a hub offers.
 type ViewSource struct {
-	ID      string   `json:"id"`    // e.g. "media.recordings"
-	Label   string   `json:"label"` // i18n key
+	ID    string `json:"id"`    // e.g. "media.recordings"
+	Label string `json:"label"` // i18n key
+	// Name, when set, is shown instead of Label: a source named by the
+	// user's own data (a Plex library's title), not by DreamHub.
+	Name    string   `json:"name,omitempty"`
 	HubID   string   `json:"hubId"`
 	Filters []string `json:"filters"`
 	Sorts   []string `json:"sorts"` // the first is the default
@@ -64,6 +68,7 @@ type ViewQuery struct {
 	FromTime      string  `json:"fromTime,omitempty"` // "HH:MM"
 	MinDuration   int     `json:"minDuration,omitempty"`
 	WarnOnly      bool    `json:"warnOnly,omitempty"`
+	Unwatched     bool    `json:"unwatched,omitempty"`
 	Bouquet       string  `json:"bouquet,omitempty"`
 	Sort          string  `json:"sort,omitempty"`
 	Limit         int     `json:"limit,omitempty"`
@@ -81,6 +86,13 @@ type ViewItem struct {
 	Size     int64  `json:"size,omitempty"` // bytes
 	Warn     bool   `json:"warn,omitempty"`
 	Path     string `json:"path,omitempty"` // where the item opens in the UI
+	// Image is the item's picture for the "posters" display, as the
+	// source's hub serves it (a Plex picture path).
+	Image string `json:"image,omitempty"`
+	// Unwatched: not seen yet, for FilterUnwatched.
+	Unwatched bool `json:"unwatched,omitempty"`
+	// Recording is a recording's file, to watch it in the browser.
+	Recording string `json:"recording,omitempty"`
 }
 
 // ViewResult is a view's items after filter, sort and limit, plus the
@@ -213,6 +225,8 @@ func applyView(items []ViewItem, src ViewSource, q ViewQuery, now time.Time, loc
 		case has[FilterMinDuration] && q.MinDuration > 0 && (it.End-it.Time) < int64(q.MinDuration)*60:
 			continue
 		case has[FilterWarnOnly] && q.WarnOnly && !it.Warn:
+			continue
+		case has[FilterUnwatched] && q.Unwatched && !it.Unwatched:
 			continue
 		}
 		if has[FilterFromTime] && fromOK {

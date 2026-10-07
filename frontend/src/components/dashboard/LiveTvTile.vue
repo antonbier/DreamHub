@@ -17,6 +17,9 @@
         <span class="min-w-0 flex-1">
           <span class="block truncate text-[13px] font-semibold text-text">{{ ch.serviceName }}</span>
           <span v-if="ch.now" class="block truncate text-[12px] text-muted">{{ ch.now.title }}</span>
+          <span v-if="ch.now && progress(ch.now) !== null" class="mt-1 block h-[3px] w-full rounded bg-field">
+            <span class="block h-full rounded bg-accent" :style="{ width: `${(progress(ch.now) ?? 0) * 100}%` }" />
+          </span>
         </span>
       </RouterLink>
     </li>
@@ -36,6 +39,12 @@ const { t } = useI18n()
 const loading = ref(true)
 const failed = ref(false)
 const channels = ref<NowNext[]>([])
+
+// How far the programme on now has run, 0–1; null without a known length.
+function progress(e: { start: number; duration: number }): number | null {
+  if (!e.duration) return null
+  return Math.min(1, Math.max(0, (Date.now() / 1000 - e.start) / e.duration))
+}
 
 onMounted(async () => {
   try {

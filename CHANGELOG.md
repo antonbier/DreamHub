@@ -6,16 +6,22 @@ Format follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/); version
 
 ## [Unreleased]
 
+## [0.2.0] - 2026-10-07
+
+Includes everything listed under 0.1.9, which was installed on the reference box but never released on its own.
+
 ### Added
 - Profiles: one per person, picked on each device ("Who's watching?") and remembered there; a profile can have a PIN. Settings → Profiles: your own PIN for everyone, managing profiles for admins. A household with a single profile without PIN sees no change.
 - Roles: admin and viewer. Viewers watch live TV, recordings and Plex, use the guide and the remote, and plan recordings; they don't delete or rename recordings, change other people's timers, see settings beyond their own, or the system and admin pages. An admin can switch "plan recordings" and "rename and delete recordings" per viewer. The server enforces all of it, not just the screen.
 - A viewer can delete or switch off the timers they made themselves.
 - New profiles start with the language and appearance of whoever created them; the profile picker and login speak the device's last language.
+- Start page for viewers: an admin designs it (Settings → Profiles → "Design the start page"); every viewer sees it until they change their own, and can go back to it any time in edit mode.
+- Dashboard tiles: "Recent recordings" (one tap to watch in the browser), "Now on TV" (the former "Live TV" tile, now showing how far each programme has run), and Plex libraries as a source for custom tiles — recently added, "not seen yet", shown as a row of posters.
 
 ### Changed
 - Setup hints (the box's clock, hubs missing a key, "Needs attention") are shown to admins only.
 
-## [0.1.9] - not released yet (built 2026-10-06, waiting for a test on the box)
+## [0.1.9] - not released separately (built 2026-10-06, part of 0.2.0)
 
 ### Added
 - **Live TV** (StreamHub): TV channels and recordings right in the browser, on phones too, with no app. The box sends its stream unchanged — it can't convert anything — and the browser decodes it: FFmpeg compiled to WebAssembly for MPEG-2 video (SD channels) and MP2/AC3/AAC sound, the device's own decoder (WebCodecs) for H.264. Channel list with what's on, "Same as the TV", audio track choice, volume, full screen. A channel that needs the box's only tuner while it's busy elsewhere says so. In Recordings, "Watch in the browser" plays a recording with a seek bar.

@@ -8,17 +8,30 @@
 -->
 <template>
   <div class="mx-auto max-w-content p-6 below-md:p-4">
-    <div class="mb-4 flex items-center">
-      <h1 class="text-[26px] font-bold">{{ t('dashboard.title') }}</h1>
+    <div class="mb-4 flex flex-wrap items-center gap-2">
+      <h1 class="text-[26px] font-bold">{{ template ? t('dashboard.template.title') : t('dashboard.title') }}</h1>
+      <button
+        v-if="canReset"
+        type="button"
+        class="ms-auto rounded px-3 py-1.5 text-[13.5px] text-muted hover:bg-tile-2 hover:text-text"
+        @click="resetToTemplate"
+      >
+        {{ t('dashboard.template.reset') }}
+      </button>
       <button
         type="button"
-        class="ms-auto rounded px-3 py-1.5 text-[13.5px] font-semibold"
-        :class="dash.editing.value ? 'bg-accent text-bg' : 'text-accent hover:bg-tile-2'"
+        class="rounded px-3 py-1.5 text-[13.5px] font-semibold"
+        :class="[dash.editing.value ? 'bg-accent text-bg' : 'text-accent hover:bg-tile-2', canReset ? '' : 'ms-auto']"
         @click="dash.editing.value = !dash.editing.value"
       >
         {{ dash.editing.value ? t('dashboard.done') : t('dashboard.edit') }}
       </button>
     </div>
+
+    <p v-if="template" class="mb-4 rounded border border-accent bg-tile px-4 py-3 text-[13.5px] text-muted">
+      {{ t('dashboard.template.explain') }}
+      <RouterLink to="/settings/profiles" class="ms-1 text-accent hover:underline">{{ t('dashboard.template.back') }}</RouterLink>
+    </p>
 
     <p v-if="dash.loading.value" class="text-[14px] text-muted">{{ t('common.loading') }}</p>
     <div v-else-if="dash.loadFailed.value" class="rounded border border-line bg-tile p-5">
@@ -64,6 +77,7 @@
           <TimersConflictsTile v-else-if="tile.type === 'timers.conflicts'" />
           <PlexContinueTile v-else-if="tile.type === 'plex.continue'" />
           <LiveTvTile v-else-if="tile.type === 'stream.channels'" />
+          <RecentRecordingsTile v-else-if="tile.type === 'media.recent'" />
         </DashboardTileFrame>
       </div>
 
@@ -89,6 +103,7 @@
 
 <script setup lang="ts">
 import { computed, nextTick, onMounted, reactive, ref } from 'vue'
+import { RouterLink, useRoute } from 'vue-router'
 import { useI18n } from 'vue-i18n'
 import DashboardTileFrame from '@/components/dashboard/DashboardTileFrame.vue'
 import CustomTile from '@/components/dashboard/CustomTile.vue'
@@ -101,6 +116,8 @@ import MediaDiskSpaceTile from '@/components/dashboard/MediaDiskSpaceTile.vue'
 import SeriesUpcomingTile from '@/components/dashboard/SeriesUpcomingTile.vue'
 import TimersConflictsTile from '@/components/dashboard/TimersConflictsTile.vue'
 import PlexContinueTile from '@/components/dashboard/PlexContinueTile.vue'
+import RecentRecordingsTile from '@/components/dashboard/RecentRecordingsTile.vue'
+import { useAuth } from '@/composables/useAuth'
 import { tileKey, useDashboard } from '@/composables/useDashboard'
 import type { CustomTileView, DashboardTile } from '@/api/types'
 
@@ -115,8 +132,30 @@ const WIDTH_CLASSES: Record<number, string> = {
 }
 
 const { t } = useI18n()
-const dash = useDashboard()
-onMounted(() => dash.load())
+const { me, can } = useAuth()
+// /?template=1: an admin designs the viewers' start page
+// (docs/PROFILES_PLAN.md, P4) — in edit mode from the start.
+const route = useRoute()
+const template = route.query.template === '1' && can('profiles')
+const dash = useDashboard(template)
+onMounted(async () => {
+  await dash.load()
+  if (template) dash.editing.value = true
+})
+
+// A viewer who customized can go back to the template — in edit mode only,
+// so it isn't tapped by accident.
+const canReset = computed(() => dash.editing.value && !template && me.value?.role === 'user' && !dash.layout.value.fromTemplate)
+
+// A viewer's own start page goes; the template comes back.
+async function resetToTemplate() {
+  try {
+    await dash.reset()
+    dash.editing.value = false
+  } catch {
+    // Stays as it was; the button can be tried again.
+  }
+}
 
 const visibleTiles = computed(() => dash.layout.value.tiles.filter((t) => !t.hidden))
 // In edit mode, hidden tiles stay visible (dimmed) so they can be brought

@@ -211,6 +211,15 @@ var migrations = []string{
 		PRIMARY KEY (service_ref, begin_at)
 	);
 	`,
+	`
+	-- The start page an admin designs for a role (docs/PROFILES_PLAN.md,
+	-- P4): a profile of that role that hasn't customized its own sees it.
+	CREATE TABLE dashboard_templates (
+		role       TEXT PRIMARY KEY,
+		layout     TEXT NOT NULL,
+		updated_at TEXT NOT NULL
+	);
+	`,
 }
 
 func (s *Store) migrate(ctx context.Context) error {

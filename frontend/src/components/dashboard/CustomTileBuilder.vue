@@ -34,7 +34,7 @@
           <label class="flex flex-col gap-1">
             <span :class="labelClass">{{ t('dashboard.builder.source') }}</span>
             <select v-model="sourceId" :class="field">
-              <option v-for="s in sources" :key="s.id" :value="s.id">{{ t(s.label) }}</option>
+              <option v-for="s in sources" :key="s.id" :value="s.id">{{ s.name ? `${t(s.label)}: ${s.name}` : t(s.label) }}</option>
             </select>
           </label>
           <label class="flex flex-col gap-1">
@@ -42,6 +42,7 @@
             <select v-model="display" :class="field">
               <option value="list">{{ t('dashboard.builder.displayList') }}</option>
               <option value="count">{{ t('dashboard.builder.displayCount') }}</option>
+              <option v-if="hasPictures" value="posters">{{ t('dashboard.builder.displayPosters') }}</option>
             </select>
           </label>
         </div>
@@ -91,6 +92,10 @@
           <label v-if="has('warnOnly')" class="flex items-center gap-2 text-[13.5px] text-text">
             <input v-model="q.warnOnly" type="checkbox" class="rounded" />
             {{ t(sourceId === 'discovery.picks' ? 'dashboard.criteriaField.withoutTimer' : 'dashboard.criteriaField.warnOnly') }}
+          </label>
+          <label v-if="has('unwatched')" class="flex items-center gap-2 text-[13.5px] text-text">
+            <input v-model="q.unwatched" type="checkbox" class="rounded" />
+            {{ t('dashboard.criteriaField.unwatched') }}
           </label>
           <p v-if="sourceId === 'media.recordings'" class="text-[12px] text-faint">{{ t('dashboard.builder.topFolderOnly') }}</p>
         </fieldset>
@@ -160,17 +165,21 @@ const bouquets = ref<Bouquet[]>([])
 
 const title = ref(props.initial?.title ?? '')
 const sourceId = ref(props.initial?.source ?? '')
-const display = ref<'list' | 'count'>(props.initial?.display ?? 'list')
+const display = ref<'list' | 'count' | 'posters'>(props.initial?.display ?? 'list')
 const q = reactive<ViewQuery>({ limit: 5, withinDays: 0, ...(props.initial?.query ?? {}) })
 
 const source = computed(() => sources.value.find((s) => s.id === sourceId.value))
 const has = (f: string) => source.value?.filters.includes(f) ?? false
+// Plex libraries have pictures: they can be a row of posters, and start as one.
+const hasPictures = computed(() => sourceId.value.startsWith('plex.'))
 const withinOptions = computed(() => (sourceId.value === 'guide.broadcasts' ? [1, 2, 3] : [1, 2, 3, 7, 14]))
 
 // A source switch keeps the criteria it shares with the old one; the sort
 // falls back to the new source's default when the old one isn't offered.
 watch(source, (s) => {
   if (s && !s.sorts.includes(q.sort ?? '')) q.sort = s.sorts[0]
+  if (hasPictures.value && !props.initial) display.value = 'posters'
+  else if (!hasPictures.value && display.value === 'posters') display.value = 'list'
   if (s?.filters.includes('bouquet') && bouquets.value.length === 0) void loadBouquets()
 })
 
@@ -197,6 +206,7 @@ function cleanQuery(): ViewQuery {
   keep('fromTime', 'fromTime')
   keep('minDuration', 'minDuration')
   keep('warnOnly', 'warnOnly')
+  keep('unwatched', 'unwatched')
   keep('bouquet', 'bouquet')
   return out
 }

@@ -292,3 +292,51 @@ func TestRoutes_EveryChangingRouteDeclaresAPermission(t *testing.T) {
 		}
 	}
 }
+
+func TestProfiles_ViewersStartWithTheTemplateAndCanReset(t *testing.T) {
+	e := newEnv(t)
+	admin, viewer, _ := e.household(t)
+
+	// The admin designs the viewers' start page: live TV first, no timers.
+	var tpl struct {
+		Tiles []struct {
+			Type   string `json:"type"`
+			Width  int    `json:"width"`
+			Hidden bool   `json:"hidden"`
+		} `json:"tiles"`
+		FromTemplate bool `json:"fromTemplate"`
+	}
+	e.json(t, "GET", "/api/v1/dashboard/template", "", withProfile(admin), 200, &tpl)
+	for _, tile := range tpl.Tiles {
+		if tile.Type == "hubs.status" {
+			t.Fatal("the viewers' template offers the admin-only tile")
+		}
+	}
+	e.json(t, "PUT", "/api/v1/dashboard/template",
+		`{"tiles":[{"type":"stream.channels","width":4,"hidden":false},{"type":"timers.upcoming","width":2,"hidden":true}]}`,
+		withProfile(admin), 200, nil)
+	if resp, _ := e.do(t, "PUT", "/api/v1/dashboard/template", `{"tiles":[]}`, withProfile(viewer)); resp.StatusCode != http.StatusForbidden {
+		t.Fatalf("a viewer edits the template: expected 403, got %d", resp.StatusCode)
+	}
+
+	e.json(t, "GET", "/api/v1/dashboard", "", withProfile(viewer), 200, &tpl)
+	if !tpl.FromTemplate || tpl.Tiles[0].Type != "stream.channels" || tpl.Tiles[0].Hidden {
+		t.Fatalf("the viewer doesn't see the template: %+v", tpl)
+	}
+	// Customizing makes it the viewer's own; reset brings the template back.
+	tpl.FromTemplate = false
+	e.json(t, "PUT", "/api/v1/dashboard", `{"tiles":[{"type":"timers.upcoming","width":2,"hidden":false}]}`, withProfile(viewer), 200, &tpl)
+	if tpl.FromTemplate || tpl.Tiles[0].Type != "timers.upcoming" {
+		t.Fatalf("own layout: %+v", tpl)
+	}
+	e.json(t, "DELETE", "/api/v1/dashboard", "", withProfile(viewer), 200, &tpl)
+	if !tpl.FromTemplate || tpl.Tiles[0].Type != "stream.channels" {
+		t.Fatalf("after reset: %+v", tpl)
+	}
+	// The admin's own start page isn't the template.
+	tpl.FromTemplate = false
+	e.json(t, "GET", "/api/v1/dashboard", "", withProfile(admin), 200, &tpl)
+	if tpl.FromTemplate || tpl.Tiles[0].Type != "control.nowPlaying" {
+		t.Fatalf("admin: %+v", tpl)
+	}
+}

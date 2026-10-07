@@ -494,7 +494,7 @@ export interface CustomTileView {
   title: string
   source: string
   query: ViewQuery
-  display: 'list' | 'count'
+  display: 'list' | 'count' | 'posters'
 }
 
 // backend/internal/hub.ViewQuery — zero/absent means "no filter".
@@ -507,6 +507,7 @@ export interface ViewQuery {
   fromTime?: string // "HH:MM"
   minDuration?: number // minutes
   warnOnly?: boolean
+  unwatched?: boolean
   bouquet?: string
   sort?: string
   limit?: number
@@ -516,6 +517,9 @@ export interface ViewQuery {
 export interface ViewSource {
   id: string
   label: string // i18n key
+  // Shown instead of label when set: named by the user's data (a Plex
+  // library's title).
+  name?: string
   hubId: string
   filters: string[]
   sorts: string[] // the first is the default
@@ -529,6 +533,11 @@ export interface ViewItem {
   size?: number // bytes
   warn?: boolean
   path?: string
+  // A picture for the posters display (a Plex picture path).
+  image?: string
+  unwatched?: boolean
+  // A recording's file, to watch it in the browser.
+  recording?: string
 }
 
 export interface ViewResult {
@@ -539,6 +548,8 @@ export interface ViewResult {
 
 export interface DashboardLayout {
   tiles: DashboardTile[]
+  // Not customized yet: the role's template (docs/PROFILES_PLAN.md, P4).
+  fromTemplate?: boolean
 }
 
 // backend/internal/hub.SearchResult, from GET /api/v1/search.

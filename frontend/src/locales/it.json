@@ -213,7 +213,8 @@
       "timersConflicts": "Conflitti",
       "nowPlaying": "Ora sul box",
       "plexContinue": "Continua a guardare (Plex)",
-      "liveTv": "TV in diretta"
+      "liveTv": "Ora in TV",
+      "mediaRecent": "Registrazioni recenti"
     },
     "tileFrame": {
       "hide": "Nascondi",
@@ -261,7 +262,8 @@
       "guide": "Guida TV",
       "seriesUpcoming": "Episodi delle serie",
       "discoveryPicks": "Consigli del giorno",
-      "radioNow": "Ora alla radio"
+      "radioNow": "Ora alla radio",
+      "plexLibrary": "Libreria Plex"
     },
     "criteria": {
       "text": "contiene «{text}»",
@@ -272,7 +274,8 @@
       "fromTime": "dalle {time}",
       "minDuration": "almeno {n} min",
       "warnOnly": "solo conflitti",
-      "withoutTimer": "senza timer"
+      "withoutTimer": "senza timer",
+      "unwatched": "non ancora visti"
     },
     "sort": {
       "newest": "più recenti prima",
@@ -290,7 +293,8 @@
       "fromTime": "Inizio dalle (ora)",
       "minDuration": "Durata minima (minuti)",
       "warnOnly": "Solo possibili conflitti",
-      "withoutTimer": "Solo quelli senza timer"
+      "withoutTimer": "Solo quelli senza timer",
+      "unwatched": "Solo non ancora visti"
     },
     "builder": {
       "eyebrow": "Riquadro personalizzato",
@@ -314,7 +318,8 @@
       "note": "Un riquadro mostra soltanto e non fa mai nulla da solo.",
       "save": "Salva",
       "create": "Crea riquadro",
-      "saveFailed": "Non è stato possibile salvare."
+      "saveFailed": "Non è stato possibile salvare.",
+      "displayPosters": "Fila di locandine"
     },
     "nowPlaying": {
       "unavailable": "Impossibile chiedere al box cosa sta mostrando.",
@@ -336,6 +341,15 @@
       "unavailable": "Plex non è raggiungibile al momento.",
       "empty": "Niente iniziato.",
       "offline": "Plex offline – ultimo stato noto."
+    },
+    "template": {
+      "title": "Pagina iniziale per gli spettatori",
+      "reset": "Torna alla pagina iniziale comune",
+      "explain": "Stai creando la pagina iniziale che ogni spettatore vede finché non personalizza la propria. Le modifiche vengono salvate subito.",
+      "back": "Torna ai profili"
+    },
+    "recent": {
+      "empty": "Ancora nessuna registrazione."
     }
   },
   "hubPlaceholder": {
@@ -1405,7 +1419,10 @@
       "custom": "permessi personalizzati",
       "edit": "Modifica",
       "add": "Aggiungi profilo",
-      "adminPinFirst": "Prima del primo altro profilo, imposta qui sopra un PIN per il tuo profilo."
+      "adminPinFirst": "Prima del primo altro profilo, imposta qui sopra un PIN per il tuo profilo.",
+      "templateTitle": "Pagina iniziale per gli spettatori",
+      "templateHint": "Ciò che uno spettatore vede per primo, finché non personalizza la propria pagina iniziale. Gli spettatori possono sempre tornarci.",
+      "templateOpen": "Crea la pagina iniziale"
     },
     "role": {
       "admin": "Admin",

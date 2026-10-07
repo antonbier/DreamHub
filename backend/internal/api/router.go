@@ -34,7 +34,7 @@ import (
 
 // Version is DreamHub's own version, following SemVer per PRINCIPLES.md.
 // Reported by /api/v1/health so the Enigma2 plugin can detect a mismatch.
-const Version = "0.1.9"
+const Version = "0.2.0"
 
 // Mount is a hub's set of routes. The core serves them under the given
 // path prefixes, behind auth and the hub's enable switch.
@@ -117,6 +117,9 @@ func NewRouterWithRoutes(d Deps) (http.Handler, []Route) {
 	core.HandleFunc("GET /api/v1/connectors", handleConnectors(d))
 	core.HandleFunc("GET /api/v1/dashboard", handleGetDashboard(d))
 	core.HandleFunc("PUT /api/v1/dashboard", handlePutDashboard(d))
+	core.HandleFunc("DELETE /api/v1/dashboard", handleResetDashboard(d))
+	core.HandleFunc("GET /api/v1/dashboard/template", handleGetDashboardTemplate(d))
+	core.HandleFunc("PUT /api/v1/dashboard/template", handlePutDashboardTemplate(d))
 	core.HandleFunc("POST /api/v1/enrich/lookup", handleEnrichLookup(d))
 	core.HandleFunc("GET /api/v1/enrich/image/{size}/{file}", handleEnrichImage(d))
 	core.HandleFunc("GET /api/v1/enrich/extras", handleEnrichExtras(d))
@@ -185,6 +188,9 @@ func NewRouterWithRoutes(d Deps) (http.Handler, []Route) {
 var corePerms = map[string]perm.Perm{
 	"PATCH /api/v1/settings":          perm.Watch, // per field: global ones need perm.SettingsGlobal (internal/settings)
 	"PUT /api/v1/dashboard":           perm.Watch, // the profile's own
+	"DELETE /api/v1/dashboard":        perm.Watch, // back to the role's template
+	"GET /api/v1/dashboard/template":  perm.Profiles,
+	"PUT /api/v1/dashboard/template":  perm.Profiles,
 	"POST /api/v1/enrich/lookup":      perm.Watch, // a read with a body
 	"POST /api/v1/dashboard/view":     perm.Watch, // a read with a body
 	"POST /api/v1/plans/{id}/apply":   perm.Watch, // the plan's creator, who needed the permission to plan it
@@ -458,6 +464,53 @@ func handlePutDashboard(d Deps) http.HandlerFunc {
 			}
 			d.Logger.Error("dashboard save failed", "requestId", httpx.RequestID(r.Context()), "error", err)
 			httpx.WriteError(w, r, http.StatusInternalServerError, "internal", "could not save the dashboard")
+			return
+		}
+		httpx.WriteJSON(w, http.StatusOK, layout)
+	}
+}
+
+// handleResetDashboard drops the profile's own start page, back to its
+// role's template (docs/PROFILES_PLAN.md, P4).
+func handleResetDashboard(d Deps) http.HandlerFunc {
+	return func(w http.ResponseWriter, r *http.Request) {
+		layout, err := d.Dashboard.Reset(r.Context(), current(r))
+		if err != nil {
+			d.Logger.Error("dashboard reset failed", "requestId", httpx.RequestID(r.Context()), "error", err)
+			httpx.WriteError(w, r, http.StatusInternalServerError, "internal", "could not reset the dashboard")
+			return
+		}
+		httpx.WriteJSON(w, http.StatusOK, layout)
+	}
+}
+
+// handleGetDashboardTemplate returns the viewers' start page, as an admin
+// designs it.
+func handleGetDashboardTemplate(d Deps) http.HandlerFunc {
+	return func(w http.ResponseWriter, r *http.Request) {
+		layout, err := d.Dashboard.Template(r.Context())
+		if err != nil {
+			httpx.WriteError(w, r, http.StatusInternalServerError, "internal", "could not load the template")
+			return
+		}
+		httpx.WriteJSON(w, http.StatusOK, layout)
+	}
+}
+
+func handlePutDashboardTemplate(d Deps) http.HandlerFunc {
+	return func(w http.ResponseWriter, r *http.Request) {
+		var body dashboard.Layout
+		if err := httpx.DecodeJSON(r, &body); err != nil {
+			httpx.WriteError(w, r, http.StatusBadRequest, "invalid_body", `expected {"tiles": [...]}`)
+			return
+		}
+		layout, err := d.Dashboard.SaveTemplate(r.Context(), current(r), body)
+		if errors.Is(err, dashboard.ErrInvalidTile) {
+			httpx.WriteError(w, r, http.StatusBadRequest, "invalid_tile", err.Error())
+			return
+		}
+		if err != nil {
+			httpx.WriteError(w, r, http.StatusInternalServerError, "internal", "could not save the template")
 			return
 		}
 		httpx.WriteJSON(w, http.StatusOK, layout)

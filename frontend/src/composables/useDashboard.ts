@@ -14,7 +14,11 @@ export function tileKey(tile: DashboardTile): string {
   return tile.type === 'custom' ? `custom:${tile.id ?? ''}` : tile.type
 }
 
-export function useDashboard() {
+// template: edit the viewers' start page (an admin's job) instead of the
+// profile's own.
+export function useDashboard(template = false) {
+  const get = () => (template ? api.dashboard.template() : api.dashboard.get())
+  const save = (l: DashboardLayout) => (template ? api.dashboard.saveTemplate(l) : api.dashboard.save(l))
   const layout = ref<DashboardLayout>({ tiles: [] })
   const loading = ref(true)
   const loadFailed = ref(false)
@@ -24,7 +28,7 @@ export function useDashboard() {
     loading.value = true
     loadFailed.value = false
     try {
-      layout.value = await api.dashboard.get()
+      layout.value = await get()
     } catch {
       loadFailed.value = true
     } finally {
@@ -36,7 +40,7 @@ export function useDashboard() {
     try {
       // Adopt the server's (reconciled) response as the new source of
       // truth, same as preferences.ts and the settings form.
-      layout.value = await api.dashboard.save(layout.value)
+      layout.value = await save(layout.value)
     } catch {
       // The layout still applies locally for this session; it just might
       // not survive a reload. No toast — a background save stays quiet.
@@ -73,12 +77,12 @@ export function useDashboard() {
   // since the builder dialog has to stay open and say so.
   async function addCustom(custom: CustomTileView) {
     const next = { tiles: [...layout.value.tiles, { type: 'custom', label: '', width: 2, hidden: false, custom }] }
-    layout.value = await api.dashboard.save(next)
+    layout.value = await save(next)
   }
 
   async function updateCustom(key: string, custom: CustomTileView) {
     const next = { tiles: layout.value.tiles.map((t) => (tileKey(t) === key ? { ...t, custom } : t)) }
-    layout.value = await api.dashboard.save(next)
+    layout.value = await save(next)
   }
 
   function removeCustom(key: string) {
@@ -86,5 +90,10 @@ export function useDashboard() {
     void persist()
   }
 
-  return { layout, loading, loadFailed, editing, load, toggleHidden, setWidth, reorder, addCustom, updateCustom, removeCustom }
+  // Back to the role's template: the profile's own start page is dropped.
+  async function reset() {
+    layout.value = await api.dashboard.reset()
+  }
+
+  return { layout, loading, loadFailed, editing, load, reset, toggleHidden, setWidth, reorder, addCustom, updateCustom, removeCustom }
 }

@@ -51,11 +51,20 @@
       {{ t('profiles.manage.add') }}
     </button>
     <p v-if="!adding && !me?.hasPin" class="mt-2 text-[12.5px] text-faint">{{ t('profiles.manage.adminPinFirst') }}</p>
+
+    <div class="mt-5 border-t border-line-soft pt-4">
+      <h3 class="text-[14px] font-semibold">{{ t('profiles.manage.templateTitle') }}</h3>
+      <p class="mb-2 mt-0.5 text-[13px] text-muted">{{ t('profiles.manage.templateHint') }}</p>
+      <RouterLink :to="{ path: '/', query: { template: '1' } }" class="text-[13.5px] text-accent hover:underline">
+        {{ t('profiles.manage.templateOpen') }}
+      </RouterLink>
+    </div>
   </section>
 </template>
 
 <script setup lang="ts">
 import { onMounted, ref } from 'vue'
+import { RouterLink } from 'vue-router'
 import { useI18n } from 'vue-i18n'
 import ProfileAvatar from './ProfileAvatar.vue'
 import ProfileForm from './ProfileForm.vue'

@@ -285,6 +285,7 @@ func New(ctx context.Context, o Options) (*App, error) {
 	hubs.AddViewProvider(hub.IDSeries, seriesHub)
 	hubs.AddViewProvider(hub.IDDiscovery, discoveryHub)
 	hubs.AddViewProvider(hub.IDRadio, radioHub)
+	hubs.AddViewProvider(hub.IDPlex, plexHub)
 	dash.KnownSource = hubs.KnownSource
 
 	var notifier *push.Notifier

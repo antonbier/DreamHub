@@ -391,3 +391,41 @@ func TestPlex_FailoverToAnotherAddress(t *testing.T) {
 		t.Errorf("a fallback must be an http(s) address: %d %s", resp.StatusCode, b)
 	}
 }
+
+// Every shown Plex library is a source for custom tiles: newest first, a
+// picture per item, "not seen yet" as a filter (docs/PROFILES_PLAN.md, P4).
+func TestPlex_LibrariesAreTileSources(t *testing.T) {
+	e := newEnv(t)
+	connectPlex(t, e)
+	_, b := e.do(t, "GET", "/api/v1/dashboard/sources", "", nil)
+	if !strings.Contains(string(b), `"id":"plex.library.1"`) || !strings.Contains(string(b), `"unwatched"`) {
+		t.Fatalf("Plex library missing from the sources: %s", b)
+	}
+	var all, unwatched struct {
+		Items []struct {
+			Title     string `json:"title"`
+			Image     string `json:"image"`
+			Path      string `json:"path"`
+			Unwatched bool   `json:"unwatched"`
+		} `json:"items"`
+		Total int `json:"total"`
+	}
+	e.json(t, "POST", "/api/v1/dashboard/view", `{"source":"plex.library.1","query":{"limit":20}}`, nil, 200, &all)
+	e.json(t, "POST", "/api/v1/dashboard/view", `{"source":"plex.library.1","query":{"unwatched":true,"limit":20}}`, nil, 200, &unwatched)
+	if all.Total == 0 || all.Items[0].Image == "" || !strings.HasPrefix(all.Items[0].Path, "/plex?item=") {
+		t.Fatalf("library view: %+v", all)
+	}
+	if unwatched.Total == 0 || unwatched.Total >= all.Total {
+		t.Fatalf("unwatched filter: %d of %d", unwatched.Total, all.Total)
+	}
+	for _, it := range unwatched.Items {
+		if !it.Unwatched {
+			t.Fatalf("a watched film in the unwatched row: %+v", it)
+		}
+	}
+	// A tile showing it as posters saves.
+	resp, b := e.do(t, "PUT", "/api/v1/dashboard", `{"tiles":[{"type":"custom","width":4,"custom":{"title":"Neu","source":"plex.library.1","query":{"unwatched":true},"display":"posters"}}]}`, nil)
+	if resp.StatusCode != 200 {
+		t.Fatalf("posters tile: %d %s", resp.StatusCode, b)
+	}
+}

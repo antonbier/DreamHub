@@ -379,7 +379,7 @@ Pulled forward from v1.1 (`CONCEPT.md`, `docs/V1_PLAN.md`): verifying the Enigma
 - Jellyfin / Emby connectors (same shape as Plex: optional, cached last-known state, graceful degradation when the server is off)
 - ~~Plex~~ — built early 2026-10-05, see "PlexHub" under v1.1
 - More AI providers behind the same interface
-- Profile/role UI (multi-user), multiple dashboards UI
+- Profile/role UI (multi-user), multiple dashboards UI — **next big topic** (decided 2026-10-07): profiles, an admin and a viewer role, a simplified viewer interface and a viewer start page, planned as packages P1–P5 in [`docs/PROFILES_PLAN.md`](docs/PROFILES_PLAN.md) (#39)
 - Additional languages, incl. RTL (the CSS is prepared for it)
 - ~~Installable PWA~~ — done 2026-10-04, see the Foundation section
 

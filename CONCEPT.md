@@ -141,7 +141,9 @@ Every hub that isn't fully *available* shows why and how to fix it — e.g. "Ser
 
 ### Profiles and roles
 
-Prepared, not built. The data model attaches preferences, language, time zone setting and dashboards to a user from day one, and every user has a **role** (*admin* or *user*). The API carries a user context. v1 has a single user, who is an admin, and no profile switching in the UI.
+Prepared in the data model from day one: preferences, language, time zone setting and dashboards belong to a user, every user has a **role**, and the API carries a user context. v1 has a single user, who is an admin, and no profile switching in the UI.
+
+**Next (decided 2026-10-07, planned in [`docs/PROFILES_PLAN.md`](docs/PROFILES_PLAN.md), #39):** profiles for each person in the household, picked Netflix-style with an optional PIN (mandatory for admins once a second profile exists), behind the unchanged Basic Auth "door". Two roles: *admin* and *viewer* (watching, guide, remote, planning recordings — no deleting, no system or settings beyond personal ones); a kids role may follow. Roles are permission sets, plus a few per-profile switches, not a full permission matrix. Viewers get an admin-designed template start page they can customize deliberately and reset.
 
 ## Internationalization
 

@@ -861,3 +861,26 @@ export interface PiconSet {
   path: string
   covered: number
 }
+
+// A line of how a bouquet should look (POST /api/v1/channels/bouquet/plan);
+// a new heading has no ref yet.
+export interface DraftEntry {
+  ref: string
+  name: string
+  marker?: boolean
+}
+
+export interface ChannelBackup {
+  filename: string
+  createdAt: string
+  summary: string
+}
+
+// backend/internal/hubs.ChannelChange — before/after of a channel plan's
+// changes ("channel.move", "channel.add", "bouquet.rename", …).
+export interface ChannelChange {
+  name?: string
+  newName?: string
+  from?: number
+  to?: number
+}

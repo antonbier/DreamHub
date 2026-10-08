@@ -33,23 +33,84 @@
       <p v-else-if="bouquetsFailed" class="text-[14px] text-muted"><ErrorText /></p>
       <template v-else>
         <p v-if="!editor" class="mb-3 rounded border border-line bg-tile px-4 py-3 text-[13.5px] text-muted">{{ t('channels.noEditor') }}</p>
+        <p v-if="saved" class="mb-3 rounded border border-ok bg-tile px-4 py-3 text-[13.5px] text-text" role="status">{{ saved }}</p>
         <div class="flex flex-wrap gap-2">
           <button
             v-for="b in bouquets"
             :key="b.ref"
             type="button"
-            class="rounded border px-3 py-2 text-start text-[14px]"
+            class="rounded border px-3 py-2 text-start text-[14px] disabled:opacity-50"
             :class="openRef === b.ref ? 'border-accent bg-tile-2 text-text' : 'border-line bg-tile text-muted hover:text-text'"
             :aria-pressed="openRef === b.ref"
+            :disabled="editing"
             @click="openBouquet(b.ref)"
           >
             <span class="block font-semibold">{{ b.name }}</span>
             <span class="block text-[12.5px] text-faint">{{ t(`channels.kind.${b.kind}`) }} · {{ t('channels.count', { n: b.count }, b.count) }}</span>
           </button>
+          <button
+            v-if="editor && !editing"
+            type="button"
+            class="rounded border border-dashed border-line px-3 py-2 text-[14px] text-accent hover:bg-tile-2"
+            :aria-expanded="bouquetForm?.action === 'create'"
+            @click="startBouquetAction('create')"
+          >
+            {{ t('channels.bouquet.create') }}
+          </button>
+        </div>
+
+        <!-- Creating, renaming or deleting a bouquet: a name, then the preview. -->
+        <div v-if="bouquetForm" class="mt-3 rounded border border-line bg-tile p-3">
+          <PlanPreview
+            v-if="bouquetForm.plan"
+            :plan="bouquetForm.plan"
+            :confirm-label="t(`channels.bouquet.confirm.${bouquetForm.action}`)"
+            :danger="bouquetForm.action === 'delete'"
+            :busy="bouquetForm.busy"
+            :error="bouquetForm.error"
+            @confirm="applyBouquetAction"
+            @cancel="bouquetForm = null"
+          >
+            <p v-for="(c, n) in bouquetForm.plan.changes" :key="n">{{ describeChange(c) }}</p>
+            <p class="mt-2 text-[12.5px] text-faint">{{ t('channels.edit.backupNote') }}</p>
+          </PlanPreview>
+          <form v-else class="flex flex-wrap items-end gap-2" @submit.prevent="reviewBouquetAction">
+            <label v-if="bouquetForm.action !== 'delete'" class="flex flex-col gap-0.5 text-[13px]">
+              <span class="text-faint">{{ t('channels.bouquet.name') }}</span>
+              <input v-model="bouquetForm.name" type="text" maxlength="60" class="w-56 rounded border border-line bg-field px-2 py-1.5 text-[14px] text-text" />
+            </label>
+            <label v-if="bouquetForm.action === 'create'" class="flex flex-col gap-0.5 text-[13px]">
+              <span class="text-faint">{{ t('channels.find.kind') }}</span>
+              <select v-model="bouquetForm.kind" class="rounded border border-line bg-field px-2 py-1.5 text-[14px] text-text">
+                <option value="tv">{{ t('channels.kind.tv') }}</option>
+                <option value="radio">{{ t('channels.kind.radio') }}</option>
+              </select>
+            </label>
+            <p v-if="bouquetForm.action === 'delete'" class="text-[13.5px] text-text">{{ t('channels.bouquet.deleteAsk', { name: currentBouquet?.name ?? '' }) }}</p>
+            <button type="submit" class="rounded bg-accent px-3 py-1.5 text-[13.5px] font-semibold text-bg disabled:opacity-50" :disabled="bouquetForm.busy || (bouquetForm.action !== 'delete' && !bouquetForm.name.trim())">
+              {{ t('channels.edit.review') }}
+            </button>
+            <button type="button" class="rounded px-3 py-1.5 text-[13.5px] text-muted hover:bg-tile-2" @click="bouquetForm = null">{{ t('plan.cancel') }}</button>
+            <p v-if="bouquetForm.error" class="w-full text-[13px] text-warn" role="alert">{{ bouquetForm.error }}</p>
+          </form>
+        </div>
+
+        <div v-if="currentBouquet && editor && !editing && !bouquetForm" class="mt-4 flex flex-wrap gap-2">
+          <button type="button" class="rounded bg-accent px-3 py-1.5 text-[13.5px] font-semibold text-bg" @click="startEditing">{{ t('channels.edit.start') }}</button>
+          <button type="button" class="rounded px-3 py-1.5 text-[13.5px] text-accent hover:bg-tile-2" @click="startBouquetAction('rename')">{{ t('channels.bouquet.rename') }}</button>
+          <button type="button" class="rounded px-3 py-1.5 text-[13.5px] text-onair hover:bg-tile-2" @click="startBouquetAction('delete')">{{ t('channels.bouquet.delete') }}</button>
         </div>
 
         <p v-if="entriesLoading" class="mt-4 text-[14px] text-muted">{{ t('common.loading') }}</p>
         <p v-else-if="entriesFailed" class="mt-4 text-[14px] text-muted"><ErrorText /></p>
+        <BouquetDraftEditor
+          v-else-if="editing && currentBouquet"
+          class="mt-4"
+          :bouquet="currentBouquet"
+          :entries="entries"
+          @cancel="editing = false"
+          @done="editDone"
+        />
         <ol v-else-if="entries.length" class="mt-4 flex flex-col">
           <li v-for="(e, i) in entries" :key="i" class="border-b border-line-soft last:border-none">
             <h3 v-if="e.marker" class="pb-1 pt-4 text-[12.5px] font-semibold uppercase tracking-wide text-faint">{{ e.name }}</h3>
@@ -66,6 +127,39 @@
             </div>
           </li>
         </ol>
+
+        <!-- Backups (C3) -->
+        <details v-if="editor && !editing" class="mt-6 rounded border border-line bg-tile p-3" @toggle="onBackupsToggle">
+          <summary class="cursor-pointer text-[14px] font-semibold">{{ t('channels.backups.title') }}</summary>
+          <p class="mt-1 text-[13px] text-muted">{{ t('channels.backups.explain') }}</p>
+          <p v-if="backupsLoading" class="mt-2 text-[13px] text-muted">{{ t('common.loading') }}</p>
+          <p v-else-if="backups.length === 0" class="mt-2 text-[13px] text-muted">{{ t('channels.backups.none') }}</p>
+          <ul v-else class="mt-2 flex flex-col">
+            <li v-for="b in backups" :key="b.filename" class="border-b border-line-soft py-2 last:border-none">
+              <div class="flex items-center gap-3">
+                <span class="min-w-0 flex-1">
+                  <span class="block text-[13.5px] text-text">{{ dateTime(b.createdAt) }}</span>
+                  <span class="block truncate text-[12.5px] text-muted">{{ t('channels.backups.before', { what: b.summary }) }}</span>
+                </span>
+                <button type="button" class="shrink-0 rounded px-2 py-1 text-[13px] text-accent hover:bg-tile-2" @click="reviewRestore(b.filename)">{{ t('channels.backups.restore') }}</button>
+              </div>
+              <PlanPreview
+                v-if="restore?.filename === b.filename && restore.plan"
+                class="mt-2"
+                :plan="restore.plan"
+                :confirm-label="t('channels.backups.restore')"
+                :busy="restore.busy"
+                :error="restore.error"
+                @confirm="applyRestore"
+                @cancel="restore = null"
+              >
+                {{ t('channels.backups.restoreAsk', { date: dateTime(b.createdAt) }) }}
+                <p class="mt-2 text-[12.5px] text-faint">{{ t('channels.edit.backupNote') }}</p>
+              </PlanPreview>
+              <p v-else-if="restore?.filename === b.filename && restore.error" class="mt-1 text-[13px] text-warn">{{ restore.error }}</p>
+            </li>
+          </ul>
+        </details>
       </template>
     </section>
 
@@ -199,15 +293,21 @@ import { useI18n } from 'vue-i18n'
 import Icon from '@/components/Icon.vue'
 import ErrorText from '@/components/ErrorText.vue'
 import ChannelLogo from '@/components/guide/ChannelLogo.vue'
+import PlanPreview from '@/components/PlanPreview.vue'
+import BouquetDraftEditor from '@/components/channels/BouquetDraftEditor.vue'
+import { useChannelChange } from '@/components/channels/useChannelChange'
 import { api } from '@/api/client'
 import { useFriendlyError } from '@/composables/useFriendlyError'
-import type { BouquetEntry, ChannelBouquet, ChannelInfo, ChannelIssue, PiconSet } from '@/api/types'
+import { usePlanError } from '@/composables/usePlanError'
+import type { BouquetEntry, ChannelBackup, ChannelBouquet, ChannelInfo, ChannelIssue, PiconSet, Plan } from '@/api/types'
 
 const TABS = ['bouquets', 'find', 'check', 'picons'] as const
 type Tab = (typeof TABS)[number]
 
 const { t, locale } = useI18n()
 const { friendly } = useFriendlyError()
+const { planErrorMessage } = usePlanError()
+const { describeChange } = useChannelChange()
 const route = useRoute()
 const tab = computed<Tab>(() => (TABS as readonly string[]).includes(route.query.tab as string) ? (route.query.tab as Tab) : 'bouquets')
 
@@ -290,6 +390,128 @@ const numbers = computed(() => {
   return entries.value.map((e) => (e.marker ? 0 : ++n))
 })
 const number = (i: number) => numbers.value[i] || ''
+const currentBouquet = computed(() => bouquets.value.find((b) => b.ref === openRef.value))
+
+function dateTime(iso: string) {
+  return new Intl.DateTimeFormat(locale.value, { dateStyle: 'medium', timeStyle: 'short' }).format(new Date(iso))
+}
+
+// --- editing (C2) -----------------------------------------------------------
+const editing = ref(false)
+const saved = ref('')
+
+function startEditing() {
+  saved.value = ''
+  editing.value = true
+}
+
+async function afterChange(message: string) {
+  editing.value = false
+  saved.value = message
+  checkLoaded.value = false
+  allLoaded.value = false
+  backupsLoaded.value = false
+  await loadBouquets()
+  if (openRef.value && bouquets.value.some((b) => b.ref === openRef.value)) await openBouquet(openRef.value)
+  else if (bouquets.value.length) await openBouquet(bouquets.value[0].ref)
+  void loadCheck()
+}
+
+function editDone() {
+  void afterChange(t('channels.edit.saved'))
+}
+
+// Creating, renaming, deleting a bouquet.
+interface BouquetForm {
+  action: 'create' | 'rename' | 'delete'
+  name: string
+  kind: 'tv' | 'radio'
+  plan?: Plan
+  busy: boolean
+  error: string
+}
+const bouquetForm = ref<BouquetForm | null>(null)
+
+function startBouquetAction(action: BouquetForm['action']) {
+  saved.value = ''
+  const b = currentBouquet.value
+  bouquetForm.value = { action, name: action === 'rename' ? (b?.name ?? '') : '', kind: action === 'create' ? 'tv' : (b?.kind ?? 'tv'), busy: false, error: '' }
+}
+
+async function reviewBouquetAction() {
+  const f = bouquetForm.value
+  if (!f) return
+  f.busy = true
+  f.error = ''
+  try {
+    f.plan = (await api.channels.planBouquets(f.action, f.kind, f.action === 'create' ? '' : openRef.value, f.name.trim())).plan
+  } catch (err) {
+    f.error = planErrorMessage(err)
+  } finally {
+    f.busy = false
+  }
+}
+
+async function applyBouquetAction() {
+  const f = bouquetForm.value
+  if (!f?.plan) return
+  f.busy = true
+  f.error = ''
+  try {
+    await api.plans.apply(f.plan.id)
+    if (f.action === 'delete') openRef.value = ''
+    bouquetForm.value = null
+    await afterChange(t('channels.edit.saved'))
+  } catch (err) {
+    f.error = planErrorMessage(err)
+    f.busy = false
+  }
+}
+
+// --- backups (C3) -------------------------------------------------------------
+const backups = ref<ChannelBackup[]>([])
+const backupsLoading = ref(false)
+const backupsLoaded = ref(false)
+const restore = ref<{ filename: string; plan?: Plan; busy: boolean; error: string } | null>(null)
+
+async function onBackupsToggle(e: Event) {
+  if (!(e.target as HTMLDetailsElement).open || backupsLoaded.value) return
+  backupsLoading.value = true
+  try {
+    backups.value = (await api.channels.backups()).backups
+    backupsLoaded.value = true
+  } catch {
+    backups.value = []
+  } finally {
+    backupsLoading.value = false
+  }
+}
+
+async function reviewRestore(filename: string) {
+  restore.value = { filename, busy: true, error: '' }
+  try {
+    restore.value.plan = (await api.channels.planRestore(filename)).plan
+  } catch (err) {
+    restore.value.error = planErrorMessage(err)
+  } finally {
+    if (restore.value) restore.value.busy = false
+  }
+}
+
+async function applyRestore() {
+  const r = restore.value
+  if (!r?.plan) return
+  r.busy = true
+  r.error = ''
+  try {
+    await api.plans.apply(r.plan.id)
+    restore.value = null
+    await afterChange(t('channels.backups.restored'))
+  } catch (err) {
+    r.error = planErrorMessage(err)
+    r.busy = false
+  }
+}
 
 // --- find -------------------------------------------------------------------
 const all = ref<ChannelInfo[]>([])

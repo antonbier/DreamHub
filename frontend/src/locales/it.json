@@ -667,7 +667,11 @@
       "invalid_url": "Inserisci un indirizzo completo con http:// o https://.",
       "plex_bad_answer": "Il server Plex ha risposto, ma DreamHub non è riuscito a leggere la risposta. Segnalalo come errore.",
       "forbidden": "Il tuo profilo non può farlo. Un admin può consentirlo in Impostazioni → Profili.",
-      "timer_not_yours": "Questo timer è stato creato da un altro profilo; solo un admin può modificarlo."
+      "timer_not_yours": "Questo timer è stato creato da un altro profilo; solo un admin può modificarlo.",
+      "channels_no_editor": "Per modificare, DreamHub ha bisogno del plugin \"BouquetEditor\" sul box.",
+      "channels_unchanged": "Lì non è cambiato nulla.",
+      "channels_restored": "Non è andato come mostrato. DreamHub ha ripristinato la lista canali dal backup — è tutto come prima.",
+      "channels_restore_failed": "Non ha funzionato, e nemmeno il ripristino. Controlla la lista canali sulla TV; il backup è sul box."
     },
     "media": {
       "not_a_recording": "Questa registrazione non esiste (più).",
@@ -1543,6 +1547,74 @@
       "autoHint": "Prima il set modificato più di recente, poi gli altri.",
       "coverage": "{covered} su {total}",
       "saved": "Salvato. I nuovi loghi compaiono al prossimo caricamento della pagina."
+    },
+    "edit": {
+      "start": "Modifica",
+      "added": "appena aggiunto",
+      "up": "Sposta {name} su",
+      "down": "Sposta {name} giù",
+      "toNumber": "Al numero",
+      "move": "Sposta",
+      "name": "Nome",
+      "rename": "Rinomina",
+      "remove": "Rimuovi",
+      "empty": "Il bouquet è vuoto.",
+      "addChannels": "Aggiungi canali",
+      "headingName": "Nome del separatore",
+      "addHeading": "Aggiungi separatore",
+      "add": "Aggiungi",
+      "noCandidates": "Nessun canale corrispondente.",
+      "apply": "Applica",
+      "reviewIntro": "Cambia in \"{bouquet}\":",
+      "backupNote": "Prima viene salvata l'intera lista canali. Se qualcosa non va come mostrato, DreamHub ripristina da solo il backup.",
+      "unsaved": "Modifiche non salvate",
+      "noChanges": "Ancora nessuna modifica",
+      "discard": "Scarta",
+      "close": "Chiudi",
+      "review": "Controlla le modifiche",
+      "saved": "Salvato. Prima è stato fatto un backup della lista canali (sotto, in \"Backup\")."
+    },
+    "bouquet": {
+      "create": "+ Nuovo bouquet",
+      "rename": "Rinomina",
+      "delete": "Elimina",
+      "name": "Nome del bouquet",
+      "deleteAsk": "Eliminare il bouquet \"{name}\" con tutte le voci? I canali restano sul box.",
+      "confirm": {
+        "create": "Crea",
+        "rename": "Rinomina",
+        "delete": "Elimina"
+      }
+    },
+    "backups": {
+      "title": "Backup",
+      "explain": "Prima di ogni modifica DreamHub salva l'intera lista canali. Qui puoi riportare uno stato precedente.",
+      "none": "Ancora nessun backup.",
+      "before": "prima di: {what}",
+      "restore": "Ripristina",
+      "restoreAsk": "Riportare la lista canali allo stato del {date}? Tutto ciò che è stato cambiato dopo va perso.",
+      "restored": "Ripristinato. Lo stato precedente è stato salvato prima."
+    },
+    "change": {
+      "channel": {
+        "add": "\"{name}\" viene aggiunto (numero {to})",
+        "remove": "\"{name}\" viene rimosso",
+        "move": "\"{name}\" passa da {from} a {to}",
+        "rename": "\"{name}\" diventa \"{newName}\""
+      },
+      "marker": {
+        "add": "Nuovo separatore \"{name}\"",
+        "remove": "Il separatore \"{name}\" viene rimosso",
+        "move": "Il separatore \"{name}\" viene spostato"
+      },
+      "bouquet": {
+        "create": "Nuovo bouquet \"{name}\"",
+        "rename": "Il bouquet \"{name}\" diventa \"{newName}\"",
+        "delete": "Il bouquet \"{name}\" viene eliminato"
+      },
+      "channels": {
+        "restore": "La lista canali torna dal backup"
+      }
     }
   }
 }

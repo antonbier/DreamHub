@@ -667,7 +667,11 @@
       "invalid_url": "Bitte eine vollständige Adresse mit http:// oder https:// angeben.",
       "plex_bad_answer": "Der Plex-Server hat geantwortet, aber DreamHub konnte die Antwort nicht lesen. Bitte melde das als Fehler.",
       "forbidden": "Dein Profil darf das nicht. Ein Admin kann es unter Einstellungen → Profile erlauben.",
-      "timer_not_yours": "Diesen Timer hat ein anderes Profil angelegt; ändern kann ihn nur ein Admin."
+      "timer_not_yours": "Diesen Timer hat ein anderes Profil angelegt; ändern kann ihn nur ein Admin.",
+      "channels_no_editor": "Zum Bearbeiten braucht DreamHub das Plugin „BouquetEditor“ auf der Box.",
+      "channels_unchanged": "Da ist nichts geändert.",
+      "channels_restored": "Das hat nicht wie gezeigt geklappt. DreamHub hat die Senderliste aus der Sicherung wiederhergestellt — es ist alles wie vorher.",
+      "channels_restore_failed": "Das hat nicht geklappt, und das Zurücksetzen auch nicht. Bitte die Senderliste am TV prüfen; die Sicherung liegt auf der Box."
     },
     "media": {
       "not_a_recording": "Diese Aufnahme gibt es nicht (mehr).",
@@ -1543,6 +1547,74 @@
       "autoHint": "Das zuletzt geänderte Set zuerst, dann die anderen.",
       "coverage": "{covered} von {total}",
       "saved": "Gespeichert. Neue Logos erscheinen nach dem nächsten Laden der Seite."
+    },
+    "edit": {
+      "start": "Bearbeiten",
+      "added": "neu hinzugefügt",
+      "up": "{name} nach oben",
+      "down": "{name} nach unten",
+      "toNumber": "Auf Platz",
+      "move": "Verschieben",
+      "name": "Name",
+      "rename": "Umbenennen",
+      "remove": "Entfernen",
+      "empty": "Das Bouquet ist leer.",
+      "addChannels": "Sender hinzufügen",
+      "headingName": "Name der Trennlinie",
+      "addHeading": "Trennlinie hinzufügen",
+      "add": "Hinzufügen",
+      "noCandidates": "Keine passenden Sender.",
+      "apply": "Übernehmen",
+      "reviewIntro": "Das ändert sich an „{bouquet}“:",
+      "backupNote": "Vorher wird die ganze Senderliste gesichert. Klappt etwas nicht wie gezeigt, stellt DreamHub die Sicherung automatisch wieder her.",
+      "unsaved": "Ungespeicherte Änderungen",
+      "noChanges": "Noch nichts geändert",
+      "discard": "Verwerfen",
+      "close": "Schließen",
+      "review": "Änderungen prüfen",
+      "saved": "Gespeichert. Vorher wurde die Senderliste gesichert (unten unter „Sicherungen“)."
+    },
+    "bouquet": {
+      "create": "+ Neues Bouquet",
+      "rename": "Umbenennen",
+      "delete": "Löschen",
+      "name": "Name des Bouquets",
+      "deleteAsk": "Das Bouquet „{name}“ mit allen Einträgen löschen? Die Sender selbst bleiben auf der Box.",
+      "confirm": {
+        "create": "Anlegen",
+        "rename": "Umbenennen",
+        "delete": "Löschen"
+      }
+    },
+    "backups": {
+      "title": "Sicherungen",
+      "explain": "Vor jeder Änderung sichert DreamHub die ganze Senderliste. Hier kannst du einen früheren Stand zurückholen.",
+      "none": "Noch keine Sicherungen.",
+      "before": "vor: {what}",
+      "restore": "Wiederherstellen",
+      "restoreAsk": "Die Senderliste auf den Stand vom {date} zurücksetzen? Alles, was danach geändert wurde, geht dabei verloren.",
+      "restored": "Wiederhergestellt. Der Stand davor wurde vorher gesichert."
+    },
+    "change": {
+      "channel": {
+        "add": "„{name}“ kommt dazu (Platz {to})",
+        "remove": "„{name}“ wird entfernt",
+        "move": "„{name}“ wandert von Platz {from} auf Platz {to}",
+        "rename": "„{name}“ heißt künftig „{newName}“"
+      },
+      "marker": {
+        "add": "Neue Trennlinie „{name}“",
+        "remove": "Trennlinie „{name}“ wird entfernt",
+        "move": "Trennlinie „{name}“ wird verschoben"
+      },
+      "bouquet": {
+        "create": "Neues Bouquet „{name}“",
+        "rename": "Bouquet „{name}“ heißt künftig „{newName}“",
+        "delete": "Bouquet „{name}“ wird gelöscht"
+      },
+      "channels": {
+        "restore": "Senderliste aus der Sicherung zurückholen"
+      }
     }
   }
 }

@@ -15,6 +15,8 @@ import { shallowRef } from 'vue'
 import { authHeaders, handleUnauthorized } from './authState'
 import type {
   BouquetEntry,
+  ChannelBackup,
+  DraftEntry,
   ChannelBouquet,
   ChannelInfo,
   ChannelIssue,
@@ -198,6 +200,13 @@ export const api = {
     picons: () => request<{ sets: PiconSet[]; total: number; chosen: string }>('GET', '/api/v1/channels/picons'),
     choosePicons: (set: string) => request<{ chosen: string }>('PUT', '/api/v1/channels/picons', { set }),
     picon: (ref: string, name: string) => requestBlob(`/api/v1/channels/picon?ref=${encodeURIComponent(ref)}&name=${encodeURIComponent(name)}`),
+    // How the bouquet should look when done; the plan says what changes.
+    planBouquet: (ref: string, kind: 'tv' | 'radio', entries: DraftEntry[]) =>
+      request<{ plan: Plan }>('POST', '/api/v1/channels/bouquet/plan', { ref, kind, entries }),
+    planBouquets: (action: 'create' | 'rename' | 'delete', kind: 'tv' | 'radio', ref: string, name: string) =>
+      request<{ plan: Plan }>('POST', '/api/v1/channels/bouquets/plan', { action, kind, ref, name }),
+    backups: () => request<{ backups: ChannelBackup[] }>('GET', '/api/v1/channels/backups'),
+    planRestore: (filename: string) => request<{ plan: Plan }>('POST', '/api/v1/channels/backups/restore/plan', { filename }),
   },
   profiles: {
     list: () => request<ProfileList>('GET', '/api/v1/profiles'),

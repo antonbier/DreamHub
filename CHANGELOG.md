@@ -7,7 +7,8 @@ Format follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/); version
 ## [Unreleased]
 
 ### Added
-- Channel list (ChannelHub, admins): your bouquets and what's in them, every channel the box knows — search, "new since" (after a channel scan), "in no bouquet", TV/radio, HD, provider — a channel check (vanished after a scan, twice in a bouquet, no programme data, no logo), and the installed logo sets with how many of your channels they cover; DreamHub shows logos from the set you choose first. Editing the list comes next.
+- Channel list (ChannelHub, admins): your bouquets and what's in them, every channel the box knows — search, "new since" (after a channel scan), "in no bouquet", TV/radio, HD, provider — a channel check (vanished after a scan, twice in a bouquet, no programme data, no logo), and the installed logo sets with how many of your channels they cover; DreamHub shows logos from the set you choose first. 
+- Editing the channel list on the phone: move channels (buttons, or drag on a computer), put one on a given number, rename, remove, add from all the box's channels, add headings; create, rename and delete bouquets. Every edit is collected first and shown as one preview in words ("ZDF HD moves from 14 to 2"). Applying backs up the whole channel list first and checks the result; if anything differs, the backup is restored by itself. Earlier backups can be brought back. Needs the BouquetEditor plugin on the box. Not yet tried on a real box.
 
 ### Changed
 - Errors in everyday words: "The box doesn't answer right now. Is it switched on?" instead of "DreamHub backend not reachable", with the technical code and request ID behind "Details". The reason is the real one — DreamHub, the box, Plex, the tuner, or the profile's permissions.

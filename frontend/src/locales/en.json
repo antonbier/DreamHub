@@ -667,7 +667,11 @@
       "invalid_url": "Enter a full address starting with http:// or https://.",
       "plex_bad_answer": "The Plex server answered, but DreamHub couldn’t read the answer. Please report this as a bug.",
       "forbidden": "Your profile may not do this. An admin can allow it under Settings → Profiles.",
-      "timer_not_yours": "This timer was made by another profile; only an admin can change it."
+      "timer_not_yours": "This timer was made by another profile; only an admin can change it.",
+      "channels_no_editor": "To edit, DreamHub needs the \"BouquetEditor\" plugin on the box.",
+      "channels_unchanged": "Nothing is changed there.",
+      "channels_restored": "That didn't go as shown. DreamHub restored the channel list from the backup — everything is as before.",
+      "channels_restore_failed": "That didn't work, and restoring didn't either. Please check the channel list on the TV; the backup is on the box."
     },
     "media": {
       "not_a_recording": "This recording doesn't exist (anymore).",
@@ -1543,6 +1547,74 @@
       "autoHint": "The most recently changed set first, then the others.",
       "coverage": "{covered} of {total}",
       "saved": "Saved. New logos show after the page is loaded again."
+    },
+    "edit": {
+      "start": "Edit",
+      "added": "newly added",
+      "up": "Move {name} up",
+      "down": "Move {name} down",
+      "toNumber": "To number",
+      "move": "Move",
+      "name": "Name",
+      "rename": "Rename",
+      "remove": "Remove",
+      "empty": "The bouquet is empty.",
+      "addChannels": "Add channels",
+      "headingName": "Name of the heading",
+      "addHeading": "Add heading",
+      "add": "Add",
+      "noCandidates": "No matching channels.",
+      "apply": "Apply",
+      "reviewIntro": "This changes in \"{bouquet}\":",
+      "backupNote": "The whole channel list is backed up first. If anything doesn't go as shown, DreamHub restores the backup by itself.",
+      "unsaved": "Unsaved changes",
+      "noChanges": "Nothing changed yet",
+      "discard": "Discard",
+      "close": "Close",
+      "review": "Review changes",
+      "saved": "Saved. The channel list was backed up first (below, under \"Backups\")."
+    },
+    "bouquet": {
+      "create": "+ New bouquet",
+      "rename": "Rename",
+      "delete": "Delete",
+      "name": "Name of the bouquet",
+      "deleteAsk": "Delete the bouquet \"{name}\" with all its entries? The channels themselves stay on the box.",
+      "confirm": {
+        "create": "Create",
+        "rename": "Rename",
+        "delete": "Delete"
+      }
+    },
+    "backups": {
+      "title": "Backups",
+      "explain": "Before every change DreamHub backs up the whole channel list. You can bring an earlier state back here.",
+      "none": "No backups yet.",
+      "before": "before: {what}",
+      "restore": "Restore",
+      "restoreAsk": "Set the channel list back to how it was on {date}? Everything changed since is lost.",
+      "restored": "Restored. The state before was backed up first."
+    },
+    "change": {
+      "channel": {
+        "add": "\"{name}\" is added (number {to})",
+        "remove": "\"{name}\" is removed",
+        "move": "\"{name}\" moves from {from} to {to}",
+        "rename": "\"{name}\" becomes \"{newName}\""
+      },
+      "marker": {
+        "add": "New heading \"{name}\"",
+        "remove": "Heading \"{name}\" is removed",
+        "move": "Heading \"{name}\" moves"
+      },
+      "bouquet": {
+        "create": "New bouquet \"{name}\"",
+        "rename": "Bouquet \"{name}\" becomes \"{newName}\"",
+        "delete": "Bouquet \"{name}\" is deleted"
+      },
+      "channels": {
+        "restore": "The channel list comes back from the backup"
+      }
     }
   }
 }

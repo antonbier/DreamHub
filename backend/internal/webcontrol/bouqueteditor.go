@@ -110,4 +110,5 @@ func (c *HTTPClient) RenameInBouquet(ctx context.Context, bouquetRef, ref, befor
 func (c *HTTPClient) AddMarker(ctx context.Context, bouquetRef, name, beforeRef string) error {
 	return c.editorWrite(ctx, "addmarkertobouquet", url.Values{"sBouquetRef": {bouquetRef}, "Name": {name}, "sRefBefore": {beforeRef}})
 }
+
 var _ BouquetEditor = (*HTTPClient)(nil)

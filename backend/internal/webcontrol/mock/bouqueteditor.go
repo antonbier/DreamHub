@@ -304,4 +304,5 @@ func (c *Client) AddMarker(ctx context.Context, bouquetRef, name, beforeRef stri
 	c.insert(bouquetRef, webcontrol.Service{ServiceReference: fmt.Sprintf("1:64:%X:0:0:0:0:0:0:0::%s", c.markers, name), ServiceName: name}, beforeRef)
 	return nil
 }
+
 var _ webcontrol.BouquetEditor = (*Client)(nil)

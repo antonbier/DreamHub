@@ -124,7 +124,9 @@ const activeTab = computed<SettingsTab>(() => {
   const p = route.params.tab
   return typeof p === 'string' && (SETTINGS_TABS as readonly string[]).includes(p) ? (p as SettingsTab) : 'general'
 })
-const tabSections = computed(() => form.sections.value.filter((s) => s.tab === activeTab.value))
+// A section whose fields are all edited elsewhere (ChannelHub's logo set)
+// has nothing to show here.
+const tabSections = computed(() => form.sections.value.filter((s) => s.tab === activeTab.value && s.fields.some((f) => !f.hidden)))
 const intro = computed(() => (te(`settings.tabIntro.${activeTab.value}`) ? t(`settings.tabIntro.${activeTab.value}`) : ''))
 
 function tabDirty(tab: SettingsTab): boolean {

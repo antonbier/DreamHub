@@ -24,7 +24,8 @@
     "control": "Telecomando",
     "radio": "Radio",
     "stream": "TV in diretta",
-    "plex": "Mediateca Plex"
+    "plex": "Mediateca Plex",
+    "channels": "Lista canali"
   },
   "status": {
     "available": "Disponibile",
@@ -939,6 +940,10 @@
         "movie": "Film",
         "show": "Serie"
       }
+    },
+    "channels": {
+      "title": "Lista canali",
+      "piconSet": "Set di loghi"
     }
   },
   "notFound": {
@@ -1477,6 +1482,67 @@
       "teal": "Ottanio",
       "pink": "Rosa",
       "slate": "Grigio"
+    }
+  },
+  "channels": {
+    "tabs": {
+      "label": "Sezioni della lista canali",
+      "bouquets": "Bouquet",
+      "find": "Trova canali",
+      "check": "Controllo",
+      "picons": "Loghi"
+    },
+    "kind": {
+      "tv": "TV",
+      "radio": "Radio"
+    },
+    "count": "{n} canale | {n} canali",
+    "noEditor": "Consultare funziona, modificare no: per questo DreamHub ha bisogno del plugin \"BouquetEditor\" sul box. Non è installato o non risponde.",
+    "find": {
+      "search": "Cerca canali",
+      "kind": "TV o radio",
+      "onlyNew": "Nuovi",
+      "onlyUnused": "In nessun bouquet",
+      "onlyHD": "HD",
+      "provider": "Fornitore",
+      "anyProvider": "Tutti",
+      "matches": "{n} canale | {n} canali",
+      "newSince": "\"Nuovo\" = aggiunto dal {date}",
+      "reload": "Rileggi la lista canali",
+      "new": "Nuovo",
+      "gone": "non più sul box",
+      "noProvider": "senza fornitore",
+      "inBouquets": "in {names}",
+      "inNone": "in nessun bouquet",
+      "more": "… e altri {n} — restringi la ricerca o i filtri"
+    },
+    "check": {
+      "allGood": "Tutto a posto: nessun canale doppio o scomparso, tutti con programma e logo.",
+      "gone": {
+        "title": "Non più sul box",
+        "explain": "Queste voci sono ancora nel bouquet, ma il box non conosce più il canale — di solito dopo una ricerca canali. Sulla TV mostrano un'immagine nera."
+      },
+      "duplicate": {
+        "title": "Doppio nel bouquet",
+        "explain": "Lo stesso canale è due volte nello stesso bouquet."
+      },
+      "noEpg": {
+        "title": "Nessun programma ora",
+        "explain": "Il box non ha dati di programma per questi canali al momento. Può essere normale (fuori onda, canali dati) o indicare una voce superata."
+      },
+      "noPicon": {
+        "title": "Senza logo",
+        "explain": "DreamHub non trova un'immagine per questi canali in nessun set di loghi."
+      }
+    },
+    "picons": {
+      "explain": "I set di loghi installati sul box e quanti canali dei tuoi bouquet coprono. DreamHub mostra prima i loghi del set scelto — sulla TV non cambia nulla.",
+      "none": "Nessun set di loghi trovato sul box.",
+      "choose": "Set di loghi per DreamHub",
+      "auto": "Automatico",
+      "autoHint": "Prima il set modificato più di recente, poi gli altri.",
+      "coverage": "{covered} su {total}",
+      "saved": "Salvato. I nuovi loghi compaiono al prossimo caricamento della pagina."
     }
   }
 }

@@ -87,6 +87,7 @@ export type Permission =
   | 'settings.global'
   | 'system'
   | 'profiles'
+  | 'channels.manage'
 
 // 'user' is the viewer role ("Zuschauer").
 export type Role = 'admin' | 'user'
@@ -814,4 +815,49 @@ export interface PlexPin {
   code: string
   expiresAt: string
   linkUrl: string
+}
+
+// ChannelHub (backend/internal/hubs/channels.go, docs/CHANNELHUB_PLAN.md).
+export interface ChannelBouquet {
+  ref: string
+  name: string
+  kind: 'tv' | 'radio'
+  count: number
+}
+
+export interface BouquetEntry {
+  ref: string
+  name: string
+  marker?: boolean
+  quality?: 'sd' | 'hd' | 'uhd'
+  picon: boolean
+  now?: EPGEvent
+}
+
+export interface ChannelInfo {
+  ref: string
+  name: string
+  provider?: string
+  kind: 'tv' | 'radio'
+  quality?: 'sd' | 'hd' | 'uhd'
+  firstSeen: number // Unix seconds
+  // Appeared after DreamHub's first look at the box's list.
+  new?: boolean
+  // The box no longer lists it.
+  gone?: boolean
+  bouquets: string[]
+}
+
+export interface ChannelIssue {
+  kind: 'duplicate' | 'gone' | 'noEpg' | 'noPicon'
+  bouquetRef: string
+  bouquet: string
+  ref: string
+  name: string
+}
+
+export interface PiconSet {
+  name: string
+  path: string
+  covered: number
 }

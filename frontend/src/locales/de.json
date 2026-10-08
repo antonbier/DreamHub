@@ -24,7 +24,8 @@
     "control": "Fernsteuerung",
     "radio": "Radio",
     "stream": "Live-TV",
-    "plex": "Plex Mediathek"
+    "plex": "Plex Mediathek",
+    "channels": "Senderliste"
   },
   "status": {
     "available": "Verfügbar",
@@ -939,6 +940,10 @@
         "movie": "Filme",
         "show": "Serien"
       }
+    },
+    "channels": {
+      "title": "Senderliste",
+      "piconSet": "Logo-Set"
     }
   },
   "notFound": {
@@ -1477,6 +1482,67 @@
       "teal": "Petrol",
       "pink": "Rosa",
       "slate": "Grau"
+    }
+  },
+  "channels": {
+    "tabs": {
+      "label": "Bereiche der Senderliste",
+      "bouquets": "Bouquets",
+      "find": "Sender finden",
+      "check": "Check",
+      "picons": "Logos"
+    },
+    "kind": {
+      "tv": "TV",
+      "radio": "Radio"
+    },
+    "count": "{n} Sender | {n} Sender",
+    "noEditor": "Ansehen geht, Bearbeiten nicht: dafür braucht DreamHub das Plugin „BouquetEditor“ auf der Box. Es ist dort nicht installiert oder antwortet nicht.",
+    "find": {
+      "search": "Sender suchen",
+      "kind": "TV oder Radio",
+      "onlyNew": "Neu",
+      "onlyUnused": "In keinem Bouquet",
+      "onlyHD": "HD",
+      "provider": "Anbieter",
+      "anyProvider": "Alle",
+      "matches": "{n} Sender | {n} Sender",
+      "newSince": "„Neu“ = seit {date} dazugekommen",
+      "reload": "Senderliste neu einlesen",
+      "new": "Neu",
+      "gone": "nicht mehr auf der Box",
+      "noProvider": "ohne Anbieter",
+      "inBouquets": "in {names}",
+      "inNone": "in keinem Bouquet",
+      "more": "… und {n} weitere — Suche oder Filter eingrenzen"
+    },
+    "check": {
+      "allGood": "Alles in Ordnung: keine doppelten oder verschwundenen Sender, alle mit Programm und Logo.",
+      "gone": {
+        "title": "Nicht mehr auf der Box",
+        "explain": "Diese Einträge stehen noch im Bouquet, aber die Box kennt den Sender nicht mehr — meist nach einem Suchlauf. Am TV zeigen sie ein schwarzes Bild."
+      },
+      "duplicate": {
+        "title": "Doppelt im Bouquet",
+        "explain": "Derselbe Sender steht zweimal im selben Bouquet."
+      },
+      "noEpg": {
+        "title": "Gerade kein Programm",
+        "explain": "Für diese Sender hat die Box im Moment keine Programmdaten. Das kann normal sein (Sendepause, Datensender) oder auf einen veralteten Eintrag hinweisen."
+      },
+      "noPicon": {
+        "title": "Ohne Logo",
+        "explain": "Für diese Sender findet DreamHub in keinem Logo-Set ein Bild."
+      }
+    },
+    "picons": {
+      "explain": "Die Logo-Sets, die auf der Box installiert sind, und wie viele Sender deiner Bouquets sie abdecken. DreamHub zeigt Logos aus dem gewählten Set zuerst — am TV ändert das nichts.",
+      "none": "Auf der Box wurden keine Logo-Sets gefunden.",
+      "choose": "Logo-Set für DreamHub",
+      "auto": "Automatisch",
+      "autoHint": "Das zuletzt geänderte Set zuerst, dann die anderen.",
+      "coverage": "{covered} von {total}",
+      "saved": "Gespeichert. Neue Logos erscheinen nach dem nächsten Laden der Seite."
     }
   }
 }

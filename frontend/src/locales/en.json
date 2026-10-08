@@ -24,7 +24,8 @@
     "control": "Remote",
     "radio": "Radio",
     "stream": "Live TV",
-    "plex": "Plex library"
+    "plex": "Plex library",
+    "channels": "Channel list"
   },
   "status": {
     "available": "Available",
@@ -939,6 +940,10 @@
         "movie": "Films",
         "show": "Series"
       }
+    },
+    "channels": {
+      "title": "Channel list",
+      "piconSet": "Logo set"
     }
   },
   "notFound": {
@@ -1477,6 +1482,67 @@
       "teal": "Teal",
       "pink": "Pink",
       "slate": "Grey"
+    }
+  },
+  "channels": {
+    "tabs": {
+      "label": "Parts of the channel list",
+      "bouquets": "Bouquets",
+      "find": "Find channels",
+      "check": "Check",
+      "picons": "Logos"
+    },
+    "kind": {
+      "tv": "TV",
+      "radio": "Radio"
+    },
+    "count": "{n} channel | {n} channels",
+    "noEditor": "Viewing works, editing doesn't: DreamHub needs the \"BouquetEditor\" plugin on the box for that. It isn't installed there or doesn't answer.",
+    "find": {
+      "search": "Search channels",
+      "kind": "TV or radio",
+      "onlyNew": "New",
+      "onlyUnused": "In no bouquet",
+      "onlyHD": "HD",
+      "provider": "Provider",
+      "anyProvider": "All",
+      "matches": "{n} channel | {n} channels",
+      "newSince": "\"New\" = added since {date}",
+      "reload": "Read the channel list again",
+      "new": "New",
+      "gone": "no longer on the box",
+      "noProvider": "no provider",
+      "inBouquets": "in {names}",
+      "inNone": "in no bouquet",
+      "more": "… and {n} more — narrow the search or filters"
+    },
+    "check": {
+      "allGood": "All fine: no duplicate or vanished channels, all with programme data and a logo.",
+      "gone": {
+        "title": "No longer on the box",
+        "explain": "These entries are still in the bouquet, but the box doesn't know the channel anymore — usually after a channel scan. On the TV they show a black picture."
+      },
+      "duplicate": {
+        "title": "Twice in a bouquet",
+        "explain": "The same channel is in the same bouquet twice."
+      },
+      "noEpg": {
+        "title": "No programme right now",
+        "explain": "The box has no programme data for these channels at the moment. That can be normal (off air, data channels) or point to an outdated entry."
+      },
+      "noPicon": {
+        "title": "Without a logo",
+        "explain": "DreamHub finds no picture for these channels in any logo set."
+      }
+    },
+    "picons": {
+      "explain": "The logo sets installed on the box, and how many channels of your bouquets each covers. DreamHub shows logos from the chosen set first — nothing changes on the TV.",
+      "none": "No logo sets were found on the box.",
+      "choose": "Logo set for DreamHub",
+      "auto": "Automatic",
+      "autoHint": "The most recently changed set first, then the others.",
+      "coverage": "{covered} of {total}",
+      "saved": "Saved. New logos show after the page is loaded again."
     }
   }
 }

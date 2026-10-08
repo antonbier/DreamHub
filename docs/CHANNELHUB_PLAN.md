@@ -1,6 +1,6 @@
 # ChannelHub — plan
 
-Status: **concept, agreed in direction with the owner on 2026-10-08, not built.** Tracks issue #26. Once a package lands, its status moves to `ROADMAP.md`.
+Status: **C1 (browse) and C4 (check & picons) built 2026-10-08 against the mock**; C2 (edit), C3 (backups) and C5 open. Tracks issue #26. Once a package lands, its status moves to `ROADMAP.md`.
 
 ## Why
 

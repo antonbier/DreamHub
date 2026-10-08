@@ -15,9 +15,9 @@ import { api } from '@/api/client'
 
 const cache = new Map<string, Promise<string | null>>()
 // source: which hub serves the logo — GuideHub's for TV channels,
-// RadioHub's for stations, StreamHub's for its own list — so no screen
-// depends on another hub.
-function piconURL(ref: string, name: string, source: 'guide' | 'radio' | 'stream') {
+// RadioHub's for stations, StreamHub's and ChannelHub's for their own
+// lists — so no screen depends on another hub.
+function piconURL(ref: string, name: string, source: 'guide' | 'radio' | 'stream' | 'channels') {
   let p = cache.get(ref)
   if (!p) {
     p = api[source]
@@ -33,7 +33,7 @@ function piconURL(ref: string, name: string, source: 'guide' | 'radio' | 'stream
 <script setup lang="ts">
 import { ref, watch } from 'vue'
 
-const props = withDefaults(defineProps<{ serviceReference: string; serviceName: string; height?: number; source?: 'guide' | 'radio' | 'stream' }>(), {
+const props = withDefaults(defineProps<{ serviceReference: string; serviceName: string; height?: number; source?: 'guide' | 'radio' | 'stream' | 'channels' }>(), {
   height: 20,
   source: 'guide',
 })

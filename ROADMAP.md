@@ -332,6 +332,8 @@ Pulled forward from v1.1 (`CONCEPT.md`, `docs/V1_PLAN.md`): verifying the Enigma
 
 ### ChannelHub
 - **Next topic** (decided 2026-10-08): planned as packages C1–C5 in [`docs/CHANNELHUB_PLAN.md`](docs/CHANNELHUB_PLAN.md) (#26). Revises "link/embed the plugin's UI": DreamHub's own mobile editor, every change through the BouquetEditor plugin's API (`/bouqueteditor/web/*`) as one plan, with a backup before and an automatic restore on failure; finding new channels from DreamHub's own snapshot of the box's channels; a channel check; picon sets from `/data/piconpool` with coverage. Bouquets per profile only prepared (no UI). The write endpoints still need an approved first try on the device.
+- [x] **C1 + C4** (2026-10-08, mock): `internal/hubs/channels.go`, `ChannelHubView.vue` — bouquets with their entries (headings, HD/UHD, picon, now), every channel the box knows in DreamHub's own snapshot (`channel_snapshot`: looks are counted, "new" = appeared after the first, "gone" = no longer listed, refreshed when stale and daily), search and filters (TV/radio, new, in no bouquet, HD, provider), the channel check (vanished, duplicate, no EPG now, no logo), picon sets with coverage and DreamHub's chosen set (`channels.piconSet`, searched first by every hub). Admin only (`channels.manage`). Whether the BouquetEditor plugin answers is shown. Still to check read-only on the box: the all-channels and provider lists (`TVAll`, `TVProviders`).
+- [ ] C2 edit, C3 backups, C5 bouquets-per-profile hook
 
 ### ControlHub: "message to TV"
 - Built early (2026-09-28): see ControlHub in the v1 section above.

@@ -248,7 +248,7 @@ func New(ctx context.Context, o Options) (*App, error) {
 		}
 	}
 
-	channelsHub := &hubs_.Channels{WC: o.WebControl, Store: st, Settings: svc, User: user, Now: now}
+	channelsHub := &hubs_.Channels{WC: o.WebControl, Store: st, Settings: svc, User: user, PiconDirs: o.PiconDirs, Now: now}
 	channelsHub.Init(ctx)
 	timerHub := &hubs_.Timer{WC: o.WebControl, Plans: plans, Now: now, AT: o.AutoTimer, Owners: st}
 	mediaHub := &hubs_.Media{WC: o.WebControl, Plans: plans, FS: o.RecordingsFS, ReadOnly: o.ReadOnlyFiles,

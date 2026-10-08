@@ -6,6 +6,9 @@ Format follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/); version
 
 ## [Unreleased]
 
+### Added
+- Channel list (ChannelHub, admins): your bouquets and what's in them, every channel the box knows — search, "new since" (after a channel scan), "in no bouquet", TV/radio, HD, provider — a channel check (vanished after a scan, twice in a bouquet, no programme data, no logo), and the installed logo sets with how many of your channels they cover; DreamHub shows logos from the set you choose first. Editing the list comes next.
+
 ### Changed
 - Errors in everyday words: "The box doesn't answer right now. Is it switched on?" instead of "DreamHub backend not reachable", with the technical code and request ID behind "Details". The reason is the real one — DreamHub, the box, Plex, the tuner, or the profile's permissions.
 - Viewers' sidebar: no status dots, and hubs that can't work at all (e.g. Plex not set up) are left out instead of greyed.

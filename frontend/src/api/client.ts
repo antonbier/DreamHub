@@ -14,6 +14,11 @@
 import { shallowRef } from 'vue'
 import { authHeaders, handleUnauthorized } from './authState'
 import type {
+  BouquetEntry,
+  ChannelBouquet,
+  ChannelInfo,
+  ChannelIssue,
+  PiconSet,
   Profile,
   ProfileInput,
   ProfileList,
@@ -184,6 +189,16 @@ async function requestBlob(path: string): Promise<Blob> {
 export const api = {
   health: () => request<HealthInfo>('GET', '/api/v1/health'),
   whoami: () => request<WhoAmI>('GET', '/api/v1/whoami'),
+  channels: {
+    bouquets: () => request<{ bouquets: ChannelBouquet[]; editor: boolean }>('GET', '/api/v1/channels/bouquets'),
+    bouquet: (ref: string) => request<{ entries: BouquetEntry[] }>('GET', `/api/v1/channels/bouquet?ref=${encodeURIComponent(ref)}`),
+    all: (refresh = false) =>
+      request<{ channels: ChannelInfo[]; refreshedAt: number; since: number }>('GET', `/api/v1/channels/all${refresh ? '?refresh=1' : ''}`),
+    check: () => request<{ issues: ChannelIssue[] }>('GET', '/api/v1/channels/check'),
+    picons: () => request<{ sets: PiconSet[]; total: number; chosen: string }>('GET', '/api/v1/channels/picons'),
+    choosePicons: (set: string) => request<{ chosen: string }>('PUT', '/api/v1/channels/picons', { set }),
+    picon: (ref: string, name: string) => requestBlob(`/api/v1/channels/picon?ref=${encodeURIComponent(ref)}&name=${encodeURIComponent(name)}`),
+  },
   profiles: {
     list: () => request<ProfileList>('GET', '/api/v1/profiles'),
     startSession: (id: number, pin?: string) =>

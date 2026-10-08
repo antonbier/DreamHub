@@ -99,6 +99,12 @@ const router = createRouter({
       meta: { perm: 'system' },
     },
     {
+      path: '/channels',
+      name: 'channels',
+      component: () => import('@/views/ChannelHubView.vue'),
+      meta: { perm: 'channels.manage' },
+    },
+    {
       path: '/control',
       name: 'control',
       component: () => import('@/views/ControlHubView.vue'),

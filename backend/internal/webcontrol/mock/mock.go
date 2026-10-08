@@ -33,6 +33,16 @@ type Client struct {
 	scanned []webcontrol.Service
 	// NoBouquetEditor plays a box without the BouquetEditor plugin.
 	NoBouquetEditor bool
+	// FailEditor makes that BouquetEditor operation ("moveservice", …) fail;
+	// Restores counts restores (bouqueteditor.go).
+	FailEditor string
+	Restores   int
+	// Editable copies of the bouquet lists and bouquets, made on the first
+	// change (bouqueteditor.go), and the backups.
+	tvBouquets, radioBouquets []webcontrol.Service
+	entries                   map[string][]webcontrol.Service
+	backups                   map[string]editorState
+	markers                   int
 	// FS holds the recordings (see Root).
 	FS *recfs.Mem
 	// Playing is what /web/getcurrent reports; a recording's reference
@@ -173,7 +183,7 @@ var favouritesTV = webcontrol.Service{
 	ServiceName:      "Free TV",
 }
 
-func (*Client) Bouquets(ctx context.Context) ([]webcontrol.Service, error) {
+func (*Client) baseBouquets(ctx context.Context) ([]webcontrol.Service, error) {
 	return []webcontrol.Service{favouritesTV}, nil
 }
 
@@ -221,9 +231,9 @@ func providerRef(name string) string {
 	return `1:7:1:0:0:0:0:0:0:0:(provider == "` + name + `") && (type == 1) || (type == 17) || (type == 22) || (type == 25) || (type == 31) || (type == 134) || (type == 195) ORDER BY name`
 }
 
-// AddChannel makes the mock box know one more TV channel, as after a
+// ScanChannel makes the mock box know one more TV channel, as after a
 // channel scan (provider "New").
-func (c *Client) AddChannel(s webcontrol.Service) {
+func (c *Client) ScanChannel(s webcontrol.Service) {
 	c.mu.Lock()
 	defer c.mu.Unlock()
 	c.scanned = append(c.scanned, s)
@@ -233,7 +243,7 @@ func (c *Client) AddChannel(s webcontrol.Service) {
 // reference box has the plugin; NoBouquetEditor plays a box without it.
 func (c *Client) BouquetEditorAvailable(ctx context.Context) bool { return !c.NoBouquetEditor }
 
-func (c *Client) Services(ctx context.Context, bouquetRef string) ([]webcontrol.Service, error) {
+func (c *Client) baseServices(ctx context.Context, bouquetRef string) ([]webcontrol.Service, error) {
 	c.mu.Lock()
 	scanned := append([]webcontrol.Service(nil), c.scanned...)
 	c.mu.Unlock()

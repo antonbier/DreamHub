@@ -1,6 +1,9 @@
 package store
 
-import "context"
+import (
+	"context"
+	"time"
+)
 
 // SeenChannel is one channel of ChannelHub's snapshot.
 type SeenChannel struct {
@@ -67,4 +70,47 @@ func (s *Store) SeenChannels(ctx context.Context) ([]SeenChannel, int64, error) 
 		out = append(out, c)
 	}
 	return out, latest, rows.Err()
+}
+
+// ChannelBackup is a channel-list backup DreamHub made.
+type ChannelBackup struct {
+	Filename  string
+	CreatedAt time.Time
+	Summary   string
+}
+
+// keepChannelBackups: how many backups ChannelHub lists; older ones stay
+// on the box but drop off the list.
+const keepChannelBackups = 20
+
+// AddChannelBackup records a backup and forgets all but the newest
+// keepChannelBackups.
+func (s *Store) AddChannelBackup(ctx context.Context, filename, summary string, userID int64) error {
+	if _, err := s.db.ExecContext(ctx, `INSERT OR REPLACE INTO channel_backups (filename, created_at, summary, user_id) VALUES (?, ?, ?, ?)`,
+		filename, s.timestamp(), summary, userID); err != nil {
+		return err
+	}
+	_, err := s.db.ExecContext(ctx, `DELETE FROM channel_backups WHERE filename NOT IN
+		(SELECT filename FROM channel_backups ORDER BY created_at DESC LIMIT ?)`, keepChannelBackups)
+	return err
+}
+
+// ChannelBackups lists the backups, newest first.
+func (s *Store) ChannelBackups(ctx context.Context) ([]ChannelBackup, error) {
+	rows, err := s.db.QueryContext(ctx, `SELECT filename, created_at, summary FROM channel_backups ORDER BY created_at DESC`)
+	if err != nil {
+		return nil, err
+	}
+	defer rows.Close()
+	out := []ChannelBackup{}
+	for rows.Next() {
+		var b ChannelBackup
+		var at string
+		if err := rows.Scan(&b.Filename, &at, &b.Summary); err != nil {
+			return nil, err
+		}
+		b.CreatedAt = parseTime(at)
+		out = append(out, b)
+	}
+	return out, rows.Err()
 }

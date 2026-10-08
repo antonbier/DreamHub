@@ -236,6 +236,15 @@ var migrations = []string{
 		first_look  INTEGER NOT NULL,
 		last_look   INTEGER NOT NULL
 	);
+
+	-- The channel-list backups DreamHub made before each change (through
+	-- the BouquetEditor plugin, which keeps the files on the box).
+	CREATE TABLE channel_backups (
+		filename   TEXT PRIMARY KEY,
+		created_at TEXT NOT NULL,
+		summary    TEXT NOT NULL,
+		user_id    INTEGER
+	);
 	`,
 }
 

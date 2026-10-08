@@ -14,6 +14,7 @@ import (
 
 	"github.com/antonbier/DreamHub/backend/internal/httpx"
 	"github.com/antonbier/DreamHub/backend/internal/perm"
+	"github.com/antonbier/DreamHub/backend/internal/plan"
 	"github.com/antonbier/DreamHub/backend/internal/settings"
 	"github.com/antonbier/DreamHub/backend/internal/store"
 	"github.com/antonbier/DreamHub/backend/internal/webcontrol"
@@ -22,10 +23,11 @@ import (
 // Channels is ChannelHub (docs/CHANNELHUB_PLAN.md): the box's channel list
 // for the phone — bouquets, every channel the box knows with "new since"
 // and "in no bouquet", a channel check, and the picon sets. This file is
-// the reading side (C1, C4); editing goes through the optional
-// BouquetEditor plugin and comes separately.
+// the reading side (C1, C4); editing, through the optional BouquetEditor
+// plugin, is in channels_edit.go.
 type Channels struct {
 	WC       webcontrol.Client
+	Plans    *plan.Service
 	Store    *store.Store
 	Settings *settings.Service
 	// User reads the global settings (the chosen picon set).
@@ -66,11 +68,20 @@ func (h *Channels) Mount(mux httpx.Mux) {
 	mux.HandleFunc("GET /api/v1/channels/picons", h.picons)
 	mux.HandleFunc("PUT /api/v1/channels/picons", h.choosePicons)
 	mux.HandleFunc("GET /api/v1/channels/picon", h.picon)
+	mux.HandleFunc("POST /api/v1/channels/bouquet/plan", h.planBouquet)
+	mux.HandleFunc("POST /api/v1/channels/bouquets/plan", h.planBouquets)
+	mux.HandleFunc("GET /api/v1/channels/backups", h.backups)
+	mux.HandleFunc("POST /api/v1/channels/backups/restore/plan", h.planRestore)
 }
 
 // Perms are ChannelHub's route permissions beyond the hub's own.
 func (h *Channels) Perms() map[string]perm.Perm {
-	return map[string]perm.Perm{"PUT /api/v1/channels/picons": perm.ChannelsManage}
+	return map[string]perm.Perm{
+		"PUT /api/v1/channels/picons":                perm.ChannelsManage,
+		"POST /api/v1/channels/bouquet/plan":         perm.ChannelsManage,
+		"POST /api/v1/channels/bouquets/plan":        perm.ChannelsManage,
+		"POST /api/v1/channels/backups/restore/plan": perm.ChannelsManage,
+	}
 }
 
 // Init applies the saved picon set; called once at startup.

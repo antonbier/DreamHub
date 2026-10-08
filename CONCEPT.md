@@ -56,7 +56,7 @@ From the requirements the core derives each hub's **status**: *available*, *degr
 | **ControlHub** | Web remote, screenshot, power | v1 — pulled forward from v1.1: verifying the Enigma2 plugin (WP8) needed a real screenshot/remote-control loop anyway, and GuideHub's "switch to this channel now" needs it too (`docs/V1_PLAN.md`) |
 | **RadioHub** | Radio services, now playing, radio timers | v1.1 (built early, 2026-10-04) |
 | **PlexHub** ("Plex Mediathek") | A Plex server's films and series (tiles or list), watched state in Plex, play on the box — optional, cached while the server is off | built early, 2026-10-05 |
-| **ChannelHub** | Bouquets (link/embed the existing BouquetEditor plugin), picons | v1.1 |
+| **ChannelHub** | Bouquets edited on the phone through the BouquetEditor plugin's API (decided 2026-10-08, [`docs/CHANNELHUB_PLAN.md`](docs/CHANNELHUB_PLAN.md)), finding new channels, a channel check, picon sets | v1.1 |
 | **StreamHub** ("Live-TV") | Live TV and recordings in the browser: the box streams unchanged, the browser decodes (FFmpeg in WebAssembly, WebCodecs) | built early, 2026-10-06, radio included (RadioHub's speaker button) |
 | **AutomationHub** | Scripts, webhooks, automations — the only place anything happens automatically | later |
 

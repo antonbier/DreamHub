@@ -331,7 +331,7 @@ Pulled forward from v1.1 (`CONCEPT.md`, `docs/V1_PLAN.md`): verifying the Enigma
 - [x] "Already in Plex" (#32): `Plex.InLibrary` (exact title match against the cached film libraries, same rule as MediaHub's enrichment lookup) flags `GET /api/v1/guide/grid`'s events and DiscoveryHub's saved recommendations (`inPlex`, omitted when false); GuideHub's grid, channel list and "Tonight", and DiscoveryHub's cards, show it next to a timer's own flag
 
 ### ChannelHub
-- Link to / embed the BouquetEditor plugin (`/bouqueteditor/*`); its write endpoints still need a write-permitted check on the device. Picons from `/data/piconpool`.
+- **Next topic** (decided 2026-10-08): planned as packages C1–C5 in [`docs/CHANNELHUB_PLAN.md`](docs/CHANNELHUB_PLAN.md) (#26). Revises "link/embed the plugin's UI": DreamHub's own mobile editor, every change through the BouquetEditor plugin's API (`/bouqueteditor/web/*`) as one plan, with a backup before and an automatic restore on failure; finding new channels from DreamHub's own snapshot of the box's channels; a channel check; picon sets from `/data/piconpool` with coverage. Bouquets per profile only prepared (no UI). The write endpoints still need an approved first try on the device.
 
 ### ControlHub: "message to TV"
 - Built early (2026-09-28): see ControlHub in the v1 section above.

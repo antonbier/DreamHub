@@ -30,6 +30,7 @@
 </template>
 
 <script setup lang="ts">
+import { useFriendlyError } from '@/composables/useFriendlyError'
 import { ref } from 'vue'
 import { useI18n } from 'vue-i18n'
 import OnboardingStepFrame from './OnboardingStepFrame.vue'
@@ -37,6 +38,7 @@ import { api } from '@/api/client'
 
 const emit = defineEmits<{ next: []; back: [] }>()
 const { t } = useI18n()
+const { friendly } = useFriendlyError()
 
 const apiKey = ref('')
 const saving = ref(false)
@@ -53,7 +55,7 @@ async function save() {
     await api.settings.update({ 'ai.openai.apiKey': apiKey.value })
     emit('next')
   } catch (err) {
-    error.value = err instanceof Error ? err.message : String(err)
+    error.value = friendly(err).text
   } finally {
     saving.value = false
   }

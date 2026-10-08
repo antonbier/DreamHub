@@ -18,7 +18,7 @@
     </div>
 
     <p v-if="loading" class="mt-5 text-[14px] text-muted">{{ t('common.loading') }}</p>
-    <p v-else-if="loadFailed" class="mt-5 text-[14px] text-muted">{{ t('common.backendUnreachable') }}</p>
+    <p v-else-if="loadFailed" class="mt-5 text-[14px] text-muted"><ErrorText /></p>
     <p v-else-if="shown.length === 0" class="mt-5 text-[14px] text-muted">{{ filterActive ? t('guide.filteredEmpty') : t('guide.empty') }}</p>
     <ul v-else class="mt-4 flex flex-col">
       <li v-for="e in shown" :key="e.start" :ref="(el) => isNow(e) && (nowRow = el as HTMLElement)">
@@ -45,6 +45,7 @@
 </template>
 
 <script setup lang="ts">
+import ErrorText from '@/components/ErrorText.vue'
 import { computed, nextTick, ref, watch } from 'vue'
 import { useI18n } from 'vue-i18n'
 import { api } from '@/api/client'

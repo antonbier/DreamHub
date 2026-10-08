@@ -32,6 +32,7 @@
 </template>
 
 <script setup lang="ts">
+import { useFriendlyError } from '@/composables/useFriendlyError'
 import { onMounted, reactive, ref } from 'vue'
 import { useI18n } from 'vue-i18n'
 import OnboardingStepFrame from './OnboardingStepFrame.vue'
@@ -40,6 +41,7 @@ import type { SettingField } from '@/api/types'
 
 const emit = defineEmits<{ next: []; back: [] }>()
 const { t } = useI18n()
+const { friendly } = useFriendlyError()
 
 const loading = ref(true)
 const saving = ref(false)
@@ -68,7 +70,7 @@ async function save() {
     await api.settings.update({ ...draft })
     emit('next')
   } catch (err) {
-    error.value = err instanceof Error ? err.message : String(err)
+    error.value = friendly(err).text
   } finally {
     saving.value = false
   }

@@ -85,7 +85,7 @@
       </div>
       <p v-if="filterActive && !enrich.enabled" class="mt-2 text-[12.5px] text-faint">{{ t('guide.filters.needsEnrichment') }}</p>
 
-      <p v-if="bouquetsFailed" class="mt-5 text-[14px] text-muted">{{ t('common.backendUnreachable') }}</p>
+      <p v-if="bouquetsFailed" class="mt-5 text-[14px] text-muted"><ErrorText /></p>
       <p v-else-if="!selectedBouquet && !bouquetsLoading" class="mt-5 text-[14px] text-muted">{{ t('guide.empty') }}</p>
       <div v-else-if="selectedBouquet" class="mt-4">
         <GuideGrid
@@ -172,6 +172,7 @@
 </template>
 
 <script setup lang="ts">
+import ErrorText from '@/components/ErrorText.vue'
 import { computed, onMounted, ref, watch } from 'vue'
 import { useI18n } from 'vue-i18n'
 import { RouterLink, useRoute } from 'vue-router'

@@ -175,6 +175,10 @@ DreamHub can sit on your phone's home screen or your computer's desktop and open
 
 Either way, enter that host name under **Settings → Access → Network → Additional allowed host names**, or DreamHub refuses requests addressed to it (protection against DNS rebinding).
 
+Over HTTPS the browser also decodes HD channels in Live TV with the device's own hardware (it refuses that on plain `http://`), so HD plays more smoothly on phones. Confirmed with Nginx Proxy Manager on an Unraid server (2026-10-08). When the machine running the proxy is off, the HTTPS address is gone too — the box's own `http://<box IP>:8080` keeps working.
+
+**Keep it in your home network.** For access from away, use Tailscale (or another VPN) rather than opening the proxy to the internet. If DreamHub is reachable from outside at all, switch on its login (**Settings → Access**) first: without it, anyone who reaches the address can control the box.
+
 When the box is off or out of reach, the app opens anyway and says so, and connects by itself once the box answers again. Nothing from the box is kept on the phone: timers, recordings and the guide are always live.
 
 ---

@@ -53,7 +53,7 @@
       />
 
       <p v-if="loading" class="mt-5 text-[14px] text-muted">{{ t('common.loading') }}</p>
-      <p v-else-if="loadFailed" class="mt-5 text-[14px] text-muted">{{ t('common.backendUnreachable') }}</p>
+      <p v-else-if="loadFailed" class="mt-5 text-[14px] text-muted"><ErrorText /></p>
       <template v-else>
         <section>
           <h2 class="mt-5 text-[15px] font-semibold text-text">{{ t('series.tracked') }}</h2>
@@ -105,6 +105,7 @@
 </template>
 
 <script setup lang="ts">
+import ErrorText from '@/components/ErrorText.vue'
 import { computed, onMounted, ref } from 'vue'
 import { RouterLink } from 'vue-router'
 import { useI18n } from 'vue-i18n'

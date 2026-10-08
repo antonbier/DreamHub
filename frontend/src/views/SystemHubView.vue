@@ -53,7 +53,7 @@
 
     <template v-if="tab === 'overview'">
       <p v-if="loading" class="mt-5 text-[14px] text-muted">{{ t('common.loading') }}</p>
-      <p v-else-if="loadFailed" class="mt-5 text-[14px] text-muted">{{ t('common.backendUnreachable') }}</p>
+      <p v-else-if="loadFailed" class="mt-5 text-[14px] text-muted"><ErrorText /></p>
       <template v-else>
         <!-- Device info -->
         <section class="mt-5 rounded border border-line bg-tile p-4">
@@ -109,7 +109,7 @@
     <template v-else>
       <SelfTestPanel />
       <p v-if="diagLoading" class="mt-5 text-[14px] text-muted">{{ t('common.loading') }}</p>
-      <p v-else-if="diagLoadFailed" class="mt-5 text-[14px] text-muted">{{ t('common.backendUnreachable') }}</p>
+      <p v-else-if="diagLoadFailed" class="mt-5 text-[14px] text-muted"><ErrorText /></p>
       <template v-else>
         <section v-for="group in diagGroups" :key="group.key" class="mt-5 first:mt-5">
           <h2 class="text-[15px] font-semibold text-text">{{ t(`diagnostics.group.${group.key}`) }} ({{ group.hubs.length }})</h2>
@@ -138,6 +138,7 @@
 </template>
 
 <script setup lang="ts">
+import ErrorText from '@/components/ErrorText.vue'
 import { computed, onMounted, ref, watch } from 'vue'
 import { useI18n } from 'vue-i18n'
 import { RouterLink, useRoute, useRouter } from 'vue-router'

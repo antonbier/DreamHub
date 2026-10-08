@@ -6,7 +6,7 @@
 -->
 <template>
   <p v-if="loading" class="text-[13px] text-faint">{{ t('common.loading') }}</p>
-  <p v-else-if="failed" class="text-[13px] text-faint">{{ t('common.backendUnreachable') }}</p>
+  <p v-else-if="failed" class="text-[13px] text-faint"><ErrorText /></p>
   <p v-else-if="items.length === 0" class="text-[13px] text-faint">{{ t('dashboard.recent.empty') }}</p>
   <ul v-else class="flex flex-col">
     <li v-for="item in items" :key="item.recording ?? item.title" class="border-b border-line-soft last:border-none">
@@ -25,6 +25,7 @@
 </template>
 
 <script setup lang="ts">
+import ErrorText from '@/components/ErrorText.vue'
 import { onMounted, ref } from 'vue'
 import { RouterLink } from 'vue-router'
 import { useI18n } from 'vue-i18n'

@@ -6,7 +6,7 @@
 -->
 <template>
   <p v-if="loading" class="text-[13px] text-faint">{{ t('common.loading') }}</p>
-  <p v-else-if="failed" class="text-[13px] text-faint">{{ t('common.backendUnreachable') }}</p>
+  <p v-else-if="failed" class="text-[13px] text-faint"><ErrorText /></p>
   <ul v-else class="grid grid-cols-2 gap-1.5 below-sm:grid-cols-1">
     <li v-for="ch in channels" :key="ch.serviceReference">
       <RouterLink
@@ -27,6 +27,7 @@
 </template>
 
 <script setup lang="ts">
+import ErrorText from '@/components/ErrorText.vue'
 import { onMounted, ref } from 'vue'
 import { RouterLink } from 'vue-router'
 import { useI18n } from 'vue-i18n'

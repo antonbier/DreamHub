@@ -5,9 +5,11 @@
 // usually names the clashing timer.
 import { useI18n } from 'vue-i18n'
 import { ApiError } from '@/api/client'
+import { useFriendlyError } from './useFriendlyError'
 
 export function usePlanError() {
   const { t } = useI18n()
+  const { friendly } = useFriendlyError()
 
   function planErrorMessage(err: unknown): string {
     const code = err instanceof ApiError ? err.code : 'network_error'
@@ -15,7 +17,8 @@ export function usePlanError() {
     // MediaHub's file errors live under error.media; "in use" says why.
     const keys = [`error.plan.${code}`, `error.media.${code}`]
     if (code === 'media_in_use' && typeof details?.reason === 'string') keys.unshift(`error.media.media_in_use_${details.reason}`)
-    let message = code
+    // Unknown to the plan/media texts: the everyday sentence for it.
+    let message = friendly(err).text
     for (const key of keys) {
       const translated = t(key)
       if (translated !== key) {

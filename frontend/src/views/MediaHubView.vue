@@ -147,7 +147,7 @@
         </div>
 
         <p v-if="loading" class="mt-5 text-[14px] text-muted">{{ t('common.loading') }}</p>
-        <p v-else-if="loadFailed" class="mt-5 text-[14px] text-muted">{{ t('common.backendUnreachable') }}</p>
+        <p v-else-if="loadFailed" class="mt-5 text-[14px] text-muted"><ErrorText /></p>
         <template v-else-if="folder">
           <ul v-if="folder.subfolders.length > 0" class="mt-4 flex flex-col">
             <li v-for="sub in folder.subfolders" :key="sub.path" class="border-b border-line-soft last:border-none">
@@ -274,6 +274,7 @@
 </template>
 
 <script setup lang="ts">
+import ErrorText from '@/components/ErrorText.vue'
 import { useAuth } from '@/composables/useAuth'
 import { computed, onMounted, reactive, ref, watch } from 'vue'
 import { RouterLink, useRoute } from 'vue-router'

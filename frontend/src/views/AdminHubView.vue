@@ -151,6 +151,7 @@
 </template>
 
 <script setup lang="ts">
+import { useFriendlyError } from '@/composables/useFriendlyError'
 import { computed, onMounted, onUnmounted, ref } from 'vue'
 import { useI18n } from 'vue-i18n'
 import { api, ApiError } from '@/api/client'
@@ -164,6 +165,7 @@ import { useDisplayTimeZone } from '@/composables/useDisplayTimeZone'
 import type { CrashLog, LogEntry, LogLevel } from '@/api/types'
 
 const { t, locale } = useI18n()
+const { lastFriendly } = useFriendlyError()
 const navigation = useNavigationStore()
 const { describe, describeFix } = useProblem()
 const { timeZone } = useDisplayTimeZone()
@@ -202,7 +204,7 @@ async function loadLogs() {
     logs.value = res.entries
   } catch (err) {
     const code = err instanceof ApiError ? err.code : 'network_error'
-    logsError.value = t(`error.admin.${code}`) !== `error.admin.${code}` ? t(`error.admin.${code}`) : t('common.backendUnreachable')
+    logsError.value = t(`error.admin.${code}`) !== `error.admin.${code}` ? t(`error.admin.${code}`) : lastFriendly().text
   } finally {
     logsLoading.value = false
   }

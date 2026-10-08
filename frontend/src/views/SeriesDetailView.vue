@@ -18,7 +18,7 @@
     <h1 v-if="!detail" class="sr-only">{{ t('hub.series') }}</h1>
     <p v-if="loading" class="mt-5 text-[14px] text-muted" aria-live="polite">{{ t('common.loading') }}</p>
     <p v-else-if="notFound" class="mt-5 text-[14px] text-muted">{{ t('series.detail.notFound') }}</p>
-    <p v-else-if="!detail" class="mt-5 text-[14px] text-muted">{{ t('common.backendUnreachable') }}</p>
+    <p v-else-if="!detail" class="mt-5 text-[14px] text-muted"><ErrorText /></p>
     <template v-else>
       <div class="mt-3 flex flex-wrap items-baseline gap-x-3 gap-y-1">
         <h1 class="text-[26px] font-bold">{{ detail.marker.name }}</h1>
@@ -183,6 +183,7 @@
 </template>
 
 <script setup lang="ts">
+import ErrorText from '@/components/ErrorText.vue'
 import { computed, onMounted, reactive, ref, watch } from 'vue'
 import { RouterLink } from 'vue-router'
 import { useI18n } from 'vue-i18n'

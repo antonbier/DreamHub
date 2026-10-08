@@ -6,7 +6,7 @@
 -->
 <template>
   <p v-if="loading" class="text-[13px] text-faint">{{ t('common.loading') }}</p>
-  <p v-else-if="failed" class="text-[13px] text-faint">{{ t('common.backendUnreachable') }}</p>
+  <p v-else-if="failed" class="text-[13px] text-faint"><ErrorText /></p>
   <p v-else-if="attention.length === 0" class="text-[13px] text-faint">{{ t('dashboard.hubsTile.allOk') }}</p>
   <ul v-else class="flex flex-col">
     <li v-for="hub in attention" :key="hub.id" class="flex items-start gap-2.5 border-b border-line-soft py-2 last:border-none">
@@ -22,6 +22,7 @@
 </template>
 
 <script setup lang="ts">
+import ErrorText from '@/components/ErrorText.vue'
 import { computed, onMounted, ref } from 'vue'
 import { useI18n } from 'vue-i18n'
 import { api } from '@/api/client'

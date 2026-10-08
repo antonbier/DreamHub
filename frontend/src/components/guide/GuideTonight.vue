@@ -13,7 +13,7 @@
     </div>
 
     <p v-if="loading" class="mt-5 text-[14px] text-muted">{{ t('common.loading') }}</p>
-    <p v-else-if="loadFailed" class="mt-5 text-[14px] text-muted">{{ t('common.backendUnreachable') }}</p>
+    <p v-else-if="loadFailed" class="mt-5 text-[14px] text-muted"><ErrorText /></p>
     <p v-else-if="shown.length === 0" class="mt-5 text-[14px] text-muted">{{ filterActive ? t('guide.filteredEmpty') : t('guide.empty') }}</p>
     <ul v-else class="mt-4 grid grid-cols-3 gap-3 below-lg:grid-cols-2 below-md:grid-cols-1">
       <li v-for="e in shown" :key="e.serviceReference + e.start">
@@ -37,6 +37,7 @@
 </template>
 
 <script setup lang="ts">
+import ErrorText from '@/components/ErrorText.vue'
 import { computed, ref, watch } from 'vue'
 import { useI18n } from 'vue-i18n'
 import { api } from '@/api/client'

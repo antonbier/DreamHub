@@ -68,6 +68,7 @@
 </template>
 
 <script setup lang="ts">
+import { useFriendlyError } from '@/composables/useFriendlyError'
 import { onBeforeUnmount, onMounted, ref } from 'vue'
 import { useI18n } from 'vue-i18n'
 import { api, ApiError } from '@/api/client'
@@ -79,6 +80,7 @@ import type { Plan, ServiceUnit } from '@/api/types'
 
 defineEmits<{ logs: [unit: string] }>()
 const { t, locale } = useI18n()
+const { friendly } = useFriendlyError()
 const { planErrorMessage } = usePlanError()
 
 const units = ref<ServiceUnit[]>([])
@@ -90,7 +92,7 @@ async function load() {
     units.value = (await api.admin.services()).services
     error.value = ''
   } catch (err) {
-    error.value = err instanceof ApiError && err.code === 'systemd_unavailable' ? t('admin.services.unavailable') : t('common.backendUnreachable')
+    error.value = err instanceof ApiError && err.code === 'systemd_unavailable' ? t('admin.services.unavailable') : friendly(err).text
   } finally {
     loading.value = false
   }

@@ -1,6 +1,6 @@
 # Profiles, roles and the viewer UI — plan
 
-Status: **P1, P2, P4 and P5 built 2026-10-07, released in 0.2.0** (with the parts of P3 that needed no extra design: navigation, settings and destructive buttons by permission, admin-only setup hints); P3's plain-language error pass is open. Tracks issue #39. Once a package lands, its status moves to `ROADMAP.md` like the `V1_PLAN.md` packages did.
+Status: **built.** P1, P2, P4 and P5 on 2026-10-07 (released in 0.2.0); P3 finished on 2026-10-08 (everyday error texts with "Details", viewers' sidebar without setup state). Still open: the per-profile bouquet switch — it needs ChannelHub, the next topic — and the kids role ("Later" below). Tracks issue #39. Once a package lands, its status moves to `ROADMAP.md` like the `V1_PLAN.md` packages did.
 
 ## Why now
 

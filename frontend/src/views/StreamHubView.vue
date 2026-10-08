@@ -175,7 +175,7 @@
 
       <!-- Channels -->
       <aside v-if="source?.kind !== 'recording'" :aria-label="t('stream.channels')">
-        <p v-if="bouquetsFailed" class="text-[14px] text-muted">{{ t('common.backendUnreachable') }}</p>
+        <p v-if="bouquetsFailed" class="text-[14px] text-muted"><ErrorText /></p>
         <template v-else>
           <div class="flex flex-wrap items-center gap-2">
             <select
@@ -209,7 +209,7 @@
             </span>
           </button>
           <p v-if="channelsLoading && !channels.length" class="mt-3 text-[14px] text-muted">{{ t('common.loading') }}</p>
-          <p v-else-if="channelsFailed" class="mt-3 text-[14px] text-muted">{{ t('common.backendUnreachable') }}</p>
+          <p v-else-if="channelsFailed" class="mt-3 text-[14px] text-muted"><ErrorText /></p>
           <ul v-else class="mt-2 flex max-h-[70vh] flex-col overflow-y-auto below-lg:max-h-none">
             <li v-for="ch in shownChannels" :key="ch.serviceReference">
               <button
@@ -235,6 +235,7 @@
 </template>
 
 <script setup lang="ts">
+import ErrorText from '@/components/ErrorText.vue'
 import { computed, onBeforeUnmount, onMounted, reactive, ref, watch } from 'vue'
 import { useI18n } from 'vue-i18n'
 import { useRoute, useRouter } from 'vue-router'

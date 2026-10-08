@@ -61,6 +61,7 @@
 </template>
 
 <script setup lang="ts">
+import { useFriendlyError } from '@/composables/useFriendlyError'
 import { onMounted, ref } from 'vue'
 import { useI18n } from 'vue-i18n'
 import { api } from '@/api/client'
@@ -68,6 +69,7 @@ import { useDisplayTimeZone } from '@/composables/useDisplayTimeZone'
 import type { ApiToken, CreatedApiToken } from '@/api/types'
 
 const { t, locale } = useI18n()
+const { friendly } = useFriendlyError()
 const { timeZone } = useDisplayTimeZone()
 const tokens = ref<ApiToken[]>([])
 const loading = ref(true)
@@ -105,7 +107,7 @@ async function create() {
     newName.value = ''
     await load()
   } catch (err) {
-    error.value = err instanceof Error ? err.message : String(err)
+    error.value = friendly(err).text
   } finally {
     creating.value = false
   }
@@ -131,7 +133,7 @@ async function revoke(id: number) {
     await api.tokens.revoke(id)
     await load()
   } catch (err) {
-    error.value = err instanceof Error ? err.message : String(err)
+    error.value = friendly(err).text
   }
 }
 

@@ -34,6 +34,7 @@
 </template>
 
 <script setup lang="ts">
+import { useFriendlyError } from '@/composables/useFriendlyError'
 import { ref } from 'vue'
 import { useI18n } from 'vue-i18n'
 import OnboardingStepFrame from './OnboardingStepFrame.vue'
@@ -43,6 +44,7 @@ import { useSettingsText } from '@/composables/useSettingsText'
 
 const emit = defineEmits<{ next: []; back: [] }>()
 const { t } = useI18n()
+const { friendly } = useFriendlyError()
 const { login } = useAuth()
 const { fieldError } = useSettingsText()
 
@@ -87,9 +89,9 @@ async function save() {
   } catch (err) {
     if (err instanceof ApiError && err.details) {
       const first = Object.values(err.details)[0]
-      error.value = first ? fieldError(first) : err.message
+      error.value = first ? fieldError(first) : friendly(err).text
     } else {
-      error.value = err instanceof Error ? err.message : String(err)
+      error.value = friendly(err).text
     }
   } finally {
     saving.value = false

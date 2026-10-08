@@ -6,6 +6,10 @@ Format follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/); version
 
 ## [Unreleased]
 
+### Changed
+- Errors in everyday words: "The box doesn't answer right now. Is it switched on?" instead of "DreamHub backend not reachable", with the technical code and request ID behind "Details". The reason is the real one — DreamHub, the box, Plex, the tuner, or the profile's permissions.
+- Viewers' sidebar: no status dots, and hubs that can't work at all (e.g. Plex not set up) are left out instead of greyed.
+
 ## [0.2.0] - 2026-10-07
 
 Includes everything listed under 0.1.9, which was installed on the reference box but never released on its own.

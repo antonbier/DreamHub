@@ -11,6 +11,7 @@
 //   useAuth.ts's login()), every request carries them; a 401 from any
 //   endpoint means they're gone or wrong, so they're dropped and the app
 //   falls back to the login screen — see App.vue.
+import { shallowRef } from 'vue'
 import { authHeaders, handleUnauthorized } from './authState'
 import type {
   Profile,
@@ -96,6 +97,16 @@ export class ApiError extends Error {
 
 const CSRF_HEADER = 'X-DreamHub-Request'
 
+// The most recent failed request, for the plain-language "couldn't load"
+// hints (src/composables/useFriendlyError.ts): most views only keep a
+// "failed" flag, this says why.
+export const lastError = shallowRef<ApiError | null>(null)
+
+function failed(err: ApiError): ApiError {
+  lastError.value = err
+  return err
+}
+
 async function request<T>(method: string, path: string, body?: unknown): Promise<T> {
   const headers: Record<string, string> = {}
   if (method !== 'GET' && method !== 'HEAD') {
@@ -115,7 +126,7 @@ async function request<T>(method: string, path: string, body?: unknown): Promise
     })
   } catch (err) {
     // Network failure (backend unreachable) — no HTTP response at all.
-    throw new ApiError(0, 'network_error', err instanceof Error ? err.message : String(err))
+    throw failed(new ApiError(0, 'network_error', err instanceof Error ? err.message : String(err)))
   }
 
   if (res.status === 204) {
@@ -139,12 +150,8 @@ async function request<T>(method: string, path: string, body?: unknown): Promise
 
   if (!res.ok) {
     const envelope = (json as { error?: { code?: string; message?: string; details?: ApiError['details'] } })?.error
-    throw new ApiError(
-      res.status,
-      envelope?.code ?? 'unknown',
-      envelope?.message ?? res.statusText,
-      requestId,
-      envelope?.details,
+    throw failed(
+      new ApiError(res.status, envelope?.code ?? 'unknown', envelope?.message ?? res.statusText, requestId, envelope?.details),
     )
   }
   return json as T
@@ -159,7 +166,7 @@ async function requestBlob(path: string): Promise<Blob> {
   try {
     res = await fetch(path, { headers, cache: 'no-store' })
   } catch (err) {
-    throw new ApiError(0, 'network_error', err instanceof Error ? err.message : String(err))
+    throw failed(new ApiError(0, 'network_error', err instanceof Error ? err.message : String(err)))
   }
   if (!res.ok) {
     let envelope: { code?: string; message?: string } | undefined
@@ -169,7 +176,7 @@ async function requestBlob(path: string): Promise<Blob> {
       envelope = undefined
     }
     if (res.status === 401) handleUnauthorized(envelope?.code)
-    throw new ApiError(res.status, envelope?.code ?? 'unknown', envelope?.message ?? res.statusText, res.headers.get('X-Request-ID') ?? undefined)
+    throw failed(new ApiError(res.status, envelope?.code ?? 'unknown', envelope?.message ?? res.statusText, res.headers.get('X-Request-ID') ?? undefined))
   }
   return res.blob()
 }

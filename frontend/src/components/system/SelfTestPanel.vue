@@ -58,6 +58,7 @@
 </template>
 
 <script setup lang="ts">
+import { useFriendlyError } from '@/composables/useFriendlyError'
 import { computed, onMounted, ref } from 'vue'
 import { useI18n } from 'vue-i18n'
 import { api, ApiError } from '@/api/client'
@@ -65,6 +66,7 @@ import { useDisplayTimeZone } from '@/composables/useDisplayTimeZone'
 import type { SelfTestCheck, SelfTestReport } from '@/api/types'
 
 const { t, te, locale } = useI18n()
+const { friendly } = useFriendlyError()
 const { timeZone } = useDisplayTimeZone()
 
 const STYLE: Record<SelfTestCheck['status'], { dot: string; text: string }> = {
@@ -117,7 +119,7 @@ async function run() {
     report.value = (await api.system.runSelfTest()).report
   } catch (err) {
     const code = err instanceof ApiError ? err.code : 'network_error'
-    error.value = code === 'selftest_running' ? t('system.selftest.alreadyRunning') : t('common.backendUnreachable')
+    error.value = code === 'selftest_running' ? t('system.selftest.alreadyRunning') : friendly(err).text
   } finally {
     running.value = false
   }
@@ -132,8 +134,8 @@ async function downloadZip() {
     a.download = 'dreamhub-selftest.zip'
     a.click()
     setTimeout(() => URL.revokeObjectURL(url), 1000)
-  } catch {
-    error.value = t('common.backendUnreachable')
+  } catch (err) {
+    error.value = friendly(err).text
   }
 }
 </script>

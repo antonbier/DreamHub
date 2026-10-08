@@ -40,7 +40,7 @@
       <p v-if="notice" class="mt-4 text-[13.5px] text-ok" role="status">{{ notice }}</p>
 
       <p v-if="loading" class="mt-5 text-[14px] text-muted">{{ t('common.loading') }}</p>
-      <p v-else-if="loadFailed" class="mt-5 text-[14px] text-muted">{{ t('common.backendUnreachable') }}</p>
+      <p v-else-if="loadFailed" class="mt-5 text-[14px] text-muted"><ErrorText /></p>
       <p v-else-if="upcomingDays.length === 0" class="mt-5 text-[14px] text-muted">{{ t('timers.empty') }}</p>
 
       <section v-for="day in upcomingDays" :key="day.key" class="mt-6">
@@ -127,6 +127,7 @@
 </template>
 
 <script setup lang="ts">
+import ErrorText from '@/components/ErrorText.vue'
 import { computed, onMounted, ref } from 'vue'
 import { useI18n } from 'vue-i18n'
 import { api, ApiError } from '@/api/client'

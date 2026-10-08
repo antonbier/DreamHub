@@ -95,8 +95,7 @@
   },
   "common": {
     "loading": "Caricamento…",
-    "retry": "Riprova",
-    "backendUnreachable": "Backend DreamHub non raggiungibile. Nuovo tentativo…"
+    "retry": "Riprova"
   },
   "login": {
     "subtitle": "Questo DreamHub richiede una password.",
@@ -691,6 +690,21 @@
       "invalid_title": "Il titolo non può essere vuoto, andare a capo o superare i 200 caratteri.",
       "no_meta": "Questa registrazione non ha un file .ts.meta di cui cambiare il titolo.",
       "duplicate_target": "un'altra registrazione selezionata avrebbe lo stesso nome"
+    },
+    "friendly": {
+      "dreamhub": "DreamHub non risponde. Questo dispositivo è nella rete di casa?",
+      "box": "Il box non risponde in questo momento. È acceso?",
+      "boxLogin": "Il box ha rifiutato l'accesso di DreamHub.",
+      "forbidden": "Il tuo profilo non può farlo.",
+      "plex": "Il server Plex non è raggiungibile al momento.",
+      "internet": "plex.tv non è raggiungibile — la connessione a internet è assente?",
+      "tuner": "Il tuner è occupato con altro in questo momento.",
+      "streams": "Troppi streaming in diretta contemporaneamente.",
+      "hubOff": "Questa parte di DreamHub è disattivata.",
+      "notFound": "Non c'è più.",
+      "server": "Qualcosa è andato storto in DreamHub. Riprova tra un momento.",
+      "generic": "Non ha funzionato. Riprova tra un momento.",
+      "details": "Dettagli"
     }
   },
   "settings": {

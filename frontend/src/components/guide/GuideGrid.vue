@@ -31,7 +31,7 @@
     </div>
 
     <p v-if="loading" class="mt-5 text-[14px] text-muted">{{ t('common.loading') }}</p>
-    <p v-else-if="loadFailed" class="mt-5 text-[14px] text-muted">{{ t('common.backendUnreachable') }}</p>
+    <p v-else-if="loadFailed" class="mt-5 text-[14px] text-muted"><ErrorText /></p>
     <p v-else-if="channels.length === 0" class="mt-5 text-[14px] text-muted">{{ t('guide.empty') }}</p>
     <div v-else class="relative mt-5">
       <div v-if="nowPercent !== null" class="absolute top-0 bottom-0 w-px bg-warn" :style="{ insetInlineStart: nowLeftStyle }" />
@@ -76,6 +76,7 @@
 </template>
 
 <script setup lang="ts">
+import ErrorText from '@/components/ErrorText.vue'
 import { computed, ref, watch } from 'vue'
 import { useI18n } from 'vue-i18n'
 import { api } from '@/api/client'

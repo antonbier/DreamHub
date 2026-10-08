@@ -10,7 +10,7 @@
 <template>
   <div>
     <p v-if="loading && !rows.length" class="mt-1 text-[14px] text-muted">{{ t('common.loading') }}</p>
-    <p v-else-if="loadFailed" class="mt-1 text-[14px] text-muted">{{ t('common.backendUnreachable') }}</p>
+    <p v-else-if="loadFailed" class="mt-1 text-[14px] text-muted"><ErrorText /></p>
     <p v-else-if="shown.length === 0" class="mt-1 text-[14px] text-muted">{{ filterActive ? t('guide.filteredEmpty') : t('guide.empty') }}</p>
     <ul v-else class="flex flex-col">
       <li v-for="ch in shown" :key="ch.serviceReference" class="flex items-center gap-3 border-b border-line-soft py-2.5 last:border-none below-sm:flex-wrap">
@@ -50,6 +50,7 @@
 </template>
 
 <script setup lang="ts">
+import ErrorText from '@/components/ErrorText.vue'
 import { computed, onBeforeUnmount, ref, watch } from 'vue'
 import { useI18n } from 'vue-i18n'
 import { api } from '@/api/client'

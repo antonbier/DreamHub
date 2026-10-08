@@ -36,7 +36,7 @@
 
     <template v-if="!item || item.status !== 'unavailable'">
       <p v-if="bouquetsLoading" class="mt-5 text-[14px] text-muted">{{ t('common.loading') }}</p>
-      <p v-else-if="bouquetsFailed" class="mt-5 text-[14px] text-muted">{{ t('common.backendUnreachable') }}</p>
+      <p v-else-if="bouquetsFailed" class="mt-5 text-[14px] text-muted"><ErrorText /></p>
       <p v-else-if="bouquets.length === 0" class="mt-5 text-[14px] text-muted">{{ t('radio.noBouquets') }}</p>
       <template v-else>
         <!-- What the box plays right now, when it's one of these stations. -->
@@ -109,7 +109,7 @@
         </div>
 
         <p v-if="stationsLoading && !stations.length" class="mt-4 text-[14px] text-muted">{{ t('common.loading') }}</p>
-        <p v-else-if="stationsFailed" class="mt-4 text-[14px] text-muted">{{ t('common.backendUnreachable') }}</p>
+        <p v-else-if="stationsFailed" class="mt-4 text-[14px] text-muted"><ErrorText /></p>
         <p v-else-if="stations.length === 0" class="mt-4 text-[14px] text-muted">{{ t('radio.empty') }}</p>
         <p v-else-if="shown.length === 0" class="mt-4 text-[14px] text-muted">{{ t('radio.noMatch', { query }) }}</p>
         <ul v-else class="mt-3 flex flex-col">
@@ -182,7 +182,7 @@
           <h2 class="text-[15px] font-semibold text-text">{{ t('radio.timers.title') }}</h2>
           <RouterLink v-if="timerHubShown" to="/timers" class="text-[13px] text-accent hover:underline">{{ t('radio.timers.manage') }}</RouterLink>
         </div>
-        <p v-if="timersFailed" class="mt-2 text-[13px] text-faint">{{ t('common.backendUnreachable') }}</p>
+        <p v-if="timersFailed" class="mt-2 text-[13px] text-faint"><ErrorText /></p>
         <p v-else-if="timers.length === 0" class="mt-2 text-[13px] text-faint">{{ t('radio.timers.empty') }}</p>
         <ul v-else class="mt-2 flex flex-col">
           <li v-for="tm in timers" :key="tm.serviceReference + tm.begin" class="flex items-center gap-3 border-b border-line-soft py-2 last:border-none">
@@ -260,6 +260,7 @@
 </template>
 
 <script setup lang="ts">
+import ErrorText from '@/components/ErrorText.vue'
 import { computed, nextTick, onBeforeUnmount, onMounted, ref, watch } from 'vue'
 import { useI18n } from 'vue-i18n'
 import { RouterLink, useRoute } from 'vue-router'

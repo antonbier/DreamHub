@@ -80,7 +80,7 @@
       <section v-if="tasteShown" id="taste-panel" class="mt-2 rounded border border-line bg-tile p-4">
         <p class="text-[12.5px] text-faint">{{ t('discovery.taste.explain') }}</p>
         <p v-if="tasteLoading" class="mt-2 text-[13px] text-muted">{{ t('common.loading') }}</p>
-        <p v-else-if="!taste" class="mt-2 text-[13px] text-muted">{{ t('common.backendUnreachable') }}</p>
+        <p v-else-if="!taste" class="mt-2 text-[13px] text-muted"><ErrorText /></p>
         <dl v-else class="mt-2 grid grid-cols-[160px_1fr] gap-x-4 gap-y-2 text-[13px] below-sm:grid-cols-1 below-sm:gap-y-0.5">
           <template v-for="part in tasteParts" :key="part.key">
             <dt class="text-muted below-sm:mt-2">{{ t(`discovery.taste.${part.key}`) }}</dt>
@@ -136,6 +136,7 @@
 </template>
 
 <script setup lang="ts">
+import ErrorText from '@/components/ErrorText.vue'
 import { computed, onBeforeUnmount, onMounted, reactive, ref, watch } from 'vue'
 import { useI18n } from 'vue-i18n'
 import { api, ApiError } from '@/api/client'

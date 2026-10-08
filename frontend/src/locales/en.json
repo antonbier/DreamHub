@@ -95,8 +95,7 @@
   },
   "common": {
     "loading": "Loading…",
-    "retry": "Retry",
-    "backendUnreachable": "Can't reach the DreamHub backend. Retrying…"
+    "retry": "Retry"
   },
   "login": {
     "subtitle": "This DreamHub requires a password.",
@@ -691,6 +690,21 @@
       "invalid_title": "The title can't be empty, span lines or be longer than 200 characters.",
       "no_meta": "This recording has no .ts.meta file whose title could change.",
       "duplicate_target": "another selected recording would get the same name"
+    },
+    "friendly": {
+      "dreamhub": "DreamHub doesn't answer. Is this device in your home network?",
+      "box": "The box doesn't answer right now. Is it switched on?",
+      "boxLogin": "The box refused DreamHub's sign-in.",
+      "forbidden": "Your profile may not do this.",
+      "plex": "The Plex server can't be reached right now.",
+      "internet": "plex.tv can't be reached — is the internet connection down?",
+      "tuner": "The tuner is busy with something else right now.",
+      "streams": "Too many live streams are running at once.",
+      "hubOff": "This part of DreamHub is switched off.",
+      "notFound": "That isn't there anymore.",
+      "server": "Something went wrong in DreamHub. Try again in a moment.",
+      "generic": "That didn't work. Try again in a moment.",
+      "details": "Details"
     }
   },
   "settings": {

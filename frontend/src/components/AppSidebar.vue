@@ -68,6 +68,7 @@
 </template>
 
 <script setup lang="ts">
+import { useAuth } from '@/composables/useAuth'
 import { computed, defineComponent, h, nextTick, onBeforeUnmount, onMounted, ref, watch } from 'vue'
 import { RouterLink, useRoute } from 'vue-router'
 import { useI18n } from 'vue-i18n'
@@ -123,8 +124,23 @@ function toggle() {
   }
 }
 
-const mainSections = computed(() => props.sections.filter((s) => s.id !== 'bottom'))
-const bottomSection = computed(() => props.sections.find((s) => s.id === 'bottom'))
+// A hub's setup state is the admin's business (docs/PROFILES_PLAN.md, P3):
+// a viewer doesn't see the dots, and a hub that can't work at all is left
+// out instead of shown greyed.
+const { can } = useAuth()
+const admin = computed(() => can('settings.global'))
+function forProfile(s: NavSection): NavSection {
+  if (admin.value) return s
+  return {
+    ...s,
+    items: s.items.filter((i) => i.status !== 'unavailable').map((i) => ({ ...i, status: undefined, problems: undefined })),
+  }
+}
+const mainSections = computed(() => props.sections.filter((s) => s.id !== 'bottom').map(forProfile).filter((s) => s.items.length > 0))
+const bottomSection = computed(() => {
+  const s = props.sections.find((x) => x.id === 'bottom')
+  return s ? forProfile(s) : undefined
+})
 
 // A hub stays highlighted on its own sub-pages too (/series/11 under
 // /series); the dashboard at "/" only on exactly "/".

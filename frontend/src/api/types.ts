@@ -579,6 +579,9 @@ export interface ChangeEntry {
   id: number
   at: string // RFC3339, UTC
   userId?: number
+  // The profile's name now; absent for the system's own entries and
+  // deleted profiles.
+  userName?: string
   action: string
   summary: string
   detail: Record<string, unknown>

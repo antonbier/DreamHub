@@ -1172,7 +1172,11 @@
       "title": "Change log",
       "empty": "No changes yet.",
       "filterPlaceholder": "Filter by action or summary",
-      "loadMore": "Load more"
+      "loadMore": "Load more",
+      "by": "By",
+      "everyone": "Everyone",
+      "system": "DreamHub itself",
+      "deletedProfile": "deleted profile"
     },
     "selftest": {
       "title": "Box self-test",

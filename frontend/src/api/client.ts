@@ -376,7 +376,9 @@ export const api = {
     create: (name: string) => request<CreatedApiToken>('POST', '/api/v1/tokens', { name }),
     revoke: (id: number) => request<void>('DELETE', `/api/v1/tokens/${id}`),
   },
-  changes: (limit = 20) => request<{ changes: ChangeEntry[] }>('GET', `/api/v1/changes?limit=${limit}`),
+  // user: a profile's id, 0 for the system's own entries, -1 everyone's.
+  changes: (limit = 20, user = -1) =>
+    request<{ changes: ChangeEntry[] }>('GET', `/api/v1/changes?limit=${limit}${user >= 0 ? `&user=${user}` : ''}`),
   system: {
     backup: () => request<BackupFile>('GET', '/api/v1/system/backup'),
     restorePlan: (file: BackupFile) => request<{ plan: Plan }>('POST', '/api/v1/system/backup/restore', file),

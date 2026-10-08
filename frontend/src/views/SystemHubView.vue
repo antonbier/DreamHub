@@ -77,12 +77,22 @@
         <section class="mt-4">
           <div class="flex flex-wrap items-center justify-between gap-3">
             <h2 class="text-[15px] font-semibold text-text">{{ t('system.changes.title') }}</h2>
-            <input
-              v-model="filter"
-              type="search"
-              :placeholder="t('system.changes.filterPlaceholder')"
-              class="w-64 max-w-full rounded border border-line bg-field px-2.5 py-1.5 text-[13px] text-text"
-            />
+            <div class="flex flex-wrap items-center gap-2">
+              <label v-if="profiles.length > 1" class="flex items-center gap-1.5 text-[13px]">
+                <span class="text-muted">{{ t('system.changes.by') }}</span>
+                <select v-model="byUser" class="rounded border border-line bg-field px-2 py-1.5 text-text" @change="loadChanges">
+                  <option :value="-1">{{ t('system.changes.everyone') }}</option>
+                  <option v-for="p in profiles" :key="p.id" :value="p.id">{{ p.name }}</option>
+                  <option :value="0">{{ t('system.changes.system') }}</option>
+                </select>
+              </label>
+              <input
+                v-model="filter"
+                type="search"
+                :placeholder="t('system.changes.filterPlaceholder')"
+                class="w-64 max-w-full rounded border border-line bg-field px-2.5 py-1.5 text-[13px] text-text"
+              />
+            </div>
           </div>
           <p v-if="filteredChanges.length === 0" class="mt-2 text-[13px] text-faint">{{ t('system.changes.empty') }}</p>
           <ul v-else class="mt-2 flex flex-col">
@@ -90,7 +100,9 @@
               <span class="w-36 shrink-0 whitespace-nowrap text-[12px] font-mono text-faint">{{ formatDate(c.at) }}</span>
               <span class="min-w-0 flex-1">
                 <span class="block truncate text-[13.5px] text-text">{{ c.summary }}</span>
-                <span class="block truncate text-[12px] text-faint">{{ c.action }}</span>
+                <span class="block truncate text-[12px] text-faint">
+                  <template v-if="profiles.length > 1">{{ c.userName || (c.userId ? t('system.changes.deletedProfile') : t('system.changes.system')) }} · </template>{{ c.action }}
+                </span>
               </span>
             </li>
           </ul>
@@ -148,7 +160,7 @@ import SelfTestPanel from '@/components/system/SelfTestPanel.vue'
 import { useNavigationStore } from '@/stores/navigation'
 import { useProblem } from '@/composables/useProblem'
 import { useDisplayTimeZone } from '@/composables/useDisplayTimeZone'
-import type { ChangeEntry, DeviceInfo, HubStatus } from '@/api/types'
+import type { ChangeEntry, DeviceInfo, HubStatus, Profile } from '@/api/types'
 
 const { t, locale } = useI18n()
 const route = useRoute()
@@ -202,8 +214,17 @@ function formatDate(iso: string): string {
   return new Intl.DateTimeFormat(locale.value, { dateStyle: 'short', timeStyle: 'short', timeZone: timeZone.value }).format(new Date(iso))
 }
 
+// Whose changes: everyone's (-1), a profile's, or the system's own (0) —
+// the profile choice only shows once there's more than one profile.
+const profiles = ref<Profile[]>([])
+const byUser = ref(-1)
+void api.profiles
+  .list()
+  .then((r) => (profiles.value = r.profiles))
+  .catch(() => {})
+
 async function loadChanges() {
-  const res = await api.changes(changesLimit.value)
+  const res = await api.changes(changesLimit.value, byUser.value)
   changes.value = res.changes
 }
 

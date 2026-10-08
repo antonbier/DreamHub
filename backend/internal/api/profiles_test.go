@@ -340,3 +340,36 @@ func TestProfiles_ViewersStartWithTheTemplateAndCanReset(t *testing.T) {
 		t.Fatalf("admin: %+v", tpl)
 	}
 }
+
+func TestChanges_FilterByProfile(t *testing.T) {
+	e := newEnv(t)
+	admin, _, benID := e.household(t)
+	var me whoami
+	e.json(t, "GET", "/api/v1/whoami", "", withProfile(admin), 200, &me)
+	type changes struct {
+		Changes []struct {
+			UserID   int64  `json:"userId"`
+			UserName string `json:"userName"`
+			Action   string `json:"action"`
+		} `json:"changes"`
+	}
+	var mine changes
+	e.json(t, "GET", "/api/v1/changes?user="+itoa(me.ID), "", withProfile(admin), 200, &mine)
+	if len(mine.Changes) == 0 {
+		t.Fatal("the admin's changes are missing")
+	}
+	for _, c := range mine.Changes {
+		if c.UserID != me.ID || c.UserName != "admin" {
+			t.Fatalf("filtered by the admin, got %+v", c)
+		}
+	}
+	// Ben made nothing himself.
+	var ben changes
+	e.json(t, "GET", "/api/v1/changes?user="+itoa(benID), "", withProfile(admin), 200, &ben)
+	if len(ben.Changes) != 0 {
+		t.Fatalf("Ben's changes: %+v", ben.Changes)
+	}
+	if resp, _ := e.do(t, "GET", "/api/v1/changes?user=x", "", withProfile(admin)); resp.StatusCode != http.StatusBadRequest {
+		t.Fatalf("bad user: %d", resp.StatusCode)
+	}
+}

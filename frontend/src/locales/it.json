@@ -1172,7 +1172,11 @@
       "title": "Registro modifiche",
       "empty": "Ancora nessuna modifica.",
       "filterPlaceholder": "Filtra per azione o riepilogo",
-      "loadMore": "Carica altri"
+      "loadMore": "Carica altri",
+      "by": "Di",
+      "everyone": "Tutti",
+      "system": "DreamHub stesso",
+      "deletedProfile": "profilo eliminato"
     },
     "selftest": {
       "title": "Autotest del box",

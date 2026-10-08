@@ -45,11 +45,18 @@ func (s *Store) AppendChange(ctx context.Context, e ChangeEntry) error {
 
 // Changes returns the most recent change log entries, newest first.
 func (s *Store) Changes(ctx context.Context, limit int) ([]ChangeEntry, error) {
+	return s.ChangesBy(ctx, limit, -1)
+}
+
+// ChangesBy returns the most recent entries one profile made, newest
+// first: userID 0 means the system's own (no profile), -1 everyone's.
+func (s *Store) ChangesBy(ctx context.Context, limit int, userID int64) ([]ChangeEntry, error) {
 	if limit <= 0 {
 		limit = 50
 	}
 	rows, err := s.db.QueryContext(ctx,
-		`SELECT id, at, COALESCE(user_id, 0), action, summary, detail FROM change_log ORDER BY id DESC LIMIT ?`, limit)
+		`SELECT id, at, COALESCE(user_id, 0), action, summary, detail FROM change_log
+		 WHERE ? < 0 OR COALESCE(user_id, 0) = ? ORDER BY id DESC LIMIT ?`, userID, userID, limit)
 	if err != nil {
 		return nil, err
 	}

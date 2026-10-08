@@ -1172,7 +1172,11 @@
       "title": "Änderungsprotokoll",
       "empty": "Noch keine Änderungen.",
       "filterPlaceholder": "Nach Aktion oder Zusammenfassung filtern",
-      "loadMore": "Mehr laden"
+      "loadMore": "Mehr laden",
+      "by": "Von",
+      "everyone": "Alle",
+      "system": "DreamHub selbst",
+      "deletedProfile": "gelöschtes Profil"
     },
     "selftest": {
       "title": "Box-Selbsttest",

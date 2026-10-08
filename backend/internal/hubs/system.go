@@ -48,12 +48,15 @@ func (h *System) Mount(mux httpx.Mux) {
 }
 
 type changeView struct {
-	ID      int64  `json:"id"`
-	At      string `json:"at"` // UTC, RFC 3339
-	UserID  int64  `json:"userId,omitempty"`
-	Action  string `json:"action"`
-	Summary string `json:"summary"`
-	Detail  any    `json:"detail"`
+	ID     int64  `json:"id"`
+	At     string `json:"at"` // UTC, RFC 3339
+	UserID int64  `json:"userId,omitempty"`
+	// UserName is the profile's name now; empty for the system's own
+	// entries and for deleted profiles.
+	UserName string `json:"userName,omitempty"`
+	Action   string `json:"action"`
+	Summary  string `json:"summary"`
+	Detail   any    `json:"detail"`
 }
 
 func (h *System) changes(w http.ResponseWriter, r *http.Request) {
@@ -66,15 +69,31 @@ func (h *System) changes(w http.ResponseWriter, r *http.Request) {
 		}
 		limit = n
 	}
-	entries, err := h.Store.Changes(r.Context(), limit)
+	// ?user=<profile id>, or 0 for what DreamHub noticed itself.
+	user := int64(-1)
+	if v := r.URL.Query().Get("user"); v != "" {
+		n, err := strconv.ParseInt(v, 10, 64)
+		if err != nil || n < 0 {
+			httpx.WriteError(w, r, http.StatusBadRequest, "invalid_query", "user must be a profile id, or 0 for the system")
+			return
+		}
+		user = n
+	}
+	entries, err := h.Store.ChangesBy(r.Context(), limit, user)
 	if err != nil {
 		httpx.WriteError(w, r, http.StatusInternalServerError, "internal", "could not load the change log")
 		return
 	}
+	names := map[int64]string{}
+	if users, err := h.Store.Users(r.Context()); err == nil {
+		for _, u := range users {
+			names[u.ID] = u.Name
+		}
+	}
 	out := make([]changeView, 0, len(entries))
 	for _, e := range entries {
 		out = append(out, changeView{
-			ID: e.ID, At: e.At.UTC().Format("2006-01-02T15:04:05Z"), UserID: e.UserID,
+			ID: e.ID, At: e.At.UTC().Format("2006-01-02T15:04:05Z"), UserID: e.UserID, UserName: names[e.UserID],
 			Action: e.Action, Summary: e.Summary, Detail: e.Detail,
 		})
 	}

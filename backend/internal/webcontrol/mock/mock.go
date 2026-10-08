@@ -11,6 +11,7 @@ package mock
 
 import (
 	"context"
+	"sort"
 	"strconv"
 	"strings"
 	"sync"
@@ -28,6 +29,10 @@ import (
 type Client struct {
 	mu     sync.Mutex
 	timers []webcontrol.Timer
+	// scanned are channels added by AddChannel.
+	scanned []webcontrol.Service
+	// NoBouquetEditor plays a box without the BouquetEditor plugin.
+	NoBouquetEditor bool
 	// FS holds the recordings (see Root).
 	FS *recfs.Mem
 	// Playing is what /web/getcurrent reports; a recording's reference
@@ -190,7 +195,78 @@ var (
 	radioMarker  = webcontrol.Service{ServiceReference: "1:64:1:0:0:0:0:0:0:0::— Musik —", ServiceName: "— Musik —"}
 )
 
-func (*Client) Services(ctx context.Context, bouquetRef string) ([]webcontrol.Service, error) {
+// TV channels the mock box knows beyond its favourites, by provider —
+// made up in the shape of the reference box's cable lineup.
+var (
+	TVDasErste = webcontrol.Service{ServiceReference: "1:0:19:283D:3FB:1:C00000:0:0:0:", ServiceName: "Das Erste HD"}
+	TVArte     = webcontrol.Service{ServiceReference: "1:0:19:283E:3FB:1:C00000:0:0:0:", ServiceName: "arte HD"}
+	TVZDF      = webcontrol.Service{ServiceReference: "1:0:19:2B66:3F3:1:C00000:0:0:0:", ServiceName: "ZDF HD"}
+	TVZDFNeo   = webcontrol.Service{ServiceReference: "1:0:19:2B7A:3F3:1:C00000:0:0:0:", ServiceName: "zdf_neo HD"}
+	TVRTL      = webcontrol.Service{ServiceReference: "1:0:19:2EE3:441:1:C00000:0:0:0:", ServiceName: "RTL Television"}
+	TVKabel1   = webcontrol.Service{ServiceReference: "1:0:1:2F1C:441:1:C00000:0:0:0:", ServiceName: "kabel eins"}
+)
+
+// tvProviders are the mock's TV providers and their channels.
+var tvProviders = []struct {
+	name     string
+	channels []webcontrol.Service
+}{
+	{"ARD", []webcontrol.Service{TVDasErste, TVArte}},
+	{"ProSiebenSat.1", []webcontrol.Service{TVKabel1}},
+	{"RTL World", []webcontrol.Service{TVRTL}},
+	{"ZDFvision", []webcontrol.Service{TVZDF, TVZDFNeo}},
+}
+
+func providerRef(name string) string {
+	return `1:7:1:0:0:0:0:0:0:0:(provider == "` + name + `") && (type == 1) || (type == 17) || (type == 22) || (type == 25) || (type == 31) || (type == 134) || (type == 195) ORDER BY name`
+}
+
+// AddChannel makes the mock box know one more TV channel, as after a
+// channel scan (provider "New").
+func (c *Client) AddChannel(s webcontrol.Service) {
+	c.mu.Lock()
+	defer c.mu.Unlock()
+	c.scanned = append(c.scanned, s)
+}
+
+// BouquetEditorAvailable implements webcontrol.BouquetEditorProber: the
+// reference box has the plugin; NoBouquetEditor plays a box without it.
+func (c *Client) BouquetEditorAvailable(ctx context.Context) bool { return !c.NoBouquetEditor }
+
+func (c *Client) Services(ctx context.Context, bouquetRef string) ([]webcontrol.Service, error) {
+	c.mu.Lock()
+	scanned := append([]webcontrol.Service(nil), c.scanned...)
+	c.mu.Unlock()
+	switch bouquetRef {
+	case webcontrol.TVAll:
+		var all []webcontrol.Service
+		for _, p := range tvProviders {
+			all = append(all, p.channels...)
+		}
+		all = append(all, scanned...)
+		sort.SliceStable(all, func(i, j int) bool { return strings.ToLower(all[i].ServiceName) < strings.ToLower(all[j].ServiceName) })
+		return all, nil
+	case webcontrol.TVProviders:
+		var out []webcontrol.Service
+		for _, p := range tvProviders {
+			out = append(out, webcontrol.Service{ServiceReference: providerRef(p.name), ServiceName: p.name})
+		}
+		if len(scanned) > 0 {
+			out = append(out, webcontrol.Service{ServiceReference: providerRef("New"), ServiceName: "New"})
+		}
+		return out, nil
+	case webcontrol.RadioProviders:
+		return []webcontrol.Service{{ServiceReference: `1:7:2:0:0:0:0:0:0:0:(provider == "ARD") && (type == 2) ORDER BY name`, ServiceName: "ARD"}}, nil
+	case `1:7:2:0:0:0:0:0:0:0:(provider == "ARD") && (type == 2) ORDER BY name`:
+		return []webcontrol.Service{RadioBayern3, RadioDLF, RadioSWR3}, nil
+	case providerRef("New"):
+		return scanned, nil
+	}
+	for _, p := range tvProviders {
+		if bouquetRef == providerRef(p.name) {
+			return p.channels, nil
+		}
+	}
 	switch bouquetRef {
 	case webcontrol.RadioRoot:
 		return []webcontrol.Service{FavouritesRadio}, nil

@@ -37,11 +37,13 @@ const (
 	System Perm = "system"
 	// Profiles: create, change and delete profiles.
 	Profiles Perm = "profiles"
+	// ChannelsManage: ChannelHub — the channel list, its backups, picons.
+	ChannelsManage Perm = "channels.manage"
 )
 
 // all lists every permission, in display order.
 var all = []Perm{Watch, Control, PlexUse, Discovery, TimersPlan, TimersManage,
-	RecordingsManage, SettingsGlobal, System, Profiles}
+	RecordingsManage, SettingsGlobal, System, Profiles, ChannelsManage}
 
 // All returns every permission.
 func All() []Perm { return append([]Perm(nil), all...) }

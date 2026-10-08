@@ -209,6 +209,7 @@ func New(ctx context.Context, o Options) (*App, error) {
 	}
 	// Hubs' own sections, then the per-hub enable switches.
 	sections = append(sections, hubs_.MediaSettingsSection())
+	sections = append(sections, hubs_.ChannelsSettingsSection())
 	sections = append(sections, hubs.SettingsSection())
 	reg := settings.NewRegistry()
 	for _, sec := range sections {
@@ -247,6 +248,8 @@ func New(ctx context.Context, o Options) (*App, error) {
 		}
 	}
 
+	channelsHub := &hubs_.Channels{WC: o.WebControl, Store: st, Settings: svc, User: user, Now: now}
+	channelsHub.Init(ctx)
 	timerHub := &hubs_.Timer{WC: o.WebControl, Plans: plans, Now: now, AT: o.AutoTimer, Owners: st}
 	mediaHub := &hubs_.Media{WC: o.WebControl, Plans: plans, FS: o.RecordingsFS, ReadOnly: o.ReadOnlyFiles,
 		Settings: svc, Store: st, AI: o.AI, TMDB: o.TMDB, Enrich: enricher, Now: now}
@@ -319,6 +322,7 @@ func New(ctx context.Context, o Options) (*App, error) {
 			{HubID: hub.IDSystem, Prefixes: []string{"/api/v1/changes", "/api/v1/system"}, Register: systemHub.Mount},
 			{HubID: hub.IDAdmin, Prefixes: []string{"/api/v1/admin"}, Register: adminHub.Mount},
 			{HubID: hub.IDControl, Prefixes: []string{"/api/v1/control"}, Register: controlHub.Mount, Perms: controlHub.Perms()},
+			{HubID: hub.IDChannels, Prefixes: []string{"/api/v1/channels"}, Register: channelsHub.Mount, Perms: channelsHub.Perms()},
 			{HubID: hub.IDPlex, Prefixes: []string{"/api/v1/plex"}, Register: plexHub.Mount, Perms: plexHub.Perms()},
 		},
 		// The box's media player fetches a Plex film without a DreamHub
@@ -339,7 +343,8 @@ func New(ctx context.Context, o Options) (*App, error) {
 		Handler: handler, Store: st, Settings: svc, Connectors: conns, Hubs: hubs,
 		Plans: plans, Dashboard: dash, Tokens: tokens, Profiles: profiles, Routes: routes, Level: level, User: user,
 		Events: eventBus, Poller: poller,
-		Background: background(notifier, seriesHub, adminHub, plexHub, eventBus, o.Logger),
+		Background: append(background(notifier, seriesHub, adminHub, plexHub, eventBus, o.Logger),
+			func(ctx context.Context) { channelsHub.Watch(ctx, o.Logger) }),
 	}, nil
 }
 

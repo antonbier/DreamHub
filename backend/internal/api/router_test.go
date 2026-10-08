@@ -487,7 +487,7 @@ func TestSettings_GetReturnsCoreSections(t *testing.T) {
 	for _, s := range body.Sections {
 		ids = append(ids, s.ID)
 	}
-	if strings.Join(ids, ",") != "general,auth,network,webcontrol,ai,tmdb,tvmaze,omdb,fanart,push,plex,media,hubs" {
+	if strings.Join(ids, ",") != "general,auth,network,webcontrol,ai,tmdb,tvmaze,omdb,fanart,push,plex,media,channels,hubs" {
 		t.Fatalf("expected core, connector and hub sections in order, got %v", ids)
 	}
 	if v := body.Sections[0].Fields[0]; v.Key != settings.KeyLanguage || v.Value != "en" {

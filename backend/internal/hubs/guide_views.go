@@ -80,13 +80,31 @@ func (h *Guide) picon(w http.ResponseWriter, r *http.Request) { servePicon(w, r,
 // serves it under its own prefix, so neither depends on the other being
 // enabled). nil dirs means DefaultPiconDirs.
 func servePicon(w http.ResponseWriter, r *http.Request, dirs []string) {
+	b, ok := readPicon(dirs, r.URL.Query().Get("ref"), r.URL.Query().Get("name"))
+	if !ok {
+		httpx.WriteError(w, r, http.StatusNotFound, "not_found", "no picon for this channel")
+		return
+	}
+	w.Header().Set("Content-Type", "image/png")
+	w.Header().Set("Cache-Control", "private, max-age=86400")
+	w.Header().Set("X-Content-Type-Options", "nosniff")
+	w.Write(b)
+}
+
+// readPicon returns the first picon found for a channel: a real PNG of
+// at most 1 MB, read-only. nil dirs means DefaultPiconDirs.
+func readPicon(dirs []string, ref, name string) ([]byte, bool) {
 	if dirs == nil {
 		dirs = DefaultPiconDirs
 	}
-	dirs = piconSearchDirs(dirs)
-	for _, name := range piconNames(r.URL.Query().Get("ref"), r.URL.Query().Get("name")) {
+	return readPiconIn(piconSearchDirs(dirs), ref, name)
+}
+
+// readPiconIn looks only in exactly these folders, not their subfolders.
+func readPiconIn(dirs []string, ref, name string) ([]byte, bool) {
+	for _, file := range piconNames(ref, name) {
 		for _, dir := range dirs {
-			p := filepath.Join(dir, name)
+			p := filepath.Join(dir, file)
 			fi, err := os.Lstat(p)
 			if err != nil || !fi.Mode().IsRegular() || fi.Size() > 1<<20 {
 				continue
@@ -95,22 +113,43 @@ func servePicon(w http.ResponseWriter, r *http.Request, dirs []string) {
 			if err != nil || http.DetectContentType(b) != "image/png" {
 				continue
 			}
-			w.Header().Set("Content-Type", "image/png")
-			w.Header().Set("Cache-Control", "private, max-age=86400")
-			w.Header().Set("X-Content-Type-Options", "nosniff")
-			w.Write(b)
-			return
+			return b, true
 		}
 	}
-	httpx.WriteError(w, r, http.StatusNotFound, "not_found", "no picon for this channel")
+	return nil, false
+}
+
+// preferredPiconSet is the picon set (a subfolder's name) an admin chose in
+// ChannelHub; "" keeps the default order. Searched before every other set.
+var (
+	preferredPiconMu  sync.Mutex
+	preferredPiconSet string
+)
+
+// SetPreferredPiconSet makes name the set every hub's logos come from
+// first (ChannelHub; read from settings at startup).
+func SetPreferredPiconSet(name string) {
+	preferredPiconMu.Lock()
+	preferredPiconSet = name
+	preferredPiconMu.Unlock()
+	piconDirsMu.Lock()
+	piconDirsCache = map[string][]string{}
+	piconDirsMu.Unlock()
+}
+
+func preferredPicon() string {
+	preferredPiconMu.Lock()
+	defer preferredPiconMu.Unlock()
+	return preferredPiconSet
 }
 
 // Picon pools hold whole picon sets as subfolders, one per style — the
 // reference box's /data/piconpool has six ("PPH_carbon_220x132", …) and no
 // logo directly inside (confirmed live 2026-10-04). Nothing on the box
 // says which set the skin uses, so each folder is searched first, then its
-// subfolders, the most recently changed set first. The list is cached for
-// a few minutes: a guide page asks for dozens of logos at once.
+// subfolders — the set chosen in ChannelHub first, then the most recently
+// changed. The list is cached for a few minutes: a guide page asks for
+// dozens of logos at once.
 var (
 	piconDirsMu    sync.Mutex
 	piconDirsCache = map[string][]string{}
@@ -146,7 +185,13 @@ func piconSearchDirs(dirs []string) []string {
 				sets = append(sets, set{filepath.Join(d, e.Name()), fi.ModTime()})
 			}
 		}
-		sort.SliceStable(sets, func(i, j int) bool { return sets[i].mod.After(sets[j].mod) })
+		preferred := preferredPicon()
+		sort.SliceStable(sets, func(i, j int) bool {
+			if pi, pj := filepath.Base(sets[i].path) == preferred, filepath.Base(sets[j].path) == preferred; pi != pj {
+				return pi
+			}
+			return sets[i].mod.After(sets[j].mod)
+		})
 		for _, st := range sets {
 			out = append(out, st.path)
 		}

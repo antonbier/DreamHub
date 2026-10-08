@@ -17,6 +17,7 @@ const (
 	IDSystem    = "system"
 	IDAdmin     = "admin"
 	IDControl   = "control"
+	IDChannels  = "channels"
 	IDRadio     = "radio"
 	IDPlex      = "plex"
 	IDStream    = "stream"
@@ -65,6 +66,11 @@ func V1() []Descriptor {
 			Perm: perm.System, Requires: []Requirement{wc}},
 		{ID: IDControl, Name: "ControlHub", Label: "hub.control", Icon: "control", Path: "/control", Group: GroupDevice, Order: 20,
 			Requires: []Requirement{wc}},
+		// The channel list (docs/CHANNELHUB_PLAN.md): browsing needs only
+		// WebControl; editing goes through the optional BouquetEditor
+		// plugin, which the hub detects itself.
+		{ID: IDChannels, Name: "ChannelHub", Label: "hub.channels", Icon: "list", Path: "/channels", Group: GroupDevice, Order: 15,
+			Perm: perm.ChannelsManage, Requires: []Requirement{wc}},
 		{ID: IDAdmin, Name: "AdminHub", Label: "hub.admin", Icon: "admin", Path: "/admin", Group: GroupBottom, Order: 10,
 			Perm: perm.System, Requires: []Requirement{{Capability: CapJournald}},
 			Emits: []string{events.ServiceFailed, events.ServiceRecovered}},

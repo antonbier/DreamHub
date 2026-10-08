@@ -1147,3 +1147,16 @@ func statusError(what string, status int) error {
 	}
 	return fmt.Errorf("webcontrol: %s returned status %d", what, status)
 }
+
+// BouquetEditorAvailable reports whether the optional BouquetEditor plugin
+// answers (implements BouquetEditorProber): its read-only bouquet list, the
+// same call its own page makes first (ARCHITECTURE.md). ChannelHub edits
+// only through it.
+func (c *HTTPClient) BouquetEditorAvailable(ctx context.Context) bool {
+	body, err := c.get(ctx, "/bouqueteditor/web/getservices")
+	if err != nil {
+		return false
+	}
+	body.Close()
+	return true
+}

@@ -220,6 +220,23 @@ var migrations = []string{
 		updated_at TEXT NOT NULL
 	);
 	`,
+	`
+	-- ChannelHub's snapshot of every channel the box knows
+	-- (docs/CHANNELHUB_PLAN.md): the box doesn't record when a channel
+	-- appeared, so DreamHub does. Times in Unix seconds; *_look count
+	-- DreamHub's looks at the list (1, 2, …), so "new" and "gone" don't
+	-- depend on two looks being seconds apart.
+	CREATE TABLE channel_snapshot (
+		service_ref TEXT PRIMARY KEY,
+		name        TEXT NOT NULL,
+		provider    TEXT NOT NULL,
+		kind        TEXT NOT NULL CHECK (kind IN ('tv', 'radio')),
+		first_seen  INTEGER NOT NULL,
+		last_seen   INTEGER NOT NULL,
+		first_look  INTEGER NOT NULL,
+		last_look   INTEGER NOT NULL
+	);
+	`,
 }
 
 func (s *Store) migrate(ctx context.Context) error {

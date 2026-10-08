@@ -67,7 +67,8 @@
         <!-- Listening in the browser (StreamHub's player, sound only). -->
         <section v-if="listening" class="mt-5 flex flex-wrap items-center gap-3 rounded border border-accent bg-tile p-3" :aria-label="t('radio.inBrowser')">
           <ChannelLogo source="radio" :service-reference="listening" :service-name="listeningStation?.serviceName ?? ''" :height="28" />
-          <div class="min-w-0 flex-1" aria-live="polite">
+          <!-- On a phone the controls wrap below, so the name has the width. -->
+          <div class="min-w-0 flex-1 below-sm:basis-[calc(100%-5rem)]" aria-live="polite">
             <div class="text-[12px] text-faint">{{ t('radio.inBrowser') }}</div>
             <div class="truncate text-[14.5px] font-semibold text-text">{{ listeningStation?.serviceName ?? listening }}</div>
             <div v-if="listenState === 'loading'" class="text-[12.5px] text-muted">{{ t('stream.loading') }}</div>
@@ -83,10 +84,22 @@
             :aria-label="t('stream.volume')"
             @input="setListenVolume(($event.target as HTMLInputElement).valueAsNumber / 100)"
           />
+          <button
+            v-if="listenState === 'playing' || listenState === 'paused'"
+            type="button"
+            class="rounded border border-line px-2.5 py-1 text-[12.5px] text-text hover:bg-field"
+            @click="togglePause"
+          >
+            {{ listenState === 'paused' ? t('radio.resume') : t('radio.pause') }}
+          </button>
           <button type="button" class="rounded border border-line px-2.5 py-1 text-[12.5px] text-text hover:bg-field" @click="stopListening">
             {{ t('stream.stop') }}
           </button>
+          <RadioVisualizer v-if="listenState === 'playing' || listenState === 'paused'" class="w-full basis-full" :analyser="listenAnalyser" />
         </section>
+        <!-- The sound's way out: a media element keeps playing with the
+             phone's screen locked and carries the lock-screen controls. -->
+        <audio ref="audioEl" class="hidden" />
 
         <div class="mt-5 flex flex-wrap items-center gap-3">
           <select
@@ -261,7 +274,7 @@
 
 <script setup lang="ts">
 import ErrorText from '@/components/ErrorText.vue'
-import { computed, nextTick, onBeforeUnmount, onMounted, ref, watch } from 'vue'
+import { computed, nextTick, onBeforeUnmount, onMounted, ref, shallowRef, watch, watchEffect } from 'vue'
 import { useI18n } from 'vue-i18n'
 import { RouterLink, useRoute } from 'vue-router'
 import { api, ApiError } from '@/api/client'
@@ -275,6 +288,7 @@ import { useProblem } from '@/composables/useProblem'
 import { useDisplayTimeZone } from '@/composables/useDisplayTimeZone'
 import { formatWhen } from '@/lib/format'
 import { TsPlayer, type PlayerState } from '@/streaming/tsPlayer'
+import RadioVisualizer from '@/components/radio/RadioVisualizer.vue'
 import type { Bouquet, EPGEvent, NowNext, Plan, Timer } from '@/api/types'
 
 const BOUQUET_KEY = 'dreamhub.radioBouquet'
@@ -463,18 +477,26 @@ function readVolume() {
   }
 }
 let radioPlayer: TsPlayer | null = null
+const audioEl = ref<HTMLAudioElement | null>(null)
+const listenAnalyser = shallowRef<AnalyserNode | null>(null)
 function listen(ref_: string) {
   radioPlayer?.stop()
   listening.value = ref_
   listenError.value = null
+  listenAnalyser.value = null
   // Sound only: the player draws nowhere visible.
-  const p = new TsPlayer(document.createElement('canvas'), {
-    state: (st, err) => {
-      if (radioPlayer !== p) return
-      listenState.value = st
-      if (err) listenError.value = err
+  const p = new TsPlayer(
+    document.createElement('canvas'),
+    {
+      state: (st, err) => {
+        if (radioPlayer !== p) return
+        listenState.value = st
+        if (err) listenError.value = err
+        if (st === 'playing') listenAnalyser.value = p.analyser
+      },
     },
-  })
+    { mediaElement: audioEl.value ?? undefined },
+  )
   radioPlayer = p
   p.setVolume(listenVolume.value)
   void p.play({ kind: 'live', ref: ref_ })
@@ -484,7 +506,78 @@ function stopListening() {
   radioPlayer = null
   listening.value = ''
   listenState.value = 'idle'
+  listenAnalyser.value = null
 }
+function togglePause() {
+  if (listenState.value === 'paused') radioPlayer?.resume()
+  else radioPlayer?.pause()
+}
+
+// --- the phone's lock screen and notification (Media Session) ----------------
+// What's playing, its logo, and play/pause/stop/previous/next station —
+// shown by the phone while the sound runs through audioEl.
+const artwork = ref('')
+watch(listening, async (ref_) => {
+  artwork.value = ''
+  const st = listeningStation.value
+  if (!ref_ || !st) return
+  try {
+    const url = URL.createObjectURL(await api.radio.picon(ref_, st.serviceName))
+    if (listening.value === ref_) artwork.value = url
+  } catch {
+    /* no logo: the phone shows its own */
+  }
+})
+function neighbour(step: number) {
+  const list = stations.value.filter((s) => !s.serviceReference.startsWith('1:64:')) // not the headings
+  const i = list.findIndex((s) => s.serviceReference === listening.value)
+  if (i < 0 || list.length < 2) return
+  listen(list[(i + step + list.length) % list.length].serviceReference)
+}
+watchEffect(() => {
+  if (!('mediaSession' in navigator)) return
+  const ms = navigator.mediaSession
+  const st = listeningStation.value
+  if (!listening.value) {
+    ms.metadata = null
+    ms.playbackState = 'none'
+    return
+  }
+  ms.metadata = new MediaMetadata({
+    title: st?.now?.title || st?.serviceName || '',
+    artist: st?.serviceName ?? '',
+    album: t('hub.radio'),
+    artwork: artwork.value ? [{ src: artwork.value, type: 'image/png' }] : [],
+  })
+  ms.playbackState = listenState.value === 'paused' ? 'paused' : 'playing'
+})
+onMounted(() => {
+  if (!('mediaSession' in navigator)) return
+  const ms = navigator.mediaSession
+  const set = (action: MediaSessionAction, fn: () => void) => {
+    try {
+      ms.setActionHandler(action, fn)
+    } catch {
+      /* this browser doesn't offer it */
+    }
+  }
+  set('play', () => radioPlayer?.resume())
+  set('pause', () => radioPlayer?.pause())
+  set('stop', stopListening)
+  set('previoustrack', () => neighbour(-1))
+  set('nexttrack', () => neighbour(1))
+})
+onBeforeUnmount(() => {
+  if (!('mediaSession' in navigator)) return
+  for (const a of ['play', 'pause', 'stop', 'previoustrack', 'nexttrack'] as MediaSessionAction[]) {
+    try {
+      navigator.mediaSession.setActionHandler(a, null)
+    } catch {
+      /* not offered */
+    }
+  }
+  navigator.mediaSession.metadata = null
+})
 function setListenVolume(v: number) {
   listenVolume.value = v
   radioPlayer?.setVolume(v)

@@ -1290,7 +1290,15 @@
     "allStations": "Tutte le emittenti radio",
     "listen": "Ascolta {station} nel browser",
     "inBrowser": "Nel browser",
-    "noTuner": "Il box al momento non invia questa stazione: probabilmente il sintonizzatore è occupato su un’altra frequenza."
+    "noTuner": "Il box al momento non invia questa stazione: probabilmente il sintonizzatore è occupato su un’altra frequenza.",
+    "pause": "Pausa",
+    "resume": "Riprendi",
+    "visual": {
+      "switch": "Cambia visualizzazione",
+      "bars": "Spettro",
+      "scope": "Oscilloscopio",
+      "off": "Nessuna visualizzazione"
+    }
   },
   "stream": {
     "intro": "TV e registrazioni direttamente nel browser: il box invia il segnale così com’è, il tuo dispositivo lo decodifica.",

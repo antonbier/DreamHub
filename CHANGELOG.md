@@ -7,6 +7,9 @@ Format follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/); version
 ## [Unreleased]
 
 ### Added
+- Radio in the background: listening in the browser keeps going with the phone's screen locked, with the station, what's on and its logo on the lock screen, and play/pause/stop and previous/next station there. Pause and resume on the page too.
+- Radio visualization in the spirit of Winamp: a spectrum with falling peaks, or an oscilloscope, or none — switched with one button, remembered per device, off by default when the system asks for less motion.
+- Change log by profile: SystemHub shows who made each change and filters by profile or "DreamHub itself".
 - Channel list (ChannelHub, admins): your bouquets and what's in them, every channel the box knows — search, "new since" (after a channel scan), "in no bouquet", TV/radio, HD, provider — a channel check (vanished after a scan, twice in a bouquet, no programme data, no logo), and the installed logo sets with how many of your channels they cover; DreamHub shows logos from the set you choose first. 
 - Editing the channel list on the phone: move channels (buttons, or drag on a computer), put one on a given number, rename, remove, add from all the box's channels, add headings; create, rename and delete bouquets. Every edit is collected first and shown as one preview in words ("ZDF HD moves from 14 to 2"). Applying backs up the whole channel list first and checks the result; if anything differs, the backup is restored by itself. Earlier backups can be brought back. Needs the BouquetEditor plugin on the box. Not yet tried on a real box.
 

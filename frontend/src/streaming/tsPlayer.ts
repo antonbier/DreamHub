@@ -58,6 +58,15 @@ export interface PlayerStats {
   kbps: number
 }
 
+// Options for sound that should keep playing in the background.
+export interface PlayerOptions {
+  // The sound goes out through this element instead of straight to the
+  // speakers: a phone keeps a playing media element alive with the screen
+  // locked and shows its media controls — Web Audio alone it may suspend.
+  // RadioHub uses it.
+  mediaElement?: HTMLAudioElement
+}
+
 export interface PlayerEvents {
   state?: (s: PlayerState, error?: ApiError | Error) => void
   tracks?: (tracks: AudioTrack[], current: number) => void
@@ -83,6 +92,8 @@ export class TsPlayer {
   private instances: LibAVInstance[] = []
   private ac: AudioContext | null = null
   private gain: GainNode | null = null
+  private analyserNode: AnalyserNode | null = null
+  private options: PlayerOptions
   private queue: VideoFrame[] = []
   private wc: VideoDecoder | null = null
   private raf = 0
@@ -97,9 +108,15 @@ export class TsPlayer {
   private startByte = 0
   private bytes = 0
 
-  constructor(canvas: HTMLCanvasElement, events: PlayerEvents = {}) {
+  constructor(canvas: HTMLCanvasElement, events: PlayerEvents = {}, options: PlayerOptions = {}) {
     this.canvas = canvas
     this.events = events
+    this.options = options
+  }
+
+  /** The sound's analyser (a visualization reads it), once playing. */
+  get analyser(): AnalyserNode | null {
+    return this.analyserNode
   }
 
   /** Starts playing src; the returned promise settles once it plays or fails. */
@@ -136,13 +153,20 @@ export class TsPlayer {
     }
     this.instances = []
     void this.ac?.close().catch(() => {})
+    const el = this.options.mediaElement
+    if (el) {
+      el.pause()
+      el.srcObject = null
+    }
   }
 
   pause() {
+    this.options.mediaElement?.pause()
     void this.ac?.suspend().then(() => this.events.state?.('paused'))
   }
 
   resume() {
+    void this.options.mediaElement?.play().catch(() => {})
     void this.ac?.resume().then(() => this.events.state?.('playing'))
   }
 
@@ -254,7 +278,20 @@ export class TsPlayer {
     this.ac = ac
     this.gain = ac.createGain()
     this.gain.gain.value = this.muted ? 0 : this.volume
-    this.gain.connect(ac.destination)
+    // A tap for visualizations; it changes nothing about the sound.
+    this.analyserNode = ac.createAnalyser()
+    this.analyserNode.fftSize = 2048
+    this.analyserNode.smoothingTimeConstant = 0.7
+    this.gain.connect(this.analyserNode)
+    const el = this.options.mediaElement
+    if (el) {
+      const out = ac.createMediaStreamDestination()
+      this.gain.connect(out)
+      el.srcObject = out.stream
+      void el.play().catch(() => {})
+    } else {
+      this.gain.connect(ac.destination)
+    }
     await ac.resume().catch(() => {})
     let clock: { pts: number; at: number } | null = null
     let nextAt = 0

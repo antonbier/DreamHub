@@ -75,7 +75,7 @@ func (h *Stream) bouquets(w http.ResponseWriter, r *http.Request) {
 			out = append(out, b)
 		}
 	}
-	httpx.WriteJSON(w, http.StatusOK, map[string]any{"bouquets": out})
+	httpx.WriteJSON(w, http.StatusOK, map[string]any{"bouquets": visibleBouquets(r.Context(), out)})
 }
 
 // channels: a bouquet's channels in its order with now/next, and what the

@@ -77,7 +77,7 @@ func (h *Guide) bouquets(w http.ResponseWriter, r *http.Request) {
 		httpx.WriteError(w, r, http.StatusBadGateway, "webcontrol_unavailable", "could not reach WebControl")
 		return
 	}
-	httpx.WriteJSON(w, http.StatusOK, map[string]any{"bouquets": bouquets})
+	httpx.WriteJSON(w, http.StatusOK, map[string]any{"bouquets": visibleBouquets(r.Context(), bouquets)})
 }
 
 // ChannelSchedule is one channel's events within the requested window.

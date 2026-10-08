@@ -33,6 +33,9 @@ type User struct {
 	// Overrides are the admin's per-profile permission switches
 	// (perm.Switchable): permission name → on/off.
 	Overrides map[string]bool
+	// Bouquets are the bouquet references the profile sees; empty means
+	// all (docs/CHANNELHUB_PLAN.md, C5 — prepared, nothing sets it yet).
+	Bouquets []string
 }
 
 // HasPin reports whether the profile is protected by a PIN.
@@ -77,9 +80,10 @@ func (s *Store) CreateUserLike(ctx context.Context, u User, likeID int64) (User,
 	defer tx.Rollback()
 
 	overrides, _ := json.Marshal(nonNil(u.Overrides))
+	bouquets, _ := json.Marshal(nonNilList(u.Bouquets))
 	now := s.timestamp()
-	res, err := tx.ExecContext(ctx, `INSERT INTO users (name, role, created_at, pin_hash, color, overrides) VALUES (?, ?, ?, ?, ?, ?)`,
-		u.Name, string(u.Role), now, u.PinHash, u.Color, string(overrides))
+	res, err := tx.ExecContext(ctx, `INSERT INTO users (name, role, created_at, pin_hash, color, overrides, bouquets) VALUES (?, ?, ?, ?, ?, ?, ?)`,
+		u.Name, string(u.Role), now, u.PinHash, u.Color, string(overrides), string(bouquets))
 	if err != nil {
 		if s.nameTaken(ctx, tx, u.Name, 0) {
 			return User{}, ErrNameTaken
@@ -127,8 +131,9 @@ func (s *Store) UpdateUser(ctx context.Context, u User) error {
 		return ErrNameTaken
 	}
 	overrides, _ := json.Marshal(nonNil(u.Overrides))
-	if _, err := tx.ExecContext(ctx, `UPDATE users SET name = ?, role = ?, pin_hash = ?, color = ?, overrides = ? WHERE id = ?`,
-		u.Name, string(u.Role), u.PinHash, u.Color, string(overrides), u.ID); err != nil {
+	bouquets, _ := json.Marshal(nonNilList(u.Bouquets))
+	if _, err := tx.ExecContext(ctx, `UPDATE users SET name = ?, role = ?, pin_hash = ?, color = ?, overrides = ?, bouquets = ? WHERE id = ?`,
+		u.Name, string(u.Role), u.PinHash, u.Color, string(overrides), string(bouquets), u.ID); err != nil {
 		return err
 	}
 	if oldPin != u.PinHash {
@@ -176,7 +181,14 @@ func nonNil(m map[string]bool) map[string]bool {
 	return m
 }
 
-const userCols = `id, name, role, created_at, pin_hash, color, overrides`
+func nonNilList(l []string) []string {
+	if l == nil {
+		return []string{}
+	}
+	return l
+}
+
+const userCols = `id, name, role, created_at, pin_hash, color, overrides, bouquets`
 
 // User returns a user by ID.
 func (s *Store) User(ctx context.Context, id int64) (User, error) {
@@ -216,14 +228,15 @@ func (s *Store) scanUser(row *sql.Row) (User, error) {
 
 func scanUserRow(row scannable) (User, error) {
 	var u User
-	var role, created, overrides string
-	if err := row.Scan(&u.ID, &u.Name, &role, &created, &u.PinHash, &u.Color, &overrides); err != nil {
+	var role, created, overrides, bouquets string
+	if err := row.Scan(&u.ID, &u.Name, &role, &created, &u.PinHash, &u.Color, &overrides, &bouquets); err != nil {
 		return User{}, err
 	}
 	u.Role = Role(role)
 	u.CreatedAt = parseTime(created)
 	u.Overrides = map[string]bool{}
 	_ = json.Unmarshal([]byte(overrides), &u.Overrides)
+	_ = json.Unmarshal([]byte(bouquets), &u.Bouquets)
 	return u, nil
 }
 

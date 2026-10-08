@@ -1,6 +1,6 @@
 # ChannelHub — plan
 
-Status: **C1–C4 built 2026-10-08 against the mock**; C5 open. C2/C3 are not released until the BouquetEditor writes have been tried on the reference box ("To confirm on the box" below). Tracks issue #26. Once a package lands, its status moves to `ROADMAP.md`.
+Status: **C1–C5 built 2026-10-08 against the mock.** C2/C3 are not released until the BouquetEditor writes have been tried on the reference box ("To confirm on the box" below). Tracks issue #26. Once a package lands, its status moves to `ROADMAP.md`.
 
 ## Why
 

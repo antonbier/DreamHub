@@ -1,6 +1,7 @@
 package api_test
 
 import (
+	"context"
 	"encoding/json"
 	"net/http"
 	"strings"
@@ -328,4 +329,40 @@ func fmtBouquets(l []struct {
 		names = append(names, b.Name)
 	}
 	return strings.Join(names, ",")
+}
+
+// C5: a profile's bouquets are prepared in the model (no interface sets
+// them yet) and every everyday bouquet list goes through one filter.
+func TestChannels_BouquetsPerProfileArePrepared(t *testing.T) {
+	e := newEnv(t)
+	admin, viewer, benID := e.household(t)
+	ben, err := e.store.User(context.Background(), benID)
+	if err != nil {
+		t.Fatal(err)
+	}
+	ben.Bouquets = []string{freeTV}
+	if err := e.store.UpdateUser(context.Background(), ben); err != nil {
+		t.Fatal(err)
+	}
+	count := func(path, token string) int {
+		var body struct {
+			Bouquets []json.RawMessage `json:"bouquets"`
+		}
+		e.json(t, "GET", path, "", withProfile(token), 200, &body)
+		return len(body.Bouquets)
+	}
+	if n := count("/api/v1/guide/bouquets", viewer); n != 1 {
+		t.Fatalf("guide for Ben: %d bouquets", n)
+	}
+	if n := count("/api/v1/radio/bouquets", viewer); n != 0 {
+		t.Fatalf("radio for Ben (no radio bouquet allowed, not even all stations): %d", n)
+	}
+	if n := count("/api/v1/radio/bouquets", admin); n < 2 {
+		t.Fatalf("radio for the admin isn't filtered: %d", n)
+	}
+	// Changing Ben's PIN or name keeps the list.
+	e.json(t, "PATCH", "/api/v1/profiles/"+itoa(benID), `{"name":"Benjamin"}`, withProfile(admin), 200, nil)
+	if ben, _ = e.store.User(context.Background(), benID); len(ben.Bouquets) != 1 {
+		t.Fatalf("the list got lost on update: %+v", ben.Bouquets)
+	}
 }

@@ -50,7 +50,7 @@ func (h *Radio) radioBouquets(ctx context.Context) ([]webcontrol.Service, error)
 	}
 	// Every radio service, last; no name — the screen calls it "All radio
 	// stations" in its own language.
-	return append(out, webcontrol.Service{ServiceReference: webcontrol.RadioAll}), nil
+	return visibleBouquets(ctx, append(out, webcontrol.Service{ServiceReference: webcontrol.RadioAll})), nil
 }
 
 func (h *Radio) bouquets(w http.ResponseWriter, r *http.Request) {

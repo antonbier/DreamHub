@@ -237,6 +237,11 @@ var migrations = []string{
 		last_look   INTEGER NOT NULL
 	);
 
+	-- The bouquets a profile sees (docs/CHANNELHUB_PLAN.md, C5) as a JSON
+	-- list of bouquet references; empty means all. Prepared, no interface
+	-- sets it yet.
+	ALTER TABLE users ADD COLUMN bouquets TEXT NOT NULL DEFAULT '[]';
+
 	-- The channel-list backups DreamHub made before each change (through
 	-- the BouquetEditor plugin, which keeps the files on the box).
 	CREATE TABLE channel_backups (

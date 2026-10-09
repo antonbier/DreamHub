@@ -920,7 +920,7 @@ func (c *HTTPClient) get(ctx context.Context, path string) (io.ReadCloser, error
 	return io.NopCloser(bytes.NewReader(body)), nil
 }
 
-// coalescedGet dedupes concurrent identical GETs (docs/V1_PLAN.md, WP7):
+// coalescedGet dedupes concurrent identical GETs (docs/archive/V1_PLAN.md, WP7):
 // enigma2 serves WebControl single-threaded (ARCHITECTURE.md), so several
 // callers asking for the same path at once — dashboard tiles loading
 // together, the debounced search palette re-firing — only make the box

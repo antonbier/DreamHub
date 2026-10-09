@@ -21,7 +21,7 @@ import (
 )
 
 // Admin is AdminHub: DreamHub's runtime log level, journald's log viewer
-// and enigma2's crash logs (docs/V1_PLAN.md, WP6). Every route requires the
+// and enigma2's crash logs (docs/archive/V1_PLAN.md, WP6). Every route requires the
 // admin role.
 type Admin struct {
 	Store *store.Store

@@ -15,7 +15,7 @@ import (
 )
 
 // System is SystemHub: the change log, and backup/restore of DreamHub's own
-// state (docs/V1_PLAN.md, WP5). Device info and hub diagnostics are core
+// state (docs/archive/V1_PLAN.md, WP5). Device info and hub diagnostics are core
 // endpoints (GET /api/v1/deviceinfo, /api/v1/hubs) the frontend already
 // calls directly — nothing hub-specific to add for those.
 type System struct {
@@ -107,7 +107,7 @@ const backupVersion = 1
 // customized, non-secret setting plus the dashboard layout. Secrets and
 // passwords (API keys, the admin password) are never included — restoring
 // them from a file would mean the file itself could unlock the box, and
-// they're easy to re-enter once (docs/V1_PLAN.md, WP5).
+// they're easy to re-enter once (docs/archive/V1_PLAN.md, WP5).
 type backupFile struct {
 	Version    int              `json:"version"`
 	ExportedAt string           `json:"exportedAt"`

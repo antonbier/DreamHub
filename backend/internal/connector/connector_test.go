@@ -182,7 +182,7 @@ func TestSerienRecorder_RealReachabilityCheck(t *testing.T) {
 }
 
 // An optional plugin that isn't installed is a normal state with its own
-// explanation, never "check the connection" (docs/V1_PLAN.md, rule 1).
+// explanation, never "check the connection" (docs/archive/V1_PLAN.md, rule 1).
 func TestSerienRecorder_NotInstalled(t *testing.T) {
 	srv := httptest.NewServer(http.NotFoundHandler())
 	defer srv.Close()

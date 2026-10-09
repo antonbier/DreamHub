@@ -11,7 +11,7 @@ import (
 	"github.com/antonbier/DreamHub/backend/internal/webcontrol"
 )
 
-// Disabling and enabling a timer (decision D5, docs/V1_PLAN.md). The box's
+// Disabling and enabling a timer (decision D5, docs/archive/V1_PLAN.md). The box's
 // own /web/timerchange has a bug in its conflict path that leaves a timer
 // half-changed (ARCHITECTURE.md), so DreamHub doesn't use it: a timer is
 // taken out with /web/timerdelete and put back with /web/timeradd —

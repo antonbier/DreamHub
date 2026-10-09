@@ -28,7 +28,7 @@ func toNotificationView(n store.Notification) notificationView {
 	return notificationView{ID: n.ID, At: n.At.UTC().Format(time.RFC3339), Key: n.Key, Params: json.RawMessage(n.Params), Read: n.ReadAt != nil}
 }
 
-// handleNotifications answers the bell's inbox (docs/V1_PLAN.md, WP7:
+// handleNotifications answers the bell's inbox (docs/archive/V1_PLAN.md, WP7:
 // "Persisted notifications... inbox in the bell").
 func handleNotifications(d Deps) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
@@ -70,7 +70,7 @@ func handleMarkNotificationsRead(d Deps) http.HandlerFunc {
 	}
 }
 
-// handleEventsStream is the core event bus's live push (docs/V1_PLAN.md,
+// handleEventsStream is the core event bus's live push (docs/archive/V1_PLAN.md,
 // WP7: "WebSocket + a minimal event bus") — implemented as Server-Sent
 // Events rather than a real WebSocket: every event here only ever flows
 // server → client (a new notification, a log line), so SSE gets the same

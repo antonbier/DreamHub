@@ -51,7 +51,7 @@ The box keeps picon **sets** as subfolders of `/data/piconpool`, installed as pa
 
 ### Bouquets per profile: prepared, no interface
 
-On the TV there's one channel list for everyone, so hiding bouquets per profile has little use today (owner, 2026-10-08). It is **prepared, not built**: a profile can carry a list of allowed bouquets in the data model, and the bouquet lists the hubs serve go through one server-side filter that today lets everything through. The interface comes with a kids role (`docs/PROFILES_PLAN.md`, "Later"), where it matters.
+On the TV there's one channel list for everyone, so hiding bouquets per profile has little use today (owner, 2026-10-08). It is **prepared, not built**: a profile can carry a list of allowed bouquets in the data model, and the bouquet lists the hubs serve go through one server-side filter that today lets everything through. The interface comes with a kids role (`docs/archive/PROFILES_PLAN.md`, "Later"), where it matters.
 
 ### Who may
 

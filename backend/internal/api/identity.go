@@ -13,7 +13,7 @@ import (
 )
 
 // ProfileHeader carries a device's profile session token
-// (docs/PROFILES_PLAN.md: a header like everything else the frontend
+// (docs/archive/PROFILES_PLAN.md: a header like everything else the frontend
 // sends — no cookies, so no new CSRF surface).
 const ProfileHeader = "X-DreamHub-Profile"
 

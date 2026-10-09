@@ -10,7 +10,7 @@ import (
 	"github.com/antonbier/DreamHub/backend/internal/systemd"
 )
 
-// AdminHub's service watch: "detection, not automation" (docs/V1_PLAN.md,
+// AdminHub's service watch: "detection, not automation" (docs/archive/V1_PLAN.md,
 // WP7) — it notices a service of the box going down or coming back and
 // says so (the notification inbox, push if switched on), it never restarts
 // anything itself. A unit counts as down only once it reads "failed" on

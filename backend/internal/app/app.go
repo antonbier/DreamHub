@@ -131,7 +131,7 @@ type App struct {
 	Routes []api.Route
 	Level  *logging.Level
 	User   store.User
-	// Events is the core event bus (internal/events, docs/V1_PLAN.md WP7).
+	// Events is the core event bus (internal/events, docs/archive/V1_PLAN.md WP7).
 	// Poller isn't started here — cmd/dreamhub runs it as long as the
 	// process does; tests just use the Bus directly, no background polling.
 	Events *events.Bus

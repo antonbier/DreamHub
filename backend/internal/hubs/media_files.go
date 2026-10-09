@@ -17,7 +17,7 @@ import (
 	"github.com/antonbier/DreamHub/backend/internal/webcontrol"
 )
 
-// MediaHub's file operations (docs/V1_PLAN.md, WP4): rename, trash, restore,
+// MediaHub's file operations (docs/archive/V1_PLAN.md, WP4): rename, trash, restore,
 // empty — each a plan (PRINCIPLES.md, "Preview and confirm"), each refused
 // while the recording is being written or played ("never touch a file
 // that's currently being recorded or played"), checked at preview *and*

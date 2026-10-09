@@ -1,4 +1,4 @@
-// Package perm is DreamHub's permission model (docs/PROFILES_PLAN.md, P1):
+// Package perm is DreamHub's permission model (docs/archive/PROFILES_PLAN.md, P1):
 // code asks "may this user do X?", never "is this user an admin?". A role
 // is a named set of permissions defined here and nowhere else, so a new
 // role (a kids role, later) is one more entry in roles below — no hub
@@ -55,7 +55,7 @@ var roles = map[store.Role][]Perm{
 }
 
 // Switchable are the permissions an admin can grant or take away per
-// viewer profile (docs/PROFILES_PLAN.md: "a few, not a matrix").
+// viewer profile (docs/archive/PROFILES_PLAN.md: "a few, not a matrix").
 var Switchable = []Perm{TimersPlan, RecordingsManage}
 
 // Set is a user's effective permissions.

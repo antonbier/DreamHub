@@ -1,6 +1,6 @@
 // The settings menu's tabs in display order — the ids match
 // backend/internal/settings (Tab*), except "profiles", which holds only
-// hand-built panels (docs/PROFILES_PLAN.md). Shared by SettingsView.vue and
+// hand-built panels (docs/archive/PROFILES_PLAN.md). Shared by SettingsView.vue and
 // the search palette, which links a matching setting to its tab.
 export const SETTINGS_TABS = ['general', 'profiles', 'recordings', 'services', 'notifications', 'hubs', 'access', 'system'] as const
 

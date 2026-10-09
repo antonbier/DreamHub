@@ -1,7 +1,7 @@
 // Package autotimer talks to the AutoTimer plugin's own web API
 // (`/autotimer`, XML — see ARCHITECTURE.md, "AutoTimer web API"). The plugin
 // is optional: on a box without it the API answers 404, reported as
-// ErrNotInstalled, which is a normal state (docs/V1_PLAN.md, rule 1).
+// ErrNotInstalled, which is a normal state (docs/archive/V1_PLAN.md, rule 1).
 //
 // DreamHub only reads here: the configured AutoTimers and a dry run of what
 // they would create (`/autotimer/simulate`, confirmed side-effect free:

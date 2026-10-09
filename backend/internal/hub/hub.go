@@ -307,7 +307,7 @@ func (r *Registry) Navigation(statuses []Status, perms perm.Set, labels string) 
 		}
 		if g == GroupBottom {
 			// Diagnostics used to be its own core nav entry; it's now a tab
-			// inside SystemHub's screen (docs/V1_PLAN.md, WP6), matching
+			// inside SystemHub's screen (docs/archive/V1_PLAN.md, WP6), matching
 			// CONCEPT.md's "a diagnostics page in SystemHub".
 			sec.Items = append(sec.Items, NavItem{ID: "settings", Kind: "core", Label: "nav.settings", Icon: "settings", Path: "/settings"})
 		}

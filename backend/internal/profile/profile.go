@@ -1,5 +1,5 @@
 // Package profile manages DreamHub's profiles and the sessions that pick
-// one on a device (docs/PROFILES_PLAN.md, P2). Profiles are DreamHub's own
+// one on a device (docs/archive/PROFILES_PLAN.md, P2). Profiles are DreamHub's own
 // state, like settings, so changes are saved directly and written to the
 // change log rather than going through preview and confirm.
 //

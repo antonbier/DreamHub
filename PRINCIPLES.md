@@ -109,7 +109,7 @@ Covers things like the AI provider key, TMDB API key, webhook URLs, the API toke
 
 Preferences, settings, language, time zone setting and dashboards belong to a user in the data model from day one; every user has a **role**; a user can own **multiple dashboards**. The API carries a user context. v1 has exactly one user (an admin), one dashboard, and no switching UI for either.
 
-Building them is planned in [`docs/PROFILES_PLAN.md`](docs/PROFILES_PLAN.md). The rules that carry over to all code from now on:
+Building them is planned in [`docs/archive/PROFILES_PLAN.md`](docs/archive/PROFILES_PLAN.md). The rules that carry over to all code from now on:
 
 - **Check permissions, never roles.** Code asks "may this user do X?", not "is this user an admin?"; a role is a named permission set defined in one place. Adding a role later must not touch any hub.
 - **The server enforces, the UI only reflects.** Hiding a button is never the protection. A mutating route without a declared permission is admin-only, and a test makes sure every mutating route declares one.

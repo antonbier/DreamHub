@@ -65,7 +65,7 @@ func (t Tile) key() string {
 type Layout struct {
 	Tiles []Tile `json:"tiles"`
 	// FromTemplate: the profile hasn't made its own start page yet and sees
-	// the one an admin designed for its role (docs/PROFILES_PLAN.md, P4).
+	// the one an admin designed for its role (docs/archive/PROFILES_PLAN.md, P4).
 	FromTemplate bool `json:"fromTemplate,omitempty"`
 }
 

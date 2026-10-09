@@ -7,7 +7,7 @@ import (
 )
 
 // Notification is one persisted event from the core event bus
-// (docs/V1_PLAN.md, WP7): "detection, not automation" — a recording
+// (docs/archive/V1_PLAN.md, WP7): "detection, not automation" — a recording
 // started/finished, disk crossed a threshold, a hub's status changed.
 // Key+params, never finished text — translated client-side the same way
 // status.Problem is everywhere else.

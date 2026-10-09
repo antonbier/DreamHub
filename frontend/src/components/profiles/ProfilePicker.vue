@@ -1,5 +1,5 @@
 <!--
-  "Who's watching?" (docs/PROFILES_PLAN.md, P2): shown instead of the shell
+  "Who's watching?" (docs/archive/PROFILES_PLAN.md, P2): shown instead of the shell
   when the door is open but this device hasn't picked a profile (App.vue).
   A profile with a PIN asks for it; the choice is remembered on the device.
 -->

@@ -1,5 +1,5 @@
 <!--
-  TimerHub's real screen (ROADMAP.md, "v1 — hubs"; docs/V1_PLAN.md, WP3):
+  TimerHub's real screen (ROADMAP.md, "v1 — hubs"; docs/archive/V1_PLAN.md, WP3):
   every timer on the box, upcoming ones grouped by day in the display time
   zone, finished ones folded away below. Each row shows its state, where it
   came from (SerienRecorder/AutoTimer, read from the box's tags) and whether
@@ -13,7 +13,7 @@
   The AutoTimer section is read-only (decision D3): the plugin's own
   configuration, a dry run of what it would create, and a link to its own
   editor. The plugin is optional — without it the section is one quiet
-  line, and TimerHub itself stays fully available (docs/V1_PLAN.md, rule 1).
+  line, and TimerHub itself stays fully available (docs/archive/V1_PLAN.md, rule 1).
 -->
 <template>
   <div class="mx-auto max-w-content p-6 below-md:p-4">

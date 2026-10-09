@@ -1,5 +1,5 @@
 <!--
-  A profile's initial on its color (docs/PROFILES_PLAN.md: name and color,
+  A profile's initial on its color (docs/archive/PROFILES_PLAN.md: name and color,
   no photos). Decorative next to the name; the name itself is always shown
   as text too.
 -->

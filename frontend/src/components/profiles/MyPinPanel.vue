@@ -1,5 +1,5 @@
 <!--
-  The profile's own PIN (docs/PROFILES_PLAN.md): every profile can set,
+  The profile's own PIN (docs/archive/PROFILES_PLAN.md): every profile can set,
   change or remove it — except an admin's once other profiles exist, which
   the server refuses with profile_admin_pin_required.
 -->

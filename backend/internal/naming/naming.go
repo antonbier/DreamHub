@@ -2,7 +2,7 @@
 // season/episode, episode title — into a clean file name. Every name
 // suggestion source (the recording's own metadata, TMDB, the AI provider)
 // only supplies these Fields; the file name itself is always built here,
-// from one template and one sanitizer (decision D2, docs/V1_PLAN.md). The
+// from one template and one sanitizer (decision D2, docs/archive/V1_PLAN.md). The
 // AI in particular never writes a file name.
 package naming
 

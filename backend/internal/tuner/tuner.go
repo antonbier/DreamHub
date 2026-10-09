@@ -7,7 +7,7 @@
 // for a preview — better than "number of timers vs. number of tuners",
 // which is wrong both ways: one tuner records every channel of a
 // transponder at once, and a cable tuner can't record a satellite channel.
-// See docs/V1_PLAN.md, "Tuners".
+// See docs/archive/V1_PLAN.md, "Tuners".
 package tuner
 
 import (

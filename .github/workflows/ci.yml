@@ -1,10 +1,10 @@
 name: CI
 
-# docs/V1_PLAN.md, WP9: tests on every push, plus an ARM64 build and the
+# docs/archive/V1_PLAN.md, WP9: tests on every push, plus an ARM64 build and the
 # .deb, so a broken cross-compile or packaging step is caught immediately
 # rather than at the next manual deploy. Feed publishing (uploading the
 # .deb somewhere devices can `apt` from) is deferred — decision D4 in
-# docs/V1_PLAN.md hasn't been made yet; this only builds and uploads the
+# docs/archive/V1_PLAN.md hasn't been made yet; this only builds and uploads the
 # .deb as a workflow artifact.
 
 on:

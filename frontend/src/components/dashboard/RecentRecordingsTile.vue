@@ -1,5 +1,5 @@
 <!--
-  Built-in tile "Recent recordings" (docs/PROFILES_PLAN.md, P4): the newest
+  Built-in tile "Recent recordings" (docs/archive/PROFILES_PLAN.md, P4): the newest
   recordings, each one tap from watching in the browser (StreamHub). The
   same data as a custom tile over MediaHub's "recordings" source, newest
   first — with a look made for watching rather than tidying up.

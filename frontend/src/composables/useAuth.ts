@@ -1,7 +1,7 @@
 // Drives the login gate (App.vue), LoginScreen.vue and the profile picker
 // against GET /api/v1/whoami — see src/api/authState.ts for why the app
 // manages Basic Auth itself instead of the browser's native prompt, and
-// docs/PROFILES_PLAN.md for profiles.
+// docs/archive/PROFILES_PLAN.md for profiles.
 import { computed, ref } from 'vue'
 import { api, ApiError } from '@/api/client'
 import { authState, clearCredentials, setCredentials, setProfileToken } from '@/api/authState'

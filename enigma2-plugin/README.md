@@ -1,6 +1,6 @@
 # enigma2-plugin/
 
-The Enigma2 launcher plugin (docs/V1_PLAN.md, WP8). Python 2.7 — the only interpreter present on-device (see `ARCHITECTURE.md`). **Verified live on the reference box** (2026-09-25, CHANGELOG.md): installed through the `.deb`, it appears in the Plugin Browser with its translated description, and the screen renders the QR code and the backend status ("Backend läuft (v…)") — checked through the box's own screenshot endpoint and simulated remote keys.
+The Enigma2 launcher plugin (docs/archive/V1_PLAN.md, WP8). Python 2.7 — the only interpreter present on-device (see `ARCHITECTURE.md`). **Verified live on the reference box** (2026-09-25, CHANGELOG.md): installed through the `.deb`, it appears in the Plugin Browser with its translated description, and the screen renders the QR code and the backend status ("Backend läuft (v…)") — checked through the box's own screenshot endpoint and simulated remote keys.
 
 **v1 scope — a launcher, not a second UI** (same division of labor as the WebControl plugin: basic settings on the TV, everything else in the web UI):
 - Shows a **QR code** that opens DreamHub on a phone — no IP address to type. Rendered by the backend (`GET /api/v1/qr.png`, public/unauthenticated like `/api/v1/health` — the plugin needs it before any credentials exist), so the plugin itself needs no QR library and holds no logic.

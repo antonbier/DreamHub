@@ -73,7 +73,7 @@ type Deps struct {
 	// internal/hub/watcher.go's doc comment for what this is and isn't.
 	Watcher *hub.StatusWatcher
 	Store   *store.Store
-	// Events is the core event bus (internal/events, docs/V1_PLAN.md WP7):
+	// Events is the core event bus (internal/events, docs/archive/V1_PLAN.md WP7):
 	// the persisted notification feed and its live SSE stream.
 	Events *events.Bus
 	// Enrich adds posters, ratings and overviews to titles
@@ -164,7 +164,7 @@ func NewRouterWithRoutes(d Deps) (http.Handler, []Route) {
 	// it has any credentials, and must keep working when auth is enabled.
 	mux.HandleFunc("GET /api/v1/health", handleHealth(d))
 	// Public for the same reason health is: the Enigma2 launcher plugin
-	// (docs/V1_PLAN.md, WP8) shows this before any credentials exist, and
+	// (docs/archive/V1_PLAN.md, WP8) shows this before any credentials exist, and
 	// it encodes nothing secret — just the URL to open on a phone.
 	mux.HandleFunc("GET /api/v1/qr.png", handleQR(d))
 	for _, p := range d.Public {
@@ -252,7 +252,7 @@ func serverTimeZone() string {
 }
 
 // handleQR renders a QR code for the current origin as a PNG — used by the
-// Enigma2 launcher plugin (docs/V1_PLAN.md, WP8) so it needs no QR library
+// Enigma2 launcher plugin (docs/archive/V1_PLAN.md, WP8) so it needs no QR library
 // and holds no logic of its own, and by the web UI's onboarding wizard.
 // r.Host is exactly what a browser or the plugin already used to reach
 // this server, so the code always points somewhere that actually works —
@@ -480,7 +480,7 @@ func handlePutDashboard(d Deps) http.HandlerFunc {
 }
 
 // handleResetDashboard drops the profile's own start page, back to its
-// role's template (docs/PROFILES_PLAN.md, P4).
+// role's template (docs/archive/PROFILES_PLAN.md, P4).
 func handleResetDashboard(d Deps) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		layout, err := d.Dashboard.Reset(r.Context(), current(r))

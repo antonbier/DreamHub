@@ -126,7 +126,7 @@ function toggle() {
   }
 }
 
-// A hub's setup state is the admin's business (docs/PROFILES_PLAN.md, P3):
+// A hub's setup state is the admin's business (docs/archive/PROFILES_PLAN.md, P3):
 // a viewer doesn't see the dots, and a hub that can't work at all is left
 // out instead of shown greyed.
 const { can } = useAuth()

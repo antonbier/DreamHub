@@ -1,4 +1,4 @@
-// The core event bus's inbox (docs/V1_PLAN.md, WP7; CONCEPT.md,
+// The core event bus's inbox (docs/archive/V1_PLAN.md, WP7; CONCEPT.md,
 // "Notifications"): the persisted feed (GET /api/v1/notifications) kept
 // live via the SSE stream (GET /api/v1/events/stream, useEventStream.ts).
 // One shared connection for the whole app — started from App.vue once

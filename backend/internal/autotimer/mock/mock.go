@@ -1,6 +1,6 @@
 // Package mock implements autotimer.Client without a box: either with a
 // small example configuration, or — NotInstalled — like a box without the
-// plugin, so "optional plugin missing" is testable (docs/V1_PLAN.md, rule 1).
+// plugin, so "optional plugin missing" is testable (docs/archive/V1_PLAN.md, rule 1).
 package mock
 
 import (

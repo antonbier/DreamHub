@@ -1,6 +1,6 @@
 # packaging/
 
-Builds `dreamhub_<version>_<arch>.deb` (docs/V1_PLAN.md, WP9): the backend binary, its systemd unit, an avahi mDNS service file, and the Enigma2 launcher plugin (`../enigma2-plugin/`), in one installable package. Built automatically on every push by `.github/workflows/ci.yml` (both architectures, uploaded as the workflow artifact `dreamhub-deb`); released packages are attached to the GitHub releases.
+Builds `dreamhub_<version>_<arch>.deb` (docs/archive/V1_PLAN.md, WP9): the backend binary, its systemd unit, an avahi mDNS service file, and the Enigma2 launcher plugin (`../enigma2-plugin/`), in one installable package. Built automatically on every push by `.github/workflows/ci.yml` (both architectures, uploaded as the workflow artifact `dreamhub-deb`); released packages are attached to the GitHub releases.
 
 ```sh
 # from the repo root
@@ -31,13 +31,10 @@ Requires `go`, `msgfmt` (Debian/Ubuntu: `apt install gettext`) and `dpkg-deb`/`f
 
 ## Making a release
 
-1. Set `Version` in `backend/internal/api/router.go` and `PluginVersion` in `enigma2-plugin/src/__init__.py`; add the release to `CHANGELOG.md`.
-2. `npm run build` in `frontend/`, then `ARCH=arm64` and `ARCH=armhf` builds.
-3. Install the arm64 package on the reference box and run the self-test (System → Diagnostics) — all green before releasing.
-4. Tag `v<version>` and create the GitHub release with both packages attached.
+See [`docs/RELEASE.md`](../docs/RELEASE.md) — the checklist, including the build order that keeps the embedded web UI intact.
 
 ## What's still open (ROADMAP.md, "v1 — release & packaging")
 
-- An actual apt feed to publish to (decision D4 in `docs/V1_PLAN.md` — the package format doesn't depend on it)
+- An actual apt feed to publish to (decision D4 in `docs/archive/V1_PLAN.md` — the package format doesn't depend on it)
 - Uninstall/purge on the box (not run: the box keeps DreamHub installed)
 - MIPS packages (see above)

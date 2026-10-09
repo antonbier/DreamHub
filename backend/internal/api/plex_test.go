@@ -393,7 +393,7 @@ func TestPlex_FailoverToAnotherAddress(t *testing.T) {
 }
 
 // Every shown Plex library is a source for custom tiles: newest first, a
-// picture per item, "not seen yet" as a filter (docs/PROFILES_PLAN.md, P4).
+// picture per item, "not seen yet" as a filter (docs/archive/PROFILES_PLAN.md, P4).
 func TestPlex_LibrariesAreTileSources(t *testing.T) {
 	e := newEnv(t)
 	connectPlex(t, e)

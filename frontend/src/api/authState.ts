@@ -18,7 +18,7 @@
 import { reactive } from 'vue'
 
 const STORAGE_KEY = 'dreamhub.credentials'
-// The device's profile session (docs/PROFILES_PLAN.md): kept in
+// The device's profile session (docs/archive/PROFILES_PLAN.md): kept in
 // localStorage, unlike the door's password — "remember the profile on this
 // device" was the owner's choice. The token only picks a profile; it opens
 // nothing the door hasn't already opened.

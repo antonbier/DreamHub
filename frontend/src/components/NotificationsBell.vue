@@ -3,7 +3,7 @@
   parts: *current* issues, derived live from data already on hand (hub
   problems from the navigation store — the same ones the sidebar's status
   dots explain — and a clock-skew check); and *recent activity*, the core
-  event bus's real, persisted feed (docs/V1_PLAN.md, WP7 —
+  event bus's real, persisted feed (docs/archive/V1_PLAN.md, WP7 —
   GET /api/v1/notifications, kept live over SSE by
   stores/notifications.ts): recording started/finished, disk above 90%.
   Opening the panel marks everything read.

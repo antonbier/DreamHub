@@ -1,4 +1,4 @@
-// Package journald reads systemd's journal for AdminHub (docs/V1_PLAN.md,
+// Package journald reads systemd's journal for AdminHub (docs/archive/V1_PLAN.md,
 // WP6). The journal on the reference box is volatile — RAM-backed, lost on
 // every reboot (ARCHITECTURE.md, "journald is volatile") — so a Reader only
 // ever promises "since last boot", never real history.

@@ -2,7 +2,7 @@
 # Builds dreamhub_<version>_<arch>.deb: cross-compiles the backend, compiles
 # the Enigma2 plugin's .po files to .mo, assembles the file tree dpkg
 # expects, and runs dpkg-deb. See ROADMAP.md, "v1 — release & packaging"
-# and docs/V1_PLAN.md, WP9.
+# and docs/archive/V1_PLAN.md, WP9.
 #
 # Usage: [ARCH=arm64|armhf] packaging/build-deb.sh [output-dir]
 #

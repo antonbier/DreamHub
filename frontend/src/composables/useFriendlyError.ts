@@ -1,4 +1,4 @@
-// Errors in everyday words (docs/PROFILES_PLAN.md, P3): what went wrong as
+// Errors in everyday words (docs/archive/PROFILES_PLAN.md, P3): what went wrong as
 // the person in front of the screen understands it — "the box doesn't
 // answer", not "502 webcontrol_unavailable". The technical part (code,
 // request ID) stays available behind "Details" for whoever fixes it.

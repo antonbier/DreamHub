@@ -10,7 +10,7 @@ import (
 	"github.com/antonbier/DreamHub/backend/internal/plex"
 )
 
-// Plex rows for the start page (docs/PROFILES_PLAN.md, P4): every shown
+// Plex rows for the start page (docs/archive/PROFILES_PLAN.md, P4): every shown
 // library is a view source for custom tiles — "recently added", "not seen
 // yet", shown as a row of posters. From the cache, like Search, so a row
 // stays filled while the server is off.

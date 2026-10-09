@@ -593,7 +593,7 @@ export interface ViewResult {
 
 export interface DashboardLayout {
   tiles: DashboardTile[]
-  // Not customized yet: the role's template (docs/PROFILES_PLAN.md, P4).
+  // Not customized yet: the role's template (docs/archive/PROFILES_PLAN.md, P4).
   fromTemplate?: boolean
 }
 
@@ -633,7 +633,7 @@ export interface ChangeEntry {
 
 // backend/internal/hubs's backupFile, from GET /api/v1/system/backup and the
 // body POST /api/v1/system/backup/restore expects. Never carries secrets or
-// passwords (docs/V1_PLAN.md, WP5).
+// passwords (docs/archive/V1_PLAN.md, WP5).
 export interface BackupFile {
   version: number
   exportedAt: string // RFC3339, UTC
@@ -662,7 +662,7 @@ export interface LogLevel {
 }
 
 // backend/internal/api's notificationView — the core event bus's feed
-// (docs/V1_PLAN.md, WP7), from GET /api/v1/notifications and pushed live
+// (docs/archive/V1_PLAN.md, WP7), from GET /api/v1/notifications and pushed live
 // over GET /api/v1/events/stream. key is an i18n key, params its
 // arguments — never finished text, translated client-side like
 // status.Problem everywhere else.

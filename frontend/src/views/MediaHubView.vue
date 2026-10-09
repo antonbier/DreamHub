@@ -1,5 +1,5 @@
 <!--
-  MediaHub's real screen (ROADMAP.md, "v1 — hubs"; docs/V1_PLAN.md, WP4).
+  MediaHub's real screen (ROADMAP.md, "v1 — hubs"; docs/archive/V1_PLAN.md, WP4).
 
   Recordings are browsed folder by folder (GET /api/v1/media/movies?dir=) —
   the box keeps most of them in subfolders (SerienRecorder's series folders,
@@ -354,7 +354,7 @@ const loading = ref(true)
 const loadFailed = ref(false)
 const notice = ref('')
 // Renaming and the trash need the box's files and the profile's permission
-// (a viewer just watches; docs/PROFILES_PLAN.md).
+// (a viewer just watches; docs/archive/PROFILES_PLAN.md).
 const { can } = useAuth()
 const fileOpsAvailable = computed(() => can('recordings.manage') && (folder.value?.fileOps.available ?? false))
 

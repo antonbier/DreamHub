@@ -34,11 +34,11 @@ type Timer struct {
 	Plans *plan.Service
 	Now   func() time.Time
 	// AT is the AutoTimer plugin's API; nil or "not installed" just hides
-	// that section (the plugin is optional, docs/V1_PLAN.md rule 1).
+	// that section (the plugin is optional, docs/archive/V1_PLAN.md rule 1).
 	AT autotimer.Client
 	// Owners records which profile made a timer through DreamHub, so a
 	// profile without perm.TimersManage can delete or switch off its own
-	// timers but no one else's (docs/PROFILES_PLAN.md). nil: nobody owns
+	// timers but no one else's (docs/archive/PROFILES_PLAN.md). nil: nobody owns
 	// anything.
 	Owners TimerOwners
 }

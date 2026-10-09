@@ -1,5 +1,5 @@
 <!--
-  SystemHub's real screen (docs/V1_PLAN.md, WP5/WP6): device info
+  SystemHub's real screen (docs/archive/V1_PLAN.md, WP5/WP6): device info
   (GET /api/v1/deviceinfo), the change log
   (GET /api/v1/changes) with a client-side filter, and — as a second tab —
   diagnostics (GET /api/v1/hubs), which used to be its own core route.

@@ -1,5 +1,5 @@
 <!--
-  Managing the household's profiles (docs/PROFILES_PLAN.md) — admin only
+  Managing the household's profiles (docs/archive/PROFILES_PLAN.md) — admin only
   (perm "profiles"). A profile is a person with a role; a viewer can have
   two switches flipped away from the role's defaults. Saved directly, like
   settings: DreamHub's own state, recorded in the change log.

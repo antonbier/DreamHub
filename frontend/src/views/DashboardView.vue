@@ -134,7 +134,7 @@ const WIDTH_CLASSES: Record<number, string> = {
 const { t } = useI18n()
 const { me, can } = useAuth()
 // /?template=1: an admin designs the viewers' start page
-// (docs/PROFILES_PLAN.md, P4) — in edit mode from the start.
+// (docs/archive/PROFILES_PLAN.md, P4) — in edit mode from the start.
 const route = useRoute()
 const template = route.query.template === '1' && can('profiles')
 const dash = useDashboard(template)

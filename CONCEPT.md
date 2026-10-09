@@ -53,7 +53,7 @@ From the requirements the core derives each hub's **status**: *available*, *degr
 | **SeriesHub** | SerienRecorder: episodes on disk, missing episodes, upcoming | v1 (basic) |
 | **SystemHub** | Device info, diagnostics, change log — for every user (backup/restore moved to Settings → System, 2026-10-05) | v1 (basic) |
 | **AdminHub** | Logs (v1), service status, terminal (later) — admin role only | v1 (logs) |
-| **ControlHub** | Web remote, screenshot, power | v1 — pulled forward from v1.1: verifying the Enigma2 plugin (WP8) needed a real screenshot/remote-control loop anyway, and GuideHub's "switch to this channel now" needs it too (`docs/V1_PLAN.md`) |
+| **ControlHub** | Web remote, screenshot, power | v1 — pulled forward from v1.1: verifying the Enigma2 plugin (WP8) needed a real screenshot/remote-control loop anyway, and GuideHub's "switch to this channel now" needs it too (`docs/archive/V1_PLAN.md`) |
 | **RadioHub** | Radio services, now playing, radio timers | v1.1 (built early, 2026-10-04) |
 | **PlexHub** ("Plex Mediathek") | A Plex server's films and series (tiles or list), watched state in Plex, play on the box — optional, cached while the server is off | built early, 2026-10-05 |
 | **ChannelHub** | Bouquets edited on the phone through the BouquetEditor plugin's API (decided 2026-10-08, [`docs/CHANNELHUB_PLAN.md`](docs/CHANNELHUB_PLAN.md)), finding new channels, a channel check, picon sets | v1.1 |
@@ -143,7 +143,7 @@ Every hub that isn't fully *available* shows why and how to fix it — e.g. "Ser
 
 Prepared in the data model from day one: preferences, language, time zone setting and dashboards belong to a user, every user has a **role**, and the API carries a user context. v1 has a single user, who is an admin, and no profile switching in the UI.
 
-**Next (decided 2026-10-07, planned in [`docs/PROFILES_PLAN.md`](docs/PROFILES_PLAN.md), #39):** profiles for each person in the household, picked Netflix-style with an optional PIN (mandatory for admins once a second profile exists), behind the unchanged Basic Auth "door". Two roles: *admin* and *viewer* (watching, guide, remote, planning recordings — no deleting, no system or settings beyond personal ones); a kids role may follow. Roles are permission sets, plus a few per-profile switches, not a full permission matrix. Viewers get an admin-designed template start page they can customize deliberately and reset.
+**Next (decided 2026-10-07, planned in [`docs/archive/PROFILES_PLAN.md`](docs/archive/PROFILES_PLAN.md), #39):** profiles for each person in the household, picked Netflix-style with an optional PIN (mandatory for admins once a second profile exists), behind the unchanged Basic Auth "door". Two roles: *admin* and *viewer* (watching, guide, remote, planning recordings — no deleting, no system or settings beyond personal ones); a kids role may follow. Roles are permission sets, plus a few per-profile switches, not a full permission matrix. Viewers get an admin-designed template start page they can customize deliberately and reset.
 
 ## Internationalization
 

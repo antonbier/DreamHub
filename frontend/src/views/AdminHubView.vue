@@ -1,5 +1,5 @@
 <!--
-  AdminHub's real screen (docs/V1_PLAN.md, WP6): the box's services with
+  AdminHub's real screen (docs/archive/V1_PLAN.md, WP6): the box's services with
   restart through preview (ServicesPanel.vue), DreamHub's own runtime log
   level, a journald log viewer (bounded, filtered server-side — the journal
   itself is the box's whole RAM buffer since boot, ARCHITECTURE.md,

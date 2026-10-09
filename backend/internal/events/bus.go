@@ -1,4 +1,4 @@
-// Package events is DreamHub's core event bus (docs/V1_PLAN.md, WP7):
+// Package events is DreamHub's core event bus (docs/archive/V1_PLAN.md, WP7):
 // "detection, not automation" — DreamHub notices things happening on the
 // box (a recording started or finished, disk crossed a threshold) by
 // polling the same WebControl endpoints every hub already uses, not by

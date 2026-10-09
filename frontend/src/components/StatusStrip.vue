@@ -38,7 +38,7 @@ import { useDisplayTimeZone } from '@/composables/useDisplayTimeZone'
 
 const { t } = useI18n()
 const status = useDeviceStatus()
-// The clock and hub problems are the admin's to fix (docs/PROFILES_PLAN.md).
+// The clock and hub problems are the admin's to fix (docs/archive/PROFILES_PLAN.md).
 const admin = computed(() => useAuth().can('settings.global'))
 const { timeZone: displayTimeZone } = useDisplayTimeZone()
 onMounted(status.checkClock)

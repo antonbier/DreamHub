@@ -130,7 +130,7 @@ var migrations = []string{
 	);
 	`,
 	`
-	-- The core event bus's persisted feed (docs/V1_PLAN.md, WP7):
+	-- The core event bus's persisted feed (docs/archive/V1_PLAN.md, WP7):
 	-- detection, not automation — recording.started/finished,
 	-- disk.aboveThreshold, hub.statusChanged. No user_id: v1 has exactly
 	-- one user and every event here is system-detected, never a user
@@ -182,7 +182,7 @@ var migrations = []string{
 	);
 	`,
 	`
-	-- Profiles (docs/PROFILES_PLAN.md): an optional PIN (bcrypt), a color
+	-- Profiles (docs/archive/PROFILES_PLAN.md): an optional PIN (bcrypt), a color
 	-- for the picker, and the admin's per-profile permission switches as a
 	-- JSON object {"<perm>": true|false}. role 'user' is the viewer role.
 	ALTER TABLE users ADD COLUMN pin_hash TEXT NOT NULL DEFAULT '';
@@ -212,7 +212,7 @@ var migrations = []string{
 	);
 	`,
 	`
-	-- The start page an admin designs for a role (docs/PROFILES_PLAN.md,
+	-- The start page an admin designs for a role (docs/archive/PROFILES_PLAN.md,
 	-- P4): a profile of that role that hasn't customized its own sees it.
 	CREATE TABLE dashboard_templates (
 		role       TEXT PRIMARY KEY,

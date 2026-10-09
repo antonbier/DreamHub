@@ -126,7 +126,7 @@ First release. Packages: `dreamhub_0.1.0_arm64.deb` (Dreambox One/Two — tested
 ### Development history before the release
 
 #### Added (ControlHub, pulled forward from v1.1)
-- While visually verifying WP8's Enigma2 plugin, found the WebInterface plugin's real screenshot (`/screenshot`, native `ePixmap` capture) and remote-control (`/web/remotecontrol`, `/web/zap`, `/web/powerstate`) endpoints — genuinely useful beyond that one test, so ControlHub (originally scoped for v1.1) was built now instead of later (decision D8, `docs/V1_PLAN.md`).
+- While visually verifying WP8's Enigma2 plugin, found the WebInterface plugin's real screenshot (`/screenshot`, native `ePixmap` capture) and remote-control (`/web/remotecontrol`, `/web/zap`, `/web/powerstate`) endpoints — genuinely useful beyond that one test, so ControlHub (originally scoped for v1.1) was built now instead of later (decision D8, `docs/archive/V1_PLAN.md`).
 - `webcontrol.Client` gains `Screenshot`, `SendKey`, `Zap`, `InStandby`. `GET`/`POST /api/v1/control/*` (`internal/hubs/control.go`) exposes them as direct, immediate actions — not preview-and-confirm, since a virtual remote is inherently a live input device, not a durable data mutation.
 - `ControlHubView.vue`: a live screenshot with manual/auto refresh, a standby banner with a wake button, and a virtual remote pad. GuideHub gets a "switch now" button on whatever's airing right now, calling ControlHub's zap directly.
 
@@ -162,8 +162,8 @@ First release. Packages: `dreamhub_0.1.0_arm64.deb` (Dreambox One/Two — tested
 - Delete timers through preview-and-confirm (`POST /api/v1/timers/delete/plan`). The preview warns when the timer is recording right now, since deleting it stops the recording.
 - Conflict warnings are now a transponder- and delivery-system-aware estimate (`internal/tuner`), and multi-tuner, FBC and mixed sat/cable boxes are covered by tests. On a single tuner, two channels on the same transponder are no longer flagged. The duplicate warning follows the box's own rule (same channel, same start).
 - Optional box login (Settings → WebControl) for boxes that enforce auth for DreamHub. It's used for SerienRecorder's API too. A `401` shows as "asks for a password" instead of "unreachable".
-- A SerienRecorder that isn't installed now shows as `not_installed` with an install hint instead of a connection problem. Optional plugins never break DreamHub (`docs/V1_PLAN.md`).
-- `docs/V1_PLAN.md`: the plan for v1 (work packages, open decisions, the tuner proposal).
+- A SerienRecorder that isn't installed now shows as `not_installed` with an install hint instead of a connection problem. Optional plugins never break DreamHub (`docs/archive/V1_PLAN.md`).
+- `docs/archive/V1_PLAN.md`: the plan for v1 (work packages, open decisions, the tuner proposal).
 
 #### Added / fixed (v1 plan, WP4: MediaHub files)
 - MediaHub browses **every** recording folder. Before, only the top folder was visible (36 of 773 recordings on the reference box), because the box crashes on the subfolder part of `/web/movielist` without an explicit `dirname`.

@@ -1,6 +1,6 @@
 <!--
   ControlHub (CONCEPT.md: "Web remote, message to TV, screenshot, power"),
-  pulled forward from v1.1 into v1 (docs/V1_PLAN.md) — verifying WP8's
+  pulled forward from v1.1 into v1 (docs/archive/V1_PLAN.md) — verifying WP8's
   Enigma2 plugin needed a real screenshot/remote-control loop anyway, and
   GuideHub's "switch to this channel now" needs it too. Every action here
   is direct and immediate, not preview-and-confirm (PRINCIPLES.md): a

@@ -10,7 +10,7 @@ import (
 )
 
 // Role is a profile's role. What a role may do is defined in internal/perm,
-// not here (docs/PROFILES_PLAN.md: "Check permissions, never roles").
+// not here (docs/archive/PROFILES_PLAN.md: "Check permissions, never roles").
 type Role string
 
 const (

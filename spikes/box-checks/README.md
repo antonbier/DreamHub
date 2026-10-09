@@ -5,7 +5,7 @@ Read-only scripts that collect what can only be learned on the reference box, so
 | Script | For | Collects |
 |---|---|---|
 | [`channelhub.sh`](channelhub.sh) | ChannelHub (#26) | Channel counts for the references the backend uses (all TV/radio, providers, bouquet roots), a provider's and a bouquet's listing from WebControl and from BouquetEditor, the BouquetEditor plugin's Python source as `/tmp/bouqueteditor-src.tgz` (positions, backup, restore read instead of tried), the reload endpoint, picon sets on disk and in the feed |
-| [`../adscan/phase0.sh`](../adscan/phase0.sh) | AdScan (#44) | FFmpeg build, `.ts.ap`/`.ts.cuts` layout, cut-list and "seen" handling in Enigma2 and AdvancedMovieSelection, timings |
+| [`../adscan/phase0.sh`](../adscan/phase0.sh) | AdScan (#44), trimming (#27) | FFmpeg build, `.ts.ap`/`.ts.cuts` layout, cut-list and "seen" handling in Enigma2 and AdvancedMovieSelection, timings, a test cut into `/tmp` (to play on the TV) |
 
 ## A session with the box
 

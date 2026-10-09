@@ -115,4 +115,21 @@ timed $LOW ffmpeg -nostdin -v error -i "$REC" -t 600 -map 0:a:0 -vn -sn -ac 1 -a
 section "timing: read 500 MB sequentially (disk speed for whole-file layers)"
 timed $LOW dd if="$REC" of=/dev/null bs=1M count=500
 
+section "trimming (#27): concat cut with in/out points, into /tmp only"
+# The recording is only read. Keeps 0–30 s and 60–90 s of the stream's own
+# clock (in/out points are stream timestamps, not seconds from the start).
+start=$(ffmpeg -nostdin -v info -skip_frame nokey -i "$REC" -map 0:v:0 -frames:v 1 -vf showinfo -vsync passthrough -f null - 2>&1 |
+    grep -o 'pts_time:[0-9.]*' | head -1 | cut -d: -f2)
+echo "first keyframe at stream time $start"
+if [ -n "$start" ]; then
+    list=/tmp/adscan-trim.list
+    printf "ffconcat version 1.0\nfile '%s'\ninpoint %s\noutpoint %s\nfile '%s'\ninpoint %s\noutpoint %s\n" \
+        "$REC" "$start" "$(python -c "print($start+30)")" "$REC" "$(python -c "print($start+60)")" "$(python -c "print($start+90)")" > $list
+    rm -f /tmp/adscan-trim.ts
+    timed $LOW ffmpeg -nostdin -v error -f concat -safe 0 -i $list -map 0:v -map 0:a -map '0:s?' -c copy -f mpegts -n /tmp/adscan-trim.ts
+    ls -l /tmp/adscan-trim.ts
+    ffmpeg -nostdin -v info -i /tmp/adscan-trim.ts -map 0 -c copy -f null - 2>&1 | grep -e 'Duration' -e 'Stream #' | head -12
+    echo "(play /tmp/adscan-trim.ts on the TV to check the seam at 30 s, then delete it)"
+fi
+
 section "done"

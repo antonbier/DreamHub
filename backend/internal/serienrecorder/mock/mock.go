@@ -11,7 +11,11 @@ import (
 )
 
 // Client is a serienrecorder.Client backed by in-memory fixture data.
-type Client struct{}
+type Client struct {
+	// Shift moves the upcoming episodes' times (seconds), along with the
+	// webcontrol mock's fixture day (DREAMHUB_MOCK_DATE).
+	Shift int64
+}
 
 var _ serienrecorder.Client = (*Client)(nil)
 
@@ -35,8 +39,8 @@ func (*Client) Markers(ctx context.Context) ([]serienrecorder.Marker, error) {
 	}, nil
 }
 
-func (*Client) UpcomingEpisodes(ctx context.Context) ([]serienrecorder.UpcomingEpisode, error) {
-	return []serienrecorder.UpcomingEpisode{
+func (c *Client) UpcomingEpisodes(ctx context.Context) ([]serienrecorder.UpcomingEpisode, error) {
+	list := []serienrecorder.UpcomingEpisode{
 		{
 			Series: "Gute Zeiten, schlechte Zeiten", Title: "Fehler der Vergangenheit",
 			Channel: "RTL Television", ServiceReference: "1:0:1:2EE3:441:1:C00000:0:0:0:",
@@ -52,7 +56,11 @@ func (*Client) UpcomingEpisodes(ctx context.Context) ([]serienrecorder.UpcomingE
 			Channel: "Das Erste HD", ServiceReference: "1:0:19:283D:3FB:1:C00000:0:0:0:",
 			Season: "2026", Episode: "31", StartTime: 1790626500, FSID: "tatort",
 		},
-	}, nil
+	}
+	for k := range list {
+		list[k].StartTime += c.Shift
+	}
+	return list, nil
 }
 
 func (*Client) SeriesInfo(ctx context.Context, wlid, fsid string) (*serienrecorder.SeriesInfo, error) {
@@ -61,4 +69,23 @@ func (*Client) SeriesInfo(ctx context.Context, wlid, fsid string) (*serienrecord
 			Description: "Die Krimireihe der ARD mit wechselnden Ermittlerteams.", Cast: []string{"Axel Milberg (Klaus Borowski)"}}, nil
 	}
 	return nil, nil
+}
+
+// Absent is a box without SerienRecorder: every call fails the way the
+// real client does when the plugin's API isn't there.
+type Absent struct{}
+
+var _ serienrecorder.Client = Absent{}
+
+func (Absent) Info(context.Context) (*serienrecorder.Info, error) {
+	return nil, serienrecorder.ErrNotInstalled
+}
+func (Absent) Markers(context.Context) ([]serienrecorder.Marker, error) {
+	return nil, serienrecorder.ErrNotInstalled
+}
+func (Absent) UpcomingEpisodes(context.Context) ([]serienrecorder.UpcomingEpisode, error) {
+	return nil, serienrecorder.ErrNotInstalled
+}
+func (Absent) SeriesInfo(context.Context, string, string) (*serienrecorder.SeriesInfo, error) {
+	return nil, serienrecorder.ErrNotInstalled
 }

@@ -16,6 +16,9 @@ import (
 // with the repository, broadcasts aren't ours to redistribute). Without one
 // the mock box has no tuner to stream from.
 func (c *Client) LiveStream(ctx context.Context, serviceReference string) (io.ReadCloser, error) {
+	if err := c.disturb(ctx); err != nil {
+		return nil, err
+	}
 	c.mu.Lock()
 	file := c.StreamFile
 	c.LastStreamed = serviceReference
@@ -28,6 +31,9 @@ func (c *Client) LiveStream(ctx context.Context, serviceReference string) (io.Re
 
 // RecordingFile serves a recording from FS (Range ignored: always whole).
 func (c *Client) RecordingFile(ctx context.Context, path, rangeHeader string) (*webcontrol.FileResponse, error) {
+	if err := c.disturb(ctx); err != nil {
+		return nil, err
+	}
 	if !strings.HasSuffix(path, ".ts") {
 		return nil, webcontrol.ErrNotFound
 	}

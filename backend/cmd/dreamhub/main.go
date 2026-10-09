@@ -28,6 +28,7 @@ import (
 	"net/http"
 	"os"
 	"os/exec"
+	"time"
 
 	"github.com/antonbier/DreamHub/backend/internal/ai"
 	aimock "github.com/antonbier/DreamHub/backend/internal/ai/mock"
@@ -110,7 +111,25 @@ func run(logger *slog.Logger, level *logging.Level) error {
 		services = systemd.Exec{}
 		logger.Info("webcontrol client mode", "mode", "live", "url", cfg.WebControlURL, "deviceWrites", cfg.EnableDeviceWrites)
 	default:
+		// DREAMHUB_MOCK_DATE (YYYY-MM-DD) moves the fixture evening to a
+		// real day, for working in the browser on today's evening, or on
+		// a day the clocks change (mock.SetDay must run before mock.New).
+		var dayShift time.Duration
+		if s := os.Getenv("DREAMHUB_MOCK_DATE"); s != "" {
+			if day, err := time.Parse("2006-01-02", s); err == nil {
+				before := mock.Evening
+				mock.SetDay(day)
+				dayShift = mock.Evening.Sub(before)
+			} else {
+				logger.Warn("DREAMHUB_MOCK_DATE ignored, not YYYY-MM-DD", "value", s)
+			}
+		}
 		m := mock.New()
+		if dayShift != 0 {
+			// The fixture evening moved to a real day, so "now" should
+			// follow the wall clock too, not stay pinned at 21:10.
+			m.Now = time.Now
+		}
 		// A real MPEG-TS file to "stream live" in mock mode (StreamHub);
 		// none ships with the repository.
 		m.StreamFile = os.Getenv("DREAMHUB_MOCK_STREAM")
@@ -118,9 +137,29 @@ func run(logger *slog.Logger, level *logging.Level) error {
 		if b, err := os.ReadFile(m.StreamFile); m.StreamFile != "" && err == nil {
 			m.FS.Put(mock.Root+"20260923 2015 - ZDF HD - Stream sample.ts", string(b))
 		}
+		// DREAMHUB_MOCK_CHAOS makes the mock box behave like a busy real
+		// one ("slow") or an unreliable one ("flaky"); see chaos.go for
+		// why that catches bugs an instant mock never would.
+		switch os.Getenv("DREAMHUB_MOCK_CHAOS") {
+		case "slow":
+			m.Chaos = mock.Slow()
+		case "flaky":
+			m.Chaos = mock.Flaky()
+		}
+		// DREAMHUB_MOCK_RECORDING=1 starts the mock box with a recording
+		// already running, like the real reference box right now.
+		if os.Getenv("DREAMHUB_MOCK_RECORDING") == "1" {
+			m.RecordNow(time.Now())
+		}
 		wc = m
 		recFS = m.FS
-		sr = srmock.New()
+		// DREAMHUB_MOCK_SR=absent simulates a box without SerienRecorder
+		// installed, for testing the "plugin not there" path.
+		if os.Getenv("DREAMHUB_MOCK_SR") == "absent" {
+			sr = srmock.Absent{}
+		} else {
+			sr = &srmock.Client{Shift: int64(dayShift.Seconds())}
+		}
 		at = atmock.New()
 		aiClient = aimock.New()
 		tmdbClient = tmdbmock.New()

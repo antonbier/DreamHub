@@ -22,6 +22,9 @@ type editorState struct {
 
 // Bouquets lists the TV bouquets.
 func (c *Client) Bouquets(ctx context.Context) ([]webcontrol.Service, error) {
+	if err := c.disturb(ctx); err != nil {
+		return nil, err
+	}
 	c.mu.Lock()
 	if c.tvBouquets != nil {
 		out := append([]webcontrol.Service(nil), c.tvBouquets...)
@@ -34,6 +37,9 @@ func (c *Client) Bouquets(ctx context.Context) ([]webcontrol.Service, error) {
 
 // Services lists a bouquet's entries (or any other list).
 func (c *Client) Services(ctx context.Context, bouquetRef string) ([]webcontrol.Service, error) {
+	if err := c.disturb(ctx); err != nil {
+		return nil, err
+	}
 	c.mu.Lock()
 	if list, ok := c.entries[bouquetRef]; ok {
 		out := append([]webcontrol.Service(nil), list...)
@@ -52,6 +58,9 @@ func (c *Client) Services(ctx context.Context, bouquetRef string) ([]webcontrol.
 // editable makes sure the bouquet lists and the bouquet's entries are
 // copies the mock can change. Called without the lock held.
 func (c *Client) editable(ctx context.Context, bouquetRef string) error {
+	if err := c.disturb(ctx); err != nil {
+		return err
+	}
 	tv, _ := c.Bouquets(ctx)
 	radio, _ := c.Services(ctx, webcontrol.RadioRoot)
 	var list []webcontrol.Service
@@ -95,6 +104,9 @@ func indexOf(list []webcontrol.Service, ref string) int {
 }
 
 func (c *Client) EditorBackup(ctx context.Context, filename string) error {
+	if err := c.disturb(ctx); err != nil {
+		return err
+	}
 	if err := c.failing("backup"); err != nil {
 		return err
 	}
@@ -116,6 +128,9 @@ func (c *Client) EditorBackup(ctx context.Context, filename string) error {
 }
 
 func (c *Client) EditorRestore(ctx context.Context, filename string) error {
+	if err := c.disturb(ctx); err != nil {
+		return err
+	}
 	if err := c.failing("restore"); err != nil {
 		return err
 	}
@@ -144,6 +159,9 @@ func bouquetFile(name string, radio bool) string {
 }
 
 func (c *Client) AddBouquet(ctx context.Context, name string, radio bool) error {
+	if err := c.disturb(ctx); err != nil {
+		return err
+	}
 	if err := c.failing("addbouquet"); err != nil {
 		return err
 	}
@@ -163,6 +181,9 @@ func (c *Client) AddBouquet(ctx context.Context, name string, radio bool) error 
 }
 
 func (c *Client) RemoveBouquet(ctx context.Context, bouquetRef string, radio bool) error {
+	if err := c.disturb(ctx); err != nil {
+		return err
+	}
 	if err := c.failing("removebouquet"); err != nil {
 		return err
 	}
@@ -185,6 +206,9 @@ func (c *Client) RemoveBouquet(ctx context.Context, bouquetRef string, radio boo
 }
 
 func (c *Client) RenameBouquet(ctx context.Context, bouquetRef, newName string, radio bool) error {
+	if err := c.disturb(ctx); err != nil {
+		return err
+	}
 	if err := c.failing("renamebouquet"); err != nil {
 		return err
 	}
@@ -220,6 +244,9 @@ func (c *Client) insert(bouquetRef string, s webcontrol.Service, beforeRef strin
 }
 
 func (c *Client) AddToBouquet(ctx context.Context, bouquetRef, ref, beforeRef, name string) error {
+	if err := c.disturb(ctx); err != nil {
+		return err
+	}
 	if err := c.failing("addservicetobouquet"); err != nil {
 		return err
 	}
@@ -233,6 +260,9 @@ func (c *Client) AddToBouquet(ctx context.Context, bouquetRef, ref, beforeRef, n
 }
 
 func (c *Client) RemoveFromBouquet(ctx context.Context, bouquetRef, ref string) error {
+	if err := c.disturb(ctx); err != nil {
+		return err
+	}
 	if err := c.failing("removeservice"); err != nil {
 		return err
 	}
@@ -251,6 +281,9 @@ func (c *Client) RemoveFromBouquet(ctx context.Context, bouquetRef, ref string) 
 }
 
 func (c *Client) MoveInBouquet(ctx context.Context, bouquetRef, ref string, position int, radio bool) error {
+	if err := c.disturb(ctx); err != nil {
+		return err
+	}
 	if err := c.failing("moveservice"); err != nil {
 		return err
 	}
@@ -274,6 +307,9 @@ func (c *Client) MoveInBouquet(ctx context.Context, bouquetRef, ref string, posi
 }
 
 func (c *Client) RenameInBouquet(ctx context.Context, bouquetRef, ref, beforeRef, newName string, radio bool) error {
+	if err := c.disturb(ctx); err != nil {
+		return err
+	}
 	if err := c.failing("renameservice"); err != nil {
 		return err
 	}
@@ -292,6 +328,9 @@ func (c *Client) RenameInBouquet(ctx context.Context, bouquetRef, ref, beforeRef
 }
 
 func (c *Client) AddMarker(ctx context.Context, bouquetRef, name, beforeRef string) error {
+	if err := c.disturb(ctx); err != nil {
+		return err
+	}
 	if err := c.failing("addmarkertobouquet"); err != nil {
 		return err
 	}

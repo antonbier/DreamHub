@@ -67,6 +67,8 @@ type Client struct {
 	// LastPlayStartMs is the resume position the last PlayMovie call asked
 	// the plugin to seek to (0: played from the start).
 	LastPlayStartMs int64
+	// Chaos, when set, makes calls slow and sometimes fail (chaos.go).
+	Chaos *Chaos
 	// screen is the simulated on-screen state Screenshot renders (screen.go).
 	screen screen
 }
@@ -104,11 +106,47 @@ func recordingFixtures() map[string]string {
 
 var _ webcontrol.Client = (*Client)(nil)
 
-// Evening is the day the fixture timers are on (2026-09-23, Europe/Rome).
+// Evening is the day the fixture timers are on (2026-09-23, Europe/Rome);
+// SetDay moves them (DREAMHUB_MOCK_DATE).
 var Evening = time.Date(2026, 9, 23, 0, 0, 0, 0, time.FixedZone("CEST", 2*60*60))
 
+// at is a wall-clock time on the fixture day — by the clock, not by
+// adding hours to midnight, so a day with a clock change keeps 20:15 at
+// 20:15.
 func at(h, m int) int64 {
-	return Evening.Add(time.Duration(h)*time.Hour + time.Duration(m)*time.Minute).Unix()
+	return time.Date(Evening.Year(), Evening.Month(), Evening.Day(), h, m, 0, 0, Evening.Location()).Unix()
+}
+
+// SetDay moves the fixture day (timers, the guide, now/next) to day's date
+// in Europe/Rome, the reference box's zone — for working in the browser on
+// today's evening, or on a day the clocks change. Call before New.
+func SetDay(day time.Time) {
+	loc, err := time.LoadLocation("Europe/Rome")
+	if err != nil {
+		loc = Evening.Location()
+	}
+	d := day.In(loc)
+	Evening = time.Date(d.Year(), d.Month(), d.Day(), 0, 0, 0, 0, loc)
+}
+
+// FixtureDay is the fixture day before any SetDay.
+var FixtureDay = Evening
+
+// RecordNow adds a timer that records right now (started 10 minutes ago,
+// another 50 to go) into the Bauer recording — MediaHub shows it "in use",
+// the job queue waits, TimerHub lists it running.
+func (c *Client) RecordNow(now time.Time) {
+	c.mu.Lock()
+	defer c.mu.Unlock()
+	c.timers = append(c.timers, webcontrol.Timer{
+		ServiceReference: "1:0:19:2EE3:441:1:C00000:0:0:0:",
+		ServiceName:      "RTL Television",
+		Name:             "Bauer sucht Frau International",
+		Begin:            now.Add(-10 * time.Minute).Unix(),
+		End:              now.Add(50 * time.Minute).Unix(),
+		State:            webcontrol.TimerRunning,
+		Filename:         Root + "20260608 2048 - RTL Television - Bauer sucht Frau International.ts",
+	})
 }
 
 // New returns a mock with the fixture timers.
@@ -131,7 +169,10 @@ func New() *Client {
 	}}
 }
 
-func (*Client) DeviceInfo(ctx context.Context) (*webcontrol.DeviceInfo, error) {
+func (c *Client) DeviceInfo(ctx context.Context) (*webcontrol.DeviceInfo, error) {
+	if err := c.disturb(ctx); err != nil {
+		return nil, err
+	}
 	return &webcontrol.DeviceInfo{
 		EnigmaVersion: "5.0.0r117-gutemine-2024-08-12",
 		ImageVersion:  "Experimental 2023-04-24",
@@ -145,7 +186,10 @@ func (*Client) DeviceInfo(ctx context.Context) (*webcontrol.DeviceInfo, error) {
 	}, nil
 }
 
-func (*Client) MovieList(ctx context.Context) ([]webcontrol.Movie, error) {
+func (c *Client) MovieList(ctx context.Context) ([]webcontrol.Movie, error) {
+	if err := c.disturb(ctx); err != nil {
+		return nil, err
+	}
 	return []webcontrol.Movie{
 		{
 			ServiceReference: `1:0:0:0:0:0:0:0:0:0:/media/hdd/movie/20260608 2048 - RTL Television - Bauer sucht Frau International.ts`,
@@ -170,6 +214,9 @@ func (*Client) MovieList(ctx context.Context) ([]webcontrol.Movie, error) {
 }
 
 func (c *Client) TimerList(ctx context.Context) ([]webcontrol.Timer, error) {
+	if err := c.disturb(ctx); err != nil {
+		return nil, err
+	}
 	c.mu.Lock()
 	defer c.mu.Unlock()
 	out := make([]webcontrol.Timer, len(c.timers))
@@ -183,7 +230,10 @@ var favouritesTV = webcontrol.Service{
 	ServiceName:      "Free TV",
 }
 
-func (*Client) baseBouquets(ctx context.Context) ([]webcontrol.Service, error) {
+func (c *Client) baseBouquets(ctx context.Context) ([]webcontrol.Service, error) {
+	if err := c.disturb(ctx); err != nil {
+		return nil, err
+	}
 	return []webcontrol.Service{favouritesTV}, nil
 }
 
@@ -244,6 +294,9 @@ func (c *Client) ScanChannel(s webcontrol.Service) {
 func (c *Client) BouquetEditorAvailable(ctx context.Context) bool { return !c.NoBouquetEditor }
 
 func (c *Client) baseServices(ctx context.Context, bouquetRef string) ([]webcontrol.Service, error) {
+	if err := c.disturb(ctx); err != nil {
+		return nil, err
+	}
 	c.mu.Lock()
 	scanned := append([]webcontrol.Service(nil), c.scanned...)
 	c.mu.Unlock()
@@ -351,6 +404,9 @@ func (c *Client) schedule(bouquetRef string) []webcontrol.EPGEvent {
 }
 
 func (c *Client) EPGMulti(ctx context.Context, bouquetRef string, start, end int64) ([]webcontrol.EPGEvent, error) {
+	if err := c.disturb(ctx); err != nil {
+		return nil, err
+	}
 	var out []webcontrol.EPGEvent
 	for _, e := range c.schedule(bouquetRef) {
 		if e.Start >= start && e.Start < end {
@@ -363,6 +419,9 @@ func (c *Client) EPGMulti(ctx context.Context, bouquetRef string, start, end int
 // EPGNowNext answers from the evening schedule at the mock's own clock
 // (Now, else the fixture evening at 21:10), per channel of the bouquet.
 func (c *Client) EPGNowNext(ctx context.Context, bouquetRef string) ([]webcontrol.NowNext, error) {
+	if err := c.disturb(ctx); err != nil {
+		return nil, err
+	}
 	now := at(21, 10)
 	if c.Now != nil {
 		now = c.Now().Unix()
@@ -396,6 +455,9 @@ func (c *Client) EPGNowNext(ctx context.Context, bouquetRef string) ([]webcontro
 }
 
 func (c *Client) EPGSearch(ctx context.Context, query string) ([]webcontrol.EPGEvent, error) {
+	if err := c.disturb(ctx); err != nil {
+		return nil, err
+	}
 	q := strings.ToLower(query)
 	var out []webcontrol.EPGEvent
 	for _, e := range epgSchedule() {
@@ -407,6 +469,9 @@ func (c *Client) EPGSearch(ctx context.Context, query string) ([]webcontrol.EPGE
 }
 
 func (c *Client) Locations(ctx context.Context) ([]string, error) {
+	if err := c.disturb(ctx); err != nil {
+		return nil, err
+	}
 	return []string{Root}, nil
 }
 
@@ -414,6 +479,9 @@ func (c *Client) Locations(ctx context.Context) ([]string, error) {
 // other media files (not sidecars, not trashed recordings), plus the direct
 // subfolders. Titles come from .ts.meta, as on the box.
 func (c *Client) MovieDir(ctx context.Context, dir string) (webcontrol.MovieFolder, error) {
+	if err := c.disturb(ctx); err != nil {
+		return webcontrol.MovieFolder{}, err
+	}
 	f := webcontrol.MovieFolder{Movies: []webcontrol.Movie{}, Subfolders: []string{}}
 	entries, err := c.FS.ReadDir(dir)
 	if err != nil {
@@ -456,6 +524,9 @@ func (c *Client) MovieDir(ctx context.Context, dir string) (webcontrol.MovieFold
 }
 
 func (c *Client) CurrentServiceReference(ctx context.Context) (string, error) {
+	if err := c.disturb(ctx); err != nil {
+		return "", err
+	}
 	c.mu.Lock()
 	defer c.mu.Unlock()
 	if c.Playing != "" {
@@ -466,6 +537,9 @@ func (c *Client) CurrentServiceReference(ctx context.Context) (string, error) {
 
 // Zap records the requested channel as playing, like a real zap would.
 func (c *Client) Zap(ctx context.Context, serviceReference string) error {
+	if err := c.disturb(ctx); err != nil {
+		return err
+	}
 	c.mu.Lock()
 	defer c.mu.Unlock()
 	c.LastZapped = serviceReference
@@ -476,6 +550,9 @@ func (c *Client) Zap(ctx context.Context, serviceReference string) error {
 // PlayMovie plays the reference like Zap, and records it as played in the
 // movie player, plus the start position asked for (LastPlayStartMs).
 func (c *Client) PlayMovie(ctx context.Context, serviceReference, title string, startMs int64) error {
+	if err := c.disturb(ctx); err != nil {
+		return err
+	}
 	c.mu.Lock()
 	defer c.mu.Unlock()
 	c.LastZapped = serviceReference
@@ -488,6 +565,9 @@ func (c *Client) PlayMovie(ctx context.Context, serviceReference, title string, 
 // SendKey records the code and applies it to the simulated screen
 // (screen.go), so a key press shows up in the next Screenshot.
 func (c *Client) SendKey(ctx context.Context, code int) error {
+	if err := c.disturb(ctx); err != nil {
+		return err
+	}
 	c.mu.Lock()
 	defer c.mu.Unlock()
 	c.LastKey = code
@@ -497,6 +577,9 @@ func (c *Client) SendKey(ctx context.Context, code int) error {
 
 // Message records the text, for tests to assert on.
 func (c *Client) Message(ctx context.Context, text string, kind, timeout int) error {
+	if err := c.disturb(ctx); err != nil {
+		return err
+	}
 	c.mu.Lock()
 	defer c.mu.Unlock()
 	c.LastMessage = text
@@ -506,12 +589,18 @@ func (c *Client) Message(ctx context.Context, text string, kind, timeout int) er
 // Screenshot renders the simulated screen: a test card, the menu overlay
 // when MENU opened it, black in standby.
 func (c *Client) Screenshot(ctx context.Context) ([]byte, error) {
+	if err := c.disturb(ctx); err != nil {
+		return nil, err
+	}
 	c.mu.Lock()
 	defer c.mu.Unlock()
 	return c.screen.render(c.Standby)
 }
 
 func (c *Client) InStandby(ctx context.Context) (bool, error) {
+	if err := c.disturb(ctx); err != nil {
+		return false, err
+	}
 	c.mu.Lock()
 	defer c.mu.Unlock()
 	return c.Standby, nil
@@ -522,6 +611,9 @@ func (c *Client) InStandby(ctx context.Context) (bool, error) {
 // silently drops because one with the same service and begin already
 // exists — so callers' verify-after-write logic is exercised in tests too.
 func (c *Client) AddTimer(ctx context.Context, t webcontrol.NewTimer) error {
+	if err := c.disturb(ctx); err != nil {
+		return err
+	}
 	c.mu.Lock()
 	defer c.mu.Unlock()
 	for _, existing := range c.timers {
@@ -554,6 +646,9 @@ func (c *Client) AddTimer(ctx context.Context, t webcontrol.NewTimer) error {
 // DeleteTimer matches exactly like the real box and answers the same way
 // when nothing matches.
 func (c *Client) DeleteTimer(ctx context.Context, ref webcontrol.TimerRef) error {
+	if err := c.disturb(ctx); err != nil {
+		return err
+	}
 	c.mu.Lock()
 	defer c.mu.Unlock()
 	for i, t := range c.timers {
@@ -569,6 +664,9 @@ func (c *Client) DeleteTimer(ctx context.Context, ref webcontrol.TimerRef) error
 // name from the mock's channel and station lists, now/next from their
 // evening schedules at the mock's clock, a recording by its file name.
 func (c *Client) Current(ctx context.Context) (*webcontrol.CurrentService, error) {
+	if err := c.disturb(ctx); err != nil {
+		return nil, err
+	}
 	ref, _ := c.CurrentServiceReference(ctx)
 	cur := &webcontrol.CurrentService{ServiceReference: ref, Volume: 60}
 	if webcontrol.IsRecordingReference(ref) {

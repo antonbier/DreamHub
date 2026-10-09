@@ -39,6 +39,17 @@ Only short clips were at hand (`~/build/samples`, cut from box recordings for th
 - **Seeking by slices works.** 1.5 MB read at a TS-packet-aligned offset and piped to FFmpeg yields the first keyframe after it, with the correct stream timestamp (`-copyts`), in about 120 ms per seek on this machine, including starting FFmpeg through Flatpak.
 - **Speed (this machine, not the box):** decoding all 108 SD keyframes of 66 s took ~300 ms. Box numbers are phase 0.
 
+## Prepared for the box (2026-10-09)
+
+- **`phase0.sh`**: one read-only run on the box collects phase 0's facts into a report: FFmpeg version and build options (chromaprint? `-fps_mode` is 5.1+, the box's 4.1 needs `-vsync`), the `.ts.ap` / `.ts.cuts` layout of a real recording (hex dump, entry sizes), how common cut lists are on the disk, how Enigma2's `InfoBarGenerics` and AdvancedMovieSelection handle cut regions, the resume position and "seen", and timings (FFmpeg start, keyframe decode, a 1.5 MB slice over stdin, audio decode, disk read), all under `nice`/`ionice`. Tested locally on the sample clip.
+
+  ```sh
+  scp -O spikes/adscan/phase0.sh root@<box>:/tmp/
+  ssh root@<box> 'sh /tmp/phase0.sh /media/hdd/movie/<recording>.ts > /tmp/adscan-phase0.txt 2>&1'
+  ```
+- **`sidecar.go`**: `.ts.ap` reader (16-byte entries, offset + PTS, unwrapped across the 33-bit PTS wrap, lookup by time) and `.ts.cuts` reader/writer (12-byte entries). Merging ad blocks into a cut list keeps marks and the resume position and **unites** the new blocks with the cut regions already there, so cuts made by hand in CutListEditor survive. Writes are atomic (temp file + rename). The layouts and Enigma2's IN/OUT rules (a lone IN cuts the start, a lone OUT the end) are taken from the open Enigma2 sources and must be confirmed by `phase0.sh`; whether the PTS in `.cuts` is the stream's own or relative to the recording's start is part of that.
+- **`sampler.go`**: coarse sampling every 25 s, bisection to 1 s wherever neighbours disagree, minimum block length (60 s) and joining across short logo stretches (< 20 s, e.g. a station ident inside a break). On a synthetic hour with three breaks, a weak keyframe and a split break: all three blocks found to within 1 s with **190 probes**, inside the plan's 150–250 estimate. Without ads it takes only the 145 coarse samples. Gaps shorter than the sampling step can be missed between two "logo" samples, so the minimum block length must stay above the step.
+
 ## Open, for phase 0 and phase 1
 
 - A full recording with ad breaks (RTL, VOX or ProSieben, about an hour), copied read-only from the box: learning over a whole recording, the logo-gone score, the threshold (somewhere around 0.4–0.45 on these clips), bisection.

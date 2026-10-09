@@ -84,7 +84,7 @@ func keyframes(src string, in io.Reader, max int) ([]frame, error) {
 	// middle of a recording reports where it is, not 0.
 	args = append(args, "-skip_frame", "nokey", "-copyts", "-i", src, "-map", "0:v:0", "-an", "-sn",
 		"-vf", fmt.Sprintf("scale=%d:%d,format=gray,showinfo", fw, fh),
-		"-fps_mode", "passthrough")
+		"-vsync", "passthrough") // -fps_mode only exists from FFmpeg 5.1; the box has 4.1
 	if max > 0 {
 		args = append(args, "-frames:v", strconv.Itoa(max))
 	}

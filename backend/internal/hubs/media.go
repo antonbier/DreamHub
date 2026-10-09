@@ -9,10 +9,12 @@ import (
 	"strings"
 	"time"
 
+	"github.com/antonbier/DreamHub/backend/internal/adscan"
 	"github.com/antonbier/DreamHub/backend/internal/ai"
 	"github.com/antonbier/DreamHub/backend/internal/enrich"
 	"github.com/antonbier/DreamHub/backend/internal/httpx"
 	"github.com/antonbier/DreamHub/backend/internal/hub"
+	"github.com/antonbier/DreamHub/backend/internal/jobs"
 	"github.com/antonbier/DreamHub/backend/internal/perm"
 	"github.com/antonbier/DreamHub/backend/internal/plan"
 	"github.com/antonbier/DreamHub/backend/internal/recfs"
@@ -50,6 +52,12 @@ type Media struct {
 	// nil when TMDB isn't available at all.
 	Enrich *enrich.Service
 
+	// AdScan opens recordings for ad detection (media_adscan.go): FFmpeg on
+	// the box, synthetic frames in mock mode; nil when FFmpeg is missing.
+	AdScan adscan.Opener
+	// Jobs is the background queue the analyses run in (RegisterJobs).
+	Jobs *jobs.Service
+
 	// index is every recording below the recording folders, read from the
 	// file system on the box (media_index.go).
 	index recIndex
@@ -58,6 +66,7 @@ type Media struct {
 // Perms are MediaHub's route permissions beyond the hub's own (internal/perm).
 func (h *Media) Perms() map[string]perm.Perm {
 	return map[string]perm.Perm{
+		"POST /api/v1/media/adscan":             perm.RecordingsManage,
 		"POST /api/v1/media/covers/plan":        perm.RecordingsManage,
 		"POST /api/v1/media/rename/batch/plan":  perm.RecordingsManage,
 		"POST /api/v1/media/rename/plan":        perm.RecordingsManage,
@@ -81,6 +90,8 @@ func (h *Media) Mount(mux httpx.Mux) {
 	mux.HandleFunc("GET /api/v1/media/trash", h.trashList)
 	mux.HandleFunc("POST /api/v1/media/trash/restore/plan", h.planRestore)
 	mux.HandleFunc("POST /api/v1/media/trash/empty/plan", h.planEmpty)
+	mux.HandleFunc("POST /api/v1/media/adscan", h.startAdScan)
+	mux.HandleFunc("GET /api/v1/media/adscan", h.adScanResult)
 }
 
 // isRecording reports whether a movielist entry is an actual Dreambox

@@ -19,6 +19,7 @@ import (
 	"github.com/antonbier/DreamHub/backend/internal/tmdb"
 	"github.com/antonbier/DreamHub/backend/internal/tvmaze"
 
+	"github.com/antonbier/DreamHub/backend/internal/adscan"
 	"github.com/antonbier/DreamHub/backend/internal/ai"
 	"github.com/antonbier/DreamHub/backend/internal/api"
 	"github.com/antonbier/DreamHub/backend/internal/apitoken"
@@ -260,7 +261,9 @@ func New(ctx context.Context, o Options) (*App, error) {
 	channelsHub.Init(ctx)
 	timerHub := &hubs_.Timer{WC: o.WebControl, Plans: plans, Now: now, AT: o.AutoTimer, Owners: st}
 	mediaHub := &hubs_.Media{WC: o.WebControl, Plans: plans, FS: o.RecordingsFS, ReadOnly: o.ReadOnlyFiles,
-		Settings: svc, Store: st, AI: o.AI, TMDB: o.TMDB, Enrich: enricher, Now: now}
+		Settings: svc, Store: st, AI: o.AI, TMDB: o.TMDB, Enrich: enricher, Now: now,
+		AdScan: adScanOpener(o)}
+	mediaHub.RegisterJobs(jobQueue)
 	// Built before GuideHub/DiscoveryHub: both flag a broadcast already in
 	// the library (#32) through it.
 	plexHub := &hubs_.Plex{Client: o.Plex, Settings: svc, Store: st, Plans: plans, WC: o.WebControl, User: user,
@@ -388,4 +391,28 @@ func recordingBlocker(wc webcontrol.Client) jobs.Blocker {
 		}
 		return ""
 	}
+}
+
+// adScanOpener picks where ad detection gets its frames: synthetic ones in
+// mock mode (the mock box's recordings hold no video), else the system
+// FFmpeg at low priority; nil without FFmpeg (the feature is unavailable).
+func adScanOpener(o Options) adscan.Opener {
+	if o.Mock {
+		return adscan.Synthetic{}
+	}
+	if o.LookPath == nil {
+		return nil
+	}
+	bin, err := o.LookPath("ffmpeg")
+	if err != nil {
+		return nil
+	}
+	var prefix []string
+	if nice, err := o.LookPath("nice"); err == nil {
+		prefix = append(prefix, nice, "-n", "19")
+	}
+	if ionice, err := o.LookPath("ionice"); err == nil {
+		prefix = append(prefix, ionice, "-c3")
+	}
+	return adscan.FFmpeg{Path: bin, Prefix: prefix}
 }

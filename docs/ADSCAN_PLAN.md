@@ -1,6 +1,6 @@
 # Ad detection (AdScan) — Plan
 
-Status: **planned** (2026-10-09, #44). Phase 0 needs the box; a logo-detection spike runs first against local sample recordings (`spikes/adscan/`). Read together with `CONCEPT.md`, `PRINCIPLES.md` and `ARCHITECTURE.md`; where this document conflicts with them, they win. Once a phase lands, its status moves to `ROADMAP.md`.
+Status (2026-10-09, #44): spike done (`spikes/adscan/`), phase 0 prepared as a read-only script (`spikes/adscan/phase0.sh`). **Phase 1 backend built against the mock**: the queue (`internal/jobs`, #41), the detector (`internal/adscan`), the `media.adscan` job and `POST`/`GET /api/v1/media/adscan`. Not yet: the preview UI, writing `.cuts` (waits for phase 0's format check), settings, events, results following a rename. Read together with `CONCEPT.md`, `PRINCIPLES.md` and `ARCHITECTURE.md`; where this document conflicts with them, they win. Once a phase lands, its status moves to `ROADMAP.md`.
 
 ## Decisions
 

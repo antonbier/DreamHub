@@ -39,6 +39,20 @@ Only short clips were at hand (`~/build/samples`, cut from box recordings for th
 - **Seeking by slices works.** 1.5 MB read at a TS-packet-aligned offset and piped to FFmpeg yields the first keyframe after it, with the correct stream timestamp (`-copyts`), in about 120 ms per seek on this machine, including starting FFmpeg through Flatpak.
 - **Speed (this machine, not the box):** decoding all 108 SD keyframes of 66 s took ~300 ms. Box numbers are phase 0.
 
+## Learning share: 0.6, not 0.8 (found while porting to the backend)
+
+The spike learned with "an edge in at least 80 % of the frames". On a synthetic hour with 25 % ads (commercial channels: up to 12 minutes an hour, plus trailers without logo) that learned **one** pixel — the logo is missing from too many frames. Rerun with 0.6 on the clips:
+
+| | 0.8 | 0.6 |
+|---|---|---|
+| RTL mask | 153 px | 227 px |
+| RTL frames vs. RTL mask, min / p10 / median | 0.48 / 0.84 / 0.98 | 0.45 / 0.57 / 0.91 |
+| ZDF frames vs. RTL mask, max | 0.35 | 0.31 |
+| ZDF mask (semi-transparent) | 29 px (weak) | 95 px |
+| RTL frames vs. ZDF mask, max | 0.45 | 0.33 |
+
+0.6 separates as well or better and rescues the semi-transparent logo; the margin above the 0.42 threshold for the worst RTL frame is small (0.45), which is what bisection and "uncertain" are for. The backend (`internal/adscan`) uses 0.6.
+
 ## Prepared for the box (2026-10-09)
 
 - **`phase0.sh`**: one read-only run on the box collects phase 0's facts into a report: FFmpeg version and build options (chromaprint? `-fps_mode` is 5.1+, the box's 4.1 needs `-vsync`), the `.ts.ap` / `.ts.cuts` layout of a real recording (hex dump, entry sizes), how common cut lists are on the disk, how Enigma2's `InfoBarGenerics` and AdvancedMovieSelection handle cut regions, the resume position and "seen", and timings (FFmpeg start, keyframe decode, a 1.5 MB slice over stdin, audio decode, disk read), all under `nice`/`ionice`. Tested locally on the sample clip.

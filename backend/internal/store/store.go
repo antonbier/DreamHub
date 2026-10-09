@@ -274,6 +274,22 @@ var migrations = []string{
 	);
 	CREATE INDEX jobs_state ON jobs (state);
 	`,
+	`
+	-- Ad detection (docs/ADSCAN_PLAN.md, #44): a channel's learned logo
+	-- (internal/adscan.Mask as JSON) and each recording's last analysis.
+	CREATE TABLE adscan_logos (
+		service_ref TEXT PRIMARY KEY,
+		mask        TEXT NOT NULL,
+		learned_at  TEXT NOT NULL,
+		learned_from TEXT NOT NULL DEFAULT ''
+	);
+	CREATE TABLE adscan_results (
+		path        TEXT PRIMARY KEY,
+		service_ref TEXT NOT NULL DEFAULT '',
+		result      TEXT NOT NULL,
+		analyzed_at TEXT NOT NULL
+	);
+	`,
 }
 
 func (s *Store) migrate(ctx context.Context) error {

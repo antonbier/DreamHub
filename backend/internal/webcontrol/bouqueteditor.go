@@ -86,8 +86,21 @@ func (c *HTTPClient) EditorRestore(ctx context.Context, filename string) error {
 	return c.editorWrite(ctx, "restore", url.Values{"Filename": {path}})
 }
 
+// AddBouquet names the new bouquet as asked, but the plugin appends
+// " (TV)" or " (Radio)" to it itself (BouquetEditor.py's addBouquet,
+// unconditionally, confirmed live 2026-10-09) — callers checking the
+// result need BouquetDisplayName(name, radio) for the name actually used.
 func (c *HTTPClient) AddBouquet(ctx context.Context, name string, radio bool) error {
 	return c.editorWrite(ctx, "addbouquet", url.Values{"name": {name}, "mode": {editorMode(radio)}})
+}
+
+// BouquetDisplayName is the name AddBouquet's bouquet actually ends up
+// with on the box.
+func BouquetDisplayName(name string, radio bool) string {
+	if radio {
+		return name + " (Radio)"
+	}
+	return name + " (TV)"
 }
 
 func (c *HTTPClient) RemoveBouquet(ctx context.Context, bouquetRef string, radio bool) error {

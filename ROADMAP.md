@@ -28,8 +28,8 @@ All on the box unless noted.
 
 Open:
 - [ ] Exact conflict dry run through the TV plugin (decision D7) (#33)
-- [ ] Check SeriesHub against the box's real SerienRecorder data (#25)
-- [ ] Check DiscoveryHub's taste-based picks on the box with a real OpenAI key (#24)
+
+Confirmed on the box 2026-10-09: SeriesHub against the box's real SerienRecorder data (#25, no bugs found — info/markers/timer/seriesinfo all match the Go structs exactly); DiscoveryHub's taste-based picks with the real OpenAI key already in Settings (#24, generated real German recommendations from real taste data).
 
 ## v1 — release & packaging
 
@@ -44,10 +44,8 @@ Done: `.deb` for arm64 (box) and armhf (built, not tried on a DM900/DM920) with 
 - **RadioHub** — stations with what's on, play on the box or in the browser (also with the screen locked, with a visualization), radio timers. Box.
 - **PlexHub** — films and series from a Plex server, cached for when it's off, watched state synced, films in the box's movie player with resume, address failover. Box.
 - **AdminHub service status**, **ControlHub message to the TV** — box.
-- **ChannelHub** ([`docs/CHANNELHUB_PLAN.md`](docs/CHANNELHUB_PLAN.md)) — bouquets, all channels with "new since", channel check, picon sets; editing as one plan with a backup before and an automatic restore on any difference; bouquets created, renamed, deleted; backups restorable. Mock.
-  - [ ] Read-only checks on the box (`spikes/box-checks/channelhub.sh`), then the first approved writes, one at a time (#26)
-- **Ad detection and cutting** ([`docs/ADSCAN_PLAN.md`](docs/ADSCAN_PLAN.md)) — logo learned per channel from keyframes, coarse sampling with bisection, a background job, results that follow renames; a timeline in the recording's details (breaks play in the browser), batch from the selection; cutting ticked breaks out without re-encoding, the original kept in the trash. Mock, and checked with FFmpeg on real clips.
-  - [ ] Phase 0 on the box (`spikes/adscan/phase0.sh`): FFmpeg 4.1, `.ts.ap`/`.ts.cuts`, playback of a cut file on the TV, timings; a real hour with ads (#44, #27)
+- **ChannelHub** ([`docs/CHANNELHUB_PLAN.md`](docs/CHANNELHUB_PLAN.md)) — bouquets, all channels with "new since", channel check, picon sets; editing as one plan with a backup before and an automatic restore on any difference; bouquets created, renamed, deleted; backups restorable. Box (read-only checks and the first real writes — create/delete a bouquet, add and reorder channels — confirmed 2026-10-09; three real bugs found and fixed in the process, see `docs/CHANNELHUB_PLAN.md`).
+- **Ad detection and cutting** ([`docs/ADSCAN_PLAN.md`](docs/ADSCAN_PLAN.md)) — logo learned per channel from keyframes, coarse sampling with bisection, a background job, results that follow renames; a timeline in the recording's details (breaks play in the browser), batch from the selection; cutting ticked breaks out without re-encoding, the original kept in the trash. Box (phase 0 and a real cut played on the TV confirmed 2026-10-09).
   - [ ] Writing the breaks into `.ts.cuts` (the TV skips them) once the format is confirmed (#44)
   - [ ] Phases 2–3: audio fingerprints, learned series patterns, learned timer margins, suspicious recordings (#44)
   - [ ] Cutting by hand (own in/out points) (#27)

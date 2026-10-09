@@ -1,6 +1,6 @@
 # ChannelHub — plan
 
-Status: **C1–C5 built 2026-10-08 against the mock.** C2/C3 are not released until the BouquetEditor writes have been tried on the reference box ("To confirm on the box" below). Tracks issue #26. Once a package lands, its status moves to `ROADMAP.md`.
+Status: **C1–C5 built 2026-10-08 against the mock; the BouquetEditor writes tried and confirmed on the reference box 2026-10-09** (create/delete a bouquet, add three channels, reorder them — see below). Tracks issue #26. Once a package lands, its status moves to `ROADMAP.md`.
 
 ## Why
 
@@ -84,7 +84,12 @@ C1 and C4 can be built and finished against the mock. C2 and C3 are built agains
 - `moveService`/`moveBouquet`'s `position` is passed straight through to the native `eDVBDB` binding (`mutableBouquetList.moveService(ref, position)`) with no Python-visible index arithmetic — reading the source doesn't resolve whether it counts from 0 or 1 with headers included; **still needs a real write** to confirm, as planned.
 - Picon sets: several already on disk under `/data/piconpool/*` (1000–2600 files each) and more available as installable feed packages (`gp4-picon-*`, several thousand services' worth across Astra/Hotbird/cable providers) — "Save covers"-style picon fetching has real packages to offer, not just one.
 
-## Still open
+## Confirmed with real writes (2026-10-09)
 
-- Whether the TV's channel list updates at once after a change, or needs a reload (`/web/servicelistreload`) — covered by the above but worth re-checking after a real write.
-- `position`'s base/offset (see above) — the first approved write, one change at a time, per the plan.
+A throwaway test bouquet (created, edited, deleted; the household's real bouquets were never touched) on the reference box:
+
+- `AddBouquet`'s name isn't used verbatim: BouquetEditor.py's `addBouquet` unconditionally appends `" (TV)"`/`" (Radio)"` to whatever name it's given. **Found a second real bug from this**: `channels_edit.go`'s create-check compared against the bare name and always failed, so every real bouquet creation rolled itself back via the (now-fixed) restore path — caught live, not from reading source. **Fixed**: `webcontrol.BouquetDisplayName` computes the real name; the mock now matches (`backend/internal/webcontrol/mock/bouqueteditor.go`).
+- **Found a third real bug, same session**: `addServiceToBouquet` with a non-empty `Name` bakes the name into the stored reference itself (`ref.setName`, native binding — a ref always ends in `:`, so the result reads as the bouquet's usual `...::name` entries). `applyBouquet`'s own "verify, don't trust" step compared the resulting reference against the clean one it was given, so it never matched and **every** channel add rolled itself back too. Confirmed this is enigma2's real on-disk convention, not a one-off: existing bouquets already contain such entries. **Fixed**: `applyBouquet` now predicts the composed reference for a fresh add before comparing; the mock does the same (same two files as above).
+- `position`'s base/offset: adding three channels (plain appends) then reordering them (exercises `MoveInBouquet`) both applied and verified cleanly — the existing 0-based, headers-counted implementation matches the real box.
+- The TV's channel list (and any subsequent `/web/getservices` read) updates at once; no `/web/servicelistreload` call was needed anywhere in this sequence.
+- The restore safety net itself fired twice during this session (for bugs 2 and 3, before they were fixed) and correctly brought the household's actual channel list back untouched both times — the fix from the read-only pass above is confirmed working, not just unit-tested.

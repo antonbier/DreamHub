@@ -170,6 +170,9 @@ func (c *Client) AddBouquet(ctx context.Context, name string, radio bool) error 
 	}
 	c.mu.Lock()
 	defer c.mu.Unlock()
+	// The real plugin appends " (TV)"/" (Radio)" to whatever name it's
+	// given (BouquetEditor.py's addBouquet, confirmed live 2026-10-09).
+	name = webcontrol.BouquetDisplayName(name, radio)
 	b := webcontrol.Service{ServiceReference: bouquetFile(name, radio), ServiceName: name}
 	if radio {
 		c.radioBouquets = append(c.radioBouquets, b)
@@ -255,7 +258,14 @@ func (c *Client) AddToBouquet(ctx context.Context, bouquetRef, ref, beforeRef, n
 	}
 	c.mu.Lock()
 	defer c.mu.Unlock()
-	c.insert(bouquetRef, webcontrol.Service{ServiceReference: ref, ServiceName: name}, beforeRef)
+	// The real plugin bakes a non-empty name into the reference itself
+	// (ref.setName, confirmed live 2026-10-09) — a ref always ends in
+	// ":", so this reads as the usual "...::name" bouquet entries show.
+	stored := ref
+	if name != "" {
+		stored = ref + ":" + name
+	}
+	c.insert(bouquetRef, webcontrol.Service{ServiceReference: stored, ServiceName: name}, beforeRef)
 	return nil
 }
 

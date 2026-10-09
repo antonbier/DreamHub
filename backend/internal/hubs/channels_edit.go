@@ -331,13 +331,29 @@ func (h *Channels) applyBouquet(ctx context.Context, editor webcontrol.BouquetEd
 	if len(newMarkers) != len(diff.addMarkers) {
 		return errors.New("channels: the new headings didn't all appear")
 	}
+	// A fresh add with a name doesn't keep the clean reference it was
+	// asked for: BouquetEditor.py's addServiceToBouquet calls the native
+	// ref.setName(sName), which bakes the name into the reference itself
+	// as "<ref>:<name>" (confirmed live 2026-10-09; a ref always ends in
+	// ":" already, so this reads as the usual "...::name" bouquet entries
+	// show). Entries already in the bouquet keep whatever reference the
+	// box already gave them, including one from an earlier such add.
+	addedName := map[string]string{}
+	for _, e := range diff.add {
+		if e.Name != "" {
+			addedName[e.Ref] = e.Name
+		}
+	}
 	target := make([]string, 0, len(d.Entries))
 	m := 0
 	for _, e := range d.Entries {
-		if e.Marker && e.Ref == "" {
+		switch {
+		case e.Marker && e.Ref == "":
 			target = append(target, newMarkers[m])
 			m++
-		} else {
+		case addedName[e.Ref] != "":
+			target = append(target, e.Ref+":"+addedName[e.Ref])
+		default:
 			target = append(target, e.Ref)
 		}
 	}
@@ -469,10 +485,13 @@ func (h *Channels) planBouquets(w http.ResponseWriter, r *http.Request) {
 	var check func([]BouquetSummary) bool
 	switch a.Action {
 	case "create":
-		change = plan.Change{Type: "bouquet.create", After: ChannelChange{Name: a.Name}}
-		summary = fmt.Sprintf("Created bouquet %q", a.Name)
+		// BouquetEditor appends " (TV)"/" (Radio)" to whatever name it's
+		// given (confirmed live 2026-10-09, webcontrol.BouquetDisplayName).
+		displayName := webcontrol.BouquetDisplayName(a.Name, radio)
+		change = plan.Change{Type: "bouquet.create", After: ChannelChange{Name: displayName}}
+		summary = fmt.Sprintf("Created bouquet %q", displayName)
 		do = func(ctx context.Context) error { return editor.AddBouquet(ctx, a.Name, radio) }
-		check = func(after []BouquetSummary) bool { return len(after) == len(list)+1 && hasBouquetNamed(after, a.Name) }
+		check = func(after []BouquetSummary) bool { return len(after) == len(list)+1 && hasBouquetNamed(after, displayName) }
 	case "rename":
 		change = plan.Change{Type: "bouquet.rename", Before: ChannelChange{Name: existing.Name}, After: ChannelChange{NewName: a.Name}}
 		summary = fmt.Sprintf("Renamed bouquet %q to %q", existing.Name, a.Name)

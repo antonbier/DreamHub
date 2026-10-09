@@ -204,10 +204,12 @@ func TestChannels_EditBouquetAsOnePlan(t *testing.T) {
 		t.Fatalf("after apply: %v", names)
 	}
 
-	// Now remove RTL and the heading — references as the box made them.
+	// Now remove RTL and the heading — references as the box made them
+	// (adding a name bakes it into the reference itself, so these aren't
+	// mock.TVZDF/TVZDFNeo's own references any more).
 	draft2 := `{"ref":` + jsonStr(freeTV) + `,"kind":"tv","entries":[
-		{"ref":"` + mock.TVZDF.ServiceReference + `","name":"ZDF HD"},
-		{"ref":"` + mock.TVZDFNeo.ServiceReference + `","name":"zdf_neo HD"}]}`
+		{"ref":"` + got.Entries[1].Ref + `","name":"ZDF HD"},
+		{"ref":"` + got.Entries[2].Ref + `","name":"zdf_neo HD"}]}`
 	e.planAndApply(t, "/api/v1/channels/bouquet/plan", draft2, 200)
 	if n := len(e.entries(t, freeTV).Entries); n != 2 {
 		t.Fatalf("after removing: %d entries", n)
@@ -277,9 +279,11 @@ func TestChannels_BouquetsAndRestore(t *testing.T) {
 		} `json:"bouquets"`
 	}
 	e.json(t, "GET", "/api/v1/channels/bouquets", "", nil, 200, &list)
+	// BouquetEditor appends " (TV)"/" (Radio)" to the name itself
+	// (confirmed live 2026-10-09, webcontrol.BouquetDisplayName).
 	var kids string
 	for _, b := range list.Bouquets {
-		if b.Name == "Kinder" {
+		if b.Name == "Kinder (TV)" {
 			kids = b.Ref
 		}
 	}

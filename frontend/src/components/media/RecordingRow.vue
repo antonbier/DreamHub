@@ -196,7 +196,7 @@ import PlanPreview from '@/components/PlanPreview.vue'
 import PosterImage from '@/components/enrich/PosterImage.vue'
 import RatingBadge from '@/components/enrich/RatingBadge.vue'
 import { useEnrichStore } from '@/stores/enrich'
-import { formatBytes } from '@/lib/format'
+import { formatBytes, formatMinutes } from '@/lib/format'
 import { titleFromFileName } from '@/lib/titles'
 import type { Movie } from '@/api/types'
 import type { RowState, SuggestSources } from './types'
@@ -212,6 +212,8 @@ const props = defineProps<{
   state: RowState | null
   // Which name-suggestion sources are set up.
   sources: SuggestSources
+  // Ad detection runs for it right now (the background queue).
+  adsRunning?: boolean
 }>()
 const emit = defineEmits<{
   toggle: []
@@ -234,13 +236,21 @@ const info = computed(() => (props.movie.isRecording ? enrich.info(props.movie.t
 // Without a .ts.meta title the box reports the file name; show its title part.
 const shownTitle = computed(() => (props.movie.isRecording ? titleFromFileName(props.movie.title) : props.movie.title))
 
-// channel · time · length · genres, leaving out whatever is unknown.
+// channel · time · length · genres · ads, leaving out whatever is unknown.
+// Ads only as information here; acting on them is in the detail dialog.
+const adsText = computed(() => {
+  if (props.adsRunning) return t('media.ads.rowRunning')
+  const a = props.movie.ads
+  if (!a) return ''
+  return a.blocks === 0 ? t('media.ads.rowNone') : t('media.ads.rowMinutes', { minutes: formatMinutes(a.seconds, locale.value) })
+})
 const details = computed(() =>
   [
     props.movie.serviceName,
     props.movie.time > 0 ? formatTime(props.movie.time) : '',
     props.movie.length,
     info.value?.genres?.slice(0, 2).join(', '),
+    adsText.value,
   ]
     .filter(Boolean)
     .join(' · '),

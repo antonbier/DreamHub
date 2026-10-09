@@ -456,6 +456,48 @@
       "playing": "Läuft auf dem TV",
       "length": "{length} Min.",
       "watchInBrowser": "Im Browser ansehen"
+    },
+    "ads": {
+      "heading": "Werbung",
+      "detect": "Werbung erkennen",
+      "again": "Neu erkennen",
+      "stop": "Stopp",
+      "dismiss": "Schließen",
+      "notAnalysed": "Noch nicht auf Werbung geprüft.",
+      "queued": "Wartet auf den Start …",
+      "running": "Werbung wird erkannt … {percent} %",
+      "waiting": {
+        "recording": "Wartet, bis die Aufnahme fertig ist",
+        "boxUnreachable": "Wartet, bis die Box wieder antwortet"
+      },
+      "none": "Keine Werbeblöcke gefunden.",
+      "breaks": "{count} Block | {count} Blöcke",
+      "summary": "{breaks} · {ads} Werbung · {without} ohne",
+      "uncertain": "unsicher",
+      "uncertainCount": "{count} unsicher | {count} unsicher",
+      "block": "Werbung {from}–{to}",
+      "playFromHere": "ab hier abspielen",
+      "weakLogo": "Das Logo dieses Senders ist schwer zu erkennen, deshalb ist jeder Block unsicher.",
+      "rowRunning": "Werbung wird erkannt …",
+      "rowNone": "keine Werbung",
+      "rowMinutes": "{minutes} Werbung",
+      "batchRunning": "Werbung wird erkannt: {done} von {total}",
+      "batchDone": "Werbung erkannt bei {count} Aufnahme | Werbung erkannt bei {count} Aufnahmen",
+      "batchFailed": "{count} fehlgeschlagen | {count} fehlgeschlagen",
+      "batchSkipped": "{count} übersprungen | {count} übersprungen",
+      "reason": {
+        "not_a_recording": "Das ist keine Aufnahme.",
+        "media_in_use": "Sie wird gerade noch aufgenommen. Versuch es, wenn sie fertig ist."
+      },
+      "error": {
+        "generic": "Die Werbeerkennung hat nicht geklappt.",
+        "adscan_unavailable": "Die Werbeerkennung braucht FFmpeg und DreamHub auf der Box.",
+        "adscan_no_frames": "Aus dieser Aufnahme ließen sich keine Bilder lesen.",
+        "media_in_use": "Die Aufnahme wurde wieder aufgenommen.",
+        "not_found": "Die Aufnahme ist nicht mehr da.",
+        "interrupted": "DreamHub wurde während der Erkennung neu gestartet. Starte sie noch einmal.",
+        "adscan_open_failed": "Die Aufnahme ließ sich nicht öffnen."
+      }
     }
   },
   "guide": {

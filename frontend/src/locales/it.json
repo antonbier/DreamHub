@@ -456,6 +456,48 @@
       "playing": "In riproduzione sulla TV",
       "length": "{length} min",
       "watchInBrowser": "Guarda nel browser"
+    },
+    "ads": {
+      "heading": "Pubblicità",
+      "detect": "Riconosci pubblicità",
+      "again": "Riconosci di nuovo",
+      "stop": "Ferma",
+      "dismiss": "Chiudi",
+      "notAnalysed": "Non ancora controllata.",
+      "queued": "In attesa di iniziare …",
+      "running": "Riconoscimento pubblicità … {percent} %",
+      "waiting": {
+        "recording": "Attende la fine della registrazione",
+        "boxUnreachable": "Attende che il box risponda di nuovo"
+      },
+      "none": "Nessuna interruzione pubblicitaria trovata.",
+      "breaks": "{count} blocco | {count} blocchi",
+      "summary": "{breaks} · {ads} di pubblicità · {without} senza",
+      "uncertain": "incerto",
+      "uncertainCount": "{count} incerto | {count} incerti",
+      "block": "Pubblicità {from}–{to}",
+      "playFromHere": "riproduci da qui",
+      "weakLogo": "Il logo di questo canale si vede poco, quindi ogni blocco è incerto.",
+      "rowRunning": "Riconoscimento pubblicità …",
+      "rowNone": "nessuna pubblicità",
+      "rowMinutes": "{minutes} di pubblicità",
+      "batchRunning": "Riconoscimento pubblicità: {done} di {total}",
+      "batchDone": "Pubblicità riconosciuta in {count} registrazione | Pubblicità riconosciuta in {count} registrazioni",
+      "batchFailed": "{count} non riuscita | {count} non riuscite",
+      "batchSkipped": "{count} saltata | {count} saltate",
+      "reason": {
+        "not_a_recording": "Non è una registrazione.",
+        "media_in_use": "È ancora in registrazione. Riprova quando è finita."
+      },
+      "error": {
+        "generic": "Il riconoscimento della pubblicità non è riuscito.",
+        "adscan_unavailable": "Il riconoscimento della pubblicità richiede FFmpeg e DreamHub sul box.",
+        "adscan_no_frames": "Non è stato possibile leggere immagini da questa registrazione.",
+        "media_in_use": "La registrazione è di nuovo in corso.",
+        "not_found": "La registrazione non c'è più.",
+        "interrupted": "DreamHub è stato riavviato durante il riconoscimento. Avvialo di nuovo.",
+        "adscan_open_failed": "Non è stato possibile aprire la registrazione."
+      }
     }
   },
   "guide": {

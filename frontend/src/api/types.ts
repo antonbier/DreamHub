@@ -246,6 +246,44 @@ export interface Movie {
   // The box is writing ("recording") or playing it right now; no file
   // actions until it's done.
   inUse?: 'recording' | 'playing'
+  // The last ad detection's summary, when the recording was analysed.
+  ads?: AdSummary
+}
+
+// backend/internal/hubs.adSummary — what the list shows of an analysis.
+export interface AdSummary {
+  blocks: number
+  seconds: number
+  uncertain?: number
+}
+
+// backend/internal/adscan.Result, from GET /api/v1/media/adscan?path=.
+// Times are seconds from the recording's start.
+export interface AdScanResult {
+  duration: number
+  blocks: { start: number; end: number; uncertain?: boolean }[]
+  probes: number
+  weakLogo?: boolean
+  learned?: boolean
+}
+
+// backend/internal/api.jobView — a background job (GET /api/v1/jobs, and
+// "event: job" on the event stream). message/error are i18n keys.
+export type JobState = 'queued' | 'running' | 'waiting' | 'done' | 'failed' | 'canceled'
+export interface Job {
+  id: number
+  kind: string
+  key?: string
+  ownerId: number
+  state: JobState
+  done: number
+  total: number
+  message?: string
+  messageParams?: Record<string, unknown>
+  error?: string
+  createdAt: string
+  startedAt?: string
+  finishedAt?: string
 }
 
 // backend/internal/hubs.list — one folder of recordings, GET /api/v1/media/movies?dir=.
@@ -257,6 +295,8 @@ export interface MediaFolder {
   movies: Movie[]
   // File operations (rename, trash) only work when DreamHub runs on the box.
   fileOps: { available: boolean; reason?: string }
+  // Whether "Detect ads" can run here (FFmpeg on the box, or mock mode).
+  adScan?: boolean
 }
 
 // backend/internal/hubs.Suggestion — a proposed name; nothing changes

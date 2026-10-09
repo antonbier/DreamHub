@@ -503,13 +503,20 @@ function onKey(e: KeyboardEvent) {
   }
 }
 
+// ?at= starts a recording part-way in (a share of it, 0–1) — MediaHub's ad
+// breaks link here to check a boundary.
+function startAt(): number | undefined {
+  const at = Number(route.query.at)
+  return Number.isFinite(at) && at > 0 && at < 1 ? at : undefined
+}
+
 // The route says what plays: ?ref= or ?recording=.
 watch(
   () => [route.query.ref, route.query.recording],
   ([refQ, rec]) => {
     if (!supported) return
     if (typeof rec === 'string' && rec) {
-      if (source.value?.kind !== 'recording' || source.value.path !== rec) start({ kind: 'recording', path: rec })
+      if (source.value?.kind !== 'recording' || source.value.path !== rec) start({ kind: 'recording', path: rec, offset: startAt() })
     } else if (typeof refQ === 'string' && refQ) {
       if (source.value?.kind !== 'live' || source.value.ref !== refQ) start({ kind: 'live', ref: refQ })
     }
@@ -531,7 +538,7 @@ onMounted(async () => {
   if (!supported) return
   const rec = route.query.recording
   const refQ = route.query.ref
-  if (typeof rec === 'string' && rec) start({ kind: 'recording', path: rec })
+  if (typeof rec === 'string' && rec) start({ kind: 'recording', path: rec, offset: startAt() })
   else {
     await loadBouquets()
     if (typeof refQ === 'string' && refQ) start({ kind: 'live', ref: refQ })

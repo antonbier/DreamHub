@@ -456,6 +456,48 @@
       "playing": "Playing on the TV",
       "length": "{length} min",
       "watchInBrowser": "Watch in the browser"
+    },
+    "ads": {
+      "heading": "Ads",
+      "detect": "Detect ads",
+      "again": "Detect again",
+      "stop": "Stop",
+      "dismiss": "Close",
+      "notAnalysed": "Not checked for ads yet.",
+      "queued": "Waiting to start …",
+      "running": "Detecting ads … {percent} %",
+      "waiting": {
+        "recording": "Waits until the recording is finished",
+        "boxUnreachable": "Waits until the box answers again"
+      },
+      "none": "No ad breaks found.",
+      "breaks": "{count} break | {count} breaks",
+      "summary": "{breaks} · {ads} ads · {without} without",
+      "uncertain": "uncertain",
+      "uncertainCount": "{count} uncertain | {count} uncertain",
+      "block": "Ad break {from}–{to}",
+      "playFromHere": "play from here",
+      "weakLogo": "This channel's logo is hard to see, so every break is uncertain.",
+      "rowRunning": "Detecting ads …",
+      "rowNone": "no ads",
+      "rowMinutes": "{minutes} ads",
+      "batchRunning": "Detecting ads: {done} of {total}",
+      "batchDone": "Ads detected in {count} recording | Ads detected in {count} recordings",
+      "batchFailed": "{count} failed | {count} failed",
+      "batchSkipped": "{count} skipped | {count} skipped",
+      "reason": {
+        "not_a_recording": "This isn't a recording.",
+        "media_in_use": "It's still being recorded. Try again once it's finished."
+      },
+      "error": {
+        "generic": "Ad detection didn't work.",
+        "adscan_unavailable": "Ad detection needs FFmpeg and DreamHub running on the box.",
+        "adscan_no_frames": "No pictures could be read from this recording.",
+        "media_in_use": "The recording was being recorded again.",
+        "not_found": "The recording isn't there any more.",
+        "interrupted": "DreamHub was restarted during the detection. Start it again.",
+        "adscan_open_failed": "The recording couldn't be opened."
+      }
     }
   },
   "guide": {

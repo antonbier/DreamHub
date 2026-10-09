@@ -7,7 +7,8 @@
 import { defineStore } from 'pinia'
 import { api } from '@/api/client'
 import { openEventStream } from '@/composables/useEventStream'
-import type { Notification } from '@/api/types'
+import type { Job, Notification } from '@/api/types'
+import { useJobsStore } from '@/stores/jobs'
 
 let stopStream: (() => void) | null = null
 
@@ -42,6 +43,15 @@ export const useNotificationsStore = defineStore('notifications', {
     connect() {
       if (stopStream) return // already connected
       stopStream = openEventStream('/api/v1/events/stream', (e) => {
+        // Background jobs ride the same stream.
+        if (e.event === 'job') {
+          try {
+            useJobsStore().apply(JSON.parse(e.data) as Job)
+          } catch {
+            // Malformed push — ignore it.
+          }
+          return
+        }
         if (e.event !== 'notification') return
         try {
           const n = JSON.parse(e.data) as Notification

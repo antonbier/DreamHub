@@ -119,6 +119,9 @@ type MovieView struct {
 	// or delete later (media_files.go). Best effort: empty when the timer
 	// list can't be read.
 	InUse string `json:"inUse,omitempty"`
+	// Ads is the last ad detection's summary (media_adscan.go), when the
+	// recording was analysed.
+	Ads *adSummary `json:"ads,omitempty"`
 }
 
 // Search implements hub.SearchProvider: a case-insensitive substring match
@@ -205,6 +208,7 @@ func (h *Media) list(w http.ResponseWriter, r *http.Request) {
 			if p, err := recfs.CleanIn(h.FS, m.Filename, roots); err == nil {
 				poster, backdrop := recfs.Covers(h.FS, p)
 				views[i].Cover, views[i].Backdrop = poster != "", backdrop != ""
+				views[i].Ads = h.adSummary(ctx, p)
 			}
 		}
 	}
@@ -224,6 +228,8 @@ func (h *Media) list(w http.ResponseWriter, r *http.Request) {
 		"subfolders": subfolders,
 		"movies":     views,
 		"fileOps":    h.fileOps(roots),
+		// Whether "Detect ads" can run here (FFmpeg, on the box or mock).
+		"adScan": h.adScanAvailable(roots),
 	}
 	if dir != root {
 		out["parent"] = path.Dir(dir) + "/"

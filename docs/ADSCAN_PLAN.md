@@ -1,6 +1,6 @@
 # Ad detection (AdScan) — Plan
 
-Status (2026-10-09, #44): spike done (`spikes/adscan/`), phase 0 prepared as a read-only script (`spikes/adscan/phase0.sh`). **Phase 1 backend built against the mock**: the queue (`internal/jobs`, #41), the detector (`internal/adscan`), the `media.adscan` job and `POST`/`GET /api/v1/media/adscan`. Not yet: the preview UI, writing `.cuts` (waits for phase 0's format check), settings, events, results following a rename. Read together with `CONCEPT.md`, `PRINCIPLES.md` and `ARCHITECTURE.md`; where this document conflicts with them, they win. Once a phase lands, its status moves to `ROADMAP.md`.
+Status (2026-10-09, #44): spike done (`spikes/adscan/`), phase 0 prepared as a read-only script (`spikes/adscan/phase0.sh`). **Phase 1 backend built against the mock**: the queue (`internal/jobs`, #41), the detector (`internal/adscan`), the `media.adscan` job and `POST`/`GET /api/v1/media/adscan`. Display UI built too (detail dialog: detect, progress, timeline whose breaks play in the browser; batch from the selection; "14 min ads" in the row) — deliberately small, see "UI". Not yet: writing `.cuts` (waits for phase 0's format check), settings, events, results following a rename. Read together with `CONCEPT.md`, `PRINCIPLES.md` and `ARCHITECTURE.md`; where this document conflicts with them, they win. Once a phase lands, its status moves to `ROADMAP.md`.
 
 ## Decisions
 
@@ -91,6 +91,9 @@ Key: channel + EPG title (optionally the time slot). Learned only from **confirm
 - **Mock:** a fake FFmpeg runner with canned frame scores and fixture `.ap`/`.cuts` files, so the hub, queue and UI are testable without the box (`PRINCIPLES.md`, mock-first).
 
 ## UI (MediaHub)
+
+Principle (decided 2026-10-09): one new action per place, nothing technical on screen — where the ads are, how long, whether it's certain. Logo masks, sampling, thresholds and confidence numbers stay out of the everyday UI; boundary editing and keyframe thumbnails only arrive with the confirm-and-write step.
+
 
 - Recording row/detail: "Detect ads" (multi-select for batch), status (not analysed / running / done / uncertain), net runtime.
 - Preview: timeline with blocks coloured by confidence; keyframes just before and after each boundary; per block confirm / move boundary / discard; "Confirm all certain blocks" as the single primary action; then the `.cuts` plan to confirm.

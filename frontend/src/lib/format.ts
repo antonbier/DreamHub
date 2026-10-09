@@ -30,3 +30,20 @@ export function formatWhen(unixSeconds: number, locale: string, timeZone: string
   if (at > now && at - now < 6 * 86400_000) return new Intl.DateTimeFormat(locale, { ...time, weekday: 'short' }).format(at)
   return new Intl.DateTimeFormat(locale, { ...time, day: 'numeric', month: 'short' }).format(at)
 }
+
+// Whole minutes ("14 min", "14 Min."), rounded, per locale.
+export function formatMinutes(seconds: number, locale: string): string {
+  return new Intl.NumberFormat(locale, { style: 'unit', unit: 'minute', unitDisplay: 'short', maximumFractionDigits: 0 }).format(
+    Math.round(seconds / 60),
+  )
+}
+
+// A position inside a recording, h:mm:ss or m:ss — a clock reading, the
+// same in every language.
+export function formatPosition(seconds: number): string {
+  const s = Math.max(0, Math.floor(seconds))
+  const h = Math.floor(s / 3600)
+  const m = Math.floor((s % 3600) / 60)
+  const ss = String(s % 60).padStart(2, '0')
+  return h > 0 ? `${h}:${String(m).padStart(2, '0')}:${ss}` : `${m}:${ss}`
+}

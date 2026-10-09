@@ -117,8 +117,28 @@
           >
             {{ t('media.covers.open') }}
           </button>
+          <button
+            v-if="adScanOn"
+            type="button"
+            class="rounded px-3 py-1.5 text-accent hover:bg-tile-2 disabled:opacity-60"
+            :disabled="bulk?.busy || batchOpen || coversOpen || adsStarting"
+            @click="startBatchAds"
+          >
+            {{ t('media.ads.detect') }}
+          </button>
           <button type="button" class="rounded bg-accent px-3 py-1.5 font-semibold text-bg disabled:opacity-60" :disabled="bulk?.busy || batchOpen || coversOpen" @click="previewBulkTrash">
             {{ t('media.moveSelectedToTrash') }}
+          </button>
+        </div>
+        <!-- Ad detection over a selection runs in the background: its
+             progress stays here, even after the selection is cleared. -->
+        <div v-if="adsBatch" class="mt-3 flex flex-wrap items-center gap-3 rounded border border-line-soft px-3 py-2 text-[13.5px]" aria-live="polite">
+          <span class="text-text">{{ adsBatchText }}</span>
+          <button v-if="adsBatchProgress.active > 0" type="button" class="ms-auto rounded px-2 py-1 text-accent hover:bg-tile-2" @click="stopBatchAds">
+            {{ t('media.ads.stop') }}
+          </button>
+          <button v-else type="button" class="ms-auto rounded px-2 py-1 text-accent hover:bg-tile-2" @click="adsBatch = null">
+            {{ t('media.ads.dismiss') }}
           </button>
         </div>
         <BatchRenamePreview
@@ -168,6 +188,7 @@
               :selectable="fileOpsAvailable && movie.isRecording && !movie.inUse"
               :selected="selection.has(movie.filename)"
               :state="rowStates[movie.filename] ?? null"
+              :ads-running="adsRunning(movie.filename)"
               :sources="suggestSources"
               @toggle="toggle(movie.filename)"
               @open="openMovie = movie"
@@ -249,6 +270,16 @@
         <p v-if="openMovie.description" class="mt-1 text-[14px] text-text">{{ openMovie.description }}</p>
         <p v-if="openMovie.descriptionExtended" class="mt-1 whitespace-pre-line text-[13.5px] text-muted">{{ openMovie.descriptionExtended }}</p>
       </section>
+      <AdScanPanel
+        v-if="openMovie.isRecording && (folder?.adScan || openMovie.ads)"
+        :path="openMovie.filename"
+        :title="openMovie.title"
+        :channel="openMovie.serviceName"
+        :length="openMovie.length"
+        :can-start="adScanOn && openMovie.inUse !== 'recording'"
+        :can-play="streamHubOn"
+        @analysed="(sum: AdSummary) => (openMovie!.ads = sum)"
+      />
       <template #actions>
         <div class="flex flex-wrap items-center gap-2">
           <button
@@ -282,6 +313,7 @@ import { useI18n } from 'vue-i18n'
 import { api } from '@/api/client'
 import Icon from '@/components/Icon.vue'
 import PlanPreview from '@/components/PlanPreview.vue'
+import AdScanPanel from '@/components/media/AdScanPanel.vue'
 import RecordingRow from '@/components/media/RecordingRow.vue'
 import TrashPreview from '@/components/media/TrashPreview.vue'
 import BatchRenamePreview from '@/components/media/BatchRenamePreview.vue'
@@ -295,7 +327,8 @@ import { useProblem } from '@/composables/useProblem'
 import { usePlanError } from '@/composables/usePlanError'
 import { useDisplayTimeZone } from '@/composables/useDisplayTimeZone'
 import { formatBytes } from '@/lib/format'
-import type { Disk, MediaFolder, Movie, Plan, SuggestionSource, TrashItem } from '@/api/types'
+import type { AdSummary, Disk, MediaFolder, Movie, Plan, SuggestionSource, TrashItem } from '@/api/types'
+import { ACTIVE, cleanPath, useJobsStore } from '@/stores/jobs'
 
 const { t, locale } = useI18n()
 const navigation = useNavigationStore()
@@ -320,6 +353,108 @@ const notice = ref('')
 // (a viewer just watches; docs/PROFILES_PLAN.md).
 const { can } = useAuth()
 const fileOpsAvailable = computed(() => can('recordings.manage') && (folder.value?.fileOps.available ?? false))
+
+// --- ad detection (docs/ADSCAN_PLAN.md) --------------------------------------
+
+const jobs = useJobsStore()
+// "Detect ads" is offered where it can run and the profile may start it.
+const adScanOn = computed(() => can('recordings.manage') && (folder.value?.adScan ?? false))
+const adsStarting = ref(false)
+// The last batch started from the selection: its jobs' progress.
+const adsBatch = ref<{ jobIds: number[]; skipped: number } | null>(null)
+
+function adsRunning(path: string) {
+  const j = jobs.latest('media.adscan', path)
+  return !!j && ACTIVE.includes(j.state)
+}
+
+const adsBatchProgress = computed(() => {
+  const ids = adsBatch.value?.jobIds ?? []
+  let done = 0
+  let active = 0
+  let failed = 0
+  for (const id of ids) {
+    const state = jobs.byId[id]?.state ?? 'queued'
+    if (state === 'done') done++
+    else if (ACTIVE.includes(state)) active++
+    else failed++
+  }
+  return { done, active, failed, total: ids.length }
+})
+const adsBatchText = computed(() => {
+  const p = adsBatchProgress.value
+  const skipped = adsBatch.value?.skipped ?? 0
+  const parts: string[] = []
+  if (p.active > 0) {
+    parts.push(t('media.ads.batchRunning', { done: p.done, total: p.total }))
+    if (jobs.blockedBy) parts.push(t(`media.ads.waiting.${jobs.blockedBy}`))
+  } else {
+    parts.push(t('media.ads.batchDone', { count: p.done }, p.done))
+  }
+  if (p.failed > 0) parts.push(t('media.ads.batchFailed', { count: p.failed }, p.failed))
+  if (skipped > 0) parts.push(t('media.ads.batchSkipped', { count: skipped }, skipped))
+  return parts.join(' · ')
+})
+
+async function startBatchAds() {
+  adsStarting.value = true
+  try {
+    const res = await api.media.adScanStart([...selection])
+    const jobIds: number[] = []
+    let skipped = 0
+    for (const item of res.items) {
+      if (!item.jobId) {
+        skipped++
+        continue
+      }
+      jobIds.push(item.jobId)
+      if (!jobs.byId[item.jobId]) {
+        jobs.apply({ id: item.jobId, kind: 'media.adscan', key: item.path, ownerId: 0, state: 'queued', done: 0, total: 0, createdAt: new Date().toISOString() })
+      }
+    }
+    adsBatch.value = { jobIds, skipped }
+    selection.clear()
+  } catch {
+    notice.value = t('media.ads.error.generic')
+  } finally {
+    adsStarting.value = false
+  }
+}
+
+function stopBatchAds() {
+  for (const id of adsBatch.value?.jobIds ?? []) {
+    const state = jobs.byId[id]?.state
+    if (state && ACTIVE.includes(state)) void jobs.cancel(id)
+  }
+}
+
+// A recording in this folder finished its analysis: show its summary in
+// the row without reloading the folder (the box's movie list is slow).
+watch(
+  () =>
+    Object.values(jobs.byId)
+      .filter((j) => j.kind === 'media.adscan' && j.state === 'done')
+      .map((j) => j.id),
+  async (doneIds, before) => {
+    const fresh = doneIds.filter((id) => !before?.includes(id))
+    for (const id of fresh) {
+      const path = jobs.byId[id]?.key
+      const movie = folder.value?.movies.find((m) => cleanPath(m.filename) === path)
+      if (!movie || !path) continue
+      try {
+        const res = await api.media.adScanResult(path)
+        const blocks = res.result.blocks
+        movie.ads = {
+          blocks: blocks.length,
+          seconds: blocks.reduce((s, b) => s + (b.end - b.start), 0),
+          uncertain: blocks.filter((b) => b.uncertain).length || undefined,
+        }
+      } catch {
+        // The row keeps what it had.
+      }
+    }
+  },
+)
 
 // --- tabs -------------------------------------------------------------------
 

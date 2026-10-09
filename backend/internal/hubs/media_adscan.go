@@ -11,6 +11,7 @@ import (
 	"encoding/json"
 	"errors"
 	"net/http"
+	"path"
 	"strings"
 
 	"github.com/antonbier/DreamHub/backend/internal/adscan"
@@ -100,7 +101,10 @@ func (h *Media) startAdScan(w http.ResponseWriter, r *http.Request) {
 
 // adScanResult answers GET ?path=: the recording's last analysis.
 func (h *Media) adScanResult(w http.ResponseWriter, r *http.Request) {
-	res, ok, err := h.Store.AdScanResult(r.Context(), r.URL.Query().Get("path"))
+	// The box's movie list may report "//media/…"; results are kept under
+	// the clean path.
+	p := path.Clean("/" + strings.TrimLeft(r.URL.Query().Get("path"), "/"))
+	res, ok, err := h.Store.AdScanResult(r.Context(), p)
 	if err != nil {
 		httpx.WriteError(w, r, http.StatusInternalServerError, "internal", "could not load the analysis")
 		return
@@ -190,4 +194,34 @@ func (h *Media) serviceRef(tsPath string) string {
 	}
 	line, _, _ := strings.Cut(string(data), "\n")
 	return strings.TrimSpace(line)
+}
+
+// adSummary is what the recording list shows of an analysis: how many
+// breaks, how long, how many uncertain.
+type adSummary struct {
+	Blocks    int     `json:"blocks"`
+	Seconds   float64 `json:"seconds"`
+	Uncertain int     `json:"uncertain,omitempty"`
+}
+
+func (h *Media) adSummary(ctx context.Context, tsPath string) *adSummary {
+	if h.Store == nil {
+		return nil
+	}
+	stored, ok, err := h.Store.AdScanResult(ctx, tsPath)
+	if err != nil || !ok {
+		return nil
+	}
+	var res adscan.Result
+	if json.Unmarshal(stored.Result, &res) != nil {
+		return nil
+	}
+	sum := &adSummary{Blocks: len(res.Blocks)}
+	for _, b := range res.Blocks {
+		sum.Seconds += b.End - b.Start
+		if b.Uncertain {
+			sum.Uncertain++
+		}
+	}
+	return sum
 }

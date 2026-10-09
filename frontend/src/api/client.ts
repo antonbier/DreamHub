@@ -14,12 +14,14 @@
 import { shallowRef } from 'vue'
 import { authHeaders, handleUnauthorized } from './authState'
 import type {
+  AdScanResult,
   BouquetEntry,
   ChannelBackup,
   DraftEntry,
   ChannelBouquet,
   ChannelInfo,
   ChannelIssue,
+  Job,
   PiconSet,
   Profile,
   ProfileInput,
@@ -288,6 +290,17 @@ export const api = {
     restorePlan: (paths: string[]) => request<{ plan: Plan }>('POST', '/api/v1/media/trash/restore/plan', { paths }),
     emptyPlan: (paths: string[]) => request<{ plan: Plan; bytes: number }>('POST', '/api/v1/media/trash/empty/plan', { paths }),
     disk: () => request<{ disks: Disk[] }>('GET', '/api/v1/media/disk'),
+    // Ad detection: queue an analysis per recording (it changes nothing),
+    // and read one recording's last result.
+    adScanStart: (paths: string[]) =>
+      request<{ items: { path: string; jobId?: number; existing?: boolean; reason?: string }[] }>('POST', '/api/v1/media/adscan', { paths }),
+    adScanResult: (path: string) =>
+      request<{ path: string; analyzedAt: string; result: AdScanResult }>('GET', `/api/v1/media/adscan?path=${encodeURIComponent(path)}`),
+  },
+  // The background queue; changes arrive live on the event stream.
+  jobs: {
+    list: () => request<{ jobs: Job[]; blockedBy: string }>('GET', '/api/v1/jobs'),
+    cancel: (id: number) => request<Job>('POST', `/api/v1/jobs/${id}/cancel`),
   },
   guide: {
     bouquets: () => request<{ bouquets: Bouquet[] }>('GET', '/api/v1/guide/bouquets'),

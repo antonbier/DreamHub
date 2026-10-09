@@ -8,6 +8,7 @@ Format follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/); version
 
 ### Added
 - Radio in the background: listening in the browser keeps going with the phone's screen locked, with the station, what's on and its logo on the lock screen, and play/pause/stop and previous/next station there. Pause and resume on the page too.
+- Ad detection in recordings (first part): "Detect ads" in a recording's details or for a selection finds the ad breaks by the channel's logo, on the box, in the background — it waits while the box records. The details show the breaks on a timeline (uncertain ones marked), tap one to watch from there in the browser; the list shows "14 min ads". Nothing in the recording changes yet. Not yet tried on a real box.
 - Radio visualization in the spirit of Winamp: a spectrum with falling peaks, or an oscilloscope, or none — switched with one button, remembered per device, off by default when the system asks for less motion.
 - Change log by profile: SystemHub shows who made each change and filters by profile or "DreamHub itself".
 - Channel list (ChannelHub, admins): your bouquets and what's in them, every channel the box knows — search, "new since" (after a channel scan), "in no bouquet", TV/radio, HD, provider — a channel check (vanished after a scan, twice in a bouquet, no programme data, no logo), and the installed logo sets with how many of your channels they cover; DreamHub shows logos from the set you choose first. 

@@ -78,6 +78,12 @@ func TestAdScan_FindsBreaksInTheBackground(t *testing.T) {
 	if got.ServiceRef != "1:0:19:2EE3:441:1:C00000:0:0:0:" || got.Result.Duration != 3600 || len(got.Result.Blocks) != 3 || !got.Result.Learned {
 		t.Fatalf("result: %+v", got)
 	}
+	// The box's movie list reports "//media/…": the same result.
+	var viaList adScanAnswer
+	e.json(t, "GET", "/api/v1/media/adscan?path="+url.QueryEscape("/"+bauer), "", nil, 200, &viaList)
+	if len(viaList.Result.Blocks) != 3 {
+		t.Fatalf("by the list's path: %+v", viaList)
+	}
 	if _, ok, _ := e.store.AdScanLogo(context.Background(), got.ServiceRef); !ok {
 		t.Fatal("the channel's logo wasn't kept")
 	}

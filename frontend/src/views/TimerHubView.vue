@@ -19,7 +19,7 @@
   <div class="mx-auto max-w-content p-6 below-md:p-4">
     <div class="flex items-center gap-3">
       <Icon name="timers" :size="24" class="text-muted" />
-      <h1 class="text-[26px] font-bold">{{ t(item ? item.label : 'hub.timer') }}</h1>
+      <h1 class="text-[26px] font-bold">{{ hubTitle('timer', 'hub.timer') }}</h1>
       <span v-if="tuners > 0" class="ms-auto text-[13px] text-faint">{{ t('timers.tuners', { count: tuners }, tuners) }}</span>
     </div>
 
@@ -127,6 +127,7 @@
 </template>
 
 <script setup lang="ts">
+import { useHubLabel } from '@/composables/useHubLabel'
 import ErrorText from '@/components/ErrorText.vue'
 import { computed, onMounted, ref } from 'vue'
 import { useI18n } from 'vue-i18n'
@@ -141,6 +142,7 @@ import { useDisplayTimeZone } from '@/composables/useDisplayTimeZone'
 import type { AutoTimers, SimulatedTimer, Timer } from '@/api/types'
 
 const { t, locale } = useI18n()
+const { hubTitle } = useHubLabel()
 const navigation = useNavigationStore()
 const { describe, describeFix } = useProblem()
 const { planErrorMessage } = usePlanError()

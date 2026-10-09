@@ -1,7 +1,7 @@
 // Sidebar contents from GET /api/v1/navigation (backend/internal/hub,
-// Navigation()). The backend already applies the role filter, hides
-// disabled hubs and picks descriptive-vs-hub labels — the frontend just
-// renders what it's given.
+// Navigation()). The backend already applies the role filter and hides
+// disabled hubs. Each item carries both its descriptive label and its hub
+// name; which one shows is the frontend's (composables/useHubLabel.ts).
 import { defineStore } from 'pinia'
 import { api } from '@/api/client'
 import type { Navigation } from '@/api/types'

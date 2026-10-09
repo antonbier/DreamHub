@@ -23,7 +23,7 @@
   <div class="mx-auto max-w-content p-6 below-md:p-4">
     <div class="flex items-center gap-3">
       <Icon name="recommendations" :size="24" class="text-muted" />
-      <h1 class="text-[26px] font-bold">{{ t(item ? item.label : 'hub.discovery') }}</h1>
+      <h1 class="text-[26px] font-bold">{{ hubTitle('discovery', 'hub.discovery') }}</h1>
     </div>
 
     <div v-if="item && item.status && item.status !== 'available'" class="mt-4 rounded border border-line bg-tile p-4">
@@ -136,6 +136,7 @@
 </template>
 
 <script setup lang="ts">
+import { useHubLabel } from '@/composables/useHubLabel'
 import ErrorText from '@/components/ErrorText.vue'
 import { computed, onBeforeUnmount, onMounted, reactive, ref, watch } from 'vue'
 import { useI18n } from 'vue-i18n'
@@ -153,6 +154,7 @@ import { dayKey as zonedDayKey } from '@/lib/zonedTime'
 import type { Bouquet, DiscoveryStatus, Recommendation, TasteCounts, TasteProfile } from '@/api/types'
 
 const { t, locale } = useI18n()
+const { hubTitle } = useHubLabel()
 const navigation = useNavigationStore()
 const { describe, describeFix } = useProblem()
 const { timeZone } = useDisplayTimeZone()

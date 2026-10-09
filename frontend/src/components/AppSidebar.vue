@@ -68,6 +68,7 @@
 </template>
 
 <script setup lang="ts">
+import { useHubLabel } from '@/composables/useHubLabel'
 import { useAuth } from '@/composables/useAuth'
 import { computed, defineComponent, h, nextTick, onBeforeUnmount, onMounted, ref, watch } from 'vue'
 import { RouterLink, useRoute } from 'vue-router'
@@ -80,6 +81,7 @@ import type { NavItem, NavSection } from '@/api/types'
 
 const props = defineProps<{ sections: NavSection[] }>()
 const { t } = useI18n()
+const { hubLabel } = useHubLabel()
 const ui = useUiStore()
 
 // As a drawer (below 900 px) the sidebar is a modal while open — Tab stays
@@ -160,14 +162,14 @@ const NavLink = defineComponent({
 
     const tooltip = computed(() => {
       const item = props.item
-      if (!item.status || item.status === 'available') return props.collapsed ? t(item.label) : undefined
+      if (!item.status || item.status === 'available') return props.collapsed ? hubLabel(item) : undefined
       const parts = [t(`status.${item.status}`)]
       for (const p of item.problems ?? []) {
         parts.push(describe(p))
         const fix = describeFix(p)
         if (fix) parts.push(fix)
       }
-      return (props.collapsed ? `${t(item.label)} — ` : '') + parts.join(' · ')
+      return (props.collapsed ? `${hubLabel(item)} — ` : '') + parts.join(' · ')
     })
 
     return () =>
@@ -185,7 +187,7 @@ const NavLink = defineComponent({
         },
         () => [
           h(Icon, { name: props.item.icon, size: 18 }),
-          !props.collapsed ? h('span', { class: 'truncate' }, t(props.item.label)) : null,
+          !props.collapsed ? h('span', { class: 'truncate' }, hubLabel(props.item)) : null,
           props.item.status && props.item.status !== 'available'
             ? h('span', {
                 class: [

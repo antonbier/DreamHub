@@ -10,7 +10,7 @@
     <div v-if="item" class="flex items-start gap-3">
       <Icon :name="item.icon" :size="24" class="mt-0.5 text-muted" />
       <div>
-        <h1 class="text-[26px] font-bold">{{ t('hubPlaceholder.title', { name: t(item.label) }) }}</h1>
+        <h1 class="text-[26px] font-bold">{{ t('hubPlaceholder.title', { name: hubLabel(item) }) }}</h1>
         <p class="mt-2 max-w-[640px] text-[14px] text-muted">{{ t('hubPlaceholder.body') }}</p>
         <div v-if="item.status && item.status !== 'available'" class="mt-4 rounded border border-line bg-tile p-4">
           <div class="mb-1.5 flex items-center gap-2 text-[13.5px] font-semibold">
@@ -34,6 +34,7 @@
 </template>
 
 <script setup lang="ts">
+import { useHubLabel } from '@/composables/useHubLabel'
 import { computed } from 'vue'
 import { useRoute } from 'vue-router'
 import { useI18n } from 'vue-i18n'
@@ -43,6 +44,7 @@ import { useProblem } from '@/composables/useProblem'
 
 const route = useRoute()
 const { t } = useI18n()
+const { hubLabel } = useHubLabel()
 const navigation = useNavigationStore()
 const { describe, describeFix } = useProblem()
 

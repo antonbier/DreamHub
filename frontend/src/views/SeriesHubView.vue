@@ -9,7 +9,7 @@
   <div class="mx-auto max-w-content p-6 below-md:p-4">
     <div class="flex items-center gap-3">
       <Icon name="series" :size="24" class="text-muted" />
-      <h1 class="text-[26px] font-bold">{{ t(item ? item.label : 'hub.series') }}</h1>
+      <h1 class="text-[26px] font-bold">{{ hubTitle('series', 'hub.series') }}</h1>
     </div>
 
     <div v-if="item && item.status && item.status !== 'available'" class="mt-4 rounded border border-line bg-tile p-4">
@@ -105,6 +105,7 @@
 </template>
 
 <script setup lang="ts">
+import { useHubLabel } from '@/composables/useHubLabel'
 import ErrorText from '@/components/ErrorText.vue'
 import { computed, onMounted, ref } from 'vue'
 import { RouterLink } from 'vue-router'
@@ -119,6 +120,7 @@ import { useDisplayTimeZone } from '@/composables/useDisplayTimeZone'
 import type { SeriesMarker, UpcomingEpisode } from '@/api/types'
 
 const { t, locale } = useI18n()
+const { hubTitle } = useHubLabel()
 const navigation = useNavigationStore()
 const enrich = useEnrichStore()
 const { describe, describeFix } = useProblem()

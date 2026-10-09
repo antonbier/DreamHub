@@ -19,7 +19,7 @@
   <div class="mx-auto max-w-content p-6 below-md:p-4">
     <div class="flex items-center gap-3">
       <Icon name="control" :size="24" class="text-muted" />
-      <h1 class="text-[26px] font-bold">{{ t(item ? item.label : 'hub.control') }}</h1>
+      <h1 class="text-[26px] font-bold">{{ hubTitle('control', 'hub.control') }}</h1>
     </div>
 
     <div v-if="item && item.status && item.status !== 'available'" class="mt-4 rounded border border-line bg-tile p-4">
@@ -60,6 +60,7 @@
 </template>
 
 <script setup lang="ts">
+import { useHubLabel } from '@/composables/useHubLabel'
 import { useI18n } from 'vue-i18n'
 import Icon from '@/components/Icon.vue'
 import RemotePad from '@/components/control/RemotePad.vue'
@@ -69,6 +70,7 @@ import { useControlHub } from '@/composables/useControlHub'
 import { useProblem } from '@/composables/useProblem'
 
 const { t } = useI18n()
+const { hubTitle } = useHubLabel()
 const { describe, describeFix } = useProblem()
 const { item } = useControlHub()
 </script>

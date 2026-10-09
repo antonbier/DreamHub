@@ -12,7 +12,7 @@
     <li v-for="hub in attention" :key="hub.id" class="flex items-start gap-2.5 border-b border-line-soft py-2 last:border-none">
       <span class="mt-1.5 h-1.5 w-1.5 shrink-0 rounded-full" :class="hub.status === 'degraded' ? 'bg-warn' : 'bg-faint'" />
       <span class="min-w-0 flex-1">
-        <span class="block truncate text-[14px] text-text">{{ t(hub.label) }}</span>
+        <span class="block truncate text-[14px] text-text">{{ hubLabel(hub) }}</span>
         <span class="block text-[12.5px] text-muted">
           {{ hub.problems.map(describe).join(' · ') }}
         </span>
@@ -22,6 +22,7 @@
 </template>
 
 <script setup lang="ts">
+import { useHubLabel } from '@/composables/useHubLabel'
 import ErrorText from '@/components/ErrorText.vue'
 import { computed, onMounted, ref } from 'vue'
 import { useI18n } from 'vue-i18n'
@@ -30,6 +31,7 @@ import { useProblem } from '@/composables/useProblem'
 import type { HubStatus } from '@/api/types'
 
 const { t } = useI18n()
+const { hubLabel } = useHubLabel()
 const { describe } = useProblem()
 const hubs = ref<HubStatus[]>([])
 const loading = ref(true)

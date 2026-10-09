@@ -46,6 +46,7 @@
 </template>
 
 <script setup lang="ts">
+import { useHubLabel } from '@/composables/useHubLabel'
 import { useAuth } from '@/composables/useAuth'
 import { computed, onMounted } from 'vue'
 import { useI18n } from 'vue-i18n'
@@ -59,6 +60,7 @@ import { useDisplayTimeZone } from '@/composables/useDisplayTimeZone'
 import type { Notification } from '@/api/types'
 
 const { t, locale } = useI18n()
+const { hubLabel } = useHubLabel()
 const { timeZone } = useDisplayTimeZone()
 const navigation = useNavigationStore()
 const notifications = useNotificationsStore()
@@ -87,7 +89,7 @@ const issues = computed<Issue[]>(() => {
   for (const item of navigation.navigation?.sections.flatMap((s) => s.items) ?? []) {
     if (!item.status || item.status === 'available') continue
     for (const p of item.problems ?? []) {
-      out.push({ text: `${t(item.label)}: ${describe(p)}`, level: item.status === 'degraded' ? 'warn' : 'muted' })
+      out.push({ text: `${hubLabel(item)}: ${describe(p)}`, level: item.status === 'degraded' ? 'warn' : 'muted' })
     }
   }
   return out

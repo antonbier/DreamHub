@@ -130,12 +130,4 @@ watch(
   },
 )
 
-// The backend picks descriptive-vs-hub labels per navLabels, so re-fetch
-// the sidebar whenever that preference changes (skip the initial load).
-watch(
-  () => preferences.navLabels,
-  () => {
-    if (preferences.loaded) void navigation.load()
-  },
-)
 </script>

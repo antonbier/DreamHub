@@ -17,7 +17,7 @@
   <div class="mx-auto max-w-content p-6 below-md:p-4">
     <div class="flex items-center gap-3">
       <Icon name="radio" :size="24" class="text-muted" />
-      <h1 class="text-[26px] font-bold">{{ t(item ? item.label : 'hub.radio') }}</h1>
+      <h1 class="text-[26px] font-bold">{{ hubTitle('radio', 'hub.radio') }}</h1>
     </div>
     <p class="mt-1 text-[13.5px] text-muted">{{ t('radio.intro') }}</p>
 
@@ -273,6 +273,7 @@
 </template>
 
 <script setup lang="ts">
+import { useHubLabel } from '@/composables/useHubLabel'
 import ErrorText from '@/components/ErrorText.vue'
 import { computed, nextTick, onBeforeUnmount, onMounted, ref, shallowRef, watch, watchEffect } from 'vue'
 import { useI18n } from 'vue-i18n'
@@ -294,6 +295,7 @@ import type { Bouquet, EPGEvent, NowNext, Plan, Timer } from '@/api/types'
 const BOUQUET_KEY = 'dreamhub.radioBouquet'
 
 const { t, locale } = useI18n()
+const { hubTitle } = useHubLabel()
 const navigation = useNavigationStore()
 const { describe, describeFix } = useProblem()
 const { timeZone } = useDisplayTimeZone()

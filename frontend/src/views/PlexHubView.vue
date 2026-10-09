@@ -21,7 +21,7 @@
   <div class="mx-auto max-w-content p-6 below-md:p-4">
     <div class="flex flex-wrap items-center gap-3">
       <Icon name="library" :size="24" class="text-muted" />
-      <h1 class="text-[26px] font-bold">{{ t(navItem ? navItem.label : 'hub.plex') }}</h1>
+      <h1 class="text-[26px] font-bold">{{ hubTitle('plex', 'hub.plex') }}</h1>
       <div v-if="status?.configured" class="ms-auto flex items-center gap-3 text-[13px]">
         <span class="flex items-center gap-1.5" :class="online ? 'text-muted' : 'text-warn'">
           <span class="h-1.5 w-1.5 rounded-full" :class="online ? 'bg-ok' : 'bg-warn'" />
@@ -235,6 +235,7 @@
 </template>
 
 <script setup lang="ts">
+import { useHubLabel } from '@/composables/useHubLabel'
 import { computed, onBeforeUnmount, onMounted, ref, watch } from 'vue'
 import { RouterLink, useRoute, useRouter } from 'vue-router'
 import { useI18n } from 'vue-i18n'
@@ -246,7 +247,6 @@ import PlexItemCard from '@/components/plex/PlexItemCard.vue'
 import PlexItemRow from '@/components/plex/PlexItemRow.vue'
 import PlexItemDialog from '@/components/plex/PlexItemDialog.vue'
 import PlexWatchedPreview from '@/components/plex/PlexWatchedPreview.vue'
-import { useNavigationStore } from '@/stores/navigation'
 import { useDisplayTimeZone } from '@/composables/useDisplayTimeZone'
 import { usePlanError } from '@/composables/usePlanError'
 import { usePlexText } from '@/composables/usePlexText'
@@ -254,14 +254,12 @@ import { formatWhen } from '@/lib/format'
 import type { Plan, PlexItem, PlexLibrary, PlexStatus } from '@/api/types'
 
 const { t, locale } = useI18n()
+const { hubTitle } = useHubLabel()
 const route = useRoute()
 const router = useRouter()
-const navigation = useNavigationStore()
 const { timeZone } = useDisplayTimeZone()
 const { planErrorMessage } = usePlanError()
 const text = usePlexText()
-
-const navItem = computed(() => navigation.navigation?.sections.flatMap((s) => s.items).find((i) => i.path === '/plex'))
 
 const status = ref<PlexStatus | null>(null)
 const loading = ref(true)

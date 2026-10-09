@@ -22,7 +22,7 @@
   <div class="mx-auto max-w-content p-6 below-md:p-4">
     <div class="flex items-center gap-3">
       <Icon name="guide" :size="24" class="text-muted" />
-      <h1 class="text-[26px] font-bold">{{ t(item ? item.label : 'hub.guide') }}</h1>
+      <h1 class="text-[26px] font-bold">{{ hubTitle('guide', 'hub.guide') }}</h1>
     </div>
 
     <div v-if="item && item.status && item.status !== 'available'" class="mt-4 rounded border border-line bg-tile p-4">
@@ -172,6 +172,7 @@
 </template>
 
 <script setup lang="ts">
+import { useHubLabel } from '@/composables/useHubLabel'
 import ErrorText from '@/components/ErrorText.vue'
 import { computed, onMounted, ref, watch } from 'vue'
 import { useI18n } from 'vue-i18n'
@@ -197,6 +198,7 @@ type View = (typeof VIEWS)[number]
 const VIEW_KEY = 'dreamhub.guideView'
 
 const { t, locale } = useI18n()
+const { hubTitle } = useHubLabel()
 const navigation = useNavigationStore()
 const enrich = useEnrichStore()
 const { describe, describeFix } = useProblem()

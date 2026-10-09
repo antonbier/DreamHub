@@ -10,7 +10,7 @@
   <div class="mx-auto max-w-content p-6 below-md:p-4">
     <div class="flex items-center gap-3">
       <Icon name="list" :size="24" class="text-muted" />
-      <h1 class="text-[26px] font-bold">{{ t('hub.channels') }}</h1>
+      <h1 class="text-[26px] font-bold">{{ hubTitle('channels', 'hub.channels') }}</h1>
     </div>
 
     <nav class="-mx-6 mt-4 flex gap-1 overflow-x-auto border-b border-line-soft px-6 below-md:-mx-4 below-md:px-4" :aria-label="t('channels.tabs.label')">
@@ -287,6 +287,7 @@
 </template>
 
 <script setup lang="ts">
+import { useHubLabel } from '@/composables/useHubLabel'
 import { computed, defineComponent, h, onMounted, ref, watch } from 'vue'
 import { RouterLink, useRoute } from 'vue-router'
 import { useI18n } from 'vue-i18n'
@@ -305,6 +306,7 @@ const TABS = ['bouquets', 'find', 'check', 'picons'] as const
 type Tab = (typeof TABS)[number]
 
 const { t, locale } = useI18n()
+const { hubTitle } = useHubLabel()
 const { friendly } = useFriendlyError()
 const { planErrorMessage } = usePlanError()
 const { describeChange } = useChannelChange()

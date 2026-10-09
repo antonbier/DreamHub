@@ -12,7 +12,7 @@
   <div class="mx-auto max-w-content p-6 below-md:p-4">
     <div class="flex items-center gap-3">
       <Icon name="admin" :size="24" class="text-muted" />
-      <h1 class="text-[26px] font-bold">{{ t(item ? item.label : 'hub.admin') }}</h1>
+      <h1 class="text-[26px] font-bold">{{ hubTitle('admin', 'hub.admin') }}</h1>
     </div>
 
     <div v-if="item && item.status && item.status !== 'available'" class="mt-4 rounded border border-line bg-tile p-4">
@@ -151,6 +151,7 @@
 </template>
 
 <script setup lang="ts">
+import { useHubLabel } from '@/composables/useHubLabel'
 import { useFriendlyError } from '@/composables/useFriendlyError'
 import { computed, onMounted, onUnmounted, ref } from 'vue'
 import { useI18n } from 'vue-i18n'
@@ -165,6 +166,7 @@ import { useDisplayTimeZone } from '@/composables/useDisplayTimeZone'
 import type { CrashLog, LogEntry, LogLevel } from '@/api/types'
 
 const { t, locale } = useI18n()
+const { hubTitle } = useHubLabel()
 const { lastFriendly } = useFriendlyError()
 const navigation = useNavigationStore()
 const { describe, describeFix } = useProblem()

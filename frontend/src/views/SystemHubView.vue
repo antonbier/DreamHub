@@ -12,7 +12,7 @@
   <div class="mx-auto max-w-content p-6 below-md:p-4">
     <div class="flex items-center gap-3">
       <Icon name="system" :size="24" class="text-muted" />
-      <h1 class="text-[26px] font-bold">{{ t(item ? item.label : 'hub.system') }}</h1>
+      <h1 class="text-[26px] font-bold">{{ hubTitle('system', 'hub.system') }}</h1>
     </div>
 
     <div v-if="item && item.status && item.status !== 'available'" class="mt-4 rounded border border-line bg-tile p-4">
@@ -130,7 +130,7 @@
               <Icon :name="hub.icon" :size="18" class="mt-0.5 shrink-0 text-muted" />
               <span class="min-w-0 flex-1">
                 <span class="flex items-center gap-2">
-                  <span class="truncate text-[14px] text-text">{{ t(hub.label) }}</span>
+                  <span class="truncate text-[14px] text-text">{{ hubLabel(hub) }}</span>
                   <span v-if="!hub.enabled" class="shrink-0 text-[12px] text-faint">{{ t('diagnostics.disabled') }}</span>
                 </span>
                 <ul v-if="hub.problems.length > 0" class="mt-0.5 flex flex-col gap-0.5 text-[12.5px] text-muted">
@@ -150,6 +150,7 @@
 </template>
 
 <script setup lang="ts">
+import { useHubLabel } from '@/composables/useHubLabel'
 import ErrorText from '@/components/ErrorText.vue'
 import { computed, onMounted, ref, watch } from 'vue'
 import { useI18n } from 'vue-i18n'
@@ -163,6 +164,7 @@ import { useDisplayTimeZone } from '@/composables/useDisplayTimeZone'
 import type { ChangeEntry, DeviceInfo, HubStatus, Profile } from '@/api/types'
 
 const { t, locale } = useI18n()
+const { hubLabel, hubTitle } = useHubLabel()
 const route = useRoute()
 const router = useRouter()
 const navigation = useNavigationStore()

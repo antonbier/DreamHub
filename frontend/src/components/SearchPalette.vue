@@ -59,6 +59,7 @@
 </template>
 
 <script setup lang="ts">
+import { useHubLabel } from '@/composables/useHubLabel'
 import { computed, nextTick, onBeforeUnmount, onMounted, ref, watch } from 'vue'
 import { useI18n } from 'vue-i18n'
 import { useRouter } from 'vue-router'
@@ -70,6 +71,7 @@ import { useSettingsText } from '@/composables/useSettingsText'
 import type { SettingSection } from '@/api/types'
 
 const { t } = useI18n()
+const { hubLabel } = useHubLabel()
 const router = useRouter()
 const navigation = useNavigationStore()
 
@@ -94,7 +96,7 @@ const allItems = computed<ResultItem[]>(
   () =>
     navigation.navigation?.sections
       .flatMap((s) => s.items)
-      .map((i) => ({ key: `page:${i.path}`, path: i.path, label: t(i.label), icon: i.icon })) ?? [],
+      .map((i) => ({ key: `page:${i.path}`, path: i.path, label: hubLabel(i), icon: i.icon })) ?? [],
 )
 
 // Settings: a section matches by its title or any of its field labels and

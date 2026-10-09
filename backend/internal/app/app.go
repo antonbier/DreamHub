@@ -386,7 +386,9 @@ func recordingBlocker(wc webcontrol.Client) jobs.Blocker {
 			return "boxUnreachable"
 		}
 		for _, t := range timers {
-			if t.State == webcontrol.TimerRunning {
+			// Like MediaHub's "in use": a zap timer or a switched-off one
+			// records nothing.
+			if t.State == webcontrol.TimerRunning && !t.Disabled && !t.JustPlay {
 				return "recording"
 			}
 		}

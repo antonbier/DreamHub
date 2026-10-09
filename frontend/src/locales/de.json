@@ -515,7 +515,8 @@
           "not_found": "Die Aufnahme ist nicht mehr da.",
           "interrupted": "DreamHub wurde während des Schneidens neu gestartet. Die Aufnahme ist unverändert."
         }
-      }
+      },
+      "rowTrimmed": "Werbung herausgeschnitten"
     }
   },
   "guide": {

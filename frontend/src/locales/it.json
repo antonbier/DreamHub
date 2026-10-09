@@ -515,7 +515,8 @@
           "not_found": "La registrazione non c'è più.",
           "interrupted": "DreamHub è stato riavviato durante il taglio. La registrazione è invariata."
         }
-      }
+      },
+      "rowTrimmed": "pubblicità tagliata"
     }
   },
   "guide": {

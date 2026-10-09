@@ -39,7 +39,7 @@ func (h *Media) RegisterJobs(q *jobs.Service) {
 	q.Register(jobs.Kind{Name: JobAdScan, Run: h.runAdScan, Resumable: true})
 	// Not resumable: a cut interrupted halfway starts over (its partial
 	// file is removed), and only when asked again.
-	q.Register(jobs.Kind{Name: JobTrim, Run: h.runTrim})
+	q.Register(jobs.Kind{Name: JobTrim, Run: h.runTrim, Abandon: h.abandonTrim})
 }
 
 // adScanAvailable: an Opener (FFmpeg found, or mock mode), the queue, and
@@ -205,6 +205,7 @@ type adSummary struct {
 	Blocks    int     `json:"blocks"`
 	Seconds   float64 `json:"seconds"`
 	Uncertain int     `json:"uncertain,omitempty"`
+	Trimmed   bool    `json:"trimmed,omitempty"`
 }
 
 func (h *Media) adSummary(ctx context.Context, tsPath string) *adSummary {
@@ -219,7 +220,7 @@ func (h *Media) adSummary(ctx context.Context, tsPath string) *adSummary {
 	if json.Unmarshal(stored.Result, &res) != nil {
 		return nil
 	}
-	sum := &adSummary{Blocks: len(res.Blocks)}
+	sum := &adSummary{Blocks: len(res.Blocks), Trimmed: res.Trimmed}
 	for _, b := range res.Blocks {
 		sum.Seconds += b.End - b.Start
 		if b.Uncertain {

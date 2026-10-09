@@ -515,7 +515,8 @@
           "not_found": "The recording isn't there any more.",
           "interrupted": "DreamHub was restarted during the cut. The recording is unchanged."
         }
-      }
+      },
+      "rowTrimmed": "ads cut out"
     }
   },
   "guide": {

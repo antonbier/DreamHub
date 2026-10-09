@@ -23,6 +23,7 @@ import (
 	"github.com/antonbier/DreamHub/backend/internal/jobs"
 	"github.com/antonbier/DreamHub/backend/internal/plan"
 	"github.com/antonbier/DreamHub/backend/internal/recfs"
+	"github.com/antonbier/DreamHub/backend/internal/store"
 	"github.com/antonbier/DreamHub/backend/internal/trim"
 	"github.com/antonbier/DreamHub/backend/internal/webcontrol"
 )
@@ -102,14 +103,12 @@ func (h *Media) trimPlan(w http.ResponseWriter, r *http.Request) {
 	if !h.checkNotInUse(w, r, []string{p}) {
 		return
 	}
-	// The original's new name must be free.
+	// The original's new name must be free — also of an earlier cut's
+	// original, whose files stay next to its trashed .ts.
 	base := recfs.Base(p)
-	if _, err := recfs.ValidName(base + originalSuffix); err != nil {
-		httpx.WriteError(w, r, http.StatusConflict, CodeTrimOriginalName, "the recording's name is too long for keeping the original next to it")
-		return
-	}
-	if _, err := h.FS.Lstat(path.Join(path.Dir(p), base+originalSuffix+".ts")); err == nil {
-		httpx.WriteError(w, r, http.StatusConflict, CodeTrimOriginalName, "a recording named like the kept original already exists")
+	origBase, ok := h.originalBase(path.Dir(p), base)
+	if !ok {
+		httpx.WriteError(w, r, http.StatusConflict, CodeTrimOriginalName, "no free name for keeping the original next to the recording")
 		return
 	}
 	// The cut version is written next to the original first.
@@ -129,7 +128,7 @@ func (h *Media) trimPlan(w http.ResponseWriter, r *http.Request) {
 	changes := []plan.Change{
 		{Type: "recording.trim", Before: map[string]any{"path": p, "duration": res.Duration, "size": size},
 			After: map[string]any{"path": p, "duration": trim.Length(keep), "size": newSize, "removed": cut, "blocks": len(req.Blocks)}},
-		{Type: "recording.trash", Before: p, After: path.Join(path.Dir(p), base+originalSuffix+".ts"+recfs.TrashSuffix)},
+		{Type: "recording.trash", Before: p, After: path.Join(path.Dir(p), origBase+".ts"+recfs.TrashSuffix)},
 	}
 	pl := h.Plans.Create(user, plan.Draft{
 		Action:      "media.trim",
@@ -169,8 +168,7 @@ func (h *Media) runTrim(ctx context.Context, run *jobs.Run) error {
 		return jobs.Fail(CodeMediaInUse, nil)
 	}
 	dir, base := path.Dir(p.Path), recfs.Base(p.Path)
-	// Hidden and not ending in .ts: the box's lists ignore it meanwhile.
-	tmp := path.Join(dir, "."+base+".dreamhub-trim")
+	tmp := trimTemp(dir, base)
 	_ = h.FS.Remove(tmp) // a leftover from an interrupted run
 
 	name := map[string]string{"name": base}
@@ -209,7 +207,10 @@ func (h *Media) swapTrimmed(ctx context.Context, p, tmp string) error {
 		return jobs.Fail(CodeMediaInUse, nil)
 	}
 	dir, base := path.Dir(p), recfs.Base(p)
-	origBase := base + originalSuffix
+	origBase, ok := h.originalBase(dir, base)
+	if !ok {
+		return jobs.Fail(CodeTrimOriginalName, nil)
+	}
 	moves, err := recfs.PlanRename(h.FS, p, origBase)
 	if err != nil {
 		return jobs.Fail(CodeTrimOriginalName, err)
@@ -260,4 +261,48 @@ func (h *Media) swapTrimmed(ctx context.Context, p, tmp string) error {
 		}
 	}
 	return nil
+}
+
+// trimTemp is where a cut is written first: next to the recording (same
+// file system, so the final rename is instant), hidden and not ending in
+// .ts, so the box's lists ignore it meanwhile.
+func trimTemp(dir, base string) string {
+	return path.Join(dir, "."+base+".dreamhub-trim")
+}
+
+// abandonTrim removes the half-written cut of a job a restart interrupted.
+func (h *Media) abandonTrim(_ context.Context, j store.Job) {
+	var p trimParams
+	if json.Unmarshal(j.Params, &p) != nil || p.Path == "" {
+		return
+	}
+	tmp := trimTemp(path.Dir(p.Path), recfs.Base(p.Path))
+	_ = h.FS.Remove(tmp)
+	_ = h.FS.Remove(tmp + ".list")
+}
+
+// originalBase finds a name for the kept original: "<name> - original",
+// else "<name> - original 2" … — none of whose files may exist yet (an
+// earlier cut's original keeps its sidecars next to its trashed .ts).
+func (h *Media) originalBase(dir, base string) (string, bool) {
+	for n := 1; n <= 9; n++ {
+		cand := base + originalSuffix
+		if n > 1 {
+			cand += fmt.Sprintf(" %d", n)
+		}
+		if _, err := recfs.ValidName(cand); err != nil {
+			return "", false
+		}
+		free := true
+		for _, ext := range []string{".ts", ".ts" + recfs.TrashSuffix, ".ts.meta", ".ts.ap", ".ts.sc", ".ts.cuts", ".eit", ".jpg", ".backdrop.jpg"} {
+			if _, err := h.FS.Lstat(path.Join(dir, cand+ext)); err == nil {
+				free = false
+				break
+			}
+		}
+		if free {
+			return cand, true
+		}
+	}
+	return "", false
 }

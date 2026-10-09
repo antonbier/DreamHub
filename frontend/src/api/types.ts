@@ -255,6 +255,8 @@ export interface AdSummary {
   blocks: number
   seconds: number
   uncertain?: number
+  // The breaks were cut out of the recording.
+  trimmed?: boolean
 }
 
 // backend/internal/adscan.Result, from GET /api/v1/media/adscan?path=.

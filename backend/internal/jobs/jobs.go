@@ -32,6 +32,9 @@ type Kind struct {
 	// Resumable jobs are queued again after a restart, with their last
 	// checkpoint; others are marked failed ("interrupted").
 	Resumable bool
+	// Abandon cleans up after a job a restart interrupted and that won't
+	// resume (a half-written file); optional.
+	Abandon func(ctx context.Context, j store.Job)
 }
 
 // Blocker reports a reason to hold the queue right now ("recording"), or
@@ -290,6 +293,9 @@ func (s *Service) recover(ctx context.Context) {
 			j.State, j.Message, j.MessageParams = store.JobQueued, "", nil
 		} else {
 			j.State, j.Error, j.FinishedAt = store.JobFailed, "interrupted", s.now()
+			if ok && k.Abandon != nil {
+				k.Abandon(ctx, j)
+			}
 		}
 		if err := s.Store.UpdateJob(ctx, j); err != nil {
 			s.logErr("recovering a job", err)

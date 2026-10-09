@@ -14,7 +14,9 @@
   original goes to the trash.
 -->
 <template>
-  <section class="mt-4 rounded border border-line-soft bg-bg p-3" :aria-busy="active">
+  <!-- Someone who can't start it sees the section only once there's
+       something to see. -->
+  <section v-if="result || canStart || active || trimActive" class="mt-4 rounded border border-line-soft bg-bg p-3" :aria-busy="active">
     <div class="flex items-center gap-3">
       <h3 class="text-[12.5px] text-faint">{{ t('media.ads.heading') }}</h3>
       <button
@@ -80,6 +82,7 @@
           v-for="(b, i) in result.blocks"
           :key="i"
           :type="canPlay ? 'button' : undefined"
+          :role="canPlay ? undefined : 'img'"
           class="absolute inset-y-0 border-x border-bg"
           :class="[b.uncertain ? 'ad-uncertain' : 'bg-muted', canPlay ? 'hover:opacity-80 focus-visible:outline focus-visible:outline-2 focus-visible:outline-accent' : '']"
           :style="{ insetInlineStart: pct(b.start), width: pct(b.end - b.start) }"
@@ -152,7 +155,6 @@
       >
         {{ t('media.ads.detect') }}
       </button>
-      <span v-else class="text-[13px] text-muted">{{ t('media.ads.notAnalysed') }}</span>
     </div>
 
     <p v-if="errorText" class="mt-2 text-[12.5px] text-warn" role="alert">{{ errorText }}</p>
@@ -195,6 +197,12 @@ const router = useRouter()
 const jobs = useJobsStore()
 
 const result = ref<AdScanResult | null>(null)
+// A failed job's message shows until the next action; older failures
+// (from before this dialog's last start) don't.
+const errorsSince = ref(0)
+function freshErrors() {
+  errorsSince.value = Math.max(0, ...Object.keys(jobs.byId).map(Number))
+}
 const loaded = ref(false)
 const starting = ref(false)
 const startError = ref('')
@@ -217,7 +225,7 @@ const errorText = computed(() => {
   if (startError.value) return startError.value
   if (trimErrorFromJob.value) return trimErrorFromJob.value
   const j = job.value
-  if (j?.state !== 'failed') return ''
+  if (j?.state !== 'failed' || j.id <= errorsSince.value) return ''
   const key = `media.ads.error.${j.error}`
   return te(key) ? t(key) : t('media.ads.error.generic')
 })
@@ -262,7 +270,12 @@ async function loadResult() {
   try {
     const res = await api.media.adScanResult(props.path)
     result.value = res.result
-    const sum: AdSummary = { blocks: res.result.blocks.length, seconds: adSeconds.value, uncertain: uncertain.value || undefined }
+    const sum: AdSummary = {
+      blocks: res.result.blocks.length,
+      seconds: adSeconds.value,
+      uncertain: uncertain.value || undefined,
+      trimmed: res.result.trimmed || undefined,
+    }
     return sum
   } catch {
     // 404: not analysed yet.
@@ -273,6 +286,7 @@ async function loadResult() {
 }
 
 async function start() {
+  freshErrors()
   starting.value = true
   startError.value = ''
   try {
@@ -324,6 +338,7 @@ const trimSummary = computed(() =>
 
 // Certain breaks ticked, uncertain ones left to the user.
 function startChoosing() {
+  freshErrors()
   ticked.value = (result.value?.blocks ?? []).map((b) => !b.uncertain)
   trimPlan.value = null
   trimError.value = ''
@@ -378,7 +393,7 @@ watch(
 
 const trimErrorFromJob = computed(() => {
   const j = trimJob.value
-  if (j?.state !== 'failed') return ''
+  if (j?.state !== 'failed' || j.id <= errorsSince.value) return ''
   const key = `media.ads.cut.error.${j.error}`
   return te(key) ? t(key) : t('media.ads.cut.error.generic')
 })

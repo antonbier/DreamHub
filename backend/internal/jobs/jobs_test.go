@@ -224,11 +224,16 @@ func TestRestartResumesFromCheckpointOrFails(t *testing.T) {
 		resumedAt.Store("ok", ok)
 		return err
 	}})
-	second.Register(Kind{Name: "test.oneshot", Run: func(context.Context, *Run) error { return nil }})
+	var abandoned atomic.Int64
+	second.Register(Kind{Name: "test.oneshot", Run: func(context.Context, *Run) error { return nil },
+		Abandon: func(_ context.Context, j store.Job) { abandoned.Store(j.ID) }})
 	start(t, second)
 	waitFor(t, st, res.ID, store.JobDone)
 	if got := waitFor(t, st, one.ID, store.JobFailed); got.Error != "interrupted" {
 		t.Fatalf("one-shot job after restart: %q", got.Error)
+	}
+	if abandoned.Load() != one.ID {
+		t.Fatalf("Abandon wasn't called for the interrupted one-shot job")
 	}
 	if next, _ := resumedAt.Load("next"); next != 7 {
 		t.Fatalf("resumed from checkpoint %v, want 7", next)

@@ -218,6 +218,56 @@ func TestTrim_CutsTheBreaksAndKeepsTheOriginalInTheTrash(t *testing.T) {
 	e.json(t, "GET", "/api/v1/media/adscan?path="+url.QueryEscape(orig+".ts.trash"), "", nil, 200, nil)
 }
 
+// trimAll cuts every found break out of p and waits for the cut.
+func (e *env) trimAll(t *testing.T, p string) {
+	t.Helper()
+	got := e.analyse(t, p)
+	var cut []map[string]float64
+	for _, b := range got.Result.Blocks {
+		cut = append(cut, map[string]float64{"start": b.Start, "end": b.End})
+	}
+	if len(cut) == 0 { // a cut version: invent a break to cut again
+		cut = append(cut, map[string]float64{"start": 100, "end": 200})
+	}
+	body, _ := json.Marshal(map[string]any{"path": p, "blocks": cut})
+	var pr struct {
+		Plan struct {
+			ID string `json:"id"`
+		} `json:"plan"`
+	}
+	e.json(t, "POST", "/api/v1/media/trim/plan", string(body), nil, 200, &pr)
+	e.json(t, "POST", "/api/v1/plans/"+pr.Plan.ID+"/apply", "", nil, 200, nil)
+	var list struct {
+		Jobs []struct {
+			ID    int64  `json:"id"`
+			Kind  string `json:"kind"`
+			State string `json:"state"`
+		} `json:"jobs"`
+	}
+	e.json(t, "GET", "/api/v1/jobs", "", nil, 200, &list)
+	for _, j := range list.Jobs {
+		if j.Kind == "media.trim" && j.State != "done" {
+			e.waitJob(t, j.ID)
+		}
+	}
+}
+
+func TestTrim_TwiceKeepsBothOriginals(t *testing.T) {
+	m := mock.New()
+	e := newEnvWith(t, m)
+	e.trimAll(t, bauer)
+	e.trimAll(t, bauer)
+	base := mock.Root + "20260608 2048 - RTL Television - Bauer sucht Frau International"
+	for _, f := range []string{base + " - original.ts.trash", base + " - original 2.ts.trash", base + " - original 2.ts.meta"} {
+		if !exists(m, f) {
+			t.Errorf("%s is missing", f)
+		}
+	}
+	if c := content(m, bauer); c != "trimmed: trimmed: recording" {
+		t.Fatalf("after two cuts: %q", c)
+	}
+}
+
 func TestTrim_NeedsAnAnalysisAndSaneBlocks(t *testing.T) {
 	e := newEnv(t)
 	resp, b := e.do(t, "POST", "/api/v1/media/trim/plan", `{"path":"`+bauer+`","blocks":[{"start":10,"end":20}]}`, nil)

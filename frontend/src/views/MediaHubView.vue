@@ -278,7 +278,9 @@
         :length="openMovie.length"
         :can-start="adScanOn && openMovie.inUse !== 'recording'"
         :can-play="streamHubOn"
+        :can-trim="fileOpsAvailable && !openMovie.inUse"
         @analysed="(sum: AdSummary) => (openMovie!.ads = sum)"
+        @trimmed="onTrimmed"
       />
       <template #actions>
         <div class="flex flex-wrap items-center gap-2">
@@ -419,6 +421,12 @@ async function startBatchAds() {
   } finally {
     adsStarting.value = false
   }
+}
+
+// A recording was cut: its length and size changed, and the original is
+// in the trash now — reload the folder.
+function onTrimmed() {
+  if (folder.value) void open(folder.value.dir)
 }
 
 function stopBatchAds() {

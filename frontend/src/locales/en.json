@@ -497,6 +497,24 @@
         "not_found": "The recording isn't there any more.",
         "interrupted": "DreamHub was restarted during the detection. Start it again.",
         "adscan_open_failed": "The recording couldn't be opened."
+      },
+      "cut": {
+        "heading": "Cut out the ads",
+        "open": "Cut out the ads …",
+        "which": "Which breaks to cut out (uncertain ones are left for you to decide)",
+        "preview": "Preview",
+        "confirm": "Cut out",
+        "summary": "Cuts {breaks} out of the recording (new length: {length}). Nothing is re-encoded, so up to a second of ads may remain at each cut. The original keeps all its files and goes to the trash — you can restore it.",
+        "running": "Cutting … {percent} %",
+        "done": "Ads cut out (new length: {length}). The original is in the trash.",
+        "error": {
+          "generic": "Cutting didn't work. The recording is unchanged.",
+          "trim_failed": "FFmpeg couldn't cut the recording. It is unchanged.",
+          "trim_swap_failed": "The cut version couldn't take the recording's place. The recording is unchanged.",
+          "media_in_use": "The recording was being played or recorded. It is unchanged.",
+          "not_found": "The recording isn't there any more.",
+          "interrupted": "DreamHub was restarted during the cut. The recording is unchanged."
+        }
       }
     }
   },
@@ -736,7 +754,12 @@
       "ai_unavailable": "The AI didn't give a usable answer.",
       "invalid_title": "The title can't be empty, span lines or be longer than 200 characters.",
       "no_meta": "This recording has no .ts.meta file whose title could change.",
-      "duplicate_target": "another selected recording would get the same name"
+      "duplicate_target": "another selected recording would get the same name",
+      "trim_unavailable": "Cutting needs FFmpeg and DreamHub running on the box.",
+      "trim_invalid_blocks": "Those breaks don't fit the recording. Detect the ads again.",
+      "trim_not_enough_space": "There isn't enough free space on the disk for the cut version.",
+      "trim_original_exists": "A recording named like the kept original already exists, or the name is too long.",
+      "adscan_not_analysed": "Detect the ads first."
     },
     "friendly": {
       "dreamhub": "DreamHub doesn't answer. Is this device in your home network?",

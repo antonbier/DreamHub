@@ -220,7 +220,11 @@ func (h *Media) planBatchRename(w http.ResponseWriter, r *http.Request) {
 			if err != nil {
 				return err
 			}
-			return recfs.ApplyInto(h.FS, dirs, moves)
+			if err := recfs.ApplyInto(h.FS, dirs, moves); err != nil {
+				return err
+			}
+			h.followMoves(ctx, moves)
+			return nil
 		},
 	})
 	httpx.WriteJSON(w, http.StatusOK, out)

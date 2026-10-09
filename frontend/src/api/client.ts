@@ -294,6 +294,10 @@ export const api = {
     // and read one recording's last result.
     adScanStart: (paths: string[]) =>
       request<{ items: { path: string; jobId?: number; existing?: boolean; reason?: string }[] }>('POST', '/api/v1/media/adscan', { paths }),
+    // Cutting ticked breaks out of a recording: a preview; applying it
+    // queues the cut (a "media.trim" job).
+    trimPlan: (path: string, blocks: { start: number; end: number }[]) =>
+      request<{ plan: Plan; keep: { start: number; end: number }[] }>('POST', '/api/v1/media/trim/plan', { path, blocks }),
     adScanResult: (path: string) =>
       request<{ path: string; analyzedAt: string; result: AdScanResult }>('GET', `/api/v1/media/adscan?path=${encodeURIComponent(path)}`),
   },

@@ -497,6 +497,24 @@
         "not_found": "La registrazione non c'è più.",
         "interrupted": "DreamHub è stato riavviato durante il riconoscimento. Avvialo di nuovo.",
         "adscan_open_failed": "Non è stato possibile aprire la registrazione."
+      },
+      "cut": {
+        "heading": "Taglia la pubblicità",
+        "open": "Taglia la pubblicità …",
+        "which": "Quali blocchi tagliare (quelli incerti li decidi tu)",
+        "preview": "Anteprima",
+        "confirm": "Taglia",
+        "summary": "Taglia {breaks} dalla registrazione (nuova durata: {length}). Nulla viene ricodificato, quindi a ogni taglio può restare fino a un secondo di pubblicità. L'originale tiene tutti i suoi file e va nel cestino: puoi ripristinarlo.",
+        "running": "Taglio in corso … {percent} %",
+        "done": "Pubblicità tagliata (nuova durata: {length}). L'originale è nel cestino.",
+        "error": {
+          "generic": "Il taglio non è riuscito. La registrazione è invariata.",
+          "trim_failed": "FFmpeg non è riuscito a tagliare la registrazione. È invariata.",
+          "trim_swap_failed": "La versione tagliata non ha potuto prendere il posto della registrazione. La registrazione è invariata.",
+          "media_in_use": "La registrazione era in riproduzione o in registrazione. È invariata.",
+          "not_found": "La registrazione non c'è più.",
+          "interrupted": "DreamHub è stato riavviato durante il taglio. La registrazione è invariata."
+        }
       }
     }
   },
@@ -736,7 +754,12 @@
       "ai_unavailable": "L'IA non ha dato una risposta utilizzabile.",
       "invalid_title": "Il titolo non può essere vuoto, andare a capo o superare i 200 caratteri.",
       "no_meta": "Questa registrazione non ha un file .ts.meta di cui cambiare il titolo.",
-      "duplicate_target": "un'altra registrazione selezionata avrebbe lo stesso nome"
+      "duplicate_target": "un'altra registrazione selezionata avrebbe lo stesso nome",
+      "trim_unavailable": "Per tagliare servono FFmpeg e DreamHub sul box.",
+      "trim_invalid_blocks": "Questi blocchi non corrispondono alla registrazione. Riconosci di nuovo la pubblicità.",
+      "trim_not_enough_space": "Non c'è abbastanza spazio libero sul disco per la versione tagliata.",
+      "trim_original_exists": "Esiste già una registrazione con il nome dell'originale conservato, oppure il nome è troppo lungo.",
+      "adscan_not_analysed": "Riconosci prima la pubblicità."
     },
     "friendly": {
       "dreamhub": "DreamHub non risponde. Questo dispositivo è nella rete di casa?",

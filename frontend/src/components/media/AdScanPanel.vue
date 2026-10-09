@@ -8,8 +8,10 @@
     (never colour alone) — and "3 breaks · 14 min ads · 46 min without".
     A break is a button: it plays the recording in the browser from just
     before it, to check the boundary.
-  Analysing changes nothing; taking the breaks over into the recording
-  comes later, as its own preview.
+  Analysing changes nothing. "Cut out the ads" (only where file operations
+  work) ticks the certain breaks, leaves the uncertain ones to the user,
+  and shows the usual preview; the cut runs in the background, the
+  original goes to the trash.
 -->
 <template>
   <section class="mt-4 rounded border border-line-soft bg-bg p-3" :aria-busy="active">
@@ -25,8 +27,33 @@
       </button>
     </div>
 
+    <!-- Cutting -->
+    <div v-if="trimActive && trimJob" class="mt-2">
+      <div class="flex items-center gap-3 text-[13.5px]">
+        <span class="text-muted" aria-live="polite">{{ trimProgressText }}</span>
+        <button type="button" class="ms-auto rounded px-2 py-0.5 text-[12.5px] text-accent hover:bg-tile-2" @click="jobs.cancel(trimJob.id)">
+          {{ t('media.ads.stop') }}
+        </button>
+      </div>
+      <div
+        class="mt-2 h-1.5 overflow-hidden rounded-full bg-field"
+        role="progressbar"
+        :aria-valuenow="trimPercent"
+        aria-valuemin="0"
+        aria-valuemax="100"
+        :aria-label="t('media.ads.cut.heading')"
+      >
+        <div class="h-full bg-accent transition-[width]" :style="{ width: `${trimPercent}%` }" />
+      </div>
+    </div>
+
+    <!-- Already cut -->
+    <p v-else-if="result?.trimmed" class="mt-2 text-[13.5px] text-text">
+      {{ t('media.ads.cut.done', { length: formatMinutes(result.duration, locale) }) }}
+    </p>
+
     <!-- Running, waiting or queued -->
-    <div v-if="active && job" class="mt-2">
+    <div v-else-if="active && job" class="mt-2">
       <div class="flex items-center gap-3 text-[13.5px]">
         <span class="text-muted" aria-live="polite">{{ progressText }}</span>
         <button type="button" class="ms-auto rounded px-2 py-0.5 text-[12.5px] text-accent hover:bg-tile-2" @click="jobs.cancel(job.id)">
@@ -69,6 +96,49 @@
         </template>
       </p>
       <p v-if="result.weakLogo" class="mt-1 text-[12.5px] text-muted">{{ t('media.ads.weakLogo') }}</p>
+
+      <!-- Cutting out: choose, preview, confirm -->
+      <button
+        v-if="canTrim && result.blocks.length > 0 && !choosing"
+        type="button"
+        class="mt-3 rounded border border-line px-3 py-1 text-[13.5px] text-text hover:bg-field"
+        @click="startChoosing"
+      >
+        {{ t('media.ads.cut.open') }}
+      </button>
+      <div v-if="choosing" class="mt-3 flex flex-col gap-2">
+        <fieldset :disabled="!!trimPlan">
+          <legend class="text-[12.5px] text-faint">{{ t('media.ads.cut.which') }}</legend>
+          <label v-for="(b, i) in result.blocks" :key="i" class="mt-1 flex items-center gap-2 text-[13.5px] text-text">
+            <input v-model="ticked[i]" type="checkbox" class="accent-[var(--dh-accent)]" />
+            <span>{{ t('media.ads.block', { from: formatPosition(b.start), to: formatPosition(b.end) }) }}</span>
+            <span v-if="b.uncertain" class="text-[12.5px] text-warn">{{ t('media.ads.uncertain') }}</span>
+          </label>
+        </fieldset>
+        <div v-if="!trimPlan" class="flex flex-wrap items-center gap-2">
+          <button
+            type="button"
+            class="rounded bg-accent px-3 py-1 text-[13.5px] font-semibold text-bg disabled:opacity-60"
+            :disabled="tickedCount === 0 || trimBusy"
+            @click="previewTrim"
+          >
+            {{ t('media.ads.cut.preview') }}
+          </button>
+          <button type="button" class="rounded px-3 py-1 text-[13.5px] text-text hover:bg-field" @click="stopChoosing">{{ t('plan.cancel') }}</button>
+        </div>
+        <PlanPreview
+          v-else
+          :plan="trimPlan"
+          :confirm-label="t('media.ads.cut.confirm')"
+          :busy="trimBusy"
+          :error="trimError"
+          @confirm="applyTrim"
+          @cancel="trimPlan = null"
+        >
+          {{ trimSummary }}
+        </PlanPreview>
+        <p v-if="trimError && !trimPlan" class="text-[12.5px] text-warn" role="alert">{{ trimError }}</p>
+      </div>
     </template>
 
     <!-- Not analysed yet -->
@@ -94,7 +164,9 @@ import { computed, onMounted, ref, watch } from 'vue'
 import { useI18n } from 'vue-i18n'
 import { useRouter } from 'vue-router'
 import { api, ApiError } from '@/api/client'
-import type { AdScanResult, AdSummary } from '@/api/types'
+import PlanPreview from '@/components/PlanPreview.vue'
+import { usePlanError } from '@/composables/usePlanError'
+import type { AdScanResult, AdSummary, Plan } from '@/api/types'
 import { formatMinutes, formatPosition } from '@/lib/format'
 import { ACTIVE, cleanPath, useJobsStore } from '@/stores/jobs'
 
@@ -108,10 +180,14 @@ const props = defineProps<{
   canStart: boolean
   // StreamHub is on: a break plays from there.
   canPlay: boolean
+  // File operations work here and the profile may change recordings.
+  canTrim: boolean
 }>()
 const emit = defineEmits<{
   // A new result: the recording list shows its summary.
   analysed: [summary: AdSummary]
+  // The recording was cut: its length and size changed.
+  trimmed: []
 }>()
 
 const { t, te, locale } = useI18n()
@@ -139,6 +215,7 @@ const progressText = computed(() => {
 
 const errorText = computed(() => {
   if (startError.value) return startError.value
+  if (trimErrorFromJob.value) return trimErrorFromJob.value
   const j = job.value
   if (j?.state !== 'failed') return ''
   const key = `media.ads.error.${j.error}`
@@ -213,6 +290,98 @@ async function start() {
     starting.value = false
   }
 }
+
+// --- cutting out -------------------------------------------------------------
+
+const { planErrorMessage } = usePlanError()
+const choosing = ref(false)
+const ticked = ref<boolean[]>([])
+const trimPlan = ref<Plan | null>(null)
+const trimBusy = ref(false)
+const trimError = ref('')
+const trimKeptSeconds = ref(0)
+
+const trimJob = computed(() => jobs.latest('media.trim', props.path))
+const trimActive = computed(() => !!trimJob.value && ACTIVE.includes(trimJob.value.state))
+const trimPercent = computed(() => {
+  const j = trimJob.value
+  return j && j.total > 0 ? Math.min(100, Math.round((j.done / j.total) * 100)) : 0
+})
+const trimProgressText = computed(() => {
+  const j = trimJob.value
+  if (!j) return ''
+  if (j.state === 'queued') return t('media.ads.queued')
+  if (j.state === 'waiting') return t(`media.ads.waiting.${jobs.blockedBy || 'recording'}`)
+  return t('media.ads.cut.running', { percent: trimPercent.value })
+})
+const tickedCount = computed(() => ticked.value.filter(Boolean).length)
+const trimSummary = computed(() =>
+  t('media.ads.cut.summary', {
+    breaks: t('media.ads.breaks', { count: tickedCount.value }, tickedCount.value),
+    length: formatMinutes(trimKeptSeconds.value, locale.value),
+  }),
+)
+
+// Certain breaks ticked, uncertain ones left to the user.
+function startChoosing() {
+  ticked.value = (result.value?.blocks ?? []).map((b) => !b.uncertain)
+  trimPlan.value = null
+  trimError.value = ''
+  choosing.value = true
+}
+function stopChoosing() {
+  choosing.value = false
+  trimPlan.value = null
+}
+
+async function previewTrim() {
+  const blocks = (result.value?.blocks ?? []).filter((_, i) => ticked.value[i]).map((b) => ({ start: b.start, end: b.end }))
+  trimBusy.value = true
+  trimError.value = ''
+  try {
+    const res = await api.media.trimPlan(props.path, blocks)
+    trimKeptSeconds.value = res.keep.reduce((s, k) => s + (k.end - k.start), 0)
+    trimPlan.value = res.plan
+  } catch (e) {
+    trimError.value = planErrorMessage(e)
+  } finally {
+    trimBusy.value = false
+  }
+}
+
+async function applyTrim() {
+  if (!trimPlan.value) return
+  trimBusy.value = true
+  trimError.value = ''
+  try {
+    await api.plans.apply(trimPlan.value.id)
+    choosing.value = false
+    trimPlan.value = null
+    // The job arrives on the event stream; until then, load the list.
+    await jobs.load()
+  } catch (e) {
+    trimError.value = planErrorMessage(e)
+  } finally {
+    trimBusy.value = false
+  }
+}
+
+watch(
+  () => trimJob.value?.state,
+  async (state, before) => {
+    if (state === 'done' && before && before !== 'done') {
+      await loadResult()
+      emit('trimmed')
+    }
+  },
+)
+
+const trimErrorFromJob = computed(() => {
+  const j = trimJob.value
+  if (j?.state !== 'failed') return ''
+  const key = `media.ads.cut.error.${j.error}`
+  return te(key) ? t(key) : t('media.ads.cut.error.generic')
+})
 
 // A finished analysis: fetch its result.
 watch(

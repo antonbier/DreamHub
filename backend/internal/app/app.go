@@ -17,6 +17,7 @@ import (
 	"github.com/antonbier/DreamHub/backend/internal/push"
 	"github.com/antonbier/DreamHub/backend/internal/recfs"
 	"github.com/antonbier/DreamHub/backend/internal/tmdb"
+	"github.com/antonbier/DreamHub/backend/internal/trim"
 	"github.com/antonbier/DreamHub/backend/internal/tvmaze"
 
 	"github.com/antonbier/DreamHub/backend/internal/adscan"
@@ -262,7 +263,7 @@ func New(ctx context.Context, o Options) (*App, error) {
 	timerHub := &hubs_.Timer{WC: o.WebControl, Plans: plans, Now: now, AT: o.AutoTimer, Owners: st}
 	mediaHub := &hubs_.Media{WC: o.WebControl, Plans: plans, FS: o.RecordingsFS, ReadOnly: o.ReadOnlyFiles,
 		Settings: svc, Store: st, AI: o.AI, TMDB: o.TMDB, Enrich: enricher, Now: now,
-		AdScan: adScanOpener(o)}
+		AdScan: adScanOpener(o), Trim: trimCutter(o)}
 	mediaHub.RegisterJobs(jobQueue)
 	// Built before GuideHub/DiscoveryHub: both flag a broadcast already in
 	// the library (#32) through it.
@@ -415,4 +416,17 @@ func adScanOpener(o Options) adscan.Opener {
 		prefix = append(prefix, ionice, "-c3")
 	}
 	return adscan.FFmpeg{Path: bin, Prefix: prefix}
+}
+
+// trimCutter is adScanOpener's counterpart for cutting: a stand-in that
+// writes into the mock FS in mock mode, else the system FFmpeg.
+func trimCutter(o Options) trim.Cutter {
+	if o.Mock {
+		return trim.Mock{FS: o.RecordingsFS}
+	}
+	ff, ok := adScanOpener(o).(adscan.FFmpeg)
+	if !ok {
+		return nil
+	}
+	return trim.FFmpeg{Path: ff.Path, Prefix: ff.Prefix, Probe: ff}
 }

@@ -37,6 +37,9 @@ type adScanParams struct {
 func (h *Media) RegisterJobs(q *jobs.Service) {
 	h.Jobs = q
 	q.Register(jobs.Kind{Name: JobAdScan, Run: h.runAdScan, Resumable: true})
+	// Not resumable: a cut interrupted halfway starts over (its partial
+	// file is removed), and only when asked again.
+	q.Register(jobs.Kind{Name: JobTrim, Run: h.runTrim})
 }
 
 // adScanAvailable: an Opener (FFmpeg found, or mock mode), the queue, and
@@ -224,4 +227,30 @@ func (h *Media) adSummary(ctx context.Context, tsPath string) *adSummary {
 		}
 	}
 	return sum
+}
+
+// followMoves keeps ad-detection results with their recordings when they
+// are renamed, trashed (x.ts → x.ts.trash) or restored. Best effort: a
+// result lost here only means analysing again.
+func (h *Media) followMoves(ctx context.Context, moves []recfs.Move) {
+	if h.Store == nil {
+		return
+	}
+	for _, m := range moves {
+		if strings.HasSuffix(m.From, ".ts") || strings.HasSuffix(m.From, ".ts"+recfs.TrashSuffix) {
+			_ = h.Store.MoveAdScanResult(context.WithoutCancel(ctx), m.From, m.To)
+		}
+	}
+}
+
+// forgetResults drops the results of recordings deleted for good.
+func (h *Media) forgetResults(ctx context.Context, files []string) {
+	if h.Store == nil {
+		return
+	}
+	for _, f := range files {
+		if strings.HasSuffix(f, ".ts"+recfs.TrashSuffix) || strings.HasSuffix(f, ".ts") {
+			_ = h.Store.DeleteAdScanResult(context.WithoutCancel(ctx), f)
+		}
+	}
 }

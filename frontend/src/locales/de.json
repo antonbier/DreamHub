@@ -497,6 +497,24 @@
         "not_found": "Die Aufnahme ist nicht mehr da.",
         "interrupted": "DreamHub wurde während der Erkennung neu gestartet. Starte sie noch einmal.",
         "adscan_open_failed": "Die Aufnahme ließ sich nicht öffnen."
+      },
+      "cut": {
+        "heading": "Werbung herausschneiden",
+        "open": "Werbung herausschneiden …",
+        "which": "Welche Blöcke herausschneiden (unsichere entscheidest du)",
+        "preview": "Vorschau",
+        "confirm": "Herausschneiden",
+        "summary": "Schneidet {breaks} aus der Aufnahme (neue Länge: {length}). Es wird nichts neu kodiert, deshalb kann an jeder Schnittstelle bis zu eine Sekunde Werbung übrig bleiben. Das Original behält alle seine Dateien und kommt in den Papierkorb – du kannst es wiederherstellen.",
+        "running": "Wird geschnitten … {percent} %",
+        "done": "Werbung herausgeschnitten (neue Länge: {length}). Das Original liegt im Papierkorb.",
+        "error": {
+          "generic": "Das Schneiden hat nicht geklappt. Die Aufnahme ist unverändert.",
+          "trim_failed": "FFmpeg konnte die Aufnahme nicht schneiden. Sie ist unverändert.",
+          "trim_swap_failed": "Die geschnittene Fassung konnte nicht an die Stelle der Aufnahme treten. Die Aufnahme ist unverändert.",
+          "media_in_use": "Die Aufnahme wurde gerade abgespielt oder aufgenommen. Sie ist unverändert.",
+          "not_found": "Die Aufnahme ist nicht mehr da.",
+          "interrupted": "DreamHub wurde während des Schneidens neu gestartet. Die Aufnahme ist unverändert."
+        }
       }
     }
   },
@@ -736,7 +754,12 @@
       "ai_unavailable": "Die KI hat keine brauchbare Antwort geliefert.",
       "invalid_title": "Der Titel darf nicht leer sein, keine Zeilenumbrüche enthalten und höchstens 200 Zeichen haben.",
       "no_meta": "Zu dieser Aufnahme gibt es keine .ts.meta-Datei, deren Titel sich ändern ließe.",
-      "duplicate_target": "eine andere Aufnahme der Auswahl bekäme denselben Namen"
+      "duplicate_target": "eine andere Aufnahme der Auswahl bekäme denselben Namen",
+      "trim_unavailable": "Zum Schneiden braucht es FFmpeg und DreamHub auf der Box.",
+      "trim_invalid_blocks": "Diese Blöcke passen nicht zur Aufnahme. Erkenne die Werbung neu.",
+      "trim_not_enough_space": "Auf der Festplatte ist nicht genug Platz für die geschnittene Fassung.",
+      "trim_original_exists": "Es gibt schon eine Aufnahme mit dem Namen des aufbewahrten Originals, oder der Name ist zu lang.",
+      "adscan_not_analysed": "Erkenne zuerst die Werbung."
     },
     "friendly": {
       "dreamhub": "DreamHub antwortet nicht. Ist dieses Gerät im Heimnetz?",

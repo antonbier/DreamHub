@@ -64,6 +64,21 @@ type ffSource struct {
 
 func (s *ffSource) Close() error { return s.file.Close() }
 
+// Start is the stream time (seconds) of the recording's first keyframe —
+// where "0 s into the recording" is on the stream's own clock.
+func (f FFmpeg) Start(ctx context.Context, path string) (float64, error) {
+	src, err := f.Open(path)
+	if err != nil {
+		return 0, err
+	}
+	defer src.Close()
+	s := src.(*ffSource)
+	if _, err := s.Duration(ctx); err != nil {
+		return 0, err
+	}
+	return s.base, nil
+}
+
 // Duration decodes the first and the last keyframe: their timestamps give
 // the recording's start and length, whatever the index says.
 func (s *ffSource) Duration(ctx context.Context) (float64, error) {

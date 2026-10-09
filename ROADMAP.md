@@ -342,6 +342,8 @@ Pulled forward from v1.1 (`CONCEPT.md`, `docs/V1_PLAN.md`): verifying the Enigma
 
 ### MediaHub trimming
 - Lossless trimming via `ffmpeg -c copy` (cuts land on keyframe boundaries). `CutListEditor` is the on-screen reference for the `.ts.cuts` mechanism.
+- [x] **Cutting out detected ads** (built 2026-10-09 against the mock and checked with FFmpeg on a real recording): from a recording's ad-detection result, tick breaks (uncertain ones unticked), preview, confirm; a background job cuts with FFmpeg's concat demuxer (`internal/trim`), the original is renamed `<name> - original` and trashed, restorable. Not yet on the box: FFmpeg 4.1's concat behaviour, playback of a cut file on the TV (seam, no `.ap`/`.sc`) (#27, #44)
+- [ ] Cutting by hand (own in/out points), cutting several recordings at once; automatic cutting only via AutomationHub, opt-in (#35)
 
 ### AdminHub service status
 - Status of enigma2, dreamhub, Samba and other units; restarting is a change and goes through preview-and-confirm.

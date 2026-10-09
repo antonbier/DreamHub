@@ -26,6 +26,9 @@ type Result struct {
 	WeakLogo bool `json:"weakLogo,omitempty"`
 	// Learned: the mask was learned from this recording, not reused.
 	Learned bool `json:"learned,omitempty"`
+	// Trimmed: the breaks were cut out of the recording (MediaHub
+	// trimming); Duration is the new length.
+	Trimmed bool `json:"trimmed,omitempty"`
 }
 
 // Options steer an analysis.

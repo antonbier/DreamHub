@@ -21,6 +21,7 @@ import (
 	"github.com/antonbier/DreamHub/backend/internal/settings"
 	"github.com/antonbier/DreamHub/backend/internal/store"
 	"github.com/antonbier/DreamHub/backend/internal/tmdb"
+	"github.com/antonbier/DreamHub/backend/internal/trim"
 	"github.com/antonbier/DreamHub/backend/internal/webcontrol"
 )
 
@@ -55,7 +56,10 @@ type Media struct {
 	// AdScan opens recordings for ad detection (media_adscan.go): FFmpeg on
 	// the box, synthetic frames in mock mode; nil when FFmpeg is missing.
 	AdScan adscan.Opener
-	// Jobs is the background queue the analyses run in (RegisterJobs).
+	// Trim cuts ad breaks out (media_trim.go): FFmpeg on the box, a
+	// stand-in in mock mode; nil when FFmpeg is missing.
+	Trim trim.Cutter
+	// Jobs is the background queue analyses and cuts run in (RegisterJobs).
 	Jobs *jobs.Service
 
 	// index is every recording below the recording folders, read from the
@@ -67,6 +71,7 @@ type Media struct {
 func (h *Media) Perms() map[string]perm.Perm {
 	return map[string]perm.Perm{
 		"POST /api/v1/media/adscan":             perm.RecordingsManage,
+		"POST /api/v1/media/trim/plan":          perm.RecordingsManage,
 		"POST /api/v1/media/covers/plan":        perm.RecordingsManage,
 		"POST /api/v1/media/rename/batch/plan":  perm.RecordingsManage,
 		"POST /api/v1/media/rename/plan":        perm.RecordingsManage,
@@ -92,6 +97,7 @@ func (h *Media) Mount(mux httpx.Mux) {
 	mux.HandleFunc("POST /api/v1/media/trash/empty/plan", h.planEmpty)
 	mux.HandleFunc("POST /api/v1/media/adscan", h.startAdScan)
 	mux.HandleFunc("GET /api/v1/media/adscan", h.adScanResult)
+	mux.HandleFunc("POST /api/v1/media/trim/plan", h.trimPlan)
 }
 
 // isRecording reports whether a movielist entry is an actual Dreambox

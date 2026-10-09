@@ -265,6 +265,8 @@ export interface AdScanResult {
   probes: number
   weakLogo?: boolean
   learned?: boolean
+  // The breaks were cut out; duration is the new length.
+  trimmed?: boolean
 }
 
 // backend/internal/api.jobView — a background job (GET /api/v1/jobs, and

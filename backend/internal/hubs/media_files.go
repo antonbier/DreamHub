@@ -290,6 +290,7 @@ func (h *Media) planRename(w http.ResponseWriter, r *http.Request) {
 				}
 				return err
 			}
+			h.followMoves(ctx, moves)
 			return nil
 		},
 	})
@@ -367,6 +368,9 @@ func (h *Media) planTrash(w http.ResponseWriter, r *http.Request) {
 				return err
 			}
 			err := recfs.Apply(h.FS, moves)
+			if err == nil {
+				h.followMoves(ctx, moves)
+			}
 			h.refreshIndex(context.WithoutCancel(ctx))
 			return err
 		},
@@ -425,6 +429,9 @@ func (h *Media) planRestore(w http.ResponseWriter, r *http.Request) {
 				return webcontrol.ErrWritesDisabled
 			}
 			err := recfs.Apply(h.FS, moves)
+			if err == nil {
+				h.followMoves(ctx, moves)
+			}
 			h.refreshIndex(context.WithoutCancel(ctx))
 			return err
 		},
@@ -474,6 +481,9 @@ func (h *Media) planEmpty(w http.ResponseWriter, r *http.Request) {
 				return webcontrol.ErrWritesDisabled
 			}
 			err := recfs.Remove(h.FS, files)
+			if err == nil {
+				h.forgetResults(ctx, files)
+			}
 			h.refreshIndex(context.WithoutCancel(ctx))
 			return err
 		},

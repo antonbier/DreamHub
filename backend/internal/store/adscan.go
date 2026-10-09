@@ -73,3 +73,16 @@ func (s *Store) SaveAdScanResult(ctx context.Context, path, serviceRef string, r
 		path, serviceRef, string(result), s.timestamp())
 	return err
 }
+
+// MoveAdScanResult re-keys a recording's analysis after a rename; nothing
+// happens when it has none.
+func (s *Store) MoveAdScanResult(ctx context.Context, from, to string) error {
+	_, err := s.db.ExecContext(ctx, `UPDATE OR REPLACE adscan_results SET path = ? WHERE path = ?`, to, from)
+	return err
+}
+
+// DeleteAdScanResult forgets a recording's analysis.
+func (s *Store) DeleteAdScanResult(ctx context.Context, path string) error {
+	_, err := s.db.ExecContext(ctx, `DELETE FROM adscan_results WHERE path = ?`, path)
+	return err
+}

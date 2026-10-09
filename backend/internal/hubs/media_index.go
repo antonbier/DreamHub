@@ -39,6 +39,9 @@ type recIndex struct {
 	entries  []indexEntry
 	built    time.Time
 	building bool
+	// again: a file operation happened while a build ran — that build may
+	// have read the old state, so build once more when it's done.
+	again bool
 }
 
 // recordingIndex returns the index's entries, or ok=false when the file
@@ -68,12 +71,19 @@ func (h *Media) recordingIndex(ctx context.Context) ([]indexEntry, bool) {
 }
 
 func (h *Media) buildIndex(roots []string) []indexEntry {
-	built := walkRecordings(h.FS, roots)
 	x := &h.index
-	x.mu.Lock()
-	x.entries, x.built, x.building = built, time.Now(), false
-	x.mu.Unlock()
-	return built
+	for {
+		built := walkRecordings(h.FS, roots)
+		x.mu.Lock()
+		x.entries, x.built = built, time.Now()
+		if !x.again {
+			x.building = false
+			x.mu.Unlock()
+			return built
+		}
+		x.again = false
+		x.mu.Unlock()
+	}
 }
 
 // refreshIndex rebuilds the index in the background after a file
@@ -82,7 +92,12 @@ func (h *Media) buildIndex(roots []string) []indexEntry {
 func (h *Media) refreshIndex(ctx context.Context) {
 	x := &h.index
 	x.mu.Lock()
-	if x.entries == nil || x.building {
+	if x.building {
+		x.again = true
+		x.mu.Unlock()
+		return
+	}
+	if x.entries == nil {
 		x.mu.Unlock()
 		return
 	}

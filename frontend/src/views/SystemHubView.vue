@@ -67,6 +67,25 @@
           </dl>
         </section>
 
+        <!-- About: version, copyright, source link (plain static info; no
+             section of its own in Settings, so it lives here next to the
+             device info it's shown alongside). -->
+        <section class="mt-4 rounded border border-line bg-tile p-4">
+          <h2 class="text-[14px] font-semibold text-text">{{ t('system.about.title') }}</h2>
+          <dl class="mt-2 grid grid-cols-[max-content_1fr] gap-x-6 gap-y-1.5 text-[13px] below-sm:grid-cols-1 below-sm:gap-y-0">
+            <dt class="text-muted below-sm:mt-1.5">{{ t('system.about.version', { version }) }}</dt>
+            <dd class="min-w-0 break-words text-text">{{ t('system.about.copyright') }}</dd>
+          </dl>
+          <a
+            href="https://github.com/antonbier/DreamHub"
+            target="_blank"
+            rel="noopener"
+            class="mt-2 inline-block text-[13px] text-accent hover:underline"
+          >
+            {{ t('system.about.repo') }}
+          </a>
+        </section>
+
         <!-- Backup & restore moved to Settings → System. -->
         <p class="mt-4 text-[13px] text-muted">
           {{ t('system.backup.movedHint') }}
@@ -178,6 +197,7 @@ const tab = ref<Tab>(route.query.tab === 'diagnostics' ? 'diagnostics' : 'overvi
 watch(tab, (t) => router.replace({ query: { ...route.query, tab: t === 'overview' ? undefined : t } }))
 
 const device = ref<DeviceInfo | null>(null)
+const version = ref('')
 const deviceRows = computed(() => {
   const d = device.value
   if (!d) return []
@@ -243,6 +263,13 @@ onMounted(async () => {
     loadFailed.value = true
   } finally {
     loading.value = false
+  }
+  // Best-effort: the device info above already fails loudly if DreamHub
+  // isn't reachable, so a failed version lookup just leaves it blank.
+  try {
+    version.value = (await api.health()).version
+  } catch {
+    // leave blank
   }
 })
 

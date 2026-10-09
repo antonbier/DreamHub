@@ -1218,6 +1218,12 @@
       "model": "Modell",
       "imageLabel": "Image"
     },
+    "about": {
+      "title": "Über DreamHub",
+      "version": "Version {version}",
+      "copyright": "© 2027 antonbier",
+      "repo": "Quellcode auf GitHub ↗"
+    },
     "tabs": {
       "overview": "Übersicht"
     },

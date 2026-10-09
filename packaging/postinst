@@ -35,12 +35,33 @@ PLUGIN_DIR=/usr/lib/enigma2/python/Plugins/Extensions/DreamHub
 SUM_FILE=/data/dreamhub/.plugin.sum
 NEW_SUM=$(find "$PLUGIN_DIR" -type f ! -name '*.pyc' ! -name '*.pyo' -exec md5sum {} + 2>/dev/null | sort | md5sum | cut -d' ' -f1)
 OLD_SUM=$(cat "$SUM_FILE" 2>/dev/null || true)
+#
+# Never while the box records: restarting enigma2 would cut the recording.
+# Then the plugin waits for the next enigma2 restart (or reboot), and the
+# checksum isn't saved, so the next install tries again.
+recording_now() {
+    # e2state 2 = running (ARCHITECTURE.md). If the timer list can't be
+    # read (a WebControl login is set), assume a recording: a plugin that
+    # loads a little later beats a cut recording.
+    list=$(wget -q -T 5 -O - http://127.0.0.1/web/timerlist 2>/dev/null) || return 0
+    case "$list" in
+        *"<e2state>2</e2state>"*) return 0 ;;
+    esac
+    return 1
+}
 if [ "$NEW_SUM" != "$OLD_SUM" ]; then
     if [ -d /run/systemd/system ] && systemctl is-active --quiet enigma2 2>/dev/null; then
-        echo "dreamhub: restarting enigma2 to load the launcher plugin..."
-        systemctl restart enigma2 || true
+        if recording_now; then
+            echo "dreamhub: the box is recording (or its timer list can't be read) — enigma2 is NOT restarted."
+            echo "dreamhub: the launcher plugin loads at the next enigma2 restart: systemctl restart enigma2"
+        else
+            echo "dreamhub: restarting enigma2 to load the launcher plugin..."
+            systemctl restart enigma2 || true
+            echo "$NEW_SUM" > "$SUM_FILE"
+        fi
+    else
+        echo "$NEW_SUM" > "$SUM_FILE"
     fi
-    echo "$NEW_SUM" > "$SUM_FILE"
 else
     echo "dreamhub: launcher plugin unchanged, enigma2 keeps running"
 fi

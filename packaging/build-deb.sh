@@ -28,6 +28,30 @@ if [ -z "$VERSION" ]; then
     echo "build-deb.sh: could not read Version from backend/internal/api/router.go" >&2
     exit 1
 fi
+# The TV plugin reports a version mismatch unless its version is the same.
+PLUGIN_VERSION="$(sed -n 's/^PluginVersion = "\(.*\)"$/\1/p' "$ROOT/enigma2-plugin/src/__init__.py")"
+if [ "$PLUGIN_VERSION" != "$VERSION" ]; then
+    echo "build-deb.sh: PluginVersion ($PLUGIN_VERSION, enigma2-plugin/src/__init__.py) differs from Version ($VERSION)" >&2
+    exit 1
+fi
+
+# The binary embeds whatever is in backend/internal/webui/dist. An index.html
+# naming asset files that aren't there (a stale or placeholder index.html
+# next to a newer build — happened on 2026-10-06) gives a package whose web
+# UI is a blank page. Run `npm run build` in frontend/ right before this.
+DIST="$ROOT/backend/internal/webui/dist"
+ASSETS="$(grep -o '/assets/[^"]*' "$DIST/index.html" || true)"
+if [ -z "$ASSETS" ]; then
+    echo "build-deb.sh: $DIST/index.html names no assets — run 'npm run build' in frontend/ first" >&2
+    exit 1
+fi
+for a in $ASSETS; do
+    if [ ! -f "$DIST$a" ]; then
+        echo "build-deb.sh: $DIST/index.html names $a, which doesn't exist — run 'npm run build' in frontend/ right before this" >&2
+        exit 1
+    fi
+done
+
 ARCH="${ARCH:-arm64}"
 case "$ARCH" in
     arm64)  GOARCH=arm64;  GOARM=;  GOMIPS= ;;
@@ -60,8 +84,9 @@ for po in "$ROOT"/enigma2-plugin/src/locale/*/LC_MESSAGES/DreamHub.po; do
     msgfmt "$ROOT/enigma2-plugin/src/locale/$lang/LC_MESSAGES/DreamHub.po" \
         -o "$PKG/usr/lib/enigma2/python/Plugins/Extensions/DreamHub/locale/$lang/LC_MESSAGES/DreamHub.mo"
 done
-for f in __init__.py backend.py plugin.py DreamHubScreen.py DreamHubSetup.py webplay.py; do
-    cp "$ROOT/enigma2-plugin/src/$f" "$PKG/usr/lib/enigma2/python/Plugins/Extensions/DreamHub/$f"
+# Every .py: a new module can't be forgotten here.
+for f in "$ROOT"/enigma2-plugin/src/*.py; do
+    cp "$f" "$PKG/usr/lib/enigma2/python/Plugins/Extensions/DreamHub/"
 done
 cp "$ROOT/enigma2-plugin/src/plugin.png" "$PKG/usr/lib/enigma2/python/Plugins/Extensions/DreamHub/plugin.png"
 

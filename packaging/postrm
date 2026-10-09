@@ -11,6 +11,9 @@ case "$1" in
             systemctl daemon-reload || true
         fi
         rm -f /etc/avahi/services/dreamhub.service
+        # The plugin is gone: a reinstall must load it again, even if its
+        # files are the same as before.
+        rm -f /data/dreamhub/.plugin.sum
         ;;
     purge)
         if [ -d /run/systemd/system ]; then

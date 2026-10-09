@@ -27,7 +27,7 @@ Requires `go`, `msgfmt` (Debian/Ubuntu: `apt install gettext`) and `dpkg-deb`/`f
 | `/etc/avahi/services/dreamhub.service` | mDNS advertisement (`<box>.local:8080`) |
 | `/usr/lib/enigma2/python/Plugins/Extensions/DreamHub/` | the TV launcher plugin, `.po` files pre-compiled to `.mo` |
 
-`postinst` restarts `enigma2` only when the launcher plugin changed (it keeps a checksum), so the plugin shows up without a manual GUI restart — the same thing installing any other Extensions plugin through the Addon Manager does. A recording running at that moment would be cut: install when nothing records. `postrm` only removes `/data/dreamhub` (the SQLite database and its settings) on `purge`, never on a plain removal, so reinstalling later picks up where the user left off. Install and in-place upgrades are confirmed on the reference box (ARCHITECTURE.md).
+`postinst` restarts `enigma2` only when the launcher plugin changed (it keeps a checksum), so the plugin shows up without a manual GUI restart — the same thing installing any other Extensions plugin through the Addon Manager does. It doesn't while the box records (or when it can't read the timer list): then the plugin loads at the next enigma2 restart, and the next install tries again. `postrm` only removes `/data/dreamhub` (the SQLite database and its settings) on `purge`, never on a plain removal, so reinstalling later picks up where the user left off. Install and in-place upgrades are confirmed on the reference box (ARCHITECTURE.md).
 
 ## Making a release
 

@@ -41,8 +41,7 @@ mkdir -p "$PKG/DEBIAN" \
          "$PKG/usr/bin" \
          "$PKG/lib/systemd/system" \
          "$PKG/etc/avahi/services" \
-         "$PKG/usr/lib/enigma2/python/Plugins/Extensions/DreamHub/locale/de/LC_MESSAGES" \
-         "$PKG/usr/lib/enigma2/python/Plugins/Extensions/DreamHub/locale/it/LC_MESSAGES"
+         "$PKG/usr/lib/enigma2/python/Plugins/Extensions/DreamHub/locale"
 
 # --- backend binary ---
 echo "Cross-compiling the backend..."
@@ -55,7 +54,9 @@ cp "$ROOT/packaging/dreamhub.avahi.service" "$PKG/etc/avahi/services/dreamhub.se
 
 # --- Enigma2 plugin ---
 echo "Compiling plugin translations..."
-for lang in de it; do
+for po in "$ROOT"/enigma2-plugin/src/locale/*/LC_MESSAGES/DreamHub.po; do
+    lang="$(basename "$(dirname "$(dirname "$po")")")"
+    mkdir -p "$PKG/usr/lib/enigma2/python/Plugins/Extensions/DreamHub/locale/$lang/LC_MESSAGES"
     msgfmt "$ROOT/enigma2-plugin/src/locale/$lang/LC_MESSAGES/DreamHub.po" \
         -o "$PKG/usr/lib/enigma2/python/Plugins/Extensions/DreamHub/locale/$lang/LC_MESSAGES/DreamHub.mo"
 done

@@ -1,0 +1,49 @@
+msgid ""
+msgstr ""
+"Project-Id-Version: DreamHub 0.3.0\n"
+"MIME-Version: 1.0\n"
+"Content-Type: text/plain; charset=UTF-8\n"
+"Content-Transfer-Encoding: 8bit\n"
+"Language: pl\n"
+
+msgid "Open DreamHub on your phone"
+msgstr "Otwórz DreamHub na telefonie"
+
+msgid "DreamHub"
+msgstr "DreamHub"
+
+msgid "Checking backend…"
+msgstr "Sprawdzanie backendu…"
+
+msgid "Scan this code with your phone's camera to open DreamHub."
+msgstr "Zeskanuj ten kod aparatem telefonu, aby otworzyć DreamHub."
+
+msgid "Close"
+msgstr "Zamknij"
+
+msgid "Settings"
+msgstr "Ustawienia"
+
+msgid "Backend running (v%s)\nThis plugin is v%s — versions differ, some things may not match."
+msgstr "Backend działa (v%s)\nTa wtyczka to v%s — wersje się różnią, coś może nie pasować."
+
+msgid "Backend running (v%s)"
+msgstr "Backend działa (v%s)"
+
+msgid "Backend not reachable on this box.\nIs DreamHub installed and running?"
+msgstr "Backend na tym odbiorniku nie odpowiada.\nCzy DreamHub jest zainstalowany i uruchomiony?"
+
+msgid "DreamHub Settings"
+msgstr "Ustawienia DreamHub"
+
+msgid "Backend port"
+msgstr "Port backendu"
+
+msgid "Backend requires a password"
+msgstr "Backend wymaga hasła"
+
+msgid "Cancel"
+msgstr "Anuluj"
+
+msgid "Save"
+msgstr "Zapisz"

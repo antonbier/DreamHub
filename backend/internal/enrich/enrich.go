@@ -374,6 +374,16 @@ func Language(uiLanguage string) string {
 		return "de-DE"
 	case "it":
 		return "it-IT"
+	case "fr":
+		return "fr-FR"
+	case "es":
+		return "es-ES"
+	case "nl":
+		return "nl-NL"
+	case "pl":
+		return "pl-PL"
+	case "tr":
+		return "tr-TR"
 	}
 	return "en-US"
 }

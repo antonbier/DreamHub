@@ -11,7 +11,7 @@ import (
 // The texts a push carries, per event key and language. The web UI
 // translates notifications itself (frontend locales, "notification.*");
 // a push leaves the box as finished text, so the few it sends are kept
-// here, in the same three languages.
+// here, in the same languages.
 type texts struct{ title, body string }
 
 var catalog = map[string]map[string]texts{
@@ -19,41 +19,81 @@ var catalog = map[string]map[string]texts{
 		"de": {"Aufnahme gestartet", "{name} · {service}"},
 		"en": {"Recording started", "{name} · {service}"},
 		"it": {"Registrazione avviata", "{name} · {service}"},
+		"fr": {"Enregistrement démarré", "{name} · {service}"},
+		"es": {"Grabación iniciada", "{name} · {service}"},
+		"nl": {"Opname gestart", "{name} · {service}"},
+		"pl": {"Nagrywanie rozpoczęte", "{name} · {service}"},
+		"tr": {"Kayıt başladı", "{name} · {service}"},
 	},
 	"recording.finished": {
 		"de": {"Aufnahme fertig", "{name} · {service}"},
 		"en": {"Recording finished", "{name} · {service}"},
 		"it": {"Registrazione terminata", "{name} · {service}"},
+		"fr": {"Enregistrement terminé", "{name} · {service}"},
+		"es": {"Grabación terminada", "{name} · {service}"},
+		"nl": {"Opname klaar", "{name} · {service}"},
+		"pl": {"Nagrywanie zakończone", "{name} · {service}"},
+		"tr": {"Kayıt bitti", "{name} · {service}"},
 	},
 	"disk.aboveThreshold": {
 		"de": {"Festplatte fast voll", "{model} ist zu {percent} % belegt."},
 		"en": {"Disk almost full", "{model} is {percent}% full."},
 		"it": {"Disco quasi pieno", "{model} è pieno al {percent}%."},
+		"fr": {"Disque presque plein", "{model} est plein à {percent} %."},
+		"es": {"Disco casi lleno", "{model} está lleno al {percent} %."},
+		"nl": {"Schijf bijna vol", "{model} is voor {percent}% vol."},
+		"pl": {"Dysk prawie pełny", "{model} jest zapełniony w {percent}%."},
+		"tr": {"Disk neredeyse dolu", "{model} %{percent} dolu."},
 	},
 	"timer.conflict": {
 		"de": {"Möglicher Timer-Konflikt", "{name} ({service}) um {time} – zu viele Aufnahmen für die Tuner."},
 		"en": {"Possible timer conflict", "{name} ({service}) at {time} — more recordings than tuners."},
 		"it": {"Possibile conflitto di timer", "{name} ({service}) alle {time}: più registrazioni che sintonizzatori."},
+		"fr": {"Conflit de minuteries possible", "{name} ({service}) à {time} — plus d’enregistrements que de tuners."},
+		"es": {"Posible conflicto de temporizadores", "{name} ({service}) a las {time}: más grabaciones que sintonizadores."},
+		"nl": {"Mogelijk timerconflict", "{name} ({service}) om {time} — meer opnames dan tuners."},
+		"pl": {"Możliwy konflikt timerów", "{name} ({service}) o {time} — więcej nagrań niż tunerów."},
+		"tr": {"Olası zamanlayıcı çakışması", "{name} ({service}) {time} — kayıt sayısı tuner sayısından fazla."},
 	},
 	"series.missingAiring": {
 		"de": {"Fehlende Folge läuft", "{series} {code} „{title}“ – {time} auf {service}"},
 		"en": {"Missing episode airs", "{series} {code} “{title}” — {time} on {service}"},
 		"it": {"Va in onda un episodio mancante", "{series} {code} «{title}» – {time} su {service}"},
+		"fr": {"Un épisode manquant est diffusé", "{series} {code} « {title} » – {time} sur {service}"},
+		"es": {"Se emite un episodio que falta", "{series} {code} «{title}» – {time} en {service}"},
+		"nl": {"Ontbrekende aflevering wordt uitgezonden", "{series} {code} ‘{title}’ – {time} op {service}"},
+		"pl": {"Leci brakujący odcinek", "{series} {code} „{title}” – {time} na {service}"},
+		"tr": {"Eksik bölüm yayında", "{series} {code} “{title}” – {time}, {service}"},
 	},
 	"service.failed": {
 		"de": {"Dienst ausgefallen", "{name} auf der Box läuft nicht mehr."},
 		"en": {"Service down", "{name} on the box stopped running."},
 		"it": {"Servizio fermo", "{name} sul box non è più in esecuzione."},
+		"fr": {"Service arrêté", "{name} ne tourne plus sur le récepteur."},
+		"es": {"Servicio detenido", "{name} ha dejado de funcionar en el receptor."},
+		"nl": {"Dienst uitgevallen", "{name} op de box draait niet meer."},
+		"pl": {"Usługa zatrzymana", "{name} na odbiorniku przestała działać."},
+		"tr": {"Servis durdu", "Kutudaki {name} artık çalışmıyor."},
 	},
 	"service.recovered": {
 		"de": {"Dienst läuft wieder", "{name} auf der Box läuft wieder."},
 		"en": {"Service back", "{name} on the box is running again."},
 		"it": {"Servizio ripristinato", "{name} sul box è di nuovo in esecuzione."},
+		"fr": {"Service rétabli", "{name} tourne de nouveau sur le récepteur."},
+		"es": {"Servicio restablecido", "{name} vuelve a funcionar en el receptor."},
+		"nl": {"Dienst draait weer", "{name} op de box draait weer."},
+		"pl": {"Usługa przywrócona", "{name} na odbiorniku znowu działa."},
+		"tr": {"Servis yeniden çalışıyor", "Kutudaki {name} yeniden çalışıyor."},
 	},
 	"push.test": {
 		"de": {"DreamHub", "Benachrichtigungen kommen an."},
 		"en": {"DreamHub", "Notifications are arriving."},
 		"it": {"DreamHub", "Le notifiche arrivano."},
+		"fr": {"DreamHub", "Les notifications arrivent."},
+		"es": {"DreamHub", "Las notificaciones llegan."},
+		"nl": {"DreamHub", "Meldingen komen aan."},
+		"pl": {"DreamHub", "Powiadomienia docierają."},
+		"tr": {"DreamHub", "Bildirimler geliyor."},
 	},
 }
 
@@ -73,8 +113,8 @@ var leftover = regexp.MustCompile(`( · | \()?\{[a-z]+\}\)?`)
 // Known reports whether key has a push text.
 func Known(key string) bool { _, ok := catalog[key]; return ok }
 
-// Compose builds the message for an event in language lang ("de", "en",
-// "it"; anything else falls back to English). params are the event's own
+// Compose builds the message for an event in language lang (one of the
+// UI's languages; anything else falls back to English). params are the event's own
 // (a "begin"/"start" Unix time becomes {time}, formatted in loc).
 func Compose(key string, params json.RawMessage, lang string, loc *time.Location) (Message, bool) {
 	byLang, ok := catalog[key]

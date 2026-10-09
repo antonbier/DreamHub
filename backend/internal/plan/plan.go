@@ -16,6 +16,7 @@ import (
 	"encoding/hex"
 	"encoding/json"
 	"errors"
+	"log/slog"
 	"sync"
 	"time"
 
@@ -100,6 +101,8 @@ type entry struct {
 type Service struct {
 	store *store.Store
 	now   func() time.Time
+	// Logger reports what can't be reported to the client (optional).
+	Logger *slog.Logger
 
 	mu      sync.Mutex
 	pending map[string]entry
@@ -164,6 +167,11 @@ func (s *Service) Apply(ctx context.Context, u store.User, id string) (Result, e
 		return Result{}, ErrNotFound
 	}
 
+	// Once confirmed, a change runs to its end even if the client goes
+	// away (a phone locking its screen): stopping a multi-step change
+	// halfway — or its own rollback — would leave the box half-changed.
+	// The clients underneath keep their own per-request timeouts.
+	ctx = context.WithoutCancel(ctx)
 	if e.draft.Current != nil {
 		fp, err := e.draft.Current(ctx)
 		if err != nil {
@@ -181,10 +189,12 @@ func (s *Service) Apply(ctx context.Context, u store.User, id string) (Result, e
 	if err != nil {
 		return Result{}, err
 	}
+	// The change happened: a change-log entry that can't be written must
+	// not turn it into a reported failure (the user would retry it).
 	if err := s.store.AppendChange(ctx, store.ChangeEntry{
 		UserID: u.ID, Action: e.draft.Action, Summary: e.draft.Summary, Detail: detail,
-	}); err != nil {
-		return Result{}, err
+	}); err != nil && s.Logger != nil {
+		s.Logger.Error("writing the change log failed", "action", e.draft.Action, "plan", id, "error", err)
 	}
 	return Result{PlanID: id, Action: e.draft.Action}, nil
 }

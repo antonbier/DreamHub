@@ -262,7 +262,9 @@ func serverTimeZone() string {
 func handleQR(d Deps) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		scheme := "http"
-		if r.TLS != nil {
+		// Behind a TLS-terminating reverse proxy (a household domain with
+		// HTTPS) DreamHub itself sees plain HTTP; the proxy says so.
+		if r.TLS != nil || strings.EqualFold(r.Header.Get("X-Forwarded-Proto"), "https") {
 			scheme = "https"
 		}
 		png, err := qrcode.Encode(scheme+"://"+r.Host, qrcode.Medium, 256)

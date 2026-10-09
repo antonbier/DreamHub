@@ -389,12 +389,16 @@ type HTTPClient struct {
 
 	inflightMu sync.Mutex
 	inflight   map[string]*inflightGet
+	// writes counts finished writes; a read joins only an in-flight read
+	// of the same path started after the last write, so verifying a
+	// change never gets an answer from before it.
+	writes uint64
 }
 
 // inflightGet is one GET in progress, shared by every caller asking for the
 // same path while it's outstanding — see coalescedGet.
 type inflightGet struct {
-	wg   sync.WaitGroup
+	done chan struct{} // closed when body/err are set
 	body []byte
 	err  error
 }
@@ -405,8 +409,12 @@ type inflightGet struct {
 // services are unavailable").
 func NewHTTPClient(baseURL string) *HTTPClient {
 	return &HTTPClient{
-		BaseURL:  baseURL,
-		HTTP:     &http.Client{Timeout: 5 * time.Second},
+		BaseURL: baseURL,
+		// 15 s, not 5: /web/movielist alone takes 3.5 s on the reference
+		// box (ARCHITECTURE.md), and more with a fuller disk or a busy
+		// enigma2. Quick checks (connectors, self-test) set their own
+		// shorter deadline on the context.
+		HTTP:     &http.Client{Timeout: 15 * time.Second},
 		Streams:  &http.Client{Transport: streamTransport()},
 		inflight: map[string]*inflightGet{},
 	}
@@ -716,6 +724,7 @@ func (c *HTTPClient) DeleteTimer(ctx context.Context, ref TimerRef) error {
 }
 
 func (c *HTTPClient) simpleWrite(ctx context.Context, op string, form url.Values) error {
+	defer c.wrote()
 	body, err := c.do(ctx, http.MethodPost, "/web/"+op, form)
 	if err != nil {
 		return err
@@ -751,7 +760,7 @@ func (c *HTTPClient) Zap(ctx context.Context, serviceReference string) error {
 	if !c.AllowWrites {
 		return ErrWritesDisabled
 	}
-	body, err := c.get(ctx, "/web/zap?sRef="+url.QueryEscape(serviceReference))
+	body, err := c.command(ctx, "/web/zap?sRef="+url.QueryEscape(serviceReference))
 	if err != nil {
 		return err
 	}
@@ -777,6 +786,7 @@ func (c *HTTPClient) PlayMovie(ctx context.Context, serviceReference, title stri
 	if startMs > 0 {
 		form.Set("t", strconv.FormatInt(startMs, 10))
 	}
+	defer c.wrote()
 	body, err := c.do(ctx, http.MethodPost, "/dreamhub/play", form)
 	if err != nil {
 		return err
@@ -806,7 +816,7 @@ func (c *HTTPClient) SendKey(ctx context.Context, code int) error {
 	if !c.AllowWrites {
 		return ErrWritesDisabled
 	}
-	body, err := c.get(ctx, "/web/remotecontrol?command="+strconv.Itoa(code))
+	body, err := c.command(ctx, "/web/remotecontrol?command="+strconv.Itoa(code))
 	if err != nil {
 		return err
 	}
@@ -922,31 +932,40 @@ func (c *HTTPClient) get(ctx context.Context, path string) (io.ReadCloser, error
 // in particular it never undermines a plan's own apply-time freshness
 // check (internal/plan's Fingerprint/Current), which always runs after any
 // in-flight call this could have coalesced with has long finished.
+//
+// The shared request runs on its own, not on the first caller's context:
+// a browser tab that goes away must not cancel the answer the poller is
+// waiting for too. Each caller still stops waiting when its own context
+// ends; the request itself is bounded by the HTTP client's timeout.
 func (c *HTTPClient) coalescedGet(ctx context.Context, path string) ([]byte, error) {
 	c.inflightMu.Lock()
-	if call, ok := c.inflight[path]; ok {
-		c.inflightMu.Unlock()
-		call.wg.Wait()
+	key := strconv.FormatUint(c.writes, 10) + " " + path
+	call, ok := c.inflight[key]
+	if !ok {
+		call = &inflightGet{done: make(chan struct{})}
+		c.inflight[key] = call
+		go func() {
+			rc, err := c.do(context.WithoutCancel(ctx), http.MethodGet, path, nil)
+			var body []byte
+			if err == nil {
+				body, err = io.ReadAll(rc)
+				rc.Close()
+			}
+			call.body, call.err = body, err
+			c.inflightMu.Lock()
+			delete(c.inflight, key)
+			c.inflightMu.Unlock()
+			close(call.done)
+		}()
+	}
+	c.inflightMu.Unlock()
+
+	select {
+	case <-call.done:
 		return call.body, call.err
+	case <-ctx.Done():
+		return nil, ctx.Err()
 	}
-	call := &inflightGet{}
-	call.wg.Add(1)
-	c.inflight[path] = call
-	c.inflightMu.Unlock()
-
-	rc, err := c.do(ctx, http.MethodGet, path, nil)
-	var body []byte
-	if err == nil {
-		body, err = io.ReadAll(rc)
-		rc.Close()
-	}
-	call.body, call.err = body, err
-
-	c.inflightMu.Lock()
-	delete(c.inflight, path)
-	c.inflightMu.Unlock()
-	call.wg.Done()
-	return body, err
 }
 
 // do sends a request with Basic Auth (if configured) and, for POST, form as
@@ -1019,6 +1038,20 @@ func (c *HTTPClient) send(ctx context.Context, method, path string, form url.Val
 		return nil, fmt.Errorf("webcontrol: calling %s: %w", path, err)
 	}
 	return resp, nil
+}
+
+// wrote marks a finished write (see writes).
+func (c *HTTPClient) wrote() {
+	c.inflightMu.Lock()
+	c.writes++
+	c.inflightMu.Unlock()
+}
+
+// command sends a write that WebControl takes as a GET (zap, remote keys):
+// never coalesced — two presses of the same key are two presses.
+func (c *HTTPClient) command(ctx context.Context, path string) (io.ReadCloser, error) {
+	defer c.wrote()
+	return c.do(ctx, http.MethodGet, path, nil)
 }
 
 func (c *HTTPClient) session() string {

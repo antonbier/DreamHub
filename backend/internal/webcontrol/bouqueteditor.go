@@ -48,6 +48,7 @@ func (c *HTTPClient) editorWrite(ctx context.Context, op string, form url.Values
 		return ErrWritesDisabled
 	}
 	path := "/bouqueteditor/web/" + op
+	defer c.wrote()
 	body, err := c.do(ctx, http.MethodPost, path, form)
 	if err != nil {
 		return err

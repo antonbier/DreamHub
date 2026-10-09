@@ -95,3 +95,20 @@ func TestApply_ExecuteErrorNotLogged(t *testing.T) {
 		t.Error("a failed change must not be logged as applied")
 	}
 }
+
+func TestApply_RunsToTheEndWhenTheClientLeaves(t *testing.T) {
+	s, _, u, _ := setup(t)
+	ctx, cancel := context.WithCancel(context.Background())
+	var sawCancel bool
+	p := s.Create(u, Draft{Action: "test.change", Execute: func(ctx context.Context) error {
+		cancel() // the phone locks its screen mid-change
+		sawCancel = ctx.Err() != nil
+		return nil
+	}})
+	if _, err := s.Apply(ctx, u, p.ID); err != nil {
+		t.Fatal(err)
+	}
+	if sawCancel {
+		t.Fatal("the change saw the client's cancellation")
+	}
+}

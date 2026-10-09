@@ -239,6 +239,7 @@ func New(ctx context.Context, o Options) (*App, error) {
 		level = logging.NewLevel(now)
 	}
 	plans := plan.NewService(st, now)
+	plans.Logger = o.Logger
 	dash := dashboard.NewService(st)
 	tokens := apitoken.NewService(st, now)
 	profiles := profile.NewService(st, now)

@@ -193,6 +193,11 @@ func Base(tsPath string) string { return strings.TrimSuffix(path.Base(tsPath), "
 
 // belongs reports whether file name is part of the recording with this base.
 func belongs(name, base string) bool {
+	// A trashed recording of the same name is another recording, not a
+	// sidecar of this one (PlanEmpty passes the trashed file as main).
+	if name == base+".ts"+TrashSuffix {
+		return false
+	}
 	if name == base+".ts" || strings.HasPrefix(name, base+".ts.") {
 		return true
 	}

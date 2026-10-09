@@ -47,6 +47,8 @@ type Timer struct {
 type TimerOwners interface {
 	SetTimerOwner(ctx context.Context, serviceRef string, begin, userID int64) error
 	TimerOwner(ctx context.Context, serviceRef string, begin int64) (int64, error)
+	DeleteTimerOwner(ctx context.Context, serviceRef string, begin int64) error
+	DeleteTimerOwnersBefore(ctx context.Context, t int64) error
 }
 
 // Perms are TimerHub's route permissions (internal/perm).
@@ -436,6 +438,8 @@ func (h *Timer) planCreate(w http.ResponseWriter, r *http.Request) {
 			if h.Owners != nil {
 				// Best effort: without the record only an admin can delete it.
 				_ = h.Owners.SetTimerOwner(ctx, made.ServiceReference, made.Begin, user.ID)
+				// Timers that began two days ago have long been recorded.
+				_ = h.Owners.DeleteTimerOwnersBefore(ctx, h.Now().Add(-48*time.Hour).Unix())
 			}
 			return nil
 		},
@@ -504,6 +508,9 @@ func (h *Timer) planDelete(w http.ResponseWriter, r *http.Request) {
 			}
 			if _, still := findTimer(after, ref); still {
 				return &plan.Failure{Status: http.StatusConflict, Code: CodeTimerNotDeleted, Message: "the box reported success, but the timer is still in its list"}
+			}
+			if h.Owners != nil {
+				_ = h.Owners.DeleteTimerOwner(ctx, ref.ServiceReference, ref.Begin)
 			}
 			return nil
 		},

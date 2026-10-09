@@ -2,6 +2,7 @@ package events
 
 import (
 	"context"
+	"strings"
 	"testing"
 	"time"
 
@@ -88,7 +89,10 @@ func TestPoller_RecordingFinishedWhenTimerDisappears(t *testing.T) {
 	p := &Poller{WC: fc, Bus: bus}
 	ctx := context.Background()
 
-	timer := webcontrol.Timer{ServiceReference: "1:0:1:1:1:1:1:0:0:0:", Begin: 100, End: 200, State: webcontrol.TimerRunning}
+	timer := webcontrol.Timer{ServiceReference: "1:0:1:1:1:1:1:0:0:0:", Name: "Example", Begin: 100, End: 200}
+	fc.timers = []webcontrol.Timer{timer}
+	p.tick(ctx) // baseline: waiting
+	timer.State = webcontrol.TimerRunning
 	fc.timers = []webcontrol.Timer{timer}
 	p.tick(ctx)
 
@@ -98,6 +102,50 @@ func TestPoller_RecordingFinishedWhenTimerDisappears(t *testing.T) {
 	got := keys(t, st)
 	if len(got) != 2 || got[0] != "recording.started" || got[1] != "recording.finished" {
 		t.Fatalf("a deleted running timer must still publish recording.finished, got %v", got)
+	}
+	entries, _ := st.Notifications(ctx, 1, false)
+	if !strings.Contains(string(entries[0].Params), "Example") {
+		t.Fatalf("the finished event lost the recording's name: %s", entries[0].Params)
+	}
+}
+
+// A restart mid-recording takes the running recording as the baseline:
+// no "started" for something that started before.
+func TestPoller_RestartDoesNotReannounce(t *testing.T) {
+	bus, st := newTestBus(t)
+	fc := &fakeClient{Client: mock.New()}
+	p := &Poller{WC: fc, Bus: bus}
+	ctx := context.Background()
+	running := webcontrol.Timer{ServiceReference: "1:0:1:1:1:1:1:0:0:0:", Name: "Example", Begin: 100, End: 200, State: webcontrol.TimerRunning}
+	fc.timers = []webcontrol.Timer{running}
+	p.tick(ctx)
+	p.tick(ctx)
+	if got := keys(t, st); len(got) != 0 {
+		t.Fatalf("got %v after a restart mid-recording", got)
+	}
+	// Extending the running recording isn't a new recording.
+	running.End = 500
+	fc.timers = []webcontrol.Timer{running}
+	p.tick(ctx)
+	if got := keys(t, st); len(got) != 0 {
+		t.Fatalf("got %v after extending the end", got)
+	}
+}
+
+// A zap timer records nothing.
+func TestPoller_ZapTimersAreNotRecordings(t *testing.T) {
+	bus, st := newTestBus(t)
+	fc := &fakeClient{Client: mock.New()}
+	p := &Poller{WC: fc, Bus: bus}
+	ctx := context.Background()
+	zap := webcontrol.Timer{ServiceReference: "1:0:1:1:1:1:1:0:0:0:", Begin: 100, End: 200, JustPlay: true}
+	fc.timers = []webcontrol.Timer{zap}
+	p.tick(ctx)
+	zap.State = webcontrol.TimerRunning
+	fc.timers = []webcontrol.Timer{zap}
+	p.tick(ctx)
+	if got := keys(t, st); len(got) != 0 {
+		t.Fatalf("a zap timer published %v", got)
 	}
 }
 

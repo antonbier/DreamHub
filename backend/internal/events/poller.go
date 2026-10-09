@@ -35,7 +35,11 @@ type Poller struct {
 	Interval time.Duration
 	Logger   *slog.Logger
 
-	running   map[string]bool // timer key -> was recording last tick
+	// running holds the timers that were recording last tick, by channel
+	// and start (not end: extending a running recording isn't a new one);
+	// nil until the first tick, which only takes the baseline — a restart
+	// mid-recording mustn't announce it as just started.
+	running   map[string]webcontrol.Timer
 	diskAbove map[string]bool // disk model -> currently above threshold
 	// conflicting holds the timers that clashed last tick; nil until the
 	// first tick, which only takes the baseline — a restart mustn't
@@ -45,8 +49,11 @@ type Poller struct {
 	Now func() time.Time
 }
 
+// key identifies a timer across ticks by channel and start: the end can
+// move (a recording extended, AutoTimer adjusting) without it becoming
+// another timer — the box itself matches duplicates the same way.
 func key(t webcontrol.Timer) string {
-	return t.ServiceReference + "|" + strconv.FormatInt(t.Begin, 10) + "|" + strconv.FormatInt(t.End, 10)
+	return t.ServiceReference + "|" + strconv.FormatInt(t.Begin, 10)
 }
 
 // Run polls until ctx is done. Meant to run in its own goroutine for the
@@ -69,9 +76,6 @@ func (p *Poller) Run(ctx context.Context) {
 }
 
 func (p *Poller) tick(ctx context.Context) {
-	if p.running == nil {
-		p.running = map[string]bool{}
-	}
 	if p.diskAbove == nil {
 		p.diskAbove = map[string]bool{}
 	}
@@ -115,32 +119,29 @@ func (p *Poller) checkConflicts(ctx context.Context, timers []webcontrol.Timer, 
 }
 
 func (p *Poller) checkRecordings(ctx context.Context, timers []webcontrol.Timer) {
-	seen := make(map[string]bool, len(timers))
+	now := make(map[string]webcontrol.Timer, len(timers))
 	for _, t := range timers {
-		k := key(t)
-		recording := !t.Disabled && t.State == webcontrol.TimerRunning
-		seen[k] = recording
-		wasRecording := p.running[k]
-		if recording && !wasRecording {
-			p.Bus.Publish(ctx, RecordingStarted, map[string]any{"name": t.Name, "service": t.ServiceName})
-		} else if wasRecording && !recording {
-			p.Bus.Publish(ctx, RecordingFinished, map[string]any{"name": t.Name, "service": t.ServiceName})
+		// A zap timer switches channels; it records nothing.
+		if !t.Disabled && !t.JustPlay && t.State == webcontrol.TimerRunning {
+			now[key(t)] = t
 		}
 	}
-	// A timer that disappeared entirely (deleted) while recording also
-	// counts as finished — MediaHub's own file is done being written either
-	// way.
-	for k, was := range p.running {
-		if was && !seenContains(seen, k) {
-			p.Bus.Publish(ctx, RecordingFinished, map[string]any{})
+	if p.running != nil {
+		for k, t := range now {
+			if _, was := p.running[k]; !was {
+				p.Bus.Publish(ctx, RecordingStarted, map[string]any{"name": t.Name, "service": t.ServiceName})
+			}
+		}
+		// Gone from "recording": finished, or deleted while recording —
+		// the file is done being written either way. The name comes from
+		// the last tick, the timer may not be listed any more.
+		for k, t := range p.running {
+			if _, still := now[k]; !still {
+				p.Bus.Publish(ctx, RecordingFinished, map[string]any{"name": t.Name, "service": t.ServiceName})
+			}
 		}
 	}
-	p.running = seen
-}
-
-func seenContains(seen map[string]bool, k string) bool {
-	_, ok := seen[k]
-	return ok
+	p.running = now
 }
 
 func (p *Poller) checkDisk(ctx context.Context, info *webcontrol.DeviceInfo) {

@@ -304,6 +304,14 @@ func (s *Store) TimerOwner(ctx context.Context, serviceRef string, begin int64) 
 	return id, err
 }
 
+// DeleteTimerOwner forgets who made a timer (it was deleted): a later
+// timer on the same channel and start, made by someone else, must not
+// count as theirs.
+func (s *Store) DeleteTimerOwner(ctx context.Context, serviceRef string, begin int64) error {
+	_, err := s.db.ExecContext(ctx, `DELETE FROM timer_owners WHERE service_ref = ? AND begin_at = ?`, serviceRef, begin)
+	return err
+}
+
 // DeleteTimerOwnersBefore forgets the owners of timers that began before
 // t — they've long been recorded or deleted.
 func (s *Store) DeleteTimerOwnersBefore(ctx context.Context, t int64) error {

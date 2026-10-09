@@ -118,7 +118,7 @@ timed $LOW dd if="$REC" of=/dev/null bs=1M count=500
 section "trimming (#27): concat cut with in/out points, into /tmp only"
 # The recording is only read. Keeps 0–30 s and 60–90 s of the stream's own
 # clock (in/out points are stream timestamps, not seconds from the start).
-start=$(ffmpeg -nostdin -v info -skip_frame nokey -i "$REC" -map 0:v:0 -frames:v 1 -vf showinfo -vsync passthrough -f null - 2>&1 |
+start=$(ffmpeg -nostdin -v info -skip_frame nokey -copyts -i "$REC" -map 0:v:0 -frames:v 1 -vf showinfo -vsync passthrough -f null - 2>&1 |
     grep -o 'pts_time:[0-9.]*' | head -1 | cut -d: -f2)
 echo "first keyframe at stream time $start"
 if [ -n "$start" ]; then

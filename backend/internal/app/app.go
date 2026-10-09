@@ -32,6 +32,7 @@ import (
 	"github.com/antonbier/DreamHub/backend/internal/fanart"
 	"github.com/antonbier/DreamHub/backend/internal/hub"
 	hubs_ "github.com/antonbier/DreamHub/backend/internal/hubs"
+	"github.com/antonbier/DreamHub/backend/internal/jobs"
 	"github.com/antonbier/DreamHub/backend/internal/journald"
 	"github.com/antonbier/DreamHub/backend/internal/logging"
 	"github.com/antonbier/DreamHub/backend/internal/plan"
@@ -133,6 +134,9 @@ type App struct {
 	// process does; tests just use the Bus directly, no background polling.
 	Events *events.Bus
 	Poller *events.Poller
+	// Jobs is the background queue (internal/jobs); hubs register their
+	// job kinds on it, cmd/dreamhub runs it with Background.
+	Jobs *jobs.Service
 	// Background are further long-running jobs cmd/dreamhub starts next to
 	// the Poller: push notifications, SeriesHub's missing-episode watch.
 	Background []func(context.Context)
@@ -238,6 +242,10 @@ func New(ctx context.Context, o Options) (*App, error) {
 	profiles := profile.NewService(st, now)
 	watcher := hub.NewStatusWatcher()
 	eventBus := events.NewBus(st, now)
+	// The background queue (#41) holds while the box records: the tuner,
+	// the disk and enigma2 belong to the recording.
+	jobQueue := &jobs.Service{Store: st, Logger: o.Logger, Now: now,
+		Blockers: []jobs.Blocker{recordingBlocker(o.WebControl)}}
 	poller := &events.Poller{WC: o.WebControl, Bus: eventBus, Logger: o.Logger, Now: now}
 
 	var enricher *enrich.Service
@@ -311,6 +319,7 @@ func New(ctx context.Context, o Options) (*App, error) {
 		Events:     eventBus,
 		Enrich:     enricher,
 		Push:       notifier,
+		Jobs:       jobQueue,
 		Mounts: []api.Mount{
 			{HubID: hub.IDTimer, Prefixes: []string{"/api/v1/timers"}, Register: timerHub.Mount, Perms: timerHub.Perms()},
 			{HubID: hub.IDMedia, Prefixes: []string{"/api/v1/media"}, Register: mediaHub.Mount, Perms: mediaHub.Perms()},
@@ -342,9 +351,9 @@ func New(ctx context.Context, o Options) (*App, error) {
 	return &App{
 		Handler: handler, Store: st, Settings: svc, Connectors: conns, Hubs: hubs,
 		Plans: plans, Dashboard: dash, Tokens: tokens, Profiles: profiles, Routes: routes, Level: level, User: user,
-		Events: eventBus, Poller: poller,
+		Events: eventBus, Poller: poller, Jobs: jobQueue,
 		Background: append(background(notifier, seriesHub, adminHub, plexHub, eventBus, o.Logger),
-			func(ctx context.Context) { channelsHub.Watch(ctx, o.Logger) }),
+			func(ctx context.Context) { channelsHub.Watch(ctx, o.Logger) }, jobQueue.Run),
 	}, nil
 }
 
@@ -361,4 +370,22 @@ func background(n *push.Notifier, series *hubs_.Series, admin *hubs_.Admin, plex
 		jobs = append(jobs, n.Run)
 	}
 	return jobs
+}
+
+// recordingBlocker holds the job queue while a timer records. When the
+// timer list can't be read, it holds too: better a late job than one that
+// competes with a recording nobody could see.
+func recordingBlocker(wc webcontrol.Client) jobs.Blocker {
+	return func(ctx context.Context) string {
+		timers, err := wc.TimerList(ctx)
+		if err != nil {
+			return "boxUnreachable"
+		}
+		for _, t := range timers {
+			if t.State == webcontrol.TimerRunning {
+				return "recording"
+			}
+		}
+		return ""
+	}
 }

@@ -8,6 +8,7 @@ import (
 	"time"
 
 	"github.com/antonbier/DreamHub/backend/internal/httpx"
+	"github.com/antonbier/DreamHub/backend/internal/perm"
 	"github.com/antonbier/DreamHub/backend/internal/store"
 )
 
@@ -89,6 +90,16 @@ func handleEventsStream(d Deps) http.HandlerFunc {
 		}
 		ch, cancel := d.Events.Subscribe()
 		defer cancel()
+		// Background jobs' changes ride the same stream ("event: job"),
+		// only the ones this profile may see.
+		var jobCh <-chan store.Job
+		if d.Jobs != nil {
+			var cancelJobs func()
+			jobCh, cancelJobs = d.Jobs.Subscribe()
+			defer cancelJobs()
+		}
+		me := current(r)
+		seeAll := perm.For(me).Has(perm.System)
 
 		w.Header().Set("Content-Type", "text/event-stream")
 		w.Header().Set("Cache-Control", "no-cache")
@@ -109,6 +120,16 @@ func handleEventsStream(d Deps) http.HandlerFunc {
 					continue
 				}
 				fmt.Fprintf(w, "event: notification\ndata: %s\n\n", data)
+				flusher.Flush()
+			case j := <-jobCh:
+				if !seeAll && j.OwnerID != me.ID {
+					continue
+				}
+				data, err := json.Marshal(toJobView(j))
+				if err != nil {
+					continue
+				}
+				fmt.Fprintf(w, "event: job\ndata: %s\n\n", data)
 				flusher.Flush()
 			case <-ping.C:
 				fmt.Fprint(w, ": ping\n\n") // keeps intermediaries/the client's read from timing out on a quiet box

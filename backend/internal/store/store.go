@@ -251,6 +251,29 @@ var migrations = []string{
 		user_id    INTEGER
 	);
 	`,
+	`
+	-- Background jobs (internal/jobs, #41): long work such as ad detection
+	-- that outlives a request. message/params are an i18n key and its
+	-- parameters; checkpoint is the job kind's own resume state.
+	CREATE TABLE jobs (
+		id          INTEGER PRIMARY KEY,
+		kind        TEXT NOT NULL,
+		key         TEXT NOT NULL DEFAULT '',
+		owner_id    INTEGER NOT NULL,
+		params      TEXT NOT NULL DEFAULT '{}',
+		state       TEXT NOT NULL,
+		done        INTEGER NOT NULL DEFAULT 0,
+		total       INTEGER NOT NULL DEFAULT 0,
+		message     TEXT NOT NULL DEFAULT '',
+		msg_params  TEXT NOT NULL DEFAULT '{}',
+		error       TEXT NOT NULL DEFAULT '',
+		checkpoint  TEXT NOT NULL DEFAULT '',
+		created_at  TEXT NOT NULL,
+		started_at  TEXT NOT NULL DEFAULT '',
+		finished_at TEXT NOT NULL DEFAULT ''
+	);
+	CREATE INDEX jobs_state ON jobs (state);
+	`,
 }
 
 func (s *Store) migrate(ctx context.Context) error {

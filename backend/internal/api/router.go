@@ -22,6 +22,7 @@ import (
 	"github.com/antonbier/DreamHub/backend/internal/events"
 	"github.com/antonbier/DreamHub/backend/internal/httpx"
 	"github.com/antonbier/DreamHub/backend/internal/hub"
+	"github.com/antonbier/DreamHub/backend/internal/jobs"
 	"github.com/antonbier/DreamHub/backend/internal/perm"
 	"github.com/antonbier/DreamHub/backend/internal/plan"
 	"github.com/antonbier/DreamHub/backend/internal/profile"
@@ -79,7 +80,9 @@ type Deps struct {
 	// (internal/enrich); nil turns /api/v1/enrich off.
 	Enrich *enrich.Service
 	// Push (nil: not wired) sends the test notification.
-	Push   *push.Notifier
+	Push *push.Notifier
+	// Jobs is the background queue (internal/jobs); nil disables its routes' work.
+	Jobs   *jobs.Service
 	Mounts []Mount
 	// Profiles picks the profile behind each request (identity.go).
 	Profiles *profile.Service
@@ -135,6 +138,9 @@ func NewRouterWithRoutes(d Deps) (http.Handler, []Route) {
 	core.HandleFunc("GET /api/v1/notifications", handleNotifications(d))
 	core.HandleFunc("POST /api/v1/notifications/read", handleMarkNotificationsRead(d))
 	core.HandleFunc("GET /api/v1/events/stream", handleEventsStream(d))
+	core.HandleFunc("GET /api/v1/jobs", handleJobs(d))
+	core.HandleFunc("GET /api/v1/jobs/{id}", handleJob(d))
+	core.HandleFunc("POST /api/v1/jobs/{id}/cancel", handleCancelJob(d))
 	core.HandleFunc("POST /api/v1/profiles", handleCreateProfile(d))
 	core.HandleFunc("PATCH /api/v1/profiles/{id}", handleUpdateProfile(d))
 	core.HandleFunc("DELETE /api/v1/profiles/{id}", handleDeleteProfile(d))
@@ -195,6 +201,7 @@ var corePerms = map[string]perm.Perm{
 	"POST /api/v1/dashboard/view":     perm.Watch, // a read with a body
 	"POST /api/v1/plans/{id}/apply":   perm.Watch, // the plan's creator, who needed the permission to plan it
 	"POST /api/v1/notifications/read": perm.Watch,
+	"POST /api/v1/jobs/{id}/cancel":   perm.Watch, // the job's owner, or perm.System
 	"PUT /api/v1/profiles/me/pin":     perm.Watch,
 	"POST /api/v1/push/test":          perm.System,
 	"GET /api/v1/tokens":              perm.System,

@@ -62,6 +62,6 @@ See [`CONCEPT.md`](CONCEPT.md) for the hub list and release scope (v1 / v1.1 / l
 
 ## 7. Current status
 
-Released (0.1.0 on 2026-10-04, currently 0.1.8) and running on the reference box: the core shell and every v1 hub, plus RadioHub, ControlHub, AdminHub's service status and PlexHub, built early — each confirmed on the real box (the self-test on System → Diagnostics), each also running against the mocks for development. What's open on the way to 1.0.0 is hardening (WP10: DST days, a box without the optional plugins, dogfooding), the apt feed (D4) and uninstall/purge; after that v1.1 (ChannelHub, trimming) and the later hubs. `ROADMAP.md` is the itemized, authoritative status; every open item links its GitHub issue.
+Released (0.1.0 on 2026-10-04, currently 0.2.0 with profiles and roles) and running on the reference box: the core shell and every v1 hub, plus RadioHub, ControlHub, AdminHub's service status, StreamHub and PlexHub, built early — each confirmed on the real box (the self-test on System → Diagnostics), each also running against the mocks for development. What's open on the way to 1.0.0 is hardening (WP10: DST days, a box without the optional plugins, dogfooding), the apt feed (D4) and uninstall/purge; v1.1's ChannelHub and trimming (with ad detection, docs/ADSCAN_PLAN.md) are built against the mock and wait for their first test on the box; then the later hubs. `ROADMAP.md` is the itemized, authoritative status; every open item links its GitHub issue.
 
 Project board: https://github.com/users/antonbier/projects/1

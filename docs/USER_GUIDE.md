@@ -65,6 +65,10 @@ Tip: put it on your phone's home screen — it then opens like an app. See [sect
 
 The first visit starts a short assistant: language, connection to the box, a password for DreamHub, which hubs to show, your channel list, and optionally an AI key. Everything in it can be changed later under **Settings**, and **Settings → System → Run setup wizard** starts it again. Settings are split into tabs — General, Recordings, Services, Notifications, Hubs, Access, System — and any setting can be found with **Ctrl+K**.
 
+### Profiles: one per person
+
+Under **Settings → Profiles** an admin adds a profile for each person in the household. Each device asks once "Who's watching?" and remembers the answer; a profile can have a PIN (admins need one as soon as there's more than one profile). **Viewers** watch live TV, recordings and Plex, use the guide and the remote, and plan recordings — they don't rename or delete recordings, change other people's timers, or see the settings beyond their own. Per viewer, an admin can allow "plan recordings" and "rename and delete recordings". **Design the start page** sets the start page every viewer sees until they change their own.
+
 ### Recommended: protect your network access
 
 - **Set a DreamHub password** (Settings → Access → Authentication). Without one, anyone on your home network can use DreamHub.
@@ -102,6 +106,8 @@ Every recording folder on the box, folder by folder.
   - **Rename by scheme** — names follow your scheme from *Settings → Recordings* (e.g. `{title} - S{season:02}E{episode:02} - {episodeTitle}`). Tick **Sort into folders** to also move them into folders by your folder scheme (e.g. `{title}/Season {season:02}`); missing folders are created.
   - **Save covers** — writes the poster and backdrop next to recordings that have none, where Enigma2 and other plugins look for them. Existing covers are never replaced.
   - **Move to trash** — nothing is deleted right away; the **Trash** tab restores or deletes for good.
+
+- **Ads** *(from the next release)* — in a recording's details, **Detect ads** finds the ad breaks by the channel's logo, on the box, in the background (it waits while the box records). The breaks show on a timeline; tap one to watch from there in the browser. **Cut out the ads …** ticks the breaks it is sure about — the uncertain ones are yours to decide — shows what will happen and cuts them out without re-encoding. The original keeps all its files and goes to the trash, so it can be restored. For several recordings at once: select them, then **Detect ads**. The list shows "14 min ads" next to a recording that was checked.
 
 Files are only changed when DreamHub runs on the box itself, and never while a recording is still being written or played.
 
@@ -150,6 +156,10 @@ All timers on the box, by day, with likely tuner conflicts marked. **Disable** k
 ### Recommendations
 
 AI picks from a bouquet's programme for the next hours, optionally fitted to your taste (what you record and follow — **What gets sent** shows the exact list before anything is sent). The picks stay until you generate new ones, also on other devices. Click a pick for its details and **Create timer**.
+
+### Channel list *(from the next release)*
+
+Your bouquets, editable on the phone (admins). Move channels (buttons, or drag on a computer), put one on a given number, rename, remove, add from all the channels the box knows, add headings; create, rename and delete bouquets. **New since** shows the channels a channel scan brought, **Check** lists what deserves a look (channels gone after a scan, twice in a bouquet, without programme data or logo), **Logos** shows the installed logo sets and lets you pick the one DreamHub uses. Every change is collected and shown as one preview ("ZDF HD moves from 14 to 2"); applying makes a backup of the whole channel list first and restores it by itself if the result isn't what was previewed. Older backups can be restored. Needs the BouquetEditor plugin on the box.
 
 ### Remote
 

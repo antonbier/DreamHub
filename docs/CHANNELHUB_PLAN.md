@@ -74,9 +74,17 @@ The editor is designed for a phone held in one hand: a long list with large rows
 
 C1 and C4 can be built and finished against the mock. C2 and C3 are built against the mock too, but aren't released until the BouquetEditor writes have been tried on the reference box, one approved change at a time, and restored.
 
-## To confirm on the box (read-only first)
+## Confirmed on the box, read-only (2026-10-09, `spikes/box-checks/channelhub.sh` + the BouquetEditor plugin's own Python source fetched from it)
 
-- How WebControl lists all channels and providers (`/web/getservices` with the provider/all-services references — the OpenWebif conventions are known, DreamOS's answers aren't).
-- The BouquetEditor endpoints' exact behaviour: `mode` (TV/radio), whether `position` counts from 0 or 1, what `sRefBefore` expects at the end of a list, where `backup()` writes and whether `restore()` reloads the lists without a restart.
-- Whether the TV's channel list updates at once after a change, or needs a reload (`/web/servicelistreload`).
-- The picon packages in the Gemini feed (`apt-cache search picon`).
+- `/web/getservices` with the provider/all-services references works as assumed: counted 3320 TV services, 182 providers, 664 radio services, 72 radio providers on the reference box; the first TV bouquet's listing from plain WebControl and from `/bouqueteditor/web/getservices` matched entry for entry.
+- `sRefBefore` ("" = at the end) is confirmed directly from `BouquetEditor.py`'s `addServiceToBouquet`/`addMarkerToBouquet`.
+- `backup(Filename)` always writes to `/tmp/<name>.tar` — `BACKUP_PATH = "/tmp"`, hardcoded — after sanitizing `name` (anything outside `[A-Za-z0-9_. ]` collapses to a single `_`) and appending `.tar`; it never echoes the resulting path back in its XML answer.
+- **Found a real bug from this**: `restore(Filename)` does *not* do the same join — it takes `Filename` as a literal path and just checks `exists()` on it (the plugin's own join call is commented out). `webcontrol.HTTPClient.EditorRestore` was sending the bare backup name straight through, so every real-box restore would have failed with "does not exist" — the auto-restore-on-failure safety net in `channels_edit.go`'s `withBackup` was silently broken for the real device, never caught because it only runs against the mock. **Fixed**: `EditorRestore` now reconstructs `/tmp/<sanitized name>.tar` itself (same commit, `backend/internal/webcontrol/bouqueteditor.go`, test in `bouqueteditor_test.go`).
+- `restore()` *does* fully reload: `eDVBDB.removeServices()`, re-reads transponders, `reloadServicelist()`, `reloadBouquets()`, and even refreshes the currently-shown service list screen on the TV if one is open — no restart needed.
+- `moveService`/`moveBouquet`'s `position` is passed straight through to the native `eDVBDB` binding (`mutableBouquetList.moveService(ref, position)`) with no Python-visible index arithmetic — reading the source doesn't resolve whether it counts from 0 or 1 with headers included; **still needs a real write** to confirm, as planned.
+- Picon sets: several already on disk under `/data/piconpool/*` (1000–2600 files each) and more available as installable feed packages (`gp4-picon-*`, several thousand services' worth across Astra/Hotbird/cable providers) — "Save covers"-style picon fetching has real packages to offer, not just one.
+
+## Still open
+
+- Whether the TV's channel list updates at once after a change, or needs a reload (`/web/servicelistreload`) — covered by the above but worth re-checking after a real write.
+- `position`'s base/offset (see above) — the first approved write, one change at a time, per the plan.

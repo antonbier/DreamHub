@@ -4,6 +4,7 @@ import (
 	"context"
 	"net/http"
 	"net/url"
+	"regexp"
 	"strconv"
 	"strings"
 )
@@ -11,10 +12,11 @@ import (
 // BouquetEditor is the optional BouquetEditor plugin's write API
 // (/bouqueteditor/web/*, parameters in ARCHITECTURE.md) — the one thing
 // that changes the box's channel list for ChannelHub
-// (docs/CHANNELHUB_PLAN.md). Read from the plugin's own XML definitions;
-// how position counts and what a rename of a bouquet needs haven't been
-// tried on the box yet, so ChannelHub checks the resulting list after every
-// change and restores its backup when it doesn't match.
+// (docs/CHANNELHUB_PLAN.md). Read from the plugin's own XML definitions
+// (BouquetEditor.py, confirmed live 2026-10-09): position is a plain index
+// passed straight to the native eDVBDB binding with no visible base/header
+// handling, so that still needs a real write to confirm; backup and
+// restore reload the whole bouquet list and the on-screen service list.
 type BouquetEditor interface {
 	BouquetEditorProber
 	// EditorBackup and EditorRestore save and bring back the whole channel
@@ -68,8 +70,20 @@ func (c *HTTPClient) EditorBackup(ctx context.Context, filename string) error {
 	return c.editorWrite(ctx, "backup", url.Values{"Filename": {filename}})
 }
 
+// backupNameInvalid mirrors the plugin's own cleanup of a backup's name
+// (BouquetEditor.py's backupFiles: any run of characters outside this set
+// becomes a single "_") — needed because restore, unlike backup, doesn't
+// sanitize or place the name itself; it takes the resulting path literally.
+var backupNameInvalid = regexp.MustCompile(`[^A-Za-z0-9_. ]+`)
+
+// EditorRestore reconstructs the path EditorBackup's filename actually
+// landed at. The plugin's backup joins BACKUP_PATH ("/tmp"), sanitizes the
+// name and appends ".tar" itself; its restore takes the opposite — a
+// literal path it checks with exists() — so passing the bare name back
+// (as the plugin's own XML parameter suggests) fails every real restore.
 func (c *HTTPClient) EditorRestore(ctx context.Context, filename string) error {
-	return c.editorWrite(ctx, "restore", url.Values{"Filename": {filename}})
+	path := "/tmp/" + backupNameInvalid.ReplaceAllString(filename, "_") + ".tar"
+	return c.editorWrite(ctx, "restore", url.Values{"Filename": {path}})
 }
 
 func (c *HTTPClient) AddBouquet(ctx context.Context, name string, radio bool) error {

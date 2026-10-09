@@ -19,6 +19,21 @@ func (s *Store) IncrementAIUsage(ctx context.Context, date string) (int, error) 
 	return s.AIUsageToday(ctx, date)
 }
 
+// ReserveAIUsage counts one more AI call for date if fewer than limit were
+// made — check and count in one statement, so two requests at the same
+// moment can't both slip under the limit.
+func (s *Store) ReserveAIUsage(ctx context.Context, date string, limit int64) (bool, error) {
+	if _, err := s.db.ExecContext(ctx, `INSERT INTO ai_usage (date, count) VALUES (?, 0) ON CONFLICT (date) DO NOTHING`, date); err != nil {
+		return false, err
+	}
+	res, err := s.db.ExecContext(ctx, `UPDATE ai_usage SET count = count + 1 WHERE date = ? AND count < ?`, date, limit)
+	if err != nil {
+		return false, err
+	}
+	n, err := res.RowsAffected()
+	return n == 1, err
+}
+
 // AIUsageToday returns the given date's count without incrementing it.
 func (s *Store) AIUsageToday(ctx context.Context, date string) (int, error) {
 	var count int

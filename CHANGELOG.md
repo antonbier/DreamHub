@@ -19,6 +19,19 @@ Format follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/); version
 - Errors in everyday words: "The box doesn't answer right now. Is it switched on?" instead of "DreamHub backend not reachable", with the technical code and request ID behind "Details". The reason is the real one — DreamHub, the box, Plex, the tuner, or the profile's permissions.
 - Viewers' sidebar: no status dots, and hubs that can't work at all (e.g. Plex not set up) are left out instead of greyed.
 
+### Fixed
+- "Sidebar labels: hub names" did nothing anywhere; now the sidebar, search, notifications, status lists and page headings switch.
+- Pressing the same remote key twice quickly reached the box only once.
+- A confirmed change kept going if the phone locked its screen mid-apply (a channel-list change could stop halfway, its automatic restore too).
+- Checking a new or deleted timer could read the box's list from before the change and report "not created" / "still there".
+- Notifications: a DreamHub restart during a recording announced it as just started; zap timers counted as recordings; extending a running recording sent "finished" and "started"; a recording deleted while running was announced without its name.
+- A viewer could delete a timer SerienRecorder or AutoTimer made, if it started on the same channel at the same time as one of the viewer's own deleted timers.
+- The AI's daily limit could be passed by two requests at the same moment.
+- The recording list could time out on a fuller disk (box requests may now take 15 s, not 5).
+- The TV plugin's play endpoint only answers POST (any web page on the LAN could start playback through a GET).
+- The setup QR code points to https behind a TLS reverse proxy.
+- Go 1.27.2 for its HTTP and TLS fixes.
+
 ## [0.2.0] - 2026-10-07
 
 Includes everything listed under 0.1.9, which was installed on the reference box but never released on its own.

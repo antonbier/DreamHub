@@ -15,16 +15,12 @@ import (
 // (same rule as DiscoveryHub). It returns an error code, or "" when the
 // call may go ahead.
 func reserveAICall(ctx context.Context, st *store.Store, v settings.Values, now func() time.Time) string {
-	today := now().UTC().Format("2006-01-02")
-	used, err := st.AIUsageToday(ctx, today)
-	if err != nil {
+	ok, err := st.ReserveAIUsage(ctx, now().UTC().Format("2006-01-02"), v.Int(connector.KeyAIDailyLimit))
+	switch {
+	case err != nil:
 		return "internal"
-	}
-	if int64(used) >= v.Int(connector.KeyAIDailyLimit) {
+	case !ok:
 		return "ai_budget_exceeded"
-	}
-	if _, err := st.IncrementAIUsage(ctx, today); err != nil {
-		return "internal"
 	}
 	return ""
 }

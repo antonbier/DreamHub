@@ -37,10 +37,16 @@ class PlayResource(resource.Resource):
         resource.Resource.__init__(self)
         self.session = session
 
-    def render_POST(self, request):
-        return self.render_GET(request)
-
     def render_GET(self, request):
+        # POST only: a GET can be triggered by any web page open on the
+        # LAN (an <img> pointing here) and would start playback on the TV.
+        # DreamHub's backend always posts.
+        request.setResponseCode(405)
+        request.setHeader("Allow", "POST")
+        request.setHeader("Content-Type", "application/json; charset=utf-8")
+        return json.dumps({"ok": False, "error": "use POST"})
+
+    def render_POST(self, request):
         request.setHeader("Content-Type", "application/json; charset=utf-8")
         ref = request.args.get("sRef", [""])[0]
         title = request.args.get("title", [""])[0]

@@ -83,6 +83,21 @@
               {{ t('settings.page.runWizard') }}
             </RouterLink>
           </section>
+          <section class="rounded border border-line bg-tile p-5">
+            <h2 class="text-[15.5px] font-semibold">{{ t('system.about.title') }}</h2>
+            <dl class="mt-2 grid grid-cols-[max-content_1fr] gap-x-6 gap-y-1.5 text-[13px] below-sm:grid-cols-1 below-sm:gap-y-0">
+              <dt class="text-muted below-sm:mt-1.5">{{ t('system.about.version', { version }) }}</dt>
+              <dd class="min-w-0 break-words text-text">{{ t('system.about.copyright') }}</dd>
+            </dl>
+            <a
+              href="https://github.com/antonbier/DreamHub"
+              target="_blank"
+              rel="noopener"
+              class="mt-2 inline-block text-[13.5px] text-accent hover:underline"
+            >
+              {{ t('system.about.repo') }}
+            </a>
+          </section>
         </template>
       </div>
     </template>
@@ -184,11 +199,21 @@ function onBeforeUnload(e: BeforeUnloadEvent) {
   if (anyDirty.value) e.preventDefault()
 }
 
+const version = ref('')
+
 onMounted(async () => {
   window.addEventListener('beforeunload', onBeforeUnload)
   await Promise.all([form.load(), loadConnectors()])
   redirectOldHash()
   await scrollToHash()
+  // Best-effort, System tab only: a failed lookup just leaves it blank.
+  if (can('system')) {
+    try {
+      version.value = (await api.health()).version
+    } catch {
+      // leave blank
+    }
+  }
 })
 onBeforeUnmount(() => window.removeEventListener('beforeunload', onBeforeUnload))
 </script>

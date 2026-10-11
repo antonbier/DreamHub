@@ -171,6 +171,17 @@ func (h *Plex) newTicket(t ticket) string {
 // less often than the box's own Range requests while it buffers or seeks.
 const progressThrottle = 10 * time.Second
 
+// streamStallTimeout: a plain io.Copy from Plex to the box has no limit of
+// its own — if Plex (or the LAN between them) stalls mid-film, the copy
+// just hangs forever. A film's video bitrate is many times its audio
+// bitrate, so a fixed-size player buffer holds far less *time* of video
+// than of audio: a stall shows up on screen as the picture freezing while
+// the sound keeps playing from its still-full buffer, well before the box
+// gives up on its own. Closing the connection here once nothing has
+// arrived for a while lets the box's own player notice and reconnect with
+// a fresh Range request from where it left off, instead of hanging.
+const streamStallTimeout = 15 * time.Second
+
 // Stream passes one ticket's file on to the box's player. Public route
 // (no DreamHub login: the box's player has none) but only for requests
 // from the machine itself, with a valid ticket.
@@ -210,7 +221,41 @@ func (h *Plex) Stream(w http.ResponseWriter, r *http.Request) {
 	}
 	w.WriteHeader(resp.StatusCode)
 	if r.Method != http.MethodHead {
-		io.Copy(w, resp.Body)
+		copyUntilStall(w, resp.Body, streamStallTimeout)
+	}
+}
+
+// copyUntilStall is io.Copy, but gives up once src has produced nothing for
+// idle: it closes src (unblocking its Read, which runs in the background
+// and would otherwise leak) and returns. The caller's response ends there;
+// nothing else here needs to react, since the box's own reconnect (if any)
+// comes back as a brand new request.
+func copyUntilStall(dst io.Writer, src io.ReadCloser, idle time.Duration) {
+	buf := make([]byte, 32*1024)
+	type result struct {
+		n   int
+		err error
+	}
+	for {
+		ch := make(chan result, 1)
+		go func() {
+			n, err := src.Read(buf)
+			ch <- result{n, err}
+		}()
+		select {
+		case res := <-ch:
+			if res.n > 0 {
+				if _, err := dst.Write(buf[:res.n]); err != nil {
+					return
+				}
+			}
+			if res.err != nil {
+				return
+			}
+		case <-time.After(idle):
+			src.Close()
+			return
+		}
 	}
 }
 

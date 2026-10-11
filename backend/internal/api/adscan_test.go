@@ -2,12 +2,14 @@ package api_test
 
 import (
 	"context"
+	"encoding/binary"
 	"encoding/json"
 	"net/http"
 	"net/url"
 	"testing"
 	"time"
 
+	"github.com/antonbier/DreamHub/backend/internal/adscan"
 	"github.com/antonbier/DreamHub/backend/internal/webcontrol/mock"
 )
 
@@ -216,6 +218,167 @@ func TestTrim_CutsTheBreaksAndKeepsTheOriginalInTheTrash(t *testing.T) {
 	}
 	// The original's analysis went with it into the trash.
 	e.json(t, "GET", "/api/v1/media/adscan?path="+url.QueryEscape(orig+".ts.trash"), "", nil, 200, nil)
+}
+
+// syntheticAP builds a .ts.ap with one access point per second, covering
+// seconds; offsets are arbitrary, only the PTS (90 kHz) matters here.
+func syntheticAP(seconds int) []byte {
+	out := make([]byte, 16*seconds)
+	for i := 0; i < seconds; i++ {
+		binary.BigEndian.PutUint64(out[16*i:], uint64(i*188000))
+		binary.BigEndian.PutUint64(out[16*i+8:], uint64(i)*90000)
+	}
+	return out
+}
+
+func TestMark_WritesBreaksIntoTheCutList(t *testing.T) {
+	m := mock.New()
+	e := newEnvWith(t, m)
+	// The fixture's .ts.ap and .ts.cuts are placeholder text, not real
+	// sidecars (recordingFixtures) — a real recording always has a real
+	// .ts.ap, so this stands in for one; an empty .ts.cuts for "no cuts
+	// yet", which is the common case (ROADMAP.md, phase 0's box check).
+	if err := m.FS.WriteFile(bauer+".ap", syntheticAP(3600)); err != nil {
+		t.Fatal(err)
+	}
+	if err := m.FS.WriteFile(bauer+".cuts", nil); err != nil {
+		t.Fatal(err)
+	}
+	got := e.analyse(t, bauer)
+	if len(got.Result.Blocks) != 3 {
+		t.Fatalf("fixture changed: %d blocks", len(got.Result.Blocks))
+	}
+
+	type span struct {
+		Start float64 `json:"start"`
+		End   float64 `json:"end"`
+	}
+	var blocks []span
+	for _, b := range got.Result.Blocks {
+		blocks = append(blocks, span{b.Start, b.End})
+	}
+	body, _ := json.Marshal(map[string]any{"path": bauer, "blocks": blocks})
+	var pr struct {
+		Plan struct {
+			ID      string `json:"id"`
+			Changes []struct {
+				Type string `json:"type"`
+			} `json:"changes"`
+		} `json:"plan"`
+	}
+	e.json(t, "POST", "/api/v1/media/adscan/mark/plan", string(body), nil, 200, &pr)
+	if len(pr.Plan.Changes) != 1 || pr.Plan.Changes[0].Type != "recording.mark" {
+		t.Fatalf("plan: %+v", pr.Plan.Changes)
+	}
+	// Nothing changed yet.
+	if raw, _ := m.FS.ReadFile(bauer + ".cuts"); len(raw) != 0 {
+		t.Fatal("previewing changed the cut list")
+	}
+	e.json(t, "POST", "/api/v1/plans/"+pr.Plan.ID+"/apply", "", nil, 200, nil)
+
+	raw, err := m.FS.ReadFile(bauer + ".cuts")
+	if err != nil {
+		t.Fatal(err)
+	}
+	cuts, err := adscan.ParseCuts(raw)
+	if err != nil {
+		t.Fatal(err)
+	}
+	if len(cuts) != 2*len(got.Result.Blocks) {
+		t.Fatalf("cuts: %+v", cuts)
+	}
+	for i, b := range got.Result.Blocks {
+		out, in := cuts[2*i], cuts[2*i+1]
+		if out.Type != adscan.CutOut || in.Type != adscan.CutIn {
+			t.Fatalf("block %d: types %d, %d", i, out.Type, in.Type)
+		}
+		// One access point per second: the PTS is the floor of the
+		// block's boundary, times 90 kHz.
+		if want := uint64(int64(b.Start)) * 90000; out.PTS != want {
+			t.Errorf("block %d out: PTS %d, want %d", i, out.PTS, want)
+		}
+		if want := uint64(int64(b.End)) * 90000; in.PTS != want {
+			t.Errorf("block %d in: PTS %d, want %d", i, in.PTS, want)
+		}
+	}
+
+	var after adScanAnswer
+	var afterFull struct {
+		Result struct {
+			Marked bool `json:"marked"`
+		} `json:"result"`
+	}
+	e.json(t, "GET", "/api/v1/media/adscan?path="+url.QueryEscape(bauer), "", nil, 200, &after)
+	e.json(t, "GET", "/api/v1/media/adscan?path="+url.QueryEscape(bauer), "", nil, 200, &afterFull)
+	if !afterFull.Result.Marked {
+		t.Fatal("the result wasn't flagged as marked")
+	}
+}
+
+func TestMark_KeepsExistingCutsAndUnitesOverlaps(t *testing.T) {
+	m := mock.New()
+	e := newEnvWith(t, m)
+	if err := m.FS.WriteFile(bauer+".ap", syntheticAP(3600)); err != nil {
+		t.Fatal(err)
+	}
+	got := e.analyse(t, bauer)
+	if len(got.Result.Blocks) == 0 {
+		t.Fatal("fixture changed: no blocks")
+	}
+	// A resume position, and a hand-made cut starting 50 s before the
+	// first ad block and ending 50 s into it (every synthetic block is
+	// at least 180 s wide, so this always overlaps).
+	blockStart := uint64(int64(got.Result.Blocks[0].Start)) * 90000
+	existing := []adscan.Cut{
+		{PTS: blockStart - 50*90000, Type: adscan.CutOut}, {PTS: blockStart + 50*90000, Type: adscan.CutIn},
+		{PTS: 3000 * 90000, Type: adscan.CutLast},
+	}
+	if err := m.FS.WriteFile(bauer+".cuts", adscan.EncodeCuts(existing)); err != nil {
+		t.Fatal(err)
+	}
+
+	type span struct {
+		Start float64 `json:"start"`
+		End   float64 `json:"end"`
+	}
+	var blocks []span
+	for _, b := range got.Result.Blocks {
+		blocks = append(blocks, span{b.Start, b.End})
+	}
+	body, _ := json.Marshal(map[string]any{"path": bauer, "blocks": blocks})
+	var pr struct {
+		Plan struct {
+			ID string `json:"id"`
+		} `json:"plan"`
+	}
+	e.json(t, "POST", "/api/v1/media/adscan/mark/plan", string(body), nil, 200, &pr)
+	e.json(t, "POST", "/api/v1/plans/"+pr.Plan.ID+"/apply", "", nil, 200, nil)
+
+	raw, _ := m.FS.ReadFile(bauer + ".cuts")
+	cuts, err := adscan.ParseCuts(raw)
+	if err != nil {
+		t.Fatal(err)
+	}
+	var lastKept, markCount int
+	for _, c := range cuts {
+		if c.Type == adscan.CutLast {
+			lastKept++
+		}
+		if c.Type == adscan.CutOut {
+			markCount++
+		}
+	}
+	if lastKept != 1 {
+		t.Fatalf("the resume position wasn't kept: %+v", cuts)
+	}
+	// The hand-made cut united with the first ad block into one region,
+	// so there are fewer OUT entries than ad blocks plus one.
+	if markCount != len(got.Result.Blocks) {
+		t.Fatalf("regions: %d OUT entries for %d blocks: %+v", markCount, len(got.Result.Blocks), cuts)
+	}
+	if cuts[0].PTS > blockStart-50*90000 {
+		t.Fatalf("the united region should start at or before the hand-made cut: %+v", cuts[0])
+	}
 }
 
 // trimAll cuts every found break out of p and waits for the cut.

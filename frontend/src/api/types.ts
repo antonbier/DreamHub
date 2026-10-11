@@ -257,6 +257,8 @@ export interface AdSummary {
   uncertain?: number
   // The breaks were cut out of the recording.
   trimmed?: boolean
+  // The breaks were written into the recording's own cut list.
+  marked?: boolean
 }
 
 // backend/internal/adscan.Result, from GET /api/v1/media/adscan?path=.
@@ -269,6 +271,9 @@ export interface AdScanResult {
   learned?: boolean
   // The breaks were cut out; duration is the new length.
   trimmed?: boolean
+  // The breaks were written into the recording's own cut list — nothing
+  // removed, but the box's own remote can jump past them.
+  marked?: boolean
 }
 
 // backend/internal/api.jobView — a background job (GET /api/v1/jobs, and

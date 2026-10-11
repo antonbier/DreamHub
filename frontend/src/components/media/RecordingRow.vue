@@ -243,6 +243,7 @@ const adsText = computed(() => {
   const a = props.movie.ads
   if (!a) return ''
   if (a.trimmed) return t('media.ads.rowTrimmed')
+  if (a.marked) return t('media.ads.rowMarked')
   return a.blocks === 0 ? t('media.ads.rowNone') : t('media.ads.rowMinutes', { minutes: formatMinutes(a.seconds, locale.value) })
 })
 const details = computed(() =>

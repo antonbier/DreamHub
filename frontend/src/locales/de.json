@@ -516,7 +516,15 @@
           "interrupted": "DreamHub wurde während des Schneidens neu gestartet. Die Aufnahme ist unverändert."
         }
       },
-      "rowTrimmed": "Werbung herausgeschnitten"
+      "rowTrimmed": "Werbung herausgeschnitten",
+      "rowMarked": "Werbung in Schnittliste markiert",
+      "mark": {
+        "open": "In Schnittliste markieren …",
+        "preview": "Vorschau",
+        "confirm": "Markieren",
+        "summary": "Markiert {breaks} in der eigenen Schnittliste von {name} — an der Aufnahme ändert sich nichts, aber die Box-Fernbedienung kann daran vorbeispringen (\"zur nächsten Markierung springen\"). Eine vorhandene Wiedergabeposition oder ein vorhandener Schnitt bleibt erhalten.",
+        "done": "In der Schnittliste markiert."
+      }
     }
   },
   "guide": {
@@ -760,7 +768,9 @@
       "trim_invalid_blocks": "Diese Blöcke passen nicht zur Aufnahme. Erkenne die Werbung neu.",
       "trim_not_enough_space": "Auf der Festplatte ist nicht genug Platz für die geschnittene Fassung.",
       "trim_original_exists": "Es gibt schon eine Aufnahme mit dem Namen des aufbewahrten Originals, oder der Name ist zu lang.",
-      "adscan_not_analysed": "Erkenne zuerst die Werbung."
+      "adscan_not_analysed": "Erkenne zuerst die Werbung.",
+      "mark_invalid_blocks": "Diese Unterbrechungen passen nicht zur Aufnahme. Erkenne die Werbung erneut.",
+      "mark_no_access_points": "Diese Aufnahme hat keine Indexdatei, um Positionen zu markieren."
     },
     "friendly": {
       "dreamhub": "DreamHub antwortet nicht. Ist dieses Gerät im Heimnetz?",

@@ -71,6 +71,7 @@ type Media struct {
 func (h *Media) Perms() map[string]perm.Perm {
 	return map[string]perm.Perm{
 		"POST /api/v1/media/adscan":             perm.RecordingsManage,
+		"POST /api/v1/media/adscan/mark/plan":   perm.RecordingsManage,
 		"POST /api/v1/media/trim/plan":          perm.RecordingsManage,
 		"POST /api/v1/media/covers/plan":        perm.RecordingsManage,
 		"POST /api/v1/media/rename/batch/plan":  perm.RecordingsManage,
@@ -97,6 +98,7 @@ func (h *Media) Mount(mux httpx.Mux) {
 	mux.HandleFunc("POST /api/v1/media/trash/empty/plan", h.planEmpty)
 	mux.HandleFunc("POST /api/v1/media/adscan", h.startAdScan)
 	mux.HandleFunc("GET /api/v1/media/adscan", h.adScanResult)
+	mux.HandleFunc("POST /api/v1/media/adscan/mark/plan", h.markPlan)
 	mux.HandleFunc("POST /api/v1/media/trim/plan", h.trimPlan)
 }
 

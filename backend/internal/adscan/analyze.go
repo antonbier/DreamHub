@@ -29,6 +29,10 @@ type Result struct {
 	// Trimmed: the breaks were cut out of the recording (MediaHub
 	// trimming); Duration is the new length.
 	Trimmed bool `json:"trimmed,omitempty"`
+	// Marked: the breaks were written into the recording's own cut list
+	// (.ts.cuts) — nothing removed, but the box's own remote can jump
+	// past them (MediaHub's "Mark in cut list", sidecar.go).
+	Marked bool `json:"marked,omitempty"`
 }
 
 // Options steer an analysis.

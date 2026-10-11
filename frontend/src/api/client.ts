@@ -298,6 +298,11 @@ export const api = {
     // queues the cut (a "media.trim" job).
     trimPlan: (path: string, blocks: { start: number; end: number }[]) =>
       request<{ plan: Plan; keep: { start: number; end: number }[] }>('POST', '/api/v1/media/trim/plan', { path, blocks }),
+    // Marking ticked breaks in the recording's own cut list, without
+    // changing the recording itself — for jumping past them with the
+    // box's own remote. Runs at once on apply, no background job.
+    markPlan: (path: string, blocks: { start: number; end: number }[]) =>
+      request<{ plan: Plan }>('POST', '/api/v1/media/adscan/mark/plan', { path, blocks }),
     adScanResult: (path: string) =>
       request<{ path: string; analyzedAt: string; result: AdScanResult }>('GET', `/api/v1/media/adscan?path=${encodeURIComponent(path)}`),
   },

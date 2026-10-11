@@ -516,7 +516,15 @@
           "interrupted": "DreamHub è stato riavviato durante il taglio. La registrazione è invariata."
         }
       },
-      "rowTrimmed": "pubblicità tagliata"
+      "rowTrimmed": "pubblicità tagliata",
+      "rowMarked": "pubblicità segnata nella lista dei tagli",
+      "mark": {
+        "open": "Segna nella lista dei tagli …",
+        "preview": "Anteprima",
+        "confirm": "Segna",
+        "summary": "Segna {breaks} nella lista dei tagli di {name} — nella registrazione non cambia nulla, ma il telecomando della box può saltarle (\"salta al prossimo segno\"). Una posizione di ripresa o un taglio già presenti vengono mantenuti.",
+        "done": "Segnato nella lista dei tagli."
+      }
     }
   },
   "guide": {
@@ -760,7 +768,9 @@
       "trim_invalid_blocks": "Questi blocchi non corrispondono alla registrazione. Riconosci di nuovo la pubblicità.",
       "trim_not_enough_space": "Non c'è abbastanza spazio libero sul disco per la versione tagliata.",
       "trim_original_exists": "Esiste già una registrazione con il nome dell'originale conservato, oppure il nome è troppo lungo.",
-      "adscan_not_analysed": "Riconosci prima la pubblicità."
+      "adscan_not_analysed": "Riconosci prima la pubblicità.",
+      "mark_invalid_blocks": "Queste interruzioni non corrispondono alla registrazione. Riconosci di nuovo la pubblicità.",
+      "mark_no_access_points": "Questa registrazione non ha un file indice su cui segnare le posizioni."
     },
     "friendly": {
       "dreamhub": "DreamHub non risponde. Questo dispositivo è nella rete di casa?",

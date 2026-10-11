@@ -99,16 +99,17 @@
         </template>
       </p>
       <p v-if="result.weakLogo" class="mt-1 text-[12.5px] text-muted">{{ t('media.ads.weakLogo') }}</p>
+      <p v-if="result.marked && !choosing && !markChoosing" class="mt-1 text-[12.5px] text-muted">{{ t('media.ads.mark.done') }}</p>
 
-      <!-- Cutting out: choose, preview, confirm -->
-      <button
-        v-if="canTrim && result.blocks.length > 0 && !choosing"
-        type="button"
-        class="mt-3 rounded border border-line px-3 py-1 text-[13.5px] text-text hover:bg-field"
-        @click="startChoosing"
-      >
-        {{ t('media.ads.cut.open') }}
-      </button>
+      <!-- Cutting out, or marking in the cut list: choose, preview, confirm -->
+      <div v-if="canTrim && result.blocks.length > 0 && !choosing && !markChoosing" class="mt-3 flex flex-wrap gap-2">
+        <button type="button" class="rounded border border-line px-3 py-1 text-[13.5px] text-text hover:bg-field" @click="startChoosing">
+          {{ t('media.ads.cut.open') }}
+        </button>
+        <button type="button" class="rounded border border-line px-3 py-1 text-[13.5px] text-text hover:bg-field" @click="startMarkChoosing">
+          {{ t('media.ads.mark.open') }}
+        </button>
+      </div>
       <div v-if="choosing" class="mt-3 flex flex-col gap-2">
         <fieldset :disabled="!!trimPlan">
           <legend class="text-[12.5px] text-faint">{{ t('media.ads.cut.which') }}</legend>
@@ -141,6 +142,39 @@
           {{ trimSummary }}
         </PlanPreview>
         <p v-if="trimError && !trimPlan" class="text-[12.5px] text-warn" role="alert">{{ trimError }}</p>
+      </div>
+      <div v-if="markChoosing" class="mt-3 flex flex-col gap-2">
+        <fieldset :disabled="!!markPlan">
+          <legend class="text-[12.5px] text-faint">{{ t('media.ads.cut.which') }}</legend>
+          <label v-for="(b, i) in result.blocks" :key="i" class="mt-1 flex items-center gap-2 text-[13.5px] text-text">
+            <input v-model="markTicked[i]" type="checkbox" class="accent-[var(--dh-accent)]" />
+            <span>{{ t('media.ads.block', { from: formatPosition(b.start), to: formatPosition(b.end) }) }}</span>
+            <span v-if="b.uncertain" class="text-[12.5px] text-warn">{{ t('media.ads.uncertain') }}</span>
+          </label>
+        </fieldset>
+        <div v-if="!markPlan" class="flex flex-wrap items-center gap-2">
+          <button
+            type="button"
+            class="rounded bg-accent px-3 py-1 text-[13.5px] font-semibold text-bg disabled:opacity-60"
+            :disabled="markTickedCount === 0 || markBusy"
+            @click="previewMark"
+          >
+            {{ t('media.ads.mark.preview') }}
+          </button>
+          <button type="button" class="rounded px-3 py-1 text-[13.5px] text-text hover:bg-field" @click="stopMarkChoosing">{{ t('plan.cancel') }}</button>
+        </div>
+        <PlanPreview
+          v-else
+          :plan="markPlan"
+          :confirm-label="t('media.ads.mark.confirm')"
+          :busy="markBusy"
+          :error="markError"
+          @confirm="applyMark"
+          @cancel="markPlan = null"
+        >
+          {{ markSummary }}
+        </PlanPreview>
+        <p v-if="markError && !markPlan" class="text-[12.5px] text-warn" role="alert">{{ markError }}</p>
       </div>
     </template>
 
@@ -275,6 +309,7 @@ async function loadResult() {
       seconds: adSeconds.value,
       uncertain: uncertain.value || undefined,
       trimmed: res.result.trimmed || undefined,
+      marked: res.result.marked || undefined,
     }
     return sum
   } catch {
@@ -397,6 +432,65 @@ const trimErrorFromJob = computed(() => {
   const key = `media.ads.cut.error.${j.error}`
   return te(key) ? t(key) : t('media.ads.cut.error.generic')
 })
+
+// --- marking in the cut list -------------------------------------------------
+
+const markChoosing = ref(false)
+const markTicked = ref<boolean[]>([])
+const markPlan = ref<Plan | null>(null)
+const markBusy = ref(false)
+const markError = ref('')
+
+const markTickedCount = computed(() => markTicked.value.filter(Boolean).length)
+const markSummary = computed(() =>
+  t('media.ads.mark.summary', {
+    breaks: t('media.ads.breaks', { count: markTickedCount.value }, markTickedCount.value),
+    name: props.title,
+  }),
+)
+
+function startMarkChoosing() {
+  freshErrors()
+  markTicked.value = (result.value?.blocks ?? []).map((b) => !b.uncertain)
+  markPlan.value = null
+  markError.value = ''
+  markChoosing.value = true
+}
+function stopMarkChoosing() {
+  markChoosing.value = false
+  markPlan.value = null
+}
+
+async function previewMark() {
+  const blocks = (result.value?.blocks ?? []).filter((_, i) => markTicked.value[i]).map((b) => ({ start: b.start, end: b.end }))
+  markBusy.value = true
+  markError.value = ''
+  try {
+    const res = await api.media.markPlan(props.path, blocks)
+    markPlan.value = res.plan
+  } catch (e) {
+    markError.value = planErrorMessage(e)
+  } finally {
+    markBusy.value = false
+  }
+}
+
+async function applyMark() {
+  if (!markPlan.value) return
+  markBusy.value = true
+  markError.value = ''
+  try {
+    await api.plans.apply(markPlan.value.id)
+    markChoosing.value = false
+    markPlan.value = null
+    const sum = await loadResult()
+    if (sum) emit('analysed', sum)
+  } catch (e) {
+    markError.value = planErrorMessage(e)
+  } finally {
+    markBusy.value = false
+  }
+}
 
 // A finished analysis: fetch its result.
 watch(

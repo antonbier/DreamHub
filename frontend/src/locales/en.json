@@ -516,7 +516,15 @@
           "interrupted": "DreamHub was restarted during the cut. The recording is unchanged."
         }
       },
-      "rowTrimmed": "ads cut out"
+      "rowTrimmed": "ads cut out",
+      "rowMarked": "ads marked in cut list",
+      "mark": {
+        "open": "Mark in cut list …",
+        "preview": "Preview",
+        "confirm": "Mark",
+        "summary": "Marks {breaks} in {name}'s own cut list — nothing in the recording changes, but the box's own remote can jump past them (\"jump to next marked position\"). Any resume position or cut already there is kept.",
+        "done": "Marked in the cut list."
+      }
     }
   },
   "guide": {
@@ -760,7 +768,9 @@
       "trim_invalid_blocks": "Those breaks don't fit the recording. Detect the ads again.",
       "trim_not_enough_space": "There isn't enough free space on the disk for the cut version.",
       "trim_original_exists": "A recording named like the kept original already exists, or the name is too long.",
-      "adscan_not_analysed": "Detect the ads first."
+      "adscan_not_analysed": "Detect the ads first.",
+      "mark_invalid_blocks": "Those breaks don't fit the recording. Detect the ads again.",
+      "mark_no_access_points": "This recording has no index file to mark positions against."
     },
     "friendly": {
       "dreamhub": "DreamHub doesn't answer. Is this device in your home network?",

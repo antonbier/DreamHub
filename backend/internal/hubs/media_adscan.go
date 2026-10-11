@@ -206,6 +206,7 @@ type adSummary struct {
 	Seconds   float64 `json:"seconds"`
 	Uncertain int     `json:"uncertain,omitempty"`
 	Trimmed   bool    `json:"trimmed,omitempty"`
+	Marked    bool    `json:"marked,omitempty"`
 }
 
 func (h *Media) adSummary(ctx context.Context, tsPath string) *adSummary {
@@ -220,7 +221,7 @@ func (h *Media) adSummary(ctx context.Context, tsPath string) *adSummary {
 	if json.Unmarshal(stored.Result, &res) != nil {
 		return nil
 	}
-	sum := &adSummary{Blocks: len(res.Blocks), Trimmed: res.Trimmed}
+	sum := &adSummary{Blocks: len(res.Blocks), Trimmed: res.Trimmed, Marked: res.Marked}
 	for _, b := range res.Blocks {
 		sum.Seconds += b.End - b.Start
 		if b.Uncertain {

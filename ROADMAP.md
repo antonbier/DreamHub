@@ -46,7 +46,7 @@ Done: `.deb` for arm64 (box) and armhf (built, not tried on a DM900/DM920) with 
 - **AdminHub service status**, **ControlHub message to the TV** — box.
 - **ChannelHub** ([`docs/CHANNELHUB_PLAN.md`](docs/CHANNELHUB_PLAN.md)) — bouquets, all channels with "new since", channel check, picon sets; editing as one plan with a backup before and an automatic restore on any difference; bouquets created, renamed, deleted; backups restorable. Box (read-only checks and the first real writes — create/delete a bouquet, add and reorder channels — confirmed 2026-10-09; three real bugs found and fixed in the process, see `docs/CHANNELHUB_PLAN.md`).
 - **Ad detection and cutting** ([`docs/ADSCAN_PLAN.md`](docs/ADSCAN_PLAN.md)) — logo learned per channel from keyframes, coarse sampling with bisection, a background job, results that follow renames; a timeline in the recording's details (breaks play in the browser), batch from the selection; cutting ticked breaks out without re-encoding, the original kept in the trash. Box (phase 0 and a real cut played on the TV confirmed 2026-10-09).
-  - [ ] Writing the breaks into `.ts.cuts` (the TV skips them) once the format is confirmed (#44)
+  - [ ] Writing the breaks into `.ts.cuts` (the TV skips them) once the format is confirmed (#44) — built and mock-tested (`media.adscan.mark`, "Mark in cut list" in the detail dialog); still needs a box check that the player actually skips the marked OUT→IN regions before release
   - [ ] Phases 2–3: audio fingerprints, learned series patterns, learned timer margins, suspicious recordings (#44)
   - [ ] Cutting by hand (own in/out points) (#27)
 - [ ] Radio text / now playing (#28)

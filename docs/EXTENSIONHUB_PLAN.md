@@ -37,7 +37,21 @@ An extension whose version or widgets the installed DreamHub doesn't understand 
 
 ### Distribution: one package mechanism, not two
 
-Rather than invent a separate installer for extensions, they ride the **same apt feed/package mechanism AdminHub is getting for DreamHub's own updates** (`docs/ADMINHUB_PLAN.md` once written, decision D4 for DreamHub's own feed). An extension's `.deb` carries a declaration (e.g. a control-file field or a marker file) that says "this is a DreamHub extension" and what it registers as; AdminHub's package view can then show "DreamHub extensions" as a filtered, friendlier slice of one general package list, instead of extensions needing their own separate update/remove UI. A second feed (separate from DreamHub's own) hosts them, matching the original idea that e.g. an Arrr-suite extension would live on its own feed, maintained on its own schedule.
+Rather than invent a separate installer for extensions, they ride the **same apt feed/package mechanism AdminHub is getting for DreamHub's own updates** (`docs/ADMINHUB_PLAN.md`, decision D4 for DreamHub's own feed). An extension's `.deb` carries a declaration (the same `X-DreamHub-Category: extension` control-file field `ADMINHUB_PLAN.md` uses for DreamHub's own packages and picon sets) that says "this is a DreamHub extension" and what it registers as; AdminHub's package view then shows "DreamHub extensions" as a filtered, friendlier slice of one general package list, instead of extensions needing their own separate update/remove UI. A second feed (separate from DreamHub's own) hosts them, matching the original idea that e.g. an Arrr-suite extension would live on its own feed, maintained on its own schedule.
+
+### One nav entry for all extensions, not one per extension
+
+An earlier version of this plan had every extension register exactly like a hub — its own icon, its own slot in the navigation. Dropped: install five extensions and the navigation grows by five entries, which is precisely the clutter DreamHub is built to avoid (`CONCEPT.md`, "one place where everything connects," not many separate tools bolted on). Instead:
+
+- Every extension can contribute a **dashboard tile**, through the hub contract's existing tile mechanism (`CONCEPT.md`) — no new extension point needed, hubs already do this.
+- Every extension's fuller detail view (its status/meter/list/action widgets) lives as a card **inside one single "Extensions" nav entry** — install any number of extensions, the navigation still only grows by that one entry; what's inside it grows instead.
+- A household that genuinely uses one extension constantly can pin it to its own nav slot — opt-in, not automatic.
+
+A more granular idea raised while discussing this — a hub declaring its own **named extension points** (SAP UI5-style: "an extra button slot in this specific list"), so an extension could reach a little deeper than a dashboard tile without reaching into a hub's actual code — is worth keeping in mind for later. Not designed now: real extensions in use would be needed first to know which points are actually worth opening, and each one is itself a small versioned contract to maintain, so it shouldn't be invented speculatively.
+
+### First reference extension: eWeLink/Sonoff
+
+Confirmed as the package to build first once E1–E3 exist: one status (is the socket on), one action (toggle it) — the smallest possible exercise of the whole contract end to end, before anything more complex (Unraid, Arrr) is attempted.
 
 ### Isolation
 
@@ -51,16 +65,14 @@ Installing, updating or removing an extension needs an admin (AdminHub's package
 
 - Exact transport for the registration handshake and for serving live data (plain polling vs. SSE for anything that updates, e.g. a job progress bar) — likely SSE, reusing the event mechanism hubs already have (`internal/events`).
 - Where the reverse-proxy boundary sits: does the core proxy an extension's data calls itself (`/api/v1/ext/<name>/...`), or does each extension's process bind only to localhost and the core's own backend is the only thing that ever talks to it? The latter is safer (nothing extension-related is reachable except through DreamHub's own auth) and more consistent with how PlexHub already proxies Plex itself (`plex_play.go`).
-- First concrete extension to build as the reference implementation, to validate the contract against something real rather than a theoretical schema. A strong candidate: the eWeLink/Sonoff switch (one status, one action, nothing else) — simplest possible case, exercises the whole mechanism end to end.
-
 ## Packages
 
 | # | Package | Contents |
 |---|---|---|
-| E1 | Contract | registration handshake, widget schema v1 (status, meter, list, action→plan), the generic renderer in the frontend, version/degrade handling |
-| E2 | Distribution | extension marker in a `.deb`, AdminHub's package view filtering to "DreamHub extensions", the second feed |
+| E1 | Contract | registration handshake, widget schema v1 (status, meter, list, action→plan), the generic renderer in the frontend (the single "Extensions" nav entry plus dashboard-tile contribution), version/degrade handling |
+| E2 | Distribution | `X-DreamHub-Category: extension` marker in a `.deb`, AdminHub's package view filtering to it, the second feed |
 | E3 | Isolation | systemd unit template/hardening for an extension process, the reverse-proxy or localhost-only decision from "Open questions" |
-| E4 | Reference extension | one real extension built against E1–E3 (candidate: eWeLink/Sonoff) to prove the contract, then documented as the template for others |
-| later | Deeper widgets | SSE-backed live values, extension-contributed tiles for the dashboard, more widget types as real extensions need them — each additive per the versioning rule above |
+| E4 | Reference extension | eWeLink/Sonoff, built against E1–E3, to prove the contract end to end and document it as the template for others |
+| later | Deeper widgets | SSE-backed live values, named per-hub extension points (SAP UI5-style), more widget types as real extensions need them — each additive per the versioning rule above |
 
 Nothing here is built against the mock yet; E1 is the right starting point once prioritized, since nothing else can be tested without it.

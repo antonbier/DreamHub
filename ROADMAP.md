@@ -57,7 +57,7 @@ Done: `.deb` for arm64 (box) and armhf (built, not tried on a DM900/DM920) with 
   - [ ] On the box and on phones: live through port 8001, a recording from disk, a mid-range phone (#34)
   - [ ] The threaded build if phones need it; HEVC/UHD (WebCodecs only)
 - [ ] **AutomationHub** — the only place anything happens automatically, always opt-in; ideas collected in #35 (nightly ad detection and cutting, cleaning up finished timers) (#35)
-- [ ] **AdminHub terminal** — `shellinaboxd` behind DreamHub's auth, off by default (#36)
+- [ ] **AdminHub → DeviceHub** ([`docs/ADMINHUB_PLAN.md`](docs/ADMINHUB_PLAN.md)) — SystemHub and AdminHub merge into one nav entry ("Gerät"), role-gated tabs; package/feed management with preview/confirm and apt-Section categories, a script library, update notifications; terminal — `shellinaboxd` behind DreamHub's auth, off by default (#36, #47)
 - [ ] Jellyfin / Emby connectors (#37)
 - [ ] More AI providers (#38)
 - [ ] Profiles: a kids role with allowed bouquets (prepared: `users.bouquets`) and a Plex age limit (#45)

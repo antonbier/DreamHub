@@ -52,7 +52,7 @@ Both are about *this device* — closer to each other than either is to Settings
 
 Both halves' own dependencies (WebControl for device info, the `journald` capability for logs) are **optional** requirements on the merged hub — neither should make the whole hub unavailable just because the *other* half's dependency is missing; each missing one only degrades, with its own specific reason shown.
 
-Tabs: *Übersicht* (device info, change log), *Diagnose* (self-test, every hub's status), *Administration* (services, log level, journald viewer, crash logs today; packages/feeds/scripts/terminal land here next, A2–A4).
+Tabs: *Übersicht* (device info, change log), *Diagnose* (self-test, every hub's status), *Administration* (services, log level, journald viewer, crash logs, the script library (A3, built) today; packages/feeds/terminal land here next, A2/A4).
 
 Done as part of A1: the `/system?tab=diagnostics` link from `SettingsView.vue` now points at `/device?tab=diagnostics`; `/system` and `/admin` redirect to `/device` for any other old link or bookmark; every mention of `SystemHub`/`AdminHub` in `CONCEPT.md` and `ROADMAP.md` updated to `DeviceHub`.
 
@@ -70,7 +70,7 @@ Package/feed/script actions need `system` (the same permission that already gate
 |---|---|---|
 | A1 | DeviceHub merge | **built 2026-10-11.** SystemHub + AdminHub → one nav entry (admin-only, no role split — see above), the redirect/link cleanup |
 | A2 | Packages & feeds | full package list (apt-Section categories, filters, AI explain), install/remove as a plan with simulate-preview and the generalized "don't restart a service while recording" check, feed list with a trust signal, update notifications, targeted self-test re-check |
-| A3 | Scripts | upload, store, run with confirm + change-log entry |
+| A3 | Scripts | **built 2026-10-11.** upload, store, run with confirm + change-log entry; run as a background job instead of a synchronous apply is future work if `scripts.Timeout` (2 min) turns out too short in practice |
 | A4 | Terminal (#36) | `shellinaboxd` proxied behind DreamHub's auth, off by default, re-auth required, session start/end logged |
 
-A1 can be built independently of A2–A4 (it's a navigation change, not new capability). A2's categorization and filtering can be built and shown against a mock package list; the install/remove plan and the "don't restart while recording" check need the box to confirm `apt`'s simulate output and service-restart behavior match what's assumed here.
+A1 and A3 are both built (2026-10-11), independently of A2/A4. A2's categorization and filtering can be built and shown against a mock package list; the install/remove plan and the "don't restart while recording" check need the box to confirm `apt`'s simulate output and service-restart behavior match what's assumed here.

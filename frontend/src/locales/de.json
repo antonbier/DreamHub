@@ -1149,6 +1149,19 @@
         "reloading": "Lädt neu…"
       },
       "doneStart": "{name} startet."
+    },
+    "scripts": {
+      "title": "Scripts",
+      "upload": "Script hochladen …",
+      "uploadFailed": "Das Script konnte nicht hochgeladen werden.",
+      "empty": "Noch keine Scripts hochgeladen.",
+      "run": "Ausführen",
+      "delete": "Löschen",
+      "deleteConfirm": "Wirklich löschen?",
+      "deleteYes": "Löschen",
+      "confirmRun": "Jetzt ausführen",
+      "previewRun": "{name} wird ausgeführt.",
+      "exitCode": "Exit-Code {code}"
     }
   },
   "control": {

@@ -21,6 +21,7 @@ import (
 	plexmock "github.com/antonbier/DreamHub/backend/internal/plex/mock"
 	pushmock "github.com/antonbier/DreamHub/backend/internal/push/mock"
 	"github.com/antonbier/DreamHub/backend/internal/recfs"
+	scriptsmock "github.com/antonbier/DreamHub/backend/internal/scripts/mock"
 	sdmock "github.com/antonbier/DreamHub/backend/internal/systemd/mock"
 	tmdbmock "github.com/antonbier/DreamHub/backend/internal/tmdb/mock"
 	tvmazemock "github.com/antonbier/DreamHub/backend/internal/tvmaze/mock"
@@ -51,6 +52,8 @@ type env struct {
 	pushed *pushmock.Client
 	// systemd is AdminHub's service manager (in-memory).
 	systemd *sdmock.Manager
+	// scripts is AdminHub's script runner (in-memory, canned output).
+	scripts *scriptsmock.Runner
 	// plex is PlexHub's server (in-memory).
 	plex *plexmock.Client
 	// routes are the protected routes with their permissions.
@@ -94,6 +97,7 @@ func newEnvFull(t *testing.T, wc webcontrol.Client, at autotimer.Client, recFS r
 	t.Helper()
 	pushed := pushmock.New()
 	services := sdmock.New()
+	runner := &scriptsmock.Runner{}
 	plexServer := plexmock.New()
 	a, err := app.New(context.Background(), app.Options{
 		ReadOnlyFiles: readOnly,
@@ -112,6 +116,7 @@ func newEnvFull(t *testing.T, wc webcontrol.Client, at autotimer.Client, recFS r
 		AI:            aimock.New(),
 		Logs:          logs,
 		Systemd:       services,
+		Scripts:       runner,
 		Mock:          true,
 		LookPath:      func(string) (string, error) { return "/usr/bin/journalctl", nil },
 		Logger:        discardLogger(),
@@ -130,7 +135,7 @@ func newEnvFull(t *testing.T, wc webcontrol.Client, at autotimer.Client, recFS r
 	for _, job := range a.Background {
 		go job(jobs)
 	}
-	return &env{srv: srv, store: a.Store, svc: a.Settings, events: a.Events, pushed: pushed, systemd: services, plex: plexServer, routes: a.Routes}
+	return &env{srv: srv, store: a.Store, svc: a.Settings, events: a.Events, pushed: pushed, systemd: services, scripts: runner, plex: plexServer, routes: a.Routes}
 }
 
 func (e *env) do(t *testing.T, method, path, body string, configure func(*http.Request)) (*http.Response, []byte) {

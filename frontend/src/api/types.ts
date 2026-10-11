@@ -661,6 +661,21 @@ export interface CrashLog {
   size: number
 }
 
+// backend/internal/hubs.scriptView — AdminHub's script library (A3).
+export interface AdminScript {
+  id: number
+  name: string
+  uploadedAt: string // RFC3339, UTC
+}
+
+// backend/internal/hubs.scriptRunView — one past run of a script.
+export interface ScriptRun {
+  startedAt: string // RFC3339, UTC
+  finishedAt: string // RFC3339, UTC
+  exitCode: number
+  output: string
+}
+
 export interface LogLevel {
   level: 'info' | 'debug'
   until?: string // RFC3339, UTC — only while level is "debug"

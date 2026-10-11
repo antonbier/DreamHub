@@ -38,6 +38,8 @@ import (
 	"github.com/antonbier/DreamHub/backend/internal/journald"
 	jmock "github.com/antonbier/DreamHub/backend/internal/journald/mock"
 	"github.com/antonbier/DreamHub/backend/internal/logging"
+	"github.com/antonbier/DreamHub/backend/internal/scripts"
+	scriptsmock "github.com/antonbier/DreamHub/backend/internal/scripts/mock"
 	"github.com/antonbier/DreamHub/backend/internal/serienrecorder"
 	srmock "github.com/antonbier/DreamHub/backend/internal/serienrecorder/mock"
 	"github.com/antonbier/DreamHub/backend/internal/systemd"
@@ -75,6 +77,7 @@ func run(logger *slog.Logger, level *logging.Level) error {
 	var dmiReader *dmi.Reader
 	var logs journald.Reader
 	var services systemd.Manager
+	var scriptRunner scripts.Runner
 	switch cfg.Mode {
 	case config.ModeLive:
 		c := webcontrol.NewHTTPClient(cfg.WebControlURL)
@@ -109,6 +112,7 @@ func run(logger *slog.Logger, level *logging.Level) error {
 		dmiReader = &dmi.Reader{}
 		logs = journald.Exec{}
 		services = systemd.Exec{}
+		scriptRunner = scripts.Exec{}
 		logger.Info("webcontrol client mode", "mode", "live", "url", cfg.WebControlURL, "deviceWrites", cfg.EnableDeviceWrites)
 	default:
 		// DREAMHUB_MOCK_DATE (YYYY-MM-DD) moves the fixture evening to a
@@ -172,6 +176,7 @@ func run(logger *slog.Logger, level *logging.Level) error {
 		streamBase = "http://127.0.0.1:" + listenPort(cfg.ListenAddr)
 		logs = jmock.New()
 		services = sdmock.New()
+		scriptRunner = &scriptsmock.Runner{}
 		logger.Info("webcontrol client mode", "mode", "mock")
 	}
 
@@ -194,6 +199,7 @@ func run(logger *slog.Logger, level *logging.Level) error {
 		AI:            aiClient,
 		Logs:          logs,
 		Systemd:       services,
+		Scripts:       scriptRunner,
 		Mock:          cfg.Mode == config.ModeMock,
 		LookPath:      exec.LookPath,
 		Logger:        logger,

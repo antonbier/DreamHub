@@ -15,6 +15,7 @@ import (
 	"github.com/antonbier/DreamHub/backend/internal/perm"
 	"github.com/antonbier/DreamHub/backend/internal/plan"
 	"github.com/antonbier/DreamHub/backend/internal/recfs"
+	"github.com/antonbier/DreamHub/backend/internal/scripts"
 	"github.com/antonbier/DreamHub/backend/internal/store"
 	"github.com/antonbier/DreamHub/backend/internal/systemd"
 	"github.com/antonbier/DreamHub/backend/internal/webcontrol"
@@ -36,10 +37,13 @@ type Admin struct {
 	Systemd systemd.Manager
 	// Services overrides DefaultServices (tests).
 	Services []string
-	// Plans holds restart previews; WC tells which recordings a restart
-	// of enigma2 would cut.
+	// Plans holds restart and script-run previews; WC tells which
+	// recordings a restart of enigma2 would cut.
 	Plans *plan.Service
 	WC    webcontrol.Client
+	// Scripts runs an uploaded script's content (admin_scripts.go); nil
+	// hides the script library (PRINCIPLES.md: unavailable, not broken).
+	Scripts scripts.Runner
 	Now   func() time.Time
 	// ReadOnly: the same switch as WebControl writes
 	// (DREAMHUB_ENABLE_DEVICE_WRITES=0) — no restarts either.
@@ -68,6 +72,11 @@ func (h *Admin) Mount(mux httpx.Mux) {
 	mux.HandleFunc("GET /api/v1/admin/crashlogs/{name}", adminOnly(h.crashLog))
 	mux.HandleFunc("GET /api/v1/admin/services", adminOnly(h.listServices))
 	mux.HandleFunc("POST /api/v1/admin/services/plan", adminOnly(h.planRestart))
+	mux.HandleFunc("GET /api/v1/admin/scripts", adminOnly(h.listScripts))
+	mux.HandleFunc("POST /api/v1/admin/scripts", adminOnly(h.uploadScript))
+	mux.HandleFunc("DELETE /api/v1/admin/scripts/{id}", adminOnly(h.deleteScript))
+	mux.HandleFunc("POST /api/v1/admin/scripts/{id}/run/plan", adminOnly(h.planRunScript))
+	mux.HandleFunc("GET /api/v1/admin/scripts/{id}/runs", adminOnly(h.scriptRuns))
 }
 
 // DefaultDebugMinutes is how long debug logging lasts unless specified.

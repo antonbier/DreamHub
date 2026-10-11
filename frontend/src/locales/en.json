@@ -1149,6 +1149,19 @@
         "reloading": "Reloading…"
       },
       "doneStart": "{name} is starting."
+    },
+    "scripts": {
+      "title": "Scripts",
+      "upload": "Upload script …",
+      "uploadFailed": "The script could not be uploaded.",
+      "empty": "No scripts uploaded yet.",
+      "run": "Run",
+      "delete": "Delete",
+      "deleteConfirm": "Really delete?",
+      "deleteYes": "Delete",
+      "confirmRun": "Run now",
+      "previewRun": "{name} will run.",
+      "exitCode": "Exit code {code}"
     }
   },
   "control": {

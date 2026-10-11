@@ -290,6 +290,29 @@ var migrations = []string{
 		analyzed_at TEXT NOT NULL
 	);
 	`,
+	`
+	-- AdminHub's script library (docs/ADMINHUB_PLAN.md, A3, #47): scripts an
+	-- admin uploaded and may run by hand, with a confirm step and a record
+	-- of every run (AutomationHub, later, triggers the same stored scripts
+	-- rather than keeping its own copies).
+	CREATE TABLE admin_scripts (
+		id          INTEGER PRIMARY KEY,
+		name        TEXT NOT NULL,
+		content     TEXT NOT NULL,
+		uploaded_at TEXT NOT NULL,
+		uploaded_by INTEGER NOT NULL
+	);
+	CREATE TABLE admin_script_runs (
+		id          INTEGER PRIMARY KEY,
+		script_id   INTEGER NOT NULL REFERENCES admin_scripts(id) ON DELETE CASCADE,
+		started_at  TEXT NOT NULL,
+		finished_at TEXT NOT NULL,
+		exit_code   INTEGER NOT NULL,
+		output      TEXT NOT NULL DEFAULT '',
+		user_id     INTEGER NOT NULL
+	);
+	CREATE INDEX admin_script_runs_script ON admin_script_runs (script_id);
+	`,
 }
 
 func (s *Store) migrate(ctx context.Context) error {

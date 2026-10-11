@@ -163,6 +163,7 @@
 
     <template v-else-if="!item || item.status !== 'unavailable'">
       <ServicesPanel @logs="showLogsFor" />
+      <ScriptsPanel />
 
       <!-- Log level -->
       <section class="mt-5 rounded border border-line bg-tile p-4">
@@ -293,6 +294,7 @@ import { RouterLink, useRoute, useRouter } from 'vue-router'
 import { api, ApiError } from '@/api/client'
 import Icon from '@/components/Icon.vue'
 import ServicesPanel from '@/components/admin/ServicesPanel.vue'
+import ScriptsPanel from '@/components/admin/ScriptsPanel.vue'
 import SelfTestPanel from '@/components/system/SelfTestPanel.vue'
 import { formatBytes } from '@/lib/format'
 import { openEventStream } from '@/composables/useEventStream'

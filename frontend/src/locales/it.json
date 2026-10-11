@@ -1149,6 +1149,19 @@
         "reloading": "Ricaricamento…"
       },
       "doneStart": "{name} si sta avviando."
+    },
+    "scripts": {
+      "title": "Script",
+      "upload": "Carica script …",
+      "uploadFailed": "Non è stato possibile caricare lo script.",
+      "empty": "Nessuno script caricato finora.",
+      "run": "Esegui",
+      "delete": "Elimina",
+      "deleteConfirm": "Eliminare davvero?",
+      "deleteYes": "Elimina",
+      "confirmRun": "Esegui ora",
+      "previewRun": "{name} verrà eseguito.",
+      "exitCode": "Codice di uscita {code}"
     }
   },
   "control": {

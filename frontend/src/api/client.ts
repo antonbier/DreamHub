@@ -14,6 +14,7 @@
 import { shallowRef } from 'vue'
 import { authHeaders, handleUnauthorized } from './authState'
 import type {
+  AdminScript,
   AdScanResult,
   BouquetEntry,
   ChannelBackup,
@@ -32,6 +33,7 @@ import type {
   CurrentService,
   SelfTestReport,
   ServiceUnit,
+  ScriptRun,
   CoverItem,
   BackupFile,
   ConnectorState,
@@ -437,6 +439,14 @@ export const api = {
     },
     crashLogs: () => request<{ logs: CrashLog[] }>('GET', '/api/v1/admin/crashlogs'),
     crashLog: (name: string) => request<{ name: string; content: string }>('GET', `/api/v1/admin/crashlogs/${encodeURIComponent(name)}`),
+    // The script library (docs/ADMINHUB_PLAN.md, A3): upload, list, delete;
+    // running one goes through plans.apply like everything else that changes
+    // something.
+    scripts: () => request<{ scripts: AdminScript[] }>('GET', '/api/v1/admin/scripts'),
+    uploadScript: (name: string, content: string) => request<AdminScript>('POST', '/api/v1/admin/scripts', { name, content }),
+    deleteScript: (id: number) => request<void>('DELETE', `/api/v1/admin/scripts/${id}`),
+    runScriptPlan: (id: number) => request<{ plan: Plan }>('POST', `/api/v1/admin/scripts/${id}/run/plan`),
+    scriptRuns: (id: number) => request<{ runs: ScriptRun[] }>('GET', `/api/v1/admin/scripts/${id}/runs`),
   },
   notifications: {
     list: (limit = 20) => request<{ notifications: Notification[]; unread: number }>('GET', `/api/v1/notifications?limit=${limit}`),

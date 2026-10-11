@@ -41,14 +41,14 @@ func (r searchResults) from(hubID string) []string {
 func TestSearch_DiscoverySystemAdmin(t *testing.T) {
 	e := newEnv(t)
 
-	// AdminHub: services by name or description.
-	if got := e.search(t, "samba").from("admin"); len(got) != 2 || !strings.HasPrefix(got[0], "smb → /admin") {
+	// DeviceHub's admin half: services by name or description.
+	if got := e.search(t, "samba").from("device"); len(got) != 2 || !strings.HasPrefix(got[0], "smb → /device?tab=admin") {
 		t.Errorf("admin results: %v", got)
 	}
 
-	// SystemHub: the change log, opened already filtered.
+	// DeviceHub's system half: the change log, opened already filtered.
 	e.do(t, "PATCH", "/api/v1/settings", `{"values":{"ai.openai.apiKey":"sk-test-1234"}}`, nil)
-	if got := e.search(t, "openai").from("system"); len(got) == 0 || !strings.HasSuffix(got[0], "/system?changes=openai") {
+	if got := e.search(t, "openai").from("device"); len(got) == 0 || !strings.HasSuffix(got[0], "/device?changes=openai") {
 		t.Errorf("system results: %v", got)
 	}
 
@@ -147,7 +147,7 @@ func TestHubs_DeclareTheirEvents(t *testing.T) {
 	for _, h := range body.Hubs {
 		emits[h.ID] = h.Emits
 	}
-	if strings.Join(emits["admin"], ",") != "service.failed,service.recovered" || len(emits["timer"]) != 3 || emits["control"] == nil {
+	if strings.Join(emits["device"], ",") != "service.failed,service.recovered" || len(emits["timer"]) != 3 || emits["control"] == nil {
 		t.Errorf("emits: %v", emits)
 	}
 }

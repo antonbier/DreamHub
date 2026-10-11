@@ -14,13 +14,19 @@ const (
 	IDGuide     = "guide"
 	IDDiscovery = "discovery"
 	IDSeries    = "series"
-	IDSystem    = "system"
-	IDAdmin     = "admin"
-	IDControl   = "control"
-	IDChannels  = "channels"
-	IDRadio     = "radio"
-	IDPlex      = "plex"
-	IDStream    = "stream"
+	// IDDevice: SystemHub and AdminHub merged into one nav entry, "Gerät"
+	// (docs/ADMINHUB_PLAN.md, 2026-10-11) — both were always about this
+	// one device, both already needed the same `system` permission (so
+	// SystemHub was never actually "for every user" despite CONCEPT.md's
+	// earlier description; corrected there too), and the merge follows
+	// the same one-entry-many-tabs pattern Settings already uses. Kept
+	// deliberately distinct from "System"/"Settings" as a name.
+	IDDevice   = "device"
+	IDControl  = "control"
+	IDChannels = "channels"
+	IDRadio    = "radio"
+	IDPlex     = "plex"
+	IDStream   = "stream"
 )
 
 // CapJournald is the capability to read logs via journalctl (AdminHub).
@@ -62,8 +68,6 @@ func V1() []Descriptor {
 		// needs TimerHub, so without it DiscoveryHub still works, but degraded.
 		{ID: IDDiscovery, Name: "DiscoveryHub", Label: "hub.discovery", Icon: "recommendations", Path: "/discovery", Group: GroupProgram, Order: 30,
 			Requires: []Requirement{wc, {Connector: connector.IDOpenAI}, {Hub: IDTimer, Optional: true}}},
-		{ID: IDSystem, Name: "SystemHub", Label: "hub.system", Icon: "system", Path: "/system", Group: GroupDevice, Order: 10,
-			Perm: perm.System, Requires: []Requirement{wc}},
 		{ID: IDControl, Name: "ControlHub", Label: "hub.control", Icon: "control", Path: "/control", Group: GroupDevice, Order: 20,
 			Requires: []Requirement{wc}},
 		// The channel list (docs/CHANNELHUB_PLAN.md): browsing needs only
@@ -71,8 +75,16 @@ func V1() []Descriptor {
 		// plugin, which the hub detects itself.
 		{ID: IDChannels, Name: "ChannelHub", Label: "hub.channels", Icon: "list", Path: "/channels", Group: GroupDevice, Order: 15,
 			Perm: perm.ChannelsManage, Requires: []Requirement{wc}},
-		{ID: IDAdmin, Name: "AdminHub", Label: "hub.admin", Icon: "admin", Path: "/admin", Group: GroupBottom, Order: 10,
-			Perm: perm.System, Requires: []Requirement{{Capability: CapJournald}},
+		// DeviceHub ("Gerät"): device status/diagnostics/change log plus
+		// administration (packages, logs, services, terminal — #47) in
+		// one nav entry. Both halves' own dependencies are optional here:
+		// neither should take the whole hub down when the other's need
+		// is missing (the admin logs/services tab never needed
+		// WebControl; the device-info/change-log tab never needed
+		// journald) — each missing dependency only degrades, the
+		// specific reason still shows in the status banner.
+		{ID: IDDevice, Name: "DeviceHub", Label: "hub.device", Icon: "admin", Path: "/device", Group: GroupBottom, Order: 10,
+			Perm: perm.System, Requires: []Requirement{{Connector: connector.IDWebControl, Optional: true}, {Capability: CapJournald, Optional: true}},
 			Emits: []string{events.ServiceFailed, events.ServiceRecovered}},
 	}
 }

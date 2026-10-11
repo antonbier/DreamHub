@@ -291,8 +291,7 @@ func New(ctx context.Context, o Options) (*App, error) {
 	hubs.AddSearchProvider(hub.IDGuide, guideHub)
 	hubs.AddSearchProvider(hub.IDRadio, radioHub)
 	hubs.AddSearchProvider(hub.IDDiscovery, discoveryHub)
-	hubs.AddSearchProvider(hub.IDSystem, systemHub)
-	hubs.AddSearchProvider(hub.IDAdmin, adminHub)
+	hubs.AddSearchProvider(hub.IDDevice, hubs_.DeviceSearch{System: systemHub, Admin: adminHub})
 	hubs.AddSearchProvider(hub.IDPlex, plexHub)
 	// View sources for custom dashboard tiles (internal/hub/view.go).
 	hubs.AddViewProvider(hub.IDMedia, mediaHub)
@@ -333,8 +332,8 @@ func New(ctx context.Context, o Options) (*App, error) {
 			{HubID: hub.IDStream, Prefixes: []string{"/api/v1/stream"}, Register: streamHub.Mount},
 			{HubID: hub.IDSeries, Prefixes: []string{"/api/v1/series"}, Register: seriesHub.Mount},
 			{HubID: hub.IDDiscovery, Prefixes: []string{"/api/v1/discovery"}, Register: discoveryHub.Mount, Perms: discoveryHub.Perms()},
-			{HubID: hub.IDSystem, Prefixes: []string{"/api/v1/changes", "/api/v1/system"}, Register: systemHub.Mount},
-			{HubID: hub.IDAdmin, Prefixes: []string{"/api/v1/admin"}, Register: adminHub.Mount},
+			{HubID: hub.IDDevice, Prefixes: []string{"/api/v1/changes", "/api/v1/system"}, Register: systemHub.Mount},
+			{HubID: hub.IDDevice, Prefixes: []string{"/api/v1/admin"}, Register: adminHub.Mount},
 			{HubID: hub.IDControl, Prefixes: []string{"/api/v1/control"}, Register: controlHub.Mount, Perms: controlHub.Perms()},
 			{HubID: hub.IDChannels, Prefixes: []string{"/api/v1/channels"}, Register: channelsHub.Mount, Perms: channelsHub.Perms()},
 			{HubID: hub.IDPlex, Prefixes: []string{"/api/v1/plex"}, Register: plexHub.Mount, Perms: plexHub.Perms()},

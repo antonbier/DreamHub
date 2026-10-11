@@ -21,9 +21,8 @@ All on the box unless noted.
 - **GuideHub** — grid, now & next, tonight, one channel; channel logos; record or switch from any programme; EPG search.
 - **DiscoveryHub** — AI recommendations from the real EPG, optional taste profile, daily cost limit, one tap to a timer.
 - **SeriesHub** — SerienRecorder markers, episode guide with missing episodes (TVmaze, absolute numbering), what's coming; notification when a missing episode airs.
-- **SystemHub** — device, disks, diagnostics with a box self-test, change log (filter by profile).
+- **DeviceHub** — device, disks, diagnostics with a box self-test, change log (filter by profile); the box's services with restart through a plan, journal logs live, crash logs. Built as two separate hubs, SystemHub and AdminHub; merged into one nav entry 2026-10-11 (`docs/ADMINHUB_PLAN.md`) — see "Later" below for what's still ahead of it.
 - **ControlHub** — remote with the live picture on every page, power, zap, message to the TV.
-- **AdminHub** — the box's services with restart through a plan, journal logs live, crash logs.
 - **TV plugin** — launcher with QR code and backend check; plays Plex films in the box's movie player (`/dreamhub/play`); follows the box's language.
 
 Open:
@@ -43,7 +42,7 @@ Done: `.deb` for arm64 (box) and armhf (built, not tried on a DM900/DM920) with 
 
 - **RadioHub** — stations with what's on, play on the box or in the browser (also with the screen locked, with a visualization), radio timers. Box.
 - **PlexHub** — films and series from a Plex server, cached for when it's off, watched state synced, films in the box's movie player with resume, address failover. Box.
-- **AdminHub service status**, **ControlHub message to the TV** — box.
+- **DeviceHub service status**, **ControlHub message to the TV** — box.
 - **ChannelHub** ([`docs/CHANNELHUB_PLAN.md`](docs/CHANNELHUB_PLAN.md)) — bouquets, all channels with "new since", channel check, picon sets; editing as one plan with a backup before and an automatic restore on any difference; bouquets created, renamed, deleted; backups restorable. Box (read-only checks and the first real writes — create/delete a bouquet, add and reorder channels — confirmed 2026-10-09; three real bugs found and fixed in the process, see `docs/CHANNELHUB_PLAN.md`).
 - **Ad detection and cutting** ([`docs/ADSCAN_PLAN.md`](docs/ADSCAN_PLAN.md)) — logo learned per channel from keyframes, coarse sampling with bisection, a background job, results that follow renames; a timeline in the recording's details (breaks play in the browser), batch from the selection; cutting ticked breaks out without re-encoding, the original kept in the trash. Box (phase 0 and a real cut played on the TV confirmed 2026-10-09).
   - [ ] Writing the breaks into `.ts.cuts` (the TV skips them) once the format is confirmed (#44) — built and mock-tested (`media.adscan.mark`, "Mark in cut list" in the detail dialog); still needs a box check that the player actually skips the marked OUT→IN regions before release
@@ -57,7 +56,9 @@ Done: `.deb` for arm64 (box) and armhf (built, not tried on a DM900/DM920) with 
   - [ ] On the box and on phones: live through port 8001, a recording from disk, a mid-range phone (#34)
   - [ ] The threaded build if phones need it; HEVC/UHD (WebCodecs only)
 - [ ] **AutomationHub** — the only place anything happens automatically, always opt-in; ideas collected in #35 (nightly ad detection and cutting, cleaning up finished timers) (#35)
-- [ ] **AdminHub → DeviceHub** ([`docs/ADMINHUB_PLAN.md`](docs/ADMINHUB_PLAN.md)) — SystemHub and AdminHub merge into one nav entry ("Gerät"), role-gated tabs; package/feed management with preview/confirm and apt-Section categories, a script library, update notifications; terminal — `shellinaboxd` behind DreamHub's auth, off by default (#36, #47)
+- [x] **AdminHub → DeviceHub** ([`docs/ADMINHUB_PLAN.md`](docs/ADMINHUB_PLAN.md)) — SystemHub and AdminHub merged into one nav entry ("Gerät"), admin-only, three tabs (A1, built 2026-10-11)
+- [ ] **DeviceHub**: package/feed management with preview/confirm and apt-Section categories, a script library, update notifications (A2–A3, `docs/ADMINHUB_PLAN.md`) (#47)
+- [ ] **DeviceHub terminal** — `shellinaboxd` behind DreamHub's auth, off by default (A4) (#36)
 - [ ] Jellyfin / Emby connectors (#37)
 - [ ] More AI providers (#38)
 - [ ] Profiles: a kids role with allowed bouquets (prepared: `users.bouquets`) and a Plex age limit (#45)

@@ -5,7 +5,9 @@ import (
 	"errors"
 	"testing"
 
+	"github.com/antonbier/DreamHub/backend/internal/connector"
 	"github.com/antonbier/DreamHub/backend/internal/perm"
+	"github.com/antonbier/DreamHub/backend/internal/status"
 	"github.com/antonbier/DreamHub/backend/internal/store"
 )
 
@@ -44,18 +46,23 @@ func TestSearch_SkipsADisabledHub(t *testing.T) {
 
 func TestSearch_SkipsAHubTheRoleCannotSee(t *testing.T) {
 	r := v1Registry(t, true)
-	r.AddSearchProvider(IDAdmin, stubProvider{results: []SearchResult{{Title: "admin match"}}})
+	r.AddSearchProvider(IDDevice, stubProvider{results: []SearchResult{{Title: "device match"}}})
 
 	if out := r.Search(context.Background(), allEnabled(r), allOK(), perm.ForRole(store.RoleUser), "q"); len(out) != 0 {
-		t.Errorf("AdminHub is admin-only; a plain user must not see its results, got %+v", out)
+		t.Errorf("DeviceHub is admin-only; a plain user must not see its results, got %+v", out)
 	}
 }
 
 func TestSearch_SkipsAnUnavailableHub(t *testing.T) {
-	r := v1Registry(t, false) // no journalctl -> AdminHub is unavailable (missing capability)
-	r.AddSearchProvider(IDAdmin, stubProvider{results: []SearchResult{{Title: "admin match"}}})
+	r := v1Registry(t, true)
+	r.AddSearchProvider(IDMedia, stubProvider{results: []SearchResult{{Title: "media match"}}})
 
-	if out := r.Search(context.Background(), allEnabled(r), allOK(), perm.ForRole(store.RoleAdmin), "q"); len(out) != 0 {
+	// MediaHub's own WebControl dependency isn't optional, so making it
+	// unreachable is a reliable way to get a genuinely unavailable hub
+	// (DeviceHub's own dependencies are both optional, see hub_test.go).
+	reps := allOK()
+	reps[connector.IDWebControl] = connector.Report{State: connector.Unreachable, Problem: &status.Problem{Code: status.CodeConnectorUnreachable}}
+	if out := r.Search(context.Background(), allEnabled(r), reps, perm.ForRole(store.RoleAdmin), "q"); len(out) != 0 {
 		t.Errorf("an unavailable hub's provider must not be queried, got %+v", out)
 	}
 }
@@ -63,7 +70,7 @@ func TestSearch_SkipsAnUnavailableHub(t *testing.T) {
 func TestSearch_AProviderErrorDoesNotFailTheRest(t *testing.T) {
 	r := v1Registry(t, true)
 	r.AddSearchProvider(IDTimer, stubProvider{err: errors.New("webcontrol unavailable")})
-	r.AddSearchProvider(IDSystem, stubProvider{results: []SearchResult{{Title: "ok"}}})
+	r.AddSearchProvider(IDDevice, stubProvider{results: []SearchResult{{Title: "ok"}}})
 
 	out := r.Search(context.Background(), allEnabled(r), allOK(), perm.ForRole(store.RoleAdmin), "q")
 	if len(out) != 1 || out[0].Title != "ok" {

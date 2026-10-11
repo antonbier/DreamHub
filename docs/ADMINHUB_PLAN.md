@@ -1,6 +1,6 @@
 # AdminHub — plan
 
-Status: **decided 2026-10-11, not yet built.** Tracks issue #47; the terminal piece was already tracked separately as #36 and keeps that number. Once a package lands, its status moves to `ROADMAP.md`.
+Status: **decided 2026-10-11; A1 (the DeviceHub merge) built the same day.** Tracks issue #47; the terminal piece was already tracked separately as #36 and keeps that number. Once a package lands, its status moves to `ROADMAP.md`.
 
 ## Why
 
@@ -44,13 +44,17 @@ Re-running the self-test after every package action would be noise (most of the 
 
 Reusing the existing AI-provider connector (already used by DiscoveryHub) for an on-demand "what does this package do?" button — apt descriptions for feed packages are often terse or assume context (`gp4-picon-hotbird13e`). Opt-in like DiscoveryHub's own AI use, nothing sent unless asked.
 
-### SystemHub and AdminHub merge into one nav entry — "Gerät"
+### SystemHub and AdminHub merge into one nav entry — "Gerät" (built)
 
-Both are about *this device* — SystemHub (status, diagnostics, change log, everyone) and AdminHub (actions that change the device, admin only) are closer to each other than either is to Settings (configuration, a different mental model, and already its own well-working role-gated-tabs entry — not merged further). The merged entry uses the same pattern Settings already proves: one nav position, tabs that differ by role. Descriptive label **"Gerät"**, deliberately not "System" (too close to "Settings"/"Einstellungen" to tell apart at a glance); fixed hub name `DeviceHub` (not `SystemHub`, which stays retired to avoid confusion with the old name in old links/docs).
+Both are about *this device* — closer to each other than either is to Settings (configuration, a different mental model, and already its own well-working role-gated-tabs entry — not merged further). The merged entry uses the same pattern Settings already proves: one nav position, several tabs. Descriptive label **"Gerät"**, deliberately not "System" (too close to "Settings"/"Einstellungen" to tell apart at a glance); fixed hub name `DeviceHub` (not `SystemHub`, which stays retired to avoid confusion with the old name in old links/docs).
 
-Tabs: *Übersicht & Diagnose* (today's SystemHub content, everyone), *Administration* (today's AdminHub + packages/feeds/scripts/terminal, admin-only — hidden entirely for anyone else, same as AdminHub's role gate today).
+**Correction found while building this (2026-10-11):** SystemHub was never actually visible to a plain user — it already required `perm.System` in the real code, the same permission as AdminHub, contradicting `CONCEPT.md`'s older description ("for every user"). So there's no role split to preserve: `DeviceHub` is **fully admin-only**, and its tabs (*Übersicht*, *Diagnose*, *Administration*) are just organization, not a permission boundary. `CONCEPT.md` is corrected to match reality instead of the other way around.
 
-**When this merge is actually built, don't forget:** the existing `/system?tab=diagnostics` link from `SettingsView.vue`; any other in-app link to `/system` or an AdminHub route; the old-hash-link redirect pattern `SettingsView.vue` already uses for `/settings#tmdb` — the same treatment for `/system`/`/admin`; every mention of `SystemHub`/`AdminHub` by name in `CONCEPT.md` and `ROADMAP.md`.
+Both halves' own dependencies (WebControl for device info, the `journald` capability for logs) are **optional** requirements on the merged hub — neither should make the whole hub unavailable just because the *other* half's dependency is missing; each missing one only degrades, with its own specific reason shown.
+
+Tabs: *Übersicht* (device info, change log), *Diagnose* (self-test, every hub's status), *Administration* (services, log level, journald viewer, crash logs today; packages/feeds/scripts/terminal land here next, A2–A4).
+
+Done as part of A1: the `/system?tab=diagnostics` link from `SettingsView.vue` now points at `/device?tab=diagnostics`; `/system` and `/admin` redirect to `/device` for any other old link or bookmark; every mention of `SystemHub`/`AdminHub` in `CONCEPT.md` and `ROADMAP.md` updated to `DeviceHub`.
 
 ### Extensions reach the dashboard through the existing tile mechanism, not a nav slot each
 
@@ -64,7 +68,7 @@ Package/feed/script actions need `system` (the same permission that already gate
 
 | # | Package | Contents |
 |---|---|---|
-| A1 | DeviceHub merge | SystemHub + AdminHub → one nav entry, role-gated tabs, the redirect/link cleanup above |
+| A1 | DeviceHub merge | **built 2026-10-11.** SystemHub + AdminHub → one nav entry (admin-only, no role split — see above), the redirect/link cleanup |
 | A2 | Packages & feeds | full package list (apt-Section categories, filters, AI explain), install/remove as a plan with simulate-preview and the generalized "don't restart a service while recording" check, feed list with a trust signal, update notifications, targeted self-test re-check |
 | A3 | Scripts | upload, store, run with confirm + change-log entry |
 | A4 | Terminal (#36) | `shellinaboxd` proxied behind DreamHub's auth, off by default, re-auth required, session start/end logged |

@@ -19,8 +19,7 @@
     "guide": "Guida TV",
     "timer": "Timer",
     "discovery": "Consigliati",
-    "system": "Sistema",
-    "admin": "Admin",
+    "device": "Dispositivo",
     "control": "Telecomando",
     "radio": "Radio",
     "stream": "TV in diretta",
@@ -1092,6 +1091,9 @@
     }
   },
   "admin": {
+    "tabs": {
+      "admin": "Amministrazione"
+    },
     "logLevel": {
       "title": "Livello di log",
       "current": "Attualmente: {level}",

@@ -132,14 +132,14 @@ func TestProfiles_ViewerIsLimitedByTheServer(t *testing.T) {
 		t.Errorf("viewer global setting: %d %s", resp.StatusCode, b)
 	}
 
-	// The navigation hides SystemHub and AdminHub.
+	// The navigation hides DeviceHub (SystemHub + AdminHub merged).
 	_, b = e.do(t, "GET", "/api/v1/navigation", "", withProfile(viewer))
-	if strings.Contains(string(b), `"/system"`) || strings.Contains(string(b), `"/admin"`) {
-		t.Errorf("viewer navigation shows system or admin: %s", b)
+	if strings.Contains(string(b), `"/device"`) {
+		t.Errorf("viewer navigation shows DeviceHub: %s", b)
 	}
 	_, b = e.do(t, "GET", "/api/v1/navigation", "", withProfile(admin))
-	if !strings.Contains(string(b), `"/system"`) {
-		t.Errorf("admin navigation lacks system: %s", b)
+	if !strings.Contains(string(b), `"/device"`) {
+		t.Errorf("admin navigation lacks DeviceHub: %s", b)
 	}
 }
 

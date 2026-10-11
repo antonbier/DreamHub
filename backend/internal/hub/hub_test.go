@@ -101,13 +101,13 @@ func TestStatuses_BoxUnreachableMakesDependentHubsUnavailable(t *testing.T) {
 	reps := allOK()
 	reps[connector.IDWebControl] = connector.Report{State: connector.Unreachable, Problem: &status.Problem{Code: status.CodeConnectorUnreachable}}
 	got := byID(r.Statuses(allEnabled(r), reps))
-	for _, id := range []string{IDMedia, IDTimer, IDGuide, IDDiscovery, IDSeries, IDSystem} {
+	for _, id := range []string{IDMedia, IDTimer, IDGuide, IDDiscovery, IDSeries} {
 		if got[id].Level != status.Unavailable {
 			t.Errorf("%s needs WebControl: expected unavailable, got %s", id, got[id].Level)
 		}
 	}
-	if got[IDAdmin].Level != status.Available {
-		t.Errorf("AdminHub reads logs locally and must not depend on WebControl, got %s", got[IDAdmin].Level)
+	if got[IDDevice].Level == status.Unavailable {
+		t.Errorf("DeviceHub's WebControl dependency is optional (its admin logs/services don't need it), expected available or degraded, got %s", got[IDDevice].Level)
 	}
 }
 
@@ -121,9 +121,9 @@ func TestStatuses_HubDependencyAndCapability(t *testing.T) {
 	if d.Level != status.Degraded || d.Problems[0].Code != status.CodeHubDependencyUnavailable || d.Problems[0].Fix != status.FixEnableHub {
 		t.Errorf("disabled TimerHub must degrade DiscoveryHub with a fix to enable it, got %+v", d)
 	}
-	a := got[IDAdmin]
-	if a.Level != status.Unavailable || a.Problems[0].Code != status.CodeCapabilityMissing {
-		t.Errorf("missing journalctl must make AdminHub unavailable, got %+v", a)
+	a := got[IDDevice]
+	if a.Level != status.Degraded || a.Problems[0].Code != status.CodeCapabilityMissing {
+		t.Errorf("missing journalctl degrades DeviceHub (its journald need is optional), got %+v", a)
 	}
 }
 
@@ -162,15 +162,15 @@ func TestNavigation(t *testing.T) {
 		t.Errorf("program group must follow declared order, got %+v", program)
 	}
 	bottom := nav.Sections[4].Items
-	if bottom[0].ID != IDAdmin || bottom[len(bottom)-1].ID != "settings" {
-		t.Errorf("bottom must be AdminHub then Settings, got %+v", bottom)
+	if bottom[0].ID != IDDevice || bottom[len(bottom)-1].ID != "settings" {
+		t.Errorf("bottom must be DeviceHub then Settings, got %+v", bottom)
 	}
 
 	userNav := r.Navigation(statuses, perm.ForRole(store.RoleUser), "descriptive")
 	for _, s := range userNav.Sections {
 		for _, it := range s.Items {
-			if it.ID == IDAdmin {
-				t.Fatal("AdminHub must be hidden from non-admins")
+			if it.ID == IDDevice {
+				t.Fatal("DeviceHub must be hidden from non-admins")
 			}
 		}
 	}
@@ -181,7 +181,6 @@ func TestNavigation_OmitsEmptyGroups(t *testing.T) {
 	v := allEnabled(r)
 	v[EnabledKey(IDControl)] = false
 	v[EnabledKey(IDChannels)] = false
-	v[EnabledKey(IDSystem)] = false
 	for _, s := range r.Navigation(r.Statuses(v, allOK()), perm.ForRole(store.RoleAdmin), "descriptive").Sections {
 		if s.ID == string(GroupDevice) {
 			t.Fatal("device group has no enabled hub and must be omitted")

@@ -16,8 +16,10 @@ const ROUTES: Record<string, string> = {
   o: '/radio', // Radio
   t: '/timers', // Timers
   r: '/discovery', // Recommendations
-  y: '/system', // System
-  a: '/admin', // Admin
+  // System and Admin merged into DeviceHub (#47); both old chords still
+  // work rather than breaking muscle memory for either.
+  y: '/device', // System → Device
+  a: '/device', // Admin → Device
   c: '/control', // Control (remote)
   ',': '/settings', // Settings
 }

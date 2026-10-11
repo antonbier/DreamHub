@@ -72,7 +72,7 @@
           <section class="rounded border border-line bg-tile p-5">
             <h2 class="text-[15.5px] font-semibold">{{ t('settings.system.diagnostics.title') }}</h2>
             <p class="mt-1 text-[13px] text-muted">{{ t('settings.system.diagnostics.body') }}</p>
-            <RouterLink to="/system?tab=diagnostics" class="mt-3 inline-block text-[13.5px] text-accent hover:underline">
+            <RouterLink to="/device?tab=diagnostics" class="mt-3 inline-block text-[13.5px] text-accent hover:underline">
               {{ t('settings.system.diagnostics.open') }}
             </RouterLink>
           </section>

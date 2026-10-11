@@ -51,8 +51,7 @@ From the requirements the core derives each hub's **status**: *available*, *degr
 | **GuideHub** | EPG as a TV-guide grid ("TV-Zeitschrift") | v1 (basic) |
 | **DiscoveryHub** | AI recommendations, one click → TimerHub (with confirmation); optionally shaped by the user's taste (recordings, followed series, timers, AutoTimers — opt-in, since it sends viewing data to the AI provider) | v1 |
 | **SeriesHub** | SerienRecorder: episodes on disk, missing episodes, upcoming | v1 (basic) |
-| **SystemHub** | Device info, diagnostics, change log — for every user (backup/restore moved to Settings → System, 2026-10-05) | v1 (basic) |
-| **AdminHub** | Logs (v1), service status, terminal (later) — admin role only | v1 (logs) |
+| **DeviceHub** ("Gerät") | SystemHub and AdminHub merged into one nav entry, admin role only ([`docs/ADMINHUB_PLAN.md`](docs/ADMINHUB_PLAN.md), 2026-10-11 — SystemHub was never actually visible to a plain user despite this table's earlier "for every user", so the merge changes nothing about who sees it): device info, diagnostics, change log; logs (v1), service status, package/feed management, scripts, terminal (later, #47) | v1 (basic + logs) |
 | **ControlHub** | Web remote, screenshot, power | v1 — pulled forward from v1.1: verifying the Enigma2 plugin (WP8) needed a real screenshot/remote-control loop anyway, and GuideHub's "switch to this channel now" needs it too (`docs/archive/V1_PLAN.md`) |
 | **RadioHub** | Radio services, now playing, radio timers | v1.1 (built early, 2026-10-04) |
 | **PlexHub** ("Plex Mediathek") | A Plex server's films and series (tiles or list), watched state in Plex, play on the box — optional, cached while the server is off | built early, 2026-10-05 |
@@ -66,9 +65,9 @@ Notes that affect several hubs:
 - **SerienRecorder has its own web interface** (`config.plugins.serienRec.enableWebinterface=true`). SeriesHub should use its API rather than reading `SerienRecorder.db` directly. Needs verification on the device.
 - **Radio in the browser** isn't automatically easier than TV: radio services often use MP2 audio, which browsers don't play natively. StreamHub's player decodes MP2 itself (WebAssembly), so radio can follow.
 
-## AdminHub
+## DeviceHub
 
-A separate hub, visible only to the *admin* role, placed at the bottom of the navigation next to Settings — not inside the hub groups.
+Visible only to the *admin* role, placed at the bottom of the navigation next to Settings — not inside the hub groups. Merges what used to be two separate hubs, SystemHub (device info, diagnostics, change log) and AdminHub (everything below), into one entry with tabs (`docs/ADMINHUB_PLAN.md`, 2026-10-11), the same one-entry-many-tabs pattern Settings already uses.
 
 - **Logs (v1)** — read-only, so no preview needed:
   - From journald (the box runs systemd): **DreamHub's own logs** (for debugging DreamHub itself), enigma2, and other services as needed.
@@ -79,6 +78,7 @@ A separate hub, visible only to the *admin* role, placed at the bottom of the na
   - Download for support, with secrets automatically removed.
 - **Service status (later in v1.x)** — enigma2, dreamhub, Samba, etc. Restarting a service is a change and goes through preview-and-confirm.
 - **Terminal (later)** — not a DreamHub-built terminal: DreamHub proxies the existing `shellinaboxd` (`127.0.0.1:4200`, already used by WebAdmin at `/webadmin/terminal/`) behind its own auth and CSRF protection. Off by default, can only be enabled while auth is on, requires re-entering the password, shows a clear warning, and session start/end is recorded in the change log. This is the one explicit exception to preview-and-confirm (see `PRINCIPLES.md`).
+- **Packages & feeds, scripts (later, [`docs/ADMINHUB_PLAN.md`](docs/ADMINHUB_PLAN.md), #47)** — the one everyday job the box's native WebAdmin still does better than DreamHub, brought up to the same standard: install/remove/upgrade as a plan (with a real `apt -s` preview), categories read live from apt's own `Section` field rather than a maintained lookup, feeds with a trust signal, a script library AutomationHub later reuses rather than duplicates.
 - **Later**: an API overview (OpenAPI) for developers of the mobile apps.
 
 ## Core features
@@ -102,8 +102,8 @@ The home page is a **personal dashboard made of tiles** (decided from the mockup
   - *Dashboard*
   - *Media*: MediaHub, SeriesHub, PlexHub ("Plex Mediathek")
   - *Program*: GuideHub, RadioHub, TimerHub, DiscoveryHub
-  - *Device*: ChannelHub, ControlHub, SystemHub
-  - bottom: AdminHub (admins only), Settings
+  - *Device*: ChannelHub, ControlHub
+  - bottom: DeviceHub (admins only), Settings
 - **Labels selectable per user**: descriptive names (default, translated) or hub names (MediaHub, TimerHub, …) — similar to how nzb360 names the services it manages. The other name appears as a tooltip.
 - Hubs that are *unavailable* appear greyed out with the reason; hubs that are disabled don't appear.
 - **Top bar**: global search in the center; on the right notifications, the **language switcher**, and the user menu.
@@ -137,7 +137,7 @@ On first start, re-runnable from settings:
 
 ### Diagnostics / hub status
 
-Every hub that isn't fully *available* shows why and how to fix it — e.g. "SerienRecorder is not installed → install it from the Addon Manager under …". Visible on the hub's own placeholder, a diagnostics page in SystemHub, and the onboarding wizard. Also checks the **box's clock** against the browser (see "Time zones").
+Every hub that isn't fully *available* shows why and how to fix it — e.g. "SerienRecorder is not installed → install it from the Addon Manager under …". Visible on the hub's own placeholder, a diagnostics tab in DeviceHub, and the onboarding wizard. Also checks the **box's clock** against the browser (see "Time zones").
 
 ### Profiles and roles
 
@@ -172,7 +172,7 @@ Prepared in the data model from day one: preferences, language, time zone settin
 |---|---|---|
 | WebControl `/web/*` (XML, see `ARCHITECTURE.md`) | almost every hub | v1 |
 | SerienRecorder web interface API | SeriesHub, TimerHub, search | v1 (API to be verified on device) |
-| journald (local) | AdminHub | v1 |
+| journald (local) | DeviceHub | v1 |
 | BouquetEditor plugin `/bouqueteditor/*` | ChannelHub | v1.1 |
 | TMDB | MediaHub, GuideHub | v1 |
 | OpenAI | DiscoveryHub (first AI provider) | v1 |
@@ -210,6 +210,6 @@ DreamHub is a tool for getting things done, not a media center for browsing. Ple
 
 ## Release scope summary
 
-- **v1**: the complete core (dashboard with customizable and custom tiles, navigation, global search, notifications inbox, settings, onboarding, diagnostics, auth, i18n DE/IT/EN, time zone handling, profile- and role-ready data model) + MediaHub, TimerHub, GuideHub, DiscoveryHub, SeriesHub (basic), SystemHub (basic), AdminHub (logs), ControlHub (remote, screenshot, power — pulled forward from v1.1) + the TV launcher plugin + `.deb` packaging.
-- **v1.1**: RadioHub, ChannelHub, MediaHub trimming, AdminHub service status, ControlHub's "message to TV" (`/web/message`). Built early and confirmed on the box: RadioHub, service status, message to TV (release 0.1.0). ChannelHub and trimming (cutting out the ad breaks MediaHub's ad detection finds) built 2026-10-08/09 against the mock, not yet tried on the box.
-- **Later**: AutomationHub, AdminHub terminal, external notification channels, Jellyfin/Emby connectors (Plex built early), more AI providers, profile/role UI, multiple dashboards UI, additional languages incl. RTL.
+- **v1**: the complete core (dashboard with customizable and custom tiles, navigation, global search, notifications inbox, settings, onboarding, diagnostics, auth, i18n DE/IT/EN, time zone handling, profile- and role-ready data model) + MediaHub, TimerHub, GuideHub, DiscoveryHub, SeriesHub (basic), DeviceHub (basic + logs; SystemHub and AdminHub as planned at the time, merged 2026-10-11), ControlHub (remote, screenshot, power — pulled forward from v1.1) + the TV launcher plugin + `.deb` packaging.
+- **v1.1**: RadioHub, ChannelHub, MediaHub trimming, DeviceHub service status, ControlHub's "message to TV" (`/web/message`). Built early and confirmed on the box: RadioHub, service status, message to TV (release 0.1.0). ChannelHub and trimming (cutting out the ad breaks MediaHub's ad detection finds) built 2026-10-08/09 against the mock, not yet tried on the box.
+- **Later**: AutomationHub, DeviceHub terminal + packages/feeds/scripts (#47), external notification channels, Jellyfin/Emby connectors (Plex built early), more AI providers, profile/role UI, multiple dashboards UI, additional languages incl. RTL.

@@ -19,8 +19,7 @@
     "guide": "TV Guide",
     "timer": "Timers",
     "discovery": "Recommendations",
-    "system": "System",
-    "admin": "Admin",
+    "device": "Device",
     "control": "Remote",
     "radio": "Radio",
     "stream": "Live TV",
@@ -1092,6 +1091,9 @@
     }
   },
   "admin": {
+    "tabs": {
+      "admin": "Administration"
+    },
     "logLevel": {
       "title": "Log level",
       "current": "Currently: {level}",

@@ -1,8 +1,10 @@
 // Routes mirror the hub paths declared in backend/internal/hub/v1.go
 // (Descriptor.Path) and the core routes in Navigation() (dashboard,
 // settings). Every v1 hub now has a real screen. Diagnostics used to be its
-// own core route; it's now a tab inside SystemHubView.vue, so /diagnostics
-// redirects there instead of 404ing an old bookmark or link.
+// own core route; it's now a tab inside DeviceHubView.vue, so /diagnostics
+// redirects there instead of 404ing an old bookmark or link. SystemHub and
+// AdminHub merged into DeviceHub (docs/ADMINHUB_PLAN.md, #47); /system and
+// /admin redirect to /device (with the matching tab) for the same reason.
 import type { Permission } from '@/api/types'
 import { useAuth } from '@/composables/useAuth'
 import { createRouter, createWebHistory } from 'vue-router'
@@ -84,18 +86,20 @@ const router = createRouter({
     },
     {
       path: '/diagnostics',
-      redirect: { path: '/system', query: { tab: 'diagnostics' } },
+      redirect: { path: '/device', query: { tab: 'diagnostics' } },
     },
     {
       path: '/system',
-      name: 'system',
-      component: () => import('@/views/SystemHubView.vue'),
-      meta: { perm: 'system' },
+      redirect: (to) => ({ path: '/device', query: to.query }),
     },
     {
       path: '/admin',
-      name: 'admin',
-      component: () => import('@/views/AdminHubView.vue'),
+      redirect: { path: '/device', query: { tab: 'admin' } },
+    },
+    {
+      path: '/device',
+      name: 'device',
+      component: () => import('@/views/DeviceHubView.vue'),
       meta: { perm: 'system' },
     },
     {

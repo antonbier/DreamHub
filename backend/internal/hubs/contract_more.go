@@ -110,7 +110,7 @@ func (h *System) Search(ctx context.Context, query string) ([]hub.SearchResult, 
 			continue
 		}
 		out = append(out, hub.SearchResult{Title: e.Summary, Subtitle: e.At.Format(time.DateOnly),
-			Path: "/system?" + url.Values{"changes": {strings.TrimSpace(query)}}.Encode()})
+			Path: "/device?" + url.Values{"changes": {strings.TrimSpace(query)}}.Encode()})
 		if len(out) == maxContractResults {
 			break
 		}
@@ -134,8 +134,34 @@ func (h *Admin) Search(ctx context.Context, query string) ([]hub.SearchResult, e
 	for _, u := range units {
 		name := strings.TrimSuffix(u.Name, ".service")
 		if matches(query, name, u.Description) {
-			out = append(out, hub.SearchResult{Title: name, Subtitle: u.Description, Path: "/admin"})
+			out = append(out, hub.SearchResult{Title: name, Subtitle: u.Description, Path: "/device?tab=admin"})
 		}
+	}
+	return out, nil
+}
+
+// --- DeviceHub: SystemHub and AdminHub share one nav entry -------------------
+
+// DeviceSearch combines System's and Admin's own search results under the
+// one hub ID DeviceHub registers as (the registry's search index holds one
+// provider per hub ID, hub.go's AddSearchProvider).
+type DeviceSearch struct {
+	System *System
+	Admin  *Admin
+}
+
+func (d DeviceSearch) Search(ctx context.Context, query string) ([]hub.SearchResult, error) {
+	out, err := d.System.Search(ctx, query)
+	if err != nil {
+		return nil, err
+	}
+	more, err := d.Admin.Search(ctx, query)
+	if err != nil {
+		return nil, err
+	}
+	out = append(out, more...)
+	if len(out) > maxContractResults {
+		out = out[:maxContractResults]
 	}
 	return out, nil
 }

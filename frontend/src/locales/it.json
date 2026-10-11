@@ -1162,6 +1162,19 @@
       "confirmRun": "Esegui ora",
       "previewRun": "{name} verrà eseguito.",
       "exitCode": "Codice di uscita {code}"
+    },
+    "terminal": {
+      "title": "Terminale",
+      "unavailable": "Il terminale non è disponibile su questo sistema.",
+      "warning": "Il terminale dà accesso completo alla box — attivalo solo se necessario.",
+      "needsAuth": "Attiva prima la protezione con password di DreamHub.",
+      "openSettings": "Vai alle impostazioni",
+      "passwordLabel": "Reinserisci la password",
+      "enable": "Attiva terminale",
+      "enableFailed": "Non è stato possibile attivare il terminale.",
+      "wrongPassword": "Password errata.",
+      "enabledWarning": "Terminale attivo — accesso completo alla box.",
+      "disable": "Disattiva"
     }
   },
   "control": {

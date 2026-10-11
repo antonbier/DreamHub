@@ -30,6 +30,19 @@ type ConfigSource interface {
 	AuthConfig() Config
 }
 
+// VerifyPassword reports whether password matches this config's stored
+// hash. Unlike Verify (which checks a request, and caches a hit for
+// cacheTTL), this always does a fresh bcrypt compare — for the rare case
+// where a sensitive action needs the user to type their password again
+// right now, not just prove they have an authenticated session (AdminHub's
+// terminal, PRINCIPLES.md's one exception to preview-and-confirm).
+func (c Config) VerifyPassword(password string) bool {
+	if c.PasswordHash == "" {
+		return false
+	}
+	return bcrypt.CompareHashAndPassword([]byte(c.PasswordHash), []byte(password)) == nil
+}
+
 // cacheTTL is how long a successful Basic Auth check is remembered. The
 // browser sends the password with every request, and bcrypt is deliberately
 // slow — tens of milliseconds per check on the box's ARM cores — so checking

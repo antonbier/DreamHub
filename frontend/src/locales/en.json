@@ -1162,6 +1162,19 @@
       "confirmRun": "Run now",
       "previewRun": "{name} will run.",
       "exitCode": "Exit code {code}"
+    },
+    "terminal": {
+      "title": "Terminal",
+      "unavailable": "The terminal isn't available on this system.",
+      "warning": "The terminal gives full access to the box — only enable it when you need it.",
+      "needsAuth": "Turn on DreamHub's own password protection first.",
+      "openSettings": "Go to Settings",
+      "passwordLabel": "Re-enter your password",
+      "enable": "Enable terminal",
+      "enableFailed": "The terminal could not be enabled.",
+      "wrongPassword": "Wrong password.",
+      "enabledWarning": "Terminal enabled — full access to the box.",
+      "disable": "Disable"
     }
   },
   "control": {

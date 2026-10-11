@@ -34,6 +34,7 @@ import type {
   SelfTestReport,
   ServiceUnit,
   ScriptRun,
+  TerminalStatus,
   CoverItem,
   BackupFile,
   ConnectorState,
@@ -447,6 +448,16 @@ export const api = {
     deleteScript: (id: number) => request<void>('DELETE', `/api/v1/admin/scripts/${id}`),
     runScriptPlan: (id: number) => request<{ plan: Plan }>('POST', `/api/v1/admin/scripts/${id}/run/plan`),
     scriptRuns: (id: number) => request<{ runs: ScriptRun[] }>('GET', `/api/v1/admin/scripts/${id}/runs`),
+    // The terminal (docs/ADMINHUB_PLAN.md, A4, #36): off by default, needs
+    // auth turned on and the password typed again to enable — the one
+    // explicit exception to preview-and-confirm (PRINCIPLES.md), since
+    // there's nothing to preview about opening a shell.
+    terminalStatus: () => request<TerminalStatus>('GET', '/api/v1/admin/terminal/status'),
+    enableTerminal: (password: string) => request<{ enabled: boolean }>('POST', '/api/v1/admin/terminal/enable', { password }),
+    disableTerminal: () => request<{ enabled: boolean }>('POST', '/api/v1/admin/terminal/disable'),
+    // Not read through request(): the iframe/browser hits this directly,
+    // proxied straight to shellinaboxd.
+    terminalProxyPath: '/api/v1/admin/terminal/proxy/',
   },
   notifications: {
     list: (limit = 20) => request<{ notifications: Notification[]; unread: number }>('GET', `/api/v1/notifications?limit=${limit}`),

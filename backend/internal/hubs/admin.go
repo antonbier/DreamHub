@@ -9,6 +9,7 @@ import (
 	"strconv"
 	"time"
 
+	"github.com/antonbier/DreamHub/backend/internal/auth"
 	"github.com/antonbier/DreamHub/backend/internal/httpx"
 	"github.com/antonbier/DreamHub/backend/internal/journald"
 	"github.com/antonbier/DreamHub/backend/internal/logging"
@@ -44,7 +45,15 @@ type Admin struct {
 	// Scripts runs an uploaded script's content (admin_scripts.go); nil
 	// hides the script library (PRINCIPLES.md: unavailable, not broken).
 	Scripts scripts.Runner
-	Now   func() time.Time
+	// Auth gives the terminal's enable step something to re-check the
+	// password against (admin_terminal.go); nil hides the terminal.
+	Auth auth.ConfigSource
+	// TerminalTarget is shellinaboxd's address — "http://127.0.0.1:4200"
+	// on the box (ARCHITECTURE.md), a test server's URL in tests.
+	TerminalTarget string
+
+	terminal terminalState
+	Now      func() time.Time
 	// ReadOnly: the same switch as WebControl writes
 	// (DREAMHUB_ENABLE_DEVICE_WRITES=0) — no restarts either.
 	ReadOnly bool
@@ -77,6 +86,10 @@ func (h *Admin) Mount(mux httpx.Mux) {
 	mux.HandleFunc("DELETE /api/v1/admin/scripts/{id}", adminOnly(h.deleteScript))
 	mux.HandleFunc("POST /api/v1/admin/scripts/{id}/run/plan", adminOnly(h.planRunScript))
 	mux.HandleFunc("GET /api/v1/admin/scripts/{id}/runs", adminOnly(h.scriptRuns))
+	mux.HandleFunc("GET /api/v1/admin/terminal/status", adminOnly(h.terminalStatus))
+	mux.HandleFunc("POST /api/v1/admin/terminal/enable", adminOnly(h.enableTerminal))
+	mux.HandleFunc("POST /api/v1/admin/terminal/disable", adminOnly(h.disableTerminal))
+	mux.Handle("/api/v1/admin/terminal/proxy/", adminOnly(h.terminalProxy))
 }
 
 // DefaultDebugMinutes is how long debug logging lasts unless specified.

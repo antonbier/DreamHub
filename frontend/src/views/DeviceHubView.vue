@@ -164,6 +164,7 @@
     <template v-else-if="!item || item.status !== 'unavailable'">
       <ServicesPanel @logs="showLogsFor" />
       <ScriptsPanel />
+      <TerminalPanel />
 
       <!-- Log level -->
       <section class="mt-5 rounded border border-line bg-tile p-4">
@@ -295,6 +296,7 @@ import { api, ApiError } from '@/api/client'
 import Icon from '@/components/Icon.vue'
 import ServicesPanel from '@/components/admin/ServicesPanel.vue'
 import ScriptsPanel from '@/components/admin/ScriptsPanel.vue'
+import TerminalPanel from '@/components/admin/TerminalPanel.vue'
 import SelfTestPanel from '@/components/system/SelfTestPanel.vue'
 import { formatBytes } from '@/lib/format'
 import { openEventStream } from '@/composables/useEventStream'

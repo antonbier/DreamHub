@@ -101,6 +101,9 @@ type Options struct {
 	// Scripts runs AdminHub's uploaded scripts (internal/scripts): Exec{}
 	// on the box, the in-memory mock otherwise; nil hides the library.
 	Scripts scripts.Runner
+	// TerminalTarget overrides shellinaboxd's address (tests only); empty
+	// means the box's real "http://127.0.0.1:4200".
+	TerminalTarget string
 	// Mock is true when running against the mock WebControl/Series clients;
 	// the SerienRecorder connector then reports OK without a real check.
 	Mock bool
@@ -284,7 +287,7 @@ func New(ctx context.Context, o Options) (*App, error) {
 		SelfTest: &hubs_.SelfTest{WC: o.WebControl, SR: o.Series, AT: o.AutoTimer, DMI: o.DMI, Systemd: o.Systemd, FS: o.RecordingsFS,
 			PiconDirs: o.PiconDirs, Dir: filepath.Join(o.DataDir, "selftest"), Writes: !o.ReadOnlyFiles, Now: now}}
 	adminHub := &hubs_.Admin{Store: st, Level: level, Logs: o.Logs, FS: o.RecordingsFS,
-		Systemd: o.Systemd, Scripts: o.Scripts, Plans: plans, WC: o.WebControl, Now: now, ReadOnly: o.ReadOnlyFiles}
+		Systemd: o.Systemd, Scripts: o.Scripts, Auth: svc, TerminalTarget: o.TerminalTarget, Plans: plans, WC: o.WebControl, Now: now, ReadOnly: o.ReadOnlyFiles}
 	controlHub := &hubs_.Control{WC: o.WebControl}
 
 	// Search providers (internal/hub/search.go): every hub with content of

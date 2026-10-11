@@ -676,6 +676,15 @@ export interface ScriptRun {
   output: string
 }
 
+// GET /api/v1/admin/terminal/status.
+export interface TerminalStatus {
+  // false on a system without shellinaboxd configured (not running on the box).
+  available: boolean
+  // DreamHub's own password protection must be on before the terminal can be enabled.
+  authOn: boolean
+  enabled: boolean
+}
+
 export interface LogLevel {
   level: 'info' | 'debug'
   until?: string // RFC3339, UTC — only while level is "debug"

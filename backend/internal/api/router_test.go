@@ -79,48 +79,57 @@ func newEnvWithAutoTimer(t *testing.T, wc webcontrol.Client, at autotimer.Client
 }
 
 func newEnvWithOptions(t *testing.T, wc webcontrol.Client, at autotimer.Client, recFS recfs.FS) *env {
-	return newEnvFull(t, wc, at, recFS, false, jmock.New())
+	return newEnvFull(t, wc, at, recFS, false, jmock.New(), "")
 }
 
 func newEnvWithReadOnlyFiles(t *testing.T, m *mock.Client) *env {
-	return newEnvFull(t, m, atmock.New(), m.FS, true, jmock.New())
+	return newEnvFull(t, m, atmock.New(), m.FS, true, jmock.New(), "")
 }
 
 // newEnvWithLogs is for AdminHub tests that need a journald.Reader they
 // control the content of, rather than the fixed mock fixture.
 func newEnvWithLogs(t *testing.T, logs journald.Reader) *env {
 	m := mock.New()
-	return newEnvFull(t, m, atmock.New(), m.FS, false, logs)
+	return newEnvFull(t, m, atmock.New(), m.FS, false, logs, "")
 }
 
-func newEnvFull(t *testing.T, wc webcontrol.Client, at autotimer.Client, recFS recfs.FS, readOnly bool, logs journald.Reader) *env {
+// newEnvWithTerminalTarget is for AdminHub's terminal proxy test, which
+// needs a fake shellinaboxd to forward to instead of the real
+// 127.0.0.1:4200.
+func newEnvWithTerminalTarget(t *testing.T, target string) *env {
+	m := mock.New()
+	return newEnvFull(t, m, atmock.New(), m.FS, false, jmock.New(), target)
+}
+
+func newEnvFull(t *testing.T, wc webcontrol.Client, at autotimer.Client, recFS recfs.FS, readOnly bool, logs journald.Reader, terminalTarget string) *env {
 	t.Helper()
 	pushed := pushmock.New()
 	services := sdmock.New()
 	runner := &scriptsmock.Runner{}
 	plexServer := plexmock.New()
 	a, err := app.New(context.Background(), app.Options{
-		ReadOnlyFiles: readOnly,
-		TMDB:          tmdbmock.New(),
-		TVmaze:        tvmazemock.New(),
-		OMDb:          omdbmock.New(),
-		Fanart:        fanartmock.New(),
-		Push:          pushed,
-		Plex:          plexServer,
-		StreamBase:    "http://127.0.0.1:8080",
-		DataDir:       t.TempDir(),
-		WebControl:    wc,
-		AutoTimer:     at,
-		RecordingsFS:  recFS,
-		Series:        srmock.New(),
-		AI:            aimock.New(),
-		Logs:          logs,
-		Systemd:       services,
-		Scripts:       runner,
-		Mock:          true,
-		LookPath:      func(string) (string, error) { return "/usr/bin/journalctl", nil },
-		Logger:        discardLogger(),
-		Now:           func() time.Time { return fixedNow },
+		ReadOnlyFiles:  readOnly,
+		TMDB:           tmdbmock.New(),
+		TVmaze:         tvmazemock.New(),
+		OMDb:           omdbmock.New(),
+		Fanart:         fanartmock.New(),
+		Push:           pushed,
+		Plex:           plexServer,
+		StreamBase:     "http://127.0.0.1:8080",
+		DataDir:        t.TempDir(),
+		WebControl:     wc,
+		AutoTimer:      at,
+		RecordingsFS:   recFS,
+		Series:         srmock.New(),
+		AI:             aimock.New(),
+		Logs:           logs,
+		Systemd:        services,
+		Scripts:        runner,
+		TerminalTarget: terminalTarget,
+		Mock:           true,
+		LookPath:       func(string) (string, error) { return "/usr/bin/journalctl", nil },
+		Logger:         discardLogger(),
+		Now:            func() time.Time { return fixedNow },
 	})
 	if err != nil {
 		t.Fatal(err)

@@ -61,6 +61,7 @@ Done: `.deb` for arm64 (box) and armhf (built, not tried on a DM900/DM920) with 
 - [ ] Jellyfin / Emby connectors (#37)
 - [ ] More AI providers (#38)
 - [ ] Profiles: a kids role with allowed bouquets (prepared: `users.bouquets`) and a Plex age limit (#45)
+- [ ] **Extension Hub** ([`docs/EXTENSIONHUB_PLAN.md`](docs/EXTENSIONHUB_PLAN.md)) — optional, separately-installed packages (own process, own `.deb`, a second feed) for features that don't belong in the core (homelab bridges, smart-home switches, …); never their own frontend code, only a versioned, additive data contract DreamHub renders with its own components, degrading like any other hub when the version doesn't match (#46)
 
 ## Decided against or parked
 

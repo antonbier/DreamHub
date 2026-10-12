@@ -34,7 +34,6 @@ import (
 	"github.com/antonbier/DreamHub/backend/internal/dmi"
 	"github.com/antonbier/DreamHub/backend/internal/dockerd"
 	"github.com/antonbier/DreamHub/backend/internal/dockerhub"
-	"github.com/antonbier/DreamHub/backend/internal/meminfo"
 	"github.com/antonbier/DreamHub/backend/internal/enrich"
 	"github.com/antonbier/DreamHub/backend/internal/events"
 	"github.com/antonbier/DreamHub/backend/internal/fanart"
@@ -43,6 +42,7 @@ import (
 	"github.com/antonbier/DreamHub/backend/internal/jobs"
 	"github.com/antonbier/DreamHub/backend/internal/journald"
 	"github.com/antonbier/DreamHub/backend/internal/logging"
+	"github.com/antonbier/DreamHub/backend/internal/meminfo"
 	"github.com/antonbier/DreamHub/backend/internal/plan"
 	"github.com/antonbier/DreamHub/backend/internal/scripts"
 	"github.com/antonbier/DreamHub/backend/internal/serienrecorder"
@@ -338,7 +338,8 @@ func New(ctx context.Context, o Options) (*App, error) {
 	extensionsHub := &hubs_.Extensions{Registry: extRegistry, Plans: plans, ReadOnly: o.ReadOnlyFiles}
 	appsHub := &hubs_.Apps{
 		DockerHub: o.DockerHub, Docker: o.Docker, Mem: o.Mem, WC: o.WebControl,
-		StorageRoot: o.AppsStorageRoot, Plans: plans, ReadOnly: o.ReadOnlyFiles, Now: now,
+		StorageRoot: o.AppsStorageRoot, Plans: plans, ReadOnly: o.ReadOnlyFiles,
+		Store: st, Auth: svc, Now: now,
 	}
 
 	// Search providers (internal/hub/search.go): every hub with content of

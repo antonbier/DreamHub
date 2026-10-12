@@ -1,8 +1,10 @@
 package httpx
 
 import (
+	"bufio"
 	"crypto/rand"
 	"encoding/hex"
+	"errors"
 	"log/slog"
 	"net"
 	"net/http"
@@ -38,6 +40,20 @@ func (s *statusRecorder) Flush() {
 	if f, ok := s.ResponseWriter.(http.Flusher); ok {
 		f.Flush()
 	}
+}
+
+// Hijack makes statusRecorder itself an http.Hijacker when the
+// ResponseWriter it wraps is one — the same reason Flush exists above,
+// needed for AppsHub's console (GET /api/v1/apps/installed/{id}/console,
+// internal/wsutil.Upgrade): every request already passes through this
+// wrapper (RequestIDAndLogging), so without this the type assertion
+// inside Upgrade would always fail regardless of the real server.
+func (s *statusRecorder) Hijack() (net.Conn, *bufio.ReadWriter, error) {
+	hj, ok := s.ResponseWriter.(http.Hijacker)
+	if !ok {
+		return nil, nil, errors.New("httpx: underlying ResponseWriter doesn't support Hijack")
+	}
+	return hj.Hijack()
 }
 
 // RequestIDAndLogging gives every request a fresh ID (never trusting one

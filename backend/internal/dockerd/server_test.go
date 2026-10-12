@@ -135,9 +135,9 @@ func TestHTTPClient_CreateAndRemove(t *testing.T) {
 
 	spec := dockerd.ContainerSpec{
 		AppID: "sonarr", Image: "linuxserver/sonarr:latest",
-		Env:           map[string]string{"TZ": "Europe/Rome"},
-		HostPort:      8989, ContainerPort: 8989,
-		HostDir:       "/media/hdd/dreamhub-apps/sonarr", ContainerDir: "/config",
+		Env:      map[string]string{"TZ": "Europe/Rome"},
+		HostPort: 8989, ContainerPort: 8989,
+		HostDir: "/media/hdd/dreamhub-apps/sonarr", ContainerDir: "/config",
 		MemoryLimitBytes: 256 << 20,
 	}
 	created, err := client.Create(ctx, spec)

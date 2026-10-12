@@ -21,6 +21,7 @@ import type {
   CatalogApp,
   AppSearchResult,
   AppManifest,
+  AppConsoleStatus,
   InstalledApp,
   AdScanResult,
   BouquetEntry,
@@ -498,6 +499,15 @@ export const api = {
     removePlan: (id: string) => request<{ plan: Plan }>('POST', `/api/v1/apps/installed/${encodeURIComponent(id)}/remove/plan`),
     start: (id: string) => request<void>('POST', `/api/v1/apps/installed/${encodeURIComponent(id)}/start`),
     stop: (id: string) => request<void>('POST', `/api/v1/apps/installed/${encodeURIComponent(id)}/stop`),
+    logs: (id: string) => request<{ text: string }>('GET', `/api/v1/apps/installed/${encodeURIComponent(id)}/logs`),
+    // The console (docs/APPSHUB_PLAN.md, App5): same enable/disable shape
+    // as admin.terminalStatus/enableTerminal/disableTerminal above, plus
+    // a WebSocket path the component dials directly (browsers don't
+    // route WebSocket connections through fetch/XHR).
+    consoleStatus: () => request<AppConsoleStatus>('GET', '/api/v1/apps/console/status'),
+    enableConsole: (password: string) => request<{ enabled: boolean }>('POST', '/api/v1/apps/console/enable', { password }),
+    disableConsole: () => request<{ enabled: boolean }>('POST', '/api/v1/apps/console/disable'),
+    consolePath: (id: string) => `/api/v1/apps/installed/${encodeURIComponent(id)}/console`,
   },
   plex: {
     status: () => request<PlexStatus>('GET', '/api/v1/plex/status'),

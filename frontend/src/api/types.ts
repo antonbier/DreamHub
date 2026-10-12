@@ -759,6 +759,15 @@ export interface InstalledApp {
   upgradable?: boolean
 }
 
+// GET /api/v1/apps/console/status (docs/APPSHUB_PLAN.md, App5) — the
+// exact same shape TerminalStatus above uses, Terminal's own posture
+// reused for a per-container console.
+export interface AppConsoleStatus {
+  available: boolean
+  authOn: boolean
+  enabled: boolean
+}
+
 export interface AdminFeed {
   name: string
   url?: string

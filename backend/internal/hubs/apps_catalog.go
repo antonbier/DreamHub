@@ -8,12 +8,14 @@ import (
 	"time"
 
 	"github.com/antonbier/DreamHub/backend/internal/appcatalog"
+	"github.com/antonbier/DreamHub/backend/internal/auth"
 	"github.com/antonbier/DreamHub/backend/internal/dockerd"
 	"github.com/antonbier/DreamHub/backend/internal/dockerhub"
 	"github.com/antonbier/DreamHub/backend/internal/httpx"
 	"github.com/antonbier/DreamHub/backend/internal/meminfo"
 	"github.com/antonbier/DreamHub/backend/internal/perm"
 	"github.com/antonbier/DreamHub/backend/internal/plan"
+	"github.com/antonbier/DreamHub/backend/internal/store"
 	"github.com/antonbier/DreamHub/backend/internal/webcontrol"
 )
 
@@ -49,6 +51,18 @@ type Apps struct {
 	StorageRoot string
 	Plans       *plan.Service
 	ReadOnly    bool
+	// Store appends the change log entries the console's enable/disable
+	// make (apps_console.go), the same bar admin_terminal.go's own
+	// enable/disable already sets.
+	Store *store.Store
+	// Auth gives the console's enable step something to re-check the
+	// password against (apps_console.go, Terminal's exact posture,
+	// A4/#36); nil hides the console entirely.
+	Auth auth.ConfigSource
+	// console is the per-container console's own off-by-default,
+	// not-persisted-across-a-restart gate — see consoleState's own doc
+	// comment (apps_console.go).
+	console consoleState
 	// Now overrides the clock (tests); nil means time.Now.
 	Now func() time.Time
 }
@@ -73,6 +87,11 @@ func (h *Apps) Perms() map[string]perm.Perm {
 		"POST /api/v1/apps/installed/{id}/remove/plan": perm.System,
 		"POST /api/v1/apps/installed/{id}/start":       perm.System,
 		"POST /api/v1/apps/installed/{id}/stop":        perm.System,
+		"GET /api/v1/apps/installed/{id}/logs":         perm.System,
+		"GET /api/v1/apps/console/status":              perm.System,
+		"POST /api/v1/apps/console/enable":             perm.System,
+		"POST /api/v1/apps/console/disable":            perm.System,
+		"GET /api/v1/apps/installed/{id}/console":      perm.System,
 	}
 }
 
@@ -85,6 +104,11 @@ func (h *Apps) Mount(mux httpx.Mux) {
 	mux.HandleFunc("POST /api/v1/apps/installed/{id}/remove/plan", h.planRemove)
 	mux.HandleFunc("POST /api/v1/apps/installed/{id}/start", h.startInstalled)
 	mux.HandleFunc("POST /api/v1/apps/installed/{id}/stop", h.stopInstalled)
+	mux.HandleFunc("GET /api/v1/apps/installed/{id}/logs", h.containerLogs)
+	mux.HandleFunc("GET /api/v1/apps/console/status", h.consoleStatus)
+	mux.HandleFunc("POST /api/v1/apps/console/enable", h.enableConsole)
+	mux.HandleFunc("POST /api/v1/apps/console/disable", h.disableConsole)
+	mux.HandleFunc("GET /api/v1/apps/installed/{id}/console", h.containerConsole)
 }
 
 // catalogEntry is one curated app with box compatibility already

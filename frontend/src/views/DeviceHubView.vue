@@ -323,7 +323,13 @@ function formatDate(iso: string): string {
 }
 
 type Tab = 'overview' | 'diagnostics' | 'admin'
-const tab = ref<Tab>(route.query.tab === 'diagnostics' || route.query.tab === 'admin' ? route.query.tab : 'overview')
+const tab = ref<Tab>(
+  route.query.tab === 'diagnostics'
+    ? 'diagnostics'
+    : route.query.tab === 'admin' || typeof route.query.logUnit === 'string'
+      ? 'admin'
+      : 'overview',
+)
 watch(tab, (t) => router.replace({ query: { ...route.query, tab: t === 'overview' ? undefined : t } }))
 
 // --- overview (ex-SystemHubView) ---------------------------------------------
@@ -426,7 +432,11 @@ async function setLevel(l: 'info' | 'debug') {
 }
 
 const logLevels = ['emerg', 'alert', 'crit', 'err', 'warning', 'notice', 'info', 'debug'] as const
-const logUnit = ref('')
+// AppsHub links here with ?logUnit=docker to open straight at the
+// Docker daemon's own journald entries — Docker-the-service's health
+// reuses this exact viewer rather than a separate one
+// (docs/APPSHUB_PLAN.md, "Logs: two tiers").
+const logUnit = ref(typeof route.query.logUnit === 'string' ? route.query.logUnit : '')
 const logLevelFilter = ref('')
 const logText = ref('')
 const logs = ref<LogEntry[]>([])

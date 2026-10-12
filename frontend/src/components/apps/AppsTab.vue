@@ -16,7 +16,10 @@
 
     <template v-else>
       <section v-if="installed.length > 0" class="mt-4">
-        <h2 class="text-[13px] font-semibold text-muted">{{ t('apps.installedTitle') }}</h2>
+        <div class="flex items-center justify-between">
+          <h2 class="text-[13px] font-semibold text-muted">{{ t('apps.installedTitle') }}</h2>
+          <RouterLink to="/device?logUnit=docker" class="text-[12px] text-accent hover:underline">{{ t('apps.dockerServiceLogs') }}</RouterLink>
+        </div>
         <div class="mt-2 flex flex-col gap-2">
           <div v-for="a in installed" :key="a.id" class="flex items-center gap-3 rounded border border-line bg-tile p-3">
             <div class="min-w-0 flex-1">
@@ -30,6 +33,12 @@
             <a v-if="a.hostPort" :href="openUrl(a.hostPort)" target="_blank" rel="noopener" class="shrink-0 text-[12.5px] text-accent hover:underline">
               {{ t('apps.open') }}
             </a>
+            <button type="button" class="shrink-0 text-[12.5px] text-accent hover:underline" @click="openLogs(a)">
+              {{ t('apps.logs') }}
+            </button>
+            <button type="button" class="shrink-0 text-[12.5px] text-accent hover:underline" @click="openConsole(a)">
+              {{ t('apps.console.open') }}
+            </button>
             <button
               type="button"
               class="shrink-0 rounded border border-line px-2.5 py-1 text-[12.5px] text-text hover:bg-field disabled:opacity-60"
@@ -153,17 +162,68 @@
         </ul>
       </div>
     </template>
+
+    <!-- Logs modal (App5, "two tiers" — this is the per-container one;
+         the daemon's own health reuses DeviceHub's existing viewer via
+         the link above). -->
+    <div v-if="logsFor" class="fixed inset-0 z-50 flex items-center justify-center bg-black/50 p-4" @click.self="logsFor = null">
+      <div class="flex max-h-[80vh] w-full max-w-2xl flex-col rounded border border-line bg-bg p-4">
+        <div class="flex items-center justify-between">
+          <h3 class="text-[14px] font-semibold text-text">{{ t('apps.logsTitle', { name: logsFor.name }) }}</h3>
+          <button type="button" class="text-[12.5px] text-muted hover:text-text" @click="logsFor = null">{{ t('apps.logsClose') }}</button>
+        </div>
+        <p v-if="logsLoading" class="mt-3 text-[13px] text-faint">{{ t('common.loading') }}</p>
+        <p v-else-if="logsError" class="mt-3 text-[12.5px] text-warn">{{ logsError }}</p>
+        <p v-else-if="!logsText" class="mt-3 text-[13px] text-faint">{{ t('apps.logsEmpty') }}</p>
+        <pre v-else class="mt-3 overflow-auto whitespace-pre-wrap rounded border border-line-soft bg-tile p-3 text-[12px] text-muted">{{ logsText }}</pre>
+      </div>
+    </div>
+
+    <!-- Console modal (App5, Terminal's exact safety posture): off by
+         default, needs a fresh password re-entry, a standing warning. -->
+    <div v-if="consoleFor" class="fixed inset-0 z-50 flex items-center justify-center bg-black/50 p-4" @click.self="closeConsole">
+      <div class="flex max-h-[80vh] w-full max-w-2xl flex-col rounded border border-line bg-bg p-4">
+        <div class="flex items-center justify-between">
+          <h3 class="text-[14px] font-semibold text-text">{{ t('apps.console.title', { name: consoleFor.name }) }}</h3>
+          <button type="button" class="text-[12.5px] text-muted hover:text-text" @click="closeConsole">{{ t('apps.console.close') }}</button>
+        </div>
+
+        <p v-if="!consoleStatusInfo" class="mt-3 text-[13px] text-faint">{{ t('common.loading') }}</p>
+        <p v-else-if="!consoleStatusInfo.available" class="mt-3 text-[12.5px] text-faint">{{ t('apps.console.unavailable') }}</p>
+        <p v-else-if="!consoleStatusInfo.authOn" class="mt-3 text-[12.5px] text-warn">{{ t('apps.console.authRequired') }}</p>
+
+        <template v-else-if="!consoleStatusInfo.enabled">
+          <p class="mt-3 text-[12.5px] text-warn">{{ t('apps.console.warning') }}</p>
+          <form class="mt-3 flex items-center gap-2" @submit.prevent="enableConsoleNow">
+            <input v-model="consolePassword" type="password" :placeholder="t('apps.console.password')" class="flex-1 rounded border border-line bg-field px-3 py-2 text-[13.5px] text-text" />
+            <button type="submit" class="shrink-0 rounded border border-line px-3 py-2 text-[13px] text-text hover:bg-field">{{ t('apps.console.enable') }}</button>
+          </form>
+          <p v-if="consolePasswordError" class="mt-1.5 text-[12.5px] text-warn">{{ consolePasswordError }}</p>
+        </template>
+
+        <template v-else>
+          <p class="mt-2 text-[12px] text-warn">{{ t('apps.console.warning') }}</p>
+          <pre ref="consoleOutputEl" class="mt-2 h-64 overflow-auto whitespace-pre-wrap rounded border border-line-soft bg-tile p-3 text-[12px] text-muted">{{ consoleOutput }}</pre>
+          <p v-if="consoleConnStatus" class="mt-1 text-[12px] text-faint">{{ consoleConnStatus }}</p>
+          <form class="mt-2 flex items-center gap-2" @submit.prevent="sendConsoleInput">
+            <input v-model="consoleInput" type="text" :placeholder="t('apps.console.inputPlaceholder')" class="flex-1 rounded border border-line bg-field px-3 py-2 text-[13.5px] text-text" />
+            <button type="submit" class="shrink-0 rounded border border-line px-3 py-2 text-[13px] text-text hover:bg-field">{{ t('apps.console.send') }}</button>
+          </form>
+          <button type="button" class="mt-2 self-start text-[12.5px] text-warn hover:underline" @click="disableConsoleNow">{{ t('apps.console.disable') }}</button>
+        </template>
+      </div>
+    </div>
   </div>
 </template>
 
 <script setup lang="ts">
-import { onMounted, ref } from 'vue'
+import { nextTick, onMounted, onUnmounted, ref } from 'vue'
 import { useI18n } from 'vue-i18n'
 import { api } from '@/api/client'
 import PlanPreview from '@/components/PlanPreview.vue'
 import { useFriendlyError } from '@/composables/useFriendlyError'
 import { usePlanError } from '@/composables/usePlanError'
-import type { AppSearchResult, CatalogApp, InstalledApp, Plan } from '@/api/types'
+import type { AppConsoleStatus, AppSearchResult, CatalogApp, InstalledApp, Plan } from '@/api/types'
 
 const { t } = useI18n()
 const { friendly } = useFriendlyError()
@@ -303,4 +363,107 @@ async function checkManifest(image: string) {
 }
 
 onMounted(load)
+
+// --- per-container logs (App5) -----------------------------------------
+
+const logsFor = ref<InstalledApp | null>(null)
+const logsLoading = ref(false)
+const logsError = ref('')
+const logsText = ref('')
+
+async function openLogs(a: InstalledApp) {
+  logsFor.value = a
+  logsLoading.value = true
+  logsError.value = ''
+  logsText.value = ''
+  try {
+    logsText.value = (await api.apps.logs(a.id)).text
+  } catch {
+    logsError.value = t('apps.logsError')
+  } finally {
+    logsLoading.value = false
+  }
+}
+
+// --- per-container console (App5, Terminal's exact safety posture) ----------
+
+const consoleFor = ref<InstalledApp | null>(null)
+const consoleStatusInfo = ref<AppConsoleStatus | null>(null)
+const consolePassword = ref('')
+const consolePasswordError = ref('')
+const consoleOutput = ref('')
+const consoleConnStatus = ref('')
+const consoleInput = ref('')
+const consoleOutputEl = ref<HTMLElement | null>(null)
+let consoleSocket: WebSocket | null = null
+
+async function openConsole(a: InstalledApp) {
+  consoleFor.value = a
+  consolePassword.value = ''
+  consolePasswordError.value = ''
+  consoleOutput.value = ''
+  consoleConnStatus.value = ''
+  consoleStatusInfo.value = await api.apps.consoleStatus()
+  if (consoleStatusInfo.value.enabled) connectConsole(a.id)
+}
+
+function closeConsole() {
+  disconnectConsole()
+  consoleFor.value = null
+}
+
+async function enableConsoleNow() {
+  if (!consoleFor.value) return
+  consolePasswordError.value = ''
+  try {
+    await api.apps.enableConsole(consolePassword.value)
+    consolePassword.value = ''
+    consoleStatusInfo.value = await api.apps.consoleStatus()
+    connectConsole(consoleFor.value.id)
+  } catch (err) {
+    consolePasswordError.value = friendly(err).text || t('apps.console.wrongPassword')
+  }
+}
+
+async function disableConsoleNow() {
+  disconnectConsole()
+  await api.apps.disableConsole()
+  consoleStatusInfo.value = await api.apps.consoleStatus()
+}
+
+function connectConsole(id: string) {
+  disconnectConsole()
+  const wsProtocol = location.protocol === 'https:' ? 'wss:' : 'ws:'
+  const url = `${wsProtocol}//${location.host}${api.apps.consolePath(id)}`
+  const socket = new WebSocket(url)
+  socket.binaryType = 'arraybuffer'
+  consoleConnStatus.value = t('apps.console.connecting')
+  socket.onopen = () => {
+    consoleConnStatus.value = ''
+  }
+  socket.onmessage = (ev) => {
+    const text = typeof ev.data === 'string' ? ev.data : new TextDecoder().decode(ev.data as ArrayBuffer)
+    consoleOutput.value += text
+    void nextTick(() => {
+      consoleOutputEl.value?.scrollTo(0, consoleOutputEl.value.scrollHeight)
+    })
+  }
+  socket.onclose = () => {
+    consoleConnStatus.value = t('apps.console.disconnected')
+  }
+  consoleSocket = socket
+}
+
+function disconnectConsole() {
+  consoleSocket?.close()
+  consoleSocket = null
+}
+
+function sendConsoleInput() {
+  if (!consoleSocket || consoleSocket.readyState !== WebSocket.OPEN) return
+  consoleSocket.send(new TextEncoder().encode(consoleInput.value + '\n'))
+  consoleInput.value = ''
+}
+
+onUnmounted(disconnectConsole)
 </script>

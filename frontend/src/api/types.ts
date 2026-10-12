@@ -649,6 +649,19 @@ export interface BackupFile {
   exportedAt: string // RFC3339, UTC
   settings: Record<string, unknown>
   dashboard: DashboardLayout
+  // sections is App6's own addition — opt-in, omitted unless asked for
+  // (GET /api/v1/system/backup?sections=apps). Opaque per-section
+  // payloads; the UI never inspects their content, only whether a
+  // known section id is present.
+  sections?: Record<string, unknown>
+}
+
+// GET /api/v1/system/backup/sections (App6, docs/APPSHUB_PLAN.md).
+export interface BackupSectionsList {
+  sections: {
+    id: string
+    items: { id: string; name: string; sizeBytes: number; defaultIncluded: boolean }[]
+  }[]
 }
 
 // backend/internal/hubs's logEntryView, from GET /api/v1/admin/logs.

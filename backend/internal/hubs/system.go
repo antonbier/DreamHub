@@ -5,6 +5,7 @@ import (
 	"encoding/json"
 	"net/http"
 	"strconv"
+	"strings"
 	"time"
 
 	"github.com/antonbier/DreamHub/backend/internal/dashboard"
@@ -26,6 +27,55 @@ type System struct {
 	Now       func() time.Time
 	// SelfTest is the box self-test (selftest.go); nil leaves it out.
 	SelfTest *SelfTest
+	// Sections are the optional, additional parts a backup can carry
+	// beyond settings and the dashboard layout (docs/APPSHUB_PLAN.md,
+	// App6, "backup is a general mechanism from the start") — AppsHub's
+	// installed app configs is the first and so far only one. Nil or
+	// empty: backups behave exactly as before App6.
+	Sections []BackupSection
+}
+
+// BackupSection is one extra, opt-in part of a backup file — a hub that
+// has something worth backing up beyond settings implements this and is
+// wired into System.Sections (app.go), rather than System growing
+// hub-specific knowledge for each one.
+type BackupSection interface {
+	// ID is this section's own key in backupFile.Sections, and the
+	// ?sections= query value that includes it.
+	ID() string
+	// Items lists what this section could include right now, each with
+	// its own real size, so an admin sees what they're about to
+	// download before they do — the plan's own "sensible default,
+	// always visible, always changeable" rule, applied here too.
+	Items(ctx context.Context) ([]BackupItem, error)
+	// Export returns this section's payload for exactly itemIDs, or for
+	// every default-included item if itemIDs is nil (the whole-section
+	// "?sections=apps" case the UI uses today — see the plan's own
+	// "default per app: configuration only" decision, which Items'
+	// DefaultIncluded already reflects).
+	Export(ctx context.Context, itemIDs []string) (json.RawMessage, error)
+	// Restore writes back a previously exported payload. Called from
+	// inside the overall restore plan's own Execute, strictly after
+	// settings have already been written — a section can assume any
+	// setting it might care about is already in its restored state.
+	Restore(ctx context.Context, data json.RawMessage) error
+}
+
+// BackupItem is one thing a BackupSection could include.
+type BackupItem struct {
+	ID              string `json:"id"`
+	Name            string `json:"name"`
+	SizeBytes       int64  `json:"sizeBytes"`
+	DefaultIncluded bool   `json:"defaultIncluded"`
+}
+
+func (h *System) section(id string) (BackupSection, bool) {
+	for _, s := range h.Sections {
+		if s.ID() == id {
+			return s, true
+		}
+	}
+	return nil, false
 }
 
 func (h *System) now() time.Time {
@@ -39,6 +89,7 @@ func (h *System) now() time.Time {
 func (h *System) Mount(mux httpx.Mux) {
 	mux.HandleFunc("GET /api/v1/changes", h.changes)
 	mux.HandleFunc("GET /api/v1/system/backup", h.backup)
+	mux.HandleFunc("GET /api/v1/system/backup/sections", h.backupSections)
 	mux.HandleFunc("POST /api/v1/system/backup/restore", h.planRestore)
 	if h.SelfTest != nil {
 		mux.HandleFunc("GET /api/v1/system/selftest", adminOnly(h.SelfTest.handleLast))
@@ -113,6 +164,30 @@ type backupFile struct {
 	ExportedAt string           `json:"exportedAt"`
 	Settings   map[string]any   `json:"settings"`
 	Dashboard  dashboard.Layout `json:"dashboard"`
+	// Sections is App6's own addition — keyed by BackupSection.ID,
+	// omitted entirely for a plain settings-only backup (an older file
+	// without it restores exactly as it always did).
+	Sections map[string]json.RawMessage `json:"sections,omitempty"`
+}
+
+// backupSectionsView answers GET /api/v1/system/backup/sections: every
+// registered section's own items, so the UI can show what's available
+// and its size before the admin decides to include it.
+func (h *System) backupSections(w http.ResponseWriter, r *http.Request) {
+	type sectionView struct {
+		ID    string       `json:"id"`
+		Items []BackupItem `json:"items"`
+	}
+	out := make([]sectionView, 0, len(h.Sections))
+	for _, s := range h.Sections {
+		items, err := s.Items(r.Context())
+		if err != nil {
+			httpx.WriteError(w, r, http.StatusInternalServerError, "internal", "could not list "+s.ID()+"'s backup items")
+			return
+		}
+		out = append(out, sectionView{ID: s.ID(), Items: items})
+	}
+	httpx.WriteJSON(w, http.StatusOK, map[string]any{"sections": out})
 }
 
 func (h *System) backup(w http.ResponseWriter, r *http.Request) {
@@ -138,6 +213,26 @@ func (h *System) backup(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 	out.Dashboard = layout
+
+	// ?sections=apps,otherSection — each named, registered section's own
+	// default-included items (App6). An unknown name is ignored rather
+	// than refused: a backup download must never fail outright over one
+	// bad query value.
+	if q := r.URL.Query().Get("sections"); q != "" {
+		out.Sections = map[string]json.RawMessage{}
+		for _, id := range strings.Split(q, ",") {
+			sec, ok := h.section(strings.TrimSpace(id))
+			if !ok {
+				continue
+			}
+			data, err := sec.Export(ctx, nil)
+			if err != nil {
+				httpx.WriteError(w, r, http.StatusInternalServerError, "internal", "could not export "+sec.ID())
+				return
+			}
+			out.Sections[sec.ID()] = data
+		}
+	}
 
 	w.Header().Set("Content-Disposition", `attachment; filename="dreamhub-backup.json"`)
 	httpx.WriteJSON(w, http.StatusOK, out)
@@ -203,6 +298,23 @@ func (h *System) planRestore(w http.ResponseWriter, r *http.Request) {
 		changes = append(changes, plan.Change{Type: "dashboard", Before: currentLayout, After: in.Dashboard})
 	}
 
+	// App6: a section present in the uploaded file but not registered
+	// here (an older DreamHub, or the owning feature removed) is simply
+	// skipped — restoring settings must never fail over it.
+	type pendingSection struct {
+		sec  BackupSection
+		data json.RawMessage
+	}
+	var pendingSections []pendingSection
+	for id, data := range in.Sections {
+		sec, ok := h.section(id)
+		if !ok {
+			continue
+		}
+		pendingSections = append(pendingSections, pendingSection{sec: sec, data: data})
+		changes = append(changes, plan.Change{Type: "backup.section." + id, After: id})
+	}
+
 	pl := h.Plans.Create(u, plan.Draft{
 		Action:  "system.restore",
 		Changes: changes,
@@ -221,6 +333,15 @@ func (h *System) planRestore(w http.ResponseWriter, r *http.Request) {
 			if dashboardChanged {
 				if _, err := h.Dashboard.Save(ctx, u, in.Dashboard); err != nil {
 					return err
+				}
+			}
+			// Sections restore last, after settings are already in
+			// effect (BackupSection's own doc comment: a section can
+			// assume any setting it cares about is already restored).
+			for _, p := range pendingSections {
+				if err := p.sec.Restore(ctx, p.data); err != nil {
+					return &plan.Failure{Status: http.StatusBadGateway, Code: "section_restore_failed",
+						Message: "restoring " + p.sec.ID() + " failed", Err: err}
 				}
 			}
 			return nil

@@ -32,6 +32,7 @@ import (
 	"github.com/antonbier/DreamHub/backend/internal/connector"
 	"github.com/antonbier/DreamHub/backend/internal/dashboard"
 	"github.com/antonbier/DreamHub/backend/internal/dmi"
+	"github.com/antonbier/DreamHub/backend/internal/configfs"
 	"github.com/antonbier/DreamHub/backend/internal/dockerd"
 	"github.com/antonbier/DreamHub/backend/internal/dockerhub"
 	"github.com/antonbier/DreamHub/backend/internal/enrich"
@@ -129,6 +130,10 @@ type Options struct {
 	// default ("/media/hdd/dreamhub-apps"); nil/"" still works, it just
 	// means a path under this empty root, fine for mock mode and tests.
 	AppsStorageRoot string
+	// AppsConfigFS backs the apps backup section's directory
+	// reads/writes (App6, internal/configfs); nil means configfs.OS, the
+	// real file system — tests inject configfs/mock instead.
+	AppsConfigFS configfs.FS
 	// TerminalTarget overrides shellinaboxd's address (tests only); empty
 	// means the box's real "http://127.0.0.1:4200".
 	TerminalTarget string
@@ -339,8 +344,13 @@ func New(ctx context.Context, o Options) (*App, error) {
 	appsHub := &hubs_.Apps{
 		DockerHub: o.DockerHub, Docker: o.Docker, Mem: o.Mem, WC: o.WebControl,
 		StorageRoot: o.AppsStorageRoot, Plans: plans, ReadOnly: o.ReadOnlyFiles,
-		Store: st, Auth: svc, Now: now,
+		Store: st, Auth: svc, ConfigFS: o.AppsConfigFS, Now: now,
 	}
+	// App6: AppsHub's own installed-app configs join the existing
+	// Backup & Restore screen as an opt-in section (system.go's
+	// BackupSection) — wired here rather than inside hubs_.System since
+	// System has no reason to import AppsHub's package.
+	systemHub.Sections = []hubs_.BackupSection{appsHub}
 
 	// Search providers (internal/hub/search.go): every hub with content of
 	// its own; ControlHub has none (its results would be actions).

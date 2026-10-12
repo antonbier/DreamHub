@@ -1360,6 +1360,8 @@
       "nothingToRestore": "Diese Datei entspricht dem aktuellen Stand; nichts wiederherzustellen.",
       "confirmRestore": "Wiederherstellen",
       "restorePreview": "0 Änderungen wiederherzustellen | {count} Änderung aus dieser Sicherung vom {date} wiederherstellen. | {count} Änderungen aus dieser Sicherung vom {date} wiederherstellen.",
+      "includeApps": "0 installierte Apps | Auch die Konfiguration von 1 installierten App einschließen ({size}) | Auch die Konfigurationen von {count} installierten Apps einschließen ({size})",
+      "restoreIncludesApps": "Diese Datei enthält auch Konfigurationen installierter Apps.",
       "restored": "Aus der Sicherung wiederhergestellt.",
       "movedHint": "Backup und Wiederherstellen findest du jetzt in den Einstellungen.",
       "openSettings": "Einstellungen → System"

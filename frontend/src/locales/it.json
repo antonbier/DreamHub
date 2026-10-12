@@ -1360,6 +1360,8 @@
       "nothingToRestore": "Questo file corrisponde allo stato attuale; nulla da ripristinare.",
       "confirmRestore": "Ripristina",
       "restorePreview": "0 modifiche da ripristinare | Ripristina {count} modifica da questo backup del {date}. | Ripristina {count} modifiche da questo backup del {date}.",
+      "includeApps": "0 app installate | Includi anche la configurazione di 1 app installata ({size}) | Includi anche le configurazioni di {count} app installate ({size})",
+      "restoreIncludesApps": "Questo file include anche le configurazioni delle app installate.",
       "restored": "Ripristinato dal backup.",
       "movedHint": "Backup e ripristino ora si trovano nelle impostazioni.",
       "openSettings": "Impostazioni → Sistema"

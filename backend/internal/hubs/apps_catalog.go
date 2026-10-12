@@ -9,6 +9,7 @@ import (
 
 	"github.com/antonbier/DreamHub/backend/internal/appcatalog"
 	"github.com/antonbier/DreamHub/backend/internal/auth"
+	"github.com/antonbier/DreamHub/backend/internal/configfs"
 	"github.com/antonbier/DreamHub/backend/internal/dockerd"
 	"github.com/antonbier/DreamHub/backend/internal/dockerhub"
 	"github.com/antonbier/DreamHub/backend/internal/httpx"
@@ -63,6 +64,10 @@ type Apps struct {
 	// not-persisted-across-a-restart gate — see consoleState's own doc
 	// comment (apps_console.go).
 	console consoleState
+	// ConfigFS reads/writes an installed app's own config directory for
+	// the backup section (apps_backup.go, App6); nil means configfs.OS,
+	// the real file system — tests inject configfs/mock instead.
+	ConfigFS configfs.FS
 	// Now overrides the clock (tests); nil means time.Now.
 	Now func() time.Time
 }

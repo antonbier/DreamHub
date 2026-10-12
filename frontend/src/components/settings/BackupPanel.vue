@@ -8,6 +8,16 @@
   <section class="rounded border border-line bg-tile p-5">
     <h2 class="text-[15.5px] font-semibold">{{ t('system.backup.title') }}</h2>
     <p class="mt-1 text-[13px] text-muted">{{ t('system.backup.body') }}</p>
+
+    <!-- App6: opt-in sections beyond settings, each with its own real
+         size shown before the admin includes it. -->
+    <div v-if="appsSection" class="mt-3 flex items-center gap-2">
+      <input id="backup-include-apps" v-model="includeApps" type="checkbox" class="rounded border-line" />
+      <label for="backup-include-apps" class="text-[13px] text-text">
+        {{ t('system.backup.includeApps', { count: appsSection.items.length, size: formatSize(appsTotalSize) }, appsSection.items.length) }}
+      </label>
+    </div>
+
     <div class="mt-3 flex flex-wrap gap-2">
       <button type="button" class="rounded border border-line px-3 py-1.5 text-[13px] text-text hover:bg-field" @click="download">
         {{ t('system.backup.download') }}
@@ -34,19 +44,21 @@
         @cancel="restorePlan = null"
       >
         {{ t('system.backup.restorePreview', { count: restorePlan.changes.length, date: formatDate(restoreExportedAt) }, restorePlan.changes.length) }}
+        <p v-if="restoreIncludesApps" class="mt-1 text-[12.5px] text-faint">{{ t('system.backup.restoreIncludesApps') }}</p>
       </PlanPreview>
     </div>
   </section>
 </template>
 
 <script setup lang="ts">
-import { ref } from 'vue'
+import { computed, onMounted, ref } from 'vue'
 import { useI18n } from 'vue-i18n'
 import { api } from '@/api/client'
 import PlanPreview from '@/components/PlanPreview.vue'
 import { useDisplayTimeZone } from '@/composables/useDisplayTimeZone'
 import { usePlanError } from '@/composables/usePlanError'
-import type { BackupFile, Plan } from '@/api/types'
+import { formatBytes } from '@/lib/format'
+import type { BackupFile, BackupSectionsList, Plan } from '@/api/types'
 
 // A restore changes settings: the page reloads them afterwards.
 const emit = defineEmits<{ restored: [] }>()
@@ -59,11 +71,32 @@ function formatDate(iso: string): string {
   return new Intl.DateTimeFormat(locale.value, { dateStyle: 'short', timeStyle: 'short', timeZone: timeZone.value }).format(new Date(iso))
 }
 
+function formatSize(bytes: number): string {
+  return formatBytes(bytes, locale.value)
+}
+
+// App6: the "apps" backup section, if AppsHub has any installed app to
+// offer — included by default (docs/APPSHUB_PLAN.md's own default),
+// but always visible and always changeable, this screen's own version
+// of the plan's running rule.
+const sections = ref<BackupSectionsList['sections']>([])
+const includeApps = ref(true)
+const appsSection = computed(() => sections.value.find((s) => s.id === 'apps'))
+const appsTotalSize = computed(() => appsSection.value?.items.reduce((sum, i) => sum + i.sizeBytes, 0) ?? 0)
+
+onMounted(async () => {
+  try {
+    sections.value = (await api.system.backupSections()).sections
+  } catch {
+    sections.value = []
+  }
+})
+
 // Downloaded client-side as a plain JSON file — the browser never needs the
 // endpoint's own Content-Disposition header since fetch() already parsed
 // the body.
 async function download() {
-  const backup = await api.system.backup()
+  const backup = await api.system.backup(appsSection.value && includeApps.value ? ['apps'] : undefined)
   const blob = new Blob([JSON.stringify(backup, null, 2)], { type: 'application/json' })
   const url = URL.createObjectURL(blob)
   const a = document.createElement('a')
@@ -79,6 +112,7 @@ const restoreError = ref('')
 const restored = ref(false)
 const restorePlan = ref<Plan | null>(null)
 const restoreExportedAt = ref('')
+const restoreIncludesApps = ref(false)
 const applying = ref(false)
 const applyError = ref('')
 
@@ -98,6 +132,7 @@ async function onFileChosen(e: Event) {
     } else {
       restorePlan.value = res.plan
       restoreExportedAt.value = parsed.exportedAt
+      restoreIncludesApps.value = !!parsed.sections?.apps
     }
   } catch (err) {
     restoreError.value = err instanceof SyntaxError ? t('error.plan.invalid_backup') : planErrorMessage(err)

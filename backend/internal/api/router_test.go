@@ -17,6 +17,7 @@ import (
 	aptmock "github.com/antonbier/DreamHub/backend/internal/apt/mock"
 	"github.com/antonbier/DreamHub/backend/internal/autotimer"
 	atmock "github.com/antonbier/DreamHub/backend/internal/autotimer/mock"
+	configfsmock "github.com/antonbier/DreamHub/backend/internal/configfs/mock"
 	dockermock "github.com/antonbier/DreamHub/backend/internal/dockerd/mock"
 	dockerhubmock "github.com/antonbier/DreamHub/backend/internal/dockerhub/mock"
 	fanartmock "github.com/antonbier/DreamHub/backend/internal/fanart/mock"
@@ -60,6 +61,8 @@ type env struct {
 	scripts *scriptsmock.Runner
 	// plex is PlexHub's server (in-memory).
 	plex *plexmock.Client
+	// appsConfigFS is AppsHub's backup-section file system (App6, in-memory).
+	appsConfigFS *configfsmock.FS
 	// routes are the protected routes with their permissions.
 	routes []api.Route
 }
@@ -111,6 +114,7 @@ func newEnvFull(t *testing.T, wc webcontrol.Client, at autotimer.Client, recFS r
 	services := sdmock.New()
 	runner := &scriptsmock.Runner{}
 	plexServer := plexmock.New()
+	appsConfigFS := configfsmock.New()
 	a, err := app.New(context.Background(), app.Options{
 		ReadOnlyFiles:   readOnly,
 		TMDB:            tmdbmock.New(),
@@ -134,6 +138,7 @@ func newEnvFull(t *testing.T, wc webcontrol.Client, at autotimer.Client, recFS r
 		Docker:          dockermock.New(),
 		Mem:             meminfomock.New(),
 		AppsStorageRoot: "/media/hdd/dreamhub-apps",
+		AppsConfigFS:    appsConfigFS,
 		TerminalTarget:  terminalTarget,
 		Mock:            true,
 		LookPath:        func(string) (string, error) { return "/usr/bin/journalctl", nil },
@@ -153,7 +158,7 @@ func newEnvFull(t *testing.T, wc webcontrol.Client, at autotimer.Client, recFS r
 	for _, job := range a.Background {
 		go job(jobs)
 	}
-	return &env{srv: srv, store: a.Store, svc: a.Settings, events: a.Events, pushed: pushed, systemd: services, scripts: runner, plex: plexServer, routes: a.Routes}
+	return &env{srv: srv, store: a.Store, svc: a.Settings, events: a.Events, pushed: pushed, systemd: services, scripts: runner, plex: plexServer, appsConfigFS: appsConfigFS, routes: a.Routes}
 }
 
 func (e *env) do(t *testing.T, method, path, body string, configure func(*http.Request)) (*http.Response, []byte) {

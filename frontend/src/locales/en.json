@@ -1360,6 +1360,8 @@
       "nothingToRestore": "This file matches the current state; nothing to restore.",
       "confirmRestore": "Restore",
       "restorePreview": "0 changes to restore | Restore {count} change from this backup, made {date}. | Restore {count} changes from this backup, made {date}.",
+      "includeApps": "0 installed apps | Also include 1 installed app's config ({size}) | Also include {count} installed apps' configs ({size})",
+      "restoreIncludesApps": "This file also includes installed apps' configs.",
       "restored": "Restored from the backup.",
       "movedHint": "Backup and restore are in the settings now.",
       "openSettings": "Settings → System"

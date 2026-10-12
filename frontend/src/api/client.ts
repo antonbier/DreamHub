@@ -45,6 +45,7 @@ import type {
   TerminalStatus,
   CoverItem,
   BackupFile,
+  BackupSectionsList,
   ConnectorState,
   MediaFolder,
   NameSuggestion,
@@ -413,7 +414,9 @@ export const api = {
   changes: (limit = 20, user = -1) =>
     request<{ changes: ChangeEntry[] }>('GET', `/api/v1/changes?limit=${limit}${user >= 0 ? `&user=${user}` : ''}`),
   system: {
-    backup: () => request<BackupFile>('GET', '/api/v1/system/backup'),
+    backup: (sections?: string[]) =>
+      request<BackupFile>('GET', `/api/v1/system/backup${sections?.length ? `?sections=${sections.map(encodeURIComponent).join(',')}` : ''}`),
+    backupSections: () => request<BackupSectionsList>('GET', '/api/v1/system/backup/sections'),
     restorePlan: (file: BackupFile) => request<{ plan: Plan }>('POST', '/api/v1/system/backup/restore', file),
     // The box self-test (admin only): the last report, a new run, and the
     // run's captured answers as a zip.

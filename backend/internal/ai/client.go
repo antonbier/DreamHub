@@ -68,6 +68,10 @@ type Client interface {
 	// name: MediaHub builds that itself (internal/naming), and rejects
 	// fields that don't pass naming.Fields.Valid.
 	SuggestName(ctx context.Context, apiKey, model string, in NameInput) (naming.Fields, error)
+	// ExplainPackage answers AdminHub's "what does this do?" button
+	// (docs/ADMINHUB_PLAN.md, A2) for one apt package, from its name and
+	// apt's own (often terse) description — nothing else about the box.
+	ExplainPackage(ctx context.Context, apiKey, model, name, description string) (string, error)
 }
 
 // NameInput is what the AI sees of a recording: its real metadata only.

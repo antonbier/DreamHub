@@ -13,7 +13,8 @@ const (
 	MissingAiring     = "series.missingAiring" // SeriesHub's watch
 	ServiceFailed     = "service.failed"       // AdminHub's watch
 	ServiceRecovered  = "service.recovered"    // AdminHub's watch
+	PackageUpgradable = "package.upgradable"   // AdminHub's package watch
 )
 
 // All lists every key above.
-var All = []string{RecordingStarted, RecordingFinished, TimerConflict, DiskAboveLimit, MissingAiring, ServiceFailed, ServiceRecovered}
+var All = []string{RecordingStarted, RecordingFinished, TimerConflict, DiskAboveLimit, MissingAiring, ServiceFailed, ServiceRecovered, PackageUpgradable}

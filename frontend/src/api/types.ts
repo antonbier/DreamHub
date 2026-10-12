@@ -686,6 +686,14 @@ export interface AdminPackage {
   description: string
 }
 
+// apt.Feed — AdminHub's feed list, with a trust signal (A2).
+export interface AdminFeed {
+  name: string
+  url?: string
+  enabled: boolean
+  known: boolean
+}
+
 // GET /api/v1/admin/terminal/status.
 export interface TerminalStatus {
   // false on a system without shellinaboxd configured (not running on the box).

@@ -129,6 +129,9 @@
     "service": {
       "failed": "Service down on the box: {name}",
       "recovered": "Service running again: {name}"
+    },
+    "package": {
+      "upgradable": "{count} package update(s) available"
     }
   },
   "statusStrip": {
@@ -1158,7 +1161,10 @@
       "upgradable": "Update available",
       "upgradableFrom": "{from} → {to}",
       "empty": "No packages found.",
-      "unavailable": "The package list isn't available on this system."
+      "unavailable": "The package list isn't available on this system.",
+      "explain": "What's this?",
+      "feedsTitle": "Feeds",
+      "feedAddedByHand": "Added by hand"
     },
     "scripts": {
       "title": "Scripts",

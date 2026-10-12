@@ -129,6 +129,9 @@
     "service": {
       "failed": "Servizio fermo sul box: {name}",
       "recovered": "Servizio di nuovo in esecuzione: {name}"
+    },
+    "package": {
+      "upgradable": "{count} aggiornamento/i di pacchetto disponibile/i"
     }
   },
   "statusStrip": {
@@ -1158,7 +1161,10 @@
       "upgradable": "Aggiornamento disponibile",
       "upgradableFrom": "{from} → {to}",
       "empty": "Nessun pacchetto trovato.",
-      "unavailable": "L'elenco dei pacchetti non è disponibile su questo sistema."
+      "unavailable": "L'elenco dei pacchetti non è disponibile su questo sistema.",
+      "explain": "Cos'è?",
+      "feedsTitle": "Feed",
+      "feedAddedByHand": "Aggiunto manualmente"
     },
     "scripts": {
       "title": "Script",

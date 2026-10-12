@@ -147,7 +147,7 @@ func TestHubs_DeclareTheirEvents(t *testing.T) {
 	for _, h := range body.Hubs {
 		emits[h.ID] = h.Emits
 	}
-	if strings.Join(emits["device"], ",") != "service.failed,service.recovered" || len(emits["timer"]) != 3 || emits["control"] == nil {
+	if strings.Join(emits["device"], ",") != "service.failed,service.recovered,package.upgradable" || len(emits["timer"]) != 3 || emits["control"] == nil {
 		t.Errorf("emits: %v", emits)
 	}
 }

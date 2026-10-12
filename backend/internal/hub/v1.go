@@ -85,7 +85,7 @@ func V1() []Descriptor {
 		// specific reason still shows in the status banner.
 		{ID: IDDevice, Name: "DeviceHub", Label: "hub.device", Icon: "admin", Path: "/device", Group: GroupBottom, Order: 10,
 			Perm: perm.System, Requires: []Requirement{{Connector: connector.IDWebControl, Optional: true}, {Capability: CapJournald, Optional: true}},
-			Emits: []string{events.ServiceFailed, events.ServiceRecovered}},
+			Emits: []string{events.ServiceFailed, events.ServiceRecovered, events.PackageUpgradable}},
 	}
 }
 

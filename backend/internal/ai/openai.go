@@ -174,6 +174,32 @@ func (c *OpenAIClient) SuggestName(ctx context.Context, apiKey, model string, in
 	return f, nil
 }
 
+const explainPrompt = `You are DreamHub's package explainer, for a Dreambox/Enigma2 set-top box's admin page. You receive one apt package's name and apt's own (often terse) description as JSON. Explain in plain language, for a non-technical box owner, what it does and why it might be on the device — 1-3 short sentences. Respond with ONLY a JSON object of this exact shape: {"explanation":"<your answer>"}. Use the language of the description when it clearly isn't English; otherwise answer in English.`
+
+func (c *OpenAIClient) ExplainPackage(ctx context.Context, apiKey, model, name, description string) (string, error) {
+	if apiKey == "" {
+		return "", ErrNotConfigured
+	}
+	userContent, err := json.Marshal(struct {
+		Name        string `json:"name"`
+		Description string `json:"description"`
+	}{name, truncate(description, 500)})
+	if err != nil {
+		return "", err
+	}
+	content, err := c.chat(ctx, apiKey, model, explainPrompt, string(userContent), 200)
+	if err != nil {
+		return "", err
+	}
+	var out struct {
+		Explanation string `json:"explanation"`
+	}
+	if err := json.Unmarshal([]byte(content), &out); err != nil || out.Explanation == "" {
+		return "", ErrInvalidAnswer
+	}
+	return out.Explanation, nil
+}
+
 // chat runs one JSON-mode chat completion and returns the message content.
 func (c *OpenAIClient) chat(ctx context.Context, apiKey, model, system, user string, maxTokens int) (string, error) {
 	if model == "" {

@@ -129,6 +129,9 @@
     "service": {
       "failed": "Dienst auf der Box ausgefallen: {name}",
       "recovered": "Dienst läuft wieder: {name}"
+    },
+    "package": {
+      "upgradable": "{count} Paket-Update(s) verfügbar"
     }
   },
   "statusStrip": {
@@ -1158,7 +1161,10 @@
       "upgradable": "Update verfügbar",
       "upgradableFrom": "{from} → {to}",
       "empty": "Keine Pakete gefunden.",
-      "unavailable": "Die Paketliste ist auf diesem System nicht verfügbar."
+      "unavailable": "Die Paketliste ist auf diesem System nicht verfügbar.",
+      "explain": "Was ist das?",
+      "feedsTitle": "Feeds",
+      "feedAddedByHand": "Manuell hinzugefügt"
     },
     "scripts": {
       "title": "Scripts",

@@ -290,8 +290,13 @@ func New(ctx context.Context, o Options) (*App, error) {
 	systemHub := &hubs_.System{Store: st, Settings: svc, Dashboard: dash, Plans: plans, Now: now,
 		SelfTest: &hubs_.SelfTest{WC: o.WebControl, SR: o.Series, AT: o.AutoTimer, DMI: o.DMI, Systemd: o.Systemd, FS: o.RecordingsFS,
 			PiconDirs: o.PiconDirs, Dir: filepath.Join(o.DataDir, "selftest"), Writes: !o.ReadOnlyFiles, Now: now}}
+	// Apt's own Lister value usually also implements FeedLister (Exec{},
+	// the mock) — asserted here rather than a separate Options field, since
+	// there's never a reason for one without the other.
+	feeds, _ := o.Apt.(apt.FeedLister)
 	adminHub := &hubs_.Admin{Store: st, Level: level, Logs: o.Logs, FS: o.RecordingsFS,
-		Systemd: o.Systemd, Scripts: o.Scripts, Apt: o.Apt, Auth: svc, TerminalTarget: o.TerminalTarget, Plans: plans, WC: o.WebControl, Now: now, ReadOnly: o.ReadOnlyFiles}
+		Systemd: o.Systemd, Scripts: o.Scripts, Apt: o.Apt, Feeds: feeds, AI: o.AI, Settings: svc,
+		Auth: svc, TerminalTarget: o.TerminalTarget, Plans: plans, WC: o.WebControl, Now: now, ReadOnly: o.ReadOnlyFiles}
 	controlHub := &hubs_.Control{WC: o.WebControl}
 
 	// Search providers (internal/hub/search.go): every hub with content of
@@ -377,6 +382,7 @@ func background(n *push.Notifier, series *hubs_.Series, admin *hubs_.Admin, plex
 	jobs := []func(context.Context){
 		func(ctx context.Context) { series.WatchMissing(ctx, bus, logger) },
 		func(ctx context.Context) { admin.WatchServices(ctx, bus, logger) },
+		func(ctx context.Context) { admin.WatchPackages(ctx, bus, logger) },
 	}
 	if plexHub.Client != nil {
 		jobs = append(jobs, plexHub.Watch)

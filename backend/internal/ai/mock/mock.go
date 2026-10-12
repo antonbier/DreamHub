@@ -49,3 +49,9 @@ func (c *Client) Recommend(ctx context.Context, apiKey, model string, items []ai
 func (*Client) SuggestName(ctx context.Context, apiKey, model string, in ai.NameInput) (naming.Fields, error) {
 	return naming.FromMetadata(in.Title, in.Description, nil), nil
 }
+
+// ExplainPackage returns a canned, clearly-mock explanation — deterministic,
+// free, no network.
+func (*Client) ExplainPackage(ctx context.Context, apiKey, model, name, description string) (string, error) {
+	return "Mock explanation for local development (internal/ai/mock) — not a real AI answer: " + name + ".", nil
+}

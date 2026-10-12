@@ -9,6 +9,7 @@ import (
 	"strconv"
 	"time"
 
+	"github.com/antonbier/DreamHub/backend/internal/ai"
 	"github.com/antonbier/DreamHub/backend/internal/apt"
 	"github.com/antonbier/DreamHub/backend/internal/auth"
 	"github.com/antonbier/DreamHub/backend/internal/httpx"
@@ -18,6 +19,7 @@ import (
 	"github.com/antonbier/DreamHub/backend/internal/plan"
 	"github.com/antonbier/DreamHub/backend/internal/recfs"
 	"github.com/antonbier/DreamHub/backend/internal/scripts"
+	"github.com/antonbier/DreamHub/backend/internal/settings"
 	"github.com/antonbier/DreamHub/backend/internal/store"
 	"github.com/antonbier/DreamHub/backend/internal/systemd"
 	"github.com/antonbier/DreamHub/backend/internal/webcontrol"
@@ -49,11 +51,23 @@ type Admin struct {
 	// Auth gives the terminal's enable step something to re-check the
 	// password against (admin_terminal.go); nil hides the terminal.
 	Auth auth.ConfigSource
-	// Apt lists installed and upgradable packages (admin_packages.go); nil
-	// hides the package browser. Install/remove as a plan is a later slice
-	// (docs/ADMINHUB_PLAN.md, A2) — needs the box to confirm `apt-get -s`
-	// simulate output and service-restart behavior first.
+	// Apt lists installed and upgradable packages, and configured feeds
+	// (admin_packages.go); nil hides the package browser. Install/remove as
+	// a plan is a later slice (docs/ADMINHUB_PLAN.md, A2) — needs the box
+	// to confirm `apt-get -s` simulate output and service-restart behavior
+	// first.
 	Apt apt.Lister
+	// Feeds lists configured apt feeds (admin_packages.go); nil hides the
+	// feed list. Usually the same Exec{}/mock value as Apt, kept separate
+	// because a package-only mock in tests doesn't need to implement it.
+	Feeds apt.FeedLister
+	// AI explains a package on request (admin_packages.go); nil hides the
+	// "what does this do?" button (PRINCIPLES.md: unavailable, not
+	// broken — same opt-in pattern as DiscoveryHub's own AI use).
+	AI ai.Client
+	// Settings gives the package explainer the OpenAI key/model and the
+	// shared daily AI budget DiscoveryHub's own AI use already spends from.
+	Settings *settings.Service
 	// TerminalTarget is shellinaboxd's address — "http://127.0.0.1:4200"
 	// on the box (ARCHITECTURE.md), a test server's URL in tests.
 	TerminalTarget string
@@ -93,6 +107,8 @@ func (h *Admin) Mount(mux httpx.Mux) {
 	mux.HandleFunc("POST /api/v1/admin/scripts/{id}/run/plan", adminOnly(h.planRunScript))
 	mux.HandleFunc("GET /api/v1/admin/scripts/{id}/runs", adminOnly(h.scriptRuns))
 	mux.HandleFunc("GET /api/v1/admin/packages", adminOnly(h.listPackages))
+	mux.HandleFunc("POST /api/v1/admin/packages/explain", adminOnly(h.explainPackage))
+	mux.HandleFunc("GET /api/v1/admin/feeds", adminOnly(h.listFeeds))
 	mux.HandleFunc("GET /api/v1/admin/terminal/status", adminOnly(h.terminalStatus))
 	mux.HandleFunc("POST /api/v1/admin/terminal/enable", adminOnly(h.enableTerminal))
 	mux.HandleFunc("POST /api/v1/admin/terminal/disable", adminOnly(h.disableTerminal))

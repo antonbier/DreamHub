@@ -14,6 +14,7 @@
 import { shallowRef } from 'vue'
 import { authHeaders, handleUnauthorized } from './authState'
 import type {
+  AdminFeed,
   AdminPackage,
   AdminScript,
   AdScanResult,
@@ -468,6 +469,10 @@ export const api = {
       if (filter.status) params.set('status', filter.status)
       return request<{ packages: AdminPackage[]; categories: string[] }>('GET', `/api/v1/admin/packages?${params}`)
     },
+    // On-demand only — nothing sent unless this is actually called.
+    explainPackage: (name: string, description: string) =>
+      request<{ explanation: string }>('POST', '/api/v1/admin/packages/explain', { name, description }),
+    feeds: () => request<{ feeds: AdminFeed[] }>('GET', '/api/v1/admin/feeds'),
   },
   notifications: {
     list: (limit = 20) => request<{ notifications: Notification[]; unread: number }>('GET', `/api/v1/notifications?limit=${limit}`),

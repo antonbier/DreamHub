@@ -85,6 +85,16 @@ var catalog = map[string]map[string]texts{
 		"pl": {"Usługa przywrócona", "{name} na odbiorniku znowu działa."},
 		"tr": {"Servis yeniden çalışıyor", "Kutudaki {name} yeniden çalışıyor."},
 	},
+	"package.upgradable": {
+		"de": {"Updates verfügbar", "{count} Paket(e) auf der Box können aktualisiert werden."},
+		"en": {"Updates available", "{count} package(s) on the box can be updated."},
+		"it": {"Aggiornamenti disponibili", "{count} pacchetto/i sul box possono essere aggiornati."},
+		"fr": {"Mises à jour disponibles", "{count} paquet(s) sur le récepteur peuvent être mis à jour."},
+		"es": {"Actualizaciones disponibles", "{count} paquete(s) en el receptor se pueden actualizar."},
+		"nl": {"Updates beschikbaar", "{count} pakket(ten) op de box kunnen worden bijgewerkt."},
+		"pl": {"Dostępne aktualizacje", "{count} pakiet(y) na odbiorniku można zaktualizować."},
+		"tr": {"Güncellemeler mevcut", "Kutudaki {count} paket güncellenebilir."},
+	},
 	"push.test": {
 		"de": {"DreamHub", "Benachrichtigungen kommen an."},
 		"en": {"DreamHub", "Notifications are arriving."},
@@ -105,6 +115,7 @@ var tags = map[string][]string{
 	"series.missingAiring": {"tv"},
 	"service.failed":       {"rotating_light"},
 	"service.recovered":    {"white_check_mark"},
+	"package.upgradable":   {"arrows_counterclockwise"},
 	"push.test":            {"tada"},
 }
 

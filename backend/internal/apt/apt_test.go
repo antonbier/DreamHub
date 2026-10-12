@@ -3,18 +3,27 @@ package apt
 import "testing"
 
 func TestParseDpkgQuery(t *testing.T) {
-	out := "dreamhub\t0.3.0\tweb\tDreamHub web interface\n" +
-		"dropbear\t2022.83\tconsole/network\tLightweight SSH server\n" +
-		"no-description\t1.0\tbase\t\n"
+	out := "dreamhub\t0.3.0\tweb\tself\tDreamHub web interface\n" +
+		"dropbear\t2022.83\tconsole/network\t\tLightweight SSH server\n" +
+		"no-description\t1.0\tbase\t\t\n" +
+		"ewelink-ext\t1.0\tweb\textension\teWeLink bridge\n"
 	pkgs := ParseDpkgQuery([]byte(out))
-	if len(pkgs) != 3 {
-		t.Fatalf("len = %d, want 3: %+v", len(pkgs), pkgs)
+	if len(pkgs) != 4 {
+		t.Fatalf("len = %d, want 4: %+v", len(pkgs), pkgs)
 	}
-	if pkgs[0] != (Package{Name: "dreamhub", Version: "0.3.0", Category: "web", Description: "DreamHub web interface"}) {
+	// X-DreamHub-Category overrides the plain apt Section when set.
+	if pkgs[0] != (Package{Name: "dreamhub", Version: "0.3.0", Category: "self", Description: "DreamHub web interface"}) {
 		t.Errorf("pkgs[0] = %+v", pkgs[0])
+	}
+	// Unset: falls back to Section, same as before X-DreamHub-Category existed.
+	if pkgs[1].Category != "console/network" {
+		t.Errorf("pkgs[1] = %+v, want Category console/network", pkgs[1])
 	}
 	if pkgs[2].Name != "no-description" || pkgs[2].Description != "" {
 		t.Errorf("pkgs[2] = %+v", pkgs[2])
+	}
+	if pkgs[3].Category != "extension" {
+		t.Errorf("pkgs[3] = %+v, want Category extension", pkgs[3])
 	}
 }
 

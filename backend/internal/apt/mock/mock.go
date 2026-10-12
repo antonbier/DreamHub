@@ -27,7 +27,13 @@ var (
 func New() *Lister {
 	return &Lister{
 		Packages: []apt.Package{
-			{Name: "dreamhub", Version: "0.3.0", Category: "web", Description: "DreamHub web interface"},
+			// DreamHub's own package sets X-DreamHub-Category (control.in)
+			// so AdminHub never needs a bundled category lookup for it;
+			// an extension's .deb sets "extension" the same way
+			// (docs/EXTENSIONHUB_PLAN.md, E2) — demoed here since there's
+			// no real extension package to read it from yet.
+			{Name: "dreamhub", Version: "0.3.0", Category: "self", Description: "DreamHub web interface"},
+			{Name: "dreamhub-ext-ewelink", Version: "1.0", Category: "extension", Description: "DreamHub extension: eWeLink/Sonoff bridge (demo)"},
 			{Name: "enigma2", Version: "4.6-r1", Category: "base", Description: "Enigma2 set-top box middleware"},
 			{Name: "enigma2-plugin-skincomponents-dreamhubbutton", Version: "1.0", Category: "plugin-skincomponents", Description: "Skin button for DreamHub"},
 			{Name: "gp4-picon-hotbird13e", Version: "20260901", Category: "base", Description: "Picons for Hotbird 13E"},

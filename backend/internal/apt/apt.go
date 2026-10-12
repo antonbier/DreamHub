@@ -46,7 +46,11 @@ var _ Lister = Exec{}
 
 // dpkgFields is dpkg-query's own format mini-language, one package per
 // line, fields separated by a tab that can't appear inside any of them.
-const dpkgFields = `${Package}\t${Version}\t${Section}\t${Description}\n`
+// X-DreamHub-Category is the custom control-file field DreamHub's own
+// package and an extension's declare (docs/ADMINHUB_PLAN.md, "Categories
+// come from apt's own metadata"; docs/EXTENSIONHUB_PLAN.md, E2) — most
+// packages don't set it, and dpkg-query simply prints an empty field then.
+const dpkgFields = `${Package}\t${Version}\t${Section}\t${X-DreamHub-Category}\t${Description}\n`
 
 func (Exec) List(ctx context.Context) ([]Package, error) {
 	out, err := exec.CommandContext(ctx, "dpkg-query", "-W", "-f", dpkgFields).Output()
@@ -72,20 +76,27 @@ func (Exec) List(ctx context.Context) ([]Package, error) {
 	return pkgs, nil
 }
 
-// ParseDpkgQuery parses dpkgFields-formatted output into packages, keyed by
-// name for applyUpgradable to look up.
+// ParseDpkgQuery parses dpkgFields-formatted output into packages.
+// Category prefers the custom X-DreamHub-Category field over apt's own
+// Section when a package sets it — never the other way around, so a
+// package DreamHub doesn't own (and so never set the field on) keeps
+// being grouped by its plain apt Section as before.
 func ParseDpkgQuery(out []byte) []Package {
 	var pkgs []Package
 	sc := bufio.NewScanner(bytes.NewReader(out))
 	sc.Buffer(nil, 1<<20)
 	for sc.Scan() {
-		f := strings.SplitN(sc.Text(), "\t", 4)
-		if len(f) < 3 || f[0] == "" {
+		f := strings.SplitN(sc.Text(), "\t", 5)
+		if len(f) < 4 || f[0] == "" {
 			continue
 		}
-		p := Package{Name: f[0], Version: f[1], Category: f[2]}
-		if len(f) == 4 {
-			p.Description = f[3]
+		category := f[2]
+		if f[3] != "" {
+			category = f[3]
+		}
+		p := Package{Name: f[0], Version: f[1], Category: category}
+		if len(f) == 5 {
+			p.Description = f[4]
 		}
 		pkgs = append(pkgs, p)
 	}

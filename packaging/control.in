@@ -4,6 +4,7 @@ Section: web
 Priority: optional
 Architecture: @ARCH@
 Depends: ffmpeg
+X-DreamHub-Category: self
 Maintainer: Armin Mair <arminmair@hotmail.com>
 Homepage: https://github.com/antonbier/DreamHub
 Description: Modern web control for Dreambox receivers running DreamOS

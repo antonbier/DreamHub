@@ -83,6 +83,8 @@ const ICONS: Record<string, string> = {
   menu: '<path d="M4 6h16M4 12h16M4 18h16"/>',
   control:
     '<rect x="7" y="2.5" width="10" height="19" rx="3"/><circle cx="12" cy="7.2" r="1.4"/><path d="M9.3 11.5h5.4M9.3 14.5h5.4M9.3 17.5h5.4"/>',
+  extension:
+    '<path d="M9 4.5h3.2a1.6 1.6 0 0 1 0 3.2H12a1.8 1.8 0 1 0 0 3.6h.2a1.6 1.6 0 0 1 0 3.2H9v3.2a1.8 1.8 0 1 1-3.6 0V17.5H2.2a1.6 1.6 0 0 1 0-3.2h.2a1.8 1.8 0 1 0 0-3.6H2.2a1.6 1.6 0 0 1 0-3.2H5.4V4.3a1.8 1.8 0 1 1 3.6 0z"/>',
 }
 
 const markup = computed(() => ICONS[props.name] ?? ICONS.dashboard)

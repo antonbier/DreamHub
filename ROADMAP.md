@@ -64,7 +64,8 @@ Done: `.deb` for arm64 (box) and armhf (built, not tried on a DM900/DM920) with 
 - [ ] Jellyfin / Emby connectors (#37)
 - [ ] More AI providers (#38)
 - [ ] Profiles: a kids role with allowed bouquets (prepared: `users.bouquets`) and a Plex age limit (#45)
-- [ ] **Extension Hub** ([`docs/EXTENSIONHUB_PLAN.md`](docs/EXTENSIONHUB_PLAN.md)) — optional, separately-installed packages (own process, own `.deb`, a second feed) for features that don't belong in the core (homelab bridges, smart-home switches, …); never their own frontend code, only a versioned, additive data contract DreamHub renders with its own components, degrading like any other hub when the version doesn't match (#46)
+- [x] **Extension Hub: the contract** ([`docs/EXTENSIONHUB_PLAN.md`](docs/EXTENSIONHUB_PLAN.md)) — one nav entry for every registered extension's own card (status/meter/list/action widgets, never an extension's own frontend code), the loopback-only registration handshake, action widgets through the normal plan → apply flow, version/degrade handling (E1, built 2026-10-12). Demo-only so far (`internal/extension/mock`, a fake smart socket) — nothing to register against it yet (#46)
+- [ ] **Extension Hub: distribution, isolation, a reference extension** — the `X-DreamHub-Category: extension` package marker and second feed (E2, needs AdminHub's A2 package view), the systemd unit template/hardening for an extension's own process (E3), and eWeLink/Sonoff as the first real extension proving the contract end to end (E4) (#46)
 
 ## Decided against or parked
 

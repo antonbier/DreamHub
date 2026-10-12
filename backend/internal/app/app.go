@@ -12,6 +12,8 @@ import (
 	"time"
 
 	"github.com/antonbier/DreamHub/backend/internal/apt"
+	"github.com/antonbier/DreamHub/backend/internal/extension"
+	extmock "github.com/antonbier/DreamHub/backend/internal/extension/mock"
 	"github.com/antonbier/DreamHub/backend/internal/omdb"
 	"github.com/antonbier/DreamHub/backend/internal/plex"
 	"github.com/antonbier/DreamHub/backend/internal/profile"
@@ -299,6 +301,20 @@ func New(ctx context.Context, o Options) (*App, error) {
 		Auth: svc, TerminalTarget: o.TerminalTarget, Plans: plans, WC: o.WebControl, Now: now, ReadOnly: o.ReadOnlyFiles}
 	controlHub := &hubs_.Control{WC: o.WebControl}
 
+	// Extension Hub (docs/EXTENSIONHUB_PLAN.md, E1): the registry is
+	// always created (an extension can register at any time, over the
+	// loopback handshake); in mock mode it's pre-seeded with a demo
+	// "smart socket" so the nav entry has something to show without a
+	// real extension process (PRINCIPLES.md, "Mock-first development").
+	extRegistry := extension.NewRegistry()
+	if o.Mock {
+		extRegistry.Register(extension.Entry{
+			Registration: extension.Registration{ID: "demo.socket", Name: "Steckdose (Demo)", Icon: "control", SchemaVersion: extension.SchemaVersion},
+			Client:       extmock.New(),
+		})
+	}
+	extensionsHub := &hubs_.Extensions{Registry: extRegistry, Plans: plans, ReadOnly: o.ReadOnlyFiles}
+
 	// Search providers (internal/hub/search.go): every hub with content of
 	// its own; ControlHub has none (its results would be actions).
 	hubs.AddSearchProvider(hub.IDTimer, timerHub)
@@ -353,11 +369,16 @@ func New(ctx context.Context, o Options) (*App, error) {
 			{HubID: hub.IDControl, Prefixes: []string{"/api/v1/control"}, Register: controlHub.Mount, Perms: controlHub.Perms()},
 			{HubID: hub.IDChannels, Prefixes: []string{"/api/v1/channels"}, Register: channelsHub.Mount, Perms: channelsHub.Perms()},
 			{HubID: hub.IDPlex, Prefixes: []string{"/api/v1/plex"}, Register: plexHub.Mount, Perms: plexHub.Perms()},
+			{HubID: hub.IDExtensions, Prefixes: []string{"/api/v1/extensions"}, Register: extensionsHub.Mount, Perms: extensionsHub.Perms()},
 		},
 		// The box's media player fetches a Plex film without a DreamHub
 		// login; the handler itself admits only the box (loopback) with a
-		// ticket.
-		Public: []api.PublicRoute{{HubID: hub.IDPlex, Pattern: "GET /api/v1/plex/stream/{ticket}/{name}", Handler: http.HandlerFunc(plexHub.Stream)}},
+		// ticket. An extension's own process registers itself the same
+		// way — loopback only, no DreamHub login of its own.
+		Public: []api.PublicRoute{
+			{HubID: hub.IDPlex, Pattern: "GET /api/v1/plex/stream/{ticket}/{name}", Handler: http.HandlerFunc(plexHub.Stream)},
+			{HubID: hub.IDExtensions, Pattern: "POST /api/v1/extensions/register", Handler: http.HandlerFunc(extensionsHub.Register)},
+		},
 		User:   user,
 		Logger: o.Logger,
 		Now:    now,

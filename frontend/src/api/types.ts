@@ -527,6 +527,11 @@ export interface Plan {
   expiresAt: string
   changes: PlanChange[]
   warnings: Problem[]
+  // Set only by a caller with no i18n key of its own to render instead —
+  // today just Extension Hub's own actions (internal/extension). Every
+  // built-in hub's PlanPreview slot uses its own local i18n text and
+  // ignores this.
+  summary?: string
 }
 
 // backend/internal/dashboard.Tile / .Layout.
@@ -687,6 +692,39 @@ export interface AdminPackage {
 }
 
 // apt.Feed — AdminHub's feed list, with a trust signal (A2).
+// extension.Widget — Extension Hub's own fixed widget vocabulary
+// (docs/EXTENSIONHUB_PLAN.md, E1): never frontend code of its own, just
+// these shapes, rendered with DreamHub's own components. Fields not used
+// by `type` are simply absent.
+export interface ExtensionListRow {
+  label: string
+  value: string
+  icon?: string
+}
+export interface ExtensionWidget {
+  type: 'status' | 'meter' | 'list' | 'action'
+  label: string
+  value?: string
+  tone?: 'good' | 'warn' | 'bad'
+  current?: number
+  max?: number
+  unit?: string
+  rows?: ExtensionListRow[]
+  actionId?: string
+  buttonLabel?: string
+}
+
+// hubs.cardView — one registered extension's card.
+export interface ExtensionCard {
+  id: string
+  name: string
+  icon: string
+  admin: boolean
+  status: 'available' | 'degraded' | 'unavailable'
+  problems: Problem[]
+  widgets: ExtensionWidget[]
+}
+
 export interface AdminFeed {
   name: string
   url?: string

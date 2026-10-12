@@ -114,6 +114,11 @@ const router = createRouter({
       component: () => import('@/views/ControlHubView.vue'),
     },
     {
+      path: '/extensions',
+      name: 'extensions',
+      component: () => import('@/views/ExtensionsHubView.vue'),
+    },
+    {
       path: '/:pathMatch(.*)*',
       name: 'not-found',
       component: () => import('@/views/NotFoundView.vue'),

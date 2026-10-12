@@ -24,7 +24,8 @@
     "radio": "Radio",
     "stream": "Live TV",
     "plex": "Plex library",
-    "channels": "Channel list"
+    "channels": "Channel list",
+    "extensions": "Extensions"
   },
   "status": {
     "available": "Available",
@@ -55,6 +56,10 @@
       "restartEnigma2": "The TV picture, the box's own web interface and the remote are gone for about half a minute.",
       "recordingsInterrupted": "Recording right now, and would be cut: {names}.",
       "restartSelf": "This page loses the connection for a few seconds and reconnects by itself."
+    },
+    "extension": {
+      "unreachable": "{name} isn't responding.",
+      "unsupportedVersion": "{name} needs a newer version of DreamHub."
     }
   },
   "fix": {
@@ -1038,6 +1043,11 @@
     "cancel": "Cancel",
     "applying": "Applying…",
     "close": "Close"
+  },
+  "extensions": {
+    "empty": "No extensions installed yet.",
+    "confirm": "Apply",
+    "done": "Done."
   },
   "timers": {
     "tuners": "{count} tuner | {count} tuners",

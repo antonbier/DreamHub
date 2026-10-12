@@ -27,6 +27,11 @@ const (
 	IDRadio    = "radio"
 	IDPlex     = "plex"
 	IDStream   = "stream"
+	// IDExtensions: Extension Hub (docs/EXTENSIONHUB_PLAN.md, E1, #46) —
+	// one nav entry for every registered extension's own card, so
+	// installing five extensions grows the navigation by zero entries,
+	// not five.
+	IDExtensions = "extensions"
 )
 
 // CapJournald is the capability to read logs via journalctl (AdminHub).
@@ -86,6 +91,14 @@ func V1() []Descriptor {
 		{ID: IDDevice, Name: "DeviceHub", Label: "hub.device", Icon: "admin", Path: "/device", Group: GroupBottom, Order: 10,
 			Perm: perm.System, Requires: []Requirement{{Connector: connector.IDWebControl, Optional: true}, {Capability: CapJournald, Optional: true}},
 			Emits: []string{events.ServiceFailed, events.ServiceRecovered, events.PackageUpgradable}},
+		// Extension Hub: no requirements of its own — an individual
+		// extension's reachability is its own card's status, not this
+		// hub's (extensions.go's list handler), so installing zero
+		// extensions is "available", just empty, never "unavailable".
+		// perm.Watch (the default): the nav entry itself is for everyone;
+		// an admin-only extension's own card is filtered out for a
+		// non-admin inside the handler instead.
+		{ID: IDExtensions, Name: "Extension Hub", Label: "hub.extensions", Icon: "extension", Path: "/extensions", Group: GroupBottom, Order: 20},
 	}
 }
 

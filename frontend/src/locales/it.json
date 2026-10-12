@@ -24,7 +24,8 @@
     "radio": "Radio",
     "stream": "TV in diretta",
     "plex": "Mediateca Plex",
-    "channels": "Lista canali"
+    "channels": "Lista canali",
+    "extensions": "Estensioni"
   },
   "status": {
     "available": "Disponibile",
@@ -55,6 +56,10 @@
       "restartEnigma2": "L'immagine TV, l'interfaccia web del box e il telecomando non funzionano per circa mezzo minuto.",
       "recordingsInterrupted": "In registrazione ora, verrebbe interrotto: {names}.",
       "restartSelf": "Questa pagina perde la connessione per qualche secondo e si ricollega da sola."
+    },
+    "extension": {
+      "unreachable": "{name} non risponde.",
+      "unsupportedVersion": "{name} richiede una versione più recente di DreamHub."
     }
   },
   "fix": {
@@ -1038,6 +1043,11 @@
     "cancel": "Annulla",
     "applying": "In corso…",
     "close": "Chiudi"
+  },
+  "extensions": {
+    "empty": "Ancora nessuna estensione installata.",
+    "confirm": "Applica",
+    "done": "Fatto."
   },
   "timers": {
     "tuners": "{count} tuner | {count} tuner",

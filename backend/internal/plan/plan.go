@@ -89,6 +89,14 @@ type Plan struct {
 	ExpiresAt time.Time        `json:"expiresAt"`
 	Changes   []Change         `json:"changes"`
 	Warnings  []status.Problem `json:"warnings"`
+	// Summary is Draft.Summary, carried through to the client. Every
+	// built-in hub already builds its own preview text locally (an i18n
+	// key it owns, with Changes/Warnings as the structured data) and
+	// ignores this field — it exists for a caller with no i18n key of its
+	// own to render instead, namely an extension (internal/extension):
+	// literal text the extension's own process provides, since it can't
+	// own a key in DreamHub's frontend locale files.
+	Summary string `json:"summary,omitempty"`
 }
 
 type entry struct {
@@ -125,7 +133,7 @@ func newID() string {
 // Create stores a draft as a pending plan for u and returns its preview.
 func (s *Service) Create(u store.User, d Draft) Plan {
 	now := s.now().UTC()
-	p := Plan{ID: newID(), Action: d.Action, CreatedAt: now, ExpiresAt: now.Add(TTL), Changes: d.Changes, Warnings: d.Warnings}
+	p := Plan{ID: newID(), Action: d.Action, CreatedAt: now, ExpiresAt: now.Add(TTL), Changes: d.Changes, Warnings: d.Warnings, Summary: d.Summary}
 	if p.Changes == nil {
 		p.Changes = []Change{}
 	}

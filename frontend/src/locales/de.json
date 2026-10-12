@@ -24,7 +24,8 @@
     "radio": "Radio",
     "stream": "Live-TV",
     "plex": "Plex Mediathek",
-    "channels": "Senderliste"
+    "channels": "Senderliste",
+    "extensions": "Erweiterungen"
   },
   "status": {
     "available": "Verfügbar",
@@ -55,6 +56,10 @@
       "restartEnigma2": "Fernsehbild, die Weboberfläche der Box und die Fernbedienung sind etwa eine halbe Minute weg.",
       "recordingsInterrupted": "Läuft gerade und würde abgebrochen: {names}.",
       "restartSelf": "Diese Seite verliert für ein paar Sekunden die Verbindung und verbindet sich von selbst wieder."
+    },
+    "extension": {
+      "unreachable": "{name} antwortet nicht.",
+      "unsupportedVersion": "{name} braucht eine neuere Version von DreamHub."
     }
   },
   "fix": {
@@ -1038,6 +1043,11 @@
     "cancel": "Abbrechen",
     "applying": "Wird ausgeführt…",
     "close": "Schließen"
+  },
+  "extensions": {
+    "empty": "Noch keine Erweiterungen installiert.",
+    "confirm": "Übernehmen",
+    "done": "Erledigt."
   },
   "timers": {
     "tuners": "{count} Tuner | {count} Tuner",

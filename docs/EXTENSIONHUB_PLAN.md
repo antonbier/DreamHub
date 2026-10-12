@@ -1,6 +1,6 @@
 # Extension Hub — plan
 
-Status: **decided 2026-10-11, not yet built.** Tracks issue #46. Once a package lands, its status moves to `ROADMAP.md`.
+Status: **decided 2026-10-11; E1 (the contract) built 2026-10-12.** Tracks issue #46. Once a package lands, its status moves to `ROADMAP.md`.
 
 ## Why
 
@@ -61,18 +61,28 @@ Each extension runs as its own systemd service, under its own non-root user, wit
 
 Installing, updating or removing an extension needs an admin (AdminHub's package management, `admin` role). Whether an *installed* extension's own hub is visible to non-admins depends on the role it declares for itself — e.g. an Unraid-bridge tile might be admin-only, while a "wake the server" button could be fine for anyone, same as any other hub's role field.
 
-## Open questions (resolve before building)
+## Open questions — resolved while building E1 (2026-10-12)
 
-- Exact transport for the registration handshake and for serving live data (plain polling vs. SSE for anything that updates, e.g. a job progress bar) — likely SSE, reusing the event mechanism hubs already have (`internal/events`).
-- Where the reverse-proxy boundary sits: does the core proxy an extension's data calls itself (`/api/v1/ext/<name>/...`), or does each extension's process bind only to localhost and the core's own backend is the only thing that ever talks to it? The latter is safer (nothing extension-related is reachable except through DreamHub's own auth) and more consistent with how PlexHub already proxies Plex itself (`plex_play.go`).
+- **Reverse-proxy boundary: resolved as the localhost-only option.** An extension's process binds only to its own localhost address; DreamHub's backend is the only thing that ever calls it (`internal/extension.HTTPClient`). There's no `/api/v1/ext/<name>/...` passthrough — the core calls `GET {baseUrl}/widgets`, `POST {baseUrl}/actions/{id}/plan` and `POST {baseUrl}/actions/{id}/apply` itself and reshapes the answer into its own `GET /api/v1/extensions` response. Nothing extension-related is reachable except through DreamHub's own auth.
+- **Registration transport: a plain HTTP handshake, loopback-checked the same way `Plex.Stream` already is** (`hubs/plex_play.go`) — `POST /api/v1/extensions/register`, mounted as a public route (no DreamHub login; an extension's process has none) but rejecting anything whose `RemoteAddr` isn't loopback, and whose declared `baseUrl` isn't a loopback address either.
+- **Live data: plain polling for v1, not SSE.** `GET /api/v1/extensions` calls every registered extension's `/widgets` fresh, no caching — simple, and enough for the kind of state these widgets show (a socket on/off, a disk filling up). SSE-backed live values stay in the "later" tier below; nothing here closes the door on it, since a future `WidgetType` is additive.
+- **New, not anticipated when this doc was written: `plan.Plan` needed a `summary` field.** Every built-in hub's own `PlanPreview` slot is text the frontend itself builds from a local i18n key, with the plan's `changes`/`warnings` as the only structured data from the server — but an extension owns no key in DreamHub's own locale files, so it has nothing to render instead. `plan.Draft.Summary` (already used for the change-log entry) is now also carried through to the client (`plan.Plan.Summary`, omitted by every other hub's response) and shown verbatim by `ExtensionsHubView.vue`.
+
 ## Packages
 
 | # | Package | Contents |
 |---|---|---|
-| E1 | Contract | registration handshake, widget schema v1 (status, meter, list, action→plan), the generic renderer in the frontend (the single "Extensions" nav entry plus dashboard-tile contribution), version/degrade handling |
+| E1 | Contract | **built 2026-10-12.** See "Built" below. |
 | E2 | Distribution | `X-DreamHub-Category: extension` marker in a `.deb`, AdminHub's package view filtering to it, the second feed |
-| E3 | Isolation | systemd unit template/hardening for an extension process, the reverse-proxy or localhost-only decision from "Open questions" |
+| E3 | Isolation | systemd unit template/hardening for an extension process (the localhost-only decision above is already settled) |
 | E4 | Reference extension | eWeLink/Sonoff, built against E1–E3, to prove the contract end to end and document it as the template for others |
 | later | Deeper widgets | SSE-backed live values, named per-hub extension points (SAP UI5-style), more widget types as real extensions need them — each additive per the versioning rule above |
 
-Nothing here is built against the mock yet; E1 is the right starting point once prioritized, since nothing else can be tested without it.
+### E1, built 2026-10-12
+
+- **`internal/extension`**: `Widget` (status/meter/list/action, `SchemaVersion = 1`), `Registration`, the `Client` interface (`Widgets`/`PlanAction`/`Apply`), `HTTPClient` (the real implementation, localhost-only), `Registry` (in-memory, like `plan.Service` — an extension re-registers after a restart rather than this surviving one). `./mock`: a demo "smart socket" (one status, one toggle action) — deliberately the same smallest shape planned for the real eWeLink/Sonoff reference extension (E4), registered directly into the registry in mock mode (`app.go`) since there's no separate process to run one from yet.
+- **`internal/hubs.Extensions`**: `GET /api/v1/extensions` (every registered extension's card: widgets fetched fresh, status available/degraded/unavailable with a reason, same vocabulary every hub already uses — unreachable or an unsupported schema version degrades that one card, never the whole hub), `POST /api/v1/extensions/{id}/actions/{action}/plan` (forwards to the extension, wraps the answer in a real `plan.Service` plan — stale-refused exactly like every other hub's actions), `Register` (the public, loopback-only handshake).
+- **Hub registration**: `IDExtensions` in `hub/v1.go`, no `Requires` of its own (zero extensions installed is "available", just empty — never "unavailable"), `perm.Watch` (the nav entry is for everyone; an individual admin-only extension's card is filtered out for a non-admin inside the handler instead, via `Registration.Admin`).
+- **Frontend**: `ExtensionsHubView.vue`, the one generic renderer for all four widget types, a new "extension" icon (`Icon.vue`), `/extensions` route, `hub.extensions`/`extensions.*`/`problem.extension.*` in all three locales.
+- Dashboard-tile contribution (mentioned in E1's original scope) **not built this round** — no real extension exists yet to prove it against; revisit with E4.
+- All backend tests green (`internal/extension`, new `internal/api/extensions_test.go` covering the demo extension, the full preview→apply→stale cycle, the loopback checks and the unsupported-schema-version degrade), `go vet` clean, `npm run build` green.

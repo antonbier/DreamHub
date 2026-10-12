@@ -17,6 +17,7 @@ import type {
   AdminFeed,
   AdminPackage,
   AdminScript,
+  ExtensionCard,
   AdScanResult,
   BouquetEntry,
   ChannelBackup,
@@ -477,6 +478,11 @@ export const api = {
   notifications: {
     list: (limit = 20) => request<{ notifications: Notification[]; unread: number }>('GET', `/api/v1/notifications?limit=${limit}`),
     markRead: () => request<{ unread: number }>('POST', '/api/v1/notifications/read'),
+  },
+  extensions: {
+    list: () => request<{ extensions: ExtensionCard[] }>('GET', '/api/v1/extensions'),
+    planAction: (id: string, actionId: string) =>
+      request<{ plan: Plan }>('POST', `/api/v1/extensions/${encodeURIComponent(id)}/actions/${encodeURIComponent(actionId)}/plan`),
   },
   plex: {
     status: () => request<PlexStatus>('GET', '/api/v1/plex/status'),

@@ -101,7 +101,7 @@ Like Extension Hub itself, AppsHub stays a power-user feature you find by naviga
 | # | Package | Contents |
 |---|---|---|
 | App1 | Rename + shell | **built 2026-10-12.** Extension Hub → AppsHub (nav label, route, hub ID), existing Extensions content becomes one tab, an "Apps" tab placeholder — see below |
-| App2 | Docker isolation | the loopback-only helper process, the whitelisted Docker API subset, hardening (same template shape as `packaging/extension-template/`) |
+| App2 | Docker isolation | **built 2026-10-12** (the helper binary, the loopback protocol, the whitelisted Docker API subset; systemd hardening/packaging still open — see below) |
 | App3 | Curated list + search | the lean, AI-free app catalog (linuxserver.io first), free search with on-click multi-arch manifest checks |
 | App4 | Install/run as a plan | pull + run through preview/confirm, the live resource-budget and flash-safety checks, port suggestion + bind check + "open app" link, `TZ` passthrough |
 | App5 | Updates, logs, console | the notification-inbox update flow, the two-tier log viewer, the Terminal-equivalent per-container console |
@@ -112,4 +112,22 @@ Like Extension Hub itself, AppsHub stays a power-user feature you find by naviga
 
 `hub.IDExtensions` → `hub.IDApps` (`"apps"`), `Name: "AppsHub"`, `Label: "hub.apps"`, `Path: "/apps"` — the API routes stay under `/api/v1/extensions` unchanged (E1's contract itself isn't touched, only the hub's nav identity). `AppsHubView.vue` replaces `ExtensionsHubView.vue`, same one-entry-many-tabs pattern `DeviceHubView.vue` already uses: an "Extensions" tab (E1's cards, moved into `components/apps/ExtensionsTab.vue` verbatim) and an "Apps" tab (`components/apps/AppsTab.vue`) that's honestly just a placeholder — no fake connector-style state machine for a Docker backend that doesn't exist yet (that's App2+). Old `/extensions` links redirect to `/apps`. `go build`/`go vet`/`go test ./...`/`npm run build` all green.
 
-Everything else (App2 onward) hangs off this shell now existing.
+### App2, built 2026-10-12
+
+`internal/dockerd`: `Client` (`List`/`Start`/`Stop`/`Logs`/`Exec`, scoped to containers carrying the `dreamhub.app` label — `AppLabel`), two implementations of it:
+
+- `Exec` — hand-rolled HTTP against Docker's own Engine API over its unix socket (no SDK dependency, the same choice this repo already made for WebControl/apt), used only inside the new `cmd/dreamhub-dockerd-helper` binary. Every call (`Start`/`Stop`/`Logs`/`Exec`) checks the target container actually carries `AppLabel` before doing anything (`requireOwned`) — a container outside DreamHub's own apps is invisible, not just filtered from a listing. `List` filters server-side via Docker's own `filters` query param, and again client-side as a belt-and-suspenders check. Docker's multiplexed stdout/stderr log framing is demultiplexed (`demux`) rather than passed through raw.
+- `HTTPClient` — the loopback client DreamHub's main backend will use (once App3/4 wire a hub to it); talks only to the helper, never the socket.
+
+`dockerd.Server` is the helper's own HTTP surface: exactly five routes (`GET /containers`, `POST .../start`, `POST .../stop`, `GET .../logs`, `POST .../exec`) — the whitelisted subset holds because nothing else is registered on the mux, not because of a runtime check a bug could skip. There is still no create/run/pull anywhere in this package (that's App4) and so no path to `--privileged`, an arbitrary mount, or re-exposing the socket — the hard denials the plan calls for.
+
+`cmd/dreamhub-dockerd-helper/main.go`: the actual process, binds `127.0.0.1:8090` by default (`DREAMHUB_DOCKERD_HELPER_ADDR`), reads `/var/run/docker.sock` by default (`DREAMHUB_DOCKER_SOCKET`), with the same `DREAMHUB_MOCK=1` switch (`internal/dockerd/mock`, two demo containers) the main binary already uses for mock/live.
+
+Tests: `internal/dockerd`'s socket client is exercised against a real fake daemon listening on an actual unix socket (`httptest.Server{Listener: ...}`, not just assumed from the HTTP-shape docs), proving label filtering, the demux framing, and the not-whitelisted-container denial; the loopback `Server`+`HTTPClient` pair is tested as a real round trip over `httptest.NewServer`, including that `POST .../create` 404s (no such route). All green under `-race`.
+
+**Not done in this pass, open before App2 can actually ship:**
+- No systemd unit / hardening template yet (`packaging/extension-template/`-equivalent) — the helper isn't wired into `build-deb.sh` or `postinst`, so it doesn't run on the box today. Needs a dedicated, Docker-group-only system user, loopback-restricted sandboxing, and shutdown ordering ahead of Docker itself (the plan's "graceful shutdown ordering" decision).
+- Not run against a real Docker daemon anywhere — built and tested against a faithful fake unix-socket server, which is as far as this could go without a box or a local Docker install. The box's own vendor Docker plugin's exact API version, and whether it matches the unversioned paths this client assumes, is unconfirmed.
+- No hub/frontend wiring yet (AppsHub's "Apps" tab is still App1's placeholder) — deliberately so; that's App3 (curated list) and App4 (install/run as a plan), which is what will actually call `HTTPClient` for the first time.
+
+Everything else (App3 onward) hangs off this now existing.

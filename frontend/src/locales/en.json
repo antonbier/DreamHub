@@ -1054,7 +1054,21 @@
       "extensions": "Extensions",
       "apps": "Apps"
     },
-    "comingSoon": "Docker apps aren't available yet."
+    "comingSoon": "Docker apps aren't available yet.",
+    "category": {
+      "network": "Network",
+      "media": "Media management",
+      "files": "Files"
+    },
+    "compatible": "Works on this box",
+    "notCompatible": "Not built for this box's processor",
+    "searchPlaceholder": "Find another app on Docker Hub…",
+    "searchEmpty": "No matching images on Docker Hub.",
+    "checkCompatibility": "Check compatibility",
+    "checking": "Checking…",
+    "loadError": "The curated app list couldn't be loaded.",
+    "searchError": "The search couldn't be completed.",
+    "notYetInstallable": "Installing apps isn't available yet — this only checks whether the image would run on this box."
   },
   "timers": {
     "tuners": "{count} tuner | {count} tuners",

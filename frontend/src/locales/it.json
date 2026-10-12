@@ -1054,7 +1054,21 @@
       "extensions": "Estensioni",
       "apps": "App"
     },
-    "comingSoon": "Le app Docker non sono ancora disponibili."
+    "comingSoon": "Le app Docker non sono ancora disponibili.",
+    "category": {
+      "network": "Rete",
+      "media": "Gestione media",
+      "files": "File"
+    },
+    "compatible": "Funziona su questo box",
+    "notCompatible": "Non compilata per il processore di questo box",
+    "searchPlaceholder": "Trova un'altra app su Docker Hub…",
+    "searchEmpty": "Nessuna immagine corrispondente su Docker Hub.",
+    "checkCompatibility": "Verifica compatibilità",
+    "checking": "Verifica in corso…",
+    "loadError": "L'elenco delle app curato non è stato caricato.",
+    "searchError": "La ricerca non è riuscita.",
+    "notYetInstallable": "Installare le app non è ancora possibile — questo controlla solo se l'immagine funzionerebbe su questo box."
   },
   "timers": {
     "tuners": "{count} tuner | {count} tuner",

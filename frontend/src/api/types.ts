@@ -725,6 +725,29 @@ export interface ExtensionCard {
   widgets: ExtensionWidget[]
 }
 
+// hubs.catalogEntry — one curated AppsHub app (docs/APPSHUB_PLAN.md, App3).
+export interface CatalogApp {
+  id: string
+  name: string
+  category: string
+  description: string
+  image: string
+  compatible: boolean
+}
+
+// hubs.searchResult — one free-search hit, not yet arch-checked.
+export interface AppSearchResult {
+  image: string
+  description: string
+  stars: number
+}
+
+// GET /api/v1/apps/manifest.
+export interface AppManifest {
+  architectures: { architecture: string; variant?: string }[]
+  compatible: boolean
+}
+
 export interface AdminFeed {
   name: string
   url?: string

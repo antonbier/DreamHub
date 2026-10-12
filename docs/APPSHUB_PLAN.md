@@ -102,7 +102,7 @@ Like Extension Hub itself, AppsHub stays a power-user feature you find by naviga
 |---|---|---|
 | App1 | Rename + shell | **built 2026-10-12.** Extension Hub → AppsHub (nav label, route, hub ID), existing Extensions content becomes one tab, an "Apps" tab placeholder — see below |
 | App2 | Docker isolation | **built 2026-10-12** (the helper binary, the loopback protocol, the whitelisted Docker API subset; systemd hardening/packaging still open — see below) |
-| App3 | Curated list + search | the lean, AI-free app catalog (linuxserver.io first), free search with on-click multi-arch manifest checks |
+| App3 | Curated list + search | **built 2026-10-12** (the curated catalog, free search, on-click manifest checks, and a first "Apps" tab UI — see below) |
 | App4 | Install/run as a plan | pull + run through preview/confirm, the live resource-budget and flash-safety checks, port suggestion + bind check + "open app" link, `TZ` passthrough |
 | App5 | Updates, logs, console | the notification-inbox update flow, the two-tier log viewer, the Terminal-equivalent per-container console |
 | App6 | Backup | the general "backup sections" mechanism, config-only default for apps |
@@ -130,4 +130,16 @@ Tests: `internal/dockerd`'s socket client is exercised against a real fake daemo
 - Not run against a real Docker daemon anywhere — built and tested against a faithful fake unix-socket server, which is as far as this could go without a box or a local Docker install. The box's own vendor Docker plugin's exact API version, and whether it matches the unversioned paths this client assumes, is unconfirmed.
 - No hub/frontend wiring yet (AppsHub's "Apps" tab is still App1's placeholder) — deliberately so; that's App3 (curated list) and App4 (install/run as a plan), which is what will actually call `HTTPClient` for the first time.
 
-Everything else (App3 onward) hangs off this now existing.
+### App3, built 2026-10-12
+
+`internal/appcatalog`: `Apps`, a short, hand-maintained list (pihole, AdGuard Home, WireGuard, Syncthing, qBittorrent, Heimdall, Sonarr, Radarr, Prowlarr, Bazarr) — plain data, never AI-generated, each entry's `Arches` a point-in-time fact checked against Docker Hub's own `tags/latest` manifest on 2026-10-12 rather than guessed. One real, useful correction to the plan's own assumption while building this: **linuxserver.io's current images (heimdall, sonarr/radarr/prowlarr/bazarr, syncthing, qbittorrent, wireguard) only ship amd64+arm64 — they dropped armhf support**, so an armhf box (DM900/DM920) only gets the two non-linuxserver.io entries (Pi-hole, AdGuard Home, both still arm/v6+v7) from this list; everything else needs free search to find an armhf-capable alternative, if one exists.
+
+`internal/dockerhub`: `Client` (`Search`/`Manifest`), `HTTPClient` (the real one, hand-rolled against `hub.docker.com`'s public v2 API, no SDK — same house style as every other outbound connector here), with `Manifest` results cached in-process for 10 minutes (`manifestTTL`) rather than fetched on every click. `BoxArch()` reads `runtime.GOARCH` directly — exactly the architecture `packaging/build-deb.sh` built this very binary for, so there's no separate box-arch detection to get wrong. `Supports` treats Docker's `arm`+`v6`/`v7` variants as armhf-equivalent (a documented approximation, not a guarantee).
+
+`hubs.Apps` (`internal/hubs/apps_catalog.go`): `GET /api/v1/apps/catalog` (the curated list with `compatible` already resolved server-side), `GET /api/v1/apps/search` (free search, Docker Hub only, no per-result arch check), `GET /api/v1/apps/manifest` (the on-click check, `image` validated against a strict `namespace/repo` pattern before ever touching a request path). All three need the `system` permission, like every other AdminHub-style route — proven with a viewer-gets-403 test, since the hub's own nav entry is `perm.Watch` (everyone) and these routes need their own explicit override.
+
+Frontend: `AppsTab.vue` is no longer a placeholder — the curated list (with a per-row compatibility badge), a search box, and a "Check compatibility" button per search result that calls the manifest endpoint lazily. Confirmed with a real headless-browser pass against the mock backend (not just the Go tests): the catalog renders, "pihole" search returns pihole/pihole from the mock Docker Hub fixture, clicking "Check compatibility" shows "Works on this box", and a nonsense query shows the empty-search state.
+
+**What's still not here, on purpose:** no install/run (App4 — this tab is read-only, there's no button anywhere that would pull or start a container), so `internal/dockerd`'s `HTTPClient` (App2) still has no caller. Not run against the real Docker Hub from the box itself (only the real public API, reachable from this dev environment, and a mocked one in tests) — the box's own outbound internet reachability for this isn't confirmed either.
+
+Everything else (App4 onward) hangs off this now existing.

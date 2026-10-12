@@ -69,7 +69,8 @@ Done: `.deb` for arm64 (box) and armhf (built, not tried on a DM900/DM920) with 
 - [ ] **Extension Hub: a reference extension** — eWeLink/Sonoff, built against E1–E3, to prove the contract end to end and document it as the template for others; needs a real device and account (E4) (#46)
 - [x] **AppsHub: the rename/shell** ([`docs/APPSHUB_PLAN.md`](docs/APPSHUB_PLAN.md)) — Extension Hub renamed and widened to AppsHub, one nav entry with an "Extensions" tab (E1, unchanged) and an "Apps" tab placeholder for Docker container management (App1, built 2026-10-12)
 - [x] **AppsHub: Docker isolation** — a separate helper process (`cmd/dreamhub-dockerd-helper`) holds the Docker socket, never DreamHub's own backend; a whitelisted API subset (list/start/stop/logs/exec, scoped to `dreamhub.app`-labelled containers) reached over loopback (App2, built 2026-10-12, `docs/APPSHUB_PLAN.md`) — not yet packaged (no systemd unit/hardening, not wired into `build-deb.sh`) or tried against a real Docker daemon
-- [ ] **AppsHub: Docker apps** — curated/searchable app list with verified arm64/armhf support, install/run as a plan, live resource/flash-safety budgets instead of hardcoded limits, backup/update/console per app (App3+, `docs/APPSHUB_PLAN.md`) — not yet built
+- [x] **AppsHub: curated list + search** — a short, hand-maintained app catalog with verified arm64/armhf support, free search beyond it, an on-click (cached) multi-arch check against Docker Hub; the "Apps" tab is no longer a placeholder (App3, built 2026-10-12, `docs/APPSHUB_PLAN.md`) — read-only, confirmed in a real browser against the mock backend
+- [ ] **AppsHub: install/run as a plan** — preview/confirm through `internal/dockerd`'s helper, live resource/flash-safety budgets instead of hardcoded limits, backup/update/console per app (App4+, `docs/APPSHUB_PLAN.md`) — not yet built
 
 ## Decided against or parked
 

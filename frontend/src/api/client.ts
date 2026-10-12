@@ -18,6 +18,9 @@ import type {
   AdminPackage,
   AdminScript,
   ExtensionCard,
+  CatalogApp,
+  AppSearchResult,
+  AppManifest,
   AdScanResult,
   BouquetEntry,
   ChannelBackup,
@@ -483,6 +486,11 @@ export const api = {
     list: () => request<{ extensions: ExtensionCard[] }>('GET', '/api/v1/extensions'),
     planAction: (id: string, actionId: string) =>
       request<{ plan: Plan }>('POST', `/api/v1/extensions/${encodeURIComponent(id)}/actions/${encodeURIComponent(actionId)}/plan`),
+  },
+  apps: {
+    catalog: () => request<{ apps: CatalogApp[] }>('GET', '/api/v1/apps/catalog'),
+    search: (q: string) => request<{ results: AppSearchResult[] }>('GET', `/api/v1/apps/search?q=${encodeURIComponent(q)}`),
+    manifest: (image: string) => request<AppManifest>('GET', `/api/v1/apps/manifest?image=${encodeURIComponent(image)}`),
   },
   plex: {
     status: () => request<PlexStatus>('GET', '/api/v1/plex/status'),

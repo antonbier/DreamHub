@@ -15,6 +15,7 @@ import (
 	"time"
 
 	aptmock "github.com/antonbier/DreamHub/backend/internal/apt/mock"
+	dockerhubmock "github.com/antonbier/DreamHub/backend/internal/dockerhub/mock"
 	"github.com/antonbier/DreamHub/backend/internal/autotimer"
 	atmock "github.com/antonbier/DreamHub/backend/internal/autotimer/mock"
 	fanartmock "github.com/antonbier/DreamHub/backend/internal/fanart/mock"
@@ -127,6 +128,7 @@ func newEnvFull(t *testing.T, wc webcontrol.Client, at autotimer.Client, recFS r
 		Systemd:        services,
 		Scripts:        runner,
 		Apt:            aptmock.New(),
+		DockerHub:      dockerhubmock.Client{},
 		TerminalTarget: terminalTarget,
 		Mock:           true,
 		LookPath:       func(string) (string, error) { return "/usr/bin/journalctl", nil },

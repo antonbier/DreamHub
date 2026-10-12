@@ -32,6 +32,7 @@ import (
 	"github.com/antonbier/DreamHub/backend/internal/connector"
 	"github.com/antonbier/DreamHub/backend/internal/dashboard"
 	"github.com/antonbier/DreamHub/backend/internal/dmi"
+	"github.com/antonbier/DreamHub/backend/internal/dockerhub"
 	"github.com/antonbier/DreamHub/backend/internal/enrich"
 	"github.com/antonbier/DreamHub/backend/internal/events"
 	"github.com/antonbier/DreamHub/backend/internal/fanart"
@@ -107,6 +108,11 @@ type Options struct {
 	// Apt lists AdminHub's packages (internal/apt): Exec{} on the box, the
 	// in-memory mock otherwise; nil hides the package browser.
 	Apt apt.Lister
+	// DockerHub is AppsHub's free-search and arch-check connector
+	// (internal/dockerhub): NewHTTPClient() on the box, the deterministic
+	// mock otherwise; nil disables free search and the manifest check
+	// (the curated catalog itself still works, it needs no live call).
+	DockerHub dockerhub.Client
 	// TerminalTarget overrides shellinaboxd's address (tests only); empty
 	// means the box's real "http://127.0.0.1:4200".
 	TerminalTarget string
@@ -314,6 +320,7 @@ func New(ctx context.Context, o Options) (*App, error) {
 		})
 	}
 	extensionsHub := &hubs_.Extensions{Registry: extRegistry, Plans: plans, ReadOnly: o.ReadOnlyFiles}
+	appsHub := &hubs_.Apps{DockerHub: o.DockerHub}
 
 	// Search providers (internal/hub/search.go): every hub with content of
 	// its own; ControlHub has none (its results would be actions).
@@ -370,6 +377,7 @@ func New(ctx context.Context, o Options) (*App, error) {
 			{HubID: hub.IDChannels, Prefixes: []string{"/api/v1/channels"}, Register: channelsHub.Mount, Perms: channelsHub.Perms()},
 			{HubID: hub.IDPlex, Prefixes: []string{"/api/v1/plex"}, Register: plexHub.Mount, Perms: plexHub.Perms()},
 			{HubID: hub.IDApps, Prefixes: []string{"/api/v1/extensions"}, Register: extensionsHub.Mount, Perms: extensionsHub.Perms()},
+			{HubID: hub.IDApps, Prefixes: []string{"/api/v1/apps"}, Register: appsHub.Mount, Perms: appsHub.Perms()},
 		},
 		// The box's media player fetches a Plex film without a DreamHub
 		// login; the handler itself admits only the box (loopback) with a

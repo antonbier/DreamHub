@@ -14,6 +14,8 @@ Checked live on the reference box (read-only, 2026-10-11): every installed packa
 
 For the handful of packages DreamHub specifically cares about (its own package, Extension Hub packages, picon sets), apt's generic `Section` isn't distinctive enough (`dreamhub` itself is just `Section: web`). These get a custom control-file field instead (`X-DreamHub-Category: self|extension|picons`) — set only on packages DreamHub or an extension author controls, so it's never a source of truth DreamHub has to maintain for packages it doesn't own. A package without the field simply falls back to its plain apt `Section`.
 
+**Built 2026-10-12** (as part of Extension Hub's E2): `internal/apt.ParseDpkgQuery` reads `${X-DreamHub-Category}` via `dpkg-query`'s own field substitution alongside `${Section}`, preferring it when set. DreamHub's own `packaging/control.in` now declares `X-DreamHub-Category: self`, proving the mechanism against a package actually built by this repo; `packaging/extension-template/control.template` carries the same field for a future extension's own `.deb` to declare `extension`.
+
 ### The full package list, filterable, not a curated subset
 
 All system packages are shown (not just DreamHub-related ones) — hiding packages the box happens to need would just send the owner back to WebAdmin for anything outside DreamHub's curated view, defeating the point. Filters: free text, category (from the rule above), status (installed / upgradable / not installed), feed/origin, and a quick filter "needed by a DreamHub hub" (reads the same `requirements` a hub already declares in the hub contract — ffmpeg, BouquetEditor, …).

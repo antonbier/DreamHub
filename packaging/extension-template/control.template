@@ -1,0 +1,15 @@
+Package: @EXT_ID@
+Version: @VERSION@
+Section: web
+Priority: optional
+Architecture: @ARCH@
+# Marks this as a DreamHub extension (docs/EXTENSIONHUB_PLAN.md, E2):
+# AdminHub's package browser (docs/ADMINHUB_PLAN.md) groups by this field
+# over apt's own Section when it's set, so "DreamHub extensions" is a
+# filtered view of the one general package list, not a separate UI.
+X-DreamHub-Category: extension
+Depends: dreamhub (>= @MIN_DREAMHUB_VERSION@)
+Maintainer: @EXT_MAINTAINER@
+Homepage: @EXT_HOMEPAGE@
+Description: @EXT_DESCRIPTION@
+ @EXT_DESCRIPTION_LONG@

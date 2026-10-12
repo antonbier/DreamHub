@@ -1,0 +1,32 @@
+#!/bin/sh
+# Template postinst for a DreamHub extension's own .deb
+# (docs/EXTENSIONHUB_PLAN.md, E3, "Isolation"). Copy into the extension's
+# own packaging and fill in @EXT_ID@/@EXT_USER@ (sed, like DreamHub's own
+# build-deb.sh does for control.in) before building.
+#
+# PRINCIPLES.md: nothing happens silently — every step here is either
+# something the user already asked for by installing this package, or
+# safe to redo.
+set -e
+
+EXT_USER=@EXT_USER@
+STATE_DIR=/var/lib/@EXT_ID@
+
+# A dedicated, unprivileged system user — created once, left alone on an
+# upgrade (useradd fails harmlessly if it already exists; `|| true` keeps
+# a reinstall from aborting over it).
+if ! getent passwd "$EXT_USER" >/dev/null 2>&1; then
+    useradd --system --no-create-home --shell /usr/sbin/nologin "$EXT_USER" || true
+fi
+
+mkdir -p "$STATE_DIR"
+chown "$EXT_USER:$EXT_USER" "$STATE_DIR"
+chmod 700 "$STATE_DIR"
+
+if [ -d /run/systemd/system ]; then
+    systemctl daemon-reload || true
+    systemctl enable @EXT_ID@.service || true
+    systemctl restart @EXT_ID@.service || true
+fi
+
+exit 0

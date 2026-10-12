@@ -73,9 +73,9 @@ Installing, updating or removing an extension needs an admin (AdminHub's package
 | # | Package | Contents |
 |---|---|---|
 | E1 | Contract | **built 2026-10-12.** See "Built" below. |
-| E2 | Distribution | `X-DreamHub-Category: extension` marker in a `.deb`, AdminHub's package view filtering to it, the second feed |
-| E3 | Isolation | systemd unit template/hardening for an extension process (the localhost-only decision above is already settled) |
-| E4 | Reference extension | eWeLink/Sonoff, built against E1–E3, to prove the contract end to end and document it as the template for others |
+| E2 | Distribution | **built 2026-10-12** (the field + filtering + feed convention; standing up a real feed server is operational, not code — stays open until E4 needs one). See "Built" below. |
+| E3 | Isolation | **built 2026-10-12** (the systemd unit + packaging templates; not yet confirmed against the reference box's systemd 232). See "Built" below. |
+| E4 | Reference extension | eWeLink/Sonoff — deliberately **not built this round**: needs a real device and account to build and verify against, not assumptions about its cloud API |
 | later | Deeper widgets | SSE-backed live values, named per-hub extension points (SAP UI5-style), more widget types as real extensions need them — each additive per the versioning rule above |
 
 ### E1, built 2026-10-12
@@ -86,3 +86,11 @@ Installing, updating or removing an extension needs an admin (AdminHub's package
 - **Frontend**: `ExtensionsHubView.vue`, the one generic renderer for all four widget types, a new "extension" icon (`Icon.vue`), `/extensions` route, `hub.extensions`/`extensions.*`/`problem.extension.*` in all three locales.
 - Dashboard-tile contribution (mentioned in E1's original scope) **not built this round** — no real extension exists yet to prove it against; revisit with E4.
 - All backend tests green (`internal/extension`, new `internal/api/extensions_test.go` covering the demo extension, the full preview→apply→stale cycle, the loopback checks and the unsupported-schema-version degrade), `go vet` clean, `npm run build` green.
+
+### E2 + E3, built 2026-10-12
+
+- **E2, the `X-DreamHub-Category` marker**: `internal/apt.ParseDpkgQuery` now also reads `${X-DreamHub-Category}` via `dpkg-query`'s own field substitution, preferring it over apt's plain `Section` when a package sets it — a package that doesn't (almost everything on the box) falls back exactly as before. DreamHub's own `packaging/control.in` declares `X-DreamHub-Category: self`, so the mechanism is proven against a package this repo actually builds, not just planned. AdminHub's existing `GET /api/v1/admin/packages?category=` filter (built as part of A2, `docs/ADMINHUB_PLAN.md`) already works for `category=extension` the moment any package declares it — no separate "DreamHub extensions" UI was needed, the generic category filter already is that view.
+- **E2, the second feed**: `internal/apt/feeds.go`'s `knownFeeds` already recognized `dreamhub-extensions-feed` as a trusted name (added during A2). Actually hosting that feed is operational work with nothing to build against yet — stays open, tracked here rather than in code.
+- **E3, isolation**: `packaging/extension-template/` — a `control.template`, `extension.service`, and `postinst`/`prerm`/`postrm` templates for a future extension's own `.deb` to fill in and build from, mirroring DreamHub's own `packaging/` conventions (the `@PLACEHOLDER@` + `sed` pattern from `build-deb.sh`, the "purge only" data-removal rule from DreamHub's own `postrm`). The unit runs the extension as its own dedicated, unprivileged system user (created/removed by the postinst/postrm templates) with systemd sandboxing: no new privileges, every capability dropped, and network restricted to loopback only (`RestrictAddressFamilies`, `IPAddressAllow=localhost`) — consistent with E1's localhost-only decision, nothing an extension's process does should ever need the LAN or internet directly.
+  - **Not yet confirmed on the reference box**: several hardening directives (`ProtectKernelLogs`, `ProtectClock`, `ProtectHostname`, `RestrictRealtime`) need a newer systemd than the reference box's confirmed systemd 232 (the same version that already caused a real gap once, `internal/systemd`'s `NRestarts` property during A1). systemd's documented behavior for an unrecognized directive is to warn and ignore it, not fail the unit — but that's an assumption, not a box-confirmed fact, and is called out as such in `packaging/extension-template/README.md`.
+  - This is template/packaging work with no real extension to build from yet — not wired into CI or `build-deb.sh`, since there's nothing today that would consume it.

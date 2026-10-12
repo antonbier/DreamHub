@@ -65,7 +65,8 @@ Done: `.deb` for arm64 (box) and armhf (built, not tried on a DM900/DM920) with 
 - [ ] More AI providers (#38)
 - [ ] Profiles: a kids role with allowed bouquets (prepared: `users.bouquets`) and a Plex age limit (#45)
 - [x] **Extension Hub: the contract** ([`docs/EXTENSIONHUB_PLAN.md`](docs/EXTENSIONHUB_PLAN.md)) — one nav entry for every registered extension's own card (status/meter/list/action widgets, never an extension's own frontend code), the loopback-only registration handshake, action widgets through the normal plan → apply flow, version/degrade handling (E1, built 2026-10-12). Demo-only so far (`internal/extension/mock`, a fake smart socket) — nothing to register against it yet (#46)
-- [ ] **Extension Hub: distribution, isolation, a reference extension** — the `X-DreamHub-Category: extension` package marker and second feed (E2, needs AdminHub's A2 package view), the systemd unit template/hardening for an extension's own process (E3), and eWeLink/Sonoff as the first real extension proving the contract end to end (E4) (#46)
+- [x] **Extension Hub: distribution + isolation** — `X-DreamHub-Category` read by AdminHub's package browser (also now set on DreamHub's own package), the `dreamhub-extensions-feed` name recognized by the feed list, and a `packaging/extension-template/` (systemd unit + hardening, control file, postinst/prerm/postrm) for a future extension's own `.deb` to build from (E2 + E3, built 2026-10-12, needs a box check of the hardening directives against systemd 232) (#46)
+- [ ] **Extension Hub: a reference extension** — eWeLink/Sonoff, built against E1–E3, to prove the contract end to end and document it as the template for others; needs a real device and account (E4) (#46)
 
 ## Decided against or parked
 

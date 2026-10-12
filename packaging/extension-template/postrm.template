@@ -1,0 +1,30 @@
+#!/bin/sh
+# postrm handles the tail end of both removal and purge. dpkg calls this
+# with the action as $1 — see dpkg-maintscript-helper(1)'s convention.
+# Fill in @EXT_ID@/@EXT_USER@ before building, like postinst.template.
+set -e
+
+EXT_USER=@EXT_USER@
+STATE_DIR=/var/lib/@EXT_ID@
+
+case "$1" in
+    remove)
+        if [ -d /run/systemd/system ]; then
+            systemctl disable @EXT_ID@.service >/dev/null 2>&1 || true
+            systemctl daemon-reload || true
+        fi
+        ;;
+    purge)
+        if [ -d /run/systemd/system ]; then
+            systemctl disable @EXT_ID@.service >/dev/null 2>&1 || true
+            systemctl daemon-reload || true
+        fi
+        # Only a purge ever deletes the extension's own state, same
+        # reasoning as DreamHub's own postrm — a plain removal keeps it,
+        # so reinstalling later picks up where the user left off.
+        rm -rf "$STATE_DIR"
+        getent passwd "$EXT_USER" >/dev/null 2>&1 && userdel "$EXT_USER" || true
+        ;;
+esac
+
+exit 0

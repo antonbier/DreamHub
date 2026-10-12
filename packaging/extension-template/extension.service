@@ -1,0 +1,60 @@
+[Unit]
+Description=@EXT_DESCRIPTION@
+Documentation=@EXT_HOMEPAGE@
+# DreamHub itself is the only thing that ever calls an extension's
+# process (docs/EXTENSIONHUB_PLAN.md, "localhost-only" — the open
+# question resolved while building E1): start after it, and stop if it
+# stops.
+After=dreamhub.service
+BindsTo=dreamhub.service
+
+[Service]
+Type=simple
+# A dedicated, unprivileged user per extension (docs/EXTENSIONHUB_PLAN.md,
+# E3, "Isolation") — create it in postinst (see postinst.template) before
+# this unit is first started; systemd itself doesn't manage the account.
+User=@EXT_USER@
+Group=@EXT_USER@
+ExecStart=@EXT_EXEC@
+Restart=on-failure
+RestartSec=5
+UMask=0077
+
+# Standard hardening (docs/EXTENSIONHUB_PLAN.md, E3: "ProtectSystem,
+# NoNewPrivileges, no capabilities it doesn't declare needing"). An
+# extension only ever talks to DreamHub over its own loopback port and
+# keeps its own state under /var/lib/@EXT_ID@ — nothing here needs
+# broader filesystem, network or privilege access than that.
+NoNewPrivileges=true
+ProtectSystem=strict
+ProtectHome=true
+PrivateTmp=true
+ReadWritePaths=/var/lib/@EXT_ID@
+ProtectKernelTunables=true
+ProtectKernelModules=true
+ProtectKernelLogs=true
+ProtectControlGroups=true
+ProtectClock=true
+ProtectHostname=true
+RestrictNamespaces=true
+RestrictRealtime=true
+RestrictSUIDSGID=true
+LockPersonality=true
+MemoryDenyWriteExecute=true
+RemoveIPC=true
+# No capabilities at all: an extension talks to DreamHub over plain
+# HTTP on localhost, nothing here needs CAP_NET_BIND_SERVICE or similar.
+# A future extension that genuinely needs one capability lists it here
+# explicitly instead of widening this default.
+CapabilityBoundingSet=
+AmbientCapabilities=
+# Loopback only: nothing an extension's process does should ever need to
+# reach the LAN or the internet directly — DreamHub itself proxies
+# anything an extension's own feature needs beyond the box (the same
+# reasoning PlexHub already proxies Plex, hubs/plex_play.go).
+RestrictAddressFamilies=AF_UNIX AF_INET AF_INET6
+IPAddressDeny=any
+IPAddressAllow=localhost
+
+[Install]
+WantedBy=multi-user.target

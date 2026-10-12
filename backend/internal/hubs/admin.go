@@ -7,6 +7,7 @@ import (
 	"regexp"
 	"sort"
 	"strconv"
+	"sync"
 	"time"
 
 	"github.com/antonbier/DreamHub/backend/internal/ai"
@@ -61,6 +62,14 @@ type Admin struct {
 	// feed list. Usually the same Exec{}/mock value as Apt, kept separate
 	// because a package-only mock in tests doesn't need to implement it.
 	Feeds apt.FeedLister
+	// Packages installs, upgrades and removes packages as a plan, and
+	// lists the "not installed" catalog (admin_packages_plan.go); nil
+	// keeps the browser read-only.
+	Packages apt.Manager
+	// lastPackageRun is the most recent apply's apt-get output, shown
+	// right after confirming (admin_packages_plan.go).
+	lastPackageRun packageRunResult
+	pkgMu          sync.Mutex
 	// AI explains a package on request (admin_packages.go); nil hides the
 	// "what does this do?" button (PRINCIPLES.md: unavailable, not
 	// broken — same opt-in pattern as DiscoveryHub's own AI use).
@@ -108,6 +117,8 @@ func (h *Admin) Mount(mux httpx.Mux) {
 	mux.HandleFunc("GET /api/v1/admin/scripts/{id}/runs", adminOnly(h.scriptRuns))
 	mux.HandleFunc("GET /api/v1/admin/packages", adminOnly(h.listPackages))
 	mux.HandleFunc("POST /api/v1/admin/packages/explain", adminOnly(h.explainPackage))
+	mux.HandleFunc("POST /api/v1/admin/packages/plan", adminOnly(h.planPackages))
+	mux.HandleFunc("GET /api/v1/admin/packages/last-run", adminOnly(h.lastPackageRunView))
 	mux.HandleFunc("GET /api/v1/admin/feeds", adminOnly(h.listFeeds))
 	mux.HandleFunc("GET /api/v1/admin/terminal/status", adminOnly(h.terminalStatus))
 	mux.HandleFunc("POST /api/v1/admin/terminal/enable", adminOnly(h.enableTerminal))

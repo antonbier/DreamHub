@@ -704,6 +704,23 @@ export interface AdminPackage {
   description: string
 }
 
+// apt.Step — one package a package plan installs, upgrades or removes.
+export interface PackageStep {
+  kind: 'install' | 'upgrade' | 'remove'
+  name: string
+  oldVersion?: string
+  newVersion?: string
+}
+
+// The most recent package apply and apt-get's output.
+export interface PackageRun {
+  at: string
+  action: string
+  steps: PackageStep[]
+  ok: boolean
+  output: string
+}
+
 // apt.Feed — AdminHub's feed list, with a trust signal (A2).
 // extension.Widget — Extension Hub's own fixed widget vocabulary
 // (docs/EXTENSIONHUB_PLAN.md, E1): never frontend code of its own, just

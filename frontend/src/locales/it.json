@@ -60,6 +60,11 @@
     "extension": {
       "unreachable": "{name} non risponde.",
       "unsupportedVersion": "{name} richiede una versione più recente di DreamHub."
+    },
+    "package": {
+      "alsoRemoves": "Rimuove anche {count} pacchetto/i che non hai scelto: {names}.",
+      "touchesEnigma2": "Modifica un plugin TV, una skin o enigma2 stesso — ha effetto dopo il riavvio di enigma2; alcuni pacchetti lo riavviano da soli (l'immagine TV sparisce per circa mezzo minuto).",
+      "recordingRunning": "Il box sta registrando ({names}); si potrà applicare a registrazione finita."
     }
   },
   "fix": {
@@ -750,7 +755,13 @@
       "channels_no_editor": "Per modificare, DreamHub ha bisogno del plugin \"BouquetEditor\" sul box.",
       "channels_unchanged": "Lì non è cambiato nulla.",
       "channels_restored": "Non è andato come mostrato. DreamHub ha ripristinato la lista canali dal backup — è tutto come prima.",
-      "channels_restore_failed": "Non ha funzionato, e nemmeno il ripristino. Controlla la lista canali sulla TV; il backup è sul box."
+      "channels_restore_failed": "Non ha funzionato, e nemmeno il ripristino. Controlla la lista canali sulla TV; il backup è sul box.",
+      "nothing_to_do": "Niente da cambiare — è già aggiornato.",
+      "package_self": "DreamHub non può modificare il proprio pacchetto. Aggiornalo o rimuovilo con gli strumenti del box.",
+      "apt_refused": "apt non può farlo:",
+      "recording_running": "Il box sta registrando. Riprova a registrazione finita.",
+      "package_apply_failed": "apt ha segnalato un errore.",
+      "apt_unavailable": "L'installazione di pacchetti non è disponibile su questo sistema."
     },
     "media": {
       "not_a_recording": "Questa registrazione non esiste (più).",
@@ -1236,7 +1247,24 @@
       "unavailable": "L'elenco dei pacchetti non è disponibile su questo sistema.",
       "explain": "Cos'è?",
       "feedsTitle": "Feed",
-      "feedAddedByHand": "Aggiunto manualmente"
+      "feedAddedByHand": "Aggiunto manualmente",
+      "notInstalled": "Non installati",
+      "upgradableCount": "{count} aggiornamento disponibile | {count} aggiornamenti disponibili",
+      "upgradeAll": "Aggiorna tutto",
+      "simulating": "apt sta verificando cosa cambierebbe …",
+      "confirm": "Applica",
+      "previewIntro": "apt cambierebbe questo pacchetto: | apt cambierebbe questi {count} pacchetti:",
+      "step": {
+        "install": "+ installa {name} {to}",
+        "upgrade": "↑ aggiorna {name} {from} → {to}",
+        "remove": "− rimuovi {name} {from}"
+      },
+      "done": "Fatto",
+      "failed": "apt ha segnalato un errore",
+      "install": "Installa",
+      "upgrade": "Aggiorna",
+      "remove": "Rimuovi",
+      "truncated": "Vengono mostrati solo i primi pacchetti — usa la ricerca per restringere."
     },
     "scripts": {
       "title": "Script",

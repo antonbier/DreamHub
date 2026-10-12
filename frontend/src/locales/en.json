@@ -60,6 +60,11 @@
     "extension": {
       "unreachable": "{name} isn't responding.",
       "unsupportedVersion": "{name} needs a newer version of DreamHub."
+    },
+    "package": {
+      "alsoRemoves": "Also removes {count} package(s) you didn't pick: {names}.",
+      "touchesEnigma2": "Changes a TV plugin, skin or enigma2 itself — it takes effect after enigma2 restarts, and some packages restart it themselves (the TV picture is gone for about half a minute).",
+      "recordingRunning": "The box is recording right now ({names}); applying waits until that's done."
     }
   },
   "fix": {
@@ -750,7 +755,13 @@
       "channels_no_editor": "To edit, DreamHub needs the \"BouquetEditor\" plugin on the box.",
       "channels_unchanged": "Nothing is changed there.",
       "channels_restored": "That didn't go as shown. DreamHub restored the channel list from the backup — everything is as before.",
-      "channels_restore_failed": "That didn't work, and restoring didn't either. Please check the channel list on the TV; the backup is on the box."
+      "channels_restore_failed": "That didn't work, and restoring didn't either. Please check the channel list on the TV; the backup is on the box.",
+      "nothing_to_do": "Nothing to change — it's already up to date.",
+      "package_self": "DreamHub can't change its own package. Update or remove it with the box's own tools.",
+      "apt_refused": "apt can't do this:",
+      "recording_running": "The box is recording right now. Try again when it's done.",
+      "package_apply_failed": "apt reported an error.",
+      "apt_unavailable": "Installing packages isn't available on this system."
     },
     "media": {
       "not_a_recording": "This recording doesn't exist (anymore).",
@@ -1236,7 +1247,24 @@
       "unavailable": "The package list isn't available on this system.",
       "explain": "What's this?",
       "feedsTitle": "Feeds",
-      "feedAddedByHand": "Added by hand"
+      "feedAddedByHand": "Added by hand",
+      "notInstalled": "Not installed",
+      "upgradableCount": "{count} update available | {count} updates available",
+      "upgradeAll": "Update all",
+      "simulating": "Checking with apt what would change …",
+      "confirm": "Apply",
+      "previewIntro": "apt would change this package: | apt would change these {count} packages:",
+      "step": {
+        "install": "+ install {name} {to}",
+        "upgrade": "↑ update {name} {from} → {to}",
+        "remove": "− remove {name} {from}"
+      },
+      "done": "Done",
+      "failed": "apt reported an error",
+      "install": "Install",
+      "upgrade": "Update",
+      "remove": "Remove",
+      "truncated": "Only the first packages are shown — search to narrow it down."
     },
     "scripts": {
       "title": "Scripts",

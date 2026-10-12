@@ -13,22 +13,36 @@ import (
 
 // AdminHub's package browser (docs/ADMINHUB_PLAN.md, A2, #47): the box's
 // installed and upgradable packages, grouped by apt's own Section field,
-// filterable. Read-only — install/remove as a plan is a later slice, once
-// the box has confirmed `apt-get -s` simulate output and the generalized
-// "don't restart a service while recording" check.
+// filterable. Install, upgrade and remove go through a plan
+// (admin_packages_plan.go).
+
+// maxPackageRows caps one answer of the package list.
+const maxPackageRows = 400
 
 // listPackages answers GET /api/v1/admin/packages, filtered by:
 //   - q: a case-insensitive substring of the name or description
 //   - category: an exact match against Package.Category
-//   - status: "upgradable" (only those with an update pending) or
-//     "installed" (everything dpkg knows about, the default — there's no
-//     "not installed" catalog yet, see docs/ADMINHUB_PLAN.md)
+//   - status: "upgradable" (only those with an update pending),
+//     "available" (the feeds' packages that aren't installed) or
+//     "installed" (everything dpkg knows about, the default)
 func (h *Admin) listPackages(w http.ResponseWriter, r *http.Request) {
 	if h.Apt == nil {
 		httpx.WriteError(w, r, http.StatusServiceUnavailable, "apt_unavailable", "dpkg/apt aren't available on this system")
 		return
 	}
-	pkgs, err := h.Apt.List(r.Context())
+	status := r.URL.Query().Get("status")
+	var pkgs []apt.Package
+	var err error
+	if status == "available" {
+		// The "not installed" catalog: what the enabled feeds offer.
+		if h.Packages == nil {
+			httpx.WriteError(w, r, http.StatusServiceUnavailable, "apt_unavailable", "dpkg/apt aren't available on this system")
+			return
+		}
+		pkgs, err = h.Packages.Available(r.Context())
+	} else {
+		pkgs, err = h.Apt.List(r.Context())
+	}
 	if errors.Is(err, apt.ErrUnavailable) {
 		httpx.WriteError(w, r, http.StatusServiceUnavailable, "apt_unavailable", "dpkg/apt aren't available on this system")
 		return
@@ -40,12 +54,13 @@ func (h *Admin) listPackages(w http.ResponseWriter, r *http.Request) {
 
 	q := strings.ToLower(strings.TrimSpace(r.URL.Query().Get("q")))
 	category := r.URL.Query().Get("category")
-	status := r.URL.Query().Get("status")
 
 	out := make([]apt.Package, 0, len(pkgs))
 	categories := map[string]bool{}
 	for _, p := range pkgs {
-		categories[p.Category] = true
+		if p.Category != "" { // some feed packages carry no Section at all
+			categories[p.Category] = true
+		}
 		if q != "" && !strings.Contains(strings.ToLower(p.Name), q) && !strings.Contains(strings.ToLower(p.Description), q) {
 			continue
 		}
@@ -58,13 +73,20 @@ func (h *Admin) listPackages(w http.ResponseWriter, r *http.Request) {
 		out = append(out, p)
 	}
 
+	// The catalog runs to thousands of packages on a real box; without a
+	// search term only the first ones are sent.
+	truncated := false
+	if len(out) > maxPackageRows {
+		out, truncated = out[:maxPackageRows], true
+	}
+
 	cats := make([]string, 0, len(categories))
 	for c := range categories {
 		cats = append(cats, c)
 	}
 	sort.Strings(cats)
 
-	httpx.WriteJSON(w, http.StatusOK, map[string]any{"packages": out, "categories": cats})
+	httpx.WriteJSON(w, http.StatusOK, map[string]any{"packages": out, "categories": cats, "truncated": truncated})
 }
 
 // listFeeds answers GET /api/v1/admin/feeds: the box's configured apt

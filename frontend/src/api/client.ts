@@ -16,6 +16,8 @@ import { authHeaders, handleUnauthorized } from './authState'
 import type {
   AdminFeed,
   AdminPackage,
+  PackageRun,
+  PackageStep,
   AdminScript,
   ExtensionCard,
   CatalogApp,
@@ -469,15 +471,20 @@ export const api = {
     // Not read through request(): the iframe/browser hits this directly,
     // proxied straight to shellinaboxd.
     terminalProxyPath: '/api/v1/admin/terminal/proxy/',
-    // The package browser (docs/ADMINHUB_PLAN.md, A2): read-only so far —
-    // install/remove as a plan is a later slice.
+    // The package browser (docs/ADMINHUB_PLAN.md, A2); status "available"
+    // is the feeds' catalog of packages that aren't installed.
     packages: (filter: { q?: string; category?: string; status?: string } = {}) => {
       const params = new URLSearchParams()
       if (filter.q) params.set('q', filter.q)
       if (filter.category) params.set('category', filter.category)
       if (filter.status) params.set('status', filter.status)
-      return request<{ packages: AdminPackage[]; categories: string[] }>('GET', `/api/v1/admin/packages?${params}`)
+      return request<{ packages: AdminPackage[]; categories: string[]; truncated?: boolean }>('GET', `/api/v1/admin/packages?${params}`)
     },
+    // Install, upgrade or remove as a plan: apt-get's own simulate run is
+    // the preview. "upgrade" with no packages upgrades everything.
+    packagesPlan: (action: 'install' | 'remove' | 'upgrade', packages: string[]) =>
+      request<{ plan: Plan; steps: PackageStep[] }>('POST', '/api/v1/admin/packages/plan', { action, packages }),
+    packagesLastRun: () => request<{ run: PackageRun | null }>('GET', '/api/v1/admin/packages/last-run'),
     // On-demand only — nothing sent unless this is actually called.
     explainPackage: (name: string, description: string) =>
       request<{ explanation: string }>('POST', '/api/v1/admin/packages/explain', { name, description }),

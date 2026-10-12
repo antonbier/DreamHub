@@ -7,6 +7,9 @@ package mock
 
 import (
 	"context"
+	"slices"
+	"strings"
+	"sync"
 
 	"github.com/antonbier/DreamHub/backend/internal/apt"
 )
@@ -17,11 +20,18 @@ type Lister struct {
 	Packages []apt.Package
 	// Feeds overrides the defaults below (tests).
 	Feeds []apt.Feed
+	// Avail is what the feeds offer that isn't installed (the catalog).
+	Avail []apt.Package
+	// Applied records every Apply call (tests).
+	Applied []string
+
+	mu sync.Mutex
 }
 
 var (
 	_ apt.Lister     = (*Lister)(nil)
 	_ apt.FeedLister = (*Lister)(nil)
+	_ apt.Manager    = (*Lister)(nil)
 )
 
 func New() *Lister {
@@ -41,6 +51,11 @@ func New() *Lister {
 			{Name: "python3-core", Version: "3.11.6-r2", Category: "devel/python", Description: "Minimal Python 3 interpreter"},
 			{Name: "oscam-cycecplus", Version: "11742", Category: "console/network", Description: "Open Source Conditional Access Module", Upgradable: true, AvailableVersion: "11760"},
 		},
+		Avail: []apt.Package{
+			{Name: "htop", Version: "1.0.3-r0.0", Category: "console/utils", Description: "Interactive process viewer"},
+			{Name: "kernel-module-overlay", Version: "4.9-r0", Category: "kernel", Description: "overlay kernel module"},
+			{Name: "gp4-picon-astra19e", Version: "20260901", Category: "picon-skin", Description: "Picons for Astra 19.2E"},
+		},
 		Feeds: []apt.Feed{
 			{Name: "gp4-unstable-aio-feed", URL: "http://feed.gemini-project.net/unstable", Enabled: true, Known: true},
 			{Name: "svenh-feed", URL: "http://svenh-feeds.de/feeds/dreambox-sh4/unstable", Enabled: true, Known: true},
@@ -52,9 +67,111 @@ func New() *Lister {
 }
 
 func (l *Lister) List(ctx context.Context) ([]apt.Package, error) {
-	return l.Packages, nil
+	l.mu.Lock()
+	defer l.mu.Unlock()
+	return slices.Clone(l.Packages), nil
 }
 
 func (l *Lister) ListFeeds(ctx context.Context) ([]apt.Feed, error) {
 	return l.Feeds, nil
+}
+
+func (l *Lister) Available(ctx context.Context) ([]apt.Package, error) {
+	l.mu.Lock()
+	defer l.mu.Unlock()
+	return slices.Clone(l.Avail), nil
+}
+
+// Simulate mirrors what apt would say for the in-memory lists. Removing
+// "enigma2-plugin-skincomponents-dreamhubbutton" also removes "dreamhub",
+// a stand-in for the real cascade seen on the box (ARCHITECTURE.md, "Box
+// checks for 0.4.0") so the preview's extra-removal warning has a case.
+func (l *Lister) Simulate(ctx context.Context, action apt.Action, names []string) ([]apt.Step, error) {
+	if err := apt.ValidNames(action, names); err != nil {
+		return nil, err
+	}
+	l.mu.Lock()
+	defer l.mu.Unlock()
+	return l.simulate(action, names)
+}
+
+func (l *Lister) simulate(action apt.Action, names []string) ([]apt.Step, error) {
+	installed := func(n string) (apt.Package, bool) {
+		for _, p := range l.Packages {
+			if p.Name == n {
+				return p, true
+			}
+		}
+		return apt.Package{}, false
+	}
+	var steps []apt.Step
+	switch action {
+	case apt.ActionUpgrade:
+		for _, p := range l.Packages {
+			if p.Upgradable && (len(names) == 0 || slices.Contains(names, p.Name)) {
+				steps = append(steps, apt.Step{Kind: "upgrade", Name: p.Name, OldVersion: p.Version, NewVersion: p.AvailableVersion})
+			}
+		}
+	case apt.ActionInstall:
+		for _, n := range names {
+			if p, ok := installed(n); ok {
+				if p.Upgradable {
+					steps = append(steps, apt.Step{Kind: "upgrade", Name: n, OldVersion: p.Version, NewVersion: p.AvailableVersion})
+				}
+				continue
+			}
+			i := slices.IndexFunc(l.Avail, func(p apt.Package) bool { return p.Name == n })
+			if i < 0 {
+				return nil, &apt.SimulateError{Output: "E: Unable to locate package " + n}
+			}
+			steps = append(steps, apt.Step{Kind: "install", Name: n, NewVersion: l.Avail[i].Version})
+		}
+	case apt.ActionRemove:
+		for _, n := range names {
+			p, ok := installed(n)
+			if !ok {
+				continue
+			}
+			steps = append(steps, apt.Step{Kind: "remove", Name: n, OldVersion: p.Version})
+			if n == "enigma2-plugin-skincomponents-dreamhubbutton" {
+				if d, ok := installed("dreamhub"); ok {
+					steps = append(steps, apt.Step{Kind: "remove", Name: d.Name, OldVersion: d.Version})
+				}
+			}
+		}
+	}
+	return steps, nil
+}
+
+func (l *Lister) Apply(ctx context.Context, action apt.Action, names []string) (string, error) {
+	l.mu.Lock()
+	defer l.mu.Unlock()
+	steps, err := l.simulate(action, names)
+	if err != nil {
+		return "", err
+	}
+	var out strings.Builder
+	for _, s := range steps {
+		switch s.Kind {
+		case "install":
+			i := slices.IndexFunc(l.Avail, func(p apt.Package) bool { return p.Name == s.Name })
+			l.Packages = append(l.Packages, l.Avail[i])
+			l.Avail = slices.Delete(l.Avail, i, i+1)
+			out.WriteString("Setting up " + s.Name + " (" + s.NewVersion + ") ...\n")
+		case "upgrade":
+			for i := range l.Packages {
+				if l.Packages[i].Name == s.Name {
+					l.Packages[i].Version, l.Packages[i].Upgradable, l.Packages[i].AvailableVersion = s.NewVersion, false, ""
+				}
+			}
+			out.WriteString("Unpacking " + s.Name + " (" + s.NewVersion + ") over (" + s.OldVersion + ") ...\n")
+		case "remove":
+			i := slices.IndexFunc(l.Packages, func(p apt.Package) bool { return p.Name == s.Name })
+			l.Avail = append(l.Avail, l.Packages[i])
+			l.Packages = slices.Delete(l.Packages, i, i+1)
+			out.WriteString("Removing " + s.Name + " (" + s.OldVersion + ") ...\n")
+		}
+	}
+	l.Applied = append(l.Applied, string(action)+" "+strings.Join(names, " "))
+	return out.String(), nil
 }

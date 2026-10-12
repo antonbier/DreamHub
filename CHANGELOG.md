@@ -6,6 +6,9 @@ Format follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/); version
 
 ## [Unreleased]
 
+### Added
+- Device → Administration → Packages: install, update and remove packages, and "Update all". The preview is apt's own dry run — every package it would touch, including ones nobody picked (on the box, removing one small skin component would take two whole skins with it) — and says when a TV plugin or skin changes. Refused while the box records if enigma2 is touched; DreamHub's own package is left to the box's own tools. A "Not installed" filter browses what the feeds offer. apt's output is shown after applying, and the change log keeps each package's previous version.
+
 ## [0.4.0] - 2026-10-12
 
 ### Added

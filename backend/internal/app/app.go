@@ -323,8 +323,11 @@ func New(ctx context.Context, o Options) (*App, error) {
 	// the mock) — asserted here rather than a separate Options field, since
 	// there's never a reason for one without the other.
 	feeds, _ := o.Apt.(apt.FeedLister)
+	// Same for install/remove (apt.Manager, A2): both Exec{} and the mock
+	// implement it.
+	pkgManager, _ := o.Apt.(apt.Manager)
 	adminHub := &hubs_.Admin{Store: st, Level: level, Logs: o.Logs, FS: o.RecordingsFS,
-		Systemd: o.Systemd, Scripts: o.Scripts, Apt: o.Apt, Feeds: feeds, AI: o.AI, Settings: svc,
+		Systemd: o.Systemd, Scripts: o.Scripts, Apt: o.Apt, Feeds: feeds, Packages: pkgManager, AI: o.AI, Settings: svc,
 		Auth: svc, TerminalTarget: o.TerminalTarget, Plans: plans, WC: o.WebControl, Now: now, ReadOnly: o.ReadOnlyFiles}
 	controlHub := &hubs_.Control{WC: o.WebControl}
 

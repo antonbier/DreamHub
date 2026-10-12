@@ -60,6 +60,11 @@
     "extension": {
       "unreachable": "{name} antwortet nicht.",
       "unsupportedVersion": "{name} braucht eine neuere Version von DreamHub."
+    },
+    "package": {
+      "alsoRemoves": "Entfernt zusätzlich {count} Paket(e), die du nicht ausgewählt hast: {names}.",
+      "touchesEnigma2": "Ändert ein TV-Plugin, einen Skin oder enigma2 selbst — wirksam nach einem Neustart von enigma2; manche Pakete starten es selbst neu (das TV-Bild ist dann etwa eine halbe Minute weg).",
+      "recordingRunning": "Die Box nimmt gerade auf ({names}); Ausführen geht erst, wenn das vorbei ist."
     }
   },
   "fix": {
@@ -750,7 +755,13 @@
       "channels_no_editor": "Zum Bearbeiten braucht DreamHub das Plugin „BouquetEditor“ auf der Box.",
       "channels_unchanged": "Da ist nichts geändert.",
       "channels_restored": "Das hat nicht wie gezeigt geklappt. DreamHub hat die Senderliste aus der Sicherung wiederhergestellt — es ist alles wie vorher.",
-      "channels_restore_failed": "Das hat nicht geklappt, und das Zurücksetzen auch nicht. Bitte die Senderliste am TV prüfen; die Sicherung liegt auf der Box."
+      "channels_restore_failed": "Das hat nicht geklappt, und das Zurücksetzen auch nicht. Bitte die Senderliste am TV prüfen; die Sicherung liegt auf der Box.",
+      "nothing_to_do": "Nichts zu ändern — schon auf dem neuesten Stand.",
+      "package_self": "DreamHub kann sein eigenes Paket nicht ändern. Aktualisiere oder entferne es mit den Werkzeugen der Box.",
+      "apt_refused": "apt kann das nicht:",
+      "recording_running": "Die Box nimmt gerade auf. Versuch es nach der Aufnahme noch einmal.",
+      "package_apply_failed": "apt hat einen Fehler gemeldet.",
+      "apt_unavailable": "Pakete installieren ist auf diesem System nicht verfügbar."
     },
     "media": {
       "not_a_recording": "Diese Aufnahme gibt es nicht (mehr).",
@@ -1236,7 +1247,24 @@
       "unavailable": "Die Paketliste ist auf diesem System nicht verfügbar.",
       "explain": "Was ist das?",
       "feedsTitle": "Feeds",
-      "feedAddedByHand": "Manuell hinzugefügt"
+      "feedAddedByHand": "Manuell hinzugefügt",
+      "notInstalled": "Nicht installiert",
+      "upgradableCount": "{count} Update verfügbar | {count} Updates verfügbar",
+      "upgradeAll": "Alle aktualisieren",
+      "simulating": "apt prüft, was sich ändern würde …",
+      "confirm": "Ausführen",
+      "previewIntro": "apt würde dieses Paket ändern: | apt würde diese {count} Pakete ändern:",
+      "step": {
+        "install": "+ {name} {to} installieren",
+        "upgrade": "↑ {name} {from} → {to} aktualisieren",
+        "remove": "− {name} {from} entfernen"
+      },
+      "done": "Fertig",
+      "failed": "apt hat einen Fehler gemeldet",
+      "install": "Installieren",
+      "upgrade": "Aktualisieren",
+      "remove": "Entfernen",
+      "truncated": "Nur die ersten Pakete werden angezeigt — mit der Suche eingrenzen."
     },
     "scripts": {
       "title": "Scripts",

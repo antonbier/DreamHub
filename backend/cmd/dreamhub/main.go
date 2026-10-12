@@ -34,6 +34,8 @@ import (
 	aimock "github.com/antonbier/DreamHub/backend/internal/ai/mock"
 	"github.com/antonbier/DreamHub/backend/internal/api"
 	"github.com/antonbier/DreamHub/backend/internal/app"
+	"github.com/antonbier/DreamHub/backend/internal/apt"
+	aptmock "github.com/antonbier/DreamHub/backend/internal/apt/mock"
 	"github.com/antonbier/DreamHub/backend/internal/config"
 	"github.com/antonbier/DreamHub/backend/internal/journald"
 	jmock "github.com/antonbier/DreamHub/backend/internal/journald/mock"
@@ -78,6 +80,7 @@ func run(logger *slog.Logger, level *logging.Level) error {
 	var logs journald.Reader
 	var services systemd.Manager
 	var scriptRunner scripts.Runner
+	var packages apt.Lister
 	switch cfg.Mode {
 	case config.ModeLive:
 		c := webcontrol.NewHTTPClient(cfg.WebControlURL)
@@ -113,6 +116,7 @@ func run(logger *slog.Logger, level *logging.Level) error {
 		logs = journald.Exec{}
 		services = systemd.Exec{}
 		scriptRunner = scripts.Exec{}
+		packages = apt.Exec{}
 		logger.Info("webcontrol client mode", "mode", "live", "url", cfg.WebControlURL, "deviceWrites", cfg.EnableDeviceWrites)
 	default:
 		// DREAMHUB_MOCK_DATE (YYYY-MM-DD) moves the fixture evening to a
@@ -177,6 +181,7 @@ func run(logger *slog.Logger, level *logging.Level) error {
 		logs = jmock.New()
 		services = sdmock.New()
 		scriptRunner = &scriptsmock.Runner{}
+		packages = aptmock.New()
 		logger.Info("webcontrol client mode", "mode", "mock")
 	}
 
@@ -200,6 +205,7 @@ func run(logger *slog.Logger, level *logging.Level) error {
 		Logs:          logs,
 		Systemd:       services,
 		Scripts:       scriptRunner,
+		Apt:           packages,
 		Mock:          cfg.Mode == config.ModeMock,
 		LookPath:      exec.LookPath,
 		Logger:        logger,

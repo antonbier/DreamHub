@@ -1150,6 +1150,16 @@
       },
       "doneStart": "{name} is starting."
     },
+    "packages": {
+      "title": "Packages",
+      "search": "Search packages …",
+      "allCategories": "All categories",
+      "allStatus": "All",
+      "upgradable": "Update available",
+      "upgradableFrom": "{from} → {to}",
+      "empty": "No packages found.",
+      "unavailable": "The package list isn't available on this system."
+    },
     "scripts": {
       "title": "Scripts",
       "upload": "Upload script …",

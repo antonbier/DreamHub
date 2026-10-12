@@ -9,6 +9,7 @@ import (
 	"strconv"
 	"time"
 
+	"github.com/antonbier/DreamHub/backend/internal/apt"
 	"github.com/antonbier/DreamHub/backend/internal/auth"
 	"github.com/antonbier/DreamHub/backend/internal/httpx"
 	"github.com/antonbier/DreamHub/backend/internal/journald"
@@ -48,6 +49,11 @@ type Admin struct {
 	// Auth gives the terminal's enable step something to re-check the
 	// password against (admin_terminal.go); nil hides the terminal.
 	Auth auth.ConfigSource
+	// Apt lists installed and upgradable packages (admin_packages.go); nil
+	// hides the package browser. Install/remove as a plan is a later slice
+	// (docs/ADMINHUB_PLAN.md, A2) — needs the box to confirm `apt-get -s`
+	// simulate output and service-restart behavior first.
+	Apt apt.Lister
 	// TerminalTarget is shellinaboxd's address — "http://127.0.0.1:4200"
 	// on the box (ARCHITECTURE.md), a test server's URL in tests.
 	TerminalTarget string
@@ -86,6 +92,7 @@ func (h *Admin) Mount(mux httpx.Mux) {
 	mux.HandleFunc("DELETE /api/v1/admin/scripts/{id}", adminOnly(h.deleteScript))
 	mux.HandleFunc("POST /api/v1/admin/scripts/{id}/run/plan", adminOnly(h.planRunScript))
 	mux.HandleFunc("GET /api/v1/admin/scripts/{id}/runs", adminOnly(h.scriptRuns))
+	mux.HandleFunc("GET /api/v1/admin/packages", adminOnly(h.listPackages))
 	mux.HandleFunc("GET /api/v1/admin/terminal/status", adminOnly(h.terminalStatus))
 	mux.HandleFunc("POST /api/v1/admin/terminal/enable", adminOnly(h.enableTerminal))
 	mux.HandleFunc("POST /api/v1/admin/terminal/disable", adminOnly(h.disableTerminal))

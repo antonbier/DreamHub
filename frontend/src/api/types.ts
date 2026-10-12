@@ -676,6 +676,16 @@ export interface ScriptRun {
   output: string
 }
 
+// apt.Package — AdminHub's package browser (A2), read-only so far.
+export interface AdminPackage {
+  name: string
+  category: string
+  version: string
+  availableVersion?: string
+  upgradable: boolean
+  description: string
+}
+
 // GET /api/v1/admin/terminal/status.
 export interface TerminalStatus {
   // false on a system without shellinaboxd configured (not running on the box).

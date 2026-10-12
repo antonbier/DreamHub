@@ -59,7 +59,8 @@ Done: `.deb` for arm64 (box) and armhf (built, not tried on a DM900/DM920) with 
 - [x] **AdminHub → DeviceHub** ([`docs/ADMINHUB_PLAN.md`](docs/ADMINHUB_PLAN.md)) — SystemHub and AdminHub merged into one nav entry ("Gerät"), admin-only, three tabs (A1, built 2026-10-11)
 - [x] **DeviceHub**: script library — upload, store, run with confirm + change-log entry (A3, built 2026-10-11, `docs/ADMINHUB_PLAN.md`)
 - [x] **DeviceHub terminal** — `shellinaboxd` behind DreamHub's auth, off by default, re-auth required (A4, built 2026-10-11); still needs a box check that the real proxy reaches a working shell (#36)
-- [ ] **DeviceHub**: package/feed management with preview/confirm and apt-Section categories, update notifications (A2, `docs/ADMINHUB_PLAN.md`) (#47)
+- [x] **DeviceHub**: package browser — installed/upgradable packages, apt-Section categories, text/category/status filters (A2 read-only slice, built 2026-10-12, `docs/ADMINHUB_PLAN.md`); still needs a box check of `dpkg-query`/`apt-get` output
+- [ ] **DeviceHub**: package install/remove as a plan with preview/confirm, feeds with a trust signal, update notifications, AI explain (A2 remainder, `docs/ADMINHUB_PLAN.md`) (#47)
 - [ ] Jellyfin / Emby connectors (#37)
 - [ ] More AI providers (#38)
 - [ ] Profiles: a kids role with allowed bouquets (prepared: `users.bouquets`) and a Plex age limit (#45)

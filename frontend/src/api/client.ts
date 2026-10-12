@@ -14,6 +14,7 @@
 import { shallowRef } from 'vue'
 import { authHeaders, handleUnauthorized } from './authState'
 import type {
+  AdminPackage,
   AdminScript,
   AdScanResult,
   BouquetEntry,
@@ -458,6 +459,15 @@ export const api = {
     // Not read through request(): the iframe/browser hits this directly,
     // proxied straight to shellinaboxd.
     terminalProxyPath: '/api/v1/admin/terminal/proxy/',
+    // The package browser (docs/ADMINHUB_PLAN.md, A2): read-only so far —
+    // install/remove as a plan is a later slice.
+    packages: (filter: { q?: string; category?: string; status?: string } = {}) => {
+      const params = new URLSearchParams()
+      if (filter.q) params.set('q', filter.q)
+      if (filter.category) params.set('category', filter.category)
+      if (filter.status) params.set('status', filter.status)
+      return request<{ packages: AdminPackage[]; categories: string[] }>('GET', `/api/v1/admin/packages?${params}`)
+    },
   },
   notifications: {
     list: (limit = 20) => request<{ notifications: Notification[]; unread: number }>('GET', `/api/v1/notifications?limit=${limit}`),

@@ -1150,6 +1150,16 @@
       },
       "doneStart": "{name} si sta avviando."
     },
+    "packages": {
+      "title": "Pacchetti",
+      "search": "Cerca pacchetto …",
+      "allCategories": "Tutte le categorie",
+      "allStatus": "Tutti",
+      "upgradable": "Aggiornamento disponibile",
+      "upgradableFrom": "{from} → {to}",
+      "empty": "Nessun pacchetto trovato.",
+      "unavailable": "L'elenco dei pacchetti non è disponibile su questo sistema."
+    },
     "scripts": {
       "title": "Script",
       "upload": "Carica script …",

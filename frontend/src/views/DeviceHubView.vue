@@ -163,6 +163,7 @@
 
     <template v-else-if="!item || item.status !== 'unavailable'">
       <ServicesPanel @logs="showLogsFor" />
+      <PackagesPanel />
       <ScriptsPanel />
       <TerminalPanel />
 
@@ -295,6 +296,7 @@ import { RouterLink, useRoute, useRouter } from 'vue-router'
 import { api, ApiError } from '@/api/client'
 import Icon from '@/components/Icon.vue'
 import ServicesPanel from '@/components/admin/ServicesPanel.vue'
+import PackagesPanel from '@/components/admin/PackagesPanel.vue'
 import ScriptsPanel from '@/components/admin/ScriptsPanel.vue'
 import TerminalPanel from '@/components/admin/TerminalPanel.vue'
 import SelfTestPanel from '@/components/system/SelfTestPanel.vue'

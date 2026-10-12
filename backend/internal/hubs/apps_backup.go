@@ -35,11 +35,11 @@ func (h *Apps) ID() string { return appsBackupSectionID }
 // that App4 could have produced.
 func (h *Apps) Items(ctx context.Context) ([]BackupItem, error) {
 	if h.Docker == nil {
-		return nil, nil
+		return []BackupItem{}, nil
 	}
 	containers, err := h.Docker.List(ctx)
 	if err != nil {
-		return nil, nil // a degraded Docker connector means an empty section, not a failed backup
+		return []BackupItem{}, nil // a degraded Docker connector means an empty section, not a failed backup
 	}
 	out := make([]BackupItem, 0, len(containers))
 	for _, c := range containers {

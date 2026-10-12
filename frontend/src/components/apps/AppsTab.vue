@@ -15,6 +15,8 @@
     <p v-else-if="loadError" class="mt-4 text-[13px] text-faint">{{ loadError }}</p>
 
     <template v-else>
+      <p v-if="dockerMissing" class="mt-4 rounded border border-line bg-tile p-3 text-[13px] text-muted">{{ t('apps.dockerMissing') }}</p>
+      <p v-else-if="installedError" class="mt-4 text-[13px] text-faint">{{ installedError }}</p>
       <section v-if="installed.length > 0" class="mt-4">
         <div class="flex items-center justify-between">
           <h2 class="text-[13px] font-semibold text-muted">{{ t('apps.installedTitle') }}</h2>
@@ -94,7 +96,7 @@
               v-else
               type="button"
               class="shrink-0 rounded border border-line px-2.5 py-1 text-[12.5px] text-text hover:bg-field disabled:opacity-60"
-              :disabled="!!installing"
+              :disabled="!!installing || dockerMissing"
               @click="previewInstall(app)"
             >
               {{ t('apps.install') }}
@@ -219,7 +221,7 @@
 <script setup lang="ts">
 import { nextTick, onMounted, onUnmounted, ref } from 'vue'
 import { useI18n } from 'vue-i18n'
-import { api } from '@/api/client'
+import { api, ApiError } from '@/api/client'
 import PlanPreview from '@/components/PlanPreview.vue'
 import { useFriendlyError } from '@/composables/useFriendlyError'
 import { usePlanError } from '@/composables/usePlanError'
@@ -234,17 +236,30 @@ const installed = ref<InstalledApp[]>([])
 const loading = ref(true)
 const loadError = ref('')
 
+// Docker itself may be missing on a box (not installed, or the helper
+// not running) — the catalog and search still work then, only the
+// installed list can't be read, so the two load independently.
+const dockerMissing = ref(false)
+const installedError = ref('')
+
 async function load() {
-  try {
-    const [c, i] = await Promise.all([api.apps.catalog(), api.apps.installed()])
-    catalog.value = c.apps
-    installed.value = i.apps
+  const [c, i] = await Promise.allSettled([api.apps.catalog(), api.apps.installed()])
+  if (c.status === 'fulfilled') {
+    catalog.value = c.value.apps
     loadError.value = ''
-  } catch {
+  } else {
     loadError.value = t('apps.loadError')
-  } finally {
-    loading.value = false
   }
+  if (i.status === 'fulfilled') {
+    installed.value = i.value.apps
+    dockerMissing.value = false
+    installedError.value = ''
+  } else {
+    installed.value = []
+    dockerMissing.value = i.reason instanceof ApiError && i.reason.code === 'docker_unavailable'
+    installedError.value = dockerMissing.value ? '' : t('apps.installedLoadError')
+  }
+  loading.value = false
 }
 
 function openUrl(port: number): string {

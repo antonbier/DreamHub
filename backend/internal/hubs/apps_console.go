@@ -37,7 +37,7 @@ func (h *Apps) containerLogs(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 	if err != nil {
-		httpx.WriteError(w, r, http.StatusBadGateway, "docker_failed", "the logs couldn't be read")
+		writeDockerError(w, r, err, "the logs couldn't be read")
 		return
 	}
 	httpx.WriteJSON(w, http.StatusOK, map[string]any{"text": string(out)})
@@ -131,7 +131,7 @@ func (h *Apps) containerConsole(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 	if err != nil {
-		httpx.WriteError(w, r, http.StatusBadGateway, "docker_failed", "could not attach to the container")
+		writeDockerError(w, r, err, "could not attach to the container")
 		return
 	}
 	defer upstream.Close()

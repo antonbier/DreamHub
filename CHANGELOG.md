@@ -6,6 +6,8 @@ Format follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/); version
 
 ## [Unreleased]
 
+## [0.4.0] - 2026-10-12
+
 ### Added
 - DeviceHub ("Gerät"): SystemHub and AdminHub merged into one nav entry with role-gated tabs — device/disks/diagnostics, a script library (upload, store, run by hand with a confirm and a change-log entry), a terminal (`shellinaboxd` behind DreamHub's own auth, off by default, re-authentication required to turn it on), and a package browser (installed packages, feeds with a trust signal read from `X-DreamHub-Category`, update notifications, an AI explanation of what a package does on request).
 - Extension Hub: a versioned, data-only plugin contract so niche or homelab-style features can ship as separate, optional packages — an extension registers over loopback and describes its own UI as structured widgets (status, meter, list, action) rendered with DreamHub's own components; action widgets go through the normal plan → apply flow. A `packaging/extension-template/` for building a future extension's own `.deb` (systemd unit with hardening, control file, postinst/prerm/postrm), and `X-DreamHub-Category` recognized by the feed list and package browser. Demo-only so far — nothing registers against it yet.
@@ -15,11 +17,14 @@ Format follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/); version
 - AppsHub: a curated app can now actually be installed — "Install" shows exactly what will happen (the image, its storage location, up to how much RAM, which port) before anything runs, checked first against free memory and free disk space and refused if either is too tight. Installed apps get an "Open" link when they have a web interface, Start/Stop, and Remove (its own stored settings are kept, never deleted along with it). Free-search results still can't be installed, only checked for compatibility.
 - AppsHub: an "Update available" badge when a newer image exists for an installed app (also sent to the notification inbox), a "Logs" button per app plus a link to the Docker service's own health in the existing device log viewer, and a "Console" — an interactive shell inside the app's container, with the same off-by-default/password-re-entry/standing-warning posture as the existing device terminal.
 - Backup & restore: grew a general, opt-in "sections" mechanism beyond settings — AppsHub's own installed apps are the first, each app's own config included by default, its size shown before downloading.
-- MediaHub: ad breaks found by AdScan can be written into the recording's own cut list ("Mark in cut list" in the detail dialog) so the box's own player skips them — mock-tested only, still needs a box check that the player actually skips the marked ranges.
+- MediaHub: ad breaks found by AdScan can be written into the recording's own cut list ("Mark in cut list" in the detail dialog) so the box's own player skips them — the cut-list format is confirmed on the box; that the player really skips the marked ranges still needs a check with the TV.
 - Settings: an "About" card (version, copyright, source link) next to Backup & restore.
 
 ### Fixed
 - PlexHub: a stream that stalled mid-playback could hang forever instead of failing.
+- AppsHub on a box without Docker: the Apps tab showed only an error and hid the catalog and search; it now says Docker isn't set up, keeps both usable and disables "Install".
+- Backup & restore: on a box without Docker the settings page's backup card broke (an empty apps section came back as `null`).
+- Uninstalling (`dpkg -r`) left the TV plugin's directory behind (enigma2's own compiled files), so the next enigma2 start showed a DreamHub launcher with no backend; it also left a dangling systemd link. Both are removed now.
 
 ## [0.3.0] - 2026-10-09
 

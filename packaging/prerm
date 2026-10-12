@@ -6,6 +6,12 @@ set -e
 
 if [ -d /run/systemd/system ]; then
     systemctl stop dreamhub.service || true
+    # Disable while the unit file still exists: in postrm it's already
+    # gone and `systemctl disable` can't find it, which left a dangling
+    # multi-user.target.wants link behind (found on the box, #22).
+    if [ "$1" = remove ]; then
+        systemctl disable dreamhub.service >/dev/null 2>&1 || true
+    fi
 fi
 
 exit 0

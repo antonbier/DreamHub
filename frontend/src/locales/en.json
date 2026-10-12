@@ -1107,7 +1107,9 @@
       "send": "Send",
       "inputPlaceholder": "Type a command and press Enter…",
       "close": "Close"
-    }
+    },
+    "dockerMissing": "Docker isn't set up on this box. The list and search work, but nothing can be installed until Docker and DreamHub's Docker helper are running.",
+    "installedLoadError": "The installed apps couldn't be read."
   },
   "timers": {
     "tuners": "{count} tuner | {count} tuners",

@@ -1107,7 +1107,9 @@
       "send": "Senden",
       "inputPlaceholder": "Befehl eingeben und Enter drücken…",
       "close": "Schließen"
-    }
+    },
+    "dockerMissing": "Docker ist auf dieser Box nicht eingerichtet. Die Liste und die Suche funktionieren, installieren lässt sich aber erst, wenn Docker und DreamHubs Docker-Helfer laufen.",
+    "installedLoadError": "Die installierten Apps konnten nicht gelesen werden."
   },
   "timers": {
     "tuners": "{count} Tuner | {count} Tuner",

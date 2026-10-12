@@ -11,7 +11,7 @@
 
     <!-- App6: opt-in sections beyond settings, each with its own real
          size shown before the admin includes it. -->
-    <div v-if="appsSection" class="mt-3 flex items-center gap-2">
+    <div v-if="appsSection && appsSection.items?.length" class="mt-3 flex items-center gap-2">
       <input id="backup-include-apps" v-model="includeApps" type="checkbox" class="rounded border-line" />
       <label for="backup-include-apps" class="text-[13px] text-text">
         {{ t('system.backup.includeApps', { count: appsSection.items.length, size: formatSize(appsTotalSize) }, appsSection.items.length) }}
@@ -82,7 +82,7 @@ function formatSize(bytes: number): string {
 const sections = ref<BackupSectionsList['sections']>([])
 const includeApps = ref(true)
 const appsSection = computed(() => sections.value.find((s) => s.id === 'apps'))
-const appsTotalSize = computed(() => appsSection.value?.items.reduce((sum, i) => sum + i.sizeBytes, 0) ?? 0)
+const appsTotalSize = computed(() => appsSection.value?.items?.reduce((sum, i) => sum + i.sizeBytes, 0) ?? 0)
 
 onMounted(async () => {
   try {

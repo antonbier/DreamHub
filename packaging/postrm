@@ -10,7 +10,13 @@ case "$1" in
             systemctl disable dreamhub.service >/dev/null 2>&1 || true
             systemctl daemon-reload || true
         fi
+        rm -f /etc/systemd/system/multi-user.target.wants/dreamhub.service
         rm -f /etc/avahi/services/dreamhub.service
+        # enigma2 compiles the plugin's .py into .pyo/.pyc next to it at
+        # runtime; dpkg doesn't own those, so the directory stayed behind
+        # and the next enigma2 start would load a launcher with no backend
+        # (found on the box, #22).
+        rm -rf /usr/lib/enigma2/python/Plugins/Extensions/DreamHub
         # The plugin is gone: a reinstall must load it again, even if its
         # files are the same as before.
         rm -f /data/dreamhub/.plugin.sum
@@ -20,7 +26,9 @@ case "$1" in
             systemctl disable dreamhub.service >/dev/null 2>&1 || true
             systemctl daemon-reload || true
         fi
+        rm -f /etc/systemd/system/multi-user.target.wants/dreamhub.service
         rm -f /etc/avahi/services/dreamhub.service
+        rm -rf /usr/lib/enigma2/python/Plugins/Extensions/DreamHub
         # Only a purge (explicit "remove the config/data too") ever
         # deletes /data/dreamhub — a plain removal keeps it, exactly as
         # ROADMAP.md's WP9 acceptance criteria ask ("uninstall (data

@@ -2,6 +2,7 @@ package hubs
 
 import (
 	"context"
+	"errors"
 	"fmt"
 	"net"
 	"net/http"
@@ -99,7 +100,7 @@ func (h *Apps) listInstalled(w http.ResponseWriter, r *http.Request) {
 	}
 	containers, err := h.Docker.List(r.Context())
 	if err != nil {
-		httpx.WriteError(w, r, http.StatusBadGateway, "docker_failed", "could not list installed apps")
+		writeDockerError(w, r, err, "could not list installed apps")
 		return
 	}
 	out := make([]installedApp, 0, len(containers))
@@ -148,7 +149,7 @@ func (h *Apps) planInstall(w http.ResponseWriter, r *http.Request) {
 	ctx := r.Context()
 	containers, err := h.Docker.List(ctx)
 	if err != nil {
-		httpx.WriteError(w, r, http.StatusBadGateway, "docker_failed", "could not check installed apps")
+		writeDockerError(w, r, err, "could not check installed apps")
 		return
 	}
 	if installedFingerprint(containers, app.ID) != "not-installed" {
@@ -299,7 +300,7 @@ func (h *Apps) planRemove(w http.ResponseWriter, r *http.Request) {
 	ctx := r.Context()
 	containers, err := h.Docker.List(ctx)
 	if err != nil {
-		httpx.WriteError(w, r, http.StatusBadGateway, "docker_failed", "could not look up the app")
+		writeDockerError(w, r, err, "could not look up the app")
 		return
 	}
 	var found *dockerd.Container
@@ -383,8 +384,20 @@ func (h *Apps) setRunning(w http.ResponseWriter, r *http.Request, running bool) 
 		return
 	}
 	if err != nil {
-		httpx.WriteError(w, r, http.StatusBadGateway, "docker_failed", "the request failed")
+		writeDockerError(w, r, err, "the request failed")
 		return
 	}
 	w.WriteHeader(http.StatusNoContent)
+}
+
+// writeDockerError answers a failed helper call. An unreachable helper or
+// daemon (Docker not installed on this box, or the helper not running) is
+// its own code, docker_unavailable, so the Apps tab can say so plainly
+// and keep the catalog usable, instead of a generic failure.
+func writeDockerError(w http.ResponseWriter, r *http.Request, err error, msg string) {
+	if errors.Is(err, dockerd.ErrUnavailable) {
+		httpx.WriteError(w, r, http.StatusServiceUnavailable, "docker_unavailable", "Docker isn't reachable on this box")
+		return
+	}
+	httpx.WriteError(w, r, http.StatusBadGateway, "docker_failed", msg)
 }

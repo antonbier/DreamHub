@@ -2,6 +2,8 @@
 
 Status: **decided 2026-10-11; E1 (the contract) built 2026-10-12.** Tracks issue #46. Once a package lands, its status moves to `ROADMAP.md`.
 
+**2026-10-12: widened and renamed to AppsHub** (`docs/APPSHUB_PLAN.md`, not yet built) — Docker container management turned out to need its own full hub (forms, not widgets), not something E1's widget contract could stretch to cover. Everything on this page still stands exactly as built: E1's widget cards become one tab ("Extensions") inside the renamed AppsHub nav entry, same contract, same code, just a different wrapper around it.
+
 ## Why
 
 DreamHub's core keeps growing hubs (MediaHub, ChannelHub, …), but not every useful feature belongs there. Niche, homelab-style ideas — a quick Unraid status check, switching a WLAN socket to wake a server, an Arrr-suite queue view — are each genuinely useful to some households and irrelevant to most. Building them into the core would do to DreamHub what it was explicitly built to avoid elsewhere: a monolith nobody can keep lean. The Extension Hub is how such features ship as **separate, optional packages** instead: installed only by the households that want them, maintained (and versioned) independently of DreamHub's own release cycle, visible in DreamHub's own UI as if they'd always been a hub.

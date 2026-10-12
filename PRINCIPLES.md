@@ -105,6 +105,10 @@ Covers things like the AI provider key, TMDB API key, webhook URLs, the API toke
 - Settings per provider: API key (secret), model, and a **daily usage limit** as a cost guard.
 - Send only what's needed (e.g. only the user-selected channels' EPG), nothing personal beyond that.
 
+## AI is always optional
+
+No feature may *require* an AI provider to work at all — at most, AI adds an optional, clearly opt-in extra on top of something that already works without it (DiscoveryHub's recommendations, AdminHub's "what does this package do?"). A household without any AI provider configured, or one that never wants to send anything to an external service, gets the full product minus these specific extras — never a degraded core. This also keeps maintenance honest: a feature's everyday data (e.g. a curated app list for AppsHub) is maintained as plain, reviewable project data, not generated or kept current by an AI on anyone's behalf.
+
 ## Profiles, roles and dashboards: ready, not built
 
 Preferences, settings, language, time zone setting and dashboards belong to a user in the data model from day one; every user has a **role**; a user can own **multiple dashboards**. The API carries a user context. v1 has exactly one user (an admin), one dashboard, and no switching UI for either.

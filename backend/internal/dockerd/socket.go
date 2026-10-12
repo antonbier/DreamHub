@@ -5,6 +5,7 @@ import (
 	"context"
 	"encoding/binary"
 	"encoding/json"
+	"errors"
 	"fmt"
 	"io"
 	"net"
@@ -61,6 +62,10 @@ type dockerContainer struct {
 	State  string            `json:"State"`
 	Status string            `json:"Status"`
 	Labels map[string]string `json:"Labels"`
+	Ports  []struct {
+		PublicPort uint16 `json:"PublicPort"`
+		Type       string `json:"Type"`
+	} `json:"Ports"`
 }
 
 func fromDocker(c dockerContainer) Container {
@@ -72,8 +77,21 @@ func fromDocker(c dockerContainer) Container {
 			name = name[1:]
 		}
 	}
-	return Container{ID: c.ID, Name: name, Image: c.Image, State: c.State, Status: c.Status, Labels: c.Labels}
+	out := Container{ID: c.ID, Name: name, Image: c.Image, State: c.State, Status: c.Status, Labels: c.Labels}
+	for _, p := range c.Ports {
+		if p.Type == "tcp" && p.PublicPort != 0 {
+			out.HostPort = int(p.PublicPort)
+			break
+		}
+	}
+	return out
 }
+
+// containerName is the fixed, deterministic name a given AppID's
+// container gets — "one container per app" is enforced by Create seeing
+// this name already taken (ErrAlreadyExists), not by a separate lookup
+// that could race.
+func containerName(appID string) string { return "dreamhub-app-" + appID }
 
 func (e Exec) List(ctx context.Context) ([]Container, error) {
 	filters, err := json.Marshal(map[string][]string{"label": {AppLabel}})
@@ -238,6 +256,139 @@ func (e Exec) Exec(ctx context.Context, id string, cmd []string) ([]byte, error)
 		return nil, err
 	}
 	return demux(raw), nil
+}
+
+// pullImage asks the daemon to pull spec's image and drains the
+// (streamed, newline-delimited JSON progress) response fully before
+// returning — Docker only guarantees the pull finished once that stream
+// closes.
+func (e Exec) pullImage(ctx context.Context, image string) error {
+	resp, err := e.do(ctx, http.MethodPost, "/images/create?fromImage="+url.QueryEscape(image), nil)
+	if err != nil {
+		return err
+	}
+	defer drainClosed(resp.Body)
+	if resp.StatusCode != http.StatusOK {
+		return fmt.Errorf("dockerd: pull %s: unexpected status %d", image, resp.StatusCode)
+	}
+	// A failed pull (e.g. unknown tag) still answers 200 with an "error"
+	// line partway through the stream rather than a non-200 status —
+	// Docker's own streamed-progress convention — so the body is scanned
+	// for one instead of trusted just because the status line was OK.
+	var lastErr error
+	dec := json.NewDecoder(resp.Body)
+	for {
+		var line struct {
+			Error string `json:"error"`
+		}
+		if err := dec.Decode(&line); err != nil {
+			break
+		}
+		if line.Error != "" {
+			lastErr = errors.New(line.Error)
+		}
+	}
+	if lastErr != nil {
+		return fmt.Errorf("dockerd: pull %s: %w", image, lastErr)
+	}
+	return nil
+}
+
+func (e Exec) Create(ctx context.Context, spec ContainerSpec) (Container, error) {
+	name := containerName(spec.AppID)
+	resp, err := e.do(ctx, http.MethodGet, "/containers/"+url.PathEscape(name)+"/json", nil)
+	if err != nil {
+		return Container{}, err
+	}
+	drainClosed(resp.Body)
+	if resp.StatusCode == http.StatusOK {
+		return Container{}, ErrAlreadyExists
+	}
+
+	if err := e.pullImage(ctx, spec.Image); err != nil {
+		return Container{}, err
+	}
+
+	env := make([]string, 0, len(spec.Env))
+	for k, v := range spec.Env {
+		env = append(env, k+"="+v)
+	}
+	exposed := map[string]any{}
+	bindings := map[string]any{}
+	if spec.ContainerPort != 0 {
+		port := fmt.Sprintf("%d/tcp", spec.ContainerPort)
+		exposed[port] = map[string]any{}
+		bindings[port] = []map[string]string{{"HostPort": fmt.Sprint(spec.HostPort)}}
+	}
+	create := map[string]any{
+		"Image":        spec.Image,
+		"Env":          env,
+		"ExposedPorts": exposed,
+		"Labels":       map[string]string{AppLabel: spec.AppID},
+		"HostConfig": map[string]any{
+			"PortBindings": bindings,
+			"Binds":        []string{spec.HostDir + ":" + spec.ContainerDir},
+			"Memory":       spec.MemoryLimitBytes,
+			// A crash-looping app is reported, not restarted forever
+			// (docs/APPSHUB_PLAN.md, "Autostart and crash-loop
+			// protection") — App5 wires the notification; this caps
+			// Docker's own retries either way.
+			"RestartPolicy": map[string]any{"Name": "on-failure", "MaximumRetryCount": 5},
+		},
+	}
+	body, err := json.Marshal(create)
+	if err != nil {
+		return Container{}, err
+	}
+	resp, err = e.do(ctx, http.MethodPost, "/containers/create?name="+url.QueryEscape(name), bytes.NewReader(body))
+	if err != nil {
+		return Container{}, err
+	}
+	var created struct{ ID string }
+	decErr := json.NewDecoder(resp.Body).Decode(&created)
+	drainClosed(resp.Body)
+	if resp.StatusCode != http.StatusCreated {
+		return Container{}, fmt.Errorf("dockerd: create %s: unexpected status %d", spec.AppID, resp.StatusCode)
+	}
+	if decErr != nil {
+		return Container{}, decErr
+	}
+
+	resp, err = e.do(ctx, http.MethodPost, "/containers/"+url.PathEscape(created.ID)+"/start", nil)
+	if err != nil {
+		return Container{}, err
+	}
+	drainClosed(resp.Body)
+	if resp.StatusCode != http.StatusNoContent {
+		return Container{}, fmt.Errorf("dockerd: start newly created %s: unexpected status %d", spec.AppID, resp.StatusCode)
+	}
+
+	return Container{
+		ID: created.ID, Name: name, Image: spec.Image, State: "running", HostPort: spec.HostPort,
+		Labels: map[string]string{AppLabel: spec.AppID},
+	}, nil
+}
+
+func (e Exec) Remove(ctx context.Context, id string) error {
+	if err := e.requireOwned(ctx, id); err != nil {
+		return err
+	}
+	resp, err := e.do(ctx, http.MethodPost, "/containers/"+url.PathEscape(id)+"/stop", nil)
+	if err != nil {
+		return err
+	}
+	drainClosed(resp.Body)
+	// Stopping an already-stopped container 304s — fine, proceed to remove.
+
+	resp, err = e.do(ctx, http.MethodDelete, "/containers/"+url.PathEscape(id), nil)
+	if err != nil {
+		return err
+	}
+	defer drainClosed(resp.Body)
+	if resp.StatusCode != http.StatusNoContent {
+		return fmt.Errorf("dockerd: remove: unexpected status %d", resp.StatusCode)
+	}
+	return nil
 }
 
 // demux strips Docker's multiplexed stdout/stderr frame headers (used

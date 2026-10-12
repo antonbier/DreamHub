@@ -79,7 +79,7 @@ func TestHTTPClient_Logs(t *testing.T) {
 	client, closeFn := newTestServer(t)
 	defer closeFn()
 
-	out, err := client.Logs(context.Background(), "adguard", 50)
+	out, err := client.Logs(context.Background(), "adguardhome", 50)
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -111,18 +111,57 @@ func TestHTTPClient_Unreachable(t *testing.T) {
 }
 
 func TestServer_RoutesOnlyWhitelistedSubset(t *testing.T) {
-	// Nothing beyond list/start/stop/logs/exec is reachable — in
-	// particular no create/run, the hard denial the plan requires.
+	// Nothing beyond list/start/stop/logs/exec/create/remove is reachable
+	// — in particular nothing that would let a caller reach the daemon's
+	// own raw API (e.g. a passthrough to /containers/{id}/json, which
+	// would leak containers outside DreamHub's own apps).
 	srv := httptest.NewServer(dockerd.Server{Client: mock.New()}.Handler())
 	defer srv.Close()
 
-	resp, err := http.Post(srv.URL+"/containers/pihole/create", "application/json", nil)
+	resp, err := http.Get(srv.URL + "/containers/pihole/json")
 	if err != nil {
 		t.Fatal(err)
 	}
 	defer resp.Body.Close()
 	if resp.StatusCode != http.StatusNotFound {
-		t.Fatalf("POST .../create: got status %d, want 404 (no such route)", resp.StatusCode)
+		t.Fatalf("GET .../json: got status %d, want 404 (no such route)", resp.StatusCode)
+	}
+}
+
+func TestHTTPClient_CreateAndRemove(t *testing.T) {
+	client, closeFn := newTestServer(t)
+	defer closeFn()
+	ctx := context.Background()
+
+	spec := dockerd.ContainerSpec{
+		AppID: "sonarr", Image: "linuxserver/sonarr:latest",
+		Env:           map[string]string{"TZ": "Europe/Rome"},
+		HostPort:      8989, ContainerPort: 8989,
+		HostDir:       "/media/hdd/dreamhub-apps/sonarr", ContainerDir: "/config",
+		MemoryLimitBytes: 256 << 20,
+	}
+	created, err := client.Create(ctx, spec)
+	if err != nil {
+		t.Fatal(err)
+	}
+	if created.AppID() != "sonarr" || created.HostPort != 8989 {
+		t.Fatalf("got %+v", created)
+	}
+
+	list, _ := client.List(ctx)
+	if len(list) != 3 {
+		t.Fatalf("got %d containers after create, want 3 (2 fixtures + sonarr)", len(list))
+	}
+
+	if _, err := client.Create(ctx, spec); !errors.Is(err, dockerd.ErrAlreadyExists) {
+		t.Fatalf("creating the same app twice: got %v, want ErrAlreadyExists", err)
+	}
+
+	if err := client.Remove(ctx, created.ID); err != nil {
+		t.Fatal(err)
+	}
+	if err := client.Start(ctx, created.ID); !errors.Is(err, dockerd.ErrNotFound) {
+		t.Fatalf("starting a removed container: got %v, want ErrNotFound", err)
 	}
 }
 

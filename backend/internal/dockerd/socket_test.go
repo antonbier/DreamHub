@@ -53,6 +53,41 @@ func fakeDaemon(t *testing.T) (sockPath string, close func()) {
 		frame := []byte{1, 0, 0, 0, 0, 0, 0, 3, 'h', 'i', '\n'}
 		_, _ = w.Write(frame)
 	})
+	// Create/Remove fixtures: "sonarr" doesn't exist yet (so Create's own
+	// pre-check passes), "has-container" already does (so Create refuses
+	// it), and "bad-image" fails mid-pull the way Docker really reports
+	// it — a 200 whose streamed body still carries an "error" line.
+	mux.HandleFunc("GET /containers/dreamhub-app-sonarr/json", func(w http.ResponseWriter, r *http.Request) {
+		w.WriteHeader(http.StatusNotFound)
+	})
+	mux.HandleFunc("GET /containers/dreamhub-app-has-container/json", func(w http.ResponseWriter, r *http.Request) {
+		w.Header().Set("Content-Type", "application/json")
+		_, _ = w.Write([]byte(`{"Config":{"Labels":{"dreamhub.app":"has-container"}}}`))
+	})
+	mux.HandleFunc("GET /containers/dreamhub-app-bad-image/json", func(w http.ResponseWriter, r *http.Request) {
+		w.WriteHeader(http.StatusNotFound)
+	})
+	mux.HandleFunc("POST /images/create", func(w http.ResponseWriter, r *http.Request) {
+		if r.URL.Query().Get("fromImage") == "bad/image" {
+			_, _ = w.Write([]byte(`{"status":"pulling"}` + "\n" + `{"error":"manifest unknown"}` + "\n"))
+			return
+		}
+		_, _ = w.Write([]byte(`{"status":"pull complete"}` + "\n"))
+	})
+	mux.HandleFunc("POST /containers/create", func(w http.ResponseWriter, r *http.Request) {
+		w.Header().Set("Content-Type", "application/json")
+		w.WriteHeader(http.StatusCreated)
+		_, _ = w.Write([]byte(`{"Id":"newcontainer123"}`))
+	})
+	mux.HandleFunc("POST /containers/newcontainer123/start", func(w http.ResponseWriter, r *http.Request) {
+		w.WriteHeader(http.StatusNoContent)
+	})
+	mux.HandleFunc("POST /containers/abc123/stop", func(w http.ResponseWriter, r *http.Request) {
+		w.WriteHeader(http.StatusNoContent)
+	})
+	mux.HandleFunc("DELETE /containers/abc123", func(w http.ResponseWriter, r *http.Request) {
+		w.WriteHeader(http.StatusNoContent)
+	})
 
 	srv := &httptest.Server{Listener: listener, Config: &http.Server{Handler: mux}}
 	srv.Start()
@@ -108,6 +143,60 @@ func TestExec_Unreachable(t *testing.T) {
 	e := Exec{SocketPath: "/nonexistent/docker.sock"}
 	if _, err := e.List(context.Background()); err == nil {
 		t.Fatal("want an error when the socket doesn't exist")
+	}
+}
+
+func TestExec_Create(t *testing.T) {
+	sock, closeFn := fakeDaemon(t)
+	defer closeFn()
+	e := Exec{SocketPath: sock}
+
+	c, err := e.Create(context.Background(), ContainerSpec{
+		AppID: "sonarr", Image: "linuxserver/sonarr:latest",
+		Env: map[string]string{"TZ": "Europe/Rome"}, HostPort: 8989, ContainerPort: 8989,
+		HostDir: "/media/hdd/dreamhub-apps/sonarr", ContainerDir: "/config",
+		MemoryLimitBytes: 256 << 20,
+	})
+	if err != nil {
+		t.Fatal(err)
+	}
+	if c.ID != "newcontainer123" || c.AppID() != "sonarr" || c.HostPort != 8989 {
+		t.Fatalf("got %+v", c)
+	}
+}
+
+func TestExec_CreateRefusesExisting(t *testing.T) {
+	sock, closeFn := fakeDaemon(t)
+	defer closeFn()
+	e := Exec{SocketPath: sock}
+
+	_, err := e.Create(context.Background(), ContainerSpec{AppID: "has-container", Image: "x", MemoryLimitBytes: 1})
+	if err != ErrAlreadyExists {
+		t.Fatalf("got %v, want ErrAlreadyExists", err)
+	}
+}
+
+func TestExec_CreateFailedPull(t *testing.T) {
+	sock, closeFn := fakeDaemon(t)
+	defer closeFn()
+	e := Exec{SocketPath: sock}
+
+	_, err := e.Create(context.Background(), ContainerSpec{AppID: "bad-image", Image: "bad/image", MemoryLimitBytes: 1})
+	if err == nil {
+		t.Fatal("want an error when the daemon reports a failed pull")
+	}
+}
+
+func TestExec_Remove(t *testing.T) {
+	sock, closeFn := fakeDaemon(t)
+	defer closeFn()
+	e := Exec{SocketPath: sock}
+
+	if err := e.Remove(context.Background(), "abc123"); err != nil {
+		t.Fatal(err)
+	}
+	if err := e.Remove(context.Background(), "def456"); err != ErrNotFound {
+		t.Fatalf("unlabeled container: got %v, want ErrNotFound", err)
 	}
 }
 

@@ -21,6 +21,7 @@ import type {
   CatalogApp,
   AppSearchResult,
   AppManifest,
+  InstalledApp,
   AdScanResult,
   BouquetEntry,
   ChannelBackup,
@@ -491,6 +492,12 @@ export const api = {
     catalog: () => request<{ apps: CatalogApp[] }>('GET', '/api/v1/apps/catalog'),
     search: (q: string) => request<{ results: AppSearchResult[] }>('GET', `/api/v1/apps/search?q=${encodeURIComponent(q)}`),
     manifest: (image: string) => request<AppManifest>('GET', `/api/v1/apps/manifest?image=${encodeURIComponent(image)}`),
+    installed: () => request<{ apps: InstalledApp[] }>('GET', '/api/v1/apps/installed'),
+    installPlan: (appId: string, hostPort?: number) =>
+      request<{ plan: Plan }>('POST', '/api/v1/apps/install/plan', { appId, hostPort }),
+    removePlan: (id: string) => request<{ plan: Plan }>('POST', `/api/v1/apps/installed/${encodeURIComponent(id)}/remove/plan`),
+    start: (id: string) => request<void>('POST', `/api/v1/apps/installed/${encodeURIComponent(id)}/start`),
+    stop: (id: string) => request<void>('POST', `/api/v1/apps/installed/${encodeURIComponent(id)}/stop`),
   },
   plex: {
     status: () => request<PlexStatus>('GET', '/api/v1/plex/status'),

@@ -1068,7 +1068,18 @@
     "checking": "Wird geprüft…",
     "loadError": "Die kuratierte App-Liste konnte nicht geladen werden.",
     "searchError": "Die Suche konnte nicht abgeschlossen werden.",
-    "notYetInstallable": "Apps installieren ist noch nicht möglich — hier wird nur geprüft, ob das Image auf dieser Box laufen würde."
+    "notYetInstallable": "Diese können noch nicht installiert werden — hier wird nur geprüft, ob das Image auf dieser Box laufen würde.",
+    "catalogTitle": "App hinzufügen",
+    "installedTitle": "Installiert",
+    "install": "Installieren",
+    "installConfirm": "Installieren",
+    "installed": "Installiert",
+    "alreadyInstalled": "Bereits installiert",
+    "start": "Starten",
+    "stop": "Stoppen",
+    "remove": "Entfernen",
+    "removeConfirm": "Entfernen",
+    "open": "Öffnen"
   },
   "timers": {
     "tuners": "{count} Tuner | {count} Tuner",

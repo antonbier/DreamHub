@@ -32,7 +32,9 @@ import (
 	"github.com/antonbier/DreamHub/backend/internal/connector"
 	"github.com/antonbier/DreamHub/backend/internal/dashboard"
 	"github.com/antonbier/DreamHub/backend/internal/dmi"
+	"github.com/antonbier/DreamHub/backend/internal/dockerd"
 	"github.com/antonbier/DreamHub/backend/internal/dockerhub"
+	"github.com/antonbier/DreamHub/backend/internal/meminfo"
 	"github.com/antonbier/DreamHub/backend/internal/enrich"
 	"github.com/antonbier/DreamHub/backend/internal/events"
 	"github.com/antonbier/DreamHub/backend/internal/fanart"
@@ -113,6 +115,20 @@ type Options struct {
 	// mock otherwise; nil disables free search and the manifest check
 	// (the curated catalog itself still works, it needs no live call).
 	DockerHub dockerhub.Client
+	// Docker reaches AppsHub's isolated Docker helper
+	// (internal/dockerd.HTTPClient on the box, the in-memory mock
+	// otherwise): nil disables install/remove/start/stop and the
+	// installed list.
+	Docker dockerd.Client
+	// Mem reads free memory for AppsHub's install-time resource budget
+	// check (internal/meminfo); nil refuses every install with a clear
+	// reason.
+	Mem meminfo.Reader
+	// AppsStorageRoot is where an installed app's own config directory
+	// lives, one subdirectory per app id — the box's recording HDD by
+	// default ("/media/hdd/dreamhub-apps"); nil/"" still works, it just
+	// means a path under this empty root, fine for mock mode and tests.
+	AppsStorageRoot string
 	// TerminalTarget overrides shellinaboxd's address (tests only); empty
 	// means the box's real "http://127.0.0.1:4200".
 	TerminalTarget string
@@ -320,7 +336,10 @@ func New(ctx context.Context, o Options) (*App, error) {
 		})
 	}
 	extensionsHub := &hubs_.Extensions{Registry: extRegistry, Plans: plans, ReadOnly: o.ReadOnlyFiles}
-	appsHub := &hubs_.Apps{DockerHub: o.DockerHub}
+	appsHub := &hubs_.Apps{
+		DockerHub: o.DockerHub, Docker: o.Docker, Mem: o.Mem, WC: o.WebControl,
+		StorageRoot: o.AppsStorageRoot, Plans: plans, ReadOnly: o.ReadOnlyFiles, Now: now,
+	}
 
 	// Search providers (internal/hub/search.go): every hub with content of
 	// its own; ControlHub has none (its results would be actions).

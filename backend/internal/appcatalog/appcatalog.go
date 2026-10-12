@@ -38,6 +38,19 @@ type App struct {
 	// Image's "latest" tag — see the package doc for when and how this
 	// was checked.
 	Arches []dockerhub.Arch
+	// ContainerPort is the image's own web UI port, confirmed from its
+	// Docker Hub description's own `docker run -p` example on 2026-10-12
+	// — 0 means the app has no web UI to open (e.g. wireguard), so App4's
+	// install flow offers no host port and no "open app" link for it.
+	ContainerPort int
+	// ConfigPath is the in-container path App4 bind-mounts this app's own
+	// storage directory to, confirmed the same way as ContainerPort.
+	// Every linuxserver.io image here uses its own documented "/config"
+	// convention; the two vendor images (pihole, AdGuard Home) each use
+	// their own single documented path — a deliberate v1 simplification:
+	// AdGuard Home's second, optional "work" volume isn't modeled, and
+	// Pi-hole's optional dnsmasq.d override volume isn't either.
+	ConfigPath string
 }
 
 // Categories, in the fixed order the frontend shows them.
@@ -52,63 +65,73 @@ const (
 var Apps = []App{
 	{
 		ID: "pihole", Name: "Pi-hole", Category: CategoryNetwork,
-		Description: "Network-wide ad and tracker blocking via DNS.",
-		Image:       "pihole/pihole",
-		Arches:      []dockerhub.Arch{{Architecture: "amd64"}, {Architecture: "arm64"}, {Architecture: "arm", Variant: "v7"}, {Architecture: "arm", Variant: "v6"}, {Architecture: "386"}, {Architecture: "riscv64"}},
+		Description:   "Network-wide ad and tracker blocking via DNS.",
+		Image:         "pihole/pihole",
+		Arches:        []dockerhub.Arch{{Architecture: "amd64"}, {Architecture: "arm64"}, {Architecture: "arm", Variant: "v7"}, {Architecture: "arm", Variant: "v6"}, {Architecture: "386"}, {Architecture: "riscv64"}},
+		ContainerPort: 80, ConfigPath: "/etc/pihole",
 	},
 	{
 		ID: "adguardhome", Name: "AdGuard Home", Category: CategoryNetwork,
-		Description: "Network-wide ad and tracker blocking via DNS, with its own DNS-over-HTTPS/TLS.",
-		Image:       "adguard/adguardhome",
-		Arches:      []dockerhub.Arch{{Architecture: "386"}, {Architecture: "amd64"}, {Architecture: "arm", Variant: "v6"}, {Architecture: "arm", Variant: "v7"}, {Architecture: "arm64"}, {Architecture: "ppc64le"}},
+		Description:   "Network-wide ad and tracker blocking via DNS, with its own DNS-over-HTTPS/TLS.",
+		Image:         "adguard/adguardhome",
+		Arches:        []dockerhub.Arch{{Architecture: "386"}, {Architecture: "amd64"}, {Architecture: "arm", Variant: "v6"}, {Architecture: "arm", Variant: "v7"}, {Architecture: "arm64"}, {Architecture: "ppc64le"}},
+		ContainerPort: 3000, ConfigPath: "/opt/adguardhome/conf",
 	},
 	{
 		ID: "wireguard", Name: "WireGuard", Category: CategoryNetwork,
-		Description: "A VPN server to reach the household network from outside.",
-		Image:       "linuxserver/wireguard",
-		Arches:      []dockerhub.Arch{{Architecture: "amd64"}, {Architecture: "arm64"}},
+		Description:   "A VPN server to reach the household network from outside.",
+		Image:         "linuxserver/wireguard",
+		Arches:        []dockerhub.Arch{{Architecture: "amd64"}, {Architecture: "arm64"}},
+		ContainerPort: 0, ConfigPath: "/config",
 	},
 	{
 		ID: "syncthing", Name: "Syncthing", Category: CategoryFiles,
-		Description: "Continuous, peer-to-peer file synchronization between devices.",
-		Image:       "linuxserver/syncthing",
-		Arches:      []dockerhub.Arch{{Architecture: "amd64"}, {Architecture: "arm64"}},
+		Description:   "Continuous, peer-to-peer file synchronization between devices.",
+		Image:         "linuxserver/syncthing",
+		Arches:        []dockerhub.Arch{{Architecture: "amd64"}, {Architecture: "arm64"}},
+		ContainerPort: 8384, ConfigPath: "/config",
 	},
 	{
 		ID: "qbittorrent", Name: "qBittorrent", Category: CategoryFiles,
-		Description: "A BitTorrent client with a web UI.",
-		Image:       "linuxserver/qbittorrent",
-		Arches:      []dockerhub.Arch{{Architecture: "amd64"}, {Architecture: "arm64"}},
+		Description:   "A BitTorrent client with a web UI.",
+		Image:         "linuxserver/qbittorrent",
+		Arches:        []dockerhub.Arch{{Architecture: "amd64"}, {Architecture: "arm64"}},
+		ContainerPort: 8080, ConfigPath: "/config",
 	},
 	{
 		ID: "heimdall", Name: "Heimdall", Category: CategoryFiles,
-		Description: "A dashboard linking to the household's other self-hosted apps.",
-		Image:       "linuxserver/heimdall",
-		Arches:      []dockerhub.Arch{{Architecture: "amd64"}, {Architecture: "arm64"}},
+		Description:   "A dashboard linking to the household's other self-hosted apps.",
+		Image:         "linuxserver/heimdall",
+		Arches:        []dockerhub.Arch{{Architecture: "amd64"}, {Architecture: "arm64"}},
+		ContainerPort: 80, ConfigPath: "/config",
 	},
 	{
 		ID: "sonarr", Name: "Sonarr", Category: CategoryMedia,
-		Description: "Tracks and fetches new episodes of TV series.",
-		Image:       "linuxserver/sonarr",
-		Arches:      []dockerhub.Arch{{Architecture: "amd64"}, {Architecture: "arm64"}},
+		Description:   "Tracks and fetches new episodes of TV series.",
+		Image:         "linuxserver/sonarr",
+		Arches:        []dockerhub.Arch{{Architecture: "amd64"}, {Architecture: "arm64"}},
+		ContainerPort: 8989, ConfigPath: "/config",
 	},
 	{
 		ID: "radarr", Name: "Radarr", Category: CategoryMedia,
-		Description: "Tracks and fetches films.",
-		Image:       "linuxserver/radarr",
-		Arches:      []dockerhub.Arch{{Architecture: "amd64"}, {Architecture: "arm64"}},
+		Description:   "Tracks and fetches films.",
+		Image:         "linuxserver/radarr",
+		Arches:        []dockerhub.Arch{{Architecture: "amd64"}, {Architecture: "arm64"}},
+		ContainerPort: 7878, ConfigPath: "/config",
 	},
 	{
 		ID: "prowlarr", Name: "Prowlarr", Category: CategoryMedia,
-		Description: "A shared indexer manager for Sonarr/Radarr-style apps.",
-		Image:       "linuxserver/prowlarr",
-		Arches:      []dockerhub.Arch{{Architecture: "amd64"}, {Architecture: "arm64"}},
+		Description:   "A shared indexer manager for Sonarr/Radarr-style apps.",
+		Image:         "linuxserver/prowlarr",
+		Arches:        []dockerhub.Arch{{Architecture: "amd64"}, {Architecture: "arm64"}},
+		ContainerPort: 9696, ConfigPath: "/config",
 	},
 	{
 		ID: "bazarr", Name: "Bazarr", Category: CategoryMedia,
-		Description: "Fetches subtitles for Sonarr/Radarr libraries.",
-		Image:       "linuxserver/bazarr",
-		Arches:      []dockerhub.Arch{{Architecture: "amd64"}, {Architecture: "arm64"}},
+		Description:   "Fetches subtitles for Sonarr/Radarr libraries.",
+		Image:         "linuxserver/bazarr",
+		Arches:        []dockerhub.Arch{{Architecture: "amd64"}, {Architecture: "arm64"}},
+		ContainerPort: 6767, ConfigPath: "/config",
 	},
 }
 

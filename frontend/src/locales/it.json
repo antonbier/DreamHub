@@ -1068,7 +1068,18 @@
     "checking": "Verifica in corso…",
     "loadError": "L'elenco delle app curato non è stato caricato.",
     "searchError": "La ricerca non è riuscita.",
-    "notYetInstallable": "Installare le app non è ancora possibile — questo controlla solo se l'immagine funzionerebbe su questo box."
+    "notYetInstallable": "Queste non possono ancora essere installate — questo controlla solo se l'immagine funzionerebbe su questo box.",
+    "catalogTitle": "Aggiungi un'app",
+    "installedTitle": "Installate",
+    "install": "Installa",
+    "installConfirm": "Installa",
+    "installed": "Installata",
+    "alreadyInstalled": "Già installata",
+    "start": "Avvia",
+    "stop": "Arresta",
+    "remove": "Rimuovi",
+    "removeConfirm": "Rimuovi",
+    "open": "Apri"
   },
   "timers": {
     "tuners": "{count} tuner | {count} tuner",

@@ -15,10 +15,12 @@ import (
 	"time"
 
 	aptmock "github.com/antonbier/DreamHub/backend/internal/apt/mock"
-	dockerhubmock "github.com/antonbier/DreamHub/backend/internal/dockerhub/mock"
 	"github.com/antonbier/DreamHub/backend/internal/autotimer"
 	atmock "github.com/antonbier/DreamHub/backend/internal/autotimer/mock"
+	dockermock "github.com/antonbier/DreamHub/backend/internal/dockerd/mock"
+	dockerhubmock "github.com/antonbier/DreamHub/backend/internal/dockerhub/mock"
 	fanartmock "github.com/antonbier/DreamHub/backend/internal/fanart/mock"
+	meminfomock "github.com/antonbier/DreamHub/backend/internal/meminfo/mock"
 	omdbmock "github.com/antonbier/DreamHub/backend/internal/omdb/mock"
 	plexmock "github.com/antonbier/DreamHub/backend/internal/plex/mock"
 	pushmock "github.com/antonbier/DreamHub/backend/internal/push/mock"
@@ -110,30 +112,33 @@ func newEnvFull(t *testing.T, wc webcontrol.Client, at autotimer.Client, recFS r
 	runner := &scriptsmock.Runner{}
 	plexServer := plexmock.New()
 	a, err := app.New(context.Background(), app.Options{
-		ReadOnlyFiles:  readOnly,
-		TMDB:           tmdbmock.New(),
-		TVmaze:         tvmazemock.New(),
-		OMDb:           omdbmock.New(),
-		Fanart:         fanartmock.New(),
-		Push:           pushed,
-		Plex:           plexServer,
-		StreamBase:     "http://127.0.0.1:8080",
-		DataDir:        t.TempDir(),
-		WebControl:     wc,
-		AutoTimer:      at,
-		RecordingsFS:   recFS,
-		Series:         srmock.New(),
-		AI:             aimock.New(),
-		Logs:           logs,
-		Systemd:        services,
-		Scripts:        runner,
-		Apt:            aptmock.New(),
-		DockerHub:      dockerhubmock.Client{},
-		TerminalTarget: terminalTarget,
-		Mock:           true,
-		LookPath:       func(string) (string, error) { return "/usr/bin/journalctl", nil },
-		Logger:         discardLogger(),
-		Now:            func() time.Time { return fixedNow },
+		ReadOnlyFiles:   readOnly,
+		TMDB:            tmdbmock.New(),
+		TVmaze:          tvmazemock.New(),
+		OMDb:            omdbmock.New(),
+		Fanart:          fanartmock.New(),
+		Push:            pushed,
+		Plex:            plexServer,
+		StreamBase:      "http://127.0.0.1:8080",
+		DataDir:         t.TempDir(),
+		WebControl:      wc,
+		AutoTimer:       at,
+		RecordingsFS:    recFS,
+		Series:          srmock.New(),
+		AI:              aimock.New(),
+		Logs:            logs,
+		Systemd:         services,
+		Scripts:         runner,
+		Apt:             aptmock.New(),
+		DockerHub:       dockerhubmock.Client{},
+		Docker:          dockermock.New(),
+		Mem:             meminfomock.New(),
+		AppsStorageRoot: "/media/hdd/dreamhub-apps",
+		TerminalTarget:  terminalTarget,
+		Mock:            true,
+		LookPath:        func(string) (string, error) { return "/usr/bin/journalctl", nil },
+		Logger:          discardLogger(),
+		Now:             func() time.Time { return fixedNow },
 	})
 	if err != nil {
 		t.Fatal(err)

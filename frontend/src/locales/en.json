@@ -1068,7 +1068,18 @@
     "checking": "Checking…",
     "loadError": "The curated app list couldn't be loaded.",
     "searchError": "The search couldn't be completed.",
-    "notYetInstallable": "Installing apps isn't available yet — this only checks whether the image would run on this box."
+    "notYetInstallable": "These can't be installed yet — this only checks whether the image would run on this box.",
+    "catalogTitle": "Add an app",
+    "installedTitle": "Installed",
+    "install": "Install",
+    "installConfirm": "Install",
+    "installed": "Installed",
+    "alreadyInstalled": "Already installed",
+    "start": "Start",
+    "stop": "Stop",
+    "remove": "Remove",
+    "removeConfirm": "Remove",
+    "open": "Open"
   },
   "timers": {
     "tuners": "{count} tuner | {count} tuners",

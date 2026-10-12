@@ -1,11 +1,13 @@
 <!--
-  AppsHub's "Apps" tab (docs/APPSHUB_PLAN.md, App3 — "Curated list +
-  search"): the hand-maintained catalog (backend/internal/appcatalog,
-  never AI-generated) plus free search beyond it, each image's
-  compatibility with this box checked server-side
-  (dockerhub.Supports/BoxArch) rather than guessed here. Installing,
-  running or removing an app is App4, not built yet — this tab is
-  read-only, a preview of what AppsHub will eventually be able to run.
+  AppsHub's "Apps" tab: the curated catalog (backend/internal/appcatalog,
+  never AI-generated) with install-as-a-plan (App4, #46-adjacent — no
+  issue yet), free search beyond it with an on-click arch check (App3),
+  and the installed apps themselves (start/stop direct, remove through
+  the same preview-and-confirm flow every built-in hub's own actions use,
+  PlanPreview.vue). Only a curated app can be installed in this first
+  slice — a free-search result still only offers the compatibility check,
+  since installing it needs a web port and config path App4 doesn't know
+  for an arbitrary image (docs/APPSHUB_PLAN.md).
 -->
 <template>
   <div>
@@ -13,23 +15,101 @@
     <p v-else-if="loadError" class="mt-4 text-[13px] text-faint">{{ loadError }}</p>
 
     <template v-else>
-      <p class="mt-3 text-[12.5px] text-faint">{{ t('apps.notYetInstallable') }}</p>
-
-      <div class="mt-4 flex flex-col gap-3">
-        <section v-for="app in catalog" :key="app.id" class="flex items-center gap-3 rounded border border-line bg-tile p-3">
-          <div class="min-w-0 flex-1">
-            <div class="flex items-center gap-2">
-              <h3 class="truncate text-[13.5px] font-semibold text-text">{{ app.name }}</h3>
-              <span class="rounded-full bg-tile-2 px-2 py-0.5 text-[11px] text-muted">{{ t('apps.category.' + app.category) }}</span>
+      <section v-if="installed.length > 0" class="mt-4">
+        <h2 class="text-[13px] font-semibold text-muted">{{ t('apps.installedTitle') }}</h2>
+        <div class="mt-2 flex flex-col gap-2">
+          <div v-for="a in installed" :key="a.id" class="flex items-center gap-3 rounded border border-line bg-tile p-3">
+            <div class="min-w-0 flex-1">
+              <p class="truncate text-[13.5px] font-semibold text-text">{{ a.name }}</p>
+              <p class="mt-0.5 flex items-center gap-1.5 text-[12px]" :class="a.state === 'running' ? 'text-ok' : 'text-muted'">
+                <span class="h-1.5 w-1.5 rounded-full" :class="a.state === 'running' ? 'bg-ok' : 'bg-faint'" />
+                {{ a.state }}
+              </p>
             </div>
-            <p class="mt-0.5 truncate text-[12.5px] text-muted">{{ app.description }}</p>
+            <a v-if="a.hostPort" :href="openUrl(a.hostPort)" target="_blank" rel="noopener" class="shrink-0 text-[12.5px] text-accent hover:underline">
+              {{ t('apps.open') }}
+            </a>
+            <button
+              type="button"
+              class="shrink-0 rounded border border-line px-2.5 py-1 text-[12.5px] text-text hover:bg-field disabled:opacity-60"
+              :disabled="!!busyId"
+              @click="toggleRunning(a)"
+            >
+              {{ a.state === 'running' ? t('apps.stop') : t('apps.start') }}
+            </button>
+            <button
+              type="button"
+              class="shrink-0 rounded border border-line px-2.5 py-1 text-[12.5px] text-text hover:bg-field disabled:opacity-60"
+              :disabled="!!busyId"
+              @click="previewRemove(a)"
+            >
+              {{ t('apps.remove') }}
+            </button>
           </div>
-          <span class="flex items-center gap-1.5 shrink-0 text-[12px]" :class="app.compatible ? 'text-ok' : 'text-faint'">
-            <span class="h-1.5 w-1.5 rounded-full" :class="app.compatible ? 'bg-ok' : 'bg-faint'" />
-            {{ app.compatible ? t('apps.compatible') : t('apps.notCompatible') }}
-          </span>
-        </section>
-      </div>
+          <div v-if="removing" class="rounded border border-line bg-tile p-3">
+            <PlanPreview
+              v-if="removing.plan && !removing.done"
+              :plan="removing.plan"
+              :confirm-label="t('apps.removeConfirm')"
+              :busy="removing.applying"
+              :error="removing.error"
+              danger
+              @confirm="confirmRemove"
+              @cancel="removing = null"
+            >
+              {{ removing.plan.summary }}
+            </PlanPreview>
+            <p v-else-if="removing.error" class="text-[12.5px] text-warn">{{ removing.error }}</p>
+          </div>
+        </div>
+      </section>
+
+      <section class="mt-5">
+        <h2 class="text-[13px] font-semibold text-muted">{{ t('apps.catalogTitle') }}</h2>
+        <div class="mt-2 flex flex-col gap-3">
+          <section v-for="app in catalog" :key="app.id" class="flex items-center gap-3 rounded border border-line bg-tile p-3">
+            <div class="min-w-0 flex-1">
+              <div class="flex items-center gap-2">
+                <h3 class="truncate text-[13.5px] font-semibold text-text">{{ app.name }}</h3>
+                <span class="rounded-full bg-tile-2 px-2 py-0.5 text-[11px] text-muted">{{ t('apps.category.' + app.category) }}</span>
+              </div>
+              <p class="mt-0.5 truncate text-[12.5px] text-muted">{{ app.description }}</p>
+            </div>
+            <span v-if="!app.compatible" class="flex items-center gap-1.5 shrink-0 text-[12px] text-faint">
+              <span class="h-1.5 w-1.5 rounded-full bg-faint" />
+              {{ t('apps.notCompatible') }}
+            </span>
+            <span v-else-if="app.installed" class="shrink-0 text-[12px] text-muted">{{ t('apps.alreadyInstalled') }}</span>
+            <button
+              v-else
+              type="button"
+              class="shrink-0 rounded border border-line px-2.5 py-1 text-[12.5px] text-text hover:bg-field disabled:opacity-60"
+              :disabled="!!installing"
+              @click="previewInstall(app)"
+            >
+              {{ t('apps.install') }}
+            </button>
+          </section>
+        </div>
+        <div v-if="installing" class="mt-3 rounded border border-line bg-tile p-3">
+          <p v-if="installing.loading" class="text-[13px] text-faint">{{ t('common.loading') }}</p>
+          <PlanPreview
+            v-else-if="installing.plan && !installing.done"
+            :plan="installing.plan"
+            :confirm-label="t('apps.installConfirm')"
+            :busy="installing.applying"
+            :error="installing.error"
+            @confirm="confirmInstall"
+            @cancel="installing = null"
+          >
+            {{ installing.plan.summary }}
+          </PlanPreview>
+          <p v-else-if="installing.done" class="flex items-center gap-1.5 text-[13px] text-ok" role="status">
+            <span class="h-1.5 w-1.5 rounded-full bg-ok" />{{ t('apps.installed') }}
+          </p>
+          <p v-else-if="installing.error" class="text-[12.5px] text-warn">{{ installing.error }}</p>
+        </div>
+      </section>
 
       <div class="mt-6 border-t border-line-soft pt-4">
         <input
@@ -39,6 +119,7 @@
           :placeholder="t('apps.searchPlaceholder')"
           @keyup.enter="search"
         />
+        <p class="mt-1.5 text-[12px] text-faint">{{ t('apps.notYetInstallable') }}</p>
 
         <p v-if="searching" class="mt-3 text-[13px] text-faint">{{ t('common.loading') }}</p>
         <p v-else-if="searchError" class="mt-3 text-[13px] text-faint">{{ searchError }}</p>
@@ -78,19 +159,25 @@
 import { onMounted, ref } from 'vue'
 import { useI18n } from 'vue-i18n'
 import { api } from '@/api/client'
+import PlanPreview from '@/components/PlanPreview.vue'
 import { useFriendlyError } from '@/composables/useFriendlyError'
-import type { AppSearchResult, CatalogApp } from '@/api/types'
+import { usePlanError } from '@/composables/usePlanError'
+import type { AppSearchResult, CatalogApp, InstalledApp, Plan } from '@/api/types'
 
 const { t } = useI18n()
 const { friendly } = useFriendlyError()
+const { planErrorMessage } = usePlanError()
 
 const catalog = ref<CatalogApp[]>([])
+const installed = ref<InstalledApp[]>([])
 const loading = ref(true)
 const loadError = ref('')
 
 async function load() {
   try {
-    catalog.value = (await api.apps.catalog()).apps
+    const [c, i] = await Promise.all([api.apps.catalog(), api.apps.installed()])
+    catalog.value = c.apps
+    installed.value = i.apps
     loadError.value = ''
   } catch {
     loadError.value = t('apps.loadError')
@@ -98,6 +185,86 @@ async function load() {
     loading.value = false
   }
 }
+
+function openUrl(port: number): string {
+  return `${location.protocol}//${location.hostname}:${port}/`
+}
+
+// --- install: preview, confirm --------------------------------------------
+
+type InstallPending = { appId: string; loading?: boolean; plan?: Plan; applying?: boolean; done?: boolean; error?: string }
+const installing = ref<InstallPending | null>(null)
+
+async function previewInstall(app: CatalogApp) {
+  installing.value = { appId: app.id, loading: true }
+  try {
+    const res = await api.apps.installPlan(app.id)
+    if (installing.value?.appId === app.id) installing.value = { appId: app.id, plan: res.plan }
+  } catch (err) {
+    if (installing.value?.appId === app.id) installing.value = { appId: app.id, error: planErrorMessage(err) }
+  }
+}
+
+async function confirmInstall() {
+  const p = installing.value
+  if (!p?.plan) return
+  installing.value = { ...p, applying: true, error: undefined }
+  try {
+    await api.plans.apply(p.plan.id)
+    installing.value = { appId: p.appId, done: true }
+    await load()
+    window.setTimeout(() => {
+      if (installing.value?.done) installing.value = null
+    }, 3000)
+  } catch (err) {
+    installing.value = { appId: p.appId, error: planErrorMessage(err) }
+  }
+}
+
+// --- remove: preview, confirm -----------------------------------------------
+
+type RemovePending = { id: string; plan?: Plan; applying?: boolean; done?: boolean; error?: string }
+const removing = ref<RemovePending | null>(null)
+
+async function previewRemove(a: InstalledApp) {
+  removing.value = { id: a.id }
+  try {
+    const res = await api.apps.removePlan(a.id)
+    if (removing.value?.id === a.id) removing.value = { id: a.id, plan: res.plan }
+  } catch (err) {
+    if (removing.value?.id === a.id) removing.value = { id: a.id, error: planErrorMessage(err) }
+  }
+}
+
+async function confirmRemove() {
+  const p = removing.value
+  if (!p?.plan) return
+  removing.value = { ...p, applying: true, error: undefined }
+  try {
+    await api.plans.apply(p.plan.id)
+    removing.value = null
+    await load()
+  } catch (err) {
+    removing.value = { id: p.id, error: planErrorMessage(err) }
+  }
+}
+
+// --- start/stop: direct, no preview (docs/APPSHUB_PLAN.md) ------------------
+
+const busyId = ref('')
+
+async function toggleRunning(a: InstalledApp) {
+  busyId.value = a.id
+  try {
+    if (a.state === 'running') await api.apps.stop(a.id)
+    else await api.apps.start(a.id)
+    await load()
+  } finally {
+    busyId.value = ''
+  }
+}
+
+// --- free search + on-click arch check (App3) -------------------------------
 
 const query = ref('')
 const results = ref<AppSearchResult[]>([])

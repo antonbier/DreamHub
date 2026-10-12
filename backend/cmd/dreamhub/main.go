@@ -10,10 +10,14 @@ import (
 	"github.com/antonbier/DreamHub/backend/internal/autotimer"
 	atmock "github.com/antonbier/DreamHub/backend/internal/autotimer/mock"
 	"github.com/antonbier/DreamHub/backend/internal/dmi"
+	"github.com/antonbier/DreamHub/backend/internal/dockerd"
+	dockermock "github.com/antonbier/DreamHub/backend/internal/dockerd/mock"
 	"github.com/antonbier/DreamHub/backend/internal/dockerhub"
 	dockerhubmock "github.com/antonbier/DreamHub/backend/internal/dockerhub/mock"
 	"github.com/antonbier/DreamHub/backend/internal/fanart"
 	fanartmock "github.com/antonbier/DreamHub/backend/internal/fanart/mock"
+	"github.com/antonbier/DreamHub/backend/internal/meminfo"
+	meminfomock "github.com/antonbier/DreamHub/backend/internal/meminfo/mock"
 	"github.com/antonbier/DreamHub/backend/internal/omdb"
 	omdbmock "github.com/antonbier/DreamHub/backend/internal/omdb/mock"
 	"github.com/antonbier/DreamHub/backend/internal/plex"
@@ -62,6 +66,13 @@ func main() {
 	}
 }
 
+func envOr(key, fallback string) string {
+	if v := os.Getenv(key); v != "" {
+		return v
+	}
+	return fallback
+}
+
 func run(logger *slog.Logger, level *logging.Level) error {
 	restrictFileModes()
 	cfg := config.Load()
@@ -84,6 +95,9 @@ func run(logger *slog.Logger, level *logging.Level) error {
 	var scriptRunner scripts.Runner
 	var packages apt.Lister
 	var dockerHub dockerhub.Client
+	var dockerClient dockerd.Client
+	var appsStorageRoot string
+	var memReader meminfo.Reader
 	switch cfg.Mode {
 	case config.ModeLive:
 		c := webcontrol.NewHTTPClient(cfg.WebControlURL)
@@ -121,6 +135,14 @@ func run(logger *slog.Logger, level *logging.Level) error {
 		scriptRunner = scripts.Exec{}
 		packages = apt.Exec{}
 		dockerHub = dockerhub.NewHTTPClient()
+		// The helper is off by default (docs/APPSHUB_PLAN.md, App2's own
+		// "not yet wired into anything the box runs" gap) — its address
+		// is only reachable, not guaranteed to have a process answering;
+		// AppsHub's own calls degrade to ErrUnavailable exactly like any
+		// other connector when nothing is listening there yet.
+		dockerClient = dockerd.HTTPClient{BaseURL: envOr("DREAMHUB_DOCKERD_HELPER_ADDR", "http://127.0.0.1:8090")}
+		appsStorageRoot = envOr("DREAMHUB_APPS_STORAGE_ROOT", "/media/hdd/dreamhub-apps")
+		memReader = meminfo.Exec{}
 		logger.Info("webcontrol client mode", "mode", "live", "url", cfg.WebControlURL, "deviceWrites", cfg.EnableDeviceWrites)
 	default:
 		// DREAMHUB_MOCK_DATE (YYYY-MM-DD) moves the fixture evening to a
@@ -187,6 +209,9 @@ func run(logger *slog.Logger, level *logging.Level) error {
 		scriptRunner = &scriptsmock.Runner{}
 		packages = aptmock.New()
 		dockerHub = dockerhubmock.Client{}
+		dockerClient = dockermock.New()
+		appsStorageRoot = "/tmp/dreamhub-mock-apps"
+		memReader = meminfomock.New()
 		logger.Info("webcontrol client mode", "mode", "mock")
 	}
 
@@ -205,18 +230,21 @@ func run(logger *slog.Logger, level *logging.Level) error {
 		DMI:          dmiReader,
 		RecordingsFS: recFS,
 		// Same switch as WebControl writes; mock mode always writes.
-		ReadOnlyFiles: cfg.Mode == config.ModeLive && !cfg.EnableDeviceWrites,
-		AI:            aiClient,
-		Logs:          logs,
-		Systemd:       services,
-		Scripts:       scriptRunner,
-		Apt:           packages,
-		DockerHub:     dockerHub,
-		Mock:          cfg.Mode == config.ModeMock,
-		LookPath:      exec.LookPath,
-		Logger:        logger,
-		Level:         level,
-		WebUI:         webui.Handler(),
+		ReadOnlyFiles:   cfg.Mode == config.ModeLive && !cfg.EnableDeviceWrites,
+		AI:              aiClient,
+		Logs:            logs,
+		Systemd:         services,
+		Scripts:         scriptRunner,
+		Apt:             packages,
+		DockerHub:       dockerHub,
+		Docker:          dockerClient,
+		Mem:             memReader,
+		AppsStorageRoot: appsStorageRoot,
+		Mock:            cfg.Mode == config.ModeMock,
+		LookPath:        exec.LookPath,
+		Logger:          logger,
+		Level:           level,
+		WebUI:           webui.Handler(),
 	})
 	if err != nil {
 		return err

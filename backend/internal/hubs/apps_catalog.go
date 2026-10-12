@@ -5,26 +5,59 @@ import (
 	"net/http"
 	"regexp"
 	"strings"
+	"time"
 
 	"github.com/antonbier/DreamHub/backend/internal/appcatalog"
+	"github.com/antonbier/DreamHub/backend/internal/dockerd"
 	"github.com/antonbier/DreamHub/backend/internal/dockerhub"
 	"github.com/antonbier/DreamHub/backend/internal/httpx"
+	"github.com/antonbier/DreamHub/backend/internal/meminfo"
 	"github.com/antonbier/DreamHub/backend/internal/perm"
+	"github.com/antonbier/DreamHub/backend/internal/plan"
+	"github.com/antonbier/DreamHub/backend/internal/webcontrol"
 )
 
-// Apps is AppsHub's "Apps" tab backend (docs/APPSHUB_PLAN.md, App3 —
-// "Curated list + search"): the curated catalog (internal/appcatalog,
-// plain hand-maintained data, never AI-generated) plus free search and
-// an on-click multi-arch check against Docker Hub (internal/dockerhub).
-// Installing, running or removing a Docker app — anything that would
-// actually touch internal/dockerd's helper — is App4, not this; every
-// route here is read-only.
+// Apps is AppsHub's "Apps" tab backend: the curated catalog
+// (internal/appcatalog, plain hand-maintained data, never AI-generated),
+// free search and an on-click multi-arch check against Docker Hub
+// (internal/dockerhub, App3), and installing/running/removing a Docker
+// app through internal/dockerd's loopback helper (App4, apps_install.go
+// — docs/APPSHUB_PLAN.md).
 type Apps struct {
 	// DockerHub is nil in no known build (dockerhub.NewHTTPClient or
 	// ./mock always set in app.go), kept as a pointer-shaped dependency
 	// like every other optional connector in this codebase for the same
 	// "missing degrades, never panics" rule.
 	DockerHub dockerhub.Client
+	// Docker reaches the isolated helper process (internal/dockerd,
+	// App2) — nil disables install/remove/start/stop and the installed
+	// list, the same degrade-gracefully rule as DockerHub above.
+	Docker dockerd.Client
+	// Mem reads free memory for the install-time resource budget check
+	// (App4); nil refuses every install with a clear reason rather than
+	// skipping the check.
+	Mem meminfo.Reader
+	// WC reads the HDD's free space for the same check (reusing
+	// DeviceInfo, the same source events.Poller's own disk.aboveThreshold
+	// already trusts); nil behaves the same as Mem being nil.
+	WC webcontrol.Client
+	// StorageRoot is where every installed app's own config directory
+	// lives, one subdirectory per AppID — the box's recording HDD by
+	// default (docs/APPSHUB_PLAN.md: "every app's storage goes on the
+	// recording HDD"; letting an app opt into flash storage instead is
+	// deferred past this first slice).
+	StorageRoot string
+	Plans       *plan.Service
+	ReadOnly    bool
+	// Now overrides the clock (tests); nil means time.Now.
+	Now func() time.Time
+}
+
+func (h *Apps) now() time.Time {
+	if h.Now != nil {
+		return h.Now()
+	}
+	return time.Now()
 }
 
 // Perms: everything here needs the system permission, the same bar
@@ -32,9 +65,14 @@ type Apps struct {
 // manage") — there's no viewer-facing read of this tab yet.
 func (h *Apps) Perms() map[string]perm.Perm {
 	return map[string]perm.Perm{
-		"GET /api/v1/apps/catalog":  perm.System,
-		"GET /api/v1/apps/search":   perm.System,
-		"GET /api/v1/apps/manifest": perm.System,
+		"GET /api/v1/apps/catalog":                     perm.System,
+		"GET /api/v1/apps/search":                      perm.System,
+		"GET /api/v1/apps/manifest":                    perm.System,
+		"GET /api/v1/apps/installed":                   perm.System,
+		"POST /api/v1/apps/install/plan":               perm.System,
+		"POST /api/v1/apps/installed/{id}/remove/plan": perm.System,
+		"POST /api/v1/apps/installed/{id}/start":       perm.System,
+		"POST /api/v1/apps/installed/{id}/stop":        perm.System,
 	}
 }
 
@@ -42,6 +80,11 @@ func (h *Apps) Mount(mux httpx.Mux) {
 	mux.HandleFunc("GET /api/v1/apps/catalog", h.catalog)
 	mux.HandleFunc("GET /api/v1/apps/search", h.search)
 	mux.HandleFunc("GET /api/v1/apps/manifest", h.manifest)
+	mux.HandleFunc("GET /api/v1/apps/installed", h.listInstalled)
+	mux.HandleFunc("POST /api/v1/apps/install/plan", h.planInstall)
+	mux.HandleFunc("POST /api/v1/apps/installed/{id}/remove/plan", h.planRemove)
+	mux.HandleFunc("POST /api/v1/apps/installed/{id}/start", h.startInstalled)
+	mux.HandleFunc("POST /api/v1/apps/installed/{id}/stop", h.stopInstalled)
 }
 
 // catalogEntry is one curated app with box compatibility already
@@ -53,15 +96,27 @@ type catalogEntry struct {
 	Description string `json:"description"`
 	Image       string `json:"image"`
 	Compatible  bool   `json:"compatible"`
+	// Installed is set from a live List against the helper (App4), not
+	// stored anywhere — the same "always read live, never go stale"
+	// choice dockerd.Container.HostPort makes.
+	Installed bool `json:"installed"`
 }
 
 func (h *Apps) catalog(w http.ResponseWriter, r *http.Request) {
 	box := dockerhub.BoxArch()
+	installed := map[string]bool{}
+	if h.Docker != nil {
+		if list, err := h.Docker.List(r.Context()); err == nil {
+			for _, c := range list {
+				installed[c.AppID()] = true
+			}
+		}
+	}
 	out := make([]catalogEntry, 0, len(appcatalog.Apps))
 	for _, a := range appcatalog.Apps {
 		out = append(out, catalogEntry{
 			ID: a.ID, Name: a.Name, Category: a.Category, Description: a.Description,
-			Image: a.Image, Compatible: a.SupportsArch(box),
+			Image: a.Image, Compatible: a.SupportsArch(box), Installed: installed[a.ID],
 		})
 	}
 	httpx.WriteJSON(w, http.StatusOK, map[string]any{"apps": out})

@@ -51,6 +51,8 @@ func statusErr(resp *http.Response) error {
 	switch resp.StatusCode {
 	case http.StatusNotFound:
 		return ErrNotFound
+	case http.StatusConflict:
+		return ErrAlreadyExists
 	case http.StatusServiceUnavailable:
 		return ErrUnavailable
 	default:
@@ -113,6 +115,44 @@ func (c HTTPClient) Logs(ctx context.Context, id string, tail int) ([]byte, erro
 		return nil, statusErr(resp)
 	}
 	return io.ReadAll(resp.Body)
+}
+
+func (c HTTPClient) Create(ctx context.Context, spec ContainerSpec) (Container, error) {
+	body, err := json.Marshal(map[string]any{
+		"appId": spec.AppID, "image": spec.Image, "env": spec.Env,
+		"hostPort": spec.HostPort, "containerPort": spec.ContainerPort,
+		"hostDir": spec.HostDir, "containerDir": spec.ContainerDir,
+		"memoryLimitBytes": spec.MemoryLimitBytes,
+	})
+	if err != nil {
+		return Container{}, err
+	}
+	resp, err := c.do(ctx, http.MethodPost, "/containers", bytes.NewReader(body))
+	if err != nil {
+		return Container{}, err
+	}
+	defer resp.Body.Close()
+	if resp.StatusCode != http.StatusOK {
+		drainClosed(resp.Body)
+		return Container{}, statusErr(resp)
+	}
+	var created Container
+	if err := json.NewDecoder(resp.Body).Decode(&created); err != nil {
+		return Container{}, err
+	}
+	return created, nil
+}
+
+func (c HTTPClient) Remove(ctx context.Context, id string) error {
+	resp, err := c.do(ctx, http.MethodDelete, "/containers/"+url.PathEscape(id), nil)
+	if err != nil {
+		return err
+	}
+	defer drainClosed(resp.Body)
+	if resp.StatusCode != http.StatusNoContent {
+		return statusErr(resp)
+	}
+	return nil
 }
 
 func (c HTTPClient) Exec(ctx context.Context, id string, cmd []string) ([]byte, error) {

@@ -733,6 +733,7 @@ export interface CatalogApp {
   description: string
   image: string
   compatible: boolean
+  installed: boolean
 }
 
 // hubs.searchResult — one free-search hit, not yet arch-checked.
@@ -746,6 +747,15 @@ export interface AppSearchResult {
 export interface AppManifest {
   architectures: { architecture: string; variant?: string }[]
   compatible: boolean
+}
+
+// hubs.installedApp — one running or stopped app (docs/APPSHUB_PLAN.md, App4).
+export interface InstalledApp {
+  id: string
+  name: string
+  image: string
+  state: string
+  hostPort?: number
 }
 
 export interface AdminFeed {

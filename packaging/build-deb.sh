@@ -71,9 +71,16 @@ mkdir -p "$PKG/DEBIAN" \
 echo "Cross-compiling the backend..."
 (cd "$ROOT/backend" && CGO_ENABLED=0 GOOS=linux GOARCH="$GOARCH" GOARM="$GOARM" GOMIPS="$GOMIPS" go build -trimpath -ldflags="-s -w" \
     -o "$PKG/usr/bin/dreamhub" ./cmd/dreamhub)
+# AppsHub's Docker helper (docs/APPSHUB_PLAN.md, App2): the only process
+# that holds the Docker socket; its unit stays disabled until "Set up
+# Docker" in the Apps tab enables it.
+(cd "$ROOT/backend" && CGO_ENABLED=0 GOOS=linux GOARCH="$GOARCH" GOARM="$GOARM" GOMIPS="$GOMIPS" go build -trimpath -ldflags="-s -w" \
+    -o "$PKG/usr/bin/dreamhub-dockerd-helper" ./cmd/dreamhub-dockerd-helper)
 
 # --- systemd unit + avahi service ---
 cp "$ROOT/packaging/dreamhub.service" "$PKG/lib/systemd/system/dreamhub.service"
+cp "$ROOT/packaging/dreamhub-docker.service" "$PKG/lib/systemd/system/dreamhub-docker.service"
+cp "$ROOT/packaging/dreamhub-dockerd-helper.service" "$PKG/lib/systemd/system/dreamhub-dockerd-helper.service"
 cp "$ROOT/packaging/dreamhub.avahi.service" "$PKG/etc/avahi/services/dreamhub.service"
 
 # --- Enigma2 plugin ---

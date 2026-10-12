@@ -124,7 +124,7 @@ func (c HTTPClient) Create(ctx context.Context, spec ContainerSpec) (Container, 
 		"appId": spec.AppID, "image": spec.Image, "env": spec.Env,
 		"hostPort": spec.HostPort, "containerPort": spec.ContainerPort,
 		"hostDir": spec.HostDir, "containerDir": spec.ContainerDir,
-		"memoryLimitBytes": spec.MemoryLimitBytes,
+		"memoryLimitBytes": spec.MemoryLimitBytes, "hostNetwork": spec.HostNetwork,
 	})
 	if err != nil {
 		return Container{}, err

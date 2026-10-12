@@ -89,6 +89,7 @@ type createRequest struct {
 	HostDir       string            `json:"hostDir"`
 	ContainerDir  string            `json:"containerDir"`
 	MemoryLimit   int64             `json:"memoryLimitBytes"`
+	HostNetwork   bool              `json:"hostNetwork"`
 }
 
 func (s Server) handleCreate(w http.ResponseWriter, r *http.Request) {
@@ -101,7 +102,7 @@ func (s Server) handleCreate(w http.ResponseWriter, r *http.Request) {
 		AppID: body.AppID, Image: body.Image, Env: body.Env,
 		HostPort: body.HostPort, ContainerPort: body.ContainerPort,
 		HostDir: body.HostDir, ContainerDir: body.ContainerDir,
-		MemoryLimitBytes: body.MemoryLimit,
+		MemoryLimitBytes: body.MemoryLimit, HostNetwork: body.HostNetwork,
 	})
 	if err != nil {
 		writeErr(w, err)

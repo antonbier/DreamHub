@@ -184,6 +184,7 @@ func (h *Apps) planInstall(w http.ResponseWriter, r *http.Request) {
 		HostPort: hostPort, ContainerPort: app.ContainerPort,
 		HostDir: hostDir, ContainerDir: app.ConfigPath,
 		MemoryLimitBytes: int64(memoryLimitMB) << 20,
+		HostNetwork:      true,
 	}
 
 	summary := fmt.Sprintf("Install %s (%s), up to %d MB RAM, storage at %s", app.Name, spec.Image, memoryLimitMB, hostDir)
@@ -270,25 +271,26 @@ func (h *Apps) checkDiskSpace(ctx context.Context) string {
 // choice) falls back to the app's own documented ContainerPort and tries
 // a few ports upward from there if that one's taken. An app with no web
 // UI (ContainerPort == 0, e.g. wireguard) gets no port at all.
+// resolvePort: apps run on the box's own network (docker run --network
+// host — the box's kernel has no veth/br_netfilter for Docker's bridge,
+// ARCHITECTURE.md, "Box checks for 0.4.0"), so an app listens on its own
+// port and it can't be remapped; a conflict is refused, naming who has
+// the port when it's one of the box's own services.
 func (h *Apps) resolvePort(app appcatalog.App, explicit int) (port int, problem string) {
 	if app.ContainerPort == 0 {
 		return 0, ""
 	}
-	if explicit != 0 {
-		if portBindable(explicit) {
-			return explicit, ""
-		}
-		if name, known := knownPorts[explicit]; known {
-			return 0, fmt.Sprintf("port %d is already used by %s", explicit, name)
-		}
-		return 0, fmt.Sprintf("port %d is already in use", explicit)
+	p := app.ContainerPort
+	if explicit != 0 && explicit != p {
+		return 0, fmt.Sprintf("%s always uses port %d on this box (apps share the box's network)", app.Name, p)
 	}
-	for p := app.ContainerPort; p < app.ContainerPort+20; p++ {
-		if portBindable(p) {
-			return p, ""
-		}
+	if portBindable(p) {
+		return p, ""
 	}
-	return 0, fmt.Sprintf("no free port found starting from %d", app.ContainerPort)
+	if name, known := knownPorts[p]; known {
+		return 0, fmt.Sprintf("port %d is already used by %s", p, name)
+	}
+	return 0, fmt.Sprintf("port %d is already in use", p)
 }
 
 func (h *Apps) planRemove(w http.ResponseWriter, r *http.Request) {

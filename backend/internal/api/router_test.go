@@ -4,6 +4,7 @@ import (
 	"bytes"
 	"context"
 	"encoding/json"
+	dockersetupmock "github.com/antonbier/DreamHub/backend/internal/dockersetup/mock"
 	"io"
 	"log/slog"
 	"net/http"
@@ -136,6 +137,7 @@ func newEnvFull(t *testing.T, wc webcontrol.Client, at autotimer.Client, recFS r
 		Apt:             aptmock.New(),
 		DockerHub:       dockerhubmock.Client{},
 		Docker:          dockermock.New(),
+		DockerSetup:     dockersetupmock.New(),
 		Mem:             meminfomock.New(),
 		AppsStorageRoot: "/media/hdd/dreamhub-apps",
 		AppsConfigFS:    appsConfigFS,

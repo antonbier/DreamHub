@@ -16,6 +16,8 @@ import { authHeaders, handleUnauthorized } from './authState'
 import type {
   AdminFeed,
   AdminPackage,
+  DockerSetupState,
+  DockerSetupStep,
   PackageRun,
   PackageStep,
   AdminScript,
@@ -504,6 +506,11 @@ export const api = {
     search: (q: string) => request<{ results: AppSearchResult[] }>('GET', `/api/v1/apps/search?q=${encodeURIComponent(q)}`),
     manifest: (image: string) => request<AppManifest>('GET', `/api/v1/apps/manifest?image=${encodeURIComponent(image)}`),
     installed: () => request<{ apps: InstalledApp[] }>('GET', '/api/v1/apps/installed'),
+    // "Set up Docker" (backend/internal/dockersetup): its state, the last
+    // run's log, and the plan for whatever's still missing.
+    docker: () =>
+      request<{ state: DockerSetupState; version: string; lastRun: { at: string; ok: boolean; log: string } | null }>('GET', '/api/v1/apps/docker'),
+    dockerSetupPlan: () => request<{ plan: Plan; steps: DockerSetupStep[] }>('POST', '/api/v1/apps/docker/setup/plan'),
     installPlan: (appId: string, hostPort?: number) =>
       request<{ plan: Plan }>('POST', '/api/v1/apps/install/plan', { appId, hostPort }),
     removePlan: (id: string) => request<{ plan: Plan }>('POST', `/api/v1/apps/installed/${encodeURIComponent(id)}/remove/plan`),

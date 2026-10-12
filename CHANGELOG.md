@@ -6,7 +6,10 @@ Format follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/); version
 
 ## [Unreleased]
 
+## [0.5.0] - 2026-10-12
+
 ### Added
+- AppsHub: "Set up Docker" in the Apps tab — installs Docker (the official release, version and checksum pinned by DreamHub) with everything on `/data`, never on the root flash, plus the matching kernel module, and starts it; shown as a preview first. Apps run on the box's own network (its kernel can't do Docker's own), so each app keeps its own port and a taken one is refused by name.
 - Device → Administration → Packages: install, update and remove packages, and "Update all". The preview is apt's own dry run — every package it would touch, including ones nobody picked (on the box, removing one small skin component would take two whole skins with it) — and says when a TV plugin or skin changes. Refused while the box records if enigma2 is touched; DreamHub's own package is left to the box's own tools. A "Not installed" filter browses what the feeds offer. apt's output is shown after applying, and the change log keeps each package's previous version.
 
 ## [0.4.0] - 2026-10-12

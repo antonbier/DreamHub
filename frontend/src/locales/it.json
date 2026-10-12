@@ -761,7 +761,10 @@
       "apt_refused": "apt non può farlo:",
       "recording_running": "Il box sta registrando. Riprova a registrazione finita.",
       "package_apply_failed": "apt ha segnalato un errore.",
-      "apt_unavailable": "L'installazione di pacchetti non è disponibile su questo sistema."
+      "apt_unavailable": "L'installazione di pacchetti non è disponibile su questo sistema.",
+      "docker_no_overlay": "Nessun modulo kernel overlay corrisponde al kernel di questo box, Docker non può funzionare qui.",
+      "docker_unsupported": "Non esiste Docker per il processore di questo box.",
+      "docker_setup_failed": "La configurazione di Docker non è riuscita."
     },
     "media": {
       "not_a_recording": "Questa registrazione non esiste (più).",
@@ -1119,8 +1122,30 @@
       "inputPlaceholder": "Scrivi un comando e premi Invio…",
       "close": "Chiudi"
     },
-    "dockerMissing": "Docker non è configurato su questo box. L'elenco e la ricerca funzionano, ma non si può installare nulla finché Docker e l'helper Docker di DreamHub non sono in esecuzione.",
-    "installedLoadError": "Non è stato possibile leggere le app installate."
+    "dockerMissing": "Docker non è ancora configurato su questo box. Elenco e ricerca funzionano già; per installare serve Docker.",
+    "installedLoadError": "Non è stato possibile leggere le app installate.",
+    "docker": {
+      "title": "Docker",
+      "where": "Docker {version}, tutto su /data ({free} liberi) — mai sulla flash di root.",
+      "unavailable": "Docker non si può configurare da qui su questo box.",
+      "setUp": "Configura Docker …",
+      "confirm": "Configura",
+      "previewIntro": "Ecco cosa succede:",
+      "takesAWhile": "Ci vogliono un paio di minuti — un download di 80 MB.",
+      "done": "Docker è in esecuzione.",
+      "failed": "La configurazione di Docker non è riuscita.",
+      "retry": "Riprova",
+      "step": {
+        "overlay": {
+          "installed": "Caricare il modulo kernel overlay (già installato).",
+          "feed": "Installare il modulo kernel overlay {version} dal feed del box — esattamente per questo kernel.",
+          "official": "Installare il modulo kernel overlay {version} dal feed ufficiale Dreambox — esattamente per questo kernel; solo questo file, il feed resta disattivato."
+        },
+        "download": "Scaricare Docker {version} (release statica ufficiale) e verificarne il checksum.",
+        "config": "Scrivere le impostazioni di Docker: dati in {dataRoot}, app sulla rete del box.",
+        "services": "Avviare Docker e l'helper Docker di DreamHub, anche a ogni avvio."
+      }
+    }
   },
   "timers": {
     "tuners": "{count} tuner | {count} tuner",

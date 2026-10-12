@@ -10,7 +10,9 @@ case "$1" in
             systemctl disable dreamhub.service >/dev/null 2>&1 || true
             systemctl daemon-reload || true
         fi
-        rm -f /etc/systemd/system/multi-user.target.wants/dreamhub.service
+        rm -f /etc/systemd/system/multi-user.target.wants/dreamhub.service \
+              /etc/systemd/system/multi-user.target.wants/dreamhub-docker.service \
+              /etc/systemd/system/multi-user.target.wants/dreamhub-dockerd-helper.service
         rm -f /etc/avahi/services/dreamhub.service
         # enigma2 compiles the plugin's .py into .pyo/.pyc next to it at
         # runtime; dpkg doesn't own those, so the directory stayed behind
@@ -26,14 +28,17 @@ case "$1" in
             systemctl disable dreamhub.service >/dev/null 2>&1 || true
             systemctl daemon-reload || true
         fi
-        rm -f /etc/systemd/system/multi-user.target.wants/dreamhub.service
+        rm -f /etc/systemd/system/multi-user.target.wants/dreamhub.service \
+              /etc/systemd/system/multi-user.target.wants/dreamhub-docker.service \
+              /etc/systemd/system/multi-user.target.wants/dreamhub-dockerd-helper.service
         rm -f /etc/avahi/services/dreamhub.service
         rm -rf /usr/lib/enigma2/python/Plugins/Extensions/DreamHub
         # Only a purge (explicit "remove the config/data too") ever
         # deletes /data/dreamhub — a plain removal keeps it, exactly as
         # ROADMAP.md's WP9 acceptance criteria ask ("uninstall (data
         # kept)"), so reinstalling later picks up where the user left off.
-        rm -rf /data/dreamhub
+        rm -rf /data/dreamhub /data/dreamhub-docker
+        rm -f /etc/modules-load.d/dreamhub-docker.conf
         ;;
 esac
 

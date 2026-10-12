@@ -38,6 +38,12 @@ import (
 // Enigma2's native WebControl staying off-limits (CLAUDE.md).
 const AppLabel = "dreamhub.app"
 
+// PortLabel records an app's web port on its container. On the host
+// network (the only kind the reference box's kernel allows — no veth or
+// br_netfilter, ARCHITECTURE.md) Docker publishes no port mappings, so
+// the port can't be read back from them.
+const PortLabel = "dreamhub.port"
+
 // Container is one container this package is willing to talk about,
 // trimmed to what AppsHub needs.
 type Container struct {
@@ -92,8 +98,13 @@ type ContainerSpec struct {
 	Env map[string]string
 	// HostPort/ContainerPort map one TCP port; 0/0 means no port is
 	// published at all (e.g. wireguard, which has no web UI — see
-	// appcatalog.App.ContainerPort).
+	// appcatalog.App.ContainerPort). With HostNetwork the app listens on
+	// the box directly and HostPort must equal ContainerPort.
 	HostPort, ContainerPort int
+	// HostNetwork runs the container in the box's own network namespace
+	// (docker run --network host): what DreamHub's Docker setup uses,
+	// since the box's kernel can't do Docker's bridge network.
+	HostNetwork bool
 	// HostDir is bind-mounted to ContainerDir — HostDir is always a path
 	// this package's caller computed itself (AppsHub's own storage root
 	// plus AppID), never taken from the image or any other untrusted

@@ -14,6 +14,8 @@ import (
 	dockermock "github.com/antonbier/DreamHub/backend/internal/dockerd/mock"
 	"github.com/antonbier/DreamHub/backend/internal/dockerhub"
 	dockerhubmock "github.com/antonbier/DreamHub/backend/internal/dockerhub/mock"
+	"github.com/antonbier/DreamHub/backend/internal/dockersetup"
+	dockersetupmock "github.com/antonbier/DreamHub/backend/internal/dockersetup/mock"
 	"github.com/antonbier/DreamHub/backend/internal/fanart"
 	fanartmock "github.com/antonbier/DreamHub/backend/internal/fanart/mock"
 	"github.com/antonbier/DreamHub/backend/internal/meminfo"
@@ -97,6 +99,7 @@ func run(logger *slog.Logger, level *logging.Level) error {
 	var dockerHub dockerhub.Client
 	var dockerClient dockerd.Client
 	var appsStorageRoot string
+	var dockerSetup dockersetup.Setup
 	var memReader meminfo.Reader
 	switch cfg.Mode {
 	case config.ModeLive:
@@ -141,6 +144,7 @@ func run(logger *slog.Logger, level *logging.Level) error {
 		// AppsHub's own calls degrade to ErrUnavailable exactly like any
 		// other connector when nothing is listening there yet.
 		dockerClient = dockerd.HTTPClient{BaseURL: envOr("DREAMHUB_DOCKERD_HELPER_ADDR", "http://127.0.0.1:8090")}
+		dockerSetup = dockersetup.Exec{}
 		appsStorageRoot = envOr("DREAMHUB_APPS_STORAGE_ROOT", "/media/hdd/dreamhub-apps")
 		memReader = meminfo.Exec{}
 		logger.Info("webcontrol client mode", "mode", "live", "url", cfg.WebControlURL, "deviceWrites", cfg.EnableDeviceWrites)
@@ -210,6 +214,15 @@ func run(logger *slog.Logger, level *logging.Level) error {
 		packages = aptmock.New()
 		dockerHub = dockerhubmock.Client{}
 		dockerClient = dockermock.New()
+		dockerSetup = dockersetupmock.Ready()
+		// DREAMHUB_MOCK_DOCKER=absent: a box without Docker (like the
+		// reference box) — the helper answers only once "Set up Docker"
+		// has run.
+		if os.Getenv("DREAMHUB_MOCK_DOCKER") == "absent" {
+			s := dockersetupmock.New()
+			dockerSetup = s
+			dockerClient = dockersetupmock.Gate(dockerClient, s)
+		}
 		appsStorageRoot = "/tmp/dreamhub-mock-apps"
 		memReader = meminfomock.New()
 		logger.Info("webcontrol client mode", "mode", "mock")
@@ -240,6 +253,7 @@ func run(logger *slog.Logger, level *logging.Level) error {
 		Docker:          dockerClient,
 		Mem:             memReader,
 		AppsStorageRoot: appsStorageRoot,
+		DockerSetup:     dockerSetup,
 		Mock:            cfg.Mode == config.ModeMock,
 		LookPath:        exec.LookPath,
 		Logger:          logger,

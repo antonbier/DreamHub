@@ -12,6 +12,7 @@ import (
 	"net"
 	"net/http"
 	"net/url"
+	"strconv"
 	"strings"
 )
 
@@ -86,7 +87,19 @@ func fromDocker(c dockerContainer) Container {
 			break
 		}
 	}
+	if out.HostPort == 0 {
+		if port, err := strconv.Atoi(c.Labels[PortLabel]); err == nil {
+			out.HostPort = port
+		}
+	}
 	return out
+}
+
+func networkMode(host bool) string {
+	if host {
+		return "host"
+	}
+	return "default"
 }
 
 // containerName is the fixed, deterministic name a given AppID's
@@ -297,6 +310,9 @@ func (e Exec) pullImage(ctx context.Context, image string) error {
 }
 
 func (e Exec) Create(ctx context.Context, spec ContainerSpec) (Container, error) {
+	if spec.HostNetwork && spec.HostPort != spec.ContainerPort {
+		return Container{}, fmt.Errorf("dockerd: create %s: on the host network the port can't be remapped", spec.AppID)
+	}
 	name := containerName(spec.AppID)
 	resp, err := e.do(ctx, http.MethodGet, "/containers/"+url.PathEscape(name)+"/json", nil)
 	if err != nil {
@@ -317,7 +333,11 @@ func (e Exec) Create(ctx context.Context, spec ContainerSpec) (Container, error)
 	}
 	exposed := map[string]any{}
 	bindings := map[string]any{}
-	if spec.ContainerPort != 0 {
+	labels := map[string]string{AppLabel: spec.AppID}
+	if spec.HostNetwork && spec.ContainerPort != 0 {
+		labels[PortLabel] = fmt.Sprint(spec.ContainerPort)
+	}
+	if spec.ContainerPort != 0 && !spec.HostNetwork {
 		port := fmt.Sprintf("%d/tcp", spec.ContainerPort)
 		exposed[port] = map[string]any{}
 		bindings[port] = []map[string]string{{"HostPort": fmt.Sprint(spec.HostPort)}}
@@ -326,8 +346,9 @@ func (e Exec) Create(ctx context.Context, spec ContainerSpec) (Container, error)
 		"Image":        spec.Image,
 		"Env":          env,
 		"ExposedPorts": exposed,
-		"Labels":       map[string]string{AppLabel: spec.AppID},
+		"Labels":       labels,
 		"HostConfig": map[string]any{
+			"NetworkMode":  networkMode(spec.HostNetwork),
 			"PortBindings": bindings,
 			"Binds":        []string{spec.HostDir + ":" + spec.ContainerDir},
 			"Memory":       spec.MemoryLimitBytes,
@@ -367,7 +388,7 @@ func (e Exec) Create(ctx context.Context, spec ContainerSpec) (Container, error)
 
 	return Container{
 		ID: created.ID, Name: name, Image: spec.Image, State: "running", HostPort: spec.HostPort,
-		Labels: map[string]string{AppLabel: spec.AppID},
+		Labels: labels,
 	}, nil
 }
 

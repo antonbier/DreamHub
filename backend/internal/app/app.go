@@ -5,6 +5,7 @@ package app
 
 import (
 	"context"
+	"github.com/antonbier/DreamHub/backend/internal/dockersetup"
 	"log/slog"
 	"net/http"
 	"path/filepath"
@@ -29,10 +30,10 @@ import (
 	"github.com/antonbier/DreamHub/backend/internal/apitoken"
 	"github.com/antonbier/DreamHub/backend/internal/auth"
 	"github.com/antonbier/DreamHub/backend/internal/autotimer"
+	"github.com/antonbier/DreamHub/backend/internal/configfs"
 	"github.com/antonbier/DreamHub/backend/internal/connector"
 	"github.com/antonbier/DreamHub/backend/internal/dashboard"
 	"github.com/antonbier/DreamHub/backend/internal/dmi"
-	"github.com/antonbier/DreamHub/backend/internal/configfs"
 	"github.com/antonbier/DreamHub/backend/internal/dockerd"
 	"github.com/antonbier/DreamHub/backend/internal/dockerhub"
 	"github.com/antonbier/DreamHub/backend/internal/enrich"
@@ -130,6 +131,10 @@ type Options struct {
 	// default ("/media/hdd/dreamhub-apps"); nil/"" still works, it just
 	// means a path under this empty root, fine for mock mode and tests.
 	AppsStorageRoot string
+	// DockerSetup sets Docker up on the box from AppsHub
+	// (internal/dockersetup): Exec{} on the box, ./mock otherwise; nil
+	// hides "Set up Docker".
+	DockerSetup dockersetup.Setup
 	// AppsConfigFS backs the apps backup section's directory
 	// reads/writes (App6, internal/configfs); nil means configfs.OS, the
 	// real file system — tests inject configfs/mock instead.
@@ -347,7 +352,7 @@ func New(ctx context.Context, o Options) (*App, error) {
 	appsHub := &hubs_.Apps{
 		DockerHub: o.DockerHub, Docker: o.Docker, Mem: o.Mem, WC: o.WebControl,
 		StorageRoot: o.AppsStorageRoot, Plans: plans, ReadOnly: o.ReadOnlyFiles,
-		Store: st, Auth: svc, ConfigFS: o.AppsConfigFS, Now: now,
+		Store: st, Auth: svc, ConfigFS: o.AppsConfigFS, Setup: o.DockerSetup, Now: now,
 	}
 	// App6: AppsHub's own installed-app configs join the existing
 	// Backup & Restore screen as an opt-in section (system.go's

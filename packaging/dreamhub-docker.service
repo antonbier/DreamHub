@@ -1,0 +1,27 @@
+[Unit]
+Description=Docker for DreamHub's apps
+Documentation=https://github.com/antonbier/DreamHub/blob/main/docs/APPSHUB_PLAN.md
+# Shipped disabled. AppsHub's "Set up Docker" downloads the pinned static
+# Docker release to /data/dreamhub-docker/bin, writes its daemon.json and
+# enables this unit (backend/internal/dockersetup). Everything Docker
+# writes stays on /data, never on the root flash.
+RequiresMountsFor=/data
+After=network.target local-fs.target
+ConditionPathExists=/data/dreamhub-docker/bin/dockerd
+
+[Service]
+Type=simple
+Environment=PATH=/data/dreamhub-docker/bin:/usr/sbin:/usr/bin:/sbin:/bin
+ExecStartPre=-/sbin/modprobe overlay
+ExecStart=/data/dreamhub-docker/bin/dockerd --config-file /data/dreamhub-docker/daemon.json
+ExecReload=/bin/kill -s HUP $MAINPID
+Restart=on-failure
+RestartSec=10
+# Containers get time to stop cleanly on shutdown or standby.
+TimeoutStopSec=60
+KillMode=process
+Delegate=yes
+LimitNOFILE=1048576
+
+[Install]
+WantedBy=multi-user.target

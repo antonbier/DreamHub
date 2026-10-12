@@ -4,7 +4,6 @@ import (
 	"encoding/json"
 	"net"
 	"net/http"
-	"strconv"
 	"strings"
 	"testing"
 )
@@ -101,25 +100,24 @@ func TestAppsInstall_AlreadyInstalledRefused(t *testing.T) {
 	}
 }
 
-func TestAppsInstall_PortConflictRefusesExplicitChoice(t *testing.T) {
+// Apps share the box's network (docker --network host, the only kind its
+// kernel allows), so an app keeps its own port: a different one is
+// refused, and so is the app's own when something already holds it.
+func TestAppsInstall_PortIsTheAppsOwn(t *testing.T) {
 	e := newEnv(t)
-	// Bind the port ourselves first, standing in for whatever else on
-	// the box might already hold it — resolvePort's own real net.Listen
-	// check must see this and refuse, never silently move the admin's
-	// explicit choice to a different port.
-	l, err := net.Listen("tcp", ":0")
+	code, _, b := e.planInstall(t, `{"appId":"sonarr","hostPort":9999}`)
+	if code != http.StatusConflict || !strings.Contains(string(b), "8989") {
+		t.Fatalf("remapped port: got %d %s", code, b)
+	}
+
+	l, err := net.Listen("tcp", ":8989")
 	if err != nil {
-		t.Fatal(err)
+		t.Skip("port 8989 is busy on this machine:", err)
 	}
 	defer l.Close()
-	port := l.Addr().(*net.TCPAddr).Port
-
-	code, _, b := e.planInstall(t, `{"appId":"sonarr","hostPort":`+strconv.Itoa(port)+`}`)
-	if code != http.StatusConflict {
-		t.Fatalf("got %d, want 409: %s", code, b)
-	}
-	if !strings.Contains(string(b), strconv.Itoa(port)) {
-		t.Fatalf("expected the port number in the error, got %s", b)
+	code, _, b = e.planInstall(t, `{"appId":"sonarr"}`)
+	if code != http.StatusConflict || !strings.Contains(string(b), "8989") {
+		t.Fatalf("taken port: got %d %s", code, b)
 	}
 }
 

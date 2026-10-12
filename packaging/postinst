@@ -16,6 +16,11 @@ if [ -d /run/systemd/system ]; then
     systemctl daemon-reload || true
     systemctl enable dreamhub.service || true
     systemctl restart dreamhub.service || true
+    # Docker set up from the Apps tab: pick up a new helper binary. Never
+    # restarts dockerd itself (the apps keep running).
+    if systemctl is-enabled --quiet dreamhub-dockerd-helper.service 2>/dev/null; then
+        systemctl restart dreamhub-dockerd-helper.service || true
+    fi
 fi
 
 if command -v systemctl >/dev/null 2>&1 && systemctl is-active --quiet avahi-daemon 2>/dev/null; then

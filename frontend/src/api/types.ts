@@ -712,6 +712,24 @@ export interface PackageStep {
   newVersion?: string
 }
 
+// dockersetup.State — whether Docker is set up on the box (AppsHub).
+export interface DockerSetupState {
+  supported: boolean
+  version?: string
+  overlay: boolean
+  configured: boolean
+  dockerRunning: boolean
+  helperRunning: boolean
+  ready: boolean
+  freeBytes: number
+}
+
+// dockersetup.Step — one thing "Set up Docker" would do.
+export interface DockerSetupStep {
+  kind: 'overlay' | 'download' | 'config' | 'services'
+  detail?: Record<string, string>
+}
+
 // The most recent package apply and apt-get's output.
 export interface PackageRun {
   at: string

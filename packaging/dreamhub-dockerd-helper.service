@@ -1,0 +1,23 @@
+[Unit]
+Description=DreamHub's Docker helper
+Documentation=https://github.com/antonbier/DreamHub/blob/main/docs/APPSHUB_PLAN.md
+# The only thing that holds the Docker socket (docs/APPSHUB_PLAN.md, App2):
+# DreamHub reaches it on 127.0.0.1:8090 through a whitelisted API subset.
+# Shipped disabled; "Set up Docker" enables it with dreamhub-docker.
+After=dreamhub-docker.service
+BindsTo=dreamhub-docker.service
+
+[Service]
+Type=simple
+Environment=DREAMHUB_DOCKER_SOCKET=/run/dreamhub-docker.sock
+Environment=DREAMHUB_DOCKERD_HELPER_ADDR=127.0.0.1:8090
+ExecStart=/usr/bin/dreamhub-dockerd-helper
+Restart=on-failure
+RestartSec=5
+NoNewPrivileges=true
+ProtectSystem=strict
+ProtectHome=true
+PrivateTmp=true
+
+[Install]
+WantedBy=multi-user.target

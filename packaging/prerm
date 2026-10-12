@@ -11,6 +11,10 @@ if [ -d /run/systemd/system ]; then
     # multi-user.target.wants link behind (found on the box, #22).
     if [ "$1" = remove ]; then
         systemctl disable dreamhub.service >/dev/null 2>&1 || true
+        # Docker set up from the Apps tab goes with DreamHub; its data on
+        # /data/dreamhub-docker stays (removed only on purge).
+        systemctl stop dreamhub-dockerd-helper.service dreamhub-docker.service >/dev/null 2>&1 || true
+        systemctl disable dreamhub-dockerd-helper.service dreamhub-docker.service >/dev/null 2>&1 || true
     fi
 fi
 

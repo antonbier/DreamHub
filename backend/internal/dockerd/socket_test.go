@@ -3,10 +3,12 @@ package dockerd
 import (
 	"context"
 	"encoding/json"
+	"io"
 	"net"
 	"net/http"
 	"net/http/httptest"
 	"path/filepath"
+	"strings"
 	"testing"
 )
 
@@ -97,6 +99,7 @@ func fakeDaemon(t *testing.T) (sockPath string, close func()) {
 		_, _ = w.Write([]byte(`{"status":"pull complete"}` + "\n"))
 	})
 	mux.HandleFunc("POST /containers/create", func(w http.ResponseWriter, r *http.Request) {
+		lastCreateBody, _ = io.ReadAll(r.Body)
 		w.Header().Set("Content-Type", "application/json")
 		w.WriteHeader(http.StatusCreated)
 		_, _ = w.Write([]byte(`{"Id":"newcontainer123"}`))
@@ -183,6 +186,40 @@ func TestExec_Create(t *testing.T) {
 		t.Fatal(err)
 	}
 	if c.ID != "newcontainer123" || c.AppID() != "sonarr" || c.HostPort != 8989 {
+		t.Fatalf("got %+v", c)
+	}
+}
+
+// lastCreateBody is the most recent create request the fake daemon saw.
+var lastCreateBody []byte
+
+func TestExec_CreateHostNetwork(t *testing.T) {
+	sock, closeFn := fakeDaemon(t)
+	defer closeFn()
+	e := Exec{SocketPath: sock}
+
+	c, err := e.Create(context.Background(), ContainerSpec{
+		AppID: "vaultwarden", Image: "vaultwarden/server:latest", HostNetwork: true,
+		HostPort: 8000, ContainerPort: 8000, HostDir: "/x", ContainerDir: "/data", MemoryLimitBytes: 1,
+	})
+	if err != nil {
+		t.Fatal(err)
+	}
+	body := string(lastCreateBody)
+	if !strings.Contains(body, `"NetworkMode":"host"`) || !strings.Contains(body, `"dreamhub.port":"8000"`) || strings.Contains(body, `"HostPort"`) {
+		t.Fatalf("create body: %s", body)
+	}
+	if c.HostPort != 8000 {
+		t.Fatalf("got %+v", c)
+	}
+	if _, err := e.Create(context.Background(), ContainerSpec{AppID: "x", Image: "x", HostNetwork: true, HostPort: 8001, ContainerPort: 8000, MemoryLimitBytes: 1}); err == nil {
+		t.Fatal("a remapped port on the host network must be refused")
+	}
+}
+
+func TestFromDocker_PortFromLabel(t *testing.T) {
+	c := fromDocker(dockerContainer{ID: "a", Labels: map[string]string{AppLabel: "vw", PortLabel: "8000"}})
+	if c.HostPort != 8000 {
 		t.Fatalf("got %+v", c)
 	}
 }

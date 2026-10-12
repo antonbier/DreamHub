@@ -761,7 +761,10 @@
       "apt_refused": "apt can't do this:",
       "recording_running": "The box is recording right now. Try again when it's done.",
       "package_apply_failed": "apt reported an error.",
-      "apt_unavailable": "Installing packages isn't available on this system."
+      "apt_unavailable": "Installing packages isn't available on this system.",
+      "docker_no_overlay": "No overlay kernel module matches this box's kernel, so Docker can't run here.",
+      "docker_unsupported": "There's no Docker build for this box's processor.",
+      "docker_setup_failed": "Setting Docker up failed."
     },
     "media": {
       "not_a_recording": "This recording doesn't exist (anymore).",
@@ -1119,8 +1122,30 @@
       "inputPlaceholder": "Type a command and press Enter…",
       "close": "Close"
     },
-    "dockerMissing": "Docker isn't set up on this box. The list and search work, but nothing can be installed until Docker and DreamHub's Docker helper are running.",
-    "installedLoadError": "The installed apps couldn't be read."
+    "dockerMissing": "Docker isn't set up on this box yet. The list and search already work; installing needs Docker.",
+    "installedLoadError": "The installed apps couldn't be read.",
+    "docker": {
+      "title": "Docker",
+      "where": "Docker {version}, everything on /data ({free} free) — never on the root flash.",
+      "unavailable": "Docker can't be set up from here on this box.",
+      "setUp": "Set up Docker …",
+      "confirm": "Set up",
+      "previewIntro": "This is what happens:",
+      "takesAWhile": "Takes a minute or two — an 80 MB download.",
+      "done": "Docker is running.",
+      "failed": "Setting Docker up failed.",
+      "retry": "Try again",
+      "step": {
+        "overlay": {
+          "installed": "Load the overlay kernel module (already installed).",
+          "feed": "Install the overlay kernel module {version} from the box's feed — the exact build of this kernel.",
+          "official": "Install the overlay kernel module {version} from the official Dreambox feed — the exact build of this kernel; only this one file, the feed itself stays off."
+        },
+        "download": "Download Docker {version} (official static release) and check its checksum.",
+        "config": "Write the Docker settings: data in {dataRoot}, apps on the box's own network.",
+        "services": "Start Docker and DreamHub's Docker helper, and start them again at every boot."
+      }
+    }
   },
   "timers": {
     "tuners": "{count} tuner | {count} tuners",

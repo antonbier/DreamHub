@@ -2,9 +2,11 @@ package hubs
 
 import (
 	"errors"
+	"github.com/antonbier/DreamHub/backend/internal/dockersetup"
 	"net/http"
 	"regexp"
 	"strings"
+	"sync"
 	"time"
 
 	"github.com/antonbier/DreamHub/backend/internal/appcatalog"
@@ -68,6 +70,11 @@ type Apps struct {
 	// the backup section (apps_backup.go, App6); nil means configfs.OS,
 	// the real file system — tests inject configfs/mock instead.
 	ConfigFS configfs.FS
+	// Setup sets Docker itself up on the box ("Set up Docker",
+	// apps_docker_setup.go); nil hides that.
+	Setup     dockersetup.Setup
+	lastSetup dockerSetupRun
+	setupMu   sync.Mutex
 	// Now overrides the clock (tests); nil means time.Now.
 	Now func() time.Time
 }
@@ -97,6 +104,8 @@ func (h *Apps) Perms() map[string]perm.Perm {
 		"POST /api/v1/apps/console/enable":             perm.System,
 		"POST /api/v1/apps/console/disable":            perm.System,
 		"GET /api/v1/apps/installed/{id}/console":      perm.System,
+		"GET /api/v1/apps/docker":                      perm.System,
+		"POST /api/v1/apps/docker/setup/plan":          perm.System,
 	}
 }
 
@@ -114,6 +123,8 @@ func (h *Apps) Mount(mux httpx.Mux) {
 	mux.HandleFunc("POST /api/v1/apps/console/enable", h.enableConsole)
 	mux.HandleFunc("POST /api/v1/apps/console/disable", h.disableConsole)
 	mux.HandleFunc("GET /api/v1/apps/installed/{id}/console", h.containerConsole)
+	mux.HandleFunc("GET /api/v1/apps/docker", h.dockerStatus)
+	mux.HandleFunc("POST /api/v1/apps/docker/setup/plan", h.planDockerSetup)
 }
 
 // catalogEntry is one curated app with box compatibility already

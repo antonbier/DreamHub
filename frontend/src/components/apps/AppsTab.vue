@@ -15,7 +15,7 @@
     <p v-else-if="loadError" class="mt-4 text-[13px] text-faint">{{ loadError }}</p>
 
     <template v-else>
-      <p v-if="dockerMissing" class="mt-4 rounded border border-line bg-tile p-3 text-[13px] text-muted">{{ t('apps.dockerMissing') }}</p>
+      <DockerSetupCard v-if="dockerMissing" @ready="load" />
       <p v-else-if="installedError" class="mt-4 text-[13px] text-faint">{{ installedError }}</p>
       <section v-if="installed.length > 0" class="mt-4">
         <div class="flex items-center justify-between">
@@ -223,6 +223,7 @@ import { nextTick, onMounted, onUnmounted, ref } from 'vue'
 import { useI18n } from 'vue-i18n'
 import { api, ApiError } from '@/api/client'
 import PlanPreview from '@/components/PlanPreview.vue'
+import DockerSetupCard from '@/components/apps/DockerSetupCard.vue'
 import { useFriendlyError } from '@/composables/useFriendlyError'
 import { usePlanError } from '@/composables/usePlanError'
 import type { AppConsoleStatus, AppSearchResult, CatalogApp, InstalledApp, Plan } from '@/api/types'

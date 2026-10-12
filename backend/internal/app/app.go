@@ -420,17 +420,18 @@ func New(ctx context.Context, o Options) (*App, error) {
 		Handler: handler, Store: st, Settings: svc, Connectors: conns, Hubs: hubs,
 		Plans: plans, Dashboard: dash, Tokens: tokens, Profiles: profiles, Routes: routes, Level: level, User: user,
 		Events: eventBus, Poller: poller, Jobs: jobQueue,
-		Background: append(background(notifier, seriesHub, adminHub, plexHub, eventBus, o.Logger),
+		Background: append(background(notifier, seriesHub, adminHub, appsHub, plexHub, eventBus, o.Logger),
 			func(ctx context.Context) { channelsHub.Watch(ctx, o.Logger) }, jobQueue.Run),
 	}, nil
 }
 
 // background lists the long-running jobs besides the poller.
-func background(n *push.Notifier, series *hubs_.Series, admin *hubs_.Admin, plexHub *hubs_.Plex, bus *events.Bus, logger *slog.Logger) []func(context.Context) {
+func background(n *push.Notifier, series *hubs_.Series, admin *hubs_.Admin, apps *hubs_.Apps, plexHub *hubs_.Plex, bus *events.Bus, logger *slog.Logger) []func(context.Context) {
 	jobs := []func(context.Context){
 		func(ctx context.Context) { series.WatchMissing(ctx, bus, logger) },
 		func(ctx context.Context) { admin.WatchServices(ctx, bus, logger) },
 		func(ctx context.Context) { admin.WatchPackages(ctx, bus, logger) },
+		func(ctx context.Context) { apps.WatchApps(ctx, bus, logger) },
 	}
 	if plexHub.Client != nil {
 		jobs = append(jobs, plexHub.Watch)

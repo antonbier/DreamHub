@@ -165,6 +165,47 @@ func TestHTTPClient_CreateAndRemove(t *testing.T) {
 	}
 }
 
+func TestHTTPClient_ImageDigest(t *testing.T) {
+	client, closeFn := newTestServer(t)
+	defer closeFn()
+
+	digest, err := client.ImageDigest(context.Background(), "pihole")
+	if err != nil {
+		t.Fatal(err)
+	}
+	if digest != "sha256:pihole-pulled-old" {
+		t.Fatalf("got %q", digest)
+	}
+
+	if _, err := client.ImageDigest(context.Background(), "not-an-app"); err != dockerd.ErrNotFound {
+		t.Fatalf("got %v, want ErrNotFound", err)
+	}
+}
+
+func TestHTTPClient_Attach(t *testing.T) {
+	client, closeFn := newTestServer(t)
+	defer closeFn()
+
+	conn, err := client.Attach(context.Background(), "pihole")
+	if err != nil {
+		t.Fatal(err)
+	}
+	defer conn.Close()
+
+	if _, err := conn.Write([]byte("echo hi")); err != nil {
+		t.Fatal(err)
+	}
+	buf := make([]byte, 256)
+	n, err := conn.Read(buf)
+	if err != nil {
+		t.Fatal(err)
+	}
+	got := string(buf[:n])
+	if got == "" {
+		t.Fatal("got no bytes back from the attached session")
+	}
+}
+
 func state(list []dockerd.Container, id string) string {
 	for _, c := range list {
 		if c.ID == id {

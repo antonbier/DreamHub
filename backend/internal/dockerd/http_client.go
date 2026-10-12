@@ -1,11 +1,13 @@
 package dockerd
 
 import (
+	"bufio"
 	"bytes"
 	"context"
 	"encoding/json"
 	"fmt"
 	"io"
+	"net"
 	"net/http"
 	"net/url"
 	"time"
@@ -153,6 +155,60 @@ func (c HTTPClient) Remove(ctx context.Context, id string) error {
 		return statusErr(resp)
 	}
 	return nil
+}
+
+func (c HTTPClient) ImageDigest(ctx context.Context, id string) (string, error) {
+	resp, err := c.do(ctx, http.MethodGet, "/containers/"+url.PathEscape(id)+"/image-digest", nil)
+	if err != nil {
+		return "", err
+	}
+	defer drainClosed(resp.Body)
+	if resp.StatusCode != http.StatusOK {
+		return "", statusErr(resp)
+	}
+	var out struct {
+		Digest string `json:"digest"`
+	}
+	if err := json.NewDecoder(resp.Body).Decode(&out); err != nil {
+		return "", err
+	}
+	return out.Digest, nil
+}
+
+// Attach dials the helper directly (not through c.do/c.client, which
+// hand back a parsed *http.Response and close the connection afterwards)
+// — the same raw-hijack approach Exec.Attach uses one hop further out,
+// against the real socket, applies here against the helper's own
+// loopback listener instead.
+func (c HTTPClient) Attach(ctx context.Context, id string) (io.ReadWriteCloser, error) {
+	u, err := url.Parse(c.BaseURL)
+	if err != nil {
+		return nil, err
+	}
+	conn, err := (&net.Dialer{}).DialContext(ctx, "tcp", u.Host)
+	if err != nil {
+		return nil, fmt.Errorf("%w: %v", ErrUnavailable, err)
+	}
+	req := "GET /containers/" + url.PathEscape(id) + "/attach HTTP/1.1\r\n" +
+		"Host: " + u.Host + "\r\n" +
+		"Connection: Upgrade\r\n" +
+		"Upgrade: tcp\r\n\r\n"
+	if _, err := conn.Write([]byte(req)); err != nil {
+		conn.Close()
+		return nil, fmt.Errorf("%w: %v", ErrUnavailable, err)
+	}
+	br := bufio.NewReader(conn)
+	resp, err := http.ReadResponse(br, nil)
+	if err != nil {
+		conn.Close()
+		return nil, fmt.Errorf("%w: %v", ErrUnavailable, err)
+	}
+	resp.Body.Close()
+	if resp.StatusCode != http.StatusSwitchingProtocols && resp.StatusCode != http.StatusOK {
+		conn.Close()
+		return nil, statusErr(resp)
+	}
+	return &hijackedConn{Reader: br, conn: conn}, nil
 }
 
 func (c HTTPClient) Exec(ctx context.Context, id string, cmd []string) ([]byte, error) {

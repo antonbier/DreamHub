@@ -6,7 +6,9 @@
 package mock
 
 import (
+	"bytes"
 	"context"
+	"io"
 	"sync"
 
 	"github.com/antonbier/DreamHub/backend/internal/dockerd"
@@ -117,6 +119,86 @@ func (c *Client) Create(ctx context.Context, spec dockerd.ContainerSpec) (docker
 	}
 	c.containers[spec.AppID] = &created
 	return created, nil
+}
+
+// imageDigests is what each demo container was "pulled" at — pihole's
+// deliberately lags behind the dockerhub mock fixture's current digest
+// (internal/dockerhub/mock, "sha256:pihole-upstream-new"), so mock mode
+// has a real "update available" case to develop and demo the watch
+// (App5) against; adguardhome's matches, an "already current" case.
+var imageDigests = map[string]string{
+	"pihole":      "sha256:pihole-pulled-old",
+	"adguardhome": "sha256:adguardhome-current",
+}
+
+func (c *Client) ImageDigest(ctx context.Context, id string) (string, error) {
+	c.mu.Lock()
+	defer c.mu.Unlock()
+	if _, err := c.get(id); err != nil {
+		return "", err
+	}
+	return imageDigests[id], nil
+}
+
+// mockPTY is a trivial in-memory console: writes are echoed back with a
+// "$ " prompt prefix, close is a close — enough to prove the WS↔PTY
+// bridge end to end (App5) without a real Docker daemon. Read blocks on
+// cond until there's something to drain or Close wakes it, the same
+// "a reader that can legitimately have nothing yet" shape a real PTY has
+// — returning (0, nil) instead would make an io.Copy-driven bridge spin.
+type mockPTY struct {
+	mu     sync.Mutex
+	cond   *sync.Cond
+	buf    bytes.Buffer
+	closed bool
+}
+
+func newMockPTY() *mockPTY {
+	p := &mockPTY{}
+	p.cond = sync.NewCond(&p.mu)
+	p.buf.WriteString("[mock] attached — no real shell without a Docker daemon\r\n$ ")
+	return p
+}
+
+func (p *mockPTY) Read(b []byte) (int, error) {
+	p.mu.Lock()
+	defer p.mu.Unlock()
+	for p.buf.Len() == 0 && !p.closed {
+		p.cond.Wait()
+	}
+	if p.buf.Len() == 0 {
+		return 0, io.EOF
+	}
+	return p.buf.Read(b)
+}
+
+func (p *mockPTY) Write(b []byte) (int, error) {
+	p.mu.Lock()
+	defer p.mu.Unlock()
+	if p.closed {
+		return 0, io.ErrClosedPipe
+	}
+	p.buf.Write(b)
+	p.buf.WriteString("\r\n$ ")
+	p.cond.Signal()
+	return len(b), nil
+}
+
+func (p *mockPTY) Close() error {
+	p.mu.Lock()
+	defer p.mu.Unlock()
+	p.closed = true
+	p.cond.Broadcast()
+	return nil
+}
+
+func (c *Client) Attach(ctx context.Context, id string) (io.ReadWriteCloser, error) {
+	c.mu.Lock()
+	defer c.mu.Unlock()
+	if _, err := c.get(id); err != nil {
+		return nil, err
+	}
+	return newMockPTY(), nil
 }
 
 func (c *Client) Remove(ctx context.Context, id string) error {

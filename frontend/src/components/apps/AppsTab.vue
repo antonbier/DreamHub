@@ -24,6 +24,7 @@
               <p class="mt-0.5 flex items-center gap-1.5 text-[12px]" :class="a.state === 'running' ? 'text-ok' : 'text-muted'">
                 <span class="h-1.5 w-1.5 rounded-full" :class="a.state === 'running' ? 'bg-ok' : 'bg-faint'" />
                 {{ a.state }}
+                <span v-if="a.upgradable" class="ml-1 rounded-full bg-tile-2 px-1.5 py-0.5 text-[11px] text-accent">{{ t('apps.upgradable') }}</span>
               </p>
             </div>
             <a v-if="a.hostPort" :href="openUrl(a.hostPort)" target="_blank" rel="noopener" class="shrink-0 text-[12.5px] text-accent hover:underline">

@@ -14,7 +14,8 @@ const (
 	ServiceFailed     = "service.failed"       // AdminHub's watch
 	ServiceRecovered  = "service.recovered"    // AdminHub's watch
 	PackageUpgradable = "package.upgradable"   // AdminHub's package watch
+	AppUpgradable     = "app.upgradable"       // AppsHub's app-update watch (App5)
 )
 
 // All lists every key above.
-var All = []string{RecordingStarted, RecordingFinished, TimerConflict, DiskAboveLimit, MissingAiring, ServiceFailed, ServiceRecovered, PackageUpgradable}
+var All = []string{RecordingStarted, RecordingFinished, TimerConflict, DiskAboveLimit, MissingAiring, ServiceFailed, ServiceRecovered, PackageUpgradable, AppUpgradable}

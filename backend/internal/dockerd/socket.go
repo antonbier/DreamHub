@@ -1,6 +1,7 @@
 package dockerd
 
 import (
+	"bufio"
 	"bytes"
 	"context"
 	"encoding/binary"
@@ -11,6 +12,7 @@ import (
 	"net"
 	"net/http"
 	"net/url"
+	"strings"
 )
 
 // Exec talks to a real Docker daemon over its unix socket — the only
@@ -390,6 +392,146 @@ func (e Exec) Remove(ctx context.Context, id string) error {
 	}
 	return nil
 }
+
+func (e Exec) ImageDigest(ctx context.Context, id string) (string, error) {
+	resp, err := e.do(ctx, http.MethodGet, "/containers/"+url.PathEscape(id)+"/json", nil)
+	if err != nil {
+		return "", err
+	}
+	var insp struct {
+		Image  string `json:"Image"` // the resolved image ID, e.g. "sha256:abcd…"
+		Config struct {
+			Labels map[string]string `json:"Labels"`
+		} `json:"Config"`
+	}
+	decErr := json.NewDecoder(resp.Body).Decode(&insp)
+	drainClosed(resp.Body)
+	if resp.StatusCode == http.StatusNotFound {
+		return "", ErrNotFound
+	}
+	if resp.StatusCode != http.StatusOK {
+		return "", fmt.Errorf("dockerd: inspect: unexpected status %d", resp.StatusCode)
+	}
+	if decErr != nil {
+		return "", decErr
+	}
+	if _, ok := insp.Config.Labels[AppLabel]; !ok {
+		return "", ErrNotFound
+	}
+
+	resp, err = e.do(ctx, http.MethodGet, "/images/"+url.PathEscape(insp.Image)+"/json", nil)
+	if err != nil {
+		return "", err
+	}
+	defer drainClosed(resp.Body)
+	if resp.StatusCode != http.StatusOK {
+		return "", fmt.Errorf("dockerd: image inspect: unexpected status %d", resp.StatusCode)
+	}
+	var img struct {
+		RepoDigests []string `json:"RepoDigests"`
+	}
+	if err := json.NewDecoder(resp.Body).Decode(&img); err != nil {
+		return "", err
+	}
+	if len(img.RepoDigests) == 0 {
+		return "", nil // locally built or never pulled from a registry — nothing to compare
+	}
+	// Docker's own "repo@sha256:…" shape; the digest is what dockerhub's
+	// own Digest() answers in, so only the part after "@" is kept.
+	if _, digest, ok := strings.Cut(img.RepoDigests[0], "@"); ok {
+		return digest, nil
+	}
+	return img.RepoDigests[0], nil
+}
+
+// Attach opens an interactive PTY session inside a running container by
+// hand-rolling Docker's own "docker exec -it" protocol: create an exec
+// instance, then start it with Tty:true over a connection the caller
+// keeps raw (Docker calls this a "hijacked" connection — once the HTTP
+// response headers are read, the socket itself becomes a plain
+// bidirectional byte stream, stdin in, stdout+stderr out, no further
+// framing). The standard net/http client can't stay in that mode after a
+// request, so this dials and writes the HTTP request by hand, the same
+// way Create's pullImage and every other call here already avoid an SDK
+// — just one step further, since this one needs the raw net.Conn itself
+// afterwards rather than a parsed response.
+func (e Exec) Attach(ctx context.Context, id string) (io.ReadWriteCloser, error) {
+	if err := e.requireOwned(ctx, id); err != nil {
+		return nil, err
+	}
+	createBody, err := json.Marshal(map[string]any{
+		"Cmd": []string{"/bin/sh"}, "AttachStdin": true, "AttachStdout": true, "AttachStderr": true, "Tty": true,
+	})
+	if err != nil {
+		return nil, err
+	}
+	resp, err := e.do(ctx, http.MethodPost, "/containers/"+url.PathEscape(id)+"/exec", bytes.NewReader(createBody))
+	if err != nil {
+		return nil, err
+	}
+	var created struct{ ID string }
+	decErr := json.NewDecoder(resp.Body).Decode(&created)
+	drainClosed(resp.Body)
+	if resp.StatusCode != http.StatusCreated {
+		return nil, fmt.Errorf("dockerd: attach: exec create: unexpected status %d", resp.StatusCode)
+	}
+	if decErr != nil {
+		return nil, decErr
+	}
+
+	conn, err := (&net.Dialer{}).DialContext(ctx, "unix", e.SocketPath)
+	if err != nil {
+		return nil, fmt.Errorf("%w: %v", ErrUnavailable, err)
+	}
+	startBody, err := json.Marshal(map[string]any{"Detach": false, "Tty": true})
+	if err != nil {
+		conn.Close()
+		return nil, err
+	}
+	req := "POST /exec/" + created.ID + "/start HTTP/1.1\r\n" +
+		"Host: docker\r\n" +
+		"Content-Type: application/json\r\n" +
+		"Content-Length: " + fmt.Sprint(len(startBody)) + "\r\n" +
+		"Connection: Upgrade\r\n" +
+		"Upgrade: tcp\r\n\r\n"
+	if _, err := conn.Write([]byte(req)); err != nil {
+		conn.Close()
+		return nil, fmt.Errorf("%w: %v", ErrUnavailable, err)
+	}
+	if _, err := conn.Write(startBody); err != nil {
+		conn.Close()
+		return nil, fmt.Errorf("%w: %v", ErrUnavailable, err)
+	}
+	br := bufio.NewReader(conn)
+	startResp, err := http.ReadResponse(br, nil)
+	if err != nil {
+		conn.Close()
+		return nil, fmt.Errorf("%w: %v", ErrUnavailable, err)
+	}
+	startResp.Body.Close()
+	// Docker answers either 101 (Upgrade: tcp, confirmed) or a plain 200
+	// with "application/vnd.docker.raw-stream" (older daemons) — both
+	// mean the connection is now raw.
+	if startResp.StatusCode != http.StatusSwitchingProtocols && startResp.StatusCode != http.StatusOK {
+		conn.Close()
+		return nil, fmt.Errorf("dockerd: attach: exec start: unexpected status %d", startResp.StatusCode)
+	}
+	// br may already hold bytes the daemon sent right after the headers;
+	// hijackedConn serves those first, then falls through to conn itself.
+	return &hijackedConn{Reader: br, conn: conn}, nil
+}
+
+// hijackedConn is a raw Docker connection after its HTTP upgrade: reads
+// drain whatever bufio.Reader buffered past the response headers first,
+// then read straight from the underlying net.Conn; writes and Close go
+// straight to it.
+type hijackedConn struct {
+	io.Reader
+	conn net.Conn
+}
+
+func (h *hijackedConn) Write(p []byte) (int, error) { return h.conn.Write(p) }
+func (h *hijackedConn) Close() error                { return h.conn.Close() }
 
 // demux strips Docker's multiplexed stdout/stderr frame headers (used
 // whenever a container wasn't started with a tty: 1 byte stream type, 3

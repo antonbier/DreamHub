@@ -85,6 +85,11 @@ type installedApp struct {
 	Image    string `json:"image"`
 	State    string `json:"state"`
 	HostPort int    `json:"hostPort,omitempty"`
+	// Upgradable is App5's update check (apps_watch.go): the registry's
+	// current digest for this image:tag no longer matches what's
+	// actually running. Always computed live, never stored, same as
+	// HostPort above.
+	Upgradable bool `json:"upgradable,omitempty"`
 }
 
 func (h *Apps) listInstalled(w http.ResponseWriter, r *http.Request) {
@@ -103,7 +108,10 @@ func (h *Apps) listInstalled(w http.ResponseWriter, r *http.Request) {
 		if a, ok := appcatalog.ByID(c.AppID()); ok {
 			name = a.Name
 		}
-		out = append(out, installedApp{ID: c.ID, Name: name, Image: c.Image, State: c.State, HostPort: c.HostPort})
+		out = append(out, installedApp{
+			ID: c.ID, Name: name, Image: c.Image, State: c.State, HostPort: c.HostPort,
+			Upgradable: h.imageUpgradable(r.Context(), c),
+		})
 	}
 	sort.Slice(out, func(i, j int) bool { return out[i].Name < out[j].Name })
 	httpx.WriteJSON(w, http.StatusOK, map[string]any{"apps": out})

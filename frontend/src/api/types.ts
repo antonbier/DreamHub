@@ -756,6 +756,7 @@ export interface InstalledApp {
   image: string
   state: string
   hostPort?: number
+  upgradable?: boolean
 }
 
 export interface AdminFeed {

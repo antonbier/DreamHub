@@ -54,6 +54,11 @@ type Client interface {
 	// "pihole/pihole") was built for. Returns ErrNotFound if the image or
 	// tag doesn't exist.
 	Manifest(ctx context.Context, image, tag string) ([]Arch, error)
+	// Digest returns what a "docker pull image:tag" right now would
+	// resolve to — AppsHub's update check (App5) compares this against
+	// an installed app's own pulled digest (dockerd.Client.ImageDigest).
+	// Returns ErrNotFound if the image or tag doesn't exist.
+	Digest(ctx context.Context, image, tag string) (string, error)
 }
 
 // BoxArch is the architecture this very binary was built for

@@ -103,7 +103,8 @@ func V1() []Descriptor {
 		// card is filtered out for a non-admin inside the handler
 		// instead, and installing/managing a Docker app needs `system`
 		// like any other AdminHub-style action (docs/APPSHUB_PLAN.md).
-		{ID: IDApps, Name: "AppsHub", Label: "hub.apps", Icon: "extension", Path: "/apps", Group: GroupBottom, Order: 20},
+		{ID: IDApps, Name: "AppsHub", Label: "hub.apps", Icon: "extension", Path: "/apps", Group: GroupBottom, Order: 20,
+			Emits: []string{events.AppUpgradable}},
 	}
 }
 

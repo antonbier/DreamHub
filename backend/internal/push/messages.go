@@ -95,6 +95,16 @@ var catalog = map[string]map[string]texts{
 		"pl": {"Dostępne aktualizacje", "{count} pakiet(y) na odbiorniku można zaktualizować."},
 		"tr": {"Güncellemeler mevcut", "Kutudaki {count} paket güncellenebilir."},
 	},
+	"app.upgradable": {
+		"de": {"App-Update verfügbar", "Für {name} ist ein neues Image verfügbar."},
+		"en": {"App update available", "A newer image is available for {name}."},
+		"it": {"Aggiornamento app disponibile", "È disponibile una nuova immagine per {name}."},
+		"fr": {"Mise à jour d’appli disponible", "Une nouvelle image est disponible pour {name}."},
+		"es": {"Actualización de app disponible", "Hay una nueva imagen disponible para {name}."},
+		"nl": {"App-update beschikbaar", "Er is een nieuwere image beschikbaar voor {name}."},
+		"pl": {"Dostępna aktualizacja aplikacji", "Dla {name} dostępny jest nowszy obraz."},
+		"tr": {"Uygulama güncellemesi mevcut", "{name} için daha yeni bir imaj mevcut."},
+	},
 	"push.test": {
 		"de": {"DreamHub", "Benachrichtigungen kommen an."},
 		"en": {"DreamHub", "Notifications are arriving."},
@@ -116,6 +126,7 @@ var tags = map[string][]string{
 	"service.failed":       {"rotating_light"},
 	"service.recovered":    {"white_check_mark"},
 	"package.upgradable":   {"arrows_counterclockwise"},
+	"app.upgradable":       {"arrows_counterclockwise"},
 	"push.test":            {"tada"},
 }
 

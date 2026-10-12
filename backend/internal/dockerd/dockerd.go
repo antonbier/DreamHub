@@ -135,6 +135,21 @@ type Client interface {
 	// HostDir is never touched, only the container itself. Returns
 	// ErrNotFound if id isn't AppLabel-tagged.
 	Remove(ctx context.Context, id string) error
+	// ImageDigest returns the registry digest ("sha256:...") of the image
+	// a container was actually created from, read back from the local
+	// image's own RepoDigests — what AppsHub's update check (App5)
+	// compares against dockerhub.Client.Digest's current answer for the
+	// same image:tag. "" (no error) means the local image carries no
+	// recorded RepoDigest (e.g. built locally, never pulled from a
+	// registry) — not upgradable-checkable, not an error. Returns
+	// ErrNotFound if id isn't AppLabel-tagged.
+	ImageDigest(ctx context.Context, id string) (string, error)
+	// Attach opens an interactive shell inside a running container (a
+	// PTY, not Exec's one-shot non-interactive command) for AppsHub's
+	// per-container console (App5) — read what the shell prints, write
+	// what the user types, Close ends the session. Returns ErrNotFound if
+	// id isn't AppLabel-tagged, ErrUnavailable if it isn't running.
+	Attach(ctx context.Context, id string) (io.ReadWriteCloser, error)
 }
 
 // drainClosed discards and closes r, for defer sites that don't care

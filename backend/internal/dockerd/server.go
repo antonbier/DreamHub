@@ -3,8 +3,10 @@ package dockerd
 import (
 	"encoding/json"
 	"errors"
+	"io"
 	"net/http"
 	"strconv"
+	"sync"
 )
 
 // Server is the helper process's own HTTP surface — the whitelisted
@@ -29,6 +31,8 @@ func (s Server) Handler() http.Handler {
 	mux.HandleFunc("DELETE /containers/{id}", s.handleRemove)
 	mux.HandleFunc("GET /containers/{id}/logs", s.handleLogs)
 	mux.HandleFunc("POST /containers/{id}/exec", s.handleExec)
+	mux.HandleFunc("GET /containers/{id}/image-digest", s.handleImageDigest)
+	mux.HandleFunc("GET /containers/{id}/attach", s.handleAttach)
 	return mux
 }
 
@@ -145,6 +149,54 @@ func (s Server) handleExec(w http.ResponseWriter, r *http.Request) {
 	}
 	w.Header().Set("Content-Type", "text/plain; charset=utf-8")
 	_, _ = w.Write(out)
+}
+
+func (s Server) handleImageDigest(w http.ResponseWriter, r *http.Request) {
+	digest, err := s.Client.ImageDigest(r.Context(), r.PathValue("id"))
+	if err != nil {
+		writeErr(w, err)
+		return
+	}
+	writeJSON(w, map[string]string{"digest": digest})
+}
+
+// handleAttach is the helper's own loopback half of AppsHub's
+// console (App5): it calls the real Client.Attach (Exec, against the
+// socket) and then hijacks its own HTTP connection so DreamHub's main
+// backend sees the exact same raw-byte-stream contract one hop further
+// out, through HTTPClient.Attach — DreamHub's backend talks to this
+// helper exactly the way this helper talks to the daemon, no new
+// protocol layered in between.
+func (s Server) handleAttach(w http.ResponseWriter, r *http.Request) {
+	upstream, err := s.Client.Attach(r.Context(), r.PathValue("id"))
+	if err != nil {
+		writeErr(w, err)
+		return
+	}
+	defer upstream.Close()
+
+	hj, ok := w.(http.Hijacker)
+	if !ok {
+		http.Error(w, "dockerd: attach: hijack unsupported", http.StatusInternalServerError)
+		return
+	}
+	conn, _, err := hj.Hijack()
+	if err != nil {
+		http.Error(w, "dockerd: attach: hijack failed", http.StatusInternalServerError)
+		return
+	}
+	defer conn.Close()
+	if _, err := conn.Write([]byte("HTTP/1.1 101 Switching Protocols\r\nConnection: Upgrade\r\nUpgrade: tcp\r\n\r\n")); err != nil {
+		return
+	}
+
+	var once sync.Once
+	stop := func() { once.Do(func() { conn.Close(); upstream.Close() }) }
+	var wg sync.WaitGroup
+	wg.Add(2)
+	go func() { defer wg.Done(); io.Copy(conn, upstream); stop() }()
+	go func() { defer wg.Done(); io.Copy(upstream, conn); stop() }()
+	wg.Wait()
 }
 
 func writeJSON(w http.ResponseWriter, v any) {

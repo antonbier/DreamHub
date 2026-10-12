@@ -137,6 +137,9 @@
     },
     "package": {
       "upgradable": "{count} package update(s) available"
+    },
+    "app": {
+      "upgradable": "A newer image is available for {name}"
     }
   },
   "statusStrip": {
@@ -1079,7 +1082,32 @@
     "stop": "Stop",
     "remove": "Remove",
     "removeConfirm": "Remove",
-    "open": "Open"
+    "open": "Open",
+    "upgradable": "Update available",
+    "logs": "Logs",
+    "logsTitle": "Logs — {name}",
+    "logsEmpty": "No log output yet.",
+    "logsError": "The logs couldn't be loaded.",
+    "logsClose": "Close",
+    "dockerServiceLogs": "Docker service logs",
+    "console": {
+      "open": "Console",
+      "title": "Console — {name}",
+      "enable": "Enable console",
+      "disable": "Disable console",
+      "enabled": "Console enabled",
+      "warning": "Anyone who can open DreamHub can get a shell inside this app's container while the console is enabled. Turn it off again when you're done.",
+      "passwordPrompt": "Enter your password again to enable the console",
+      "password": "Password",
+      "wrongPassword": "Wrong password.",
+      "authRequired": "Turn on DreamHub's own password protection first (Settings).",
+      "unavailable": "The console isn't available on this system.",
+      "connecting": "Connecting…",
+      "disconnected": "Disconnected.",
+      "send": "Send",
+      "inputPlaceholder": "Type a command and press Enter…",
+      "close": "Close"
+    }
   },
   "timers": {
     "tuners": "{count} tuner | {count} tuners",

@@ -137,6 +137,9 @@
     },
     "package": {
       "upgradable": "{count} aggiornamento/i di pacchetto disponibile/i"
+    },
+    "app": {
+      "upgradable": "È disponibile una nuova immagine per {name}"
     }
   },
   "statusStrip": {
@@ -1079,7 +1082,32 @@
     "stop": "Arresta",
     "remove": "Rimuovi",
     "removeConfirm": "Rimuovi",
-    "open": "Apri"
+    "open": "Apri",
+    "upgradable": "Aggiornamento disponibile",
+    "logs": "Log",
+    "logsTitle": "Log — {name}",
+    "logsEmpty": "Ancora nessun log.",
+    "logsError": "I log non sono stati caricati.",
+    "logsClose": "Chiudi",
+    "dockerServiceLogs": "Log del servizio Docker",
+    "console": {
+      "open": "Console",
+      "title": "Console — {name}",
+      "enable": "Attiva console",
+      "disable": "Disattiva console",
+      "enabled": "Console attivata",
+      "warning": "Finché la console è attiva, chiunque possa aprire DreamHub può ottenere una shell nel container di questa app. Disattivala di nuovo quando hai finito.",
+      "passwordPrompt": "Inserisci di nuovo la password per attivare la console",
+      "password": "Password",
+      "wrongPassword": "Password errata.",
+      "authRequired": "Attiva prima la protezione con password di DreamHub (Impostazioni).",
+      "unavailable": "La console non è disponibile su questo sistema.",
+      "connecting": "Connessione…",
+      "disconnected": "Disconnesso.",
+      "send": "Invia",
+      "inputPlaceholder": "Scrivi un comando e premi Invio…",
+      "close": "Chiudi"
+    }
   },
   "timers": {
     "tuners": "{count} tuner | {count} tuner",

@@ -35,7 +35,29 @@ func fakeDaemon(t *testing.T) (sockPath string, close func()) {
 	})
 	mux.HandleFunc("GET /containers/abc123/json", func(w http.ResponseWriter, r *http.Request) {
 		w.Header().Set("Content-Type", "application/json")
-		_, _ = w.Write([]byte(`{"Config":{"Labels":{"dreamhub.app":"pihole"}}}`))
+		_, _ = w.Write([]byte(`{"Image":"sha256:imageid1","Config":{"Labels":{"dreamhub.app":"pihole"}}}`))
+	})
+	mux.HandleFunc("GET /images/sha256:imageid1/json", func(w http.ResponseWriter, r *http.Request) {
+		w.Header().Set("Content-Type", "application/json")
+		_, _ = w.Write([]byte(`{"RepoDigests":["pihole/pihole@sha256:newdigest"]}`))
+	})
+	mux.HandleFunc("POST /containers/abc123/exec", func(w http.ResponseWriter, r *http.Request) {
+		w.Header().Set("Content-Type", "application/json")
+		w.WriteHeader(http.StatusCreated)
+		_, _ = w.Write([]byte(`{"Id":"execid1"}`))
+	})
+	mux.HandleFunc("POST /exec/execid1/start", func(w http.ResponseWriter, r *http.Request) {
+		hj, ok := w.(http.Hijacker)
+		if !ok {
+			w.WriteHeader(http.StatusInternalServerError)
+			return
+		}
+		conn, _, err := hj.Hijack()
+		if err != nil {
+			return
+		}
+		defer conn.Close()
+		_, _ = conn.Write([]byte("HTTP/1.1 101 Switching Protocols\r\nConnection: Upgrade\r\nUpgrade: tcp\r\n\r\nhello from the mock shell"))
 	})
 	mux.HandleFunc("GET /containers/def456/json", func(w http.ResponseWriter, r *http.Request) {
 		w.Header().Set("Content-Type", "application/json")
@@ -196,6 +218,48 @@ func TestExec_Remove(t *testing.T) {
 		t.Fatal(err)
 	}
 	if err := e.Remove(context.Background(), "def456"); err != ErrNotFound {
+		t.Fatalf("unlabeled container: got %v, want ErrNotFound", err)
+	}
+}
+
+func TestExec_ImageDigest(t *testing.T) {
+	sock, closeFn := fakeDaemon(t)
+	defer closeFn()
+	e := Exec{SocketPath: sock}
+
+	digest, err := e.ImageDigest(context.Background(), "abc123")
+	if err != nil {
+		t.Fatal(err)
+	}
+	if digest != "sha256:newdigest" {
+		t.Fatalf("got %q, want the repo digest with the image name stripped", digest)
+	}
+
+	if _, err := e.ImageDigest(context.Background(), "def456"); err != ErrNotFound {
+		t.Fatalf("unlabeled container: got %v, want ErrNotFound", err)
+	}
+}
+
+func TestExec_Attach(t *testing.T) {
+	sock, closeFn := fakeDaemon(t)
+	defer closeFn()
+	e := Exec{SocketPath: sock}
+
+	conn, err := e.Attach(context.Background(), "abc123")
+	if err != nil {
+		t.Fatal(err)
+	}
+	defer conn.Close()
+	buf := make([]byte, 64)
+	n, err := conn.Read(buf)
+	if err != nil {
+		t.Fatal(err)
+	}
+	if got := string(buf[:n]); got != "hello from the mock shell" {
+		t.Fatalf("got %q, want the raw bytes the daemon wrote after the upgrade", got)
+	}
+
+	if _, err := e.Attach(context.Background(), "def456"); err != ErrNotFound {
 		t.Fatalf("unlabeled container: got %v, want ErrNotFound", err)
 	}
 }

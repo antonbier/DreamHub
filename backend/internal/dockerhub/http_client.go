@@ -34,6 +34,11 @@ type HTTPClient struct {
 
 type manifestCacheEntry struct {
 	arches []Arch
+	// digest is the tag's own manifest digest, Docker Hub's "digest"
+	// field — what a "docker pull image:tag" right now would resolve
+	// to, used by AppsHub's update check (App5) to tell whether an
+	// installed app's own pulled digest is still current.
+	digest string
 	notErr bool // whether this entry caches an ErrNotFound result
 	at     time.Time
 }
@@ -91,6 +96,7 @@ func (c *HTTPClient) Search(ctx context.Context, query string) ([]Repo, error) {
 }
 
 type tagResponse struct {
+	Digest string `json:"digest"`
 	Images []struct {
 		Architecture string `json:"architecture"`
 		Variant      string `json:"variant"`
@@ -98,6 +104,25 @@ type tagResponse struct {
 }
 
 func (c *HTTPClient) Manifest(ctx context.Context, image, tag string) ([]Arch, error) {
+	e, err := c.entry(ctx, image, tag)
+	if err != nil {
+		return nil, err
+	}
+	return e.arches, nil
+}
+
+func (c *HTTPClient) Digest(ctx context.Context, image, tag string) (string, error) {
+	e, err := c.entry(ctx, image, tag)
+	if err != nil {
+		return "", err
+	}
+	return e.digest, nil
+}
+
+// entry is the one cached fetch Manifest and Digest both read from — they
+// ask the same Docker Hub endpoint, so one tag lookup serves both rather
+// than two.
+func (c *HTTPClient) entry(ctx context.Context, image, tag string) (manifestCacheEntry, error) {
 	key := image + "@" + tag
 	c.mu.Lock()
 	if c.cache == nil {
@@ -106,50 +131,51 @@ func (c *HTTPClient) Manifest(ctx context.Context, image, tag string) ([]Arch, e
 	if e, ok := c.cache[key]; ok && time.Since(e.at) < manifestTTL {
 		c.mu.Unlock()
 		if e.notErr {
-			return nil, ErrNotFound
+			return manifestCacheEntry{}, ErrNotFound
 		}
-		return e.arches, nil
+		return e, nil
 	}
 	c.mu.Unlock()
 
-	arches, err := c.fetchManifest(ctx, image, tag)
+	e, err := c.fetchManifest(ctx, image, tag)
 
 	c.mu.Lock()
 	switch {
 	case err == nil:
-		c.cache[key] = manifestCacheEntry{arches: arches, at: time.Now()}
+		e.at = time.Now()
+		c.cache[key] = e
 	case err == ErrNotFound:
 		c.cache[key] = manifestCacheEntry{notErr: true, at: time.Now()}
 	}
 	c.mu.Unlock()
 
-	return arches, err
+	return e, err
 }
 
 // fetchManifest builds the request path without escaping image: it is a
 // Docker Hub "namespace/repo" pair (validated by the caller,
 // hubs.validDockerImage, before this is ever reached), and url.PathEscape
 // would wrongly encode its "/" as "%2F".
-func (c *HTTPClient) fetchManifest(ctx context.Context, image, tag string) ([]Arch, error) {
+func (c *HTTPClient) fetchManifest(ctx context.Context, image, tag string) (manifestCacheEntry, error) {
 	path := "/v2/repositories/" + image + "/tags/" + url.PathEscape(tag)
 	resp, err := c.get(ctx, path)
 	if err != nil {
-		return nil, err
+		return manifestCacheEntry{}, err
 	}
 	defer resp.Body.Close()
 	if resp.StatusCode == http.StatusNotFound {
-		return nil, ErrNotFound
+		return manifestCacheEntry{}, ErrNotFound
 	}
 	if resp.StatusCode != http.StatusOK {
-		return nil, fmt.Errorf("%w: manifest: status %d", ErrUnavailable, resp.StatusCode)
+		return manifestCacheEntry{}, fmt.Errorf("%w: manifest: status %d", ErrUnavailable, resp.StatusCode)
 	}
 	var parsed tagResponse
 	if err := json.NewDecoder(resp.Body).Decode(&parsed); err != nil {
-		return nil, err
+		return manifestCacheEntry{}, err
 	}
-	out := make([]Arch, 0, len(parsed.Images))
+	arches := make([]Arch, 0, len(parsed.Images))
 	for _, img := range parsed.Images {
-		out = append(out, Arch{Architecture: img.Architecture, Variant: img.Variant})
+		arches = append(arches, Arch{Architecture: img.Architecture, Variant: img.Variant})
 	}
-	return out, nil
+	return manifestCacheEntry{arches: arches, digest: parsed.Digest}, nil
 }

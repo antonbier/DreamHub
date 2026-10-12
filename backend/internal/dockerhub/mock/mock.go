@@ -18,10 +18,22 @@ type Client struct{}
 
 var _ dockerhub.Client = Client{}
 
-var fixtures = map[string][]dockerhub.Arch{
-	"pihole/pihole":           {{Architecture: "amd64"}, {Architecture: "arm64"}, {Architecture: "arm", Variant: "v7"}, {Architecture: "arm", Variant: "v6"}},
-	"linuxserver/heimdall":    {{Architecture: "amd64"}, {Architecture: "arm64"}},
-	"linuxserver/mariadb-old": {{Architecture: "amd64"}}, // deliberately amd64-only, to exercise "not compatible"
+type fixture struct {
+	arches []dockerhub.Arch
+	// digest is what hub.docker.com would currently say "image:latest"
+	// resolves to — compared against dockerd/mock's own seeded
+	// containers (internal/dockerd/mock) by AppsHub's update watch
+	// (App5): pihole's differ on purpose, so mock mode has a real
+	// "update available" case to develop and demo against; adguardhome's
+	// match, an "already current" case.
+	digest string
+}
+
+var fixtures = map[string]fixture{
+	"pihole/pihole":           {arches: []dockerhub.Arch{{Architecture: "amd64"}, {Architecture: "arm64"}, {Architecture: "arm", Variant: "v7"}, {Architecture: "arm", Variant: "v6"}}, digest: "sha256:pihole-upstream-new"},
+	"adguard/adguardhome":     {arches: []dockerhub.Arch{{Architecture: "386"}, {Architecture: "amd64"}, {Architecture: "arm", Variant: "v6"}, {Architecture: "arm", Variant: "v7"}, {Architecture: "arm64"}, {Architecture: "ppc64le"}}, digest: "sha256:adguardhome-current"},
+	"linuxserver/heimdall":    {arches: []dockerhub.Arch{{Architecture: "amd64"}, {Architecture: "arm64"}}, digest: "sha256:heimdall-current"},
+	"linuxserver/mariadb-old": {arches: []dockerhub.Arch{{Architecture: "amd64"}}, digest: "sha256:mariadb-old-current"}, // deliberately amd64-only, to exercise "not compatible"
 }
 
 func (Client) Search(ctx context.Context, query string) ([]dockerhub.Repo, error) {
@@ -41,9 +53,17 @@ func (Client) Search(ctx context.Context, query string) ([]dockerhub.Repo, error
 }
 
 func (Client) Manifest(ctx context.Context, image, tag string) ([]dockerhub.Arch, error) {
-	arches, ok := fixtures[image]
+	f, ok := fixtures[image]
 	if !ok {
 		return nil, dockerhub.ErrNotFound
 	}
-	return arches, nil
+	return f.arches, nil
+}
+
+func (Client) Digest(ctx context.Context, image, tag string) (string, error) {
+	f, ok := fixtures[image]
+	if !ok {
+		return "", dockerhub.ErrNotFound
+	}
+	return f.digest, nil
 }

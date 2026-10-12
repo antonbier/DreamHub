@@ -23,7 +23,7 @@ case "$1" in
         # reasoning as DreamHub's own postrm — a plain removal keeps it,
         # so reinstalling later picks up where the user left off.
         rm -rf "$STATE_DIR"
-        getent passwd "$EXT_USER" >/dev/null 2>&1 && userdel "$EXT_USER" || true
+        id -u "$EXT_USER" >/dev/null 2>&1 && userdel "$EXT_USER" || true
         ;;
 esac
 

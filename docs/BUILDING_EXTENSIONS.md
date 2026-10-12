@@ -112,7 +112,7 @@ func applyToggle(fingerprint string) (status int) {
 
 ## A minimal worked example
 
-`backend/internal/extension/mock/mock.go` in this repo is a complete, real (if in-process) implementation of exactly this contract — a one-socket "smart switch" with a status widget and a toggle action, fingerprint-checked apply included. Reading it is the fastest way to see the whole contract in ~70 lines of Go; the shape translates directly to any language, since it's all just JSON over HTTP.
+[`extensions/ewelink/`](../extensions/ewelink/) is a complete, real extension — its own Go module, its own `.deb` built from the template, discovery, encryption, a fingerprint-checked switch action; start there. `backend/internal/extension/mock/mock.go` in this repo is a smaller, in-process implementation of exactly this contract — a one-socket "smart switch" with a status widget and a toggle action, fingerprint-checked apply included. Reading it is the fastest way to see the whole contract in ~70 lines of Go; the shape translates directly to any language, since it's all just JSON over HTTP.
 
 ## 3. Package it (optional, but the convention for distribution)
 
@@ -132,6 +132,6 @@ You don't need a real Dreambox to develop against — run DreamHub itself in moc
 
 ## What this doesn't cover yet
 
-- **No extension-contributed dashboard tiles.** E1's own original scope named this; it's deferred until a real extension exists to prove it against (eWeLink/Sonoff, E4 — not yet built, needs real hardware).
+- **No extension-contributed dashboard tiles.** E1's own original scope named this; still deferred — eWeLink (E4) exists now and is the candidate to prove it against.
 - **Nothing pushes.** DreamHub polls `GET /widgets` on each page load; there's no way for your extension to proactively tell DreamHub something changed. If that turns out to matter, it'd be a later, additive addition to the schema (SSE or similar), not something you need to work around today.
 - **Permissions are binary.** `admin: true/false` is the whole vocabulary — an extension can't ask for one of DreamHub's finer-grained permissions (`channels.manage`, say). If your extension genuinely needs that kind of integration, it's a sign you might actually want the "core contribution" path from the table above instead.

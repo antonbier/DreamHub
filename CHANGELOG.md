@@ -6,6 +6,12 @@ Format follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/); version
 
 ## [Unreleased]
 
+### Added
+- eWeLink/Sonoff extension (`extensions/ewelink`, its own package `dreamhub-ext-ewelink`): Sonoff devices with LAN control on, shown and switched in AppsHub → Extensions without the eWeLink cloud, switching through the usual preview. Needs each device's key from the eWeLink account; the reference extension for anyone building one.
+
+### Fixed
+- The extension packaging template created its user on every install and never removed it on purge (DreamOS has no `getent`), and pointed at a `nologin` shell DreamOS doesn't have.
+
 ## [0.5.0] - 2026-10-12
 
 ### Added

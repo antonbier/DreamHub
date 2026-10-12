@@ -1,6 +1,6 @@
 # Extension Hub — plan
 
-Status: **decided 2026-10-11; E1 (the contract) built 2026-10-12, E2 (distribution) and E3 (isolation/packaging template) built the same day.** Tracks issue #46. Only E4 (a real reference extension, eWeLink/Sonoff) is still open — deliberately deferred, it needs real hardware and account, not just more code.
+Status: **decided 2026-10-11; E1 (the contract) built 2026-10-12, E2 (distribution) and E3 (isolation/packaging template) built the same day.** Tracks issue #46. Only E4 (a real reference extension, eWeLink/Sonoff) is still open — deliberately deferred, it needs real hardware and account, not just more code. [`docs/BUILDING_EXTENSIONS.md`](BUILDING_EXTENSIONS.md) is the developer-facing how-to this plan's own decisions led to.
 
 **2026-10-12: widened and renamed to AppsHub** (`docs/APPSHUB_PLAN.md`, built in full the same day — App1 through App6) — Docker container management turned out to need its own full hub (forms, not widgets), not something E1's widget contract could stretch to cover. Everything on this page still stands exactly as built: E1's widget cards became one tab ("Extensions") inside the renamed AppsHub nav entry, same contract, same code, just a different wrapper around it.
 

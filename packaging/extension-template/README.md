@@ -1,6 +1,6 @@
 # packaging/extension-template/
 
-A starting point for packaging a DreamHub extension (`docs/EXTENSIONHUB_PLAN.md`, E2 distribution + E3 isolation, #46) — not DreamHub's own package, see `../README.md` for that. Nothing here is built or tested against a real extension yet (E4, the eWeLink/Sonoff reference extension, is still open); it's the packaging half of the contract E1 already implements on the core side (`backend/internal/extension`, `backend/internal/hubs/extensions.go`).
+A starting point for packaging a DreamHub extension (`docs/EXTENSIONHUB_PLAN.md`, E2 distribution + E3 isolation, #46) — not DreamHub's own package, see `../README.md` for that. Nothing here is built or tested against a real extension yet (E4, the eWeLink/Sonoff reference extension, is still open); it's the packaging half of the contract E1 already implements on the core side (`backend/internal/extension`, `backend/internal/hubs/extensions.go`). See [`docs/BUILDING_EXTENSIONS.md`](../../docs/BUILDING_EXTENSIONS.md) for the full guide (registration, the three calls, a worked example) — this file covers packaging only.
 
 ## What an extension actually is
 

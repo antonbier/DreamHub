@@ -6,6 +6,16 @@ Format follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/); version
 
 ## [Unreleased]
 
+### Added
+- DeviceHub ("Gerät"): SystemHub and AdminHub merged into one nav entry with role-gated tabs — device/disks/diagnostics, a script library (upload, store, run by hand with a confirm and a change-log entry), a terminal (`shellinaboxd` behind DreamHub's own auth, off by default, re-authentication required to turn it on), and a package browser (installed packages, feeds with a trust signal read from `X-DreamHub-Category`, update notifications, an AI explanation of what a package does on request).
+- Extension Hub: a versioned, data-only plugin contract so niche or homelab-style features can ship as separate, optional packages — an extension registers over loopback and describes its own UI as structured widgets (status, meter, list, action) rendered with DreamHub's own components; action widgets go through the normal plan → apply flow. A `packaging/extension-template/` for building a future extension's own `.deb` (systemd unit with hardening, control file, postinst/prerm/postrm), and `X-DreamHub-Category` recognized by the feed list and package browser. Demo-only so far — nothing registers against it yet.
+- AppsHub: the "Extension Hub" nav entry renamed and widened into "AppsHub" with an "Extensions" tab (unchanged) and a new, empty "Apps" tab — the shell for Docker container management (Unraid-style), to be built next.
+- MediaHub: ad breaks found by AdScan can be written into the recording's own cut list ("Mark in cut list" in the detail dialog) so the box's own player skips them — mock-tested only, still needs a box check that the player actually skips the marked ranges.
+- Settings: an "About" card (version, copyright, source link) next to Backup & restore.
+
+### Fixed
+- PlexHub: a stream that stalled mid-playback could hang forever instead of failing.
+
 ## [0.3.0] - 2026-10-09
 
 ### Added

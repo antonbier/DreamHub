@@ -494,11 +494,10 @@ func (e Exec) Attach(ctx context.Context, id string) (io.ReadWriteCloser, error)
 		"Content-Length: " + fmt.Sprint(len(startBody)) + "\r\n" +
 		"Connection: Upgrade\r\n" +
 		"Upgrade: tcp\r\n\r\n"
-	if _, err := conn.Write([]byte(req)); err != nil {
-		conn.Close()
-		return nil, fmt.Errorf("%w: %v", ErrUnavailable, err)
-	}
-	if _, err := conn.Write(startBody); err != nil {
+	// One write for headers and body: a daemon may hijack the connection
+	// as soon as it has the headers, and a second write could then hit a
+	// closed socket (seen as a flaky broken pipe in CI).
+	if _, err := conn.Write(append([]byte(req), startBody...)); err != nil {
 		conn.Close()
 		return nil, fmt.Errorf("%w: %v", ErrUnavailable, err)
 	}

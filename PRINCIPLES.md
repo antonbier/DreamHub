@@ -10,14 +10,14 @@ The most important rule in this document. DreamHub operates as root on a device 
 - **Every change shows exactly what will change before it happens** (before → after, for every affected file or item) and **requires explicit user confirmation**.
 - **Nothing happens automatically in v1.** Automation is added later, deliberately and opt-in, through AutomationHub — which is one of the main reasons DreamHub is modular.
 - **The API enforces this, not just the UI.** Every mutating operation is two-step: `plan` returns the list of changes plus a plan ID; `apply` executes exactly that plan ID. No client — including a future mobile app — can skip the preview.
-- **Every applied change is recorded** in a change log (what, when, by whom), visible in SystemHub. This is the basis for undo.
+- **Every applied change is recorded** in a change log (what, when, by whom), visible in DeviceHub. This is the basis for undo.
 - **Delete means move to trash**, not hard delete.
 - **Never touch a file that's currently being recorded or played** — check timer state and the current service first.
 - **The AI only proposes.** A recommendation never creates a timer by itself.
 - **Dashboard tiles only show.** A tile never triggers an action on its own.
 - **DreamHub's own settings** don't touch recordings, timers or the system, so they're saved directly with an explicit "Save" rather than the two-step `plan` → `apply` — but they're validated all-or-nothing and every save is recorded in the change log (without secret values).
 - **Watched state in Plex** (PlexHub) belongs to the Plex server, not the box: marking *one* film or episode seen or unseen happens directly, with "Undo" right after and an entry in the change log — it changes nothing on the box and is undone with one click. Marking a whole season or series touches many episodes at once and goes through `plan` → `apply`, listing every episode. Only while the server answers: nothing is queued to be sent later on its own.
-- **The one exception is the terminal** (AdminHub, later): a shell can't preview its commands. It gets guardrails instead — off by default, can only be enabled while auth is on, admin role only, password re-entered before opening, a clear warning, session start/end recorded in the change log.
+- **The one exception is the terminal** (DeviceHub → Administration, built 2026-10-11): a shell can't preview its commands. It gets guardrails instead — off by default, can only be enabled while auth is on, admin role only, password re-entered before opening, a clear warning, session start/end recorded in the change log.
 
 ## Multilingual by construction
 
@@ -80,7 +80,7 @@ Mirrors a pattern this project already found and validated on the platform itsel
 
 ## Hub status: always explain what's missing
 
-When a hub can't run fully, the user is never left guessing. Each hub is *available*, *degraded* or *unavailable* — and every non-available state comes with the reason and how to fix it ("SerienRecorder is not installed → install it from the Addon Manager under …"). Shown on the hub's placeholder, on SystemHub's diagnostics page, and in the onboarding wizard. A one-click fix (e.g. installing a package) is itself a change and follows preview-and-confirm.
+When a hub can't run fully, the user is never left guessing. Each hub is *available*, *degraded* or *unavailable* — and every non-available state comes with the reason and how to fix it ("SerienRecorder is not installed → install it from the Addon Manager under …"). Shown on the hub's placeholder, on DeviceHub's diagnostics page, and in the onboarding wizard. A one-click fix (e.g. installing a package) is itself a change and follows preview-and-confirm.
 
 ## Settings: one central menu, schema-driven, extended per hub
 
@@ -107,7 +107,7 @@ Covers things like the AI provider key, TMDB API key, webhook URLs, the API toke
 
 ## AI is always optional
 
-No feature may *require* an AI provider to work at all — at most, AI adds an optional, clearly opt-in extra on top of something that already works without it (DiscoveryHub's recommendations, AdminHub's "what does this package do?"). A household without any AI provider configured, or one that never wants to send anything to an external service, gets the full product minus these specific extras — never a degraded core. This also keeps maintenance honest: a feature's everyday data (e.g. a curated app list for AppsHub) is maintained as plain, reviewable project data, not generated or kept current by an AI on anyone's behalf.
+No feature may *require* an AI provider to work at all — at most, AI adds an optional, clearly opt-in extra on top of something that already works without it (DiscoveryHub's recommendations, DeviceHub's "what does this package do?"). A household without any AI provider configured, or one that never wants to send anything to an external service, gets the full product minus these specific extras — never a degraded core. This also keeps maintenance honest: a feature's everyday data (e.g. a curated app list for AppsHub) is maintained as plain, reviewable project data, not generated or kept current by an AI on anyone's behalf.
 
 ## Profiles, roles and dashboards: ready, not built
 
@@ -140,8 +140,8 @@ The platform already has apt/dpkg with its own feed convention and a friendly "U
 The platform already runs full systemd with journald (see `ARCHITECTURE.md`). Log to stdout/stderr in a structured (not free-text-spam) format and let `journalctl -u dreamhub` do the rest — don't build custom log rotation or file-based logging.
 
 - Every API request gets a **request ID**, logged with every related entry and returned in error responses, so an error shown in the UI can be found in the logs immediately.
-- Log fields include the hub/connector, so AdminHub can filter by them.
-- The log level is switchable at runtime from AdminHub; debug level reverts automatically after a set time.
+- Log fields include the hub/connector, so DeviceHub can filter by them.
+- The log level is switchable at runtime from DeviceHub; debug level reverts automatically after a set time.
 
 ## Testable without the physical device
 

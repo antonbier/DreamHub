@@ -2,7 +2,7 @@
 
 DreamHub is a web interface for **Dreamboxes running DreamOS** — developed and tested on a Dreambox One; see *What you need* for the others. It runs on the box itself, next to the box's own WebControl, and you use it from a browser — on your phone, tablet or computer. This guide covers installing it, the first steps, and what each part does.
 
-DreamHub changes nothing on its own: every change to recordings, timers or settings on the box is shown to you first ("Preview · nothing changed yet") and only happens when you confirm it. Every applied change is listed under **System → Change log**.
+DreamHub changes nothing on its own: every change to recordings, timers or settings on the box is shown to you first ("Preview · nothing changed yet") and only happens when you confirm it. Every applied change is listed under **Device → Overview → Change log**.
 
 ---
 
@@ -30,7 +30,7 @@ There is no package feed to subscribe to yet (see *Later: from a feed* below), s
    ```
 
    This installs the DreamHub service and starts it, and adds the **DreamHub** plugin to the TV's plugin list. The TV's interface (enigma2) restarts once, so the plugin appears right away; after later updates it only restarts again if the plugin itself changed. A recording running at that moment would be cut, so install when nothing is recording.
-4. **Check it:** open DreamHub (next section), then **System → Diagnostics → Run self-test**. It asks the box everything DreamHub needs and should come back all green.
+4. **Check it:** open DreamHub (next section), then **Device → Diagnostics → Run self-test**. It asks the box everything DreamHub needs and should come back all green.
 
 ### Later: from a feed
 
@@ -107,7 +107,7 @@ Every recording folder on the box, folder by folder.
   - **Save covers** — writes the poster and backdrop next to recordings that have none, where Enigma2 and other plugins look for them. Existing covers are never replaced.
   - **Move to trash** — nothing is deleted right away; the **Trash** tab restores or deletes for good.
 
-- **Ads** *(from the next release)* — in a recording's details, **Detect ads** finds the ad breaks by the channel's logo, on the box, in the background (it waits while the box records). The breaks show on a timeline; tap one to watch from there in the browser. **Cut out the ads …** ticks the breaks it is sure about — the uncertain ones are yours to decide — shows what will happen and cuts them out without re-encoding. The original keeps all its files and goes to the trash, so it can be restored. For several recordings at once: select them, then **Detect ads**. The list shows "14 min ads" next to a recording that was checked.
+- **Ads** — in a recording's details, **Detect ads** finds the ad breaks by the channel's logo, on the box, in the background (it waits while the box records). The breaks show on a timeline; tap one to watch from there in the browser. **Cut out the ads …** ticks the breaks it is sure about — the uncertain ones are yours to decide — shows what will happen and cuts them out without re-encoding. The original keeps all its files and goes to the trash, so it can be restored. For several recordings at once: select them, then **Detect ads**. The list shows "14 min ads" next to a recording that was checked.
 
 Files are only changed when DreamHub runs on the box itself, and never while a recording is still being written or played.
 
@@ -157,7 +157,7 @@ All timers on the box, by day, with likely tuner conflicts marked. **Disable** k
 
 AI picks from a bouquet's programme for the next hours, optionally fitted to your taste (what you record and follow — **What gets sent** shows the exact list before anything is sent). The picks stay until you generate new ones, also on other devices. Click a pick for its details and **Create timer**.
 
-### Channel list *(from the next release)*
+### Channel list
 
 Your bouquets, editable on the phone (admins). Move channels (buttons, or drag on a computer), put one on a given number, rename, remove, add from all the channels the box knows, add headings; create, rename and delete bouquets. **New since** shows the channels a channel scan brought, **Check** lists what deserves a look (channels gone after a scan, twice in a bouquet, without programme data or logo), **Logos** shows the installed logo sets and lets you pick the one DreamHub uses. Every change is collected and shown as one preview ("ZDF HD moves from 14 to 2"); applying makes a backup of the whole channel list first and restores it by itself if the result isn't what was previewed. Older backups can be restored. Needs the BouquetEditor plugin on the box.
 
@@ -165,9 +165,15 @@ Your bouquets, editable on the phone (admins). Move channels (buttons, or drag o
 
 A remote control for the box in the browser, with a live picture of the TV screen, and **Message to the TV** to show a short text on screen. Opens from the remote icon at the top on every page.
 
-### System and Admin
+### Device
 
-**System** shows the box, its disks, DreamHub's diagnostics and the **Change log** of every change made through DreamHub. **Backup and restore** of DreamHub's own settings and dashboard are under **Settings → System**. **Admin** shows the box's **services** — enigma2, DreamHub, Samba and the others — with their state; **Restart** (or **Start**, when one is down) shows first what it interrupts, such as a recording running right now. Below that, logs — DreamHub's own and the box's — live if you like; **Logs** next to a service shows just its lines.
+**Overview** shows the box, its disks, and the **Change log** of every change made through DreamHub. **Diagnostics** runs the box self-test. **Backup and restore** of DreamHub's own settings and dashboard are under **Settings → System** (admins installing apps through AppsHub can also include each app's own configuration in that backup).
+
+**Administration** (admins only) shows the box's **services** — enigma2, DreamHub, Samba and the others — with their state; **Restart** (or **Start**, when one is down) shows first what it interrupts, such as a recording running right now. Below that, logs — DreamHub's own and the box's — live if you like; **Logs** next to a service shows just its lines. The same tab has a **package browser** (installed packages, update notifications, an AI explanation of what one does on request), a **script library** (upload a script, run it with a confirm), and a **terminal** — off by default, needs DreamHub's own password protection turned on and re-entered to switch on, with a standing warning while it's on.
+
+### Apps *(from the next release)*
+
+Admin-only, two tabs. **Extensions** shows small third-party bridges once installed (e.g. a smart switch) — each one's own status and actions, never its own web page. **Apps** runs self-hosted apps as isolated Docker containers, Unraid-style: a short hand-picked list (Pi-hole, AdGuard Home, WireGuard, Syncthing, qBittorrent, Heimdall, Sonarr, Radarr, Prowlarr, Bazarr) with whether each actually works on your box's processor, plus a search for anything else on Docker Hub (search results can only be checked for compatibility, not installed yet). **Install** shows the image, its storage location, memory limit and port before anything runs, checked against free memory and disk space first. An installed app gets **Open** (when it has its own web page), **Start/Stop**, **Logs**, a **Console** (an interactive shell inside the app — same off-by-default, password-re-entry, standing-warning treatment as the terminal above), and **Remove** (its own settings are kept unless purged). An "Update available" badge appears, and a notification, when a newer version exists — DreamHub never updates one on its own. Only the curated apps can be installed today; search results and running more than one container per app are later.
 
 ---
 
@@ -209,12 +215,12 @@ Privacy: a message's text (a recording's or series' title, a channel name) passe
 
 ## 6. When something doesn't work
 
-- **Not sure what works on your box?** **System → Diagnostics → Run self-test** asks the box everything DreamHub needs, without changing anything, and marks each answer: fine, worth a look, failed, or not applicable. **Download the box's answers** gives a zip that helps when reporting a problem.
+- **Not sure what works on your box?** **Device → Diagnostics → Run self-test** asks the box everything DreamHub needs, without changing anything, and marks each answer: fine, worth a look, failed, or not applicable. **Download the box's answers** gives a zip that helps when reporting a problem.
 - **DreamHub doesn't open:** check that the service runs — in the WebAdmin terminal, `systemctl status dreamhub`. Its log: `journalctl -u dreamhub -n 100`.
-- **A hub shows "unavailable" or "degraded":** the sidebar dot and the bell say why and how to fix it (a missing key, a plugin that isn't installed, the box not answering). **System → Diagnostics** lists all of them.
+- **A hub shows "unavailable" or "degraded":** the sidebar dot and the bell say why and how to fix it (a missing key, a plugin that isn't installed, the box not answering). **Device → Diagnostics** lists all of them.
 - **"Could not reach WebControl":** the box's interface is restarting or busy (after an update, enigma2 takes a moment), or it now asks for a login — enter it under **Settings → Services → WebControl**.
 - **File actions are missing in Recordings:** they need DreamHub to run on the box itself; the page says so when they're not available.
 - **No pictures:** add a TMDB key and make sure *Load pictures, ratings and overviews* is on (Settings → Services → TMDB).
-- **More detail for a bug report:** **Admin → Logs**, set the level to *debug* for a while (it switches back by itself).
+- **More detail for a bug report:** **Device → Administration → Logs**, set the level to *debug* for a while (it switches back by itself).
 
 Problems and ideas: the repository's issue tracker on GitHub.

@@ -176,11 +176,13 @@ This is exactly what the `GPT-Plugin` (see below — genuinely a **GUID Partitio
 
 `/data` (`mmcblk0p4`, 7.8 GB, separate from the 2 GB root) is where persistent application data lives (`/data/piconpool`, `/data/mediaportal`, `/data/GPT` backups, etc.) — it's lazy-mounted via `autofs` on first access, not mounted unconditionally at boot. **Implication for DreamHub**: root is small (2 GB) and shared by every installed package — keep the `.deb`'s installed footprint lean, and consider putting any larger persistent state under `/data` rather than assuming generous root space.
 
-## Docker: possible via a Gemini-team plugin, deliberately not used
+## Docker: possible via a Gemini-team plugin, now used by AppsHub
 
 Correction to an earlier check in this doc: Docker **is** possible on this platform — there's an official Gemini-team Docker plugin available through the feed (explains the `docker` package seen earlier in `dpkg -l`, state `rc` — available/previously removed, just not installed on the reference device at the time of the `no overlay filesystem` check). So the earlier "not possible" conclusion only described the reference device's state at that moment, not a hard platform limit.
 
-DreamHub still doesn't use it, but as a **deliberate choice, not a technical necessity**: on a 2 GB RAM / no-swap device already running enigma2 and a handful of background services (see resource headroom below), adding a Docker daemon is a constant-overhead dependency a single static Go binary simply doesn't need. Simpler, lighter, one less moving part to keep working across the platform's own updates.
+**Revised 2026-10-12**: AppsHub (`docs/APPSHUB_PLAN.md`) now runs self-hosted apps as Docker containers, reusing this same vendor plugin rather than bundling a separate daemon — DreamHub's own backend still never touches a Docker daemon beyond that: a dedicated, isolated helper process (`cmd/dreamhub-dockerd-helper`) is the only thing with socket access, talking a whitelisted subset of the Engine API, the main backend reaching it over loopback only (`backend/internal/dockerd`'s own package doc). The earlier "deliberate choice not to use it" reasoning (a constant-overhead daemon a single static binary doesn't need) was about DreamHub's *own* runtime, which still holds — running optional, user-chosen third-party apps in containers is a different question, decided separately once the owner actually wanted that capability.
+
+**Still unconfirmed on the reference box** (`docs/APPSHUB_PLAN.md`'s own open questions): whether the vendor's Docker plugin supports cgroup v2 and rootless mode, and the exact Engine API version/path compatibility `internal/dockerd`'s hand-rolled client assumes — built and tested against a faithful fake unix-socket daemon, never against the real plugin.
 
 ## mDNS/Avahi: an existing opportunity for zero-config discovery
 

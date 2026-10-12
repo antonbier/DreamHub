@@ -1,6 +1,6 @@
 # AdminHub — plan
 
-Status: **decided 2026-10-11; A1 (the DeviceHub merge) built the same day.** Tracks issue #47; the terminal piece was already tracked separately as #36 and keeps that number. Once a package lands, its status moves to `ROADMAP.md`.
+Status: **decided 2026-10-11; A1, A3, A4 built the same day, A2's box-independent slices (browsing, feeds, update notifications, AI explain) built 2026-10-12.** Tracks issue #47; the terminal piece was already tracked separately as #36 and keeps that number. Only A2's remainder (install/remove as a plan — needs the box for `apt -s` simulate output) is still open; see the table below.
 
 ## Why
 

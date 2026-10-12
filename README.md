@@ -6,7 +6,7 @@ One place for everything your **Dreambox (DreamOS)** does — recordings, timers
 
 DreamHub is a **core** (dashboard, global search, notifications, settings in tabs with backup/restore, setup assistant, profiles with an admin and a viewer role) with **hubs** plugged into it:
 
-- **MediaHub** — recordings and folders, disk space, rename (also in bulk, by naming scheme, into folders), covers, trash; finding ad breaks by the channel logo and cutting them out without re-encoding (next release)
+- **MediaHub** — recordings and folders, disk space, rename (also in bulk, by naming scheme, into folders), covers, trash; finding ad breaks by the channel logo and cutting them out without re-encoding
 - **SeriesHub** — SerienRecorder: followed series, episode guide with what's missing (TVmaze), what's coming
 - **GuideHub** — the TV guide in four views (grid, now & next, tonight, one channel), channel logos, record or switch from any programme
 - **RadioHub** — radio stations with what's on, play on the box, radio recordings
@@ -14,10 +14,10 @@ DreamHub is a **core** (dashboard, global search, notifications, settings in tab
 - **TimerHub** — timers, disabling/enabling, AutoTimer, conflict detection
 - **DiscoveryHub** — AI recommendations from the EPG, optionally matched to your taste, one tap to a timer
 - **ControlHub** — a remote with the live picture, on every page; messages to the TV
-- **SystemHub** — device info, diagnostics with a box self-test, change log
+- **DeviceHub** ("Gerät") — device info, diagnostics with a box self-test, change log; for admins also the box's services with restart and logs (live), crash logs, a package browser with update notifications, a script library and a terminal
 - **PlexHub** ("Plex Mediathek") — your Plex server's films and series as tiles or a list, watched state synced with Plex, films played on the box's own player; the library stays visible while the server is off
-- **ChannelHub** ("Channel list") — your bouquets on the phone: sort, rename, add, remove, headings, new channels after a scan, a channel check and logo sets, with a backup before every change (next release)
-- **AdminHub** — the box's services with restart, logs (live), crash logs — admins only
+- **ChannelHub** ("Channel list") — your bouquets on the phone: sort, rename, add, remove, headings, new channels after a scan, a channel check and logo sets, with a backup before every change
+- **AppsHub** — small third-party bridges as optional extensions (e.g. a smart switch), and self-hosted apps (Pi-hole, AdGuard Home, WireGuard, Syncthing and more) run as Docker containers: browse, install, start/stop, update notifications, logs, a console, and backup — all admin-only (next release)
 - later: AutomationHub (see [ROADMAP.md](ROADMAP.md))
 
 The dashboard is a personal set of tiles ("Now on the box", timers, conflicts, disk space, episodes, your own saved views). Details come from the box's own cover art and DreamMediaInfo first, then TMDB, OMDb (Rotten Tomatoes, IMDb, Metascore) and fanart.tv. Push notifications to the phone go through ntfy. Available in German, Italian and English.
@@ -46,7 +46,7 @@ Packages are attached to each [release](https://github.com/antonbier/DreamHub/re
 
 ## Status
 
-**0.3.0** is the current release (0.1.0 was the first), adding ChannelHub and ad detection with cutting — both confirmed on the reference box. Every released hub works against the real box — confirmed on the reference Dreambox One with the self-test (System → Diagnostics), Plex playback on the box included — and against a mock for development, so no Dreambox is needed to work on it. [ROADMAP.md](ROADMAP.md) has exactly what's done and what's open, [CHANGELOG.md](CHANGELOG.md) what changed, [PROJECT_PLAN.md](PROJECT_PLAN.md) why the project exists, and [backend/README.md](backend/README.md) / [frontend/README.md](frontend/README.md) how to run it locally.
+**0.3.0** is the current release (0.1.0 was the first), adding ChannelHub and ad detection with cutting — both confirmed on the reference box. Every released hub works against the real box — confirmed on the reference Dreambox One with the self-test (Device → Diagnostics), Plex playback on the box included — and against a mock for development, so no Dreambox is needed to work on it. On `main` for the next release: DeviceHub (SystemHub+AdminHub merged), Extension Hub and AppsHub (optional bridges and self-hosted Docker apps) — built and mock-tested, not yet confirmed on the box. [ROADMAP.md](ROADMAP.md) has exactly what's done and what's open, [CHANGELOG.md](CHANGELOG.md) what changed, [PROJECT_PLAN.md](PROJECT_PLAN.md) why the project exists, and [backend/README.md](backend/README.md) / [frontend/README.md](frontend/README.md) how to run it locally.
 
 ## License
 

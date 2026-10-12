@@ -1,6 +1,6 @@
 # AppsHub — plan
 
-Status: **decided 2026-10-12 (brainstorm with the owner); App1 (the rename/shell) built the same day.** No issue opened yet — ask before creating one. Widens and renames Extension Hub (`docs/EXTENSIONHUB_PLAN.md`, #46, E1 already built 2026-10-12); once a package lands, its status moves to `ROADMAP.md`.
+Status: **decided 2026-10-12 (brainstorm with the owner); App1 through App6 all built the same day — a complete, working vertical slice for curated apps (browse → install → manage → update → logs/console → backup → remove).** No issue opened yet — ask before creating one. Widens and renames Extension Hub (`docs/EXTENSIONHUB_PLAN.md`, #46, E1 already built 2026-10-12); this now shows in `ROADMAP.md` too. Only the plan's own explicitly-later tier (free-search install, multi-container/compose apps, systemd packaging for the helper, a read-only viewer dashboard tile) and real-box verification remain open.
 
 ## Why
 
@@ -105,7 +105,7 @@ Like Extension Hub itself, AppsHub stays a power-user feature you find by naviga
 | App3 | Curated list + search | **built 2026-10-12** (the curated catalog, free search, on-click manifest checks, and a first "Apps" tab UI — see below) |
 | App4 | Install/run as a plan | **built 2026-10-12** (pull + run through preview/confirm, a resource-budget check, a port bind check, `TZ` passthrough, start/stop, remove — curated apps only, see below) |
 | App5 | Updates, logs, console | **built 2026-10-12** (the notification-inbox update flow, the two-tier log viewer, the Terminal-equivalent per-container console — see below) |
-| App6 | Backup | the general "backup sections" mechanism, config-only default for apps |
+| App6 | Backup | **built 2026-10-12** (the general "backup sections" mechanism, config-only default for apps — see below) |
 | later | Compose, viewer dashboard tile | multi-container apps; a read-only "open app" tile for non-admin profiles |
 
 ### App1, built 2026-10-12
@@ -159,7 +159,6 @@ Scoped narrower than the original plan text on purpose: **only a curated catalog
 **Not done here, on purpose:**
 - Still curated-catalog-only — no way yet to install a free-search result, and no multi-container/compose support (that's the plan's own later tier).
 - No systemd packaging for the helper (App2's own gap, unchanged) — nothing here runs on the box yet regardless of how complete the backend is.
-- No backup mechanism yet (App6) — install/remove/start/stop/update/logs/console is the whole surface so far.
 - Resource and flash-fill thresholds are still the mechanism, not calibrated numbers — both still need real-box measurement, called out above and in "Open questions".
 
 ### App5, built 2026-10-12
@@ -172,4 +171,15 @@ Three independent slices, all on top of App2's `internal/dockerd` helper and App
 - Confirmed in a full headless-browser pass against the mock backend (not just the Go tests, which also all pass under `-race`, including a hand-rolled raw-socket WebSocket test client dialing the real handler — the same "don't just trust the handler shape" standard `dockerd`'s own `fakeDaemon` tests hold to): the "Update available" badge on Pi-hole (the mock fixtures are seeded so it lags behind the registry on purpose, AdGuard Home matches), the logs modal, the Docker-service-logs link landing on the filtered viewer, and the console's complete round trip — warning shown, password prompt, enable, a real echo over the bridge, disable.
 - **Not done here, on purpose**: still curated-catalog-only (App4's own scope, unchanged) — the update watch only ever checks curated apps; no systemd packaging for the helper yet (App2's gap, still open); no crash-loop detection (the plan's own decision text calls for it, but it isn't part of this package's table entry — a later pass, not forgotten).
 
-Everything else (App6 onward) hangs off this now existing.
+### App6, built 2026-10-12
+
+Modeled as a generic mechanism from the start, exactly as the plan's own "Backup is granular, built as a general mechanism" decision calls for, not an AppsHub-only special case:
+
+- `hubs.System` grew a `Sections []BackupSection` field and `GET /api/v1/system/backup/sections` (every registered section's own items, each with a real size, so the admin sees what they're about to include before they do). `backupFile` grew an optional `Sections map[string]json.RawMessage` — a plain settings-only backup (no `?sections=` query, or an older file with no `"sections"` key) behaves exactly as it always did; this is additive, not a breaking change to the existing format.
+- AppsHub is the first (and so far only) section: every installed curated app's own config directory (its `HostDir`, App4) is included by default — the plan's own "configuration only, never bulk volume data automatically" default. There's nothing else to make opt-in yet, since no curated app has a second, larger bind mount beyond the one `ConfigPath` App4 already mounts — `BackupItem`'s own per-item size and `DefaultIncluded` fields are already there for when one does, without needing another redesign.
+- `internal/configfs` (new): tars and gzips a directory for export, and restores by extracting — deliberately never deleting a file already on disk that the archive doesn't mention (the simplest safe behavior without needing to reason about what else might have legitimately been written there since the backup, e.g. a database file growing). Restore rejects a path-escaping archive entry (`../…`) outright, since an uploaded backup file is untrusted input, not something only this package's own `Archive` could have produced.
+- Frontend: `BackupPanel.vue` (Settings → System) shows a checkbox for the apps section with its own item count and total size, checked by default; the restore preview notes "This file also includes installed apps' configs" when the uploaded file carries one.
+- Confirmed in a full headless-browser pass against the mock backend: downloaded a real backup with both mock apps' configs actually embedded (not just a stub), re-uploaded it, saw the correct note in the restore preview. `internal/api/system_test.go` covers the full preview→apply round trip (plus the section being entirely absent when not asked for); `internal/configfs`'s own tests cover the archive/restore round trip, "restore never deletes," and the path-escape rejection. All green under `-race`.
+- **Not done here, on purpose**: no finer per-item selection in the UI yet (the backend's own `Items`/`BackupItem` already support it — App6 only exposes a whole-section toggle); no section beyond AppsHub's exists yet, so the mechanism itself is proven by exactly one real user, not several.
+
+Everything past App6 is the plan's own explicitly-later tier (compose/multi-container apps, a read-only viewer dashboard tile) — see the table above.

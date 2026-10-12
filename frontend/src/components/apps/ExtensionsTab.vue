@@ -1,24 +1,20 @@
 <!--
-  Extension Hub (docs/EXTENSIONHUB_PLAN.md, E1, #46): one nav entry for
-  every registered extension's own card — installing five extensions
-  grows the navigation by zero entries, not five. Each card is a handful
-  of status/meter/list/action widgets an extension's own separate process
-  describes as plain data (backend/internal/extension); this view is the
-  one generic renderer for all of them, so an extension never ships
-  frontend code. An action widget's button goes through the same
-  preview-and-confirm flow (PlanPreview) every built-in hub's own actions
-  do — but since an extension owns no i18n key in DreamHub's own locale
-  files, its preview text is the plan's own `summary` field, shown
-  verbatim rather than translated (contrast every other hub's panel,
-  which builds its preview text from a local i18n key).
+  AppsHub's "Extensions" tab (docs/EXTENSIONHUB_PLAN.md, E1, #46 —
+  unchanged by the AppsHub rename, docs/APPSHUB_PLAN.md, App1): one card
+  per registered extension — installing five extensions grows the
+  navigation by zero entries, not five. Each card is a handful of
+  status/meter/list/action widgets an extension's own separate process
+  describes as plain data (backend/internal/extension); this is the one
+  generic renderer for all of them, so an extension never ships frontend
+  code. An action widget's button goes through the same preview-and-confirm
+  flow (PlanPreview) every built-in hub's own actions do — but since an
+  extension owns no i18n key in DreamHub's own locale files, its preview
+  text is the plan's own `summary` field, shown verbatim rather than
+  translated (contrast every other hub's panel, which builds its preview
+  text from a local i18n key).
 -->
 <template>
-  <div class="mx-auto max-w-content p-6 below-md:p-4">
-    <div class="flex items-center gap-3">
-      <Icon name="extension" :size="24" class="text-muted" />
-      <h1 class="text-[26px] font-bold">{{ hubTitle('extensions', 'hub.extensions') }}</h1>
-    </div>
-
+  <div>
     <p v-if="loading" class="mt-4 text-[13px] text-faint">{{ t('common.loading') }}</p>
     <p v-else-if="error" class="mt-4 text-[13px] text-faint">{{ error }}</p>
     <p v-else-if="cards.length === 0" class="mt-4 text-[13px] text-faint">{{ t('extensions.empty') }}</p>
@@ -109,13 +105,11 @@ import { useI18n } from 'vue-i18n'
 import { api } from '@/api/client'
 import Icon from '@/components/Icon.vue'
 import PlanPreview from '@/components/PlanPreview.vue'
-import { useHubLabel } from '@/composables/useHubLabel'
 import { useProblem } from '@/composables/useProblem'
 import { usePlanError } from '@/composables/usePlanError'
 import type { ExtensionCard, ExtensionWidget, Plan } from '@/api/types'
 
 const { t } = useI18n()
-const { hubTitle } = useHubLabel()
 const { describe, describeFix } = useProblem()
 const { friendly } = useFriendlyError()
 const { planErrorMessage } = usePlanError()

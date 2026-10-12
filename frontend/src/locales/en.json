@@ -25,7 +25,7 @@
     "stream": "Live TV",
     "plex": "Plex library",
     "channels": "Channel list",
-    "extensions": "Extensions"
+    "apps": "Apps"
   },
   "status": {
     "available": "Available",
@@ -1048,6 +1048,13 @@
     "empty": "No extensions installed yet.",
     "confirm": "Apply",
     "done": "Done."
+  },
+  "apps": {
+    "tabs": {
+      "extensions": "Extensions",
+      "apps": "Apps"
+    },
+    "comingSoon": "Docker apps aren't available yet."
   },
   "timers": {
     "tuners": "{count} tuner | {count} tuners",

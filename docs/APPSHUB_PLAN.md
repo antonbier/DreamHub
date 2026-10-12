@@ -1,6 +1,6 @@
 # AppsHub — plan
 
-Status: **decided 2026-10-12 (brainstorm with the owner), not yet built.** No issue opened yet — ask before creating one. Widens and renames Extension Hub (`docs/EXTENSIONHUB_PLAN.md`, #46, E1 already built 2026-10-12); once a package lands, its status moves to `ROADMAP.md`.
+Status: **decided 2026-10-12 (brainstorm with the owner); App1 (the rename/shell) built the same day.** No issue opened yet — ask before creating one. Widens and renames Extension Hub (`docs/EXTENSIONHUB_PLAN.md`, #46, E1 already built 2026-10-12); once a package lands, its status moves to `ROADMAP.md`.
 
 ## Why
 
@@ -100,7 +100,7 @@ Like Extension Hub itself, AppsHub stays a power-user feature you find by naviga
 
 | # | Package | Contents |
 |---|---|---|
-| App1 | Rename + shell | Extension Hub → AppsHub (nav label, route, hub ID), existing Extensions content becomes one tab, an empty "Apps" tab with the connector-style not-installed/unreachable/OK states |
+| App1 | Rename + shell | **built 2026-10-12.** Extension Hub → AppsHub (nav label, route, hub ID), existing Extensions content becomes one tab, an "Apps" tab placeholder — see below |
 | App2 | Docker isolation | the loopback-only helper process, the whitelisted Docker API subset, hardening (same template shape as `packaging/extension-template/`) |
 | App3 | Curated list + search | the lean, AI-free app catalog (linuxserver.io first), free search with on-click multi-arch manifest checks |
 | App4 | Install/run as a plan | pull + run through preview/confirm, the live resource-budget and flash-safety checks, port suggestion + bind check + "open app" link, `TZ` passthrough |
@@ -108,4 +108,8 @@ Like Extension Hub itself, AppsHub stays a power-user feature you find by naviga
 | App6 | Backup | the general "backup sections" mechanism, config-only default for apps |
 | later | Compose, viewer dashboard tile | multi-container apps; a read-only "open app" tile for non-admin profiles |
 
-Nothing here is built yet. App1 (the rename) is the natural starting point once prioritized — everything else hangs off AppsHub actually existing as the shell.
+### App1, built 2026-10-12
+
+`hub.IDExtensions` → `hub.IDApps` (`"apps"`), `Name: "AppsHub"`, `Label: "hub.apps"`, `Path: "/apps"` — the API routes stay under `/api/v1/extensions` unchanged (E1's contract itself isn't touched, only the hub's nav identity). `AppsHubView.vue` replaces `ExtensionsHubView.vue`, same one-entry-many-tabs pattern `DeviceHubView.vue` already uses: an "Extensions" tab (E1's cards, moved into `components/apps/ExtensionsTab.vue` verbatim) and an "Apps" tab (`components/apps/AppsTab.vue`) that's honestly just a placeholder — no fake connector-style state machine for a Docker backend that doesn't exist yet (that's App2+). Old `/extensions` links redirect to `/apps`. `go build`/`go vet`/`go test ./...`/`npm run build` all green.
+
+Everything else (App2 onward) hangs off this shell now existing.

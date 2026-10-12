@@ -114,9 +114,16 @@ const router = createRouter({
       component: () => import('@/views/ControlHubView.vue'),
     },
     {
+      // AppsHub renamed+widened Extension Hub (docs/APPSHUB_PLAN.md,
+      // App1) — an old /extensions bookmark/link still lands on the
+      // same content, now the hub's default tab.
       path: '/extensions',
-      name: 'extensions',
-      component: () => import('@/views/ExtensionsHubView.vue'),
+      redirect: { path: '/apps' },
+    },
+    {
+      path: '/apps',
+      name: 'apps',
+      component: () => import('@/views/AppsHubView.vue'),
     },
     {
       path: '/:pathMatch(.*)*',

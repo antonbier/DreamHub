@@ -369,7 +369,7 @@ func New(ctx context.Context, o Options) (*App, error) {
 			{HubID: hub.IDControl, Prefixes: []string{"/api/v1/control"}, Register: controlHub.Mount, Perms: controlHub.Perms()},
 			{HubID: hub.IDChannels, Prefixes: []string{"/api/v1/channels"}, Register: channelsHub.Mount, Perms: channelsHub.Perms()},
 			{HubID: hub.IDPlex, Prefixes: []string{"/api/v1/plex"}, Register: plexHub.Mount, Perms: plexHub.Perms()},
-			{HubID: hub.IDExtensions, Prefixes: []string{"/api/v1/extensions"}, Register: extensionsHub.Mount, Perms: extensionsHub.Perms()},
+			{HubID: hub.IDApps, Prefixes: []string{"/api/v1/extensions"}, Register: extensionsHub.Mount, Perms: extensionsHub.Perms()},
 		},
 		// The box's media player fetches a Plex film without a DreamHub
 		// login; the handler itself admits only the box (loopback) with a
@@ -377,7 +377,7 @@ func New(ctx context.Context, o Options) (*App, error) {
 		// way — loopback only, no DreamHub login of its own.
 		Public: []api.PublicRoute{
 			{HubID: hub.IDPlex, Pattern: "GET /api/v1/plex/stream/{ticket}/{name}", Handler: http.HandlerFunc(plexHub.Stream)},
-			{HubID: hub.IDExtensions, Pattern: "POST /api/v1/extensions/register", Handler: http.HandlerFunc(extensionsHub.Register)},
+			{HubID: hub.IDApps, Pattern: "POST /api/v1/extensions/register", Handler: http.HandlerFunc(extensionsHub.Register)},
 		},
 		User:   user,
 		Logger: o.Logger,

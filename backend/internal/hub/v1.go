@@ -27,11 +27,14 @@ const (
 	IDRadio    = "radio"
 	IDPlex     = "plex"
 	IDStream   = "stream"
-	// IDExtensions: Extension Hub (docs/EXTENSIONHUB_PLAN.md, E1, #46) —
-	// one nav entry for every registered extension's own card, so
-	// installing five extensions grows the navigation by zero entries,
-	// not five.
-	IDExtensions = "extensions"
+	// IDApps: AppsHub (docs/APPSHUB_PLAN.md, App1) — renamed and widened
+	// from Extension Hub (docs/EXTENSIONHUB_PLAN.md, E1, #46): one nav
+	// entry for every registered extension's own card (so installing five
+	// extensions grows the navigation by zero entries, not five), plus,
+	// as a second tab, Docker container management — a genuinely
+	// different kind of feature that doesn't fit E1's widget contract,
+	// so it gets its own tab rather than being forced into one.
+	IDApps = "apps"
 )
 
 // CapJournald is the capability to read logs via journalctl (AdminHub).
@@ -91,14 +94,16 @@ func V1() []Descriptor {
 		{ID: IDDevice, Name: "DeviceHub", Label: "hub.device", Icon: "admin", Path: "/device", Group: GroupBottom, Order: 10,
 			Perm: perm.System, Requires: []Requirement{{Connector: connector.IDWebControl, Optional: true}, {Capability: CapJournald, Optional: true}},
 			Emits: []string{events.ServiceFailed, events.ServiceRecovered, events.PackageUpgradable}},
-		// Extension Hub: no requirements of its own — an individual
-		// extension's reachability is its own card's status, not this
-		// hub's (extensions.go's list handler), so installing zero
-		// extensions is "available", just empty, never "unavailable".
-		// perm.Watch (the default): the nav entry itself is for everyone;
-		// an admin-only extension's own card is filtered out for a
-		// non-admin inside the handler instead.
-		{ID: IDExtensions, Name: "Extension Hub", Label: "hub.extensions", Icon: "extension", Path: "/extensions", Group: GroupBottom, Order: 20},
+		// AppsHub: no requirements of its own — an individual extension's
+		// reachability is its own card's status, not this hub's
+		// (extensions.go's list handler), so installing zero extensions
+		// (or having no Docker apps installed) is "available", just
+		// empty, never "unavailable". perm.Watch (the default): the nav
+		// entry itself is for everyone; an admin-only extension's own
+		// card is filtered out for a non-admin inside the handler
+		// instead, and installing/managing a Docker app needs `system`
+		// like any other AdminHub-style action (docs/APPSHUB_PLAN.md).
+		{ID: IDApps, Name: "AppsHub", Label: "hub.apps", Icon: "extension", Path: "/apps", Group: GroupBottom, Order: 20},
 	}
 }
 

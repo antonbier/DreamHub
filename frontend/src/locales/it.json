@@ -25,7 +25,7 @@
     "stream": "TV in diretta",
     "plex": "Mediateca Plex",
     "channels": "Lista canali",
-    "extensions": "Estensioni"
+    "apps": "App"
   },
   "status": {
     "available": "Disponibile",
@@ -1048,6 +1048,13 @@
     "empty": "Ancora nessuna estensione installata.",
     "confirm": "Applica",
     "done": "Fatto."
+  },
+  "apps": {
+    "tabs": {
+      "extensions": "Estensioni",
+      "apps": "App"
+    },
+    "comingSoon": "Le app Docker non sono ancora disponibili."
   },
   "timers": {
     "tuners": "{count} tuner | {count} tuner",

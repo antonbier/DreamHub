@@ -25,7 +25,7 @@
     "stream": "Live-TV",
     "plex": "Plex Mediathek",
     "channels": "Senderliste",
-    "extensions": "Erweiterungen"
+    "apps": "Apps"
   },
   "status": {
     "available": "Verfügbar",
@@ -1048,6 +1048,13 @@
     "empty": "Noch keine Erweiterungen installiert.",
     "confirm": "Übernehmen",
     "done": "Erledigt."
+  },
+  "apps": {
+    "tabs": {
+      "extensions": "Erweiterungen",
+      "apps": "Apps"
+    },
+    "comingSoon": "Docker-Apps sind noch nicht verfügbar."
   },
   "timers": {
     "tuners": "{count} Tuner | {count} Tuner",

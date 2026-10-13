@@ -10,6 +10,7 @@ import (
 	"encoding/hex"
 	"encoding/json"
 	"errors"
+	"fmt"
 	"net/http"
 	"sort"
 	"strings"
@@ -54,9 +55,10 @@ type TimerOwners interface {
 // Perms are TimerHub's route permissions (internal/perm).
 func (h *Timer) Perms() map[string]perm.Perm {
 	return map[string]perm.Perm{
-		"POST /api/v1/timers/plan":        perm.TimersPlan,
-		"POST /api/v1/timers/delete/plan": perm.TimersPlan, // and mayChange
-		"POST /api/v1/timers/toggle/plan": perm.TimersPlan, // and mayChange
+		"POST /api/v1/timers/plan":         perm.TimersPlan,
+		"POST /api/v1/timers/delete/plan":  perm.TimersPlan, // and mayChange
+		"POST /api/v1/timers/toggle/plan":  perm.TimersPlan, // and mayChange
+		"POST /api/v1/timers/cleanup/plan": perm.TimersPlan, // only timers mayChange
 	}
 }
 
@@ -79,6 +81,7 @@ func (h *Timer) Mount(mux httpx.Mux) {
 	mux.HandleFunc("POST /api/v1/timers/plan", h.planCreate)
 	mux.HandleFunc("POST /api/v1/timers/delete/plan", h.planDelete)
 	mux.HandleFunc("POST /api/v1/timers/toggle/plan", h.planToggle)
+	mux.HandleFunc("POST /api/v1/timers/cleanup/plan", h.planCleanup)
 	mux.HandleFunc("GET /api/v1/timers/autotimers", h.autoTimers)
 	mux.HandleFunc("GET /api/v1/timers/autotimers/simulate", h.autoTimerSimulate)
 }
@@ -518,5 +521,64 @@ func (h *Timer) planDelete(w http.ResponseWriter, r *http.Request) {
 	httpx.WriteJSON(w, http.StatusOK, map[string]any{"plan": pl})
 }
 
+// planCleanup previews removing every timer that has finished, like
+// WebControl's "clean up timers". Only timers the profile may change are
+// listed; with none, there is no plan.
+func (h *Timer) planCleanup(w http.ResponseWriter, r *http.Request) {
+	ctx := r.Context()
+	user, _ := httpx.User(ctx)
+	timers, err := h.WC.TimerList(ctx)
+	if err != nil {
+		httpx.WriteError(w, r, http.StatusBadGateway, "webcontrol_unavailable", "could not reach WebControl")
+		return
+	}
+	var done []webcontrol.Timer
+	var changes []plan.Change
+	for _, t := range timers {
+		if finishedTimer(t) && h.mayChange(ctx, user, t) {
+			done = append(done, t)
+			changes = append(changes, plan.Change{Type: "timer.delete", Before: t})
+		}
+	}
+	if len(done) == 0 {
+		httpx.WriteJSON(w, http.StatusOK, map[string]any{"count": 0})
+		return
+	}
+	pl := h.Plans.Create(user, plan.Draft{
+		Action:      "timer.cleanup",
+		Changes:     changes,
+		Summary:     fmt.Sprintf("Removed %d finished timer(s)", len(done)),
+		Detail:      done,
+		Fingerprint: fingerprint(timers),
+		Current: func(ctx context.Context) (string, error) {
+			now, err := h.WC.TimerList(ctx)
+			if err != nil {
+				return "", err
+			}
+			return fingerprint(now), nil
+		},
+		Execute: func(ctx context.Context) error {
+			for _, t := range done {
+				ref := webcontrol.TimerRef{ServiceReference: t.ServiceReference, Begin: t.Begin, End: t.End}
+				if err := h.WC.DeleteTimer(ctx, ref); err != nil {
+					return boxFailure(err)
+				}
+				if h.Owners != nil {
+					_ = h.Owners.DeleteTimerOwner(ctx, ref.ServiceReference, ref.Begin)
+				}
+			}
+			return nil
+		},
+	})
+	httpx.WriteJSON(w, http.StatusOK, map[string]any{"plan": pl, "count": len(done)})
+}
+
 // IsWritesDisabled reports whether err means device writes are disabled.
 func IsWritesDisabled(err error) bool { return errors.Is(err, webcontrol.ErrWritesDisabled) }
+
+// finishedTimer reports a one-off timer that has run its course. The box
+// also reports a timer switched off as ended, and a repeating one goes back
+// to waiting — neither is finished, so a clean-up never takes them.
+func finishedTimer(t webcontrol.Timer) bool {
+	return t.State == webcontrol.TimerEnded && !t.Disabled && t.Repeated == 0
+}

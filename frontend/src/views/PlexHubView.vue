@@ -216,6 +216,7 @@
       :can-play="canPlay"
       :busy="marking === dialogItem.ratingKey"
       :playing="playingKey === dialogItem.ratingKey"
+      :server="{ url: status?.url, machineId: status?.machineId }"
       :error="dialogError"
       @close="closeDialog"
       @play="play(dialogItem, $event)"

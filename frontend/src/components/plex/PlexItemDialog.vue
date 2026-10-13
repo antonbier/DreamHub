@@ -85,6 +85,15 @@
           >
             {{ item.watched ? t('plex.markUnwatched') : t('plex.markWatched') }}
           </button>
+          <a
+            v-if="plexLink"
+            :href="plexLink"
+            target="_blank"
+            rel="noopener"
+            class="rounded px-2 py-1 text-[13.5px] text-accent hover:bg-tile-2"
+          >
+            {{ t('plex.openInPlex') }}
+          </a>
           <span v-if="!online" class="text-[12.5px] text-faint">{{ t('plex.offlineAction') }}</span>
         </div>
         <p v-if="canPlay" class="mt-2 text-[12px] text-faint">{{ t('plex.playHint') }}</p>
@@ -109,6 +118,8 @@ const props = defineProps<{
   busy?: boolean
   playing?: boolean
   error?: string
+  // Plex's own web app for this server, when known (status url + machine id).
+  server?: { url?: string; machineId?: string }
 }>()
 const emit = defineEmits<{ close: []; play: [choice: { media: number; part: number }]; toggleWatched: [] }>()
 const { t } = useI18n()
@@ -121,6 +132,13 @@ const line = computed(() =>
     text.minutes(props.item.duration),
     props.item.contentRating?.replace(/^[a-z]{2}\//, 'FSK ') ?? '',
   ].filter(Boolean),
+)
+// Opens the item in Plex's own web app on the server — Plex plays it in the
+// browser far better than DreamHub could.
+const plexLink = computed(() =>
+  props.server?.url && props.server.machineId
+    ? `${props.server.url}/web/index.html#!/server/${props.server.machineId}/details?key=${encodeURIComponent(`/library/metadata/${props.item.ratingKey}`)}`
+    : '',
 )
 const progress = computed(() => text.progress(props.item))
 

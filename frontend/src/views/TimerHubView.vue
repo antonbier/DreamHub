@@ -64,6 +64,21 @@
         <button type="button" class="text-[13.5px] text-accent hover:underline" :aria-expanded="showFinished" @click="showFinished = !showFinished">
           {{ showFinished ? t('timers.hideFinished') : t('timers.showFinished', { count: finished.length }) }}
         </button>
+        <button v-if="cleanable > 0 && !cleanup" type="button" class="ms-4 text-[13.5px] text-accent hover:underline" @click="previewCleanup">
+          {{ t('timers.cleanup.open', { count: cleanable }, cleanable) }}
+        </button>
+        <PlanPreview
+          v-if="cleanup"
+          class="mt-3"
+          :plan="cleanup.plan"
+          :confirm-label="t('timers.cleanup.confirm')"
+          :busy="cleanup.busy"
+          :error="cleanup.error"
+          @confirm="confirmCleanup"
+          @cancel="cleanup = null"
+        >
+          {{ t('timers.cleanup.preview', { count: cleanup.plan?.changes.length ?? 0 }, cleanup.plan?.changes.length ?? 0) }}
+        </PlanPreview>
         <ul v-if="showFinished" class="mt-2 flex flex-col opacity-80">
           <TimerRow
             v-for="timer in finished"
@@ -134,12 +149,13 @@ import { useI18n } from 'vue-i18n'
 import { api, ApiError } from '@/api/client'
 import Icon from '@/components/Icon.vue'
 import TimerRow from '@/components/timers/TimerRow.vue'
+import PlanPreview from '@/components/PlanPreview.vue'
 import type { DeleteState } from '@/components/timers/types'
 import { useNavigationStore } from '@/stores/navigation'
 import { useProblem } from '@/composables/useProblem'
 import { usePlanError } from '@/composables/usePlanError'
 import { useDisplayTimeZone } from '@/composables/useDisplayTimeZone'
-import type { AutoTimers, SimulatedTimer, Timer } from '@/api/types'
+import type { AutoTimers, Plan, SimulatedTimer, Timer } from '@/api/types'
 
 const { t, locale } = useI18n()
 const { hubTitle } = useHubLabel()
@@ -252,6 +268,36 @@ async function confirmDelete() {
   } catch (err) {
     // A failed or stale plan is used up — the user previews again.
     deleting.value = { key: state.key, kind: state.kind, busy: false, error: planErrorMessage(err) }
+  }
+}
+
+// --- clean up: remove every finished one-off timer ------------------------
+
+const cleanup = ref<{ plan: Plan; busy: boolean; error?: string } | null>(null)
+// Same rule as the backend: a switched-off timer is reported as ended too.
+const cleanable = computed(() => finished.value.filter((x) => !x.disabled && !x.repeated).length)
+
+async function previewCleanup() {
+  notice.value = ''
+  try {
+    const res = await api.timerCleanupPlan()
+    cleanup.value = res.plan ? { plan: res.plan, busy: false } : null
+  } catch (err) {
+    notice.value = planErrorMessage(err)
+  }
+}
+
+async function confirmCleanup() {
+  const state = cleanup.value
+  if (!state) return
+  cleanup.value = { ...state, busy: true, error: undefined }
+  try {
+    await api.plans.apply(state.plan.id)
+    notice.value = t('timers.cleanup.done', { count: state.plan.changes.length }, state.plan.changes.length)
+    cleanup.value = null
+    await load()
+  } catch (err) {
+    cleanup.value = { plan: state.plan, busy: false, error: planErrorMessage(err) }
   }
 }
 

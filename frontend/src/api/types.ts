@@ -1040,6 +1040,7 @@ export interface PlexStatus {
   syncedAt?: number
   syncing?: boolean
   url?: string
+  machineId?: string
 }
 export interface PlexServerChoice {
   name: string

@@ -1008,6 +1008,7 @@
       }
     },
     "plex": {
+    "openInPlex": "In Plex öffnen",
       "title": "Plex",
       "url": "Adresse des Plex-Servers",
       "fallbackUrls": "Weitere Adressen des Servers",
@@ -1154,6 +1155,7 @@
     "serviceLogs": "Logs ({name})"
   },
   "timers": {
+    "cleanup": {"open": "{count} abgeschlossenen aufräumen | {count} abgeschlossene aufräumen", "confirm": "Entfernen", "preview": "{count} abgeschlossener Timer wird von der Box entfernt. | {count} abgeschlossene Timer werden von der Box entfernt.", "done": "{count} Timer entfernt | {count} Timer entfernt"},
     "tuners": "{count} Tuner | {count} Tuner",
     "empty": "Keine anstehenden Timer.",
     "today": "Heute",
@@ -1580,7 +1582,8 @@
     "volume": "Lautstärke",
     "audioTrack": "Tonspur",
     "track": "Tonspur {n}",
-    "info": "Technik",
+    "info": "Stream-Details",
+    "infoHint": "Codec, verworfene Bilder und Sync dieses Streams — nur zur Fehlersuche nützlich",
     "fullscreen": "Vollbild",
     "channels": "Sender",
     "bouquet": "Senderliste",

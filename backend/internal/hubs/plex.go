@@ -495,6 +495,10 @@ func (h *Plex) status(w http.ResponseWriter, r *http.Request) {
 		out["server"] = srv
 		out["syncedAt"] = syncedAt
 		out["url"] = c.conn.URL
+		var machine string
+		if _, ok := h.cacheGet(r.Context(), "machine", &machine); ok {
+			out["machineId"] = machine // with url: the link to open an item in Plex itself
+		}
 	}
 	httpx.WriteJSON(w, http.StatusOK, out)
 }

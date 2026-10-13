@@ -274,6 +274,8 @@ export const api = {
       begin: t.begin,
       end: t.end,
     }),
+  // Every finished one-off timer, as one plan; no plan when there is none.
+  timerCleanupPlan: () => request<{ plan?: Plan; count: number }>('POST', '/api/v1/timers/cleanup/plan', {}),
   autoTimers: () => request<AutoTimers>('GET', '/api/v1/timers/autotimers'),
   autoTimerSimulate: () => request<{ timers: SimulatedTimer[] }>('GET', '/api/v1/timers/autotimers/simulate'),
   plans: {

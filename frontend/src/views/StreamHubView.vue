@@ -150,6 +150,7 @@
             type="button"
             class="rounded px-2 py-1 text-[12.5px] text-muted hover:text-text"
             :aria-pressed="showInfo"
+            :title="t('stream.infoHint')"
             @click="showInfo = !showInfo"
           >
             {{ t('stream.info') }}

@@ -101,12 +101,13 @@ func TestAppsInstall_AlreadyInstalledRefused(t *testing.T) {
 }
 
 // Apps share the box's network (docker --network host, the only kind its
-// kernel allows), so an app keeps its own port: a different one is
-// refused, and so is the app's own when something already holds it.
+// kernel allows), so an app's port is the box's port: an app whose image
+// can't move it keeps its own (a different one is refused), and the app's
+// port is refused when something already holds it.
 func TestAppsInstall_PortIsTheAppsOwn(t *testing.T) {
 	e := newEnv(t)
-	code, _, b := e.planInstall(t, `{"appId":"vaultwarden","hostPort":9999}`)
-	if code != http.StatusConflict || !strings.Contains(string(b), "8222") {
+	code, _, b := e.planInstall(t, `{"appId":"homeassistant","hostPort":9999}`)
+	if code != http.StatusConflict || !strings.Contains(string(b), "8123") {
 		t.Fatalf("remapped port: got %d %s", code, b)
 	}
 
@@ -279,5 +280,39 @@ func TestAppsInstall_AdminOnly(t *testing.T) {
 	}
 	if resp, _ := e.do(t, "POST", "/api/v1/apps/install/plan", `{"appId":"vaultwarden"}`, withProfile(viewer)); resp.StatusCode != http.StatusForbidden {
 		t.Errorf("viewer install: expected 403, got %d", resp.StatusCode)
+	}
+}
+
+func TestAppsInstall_ChoosePortAndStorage(t *testing.T) {
+	l, err := net.Listen("tcp", ":8333")
+	if err != nil {
+		t.Skip("port busy on this machine")
+	}
+	l.Close()
+	e := newEnv(t)
+
+	// Vaultwarden's port is the image's own setting: it can be moved.
+	code, p, b := e.planInstall(t, `{"appId":"vaultwarden","hostPort":8333,"storage":"/media/usb/dreamhub-apps"}`)
+	if code != http.StatusOK || !strings.Contains(p.Plan.Summary, "port 8333") || !strings.Contains(p.Plan.Summary, "/media/usb/dreamhub-apps/vaultwarden") {
+		t.Fatalf("plan: %d %s", code, b)
+	}
+	if resp, b := e.do(t, "POST", "/api/v1/plans/"+p.Plan.ID+"/apply", "", nil); resp.StatusCode != http.StatusOK {
+		t.Fatalf("apply: %d %s", resp.StatusCode, b)
+	}
+	// Its storage root is read back from the container, not guessed.
+	resp, b := e.do(t, "GET", "/api/v1/apps/installed", "", nil)
+	if resp.StatusCode != http.StatusOK || !strings.Contains(string(b), `"hostPort":8333`) {
+		t.Fatalf("installed: %d %s", resp.StatusCode, b)
+	}
+
+	// An app whose port the image can't move says so; a made-up place is refused.
+	if code, _, b := e.planInstall(t, `{"appId":"homeassistant","hostPort":3001}`); code != http.StatusConflict || !strings.Contains(string(b), "port_fixed") {
+		t.Fatalf("fixed port: %d %s", code, b)
+	}
+	if code, _, b := e.planInstall(t, `{"appId":"syncthing","storage":"/etc"}`); code != http.StatusBadRequest || !strings.Contains(string(b), "storage_invalid") {
+		t.Fatalf("storage: %d %s", code, b)
+	}
+	if code, _, b := e.planInstall(t, `{"appId":"qbittorrent","hostPort":8080}`); code != http.StatusBadRequest || !strings.Contains(string(b), "port_invalid") {
+		t.Fatalf("box port: %d %s", code, b)
 	}
 }

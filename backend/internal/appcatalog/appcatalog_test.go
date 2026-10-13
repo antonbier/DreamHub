@@ -1,6 +1,7 @@
 package appcatalog_test
 
 import (
+	"strings"
 	"testing"
 
 	"github.com/antonbier/DreamHub/backend/internal/appcatalog"
@@ -78,5 +79,28 @@ func TestSecrets(t *testing.T) {
 func TestByID_Unknown(t *testing.T) {
 	if _, ok := appcatalog.ByID("not-a-real-app"); ok {
 		t.Fatal("got ok=true for an unknown id")
+	}
+}
+
+func TestWithPort_ChangesCopyOnly(t *testing.T) {
+	vw, _ := appcatalog.ByID("vaultwarden")
+	moved := vw.WithPort(9000)
+	if moved.ContainerPort != 9000 || moved.Env["ROCKET_PORT"] != "9000" {
+		t.Fatalf("moved: %+v", moved)
+	}
+	if vw.ContainerPort != 8222 || vw.Env["ROCKET_PORT"] != "8222" {
+		t.Fatal("the catalog entry itself changed")
+	}
+	nc, _ := appcatalog.ByID("nextcloud")
+	moved = nc.WithPort(9001)
+	if !strings.Contains(moved.Cmd[2], "Listen 9001") || !strings.Contains(moved.Cmd[2], "*:9001") || !strings.Contains(moved.Cmd[2], "^Listen 80$") {
+		t.Fatalf("cmd: %s", moved.Cmd[2])
+	}
+	if !strings.Contains(nc.Cmd[2], "Listen 8088") {
+		t.Fatal("the catalog entry's Cmd changed")
+	}
+	ha, _ := appcatalog.ByID("homeassistant")
+	if ha.PortEditable() || ha.WithPort(1234).ContainerPort != 8123 {
+		t.Fatal("an app with a fixed port moved")
 	}
 }

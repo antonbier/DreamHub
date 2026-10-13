@@ -1,6 +1,7 @@
 package hubs
 
 import (
+	"context"
 	"errors"
 	"github.com/antonbier/DreamHub/backend/internal/dockersetup"
 	"net/http"
@@ -80,6 +81,9 @@ type Apps struct {
 	// PortFree overrides the install-time port check (tests); nil means a
 	// real bind attempt (portFree, apps_install.go).
 	PortFree func(appcatalog.Port) bool
+	// Storage lists the places an app can be stored (tests, mock mode); nil
+	// reads the box's mounts (apps_storage.go).
+	Storage func(context.Context) []StorageChoice
 }
 
 func (h *Apps) now() time.Time {
@@ -95,6 +99,7 @@ func (h *Apps) now() time.Time {
 func (h *Apps) Perms() map[string]perm.Perm {
 	return map[string]perm.Perm{
 		"GET /api/v1/apps/catalog":                     perm.System,
+		"GET /api/v1/apps/storage":                     perm.System,
 		"GET /api/v1/apps/search":                      perm.System,
 		"GET /api/v1/apps/manifest":                    perm.System,
 		"GET /api/v1/apps/installed":                   perm.System,
@@ -115,6 +120,7 @@ func (h *Apps) Perms() map[string]perm.Perm {
 func (h *Apps) Mount(mux httpx.Mux) {
 	mux.HandleFunc("GET /api/v1/apps/catalog", h.catalog)
 	mux.HandleFunc("GET /api/v1/apps/search", h.search)
+	mux.HandleFunc("GET /api/v1/apps/storage", h.storage)
 	mux.HandleFunc("GET /api/v1/apps/manifest", h.manifest)
 	mux.HandleFunc("GET /api/v1/apps/installed", h.listInstalled)
 	mux.HandleFunc("POST /api/v1/apps/install/plan", h.planInstall)
@@ -144,9 +150,11 @@ type catalogEntry struct {
 	Services []string `json:"services,omitempty"`
 	// MemoryMB is the memory limit of all its containers together; Port
 	// its web port (0 for none).
-	MemoryMB   int  `json:"memoryMB"`
-	Port       int  `json:"port,omitempty"`
-	Compatible bool `json:"compatible"`
+	MemoryMB int `json:"memoryMB"`
+	Port     int `json:"port,omitempty"`
+	// PortEditable: the web port can be moved at install.
+	PortEditable bool `json:"portEditable,omitempty"`
+	Compatible   bool `json:"compatible"`
 	// Installed is set from a live List against the helper (App4), not
 	// stored anywhere — the same "always read live, never go stale"
 	// choice dockerd.Container.HostPort makes.
@@ -167,7 +175,7 @@ func (h *Apps) catalog(w http.ResponseWriter, r *http.Request) {
 	for _, a := range appcatalog.Apps {
 		out = append(out, catalogEntry{
 			ID: a.ID, Name: a.Name, Category: a.Category, Description: a.Description,
-			Image: a.Image, Note: a.Note, MemoryMB: a.TotalMemoryMB(), Port: a.ContainerPort,
+			Image: a.Image, Note: a.Note, MemoryMB: a.TotalMemoryMB(), Port: a.ContainerPort, PortEditable: a.PortEditable(),
 			Compatible: a.SupportsArch(box), Installed: installed[a.ID],
 		})
 		for _, sv := range a.Services {

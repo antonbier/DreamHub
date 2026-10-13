@@ -34,27 +34,33 @@ func (h *Apps) ID() string { return appsBackupSectionID }
 // uploaded file: nothing outside StorageRoot is ever written.
 var validBackupItem = regexp.MustCompile(`^[a-z0-9]+(\.[a-z0-9]+)?$`)
 
-func (h *Apps) itemDir(id string) string { return path.Join(h.StorageRoot, id) }
+// itemDir is the item's directory under root — the storage root of the app
+// it belongs to (an app may live on another disk than the default).
+func itemDir(root, id string) string { return path.Join(root, id) }
 
 // backupItems lists every storage directory of the installed apps: the
 // app's own config (in by default, unless it holds the app's code too —
 // LargeConfig), each helper's (a database: in by default), and the bulk
 // data directory (never in by default).
-func (h *Apps) backupItems(ctx context.Context) ([]BackupItem, error) {
+func (h *Apps) backupItems(ctx context.Context) ([]BackupItem, map[string]string, error) {
+	dirs := map[string]string{} // item id → its directory
 	if h.Docker == nil {
-		return []BackupItem{}, nil
+		return []BackupItem{}, dirs, nil
 	}
 	containers, err := h.Docker.List(ctx)
 	if err != nil {
-		return nil, err
+		return nil, nil, err
 	}
 	var out []BackupItem
+	root := h.StorageRoot
 	add := func(id, name string, def bool) {
-		size, _ := h.configFS().Size(h.itemDir(id))
+		dirs[id] = itemDir(root, id)
+		size, _ := h.configFS().Size(dirs[id])
 		out = append(out, BackupItem{ID: id, Name: name, SizeBytes: size, DefaultIncluded: def})
 	}
 	for _, g := range groupApps(containers) {
 		all := g.all()
+		root = g.root(h.StorageRoot)
 		app, curated := appcatalog.ByID(g.appID)
 		name := appName(g.appID, all[0].Image)
 		add(g.appID, name, !curated || !app.LargeConfig)
@@ -68,7 +74,7 @@ func (h *Apps) backupItems(ctx context.Context) ([]BackupItem, error) {
 	if out == nil {
 		out = []BackupItem{}
 	}
-	return out, nil
+	return out, dirs, nil
 }
 
 // Items lists every installed app's storage directories with their real
@@ -76,7 +82,7 @@ func (h *Apps) backupItems(ctx context.Context) ([]BackupItem, error) {
 // anything (docs/APPSHUB_PLAN.md's running "sensible default, always
 // visible, always changeable" rule).
 func (h *Apps) Items(ctx context.Context) ([]BackupItem, error) {
-	items, err := h.backupItems(ctx)
+	items, _, err := h.backupItems(ctx)
 	if err != nil {
 		return []BackupItem{}, nil // a degraded Docker connector means an empty section, not a failed backup
 	}
@@ -100,7 +106,7 @@ type appBackup struct {
 // Export archives exactly itemIDs' directories, or every default-included
 // one if itemIDs is nil.
 func (h *Apps) Export(ctx context.Context, itemIDs []string) (json.RawMessage, error) {
-	items, err := h.backupItems(ctx)
+	items, dirs, err := h.backupItems(ctx)
 	if err != nil {
 		return nil, err
 	}
@@ -113,7 +119,7 @@ func (h *Apps) Export(ctx context.Context, itemIDs []string) (json.RawMessage, e
 		if itemIDs == nil && !it.DefaultIncluded || itemIDs != nil && !want[it.ID] {
 			continue
 		}
-		archive, err := h.configFS().Archive(h.itemDir(it.ID))
+		archive, err := h.configFS().Archive(dirs[it.ID])
 		if err != nil {
 			return nil, err
 		}
@@ -130,11 +136,17 @@ func (h *Apps) Restore(ctx context.Context, data json.RawMessage) error {
 	if err := json.Unmarshal(data, &in); err != nil {
 		return err
 	}
+	// An app that is still installed is restored where it lives.
+	_, dirs, _ := h.backupItems(ctx)
 	for id, b := range in {
 		if !validBackupItem.MatchString(id) {
 			continue
 		}
-		if err := h.configFS().Restore(h.itemDir(id), b.Archive); err != nil {
+		dir := dirs[id]
+		if dir == "" {
+			dir = itemDir(h.StorageRoot, id)
+		}
+		if err := h.configFS().Restore(dir, b.Archive); err != nil {
 			return err
 		}
 	}

@@ -241,19 +241,30 @@ func installedFingerprint(containers []dockerd.Container, appID string) string {
 // never taken from the image or a request: its own config directory, one
 // per helper, its bulk data directory, and its generated passwords (in no
 // container's mount).
-func (h *Apps) configDir(appID string) string { return path.Join(h.StorageRoot, appID) }
-func (h *Apps) serviceDir(appID, service string) string {
-	return path.Join(h.StorageRoot, appID+"."+service)
+//
+// root is the storage root the app lives under: the one chosen at install
+// (recorded on its containers, dockerd.RootLabel), else StorageRoot.
+func configDir(root, appID string) string { return path.Join(root, appID) }
+func serviceDir(root, appID, service string) string {
+	return path.Join(root, appID+"."+service)
 }
-func (h *Apps) dataDir(appID string) string { return path.Join(h.StorageRoot, appID+".data") }
-func (h *Apps) secretsFile(appID string) string {
-	return path.Join(h.StorageRoot, appID+".secrets.json")
+func dataDir(root, appID string) string     { return path.Join(root, appID+".data") }
+func secretsFile(root, appID string) string { return path.Join(root, appID+".secrets.json") }
+
+// root is where this app's storage is: its own recorded root, else the default.
+func (g appGroup) root(def string) string {
+	for _, c := range g.all() {
+		if r := c.Root(); r != "" {
+			return r
+		}
+	}
+	return def
 }
 
 // appSpecs builds the containers of app, helpers first (the app expects
 // its database to be there), with env still holding "{{secret:…}}"
 // placeholders — Execute fills them in.
-func (h *Apps) appSpecs(app appcatalog.App, memoryLimitMB int, tz string) []dockerd.ContainerSpec {
+func (h *Apps) appSpecs(app appcatalog.App, memoryLimitMB int, tz, root string) []dockerd.ContainerSpec {
 	var specs []dockerd.ContainerSpec
 	withTZ := func(env map[string]string) map[string]string {
 		out := map[string]string{"TZ": tz}
@@ -266,19 +277,19 @@ func (h *Apps) appSpecs(app appcatalog.App, memoryLimitMB int, tz string) []dock
 		specs = append(specs, dockerd.ContainerSpec{
 			AppID: app.ID, Service: s.Name, Image: appcatalog.ImageRef(s.Image, s.Tag),
 			Env: withTZ(s.Env), Cmd: s.Cmd,
-			HostDir: h.serviceDir(app.ID, s.Name), ContainerDir: s.ConfigPath,
-			MemoryLimitBytes: int64(s.MemoryMB) << 20, HostNetwork: true,
+			HostDir: serviceDir(root, app.ID, s.Name), ContainerDir: s.ConfigPath,
+			MemoryLimitBytes: int64(s.MemoryMB) << 20, HostNetwork: true, Root: root,
 		})
 	}
 	main := dockerd.ContainerSpec{
 		AppID: app.ID, Image: appcatalog.ImageRef(app.Image, app.Tag),
 		Env: withTZ(app.Env), Cmd: app.Cmd,
 		HostPort: app.ContainerPort, ContainerPort: app.ContainerPort,
-		HostDir: h.configDir(app.ID), ContainerDir: app.ConfigPath,
-		MemoryLimitBytes: int64(memoryLimitMB) << 20, HostNetwork: true,
+		HostDir: configDir(root, app.ID), ContainerDir: app.ConfigPath,
+		MemoryLimitBytes: int64(memoryLimitMB) << 20, HostNetwork: true, Root: root,
 	}
 	if app.DataPath != "" {
-		main.DataHostDir, main.DataContainerDir = h.dataDir(app.ID), app.DataPath
+		main.DataHostDir, main.DataContainerDir = dataDir(root, app.ID), app.DataPath
 	}
 	return append(specs, main)
 }
@@ -288,6 +299,8 @@ func (h *Apps) planInstall(w http.ResponseWriter, r *http.Request) {
 		AppID         string `json:"appId"`
 		HostPort      int    `json:"hostPort"`
 		MemoryLimitMB int    `json:"memoryLimitMB"`
+		// Storage is one of GET /api/v1/apps/storage's choices; "" is the default.
+		Storage string `json:"storage"`
 	}
 	if err := httpx.DecodeJSON(r, &body); err != nil || body.AppID == "" {
 		httpx.WriteError(w, r, http.StatusBadRequest, "invalid_body", `expected {"appId": "..."}`)
@@ -313,6 +326,37 @@ func (h *Apps) planInstall(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
+	root := h.StorageRoot
+	if body.Storage != "" && body.Storage != h.StorageRoot {
+		var choice *StorageChoice
+		for _, c := range h.storageChoices(ctx) {
+			if c.Path == body.Storage {
+				c := c
+				choice = &c
+			}
+		}
+		if choice == nil {
+			httpx.WriteError(w, r, http.StatusBadRequest, "storage_invalid", "that isn't one of the places apps can be stored")
+			return
+		}
+		if choice.FreeBytes < minStorageFreeBytes {
+			httpx.WriteError(w, r, http.StatusConflict, "disk_full", "there is not enough free space at that location")
+			return
+		}
+		root = choice.Path
+	}
+	if body.HostPort != 0 && body.HostPort != app.ContainerPort {
+		if !app.PortEditable() {
+			httpx.WriteError(w, r, http.StatusConflict, "port_fixed", fmt.Sprintf("%s always uses port %d on this box", app.Name, app.ContainerPort))
+			return
+		}
+		if body.HostPort < 1024 || body.HostPort > 65535 || boxPorts[body.HostPort] {
+			httpx.WriteError(w, r, http.StatusBadRequest, "port_invalid", "pick a port between 1024 and 65535 that the box doesn't use itself")
+			return
+		}
+		app = app.WithPort(body.HostPort)
+	}
+
 	memoryLimitMB := body.MemoryLimitMB
 	if memoryLimitMB <= 0 {
 		memoryLimitMB = app.MemoryMB
@@ -329,13 +373,13 @@ func (h *Apps) planInstall(w http.ResponseWriter, r *http.Request) {
 		httpx.WriteError(w, r, http.StatusConflict, "disk_full", problem)
 		return
 	}
-	if problem := h.checkPorts(app, body.HostPort); problem != "" {
+	if problem := h.checkPorts(app, 0); problem != "" {
 		httpx.WriteError(w, r, http.StatusConflict, "port_in_use", problem)
 		return
 	}
 
 	tz := containerTZ()
-	specs := h.appSpecs(app, memoryLimitMB, tz)
+	specs := h.appSpecs(app, memoryLimitMB, tz, root)
 	main := specs[len(specs)-1]
 
 	summary := fmt.Sprintf("Install %s (%s)", app.Name, main.Image)
@@ -374,7 +418,7 @@ func (h *Apps) planInstall(w http.ResponseWriter, r *http.Request) {
 			if h.ReadOnly {
 				return &plan.Failure{Status: http.StatusConflict, Code: "writes_disabled", Message: "device writes are disabled"}
 			}
-			secrets, err := h.appSecrets(app)
+			secrets, err := h.appSecrets(app, root)
 			if err != nil {
 				return &plan.Failure{Status: http.StatusInternalServerError, Code: "install_failed", Message: "the app's passwords could not be stored", Err: err}
 			}
@@ -401,13 +445,13 @@ func (h *Apps) planInstall(w http.ResponseWriter, r *http.Request) {
 // appSecrets returns app's generated passwords, creating and storing the
 // missing ones — kept across a remove and reinstall (an update), since
 // the app's database was set up with them.
-func (h *Apps) appSecrets(app appcatalog.App) (map[string]string, error) {
+func (h *Apps) appSecrets(app appcatalog.App, root string) (map[string]string, error) {
 	names := app.SecretNames()
 	secrets := map[string]string{}
 	if len(names) == 0 {
 		return secrets, nil
 	}
-	file := h.secretsFile(app.ID)
+	file := secretsFile(root, app.ID)
 	if data, err := h.configFS().ReadFile(file); err == nil {
 		if err := json.Unmarshal(data, &secrets); err != nil {
 			return nil, err
@@ -545,12 +589,13 @@ func (h *Apps) planRemove(w http.ResponseWriter, r *http.Request) {
 	}
 	all := g.all()
 	name := appName(g.appID, all[0].Image)
-	kept := []string{h.configDir(g.appID)}
+	root := g.root(h.StorageRoot)
+	kept := []string{configDir(root, g.appID)}
 	var ids []string
 	for _, c := range all {
 		ids = append(ids, c.ID)
 		if c.Service() != "" {
-			kept = append(kept, h.serviceDir(g.appID, c.Service()))
+			kept = append(kept, serviceDir(root, g.appID, c.Service()))
 		}
 	}
 	summary := "Remove " + name

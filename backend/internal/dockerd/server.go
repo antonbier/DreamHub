@@ -94,11 +94,12 @@ type createRequest struct {
 	DataDir       string            `json:"dataContainerDir"`
 	MemoryLimit   int64             `json:"memoryLimitBytes"`
 	HostNetwork   bool              `json:"hostNetwork"`
+	Root          string            `json:"root"`
 }
 
 func (s Server) handleCreate(w http.ResponseWriter, r *http.Request) {
 	var body createRequest
-	if err := json.NewDecoder(r.Body).Decode(&body); err != nil || body.AppID == "" || body.Image == "" || body.HostDir == "" || body.ContainerDir == "" || body.MemoryLimit <= 0 || !ValidService(body.Service) || (body.DataHostDir == "") != (body.DataDir == "") {
+	if err := json.NewDecoder(r.Body).Decode(&body); err != nil || body.AppID == "" || body.Image == "" || body.HostDir == "" || body.ContainerDir == "" || body.MemoryLimit <= 0 || !ValidService(body.Service) || !ValidRoot(body.Root) || (body.DataHostDir == "") != (body.DataDir == "") {
 		http.Error(w, "dockerd: create: appId, image, hostDir, containerDir and a positive memoryLimitBytes are required, service is lowercase letters/digits", http.StatusBadRequest)
 		return
 	}
@@ -107,7 +108,7 @@ func (s Server) handleCreate(w http.ResponseWriter, r *http.Request) {
 		HostPort: body.HostPort, ContainerPort: body.ContainerPort,
 		HostDir: body.HostDir, ContainerDir: body.ContainerDir,
 		DataHostDir: body.DataHostDir, DataContainerDir: body.DataDir,
-		MemoryLimitBytes: body.MemoryLimit, HostNetwork: body.HostNetwork,
+		MemoryLimitBytes: body.MemoryLimit, HostNetwork: body.HostNetwork, Root: body.Root,
 	})
 	if err != nil {
 		writeErr(w, err)

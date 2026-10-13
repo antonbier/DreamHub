@@ -66,6 +66,9 @@
       "touchesEnigma2": "Changes a TV plugin, skin or enigma2 itself — it takes effect after enigma2 restarts, and some packages restart it themselves (the TV picture is gone for about half a minute).",
       "recordingRunning": "The box is recording right now ({names}); applying waits until that's done.",
       "neededByHub": "Removes {names}, which {hubs} needs — that part of DreamHub stops working."
+    },
+    "feed": {
+      "unsigned": "Adds {url} as a source. Its packages are installed with full rights on the box and are not signed — only add one you trust."
     }
   },
   "fix": {
@@ -762,7 +765,11 @@
       "apt_unavailable": "Installing packages isn't available on this system.",
       "docker_no_overlay": "No overlay kernel module matches this box's kernel, so Docker can't run here.",
       "docker_unsupported": "There's no Docker build for this box's processor.",
-      "docker_setup_failed": "Setting Docker up failed."
+      "docker_setup_failed": "Setting Docker up failed.",
+      "feed_failed": "The feed couldn't be changed.",
+      "feed_unreachable": "apt couldn't read this source, so nothing was changed.",
+      "feed_exists": "A source with this name already exists.",
+      "feed_not_found": "This source doesn't exist."
     },
     "media": {
       "not_a_recording": "This recording doesn't exist (anymore).",
@@ -1008,7 +1015,6 @@
       }
     },
     "plex": {
-    "openInPlex": "Open in Plex",
       "title": "Plex",
       "url": "Plex server address",
       "fallbackUrls": "The server's other addresses",
@@ -1061,15 +1067,23 @@
     "close": "Close"
   },
   "extensions": {
-    "settings": {"close": "Close", "open": "Settings", "save": "Save", "done": "Saved.", "saved": "saved — type to replace", "none": "This extension has nothing to set up yet."},
+    "settings": {
+      "close": "Close",
+      "open": "Settings",
+      "save": "Save",
+      "done": "Saved.",
+      "saved": "saved — type to replace",
+      "none": "This extension has nothing to set up yet."
+    },
     "empty": "No extensions installed yet.",
     "confirm": "Apply",
     "done": "Done."
   },
   "apps": {
     "tabs": {
+      "apps": "Apps",
       "extensions": "Extensions",
-      "apps": "Apps"
+      "system": "System"
     },
     "comingSoon": "Docker apps aren't available yet.",
     "category": {
@@ -1153,10 +1167,30 @@
     "withServices": "+ {services}",
     "memory": "up to {mb} MB RAM",
     "port": "port {port}",
-    "serviceLogs": "Logs ({name})"
+    "serviceLogs": "Logs ({name})",
+    "intro": {
+      "apps": "Apps are programs that run in their own container on the box, separate from the TV software — for example Nextcloud or Pi-hole. They need Docker, which DreamHub can set up.",
+      "extensions": "Extensions are small add-ons for DreamHub itself — for example one that switches a smart plug. They show up here as a card.",
+      "system": "The box's own software (DreamOS): TV plugins, skins and tools, and the sources they are installed from."
+    },
+    "more": "More",
+    "installTitle": "Install {name}",
+    "portLabel": "Web port",
+    "portHint": "The port you open it on. The default is fine unless something else uses it.",
+    "portFixed": "This app always uses this port on this box.",
+    "storageLabel": "Store its files on",
+    "storageFree": "{size} free",
+    "storageHint": "Config and data are kept here and survive removing the app. The box's own flash memory is never offered.",
+    "installPreview": "Preview",
+    "searchTitle": "Look for other apps on Docker Hub"
   },
   "timers": {
-    "cleanup": {"open": "Clean up {count} finished | Clean up {count} finished", "confirm": "Remove", "preview": "{count} finished timer will be removed from the box. | {count} finished timers will be removed from the box.", "done": "{count} timer removed | {count} timers removed"},
+    "cleanup": {
+      "open": "Clean up {count} finished | Clean up {count} finished",
+      "confirm": "Remove",
+      "preview": "{count} finished timer will be removed from the box. | {count} finished timers will be removed from the box.",
+      "done": "{count} timer removed | {count} timers removed"
+    },
     "tuners": "{count} tuner | {count} tuners",
     "empty": "No upcoming timers.",
     "today": "Today",
@@ -1212,7 +1246,8 @@
   },
   "admin": {
     "tabs": {
-      "admin": "Administration"
+      "admin": "Administration",
+      "advanced": "Advanced"
     },
     "logLevel": {
       "title": "Log level",
@@ -1301,7 +1336,20 @@
       "truncated": "Only the first packages are shown — search to narrow it down.",
       "needed": "Needed by DreamHub",
       "neededBy": "Needed by {hubs}",
-      "missing": "Not installed"
+      "missing": "Not installed",
+      "intro": "Installed software, available updates and new packages for the box itself.",
+      "view": {
+        "installed": "Installed",
+        "upgradable": "Updates",
+        "available": "Install new",
+        "needed": "Used by DreamHub"
+      },
+      "feedsIntro": "Sources are the places packages come from. Switch one off to hide its packages.",
+      "feedAdd": "Add a source …",
+      "feedName": "Short name, e.g. my-feed",
+      "feedUrl": "Address, e.g. https://example.org/feed",
+      "feedHint": "Only add a source you trust: its packages are installed with full rights on the box and aren't signed.",
+      "feedPreview": "Preview"
     },
     "scripts": {
       "title": "Scripts",
@@ -1328,7 +1376,8 @@
       "wrongPassword": "Wrong password.",
       "enabledWarning": "Terminal enabled — full access to the box.",
       "disable": "Disable"
-    }
+    },
+    "advancedIntro": "For experts: upload a script to run on the box, or open a shell. Everything here can change the box — each step asks first."
   },
   "control": {
     "standby": {
@@ -1676,7 +1725,8 @@
     "version": "Version",
     "part": "Part",
     "open": "Open {title}",
-    "openWatched": "Open {title} (watched)"
+    "openWatched": "Open {title} (watched)",
+    "openInPlex": "Open in Plex"
   },
   "profiles": {
     "picker": {

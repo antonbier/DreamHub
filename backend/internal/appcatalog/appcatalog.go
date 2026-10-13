@@ -27,6 +27,8 @@ package appcatalog
 import (
 	"regexp"
 	"sort"
+	"strconv"
+	"strings"
 
 	"github.com/antonbier/DreamHub/backend/internal/dockerhub"
 )
@@ -106,6 +108,12 @@ type App struct {
 	// Cmd replaces the image's CMD (its ENTRYPOINT stays), when the image
 	// offers no setting for something the box needs.
 	Cmd []string
+	// PortEnv names the env var that holds the web port (the image's own
+	// setting), and PortInCmd says the port is written into Cmd as well:
+	// either one lets the person pick another port at install (WithPort).
+	// An app with neither always uses ContainerPort.
+	PortEnv   string
+	PortInCmd bool
 	// Ports are the app's other ports (see Port).
 	Ports []Port
 	// MemoryMB is the default memory limit for this app's own container.
@@ -156,6 +164,7 @@ var Apps = []App{
 		// is Pi-hole's own documented setting for that.
 		ContainerPort: 8082, ConfigPath: "/etc/pihole",
 		Env:      map[string]string{"FTLCONF_webserver_port": "8082"},
+		PortEnv:  "FTLCONF_webserver_port",
 		Ports:    []Port{{Port: 53}, {Port: 53, UDP: true}},
 		MemoryMB: 128,
 	},
@@ -174,8 +183,9 @@ var Apps = []App{
 		},
 		// Apache listens on 80 and the image has no setting for it, so
 		// its two Listen/VirtualHost lines are moved before it starts.
-		Cmd:      []string{"sh", "-c", `sed -i 's/^Listen 80$/Listen 8088/' /etc/apache2/ports.conf && sed -i 's/<VirtualHost \*:80>/<VirtualHost *:8088>/' /etc/apache2/sites-available/000-default.conf && exec apache2-foreground`},
-		MemoryMB: 512,
+		Cmd:       []string{"sh", "-c", `sed -i 's/^Listen 80$/Listen 8088/' /etc/apache2/ports.conf && sed -i 's/<VirtualHost \*:80>/<VirtualHost *:8088>/' /etc/apache2/sites-available/000-default.conf && exec apache2-foreground`},
+		MemoryMB:  512,
+		PortInCmd: true,
 		Services: []Service{{
 			Name: "db", Image: "library/mariadb", Tag: "lts", Arches: archesOfficialDB,
 			ConfigPath: "/var/lib/mysql",
@@ -199,6 +209,7 @@ var Apps = []App{
 		// It listens on 80 by default; ROCKET_PORT is its own setting.
 		ContainerPort: 8222, ConfigPath: "/data",
 		Env:      map[string]string{"ROCKET_PORT": "8222"},
+		PortEnv:  "ROCKET_PORT",
 		MemoryMB: 128,
 	},
 	{
@@ -227,9 +238,40 @@ var Apps = []App{
 		// 8080 is DreamHub's; WEBUI_PORT is the image's own setting.
 		ContainerPort: 8095, ConfigPath: "/config", DataPath: "/downloads",
 		Env:      map[string]string{"WEBUI_PORT": "8095"},
+		PortEnv:  "WEBUI_PORT",
 		Ports:    []Port{{Port: 6881}, {Port: 6881, UDP: true}},
 		MemoryMB: 256,
 	},
+}
+
+// PortEditable reports whether the web port can be moved at install.
+func (a App) PortEditable() bool { return a.ContainerPort != 0 && (a.PortEnv != "" || a.PortInCmd) }
+
+// WithPort returns a copy of a whose web port is port: the port env var
+// set, and, for PortInCmd, the old number replaced in Cmd. The original
+// (shared catalog data) is never changed.
+func (a App) WithPort(port int) App {
+	if !a.PortEditable() {
+		return a
+	}
+	old, now := strconv.Itoa(a.ContainerPort), strconv.Itoa(port)
+	env := make(map[string]string, len(a.Env)+1)
+	for k, v := range a.Env {
+		env[k] = v
+	}
+	if a.PortEnv != "" {
+		env[a.PortEnv] = now
+	}
+	a.Env = env
+	if a.PortInCmd {
+		cmd := make([]string, len(a.Cmd))
+		for i, c := range a.Cmd {
+			cmd[i] = strings.ReplaceAll(c, old, now)
+		}
+		a.Cmd = cmd
+	}
+	a.ContainerPort = port
+	return a
 }
 
 // ByID returns the curated entry with that id, and whether it exists.

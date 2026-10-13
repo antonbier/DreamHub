@@ -345,6 +345,9 @@ func (e Exec) Create(ctx context.Context, spec ContainerSpec) (Container, error)
 	if spec.Service != "" {
 		labels[ServiceLabel] = spec.Service
 	}
+	if spec.Root != "" {
+		labels[RootLabel] = spec.Root
+	}
 	if spec.HostNetwork && spec.ContainerPort != 0 {
 		labels[PortLabel] = fmt.Sprint(spec.ContainerPort)
 	}

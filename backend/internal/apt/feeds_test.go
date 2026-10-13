@@ -2,6 +2,7 @@ package apt
 
 import (
 	"context"
+	"errors"
 	"os"
 	"path/filepath"
 	"testing"
@@ -60,5 +61,53 @@ func TestListFeeds(t *testing.T) {
 	}
 	if f := byName["homebrew-feed"]; !f.Enabled || f.Known {
 		t.Errorf("homebrew-feed = %+v", f)
+	}
+}
+
+func TestFeedManager_SwitchAddRemove(t *testing.T) {
+	dir := t.TempDir()
+	old := SourcesListDir
+	SourcesListDir = dir
+	defer func() { SourcesListDir = old }()
+	ctx := context.Background()
+	e := Exec{}
+
+	if err := e.AddFeed(ctx, "my-feed", "https://example.org/feed/"); err != nil {
+		t.Fatal(err)
+	}
+	b, _ := os.ReadFile(filepath.Join(dir, "my-feed.list"))
+	if string(b) != "deb [trusted=yes] https://example.org/feed ./\n" {
+		t.Fatalf("file: %q", b)
+	}
+	if err := e.AddFeed(ctx, "my-feed", "https://example.org/x"); !errors.Is(err, ErrFeedExists) {
+		t.Fatalf("second add: %v", err)
+	}
+	if err := e.SetFeedEnabled(ctx, "my-feed", false); err != nil {
+		t.Fatal(err)
+	}
+	if _, err := os.Stat(filepath.Join(dir, "my-feed.list.off")); err != nil {
+		t.Fatal("not switched off")
+	}
+	if err := e.SetFeedEnabled(ctx, "my-feed", true); err != nil {
+		t.Fatal(err)
+	}
+	if err := e.SetFeedEnabled(ctx, "nope", true); !errors.Is(err, ErrFeedMissing) {
+		t.Fatalf("missing: %v", err)
+	}
+	if err := e.RemoveFeed(ctx, "my-feed"); err != nil {
+		t.Fatal(err)
+	}
+}
+
+func TestFeedManager_RefusesNamesAndURLsThatAreNotPlain(t *testing.T) {
+	for _, name := range []string{"../etc/passwd", "a/b", ".hidden", "x.list", "UPPER", "", "a b"} {
+		if ValidFeedName(name) {
+			t.Errorf("name %q accepted", name)
+		}
+	}
+	for _, u := range []string{"ftp://x/y", "https://", "https://a.b/c d", "https://a.b/\n deb evil", "file:///etc", "https://a.b/[x]"} {
+		if ValidFeedURL(u) {
+			t.Errorf("url %q accepted", u)
+		}
 	}
 }

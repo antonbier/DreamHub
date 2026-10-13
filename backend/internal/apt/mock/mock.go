@@ -29,9 +29,10 @@ type Lister struct {
 }
 
 var (
-	_ apt.Lister     = (*Lister)(nil)
-	_ apt.FeedLister = (*Lister)(nil)
-	_ apt.Manager    = (*Lister)(nil)
+	_ apt.Lister      = (*Lister)(nil)
+	_ apt.FeedLister  = (*Lister)(nil)
+	_ apt.Manager     = (*Lister)(nil)
+	_ apt.FeedManager = (*Lister)(nil)
 )
 
 func New() *Lister {
@@ -74,8 +75,49 @@ func (l *Lister) List(ctx context.Context) ([]apt.Package, error) {
 }
 
 func (l *Lister) ListFeeds(ctx context.Context) ([]apt.Feed, error) {
-	return l.Feeds, nil
+	l.mu.Lock()
+	defer l.mu.Unlock()
+	return slices.Clone(l.Feeds), nil
 }
+
+func (l *Lister) SetFeedEnabled(ctx context.Context, name string, enabled bool) error {
+	if !apt.ValidFeedName(name) {
+		return apt.ErrInvalidFeed
+	}
+	l.mu.Lock()
+	defer l.mu.Unlock()
+	for i := range l.Feeds {
+		if l.Feeds[i].Name == name {
+			l.Feeds[i].Enabled = enabled
+			return nil
+		}
+	}
+	return apt.ErrFeedMissing
+}
+
+func (l *Lister) AddFeed(ctx context.Context, name, url string) error {
+	if !apt.ValidFeedName(name) || !apt.ValidFeedURL(url) {
+		return apt.ErrInvalidFeed
+	}
+	l.mu.Lock()
+	defer l.mu.Unlock()
+	for _, f := range l.Feeds {
+		if f.Name == name {
+			return apt.ErrFeedExists
+		}
+	}
+	l.Feeds = append(l.Feeds, apt.Feed{Name: name, URL: url, Enabled: true})
+	return nil
+}
+
+func (l *Lister) RemoveFeed(ctx context.Context, name string) error {
+	l.mu.Lock()
+	defer l.mu.Unlock()
+	l.Feeds = slices.DeleteFunc(l.Feeds, func(f apt.Feed) bool { return f.Name == name })
+	return nil
+}
+
+func (l *Lister) RefreshIndex(ctx context.Context) error { return nil }
 
 func (l *Lister) Available(ctx context.Context) ([]apt.Package, error) {
 	l.mu.Lock()

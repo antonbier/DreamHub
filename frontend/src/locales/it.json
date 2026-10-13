@@ -66,6 +66,9 @@
       "touchesEnigma2": "Modifica un plugin TV, una skin o enigma2 stesso — ha effetto dopo il riavvio di enigma2; alcuni pacchetti lo riavviano da soli (l'immagine TV sparisce per circa mezzo minuto).",
       "recordingRunning": "Il box sta registrando ({names}); si potrà applicare a registrazione finita.",
       "neededByHub": "Rimuove {names}, che serve a {hubs} — quella parte di DreamHub smette di funzionare."
+    },
+    "feed": {
+      "unsigned": "Aggiunge {url} come fonte. I suoi pacchetti vengono installati con tutti i diritti sul box e non sono firmati — aggiungine solo una di cui ti fidi."
     }
   },
   "fix": {
@@ -762,7 +765,11 @@
       "apt_unavailable": "L'installazione di pacchetti non è disponibile su questo sistema.",
       "docker_no_overlay": "Nessun modulo kernel overlay corrisponde al kernel di questo box, Docker non può funzionare qui.",
       "docker_unsupported": "Non esiste Docker per il processore di questo box.",
-      "docker_setup_failed": "La configurazione di Docker non è riuscita."
+      "docker_setup_failed": "La configurazione di Docker non è riuscita.",
+      "feed_failed": "Impossibile modificare la fonte.",
+      "feed_unreachable": "apt non ha potuto leggere questa fonte, quindi nulla è stato modificato.",
+      "feed_exists": "Esiste già una fonte con questo nome.",
+      "feed_not_found": "Questa fonte non esiste."
     },
     "media": {
       "not_a_recording": "Questa registrazione non esiste (più).",
@@ -1008,7 +1015,6 @@
       }
     },
     "plex": {
-    "openInPlex": "Apri in Plex",
       "title": "Plex",
       "url": "Indirizzo del server Plex",
       "fallbackUrls": "Altri indirizzi del server",
@@ -1061,15 +1067,23 @@
     "close": "Chiudi"
   },
   "extensions": {
-    "settings": {"close": "Chiudi", "open": "Impostazioni", "save": "Salva", "done": "Salvato.", "saved": "salvato — digita per sostituire", "none": "Questa estensione non ha ancora nulla da impostare."},
+    "settings": {
+      "close": "Chiudi",
+      "open": "Impostazioni",
+      "save": "Salva",
+      "done": "Salvato.",
+      "saved": "salvato — digita per sostituire",
+      "none": "Questa estensione non ha ancora nulla da impostare."
+    },
     "empty": "Ancora nessuna estensione installata.",
     "confirm": "Applica",
     "done": "Fatto."
   },
   "apps": {
     "tabs": {
+      "apps": "App",
       "extensions": "Estensioni",
-      "apps": "App"
+      "system": "Sistema"
     },
     "comingSoon": "Le app Docker non sono ancora disponibili.",
     "category": {
@@ -1153,10 +1167,30 @@
     "withServices": "+ {services}",
     "memory": "fino a {mb} MB di RAM",
     "port": "porta {port}",
-    "serviceLogs": "Log ({name})"
+    "serviceLogs": "Log ({name})",
+    "intro": {
+      "apps": "Le app sono programmi che girano in un contenitore proprio sul box, separati dal software della TV — ad esempio Nextcloud o Pi-hole. Richiedono Docker, che DreamHub può configurare.",
+      "extensions": "Le estensioni sono piccole aggiunte per DreamHub stesso — ad esempio una che comanda una presa smart. Compaiono qui come scheda.",
+      "system": "Il software del box (DreamOS): plugin TV, skin e strumenti, e le fonti da cui vengono installati."
+    },
+    "more": "Altro",
+    "installTitle": "Installa {name}",
+    "portLabel": "Porta web",
+    "portHint": "La porta su cui la apri. Quella proposta va bene finché nient'altro la usa.",
+    "portFixed": "Questa app usa sempre questa porta su questo box.",
+    "storageLabel": "Salva i file su",
+    "storageFree": "{size} liberi",
+    "storageHint": "Configurazione e dati restano qui anche se rimuovi l'app. La memoria flash del box non viene mai proposta.",
+    "installPreview": "Anteprima",
+    "searchTitle": "Cerca altre app su Docker Hub"
   },
   "timers": {
-    "cleanup": {"open": "Pulisci {count} completato | Pulisci {count} completati", "confirm": "Rimuovi", "preview": "{count} timer completato verrà rimosso dal box. | {count} timer completati verranno rimossi dal box.", "done": "{count} timer rimosso | {count} timer rimossi"},
+    "cleanup": {
+      "open": "Pulisci {count} completato | Pulisci {count} completati",
+      "confirm": "Rimuovi",
+      "preview": "{count} timer completato verrà rimosso dal box. | {count} timer completati verranno rimossi dal box.",
+      "done": "{count} timer rimosso | {count} timer rimossi"
+    },
     "tuners": "{count} tuner | {count} tuner",
     "empty": "Nessun timer in programma.",
     "today": "Oggi",
@@ -1212,7 +1246,8 @@
   },
   "admin": {
     "tabs": {
-      "admin": "Amministrazione"
+      "admin": "Amministrazione",
+      "advanced": "Avanzate"
     },
     "logLevel": {
       "title": "Livello di log",
@@ -1301,7 +1336,20 @@
       "truncated": "Vengono mostrati solo i primi pacchetti — usa la ricerca per restringere.",
       "needed": "Richiesti da DreamHub",
       "neededBy": "Richiesto da {hubs}",
-      "missing": "Non installato"
+      "missing": "Non installato",
+      "intro": "Software installato, aggiornamenti disponibili e nuovi pacchetti per il box.",
+      "view": {
+        "installed": "Installati",
+        "upgradable": "Aggiornamenti",
+        "available": "Installa nuovo",
+        "needed": "Usati da DreamHub"
+      },
+      "feedsIntro": "Le fonti sono i luoghi da cui arrivano i pacchetti. Disattivando una fonte i suoi pacchetti scompaiono.",
+      "feedAdd": "Aggiungi una fonte …",
+      "feedName": "Nome breve, es. mio-feed",
+      "feedUrl": "Indirizzo, es. https://example.org/feed",
+      "feedHint": "Aggiungi solo una fonte di cui ti fidi: i suoi pacchetti vengono installati con tutti i diritti sul box e non sono firmati.",
+      "feedPreview": "Anteprima"
     },
     "scripts": {
       "title": "Script",
@@ -1328,7 +1376,8 @@
       "wrongPassword": "Password errata.",
       "enabledWarning": "Terminale attivo — accesso completo alla box.",
       "disable": "Disattiva"
-    }
+    },
+    "advancedIntro": "Per esperti: carica uno script da eseguire sul box o apri una shell. Tutto qui può modificare il box — ogni passaggio chiede prima conferma."
   },
   "control": {
     "standby": {
@@ -1676,7 +1725,8 @@
     "version": "Versione",
     "part": "Parte",
     "open": "Apri {title}",
-    "openWatched": "Apri {title} (visto)"
+    "openWatched": "Apri {title} (visto)",
+    "openInPlex": "Apri in Plex"
   },
   "profiles": {
     "picker": {

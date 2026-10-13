@@ -12,10 +12,18 @@ Format follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/); version
 - AppsHub: apps made of several containers, installed, started, stopped and removed as one — the first is Nextcloud with its own MariaDB, which only listens on the box itself; passwords between them are generated at install and kept for a reinstall. A helper container shows under its app with its own logs.
 - Settings → System → Backup: the app folders are listed one by one with their size and a checkbox — a database is in by default, bulk files (Nextcloud's, downloads) are not.
 
+- Extension settings: an extension can declare a settings form (a device key, a name, a language); its card gets a Settings button, DreamHub renders and forwards it, secrets are never sent back. eWeLink uses it for the device key, so it is entered in the UI instead of a config file.
+- AppsHub → System: package sources (feeds) can be switched on and off and a new one added, each through the usual preview with a standing warning that these feeds are unsigned; a source apt can't read is put back as it was.
+- AppsHub install: choose the web port (for apps whose image can move it) and the disk to store the app on — the box's own flash is never offered; the choice is remembered on the container, so removing, backing up and restoring look in the right place.
+- TimerHub: "Clean up finished" removes every finished one-off timer in one preview. PlexHub: "Open in Plex" on an item. MediaHub: the remote-control hint (Next/Previous jump past marked ad breaks) after marking in the cut list.
+
 ### Changed
+- AppsHub is now three tabs with one sentence each — Apps (Docker containers), Extensions (DreamHub add-ons), System (the box's own packages and feeds, moved here from Device → Administration). Installed apps show Open and Start/Stop, the rest (logs, console, remove) in a menu; free Docker Hub search is folded away. Device → Advanced holds scripts and the terminal.
+- Rename by scheme completes missing years and episode titles from TMDB by itself when a TMDB key is set — the hidden "+ TMDB" switch is gone (the year was never added unless it was switched on). Saving covers now says it makes them visible on the TV too.
 - AppsHub's app list reworked: AdGuard Home, Pi-hole, Nextcloud, Vaultwarden, Syncthing, Home Assistant and qBittorrent, each with a short note for this box and its memory limit. Sonarr, Radarr, Prowlarr, Bazarr, Heimdall and WireGuard were removed (Heimdall always needs port 80, WireGuard extra kernel rights DreamHub doesn't give a container). Pi-hole, Vaultwarden and qBittorrent now use ports the box doesn't (8082, 8222, 8095), and every port an app needs — DNS 53 included — is checked before installing.
 
 ### Fixed
+- qBittorrent was set to port 8090, which is DreamHub's own Docker helper; it now uses 8095.
 - Restoring a backup could write an app folder outside AppsHub's storage directory if the file named one like `../x`; such names are now ignored.
 - qBittorrent from the app list could never start on the box: its web port was 8080, DreamHub's own.
 - The extension packaging template created its user on every install and never removed it on purge (DreamOS has no `getent`), and pointed at a `nologin` shell DreamOS doesn't have.

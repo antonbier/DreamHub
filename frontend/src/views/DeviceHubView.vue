@@ -7,8 +7,9 @@
   - Übersicht: device info, the change log (ex-SystemHubView)
   - Diagnose: the self-test, every hub's status (ex-SystemHubView)
   - Administration: services, log level, journald log viewer, crash logs
-    (ex-AdminHubView) — packages/feeds/scripts/terminal land here later
-    (#47).
+    (ex-AdminHubView)
+  - Erweitert: scripts and the terminal. Packages and feeds moved to
+    AppsHub → System (#47, #49).
 -->
 <template>
   <div class="mx-auto max-w-content p-6 below-md:p-4">
@@ -60,6 +61,16 @@
         @click="tab = 'admin'"
       >
         {{ t('admin.tabs.admin') }}
+      </button>
+      <button
+        type="button"
+        role="tab"
+        :aria-selected="tab === 'advanced'"
+        class="border-b-2 px-3 py-2 text-[13.5px] font-semibold"
+        :class="tab === 'advanced' ? 'border-accent text-text' : 'border-transparent text-muted hover:text-text'"
+        @click="tab = 'advanced'"
+      >
+        {{ t('admin.tabs.advanced') }}
       </button>
     </div>
 
@@ -161,11 +172,17 @@
       </template>
     </template>
 
-    <template v-else-if="!item || item.status !== 'unavailable'">
-      <ServicesPanel @logs="showLogsFor" />
-      <PackagesPanel />
+    <!-- Advanced: for people who know their way around a shell. Scripts
+         and the terminal are the two ways to run things on the box by
+         hand, so they sit together instead of among the services. -->
+    <template v-else-if="tab === 'advanced'">
+      <p class="mt-3 text-[13px] text-muted">{{ t('admin.advancedIntro') }}</p>
       <ScriptsPanel />
       <TerminalPanel />
+    </template>
+
+    <template v-else-if="!item || item.status !== 'unavailable'">
+      <ServicesPanel @logs="showLogsFor" />
 
       <!-- Log level -->
       <section class="mt-5 rounded border border-line bg-tile p-4">
@@ -296,7 +313,6 @@ import { RouterLink, useRoute, useRouter } from 'vue-router'
 import { api, ApiError } from '@/api/client'
 import Icon from '@/components/Icon.vue'
 import ServicesPanel from '@/components/admin/ServicesPanel.vue'
-import PackagesPanel from '@/components/admin/PackagesPanel.vue'
 import ScriptsPanel from '@/components/admin/ScriptsPanel.vue'
 import TerminalPanel from '@/components/admin/TerminalPanel.vue'
 import SelfTestPanel from '@/components/system/SelfTestPanel.vue'
@@ -322,13 +338,15 @@ function formatDate(iso: string): string {
   return new Intl.DateTimeFormat(locale.value, { dateStyle: 'short', timeStyle: 'medium', timeZone: timeZone.value }).format(new Date(iso))
 }
 
-type Tab = 'overview' | 'diagnostics' | 'admin'
+type Tab = 'overview' | 'diagnostics' | 'admin' | 'advanced'
 const tab = ref<Tab>(
   route.query.tab === 'diagnostics'
     ? 'diagnostics'
-    : route.query.tab === 'admin' || typeof route.query.logUnit === 'string'
-      ? 'admin'
-      : 'overview',
+    : route.query.tab === 'advanced'
+      ? 'advanced'
+      : route.query.tab === 'admin' || typeof route.query.logUnit === 'string'
+        ? 'admin'
+        : 'overview',
 )
 watch(tab, (t) => router.replace({ query: { ...route.query, tab: t === 'overview' ? undefined : t } }))
 

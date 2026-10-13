@@ -789,8 +789,17 @@ export interface ExtensionSetting {
   options?: { value: string; label: string }[]
 }
 
+// hubs.StorageChoice — one place an app can be stored.
+export interface AppStorageChoice {
+  path: string
+  label: string
+  freeBytes: number
+  default?: boolean
+}
+
 // hubs.catalogEntry — one curated AppsHub app (docs/APPSHUB_PLAN.md, App3).
 export interface CatalogApp {
+  portEditable?: boolean
   id: string
   name: string
   category: string

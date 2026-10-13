@@ -66,6 +66,9 @@ type Admin struct {
 	// lists the "not installed" catalog (admin_packages_plan.go); nil
 	// keeps the browser read-only.
 	Packages apt.Manager
+	// FeedManager switches feeds on and off and adds one, as a plan
+	// (admin_feeds.go); nil keeps the feed list read-only.
+	FeedManager apt.FeedManager
 	// lastPackageRun is the most recent apply's apt-get output, shown
 	// right after confirming (admin_packages_plan.go).
 	lastPackageRun packageRunResult
@@ -120,6 +123,7 @@ func (h *Admin) Mount(mux httpx.Mux) {
 	mux.HandleFunc("POST /api/v1/admin/packages/plan", adminOnly(h.planPackages))
 	mux.HandleFunc("GET /api/v1/admin/packages/last-run", adminOnly(h.lastPackageRunView))
 	mux.HandleFunc("GET /api/v1/admin/feeds", adminOnly(h.listFeeds))
+	mux.HandleFunc("POST /api/v1/admin/feeds/plan", adminOnly(h.planFeed))
 	mux.HandleFunc("GET /api/v1/admin/terminal/status", adminOnly(h.terminalStatus))
 	mux.HandleFunc("POST /api/v1/admin/terminal/enable", adminOnly(h.enableTerminal))
 	mux.HandleFunc("POST /api/v1/admin/terminal/disable", adminOnly(h.disableTerminal))

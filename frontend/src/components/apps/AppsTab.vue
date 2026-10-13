@@ -41,15 +41,15 @@
                 </button>
               </p>
             </div>
-            <a v-if="a.hostPort" :href="openUrl(a.hostPort)" target="_blank" rel="noopener" class="shrink-0 text-[12.5px] text-accent hover:underline">
+            <a
+              v-if="a.hostPort && a.state === 'running'"
+              :href="openUrl(a.hostPort)"
+              target="_blank"
+              rel="noopener"
+              class="shrink-0 rounded bg-accent px-2.5 py-1 text-[12.5px] font-semibold text-bg"
+            >
               {{ t('apps.open') }}
             </a>
-            <button type="button" class="shrink-0 text-[12.5px] text-accent hover:underline" @click="openLogs(a)">
-              {{ t('apps.logs') }}
-            </button>
-            <button type="button" class="shrink-0 text-[12.5px] text-accent hover:underline" @click="openConsole(a)">
-              {{ t('apps.console.open') }}
-            </button>
             <button
               type="button"
               class="shrink-0 rounded border border-line px-2.5 py-1 text-[12.5px] text-text hover:bg-field disabled:opacity-60"
@@ -58,14 +58,18 @@
             >
               {{ a.state === 'running' ? t('apps.stop') : t('apps.start') }}
             </button>
-            <button
-              type="button"
-              class="shrink-0 rounded border border-line px-2.5 py-1 text-[12.5px] text-text hover:bg-field disabled:opacity-60"
-              :disabled="!!busyId"
-              @click="previewRemove(a)"
-            >
-              {{ t('apps.remove') }}
-            </button>
+            <DropdownMenu>
+              <template #trigger>
+                <button type="button" class="rounded p-1.5 text-muted hover:bg-tile-2 hover:text-text" :aria-label="t('apps.more')">
+                  <Icon name="more" :size="16" />
+                </button>
+              </template>
+              <template #panel="{ close }">
+                <button type="button" class="block w-full px-3 py-1.5 text-start text-[13px] text-text hover:bg-tile-2" @click="close(); openLogs(a)">{{ t('apps.logs') }}</button>
+                <button type="button" class="block w-full px-3 py-1.5 text-start text-[13px] text-text hover:bg-tile-2" @click="close(); openConsole(a)">{{ t('apps.console.open') }}</button>
+                <button type="button" class="block w-full px-3 py-1.5 text-start text-[13px] text-onair hover:bg-tile-2" :disabled="!!busyId" @click="close(); previewRemove(a)">{{ t('apps.remove') }}</button>
+              </template>
+            </DropdownMenu>
           </div>
           <div v-if="removing" class="rounded border border-line bg-tile p-3">
             <PlanPreview
@@ -88,7 +92,8 @@
       <section class="mt-5">
         <h2 class="text-[13px] font-semibold text-muted">{{ t('apps.catalogTitle') }}</h2>
         <div class="mt-2 flex flex-col gap-3">
-          <section v-for="app in catalog" :key="app.id" class="flex items-center gap-3 rounded border border-line bg-tile p-3">
+          <div v-for="app in catalog" :key="app.id">
+          <section class="flex items-center gap-3 rounded border border-line bg-tile p-3">
             <div class="min-w-0 flex-1">
               <div class="flex items-center gap-2">
                 <h3 class="truncate text-[13.5px] font-semibold text-text">{{ app.name }}</h3>
@@ -112,37 +117,71 @@
               type="button"
               class="shrink-0 rounded border border-line px-2.5 py-1 text-[12.5px] text-text hover:bg-field disabled:opacity-60"
               :disabled="!!installing || dockerMissing"
-              @click="previewInstall(app)"
+              @click="openInstall(app)"
             >
               {{ t('apps.install') }}
             </button>
           </section>
-        </div>
-        <div v-if="installing" class="mt-3 rounded border border-line bg-tile p-3">
-          <p v-if="installing.loading" class="text-[13px] text-faint">{{ t('common.loading') }}</p>
-          <PlanPreview
-            v-else-if="installing.plan && !installing.done"
-            :plan="installing.plan"
-            :confirm-label="t('apps.installConfirm')"
-            :busy="installing.applying"
-            :error="installing.error"
-            @confirm="confirmInstall"
-            @cancel="installing = null"
-          >
-            {{ installing.plan.summary }}
-          </PlanPreview>
-          <p v-else-if="installing.done" class="flex items-center gap-1.5 text-[13px] text-ok" role="status">
-            <span class="h-1.5 w-1.5 rounded-full bg-ok" />{{ t('apps.installed') }}
-          </p>
-          <p v-else-if="installing.error" class="text-[12.5px] text-warn">{{ installing.error }}</p>
+            <div v-if="installing?.appId === app.id" class="-mt-1 rounded-b border border-t-0 border-line bg-tile p-3">
+              <!-- Step 1: which port and which disk — sensible defaults, always visible. -->
+              <form v-if="installing.form" class="flex flex-col gap-3" @submit.prevent="previewInstall">
+                <h3 class="text-[14px] font-semibold text-text">{{ t('apps.installTitle', { name: installing.form.app.name }) }}</h3>
+                <label class="flex flex-col gap-1 text-[13px]">
+                  <span class="text-muted">{{ t('apps.portLabel') }}</span>
+                  <input
+                    v-model.number="installing.form.port"
+                    type="number"
+                    min="1024"
+                    max="65535"
+                    :disabled="!installing.form.app.portEditable"
+                    class="w-32 rounded border border-line bg-field px-2 py-1.5 text-text disabled:opacity-60"
+                  />
+                  <span class="text-[12px] text-faint">{{ installing.form.app.portEditable ? t('apps.portHint') : t('apps.portFixed') }}</span>
+                </label>
+                <label class="flex flex-col gap-1 text-[13px]">
+                  <span class="text-muted">{{ t('apps.storageLabel') }}</span>
+                  <select v-model="installing.form.storage" class="rounded border border-line bg-field px-2 py-1.5 text-text">
+                    <option v-for="c in installing.form.choices" :key="c.path" :value="c.path" :disabled="c.freeBytes < 1 << 30">
+                      {{ c.label }} — {{ t('apps.storageFree', { size: formatBytes(c.freeBytes, locale) }) }}
+                    </option>
+                  </select>
+                  <span class="text-[12px] text-faint">{{ t('apps.storageHint') }}</span>
+                </label>
+                <div class="flex justify-end gap-2">
+                  <button type="button" class="rounded px-3 py-1.5 text-[13px] text-text hover:bg-field" @click="installing = null">{{ t('plan.cancel') }}</button>
+                  <button type="submit" class="rounded bg-accent px-3 py-1.5 text-[13px] font-semibold text-bg">{{ t('apps.installPreview') }}</button>
+                </div>
+              </form>
+              <p v-else-if="installing.loading" class="text-[13px] text-faint">{{ t('common.loading') }}</p>
+              <PlanPreview
+                v-else-if="installing.plan && !installing.done"
+                :plan="installing.plan"
+                :confirm-label="t('apps.installConfirm')"
+                :busy="installing.applying"
+                :error="installing.error"
+                @confirm="confirmInstall"
+                @cancel="installing = null"
+              >
+                {{ installing.plan.summary }}
+              </PlanPreview>
+              <p v-else-if="installing.done" class="flex items-center gap-1.5 text-[13px] text-ok" role="status">
+                <span class="h-1.5 w-1.5 rounded-full bg-ok" />{{ t('apps.installed') }}
+              </p>
+              <div v-else-if="installing.error" class="flex items-start justify-between gap-3">
+                <p class="text-[12.5px] text-warn">{{ installing.error }}</p>
+                <button type="button" class="shrink-0 text-[12.5px] text-accent hover:underline" @click="installing = null">{{ t('extensions.settings.close') }}</button>
+              </div>
+            </div>
+          </div>
         </div>
       </section>
 
-      <div class="mt-6 border-t border-line-soft pt-4">
+      <details class="mt-6 border-t border-line-soft pt-4">
+        <summary class="cursor-pointer text-[13px] font-semibold text-muted">{{ t('apps.searchTitle') }}</summary>
         <input
           v-model="query"
           type="search"
-          class="w-full rounded border border-line bg-field px-3 py-2 text-[13.5px] text-text placeholder:text-faint"
+          class="mt-3 w-full rounded border border-line bg-field px-3 py-2 text-[13.5px] text-text placeholder:text-faint"
           :placeholder="t('apps.searchPlaceholder')"
           @keyup.enter="search"
         />
@@ -177,7 +216,7 @@
             </button>
           </li>
         </ul>
-      </div>
+      </details>
     </template>
 
     <!-- Logs modal (App5, "two tiers" — this is the per-container one;
@@ -237,13 +276,16 @@
 import { nextTick, onMounted, onUnmounted, ref } from 'vue'
 import { useI18n } from 'vue-i18n'
 import { api, ApiError } from '@/api/client'
+import DropdownMenu from '@/components/DropdownMenu.vue'
+import Icon from '@/components/Icon.vue'
 import PlanPreview from '@/components/PlanPreview.vue'
 import DockerSetupCard from '@/components/apps/DockerSetupCard.vue'
 import { useFriendlyError } from '@/composables/useFriendlyError'
 import { usePlanError } from '@/composables/usePlanError'
-import type { AppConsoleStatus, AppSearchResult, CatalogApp, InstalledApp, Plan } from '@/api/types'
+import { formatBytes } from '@/lib/format'
+import type { AppConsoleStatus, AppStorageChoice, AppSearchResult, CatalogApp, InstalledApp, Plan } from '@/api/types'
 
-const { t, te } = useI18n()
+const { t, te, locale } = useI18n()
 const { friendly } = useFriendlyError()
 const { planErrorMessage } = usePlanError()
 
@@ -290,16 +332,41 @@ function openUrl(port: number): string {
 
 // --- install: preview, confirm --------------------------------------------
 
-type InstallPending = { appId: string; loading?: boolean; plan?: Plan; applying?: boolean; done?: boolean; error?: string }
+type InstallForm = { app: CatalogApp; port: number; storage: string; choices: AppStorageChoice[] }
+type InstallPending = { appId: string; form?: InstallForm; loading?: boolean; plan?: Plan; applying?: boolean; done?: boolean; error?: string }
 const installing = ref<InstallPending | null>(null)
 
-async function previewInstall(app: CatalogApp) {
+// Step 1 asks for the port and the disk, with the defaults filled in.
+async function openInstall(app: CatalogApp) {
   installing.value = { appId: app.id, loading: true }
+  let choices: AppStorageChoice[] = []
   try {
-    const res = await api.apps.installPlan(app.id)
-    if (installing.value?.appId === app.id) installing.value = { appId: app.id, plan: res.plan }
+    choices = (await api.apps.storage()).choices
+  } catch {
+    // no choice offered: the default location is used
+  }
+  if (installing.value?.appId !== app.id) return
+  installing.value = {
+    appId: app.id,
+    form: { app, port: app.port ?? 0, storage: (choices.find((c) => c.default) ?? choices[0])?.path ?? '', choices },
+  }
+}
+
+// Step 2: preview what that would do, then confirm.
+async function previewInstall() {
+  const f = installing.value?.form
+  if (!f) return
+  const appId = f.app.id
+  installing.value = { appId, loading: true }
+  try {
+    const defaultStorage = f.choices.find((c) => c.default)?.path
+    const res = await api.apps.installPlan(appId, {
+      hostPort: f.port && f.port !== f.app.port ? f.port : undefined,
+      storage: f.storage && f.storage !== defaultStorage ? f.storage : undefined,
+    })
+    if (installing.value?.appId === appId) installing.value = { appId, plan: res.plan }
   } catch (err) {
-    if (installing.value?.appId === app.id) installing.value = { appId: app.id, error: planErrorMessage(err) }
+    if (installing.value?.appId === appId) installing.value = { appId, error: planErrorMessage(err) }
   }
 }
 

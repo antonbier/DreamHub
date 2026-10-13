@@ -331,8 +331,9 @@ func New(ctx context.Context, o Options) (*App, error) {
 	// Same for install/remove (apt.Manager, A2): both Exec{} and the mock
 	// implement it.
 	pkgManager, _ := o.Apt.(apt.Manager)
+	feedManager, _ := o.Apt.(apt.FeedManager)
 	adminHub := &hubs_.Admin{Store: st, Level: level, Logs: o.Logs, FS: o.RecordingsFS,
-		Systemd: o.Systemd, Scripts: o.Scripts, Apt: o.Apt, Feeds: feeds, Packages: pkgManager, AI: o.AI, Settings: svc,
+		Systemd: o.Systemd, Scripts: o.Scripts, Apt: o.Apt, Feeds: feeds, Packages: pkgManager, FeedManager: feedManager, AI: o.AI, Settings: svc,
 		Auth: svc, TerminalTarget: o.TerminalTarget, Plans: plans, WC: o.WebControl, Now: now, ReadOnly: o.ReadOnlyFiles}
 	controlHub := &hubs_.Control{WC: o.WebControl}
 
@@ -353,6 +354,16 @@ func New(ctx context.Context, o Options) (*App, error) {
 		DockerHub: o.DockerHub, Docker: o.Docker, Mem: o.Mem, WC: o.WebControl,
 		StorageRoot: o.AppsStorageRoot, Plans: plans, ReadOnly: o.ReadOnlyFiles,
 		Store: st, Auth: svc, ConfigFS: o.AppsConfigFS, Setup: o.DockerSetup, Now: now,
+	}
+	if o.Mock {
+		// Two demo disks, so the install dialog's storage choice has
+		// something to show without a box.
+		appsHub.Storage = func(context.Context) []hubs_.StorageChoice {
+			return []hubs_.StorageChoice{
+				{Path: o.AppsStorageRoot, Label: "/media/hdd", FreeBytes: 216 << 30, Default: true},
+				{Path: "/media/usb/dreamhub-apps", Label: "/media/usb", FreeBytes: 29 << 30},
+			}
+		}
 	}
 	// App6: AppsHub's own installed-app configs join the existing
 	// Backup & Restore screen as an opt-in section (system.go's

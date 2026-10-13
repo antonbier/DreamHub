@@ -107,6 +107,7 @@ Like Extension Hub itself, AppsHub stays a power-user feature you find by naviga
 | App5 | Updates, logs, console | **built 2026-10-12** (the notification-inbox update flow, the two-tier log viewer, the Terminal-equivalent per-container console — see below) |
 | App6 | Backup | **built 2026-10-12** (the general "backup sections" mechanism, config-only default for apps — see below) |
 | App8 | Curated list rework, multi-container apps | **built 2026-10-13** against the mock (the owner's list; Nextcloud with its database as the first two-container app; per-folder backup — see below) |
+| App9 | UX: understandable tabs, port and storage choice | **built 2026-10-13** against the mock (see below) |
 | later | Viewer dashboard tile, free-search install | a read-only "open app" tile for non-admin profiles; installing an image from free search |
 
 ### App1, built 2026-10-12
@@ -221,3 +222,16 @@ The owner's wishes from the 0.5.0 evening (no *arr apps; Vaultwarden, Nextcloud,
 **Backup per folder** (App6's `BackupItem` fields finally earning their keep): one item per directory, with its own default — an app's config in, a helper's (a database) in, bulk data never, and Nextcloud's own directory out too (`LargeConfig`: the image copies its whole code there). `BackupPanel.vue` lists the folders with a checkbox and a size each; `GET /api/v1/system/backup?sections=apps&items.apps=a,b` picks exactly those. Restore now refuses an item id that isn't `<id>` or `<id>.<suffix>` — the ids come from an uploaded file, and before this an id like `../x` would have been written outside the storage root. A database directory copied while it runs may not be consistent; stop the app first for a clean copy.
 
 Confirmed against the mock in a headless browser (catalog with notes, Nextcloud preview and install, the installed row with its database, the per-folder backup list) and in Go tests (`TestAppsInstall_MultiContainer`, `TestSystemBackup_AppItems`, the catalog's own port/field rules, `TestExec_CreateService` against the fake daemon). **Nothing of App8 has run on the box yet**: Nextcloud's port rewrite, MariaDB on the box's kernel, Home Assistant's memory, and whether DNS port 53 is free there are the checks still to do.
+
+### App9: understandable tabs, port and storage choice (built 2026-10-13, mock only)
+
+Owner feedback after trying 0.5.0 (#48, #49): nobody could tell what an extension is, that an app is a Docker container, where the package manager went, or how to pick a port and a disk. Rule for the fix: **keep it simple, keep it clean** — remove concepts from the surface, don't add controls.
+
+- **Three tabs, one sentence each** (`AppsHubView.vue`): *Apps* (programs in their own container; they need Docker, which DreamHub sets up), *Extensions* (small add-ons for DreamHub itself), *System* (the box's own DreamOS packages and the sources they come from). The System tab is what Device → Administration → Packages was; Device keeps services, logs and a new **Advanced** tab for scripts and the terminal.
+- **Installed apps**: *Open* (only while running) and *Start/Stop* are visible; logs, console and remove sit behind a "⋯" menu. Free Docker Hub search is a collapsed section.
+- **Install is two steps**: a small form first (web port, disk) with the defaults filled in, then the usual preview and confirm. The form sits under the app's own card, not at the bottom of the list.
+- **Port**: `appcatalog.App.PortEnv`/`PortInCmd` mark where an app's web port can be moved (the image's own setting: Pi-hole, Vaultwarden, qBittorrent; Nextcloud's Apache lines). `WithPort` returns a changed copy; an app without either always uses its port and the form says so. Ports the box itself uses (80, 443, 8080, 8090, …) are refused; the live bind check runs on the chosen port.
+- **Storage**: `GET /api/v1/apps/storage` lists the writable ext/xfs/btrfs disks mounted directly under `/media` (default root first); never the box's flash, never FAT/NTFS/network shares. The chosen root is written to the container as the `dreamhub.root` label (helper: `ContainerSpec.Root`), so remove, backup and restore find an app's folders wherever it lives (`appGroup.root`); an app installed before this has no label and uses the default root.
+- **Feeds** (`apt.FeedManager`, `POST /api/v1/admin/feeds/plan`): switch on/off = rename `.list` ↔ `.list.off`; add = a new `deb [trusted=yes] <url> ./` file, never overwriting. Every change refreshes apt's index (`apt-get update`) and is undone if that fails. Adding always warns that these feeds are unsigned. Names and URLs are validated so they can never become a path or a second apt line.
+
+**Box checks still to do** (nothing of this has run on the box): the new helper (`root` field) with a real container; storage choices from the box's real `/proc/mounts`; `apt-get update` after a feed change on DreamOS (timing, a dead feed); Nextcloud's port rewrite on a non-default port.

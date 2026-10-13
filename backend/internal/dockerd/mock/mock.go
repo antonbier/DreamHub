@@ -118,6 +118,9 @@ func (c *Client) Create(ctx context.Context, spec dockerd.ContainerSpec) (docker
 		id += "-" + spec.Service
 		labels[dockerd.ServiceLabel] = spec.Service
 	}
+	if spec.Root != "" {
+		labels[dockerd.RootLabel] = spec.Root
+	}
 	if _, exists := c.containers[id]; exists {
 		return dockerd.Container{}, dockerd.ErrAlreadyExists
 	}

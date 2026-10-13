@@ -491,7 +491,9 @@ func (h *Channels) planBouquets(w http.ResponseWriter, r *http.Request) {
 		change = plan.Change{Type: "bouquet.create", After: ChannelChange{Name: displayName}}
 		summary = fmt.Sprintf("Created bouquet %q", displayName)
 		do = func(ctx context.Context) error { return editor.AddBouquet(ctx, a.Name, radio) }
-		check = func(after []BouquetSummary) bool { return len(after) == len(list)+1 && hasBouquetNamed(after, displayName) }
+		check = func(after []BouquetSummary) bool {
+			return len(after) == len(list)+1 && hasBouquetNamed(after, displayName)
+		}
 	case "rename":
 		change = plan.Change{Type: "bouquet.rename", Before: ChannelChange{Name: existing.Name}, After: ChannelChange{NewName: a.Name}}
 		summary = fmt.Sprintf("Renamed bouquet %q to %q", existing.Name, a.Name)

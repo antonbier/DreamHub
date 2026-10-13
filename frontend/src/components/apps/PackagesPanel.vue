@@ -16,6 +16,23 @@
       </button>
     </div>
 
+    <p class="mt-1 text-[12.5px] text-muted">{{ t('admin.packages.intro') }}</p>
+
+    <div class="mt-3 flex flex-wrap gap-1 rounded bg-field p-1 text-[12.5px]" role="radiogroup" :aria-label="t('admin.packages.title')">
+      <button
+        v-for="v in views"
+        :key="v.id"
+        type="button"
+        role="radio"
+        :aria-checked="status === v.id"
+        class="rounded px-2.5 py-1"
+        :class="status === v.id ? 'bg-tile text-text' : 'text-muted hover:text-text'"
+        @click="setView(v.id)"
+      >
+        {{ t('admin.packages.view.' + (v.id || 'installed')) }}<template v-if="v.id === 'upgradable' && upgradableCount > 0"> ({{ upgradableCount }})</template>
+      </button>
+    </div>
+
     <div class="mt-2 flex flex-wrap gap-2">
       <input
         v-model="q"
@@ -27,12 +44,6 @@
       <select v-model="category" class="rounded border border-line bg-field px-2 py-1.5 text-[13px] text-text" @change="load">
         <option value="">{{ t('admin.packages.allCategories') }}</option>
         <option v-for="c in categories" :key="c" :value="c">{{ c }}</option>
-      </select>
-      <select v-model="status" class="rounded border border-line bg-field px-2 py-1.5 text-[13px] text-text" @change="load">
-        <option value="">{{ t('admin.packages.allStatus') }}</option>
-        <option value="upgradable">{{ t('admin.packages.upgradable') }}</option>
-        <option value="available">{{ t('admin.packages.notInstalled') }}</option>
-        <option value="needed">{{ t('admin.packages.needed') }}</option>
       </select>
     </div>
 
@@ -118,21 +129,6 @@
       </li>
     </ul>
   </section>
-
-  <section v-if="feeds.length || feedsError" class="mt-5 rounded border border-line bg-tile p-4">
-    <h2 class="text-[14px] font-semibold text-text">{{ t('admin.packages.feedsTitle') }}</h2>
-    <p v-if="feedsError" class="mt-2 text-[13px] text-faint">{{ feedsError }}</p>
-    <ul v-else class="mt-2 flex flex-col">
-      <li v-for="f in feeds" :key="f.name" class="flex items-center gap-2 border-b border-line-soft py-2 last:border-none">
-        <span class="h-2 w-2 shrink-0 rounded-full" :class="f.enabled ? 'bg-ok' : 'bg-faint'" />
-        <div class="min-w-0 flex-1">
-          <span class="block font-mono text-[13px] text-text">{{ f.name }}</span>
-          <span v-if="f.url" class="block truncate text-[12px] text-faint">{{ f.url }}</span>
-        </div>
-        <span v-if="!f.known" class="shrink-0 rounded border border-warn px-1.5 py-0.5 text-[11px] text-warn">{{ t('admin.packages.feedAddedByHand') }}</span>
-      </li>
-    </ul>
-  </section>
 </template>
 
 <script setup lang="ts">
@@ -143,7 +139,7 @@ import { api, ApiError } from '@/api/client'
 import Icon from '@/components/Icon.vue'
 import PlanPreview from '@/components/PlanPreview.vue'
 import { usePlanError } from '@/composables/usePlanError'
-import type { AdminFeed, AdminPackage, PackageRun, PackageStep, Plan } from '@/api/types'
+import type { AdminPackage, PackageRun, PackageStep, Plan } from '@/api/types'
 
 const { t } = useI18n()
 const { friendly } = useFriendlyError()
@@ -156,6 +152,11 @@ const error = ref('')
 const q = ref('')
 const category = ref('')
 const status = ref('')
+const views = [{ id: '' }, { id: 'upgradable' }, { id: 'available' }, { id: 'needed' }]
+function setView(id: string) {
+  status.value = id
+  void load()
+}
 // The rows on screen are the "not installed" catalog (install buttons)
 // rather than installed packages (upgrade/remove).
 const catalog = ref(false)
@@ -259,21 +260,5 @@ async function explain(p: AdminPackage) {
   }
 }
 
-// --- feeds ----------------------------------------------------------------
-
-const feeds = ref<AdminFeed[]>([])
-const feedsError = ref('')
-
-async function loadFeeds() {
-  try {
-    feeds.value = (await api.admin.feeds()).feeds
-  } catch (err) {
-    feedsError.value = friendly(err).text
-  }
-}
-
-onMounted(() => {
-  void load()
-  void loadFeeds()
-})
+onMounted(load)
 </script>

@@ -23,6 +23,7 @@ import type {
   AdminScript,
   ExtensionCard,
   ExtensionSetting,
+  AppStorageChoice,
   CatalogApp,
   AppSearchResult,
   AppManifest,
@@ -501,6 +502,9 @@ export const api = {
     explainPackage: (name: string, description: string) =>
       request<{ explanation: string }>('POST', '/api/v1/admin/packages/explain', { name, description }),
     feeds: () => request<{ feeds: AdminFeed[] }>('GET', '/api/v1/admin/feeds'),
+    // Switch a feed on or off, or add one: preview, then apply.
+    feedPlan: (action: 'enable' | 'disable' | 'add', name: string, url?: string) =>
+      request<{ plan: Plan }>('POST', '/api/v1/admin/feeds/plan', { action, name, url }),
   },
   notifications: {
     list: (limit = 20) => request<{ notifications: Notification[]; unread: number }>('GET', `/api/v1/notifications?limit=${limit}`),
@@ -525,8 +529,10 @@ export const api = {
     docker: () =>
       request<{ state: DockerSetupState; version: string; lastRun: { at: string; ok: boolean; log: string } | null }>('GET', '/api/v1/apps/docker'),
     dockerSetupPlan: () => request<{ plan: Plan; steps: DockerSetupStep[] }>('POST', '/api/v1/apps/docker/setup/plan'),
-    installPlan: (appId: string, hostPort?: number) =>
-      request<{ plan: Plan }>('POST', '/api/v1/apps/install/plan', { appId, hostPort }),
+    installPlan: (appId: string, opts: { hostPort?: number; storage?: string } = {}) =>
+      request<{ plan: Plan }>('POST', '/api/v1/apps/install/plan', { appId, ...opts }),
+    // The disks an app can be stored on (never the box's own flash).
+    storage: () => request<{ choices: AppStorageChoice[] }>('GET', '/api/v1/apps/storage'),
     removePlan: (id: string) => request<{ plan: Plan }>('POST', `/api/v1/apps/installed/${encodeURIComponent(id)}/remove/plan`),
     start: (id: string) => request<void>('POST', `/api/v1/apps/installed/${encodeURIComponent(id)}/start`),
     stop: (id: string) => request<void>('POST', `/api/v1/apps/installed/${encodeURIComponent(id)}/stop`),

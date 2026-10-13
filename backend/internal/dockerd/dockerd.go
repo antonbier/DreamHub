@@ -28,6 +28,8 @@ import (
 	"context"
 	"errors"
 	"io"
+	"path"
+	"strings"
 )
 
 // AppLabel is the container label every container this package will touch
@@ -48,6 +50,18 @@ const PortLabel = "dreamhub.port"
 // app (e.g. "db" next to Nextcloud) — unset on an app's main container.
 // Every container of one app shares its AppLabel value.
 const ServiceLabel = "dreamhub.service"
+
+// RootLabel records where an app's storage lives (the storage root the
+// person chose at install, e.g. /media/hdd/dreamhub-apps) — read back so
+// removing, backing up and restoring look in the right place even when
+// apps are spread over several disks.
+const RootLabel = "dreamhub.root"
+
+// ValidRoot reports whether r is usable as a ContainerSpec.Root: empty
+// (the default root) or a clean absolute path.
+func ValidRoot(r string) bool {
+	return r == "" || (strings.HasPrefix(r, "/") && path.Clean(r) == r && !strings.ContainsAny(r, ":\n\r\x00"))
+}
 
 // ValidService reports whether s is usable as a ContainerSpec.Service:
 // empty (the app's main container) or 1-20 lowercase letters/digits —
@@ -88,6 +102,10 @@ func (c Container) AppID() string { return c.Labels[AppLabel] }
 // Service is the Labels[ServiceLabel] value: "" for an app's main
 // container, the helper's role (e.g. "db") otherwise.
 func (c Container) Service() string { return c.Labels[ServiceLabel] }
+
+// Root is the Labels[RootLabel] value: "" for an app installed before the
+// storage choice existed (it lives under the default root).
+func (c Container) Root() string { return c.Labels[RootLabel] }
 
 // ErrNotFound means no container with that id carries AppLabel.
 var ErrNotFound = errors.New("dockerd: no such app container")
@@ -151,6 +169,9 @@ type ContainerSpec struct {
 	// an app's bulk user data (Nextcloud's files, downloads), computed by
 	// the caller the same way as HostDir — both empty, or both set.
 	DataHostDir, DataContainerDir string
+	// Root is the storage root HostDir and DataHostDir lie under, recorded
+	// as RootLabel; "" for the default.
+	Root string
 	// MemoryLimitBytes caps the container's RAM; 0 means no limit
 	// (Create refuses this — AppsHub always sets one, see
 	// docs/APPSHUB_PLAN.md's resource-budget decision).

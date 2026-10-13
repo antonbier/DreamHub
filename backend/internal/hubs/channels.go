@@ -3,6 +3,7 @@ package hubs
 import (
 	"context"
 	"encoding/json"
+	"github.com/antonbier/DreamHub/backend/internal/logosearch"
 	"log/slog"
 	"net/http"
 	"os"
@@ -34,7 +35,11 @@ type Channels struct {
 	User store.User
 	// PiconDirs: as Guide's; nil means DefaultPiconDirs.
 	PiconDirs []string
-	Now       func() time.Time
+	// LogoDir is where hand-chosen channel logos are kept (channel_logos.go);
+	// "" turns choosing one off. Logos finds one online; nil hides that.
+	LogoDir string
+	Logos   logosearch.Source
+	Now     func() time.Time
 
 	mu          sync.Mutex
 	refreshedAt time.Time
@@ -67,7 +72,15 @@ func (h *Channels) Mount(mux httpx.Mux) {
 	mux.HandleFunc("GET /api/v1/channels/check", h.check)
 	mux.HandleFunc("GET /api/v1/channels/picons", h.picons)
 	mux.HandleFunc("PUT /api/v1/channels/picons", h.choosePicons)
-	mux.HandleFunc("GET /api/v1/channels/picon", h.picon)
+	mux.HandleFunc("GET /api/v1/channels/picon", h.channelPicon)
+	mux.HandleFunc("GET /api/v1/channels/logo/sets", h.logoSets)
+	mux.HandleFunc("GET /api/v1/channels/logo/custom", h.customLogos)
+	mux.HandleFunc("GET /api/v1/channels/logo/search", h.searchLogos)
+	mux.HandleFunc("GET /api/v1/channels/logo/preview", h.previewLogo)
+	mux.HandleFunc("PUT /api/v1/channels/logo", h.chooseLogo)
+	mux.HandleFunc("POST /api/v1/channels/logo/upload", h.uploadLogo)
+	mux.HandleFunc("POST /api/v1/channels/logo/online", h.fetchLogo)
+	mux.HandleFunc("DELETE /api/v1/channels/logo", h.resetLogo)
 	mux.HandleFunc("POST /api/v1/channels/bouquet/plan", h.planBouquet)
 	mux.HandleFunc("POST /api/v1/channels/bouquets/plan", h.planBouquets)
 	mux.HandleFunc("GET /api/v1/channels/backups", h.backups)
@@ -78,6 +91,12 @@ func (h *Channels) Mount(mux httpx.Mux) {
 func (h *Channels) Perms() map[string]perm.Perm {
 	return map[string]perm.Perm{
 		"PUT /api/v1/channels/picons":                perm.ChannelsManage,
+		"PUT /api/v1/channels/logo":                  perm.ChannelsManage,
+		"POST /api/v1/channels/logo/upload":          perm.ChannelsManage,
+		"POST /api/v1/channels/logo/online":          perm.ChannelsManage,
+		"DELETE /api/v1/channels/logo":               perm.ChannelsManage,
+		"GET /api/v1/channels/logo/search":           perm.ChannelsManage,
+		"GET /api/v1/channels/logo/preview":          perm.ChannelsManage,
 		"POST /api/v1/channels/bouquet/plan":         perm.ChannelsManage,
 		"POST /api/v1/channels/bouquets/plan":        perm.ChannelsManage,
 		"POST /api/v1/channels/backups/restore/plan": perm.ChannelsManage,
@@ -86,6 +105,7 @@ func (h *Channels) Perms() map[string]perm.Perm {
 
 // Init applies the saved picon set; called once at startup.
 func (h *Channels) Init(ctx context.Context) {
+	SetLogoDir(h.LogoDir)
 	if v, err := h.Settings.Values(ctx, h.User); err == nil {
 		SetPreferredPiconSet(v.String(KeyPiconSet))
 	}
@@ -218,7 +238,7 @@ func (h *Channels) bouquet(w http.ResponseWriter, r *http.Request) {
 			e.Marker = true
 		} else {
 			e.Quality = webcontrol.Quality(s.ServiceReference)
-			e.Picon = hasPiconIn(dirs, s.ServiceReference, s.ServiceName)
+			e.Picon = hasLogo(dirs, s.ServiceReference, s.ServiceName)
 			e.Now = now[channelKey(s.ServiceReference)]
 		}
 		entries = append(entries, e)
@@ -435,7 +455,7 @@ func (h *Channels) check(w http.ResponseWriter, r *http.Request) {
 				if b.Kind == "tv" && !withNow[k] {
 					add("noEpg")
 				}
-				if !hasPiconIn(dirs, s.ServiceReference, s.ServiceName) {
+				if !hasLogo(dirs, s.ServiceReference, s.ServiceName) {
 					add("noPicon")
 				}
 			}
@@ -454,6 +474,11 @@ func (h *Channels) piconDirs() []string {
 }
 
 func (h *Channels) picon(w http.ResponseWriter, r *http.Request) { servePicon(w, r, h.PiconDirs) }
+
+// hasLogo: a hand-chosen logo, or one of dirs' picons.
+func hasLogo(dirs []string, ref, name string) bool {
+	return hasLogoOverride(ref) || hasPiconIn(dirs, ref, name)
+}
 
 // hasPiconIn reports whether one of dirs has a picon file for a channel —
 // only whether the file is there, for counting many at once.

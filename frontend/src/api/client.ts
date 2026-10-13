@@ -23,6 +23,7 @@ import type {
   AdminScript,
   ExtensionCard,
   ExtensionSetting,
+  LogoResult,
   AppStorageChoice,
   CatalogApp,
   AppSearchResult,
@@ -139,8 +140,9 @@ async function request<T>(method: string, path: string, body?: unknown): Promise
   if (method !== 'GET' && method !== 'HEAD') {
     headers[CSRF_HEADER] = '1'
   }
+  const raw = body instanceof Blob // an uploaded picture: sent as it is
   if (body !== undefined) {
-    headers['Content-Type'] = 'application/json'
+    headers['Content-Type'] = raw ? body.type || 'application/octet-stream' : 'application/json'
   }
   Object.assign(headers, authHeaders())
 
@@ -149,7 +151,7 @@ async function request<T>(method: string, path: string, body?: unknown): Promise
     res = await fetch(path, {
       method,
       headers,
-      body: body !== undefined ? JSON.stringify(body) : undefined,
+      body: body === undefined ? undefined : raw ? body : JSON.stringify(body),
     })
   } catch (err) {
     // Network failure (backend unreachable) — no HTTP response at all.
@@ -220,6 +222,18 @@ export const api = {
     picons: () => request<{ sets: PiconSet[]; total: number; chosen: string }>('GET', '/api/v1/channels/picons'),
     choosePicons: (set: string) => request<{ chosen: string }>('PUT', '/api/v1/channels/picons', { set }),
     picon: (ref: string, name: string) => requestBlob(`/api/v1/channels/picon?ref=${encodeURIComponent(ref)}&name=${encodeURIComponent(name)}`),
+    // A logo chosen by hand for one channel (DreamHub's own choice; the TV is untouched).
+    logoSets: (ref: string, name: string) =>
+      request<{ sets: string[]; custom: boolean }>('GET', `/api/v1/channels/logo/sets?ref=${encodeURIComponent(ref)}&name=${encodeURIComponent(name)}`),
+    piconInSet: (ref: string, name: string, set: string) =>
+      requestBlob(`/api/v1/channels/picon?ref=${encodeURIComponent(ref)}&name=${encodeURIComponent(name)}&set=${encodeURIComponent(set)}`),
+    customLogos: () => request<{ keys: string[] }>('GET', '/api/v1/channels/logo/custom'),
+    chooseLogo: (ref: string, name: string, set: string) => request<{ saved: boolean }>('PUT', '/api/v1/channels/logo', { ref, name, set }),
+    uploadLogo: (ref: string, file: Blob) => request<{ saved: boolean }>('POST', `/api/v1/channels/logo/upload?ref=${encodeURIComponent(ref)}`, file),
+    searchLogos: (name: string) => request<{ results: LogoResult[] }>('GET', `/api/v1/channels/logo/search?name=${encodeURIComponent(name)}`),
+    logoPreview: (path: string) => requestBlob(`/api/v1/channels/logo/preview?path=${encodeURIComponent(path)}`),
+    fetchLogo: (ref: string, path: string) => request<{ saved: boolean }>('POST', '/api/v1/channels/logo/online', { ref, path }),
+    resetLogo: (ref: string) => request<void>('DELETE', `/api/v1/channels/logo?ref=${encodeURIComponent(ref)}`),
     // How the bouquet should look when done; the plan says what changes.
     planBouquet: (ref: string, kind: 'tv' | 'radio', entries: DraftEntry[]) =>
       request<{ plan: Plan }>('POST', '/api/v1/channels/bouquet/plan', { ref, kind, entries }),

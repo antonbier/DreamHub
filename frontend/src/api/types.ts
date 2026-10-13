@@ -1143,3 +1143,10 @@ export interface ChannelChange {
   from?: number
   to?: number
 }
+
+// logosearch.Entry — one logo of the public TV-logo collection.
+export interface LogoResult {
+  path: string
+  name: string
+  country: string
+}

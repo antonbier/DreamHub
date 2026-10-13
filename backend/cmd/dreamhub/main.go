@@ -18,6 +18,8 @@ import (
 	dockersetupmock "github.com/antonbier/DreamHub/backend/internal/dockersetup/mock"
 	"github.com/antonbier/DreamHub/backend/internal/fanart"
 	fanartmock "github.com/antonbier/DreamHub/backend/internal/fanart/mock"
+	"github.com/antonbier/DreamHub/backend/internal/logosearch"
+	logosearchmock "github.com/antonbier/DreamHub/backend/internal/logosearch/mock"
 	"github.com/antonbier/DreamHub/backend/internal/meminfo"
 	meminfomock "github.com/antonbier/DreamHub/backend/internal/meminfo/mock"
 	"github.com/antonbier/DreamHub/backend/internal/omdb"
@@ -97,6 +99,7 @@ func run(logger *slog.Logger, level *logging.Level) error {
 	var scriptRunner scripts.Runner
 	var packages apt.Lister
 	var dockerHub dockerhub.Client
+	var logoSearch logosearch.Source
 	var dockerClient dockerd.Client
 	var appsStorageRoot string
 	var dockerSetup dockersetup.Setup
@@ -138,6 +141,7 @@ func run(logger *slog.Logger, level *logging.Level) error {
 		scriptRunner = scripts.Exec{}
 		packages = apt.Exec{}
 		dockerHub = dockerhub.NewHTTPClient()
+		logoSearch = &logosearch.HTTP{}
 		// The helper is off by default (docs/APPSHUB_PLAN.md, App2's own
 		// "not yet wired into anything the box runs" gap) — its address
 		// is only reachable, not guaranteed to have a process answering;
@@ -213,6 +217,7 @@ func run(logger *slog.Logger, level *logging.Level) error {
 		scriptRunner = &scriptsmock.Runner{}
 		packages = aptmock.New()
 		dockerHub = dockerhubmock.Client{}
+		logoSearch = logosearchmock.Source{}
 		dockerClient = dockermock.New()
 		dockerSetup = dockersetupmock.Ready()
 		// DREAMHUB_MOCK_DOCKER=absent: a box without Docker (like the
@@ -250,6 +255,7 @@ func run(logger *slog.Logger, level *logging.Level) error {
 		Scripts:         scriptRunner,
 		Apt:             packages,
 		DockerHub:       dockerHub,
+		LogoSearch:      logoSearch,
 		Docker:          dockerClient,
 		Mem:             memReader,
 		AppsStorageRoot: appsStorageRoot,

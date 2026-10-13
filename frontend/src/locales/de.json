@@ -1840,13 +1840,14 @@
       "anyProvider": "Alle",
       "matches": "{n} Sender | {n} Sender",
       "newSince": "„Neu“ = seit {date} dazugekommen",
-      "reload": "Senderliste neu einlesen",
+      "reload": "Liste von der Box aktualisieren",
       "new": "Neu",
       "gone": "nicht mehr auf der Box",
       "noProvider": "ohne Anbieter",
       "inBouquets": "in {names}",
       "inNone": "in keinem Bouquet",
-      "more": "… und {n} weitere — Suche oder Filter eingrenzen"
+      "more": "… und {n} weitere — Suche oder Filter eingrenzen",
+      "reloadHint": "Liest die Senderliste, wie sie jetzt auf der Box ist. Es wird nicht nach neuen Sendern gesucht – dafür einen Sendersuchlauf an der Box starten."
     },
     "check": {
       "allGood": "Alles in Ordnung: keine doppelten oder verschwundenen Sender, alle mit Programm und Logo.",
@@ -1865,7 +1866,8 @@
       "noPicon": {
         "title": "Ohne Logo",
         "explain": "Für diese Sender findet DreamHub in keinem Logo-Set ein Bild."
-      }
+      },
+      "showAll": "Alle {n} anzeigen"
     },
     "picons": {
       "explain": "Die Logo-Sets, die auf der Box installiert sind, und wie viele Sender deiner Bouquets sie abdecken. DreamHub zeigt Logos aus dem gewählten Set zuerst — am TV ändert das nichts.",
@@ -1943,6 +1945,25 @@
       "channels": {
         "restore": "Senderliste aus der Sicherung zurückholen"
       }
+    },
+    "logo": {
+      "choose": "Logo wählen",
+      "close": "Schließen",
+      "reset": "Zurück zu automatisch",
+      "fromSets": "Aus deinen installierten Logo-Sets",
+      "noSets": "Keines deiner installierten Sets hat ein Logo für diesen Sender.",
+      "upload": "Eigenes Bild verwenden",
+      "chooseFile": "Bild auswählen …",
+      "uploadHint": "PNG, JPEG oder GIF – wird passend verkleinert.",
+      "online": "Online suchen",
+      "search": "Suchen",
+      "noResults": "Unter diesem Namen nichts gefunden – andere Schreibweise versuchen oder ein Bild hochladen.",
+      "unreachable": "Die Logo-Sammlung hat nicht geantwortet. Später noch einmal versuchen.",
+      "source": "Aus der öffentlichen TV-Logos-Sammlung auf GitHub.",
+      "saved": "Gespeichert. DreamHub zeigt jetzt dieses Logo; am Fernseher ändert sich nichts.",
+      "perChannel": "Logo für einen einzelnen Sender",
+      "perChannelHint": "Das Logo eines Senders von Hand wählen – aus einem installierten Set, ein eigenes Bild oder eines aus dem Netz. Nur in DreamHub ändert sich etwas; der Fernseher zeigt weiter, was die Box hat.",
+      "searchChannel": "Sendername eintippen …"
     }
   }
 }

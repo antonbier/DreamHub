@@ -94,6 +94,9 @@ func servePicon(w http.ResponseWriter, r *http.Request, dirs []string) {
 // readPicon returns the first picon found for a channel: a real PNG of
 // at most 1 MB, read-only. nil dirs means DefaultPiconDirs.
 func readPicon(dirs []string, ref, name string) ([]byte, bool) {
+	if b, ok := readLogoOverride(ref); ok { // a logo chosen by hand wins
+		return b, true
+	}
 	if dirs == nil {
 		dirs = DefaultPiconDirs
 	}

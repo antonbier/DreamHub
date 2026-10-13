@@ -208,8 +208,9 @@
         <p class="mt-3 flex flex-wrap items-center gap-x-3 text-[12.5px] text-faint" aria-live="polite">
           <span>{{ t('channels.find.matches', { n: matches.length }, matches.length) }}</span>
           <span v-if="since">{{ t('channels.find.newSince', { date: date(since) }) }}</span>
-          <button type="button" class="text-accent hover:underline" :disabled="allLoading" @click="loadAll(true)">{{ t('channels.find.reload') }}</button>
+          <button type="button" class="text-accent hover:underline" :disabled="allLoading" :title="t('channels.find.reloadHint')" @click="loadAll(true)">{{ t('channels.find.reload') }}</button>
         </p>
+        <p class="mt-1 text-[12px] text-faint">{{ t('channels.find.reloadHint') }}</p>
         <ul class="mt-2 flex flex-col">
           <li v-for="c in shownMatches" :key="c.ref" class="border-b border-line-soft last:border-none">
             <div class="flex min-h-[52px] items-center gap-3 py-2" :class="{ 'opacity-60': c.gone }">
@@ -241,17 +242,34 @@
       <p v-else-if="checkFailed" class="text-[14px] text-muted"><ErrorText /></p>
       <p v-else-if="issues.length === 0" class="text-[14px] text-muted">{{ t('channels.check.allGood') }}</p>
       <template v-else>
-        <section v-for="group in issueGroups" :key="group.kind" class="mb-5">
-          <h2 class="text-[15.5px] font-semibold">{{ t(`channels.check.${group.kind}.title`) }} <span class="text-faint">{{ group.items.length }}</span></h2>
-          <p class="mb-1 text-[13px] text-muted">{{ t(`channels.check.${group.kind}.explain`) }}</p>
-          <ul class="flex flex-col">
-            <li v-for="(i, n) in group.items" :key="n" class="flex items-center gap-3 border-b border-line-soft py-2 last:border-none">
-              <span class="flex w-12 shrink-0 justify-center"><ChannelLogo source="channels" :service-reference="i.ref" :service-name="i.name" :height="20" /></span>
-              <span class="min-w-0 flex-1 truncate text-[14px] text-text">{{ i.name }}</span>
-              <span class="shrink-0 truncate text-[12.5px] text-faint">{{ i.bouquet }}</span>
+        <details v-for="(group, gi) in issueGroups" :key="group.kind" class="mb-3 rounded border border-line bg-tile" :open="gi === 0">
+          <summary class="flex cursor-pointer items-center gap-2 px-3 py-2.5">
+            <h2 class="text-[15px] font-semibold">{{ t(`channels.check.${group.kind}.title`) }}</h2>
+            <span class="rounded-full bg-tile-2 px-2 py-0.5 text-[12px] text-muted">{{ group.items.length }}</span>
+          </summary>
+          <p class="px-3 pb-1 text-[13px] text-muted">{{ t(`channels.check.${group.kind}.explain`) }}</p>
+          <ul class="flex flex-col px-3 pb-2">
+            <li v-for="(i, n) in group.items.slice(0, shownIssues[group.kind] ?? 25)" :key="n" class="border-b border-line-soft last:border-none">
+              <div class="flex items-center gap-3 py-2">
+                <span class="flex w-12 shrink-0 justify-center"><ChannelLogo source="channels" :service-reference="i.ref" :service-name="i.name" :height="20" /></span>
+                <span class="min-w-0 flex-1 truncate text-[14px] text-text">{{ i.name }}</span>
+                <button v-if="group.kind === 'noPicon'" type="button" class="shrink-0 text-[12.5px] text-accent hover:underline" @click="toggleLogo(`${n}|${i.ref}`, i)">
+                  {{ t('channels.logo.choose') }}
+                </button>
+                <span class="shrink-0 truncate text-[12.5px] text-faint">{{ i.bouquet }}</span>
+              </div>
+              <ChannelLogoPicker v-if="logoFor?.at === `${n}|${i.ref}`" class="mb-2" :channel="logoFor" @close="logoFor = null" @changed="loadCheck()" />
             </li>
           </ul>
-        </section>
+          <button
+            v-if="group.items.length > (shownIssues[group.kind] ?? 25)"
+            type="button"
+            class="mx-3 mb-3 text-[13px] text-accent hover:underline"
+            @click="shownIssues[group.kind] = group.items.length"
+          >
+            {{ t('channels.check.showAll', { n: group.items.length }) }}
+          </button>
+        </details>
       </template>
     </section>
 
@@ -282,6 +300,23 @@
         </label>
       </fieldset>
       <p v-if="chooseMessage" class="mt-2 text-[13px]" :class="chooseFailed ? 'text-warn' : 'text-ok'" role="status">{{ chooseMessage }}</p>
+
+      <!-- One channel's logo, chosen by hand. -->
+      <section class="mt-6 border-t border-line-soft pt-4">
+        <h2 class="text-[15.5px] font-semibold">{{ t('channels.logo.perChannel') }}</h2>
+        <p class="mt-1 text-[13px] text-muted">{{ t('channels.logo.perChannelHint') }}</p>
+        <input v-model="logoQuery" type="search" :placeholder="t('channels.logo.searchChannel')" class="mt-3 w-full rounded border border-line bg-field px-3 py-2 text-[15px] text-text" />
+        <ul class="mt-2 flex flex-col">
+          <li v-for="c in logoMatches" :key="c.ref" class="border-b border-line-soft last:border-none">
+            <div class="flex min-h-[48px] items-center gap-3 py-2">
+              <span class="flex w-12 shrink-0 justify-center"><ChannelLogo source="channels" :service-reference="c.ref" :service-name="c.name" :height="22" /></span>
+              <span class="min-w-0 flex-1 truncate text-[14.5px] text-text">{{ c.name }}</span>
+              <button type="button" class="shrink-0 text-[12.5px] text-accent hover:underline" @click="toggleLogo(c.ref, c)">{{ t('channels.logo.choose') }}</button>
+            </div>
+            <ChannelLogoPicker v-if="logoFor?.at === c.ref" class="mb-2" :channel="logoFor" @close="logoFor = null" />
+          </li>
+        </ul>
+      </section>
     </section>
   </div>
 </template>
@@ -296,6 +331,7 @@ import ErrorText from '@/components/ErrorText.vue'
 import ChannelLogo from '@/components/guide/ChannelLogo.vue'
 import PlanPreview from '@/components/PlanPreview.vue'
 import BouquetDraftEditor from '@/components/channels/BouquetDraftEditor.vue'
+import ChannelLogoPicker from '@/components/channels/ChannelLogoPicker.vue'
 import { useChannelChange } from '@/components/channels/useChannelChange'
 import { api } from '@/api/client'
 import { useFriendlyError } from '@/composables/useFriendlyError'
@@ -631,8 +667,22 @@ async function choose(name: string) {
 }
 
 // Each tab loads when first shown.
+// --- a logo chosen by hand for one channel ------------------------------------
+const shownIssues = ref<Record<string, number>>({})
+const logoFor = ref<{ at: string; ref: string; name: string } | null>(null)
+const logoQuery = ref('')
+function toggleLogo(at: string, c: { ref: string; name: string }) {
+  logoFor.value = logoFor.value?.at === at ? null : { at, ref: c.ref, name: c.name }
+}
+// Channels matching what was typed; nothing until something is.
+const logoMatches = computed(() => {
+  const q = logoQuery.value.trim().toLocaleLowerCase(locale.value)
+  if (!q) return []
+  return all.value.filter((c) => !c.gone && c.name.toLocaleLowerCase(locale.value).includes(q)).slice(0, 12)
+})
+
 function loadTab(t: Tab) {
-  if (t === 'find' && !allLoaded.value) void loadAll()
+  if ((t === 'find' || t === 'picons') && !allLoaded.value) void loadAll()
   if (t === 'picons' && !piconsLoaded.value) void loadPicons()
   if (t === 'check' && !checkLoaded.value) void loadCheck()
 }

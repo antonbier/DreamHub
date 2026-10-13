@@ -1840,13 +1840,14 @@
       "anyProvider": "All",
       "matches": "{n} channel | {n} channels",
       "newSince": "\"New\" = added since {date}",
-      "reload": "Read the channel list again",
+      "reload": "Refresh the list from the box",
       "new": "New",
       "gone": "no longer on the box",
       "noProvider": "no provider",
       "inBouquets": "in {names}",
       "inNone": "in no bouquet",
-      "more": "… and {n} more — narrow the search or filters"
+      "more": "… and {n} more — narrow the search or filters",
+      "reloadHint": "Reads the channel list as it is on the box now. It does not search for new channels — run a channel scan on the box for that."
     },
     "check": {
       "allGood": "All fine: no duplicate or vanished channels, all with programme data and a logo.",
@@ -1865,7 +1866,8 @@
       "noPicon": {
         "title": "Without a logo",
         "explain": "DreamHub finds no picture for these channels in any logo set."
-      }
+      },
+      "showAll": "Show all {n}"
     },
     "picons": {
       "explain": "The logo sets installed on the box, and how many channels of your bouquets each covers. DreamHub shows logos from the chosen set first — nothing changes on the TV.",
@@ -1943,6 +1945,25 @@
       "channels": {
         "restore": "The channel list comes back from the backup"
       }
+    },
+    "logo": {
+      "choose": "Choose logo",
+      "close": "Close",
+      "reset": "Back to automatic",
+      "fromSets": "From your installed logo sets",
+      "noSets": "None of your installed sets has a logo for this channel.",
+      "upload": "Use your own picture",
+      "chooseFile": "Choose a picture …",
+      "uploadHint": "PNG, JPEG or GIF — it is shrunk to fit.",
+      "online": "Find one online",
+      "search": "Search",
+      "noResults": "Nothing found under this name — try another spelling, or upload a picture.",
+      "unreachable": "The logo collection didn't answer. Try again later.",
+      "source": "From the public TV-logos collection on GitHub.",
+      "saved": "Saved. DreamHub shows this logo now; the TV is unchanged.",
+      "perChannel": "Logo for a single channel",
+      "perChannelHint": "Pick the logo of one channel by hand — from any installed set, your own picture, or one found online. Only DreamHub's screens change; the TV keeps what the box has.",
+      "searchChannel": "Type a channel name …"
     }
   }
 }

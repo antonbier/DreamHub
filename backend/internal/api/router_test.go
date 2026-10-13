@@ -21,6 +21,7 @@ import (
 	configfsmock "github.com/antonbier/DreamHub/backend/internal/configfs/mock"
 	dockermock "github.com/antonbier/DreamHub/backend/internal/dockerd/mock"
 	dockerhubmock "github.com/antonbier/DreamHub/backend/internal/dockerhub/mock"
+	logosearchmock "github.com/antonbier/DreamHub/backend/internal/logosearch/mock"
 	fanartmock "github.com/antonbier/DreamHub/backend/internal/fanart/mock"
 	meminfomock "github.com/antonbier/DreamHub/backend/internal/meminfo/mock"
 	omdbmock "github.com/antonbier/DreamHub/backend/internal/omdb/mock"
@@ -136,6 +137,7 @@ func newEnvFull(t *testing.T, wc webcontrol.Client, at autotimer.Client, recFS r
 		Scripts:         runner,
 		Apt:             aptmock.New(),
 		DockerHub:       dockerhubmock.Client{},
+		LogoSearch:      logosearchmock.Source{},
 		Docker:          dockermock.New(),
 		DockerSetup:     dockersetupmock.New(),
 		Mem:             meminfomock.New(),

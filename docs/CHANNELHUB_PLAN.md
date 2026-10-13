@@ -41,11 +41,13 @@ Adding from there puts the channel into a bouquet at the end or at a chosen posi
 
 ### Channel check
 
-A read-only list of what deserves a look: channels in a bouquet without EPG right now, the same channel twice in one bouquet, channels without a picon in the chosen set, entries that no longer exist after a scan (a reference the box doesn't know anymore). Each line links to the fix in the editor.
+A read-only list (groups fold, the first is open, long lists show 25 lines until asked) of what deserves a look: channels in a bouquet without EPG right now, the same channel twice in one bouquet, channels without a picon in the chosen set, entries that no longer exist after a scan (a reference the box doesn't know anymore). Each line links to the fix in the editor.
 
 ### Picons
 
 The box keeps picon **sets** as subfolders of `/data/piconpool`, installed as packages from the Gemini feed (`ARCHITECTURE.md`, "Picons"). ChannelHub shows the installed sets with their coverage of your bouquets ("34 of 40 channels") and lets an admin choose which set DreamHub itself uses for logos everywhere (guide, live TV, radio, remote) — until now DreamHub just took the first match. It doesn't change which set the TV's skin uses (nothing in the box's settings names it).
+
+**A logo per channel (built 2026-10-13, #51, mock only).** Choosing a whole set isn't enough when one channel (an ORF or RAI one, say) is missing from it. ChannelHub → Logos has a "Logo for a single channel" search, and the check's "Without a logo" rows have a *Choose logo* button; both open `ChannelLogoPicker`: the picture any installed set has for the channel, an uploaded picture (PNG/JPEG/GIF, shrunk to fit 400×240 and stored as PNG), or one from the public tv-logo/tv-logos collection on GitHub (`internal/logosearch`: the file list read once a day, the name matched ignoring spaces, accents, "HD" and country suffixes; DreamHub's own backend fetches, the browser never talks to GitHub). The choice is DreamHub's own — a PNG per channel in `<data dir>/logos/`, looked at before every picon set in every hub (`readPicon`) — so the TV is untouched, and "Back to automatic" deletes the file. The collection has no ORF 1 ("ORF eins"): for a channel it lacks, the person uploads a picture; AI-picked candidates are not built (nothing to rank when the collection has no file).
 
 **Later, after a read-only look at the feed on the box:** list the picon packages the feed offers and install or remove one through plan → apply (`apt-get`). The package names and how they install aren't confirmed yet.
 

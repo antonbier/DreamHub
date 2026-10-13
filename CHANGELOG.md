@@ -17,6 +17,8 @@ Format follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/); version
 - AppsHub install: choose the web port (for apps whose image can move it) and the disk to store the app on — the box's own flash is never offered; the choice is remembered on the container, so removing, backing up and restoring look in the right place.
 - TimerHub: "Clean up finished" removes every finished one-off timer in one preview. PlexHub: "Open in Plex" on an item. MediaHub: the remote-control hint (Next/Previous jump past marked ad breaks) after marking in the cut list.
 
+- ChannelHub: choose the logo of a single channel — from any installed logo set, your own picture, or the public TV-logos collection — from Logos or straight from the check's "Without a logo" list. DreamHub shows it everywhere; the TV is unchanged, and "Back to automatic" undoes it. The check's groups fold, and "Read the list again" now says what it does (reads the box's current list, no channel scan).
+
 ### Changed
 - AppsHub is now three tabs with one sentence each — Apps (Docker containers), Extensions (DreamHub add-ons), System (the box's own packages and feeds, moved here from Device → Administration). Installed apps show Open and Start/Stop, the rest (logs, console, remove) in a menu; free Docker Hub search is folded away. Device → Advanced holds scripts and the terminal.
 - Rename by scheme completes missing years and episode titles from TMDB by itself when a TMDB key is set — the hidden "+ TMDB" switch is gone (the year was never added unless it was switched on). Saving covers now says it makes them visible on the TV too.

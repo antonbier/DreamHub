@@ -225,8 +225,8 @@ var Apps = []App{
 		Image:       "linuxserver/qbittorrent",
 		Arches:      archesLinuxserver,
 		// 8080 is DreamHub's; WEBUI_PORT is the image's own setting.
-		ContainerPort: 8090, ConfigPath: "/config", DataPath: "/downloads",
-		Env:      map[string]string{"WEBUI_PORT": "8090"},
+		ContainerPort: 8095, ConfigPath: "/config", DataPath: "/downloads",
+		Env:      map[string]string{"WEBUI_PORT": "8095"},
 		Ports:    []Port{{Port: 6881}, {Port: 6881, UDP: true}},
 		MemoryMB: 256,
 	},

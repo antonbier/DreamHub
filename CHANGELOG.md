@@ -13,7 +13,7 @@ Format follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/); version
 - Settings → System → Backup: the app folders are listed one by one with their size and a checkbox — a database is in by default, bulk files (Nextcloud's, downloads) are not.
 
 ### Changed
-- AppsHub's app list reworked: AdGuard Home, Pi-hole, Nextcloud, Vaultwarden, Syncthing, Home Assistant and qBittorrent, each with a short note for this box and its memory limit. Sonarr, Radarr, Prowlarr, Bazarr, Heimdall and WireGuard were removed (Heimdall always needs port 80, WireGuard extra kernel rights DreamHub doesn't give a container). Pi-hole, Vaultwarden and qBittorrent now use ports the box doesn't (8082, 8222, 8090), and every port an app needs — DNS 53 included — is checked before installing.
+- AppsHub's app list reworked: AdGuard Home, Pi-hole, Nextcloud, Vaultwarden, Syncthing, Home Assistant and qBittorrent, each with a short note for this box and its memory limit. Sonarr, Radarr, Prowlarr, Bazarr, Heimdall and WireGuard were removed (Heimdall always needs port 80, WireGuard extra kernel rights DreamHub doesn't give a container). Pi-hole, Vaultwarden and qBittorrent now use ports the box doesn't (8082, 8222, 8095), and every port an app needs — DNS 53 included — is checked before installing.
 
 ### Fixed
 - Restoring a backup could write an app folder outside AppsHub's storage directory if the file named one like `../x`; such names are now ignored.

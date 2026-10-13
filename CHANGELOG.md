@@ -6,9 +6,11 @@ Format follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/); version
 
 ## [Unreleased]
 
+## [0.6.0] - 2026-10-13
+
 ### Added
 - eWeLink/Sonoff extension (`extensions/ewelink`, its own package `dreamhub-ext-ewelink`): Sonoff devices with LAN control on, shown and switched in AppsHub → Extensions without the eWeLink cloud, switching through the usual preview. Needs each device's key from the eWeLink account; the reference extension for anyone building one.
-- Device → Administration → Packages: packages a DreamHub hub uses (ffmpeg for AdScan and trimming, the overlay kernel module for Docker apps) are marked "Needed by …"; a "Needed by DreamHub" filter lists them, including any that are missing, with an install button; and removing one warns which hub stops working.
+- AppsHub → System → Packages (was Device → Administration): packages a DreamHub hub uses (ffmpeg for AdScan and trimming, the overlay kernel module for Docker apps) are marked "Needed by …"; a "Needed by DreamHub" filter lists them, including any that are missing, with an install button; and removing one warns which hub stops working.
 - AppsHub: apps made of several containers, installed, started, stopped and removed as one — the first is Nextcloud with its own MariaDB, which only listens on the box itself; passwords between them are generated at install and kept for a reinstall. A helper container shows under its app with its own logs.
 - Settings → System → Backup: the app folders are listed one by one with their size and a checkbox — a database is in by default, bulk files (Nextcloud's, downloads) are not.
 

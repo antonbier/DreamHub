@@ -2,7 +2,7 @@
 
 What's built and what's open, by release and hub ([`CONCEPT.md`](CONCEPT.md)). This is the authoritative status; every open item links its GitHub issue. How each part was built, what was tried and why, is in the archived [build log](docs/archive/BUILD_LOG.md) (up to 2026-10-09), in [`CHANGELOG.md`](CHANGELOG.md) and in the commits. Device facts live in [`ARCHITECTURE.md`](ARCHITECTURE.md).
 
-Releases: **Foundation** → **v1** → **v1.1** → **Later**; GitHub milestones mirror them. Released: **0.4.0** (2026-10-12) — DeviceHub's merge with AdminHub (scripts, terminal, package browser), Extension Hub (E1–E3), AppsHub (Docker apps), AdScan's `.ts.cuts` marking, a Plex stall-timeout fix, an About card; box checks of that release in `ARCHITECTURE.md`, "Box checks for 0.4.0".
+Releases: **Foundation** → **v1** → **v1.1** → **Later**; GitHub milestones mirror them. Released: **0.6.0** (2026-10-13) — AppsHub in three tabs (apps, extensions, system packages and feeds), install with port and storage choice, extension settings, a logo per channel, timer clean-up, browser notifications (see CHANGELOG; the Docker app install path with Nextcloud, feeds and logos are mock-tested only — box checks pending). Earlier, **0.4.0** (2026-10-12) — DeviceHub's merge with AdminHub (scripts, terminal, package browser), Extension Hub (E1–E3), AppsHub (Docker apps), AdScan's `.ts.cuts` marking, a Plex stall-timeout fix, an About card; box checks of that release in `ARCHITECTURE.md`, "Box checks for 0.4.0".
 
 "Mock" below means built and tested against the mock box only; "box" means confirmed on the reference Dreambox One.
 

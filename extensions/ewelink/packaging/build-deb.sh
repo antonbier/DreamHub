@@ -9,7 +9,7 @@ EXT=$(cd "$HERE/.." && pwd)
 ROOT=$(cd "$EXT/../.." && pwd)
 TPL="$ROOT/packaging/extension-template"
 ARCH=${ARCH:-arm64}
-VERSION=${VERSION:-0.1.0}
+VERSION=${VERSION:-0.2.0}
 ID=dreamhub-ext-ewelink
 case "$ARCH" in
     arm64) GOARCH=arm64; GOARM= ;;
@@ -26,7 +26,7 @@ mkdir -p "$PKG/DEBIAN" "$PKG/usr/bin" "$PKG/lib/systemd/system" "$PKG/usr/share/
 
 subst() {
     sed -e "s#@EXT_ID@#$ID#g" -e "s#@EXT_USER@#$ID#g" -e "s#@VERSION@#$VERSION#g" -e "s#@ARCH@#$ARCH#g" \
-        -e "s#@MIN_DREAMHUB_VERSION@#0.5.0#g" -e "s#@EXT_MAINTAINER@#DreamHub <noreply@github.com>#g" \
+        -e "s#@MIN_DREAMHUB_VERSION@#0.6.0#g" -e "s#@EXT_MAINTAINER@#DreamHub <noreply@github.com>#g" \
         -e "s#@EXT_HOMEPAGE@#https://github.com/antonbier/DreamHub/tree/main/extensions/ewelink#g" \
         -e "s#@EXT_DESCRIPTION@#DreamHub extension: eWeLink/Sonoff devices on the local network#g" \
         -e "s#@EXT_DESCRIPTION_LONG@#Reads and switches eWeLink/Sonoff devices with LAN control on, without the eWeLink cloud at run time.#g" \

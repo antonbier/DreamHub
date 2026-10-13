@@ -147,7 +147,7 @@ var Apps = []App{
 	{
 		ID: "adguardhome", Name: "AdGuard Home", Category: CategoryNetwork,
 		Description:   "Network-wide ad and tracker blocking via DNS, with its own DNS-over-HTTPS/TLS.",
-		Note:          "In its setup wizard, pick a web port other than 80 — that one is the box's own web interface.",
+		Note:          "In its setup wizard, pick a web port other than 80 — that one is the box's own web interface. The box's own DNS resolver already holds port 53, so this can only be installed once that is switched off.",
 		Image:         "adguard/adguardhome",
 		Arches:        []dockerhub.Arch{{Architecture: "386"}, {Architecture: "amd64"}, {Architecture: "arm", Variant: "v6"}, {Architecture: "arm", Variant: "v7"}, {Architecture: "arm64"}, {Architecture: "ppc64le"}},
 		ContainerPort: 3000, ConfigPath: "/opt/adguardhome/conf",
@@ -157,7 +157,7 @@ var Apps = []App{
 	{
 		ID: "pihole", Name: "Pi-hole", Category: CategoryNetwork,
 		Description: "Network-wide ad and tracker blocking via DNS.",
-		Note:        "Its admin password is generated on first start and printed in the app's logs.",
+		Note:        "Its admin password is generated on first start and printed in the app's logs. The box's own DNS resolver already holds port 53, so this can only be installed once that is switched off.",
 		Image:       "pihole/pihole",
 		Arches:      []dockerhub.Arch{{Architecture: "amd64"}, {Architecture: "arm64"}, {Architecture: "arm", Variant: "v7"}, {Architecture: "arm", Variant: "v6"}, {Architecture: "386"}, {Architecture: "riscv64"}},
 		// Its web server defaults to 80 and 443; FTLCONF_webserver_port

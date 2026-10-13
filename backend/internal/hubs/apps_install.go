@@ -59,6 +59,11 @@ const diskFullPercent = 90.0
 var knownPorts = map[int]string{
 	80: "WebControl", 8080: "DreamHub", 4200: "Terminal (shellinaboxd)",
 	139: "Samba", 445: "Samba",
+	// connman's DNS proxy answers on 127.0.0.1:53 and ::1 (the box's
+	// resolv.conf points at it), which blocks an app that wants port 53
+	// on every address — AdGuard Home and Pi-hole. Seen on the reference
+	// box 2026-10-13.
+	53: "the box's own DNS resolver (connman)",
 }
 
 // portFree reports whether p is free to bind on this host right now — a
@@ -562,8 +567,8 @@ func (h *Apps) checkPorts(app appcatalog.App, explicit int) string {
 		if p.UDP {
 			proto = "UDP"
 		}
-		if name, known := knownPorts[p.Port]; known && !p.UDP {
-			return fmt.Sprintf("port %d is already used by %s", p.Port, name)
+		if name, known := knownPorts[p.Port]; known {
+			return fmt.Sprintf("port %d (%s) is already used by %s", p.Port, proto, name)
 		}
 		return fmt.Sprintf("port %d (%s) is already in use", p.Port, proto)
 	}

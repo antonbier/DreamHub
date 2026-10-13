@@ -64,7 +64,8 @@
     "package": {
       "alsoRemoves": "Entfernt zusätzlich {count} Paket(e), die du nicht ausgewählt hast: {names}.",
       "touchesEnigma2": "Ändert ein TV-Plugin, einen Skin oder enigma2 selbst — wirksam nach einem Neustart von enigma2; manche Pakete starten es selbst neu (das TV-Bild ist dann etwa eine halbe Minute weg).",
-      "recordingRunning": "Die Box nimmt gerade auf ({names}); Ausführen geht erst, wenn das vorbei ist."
+      "recordingRunning": "Die Box nimmt gerade auf ({names}); Ausführen geht erst, wenn das vorbei ist.",
+      "neededByHub": "Entfernt {names}, das {hubs} braucht — dieser Teil von DreamHub funktioniert dann nicht mehr."
     }
   },
   "fix": {
@@ -1289,7 +1290,10 @@
       "install": "Installieren",
       "upgrade": "Aktualisieren",
       "remove": "Entfernen",
-      "truncated": "Nur die ersten Pakete werden angezeigt — mit der Suche eingrenzen."
+      "truncated": "Nur die ersten Pakete werden angezeigt — mit der Suche eingrenzen.",
+      "needed": "Von DreamHub benötigt",
+      "neededBy": "Benötigt von {hubs}",
+      "missing": "Nicht installiert"
     },
     "scripts": {
       "title": "Scripts",

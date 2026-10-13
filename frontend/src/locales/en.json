@@ -64,7 +64,8 @@
     "package": {
       "alsoRemoves": "Also removes {count} package(s) you didn't pick: {names}.",
       "touchesEnigma2": "Changes a TV plugin, skin or enigma2 itself — it takes effect after enigma2 restarts, and some packages restart it themselves (the TV picture is gone for about half a minute).",
-      "recordingRunning": "The box is recording right now ({names}); applying waits until that's done."
+      "recordingRunning": "The box is recording right now ({names}); applying waits until that's done.",
+      "neededByHub": "Removes {names}, which {hubs} needs — that part of DreamHub stops working."
     }
   },
   "fix": {
@@ -1289,7 +1290,10 @@
       "install": "Install",
       "upgrade": "Update",
       "remove": "Remove",
-      "truncated": "Only the first packages are shown — search to narrow it down."
+      "truncated": "Only the first packages are shown — search to narrow it down.",
+      "needed": "Needed by DreamHub",
+      "neededBy": "Needed by {hubs}",
+      "missing": "Not installed"
     },
     "scripts": {
       "title": "Scripts",

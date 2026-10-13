@@ -61,7 +61,7 @@ Done: `.deb` for arm64 (box) and armhf (built, not tried on a DM900/DM920) with 
 - [x] **DeviceHub terminal** — `shellinaboxd` behind DreamHub's auth, off by default, re-auth required (A4, built 2026-10-11); box: the proxy reaches the real `shellinaboxd` and its login prompt (2026-10-12, #36)
 - [x] **DeviceHub**: package browser, feeds with a trust signal, update notifications, AI explain (A2 box-independent slices, built 2026-10-12, `docs/ADMINHUB_PLAN.md`); box: `dpkg-query`/`apt-get` output and the `X-DreamHub-Category` field confirmed 2026-10-12
 - [x] **DeviceHub**: package install/upgrade/remove as a plan — `apt-get -s` is the preview (every package touched, extra removals and enigma2 changes flagged), refused while recording when enigma2 is touched, DreamHub's own package refused, previous versions in the change log — and a "not installed" catalog (A2, built and confirmed on the box 2026-10-12: htop installed and removed, the skin cascade shown) (#47)
-- [ ] **DeviceHub**: "needed by a hub" filter, targeted self-test re-check after a package change (A2 leftovers, need a package-name field on `hub.Requirement`) (#47)
+- [ ] **DeviceHub**: targeted self-test re-check after a package change (A2 leftover); add BouquetEditor/SerienRecorder/WebInterface/shellinabox to the "needed by a hub" list once their package names are read off the box (#47)
 - [ ] Jellyfin / Emby connectors (#37)
 - [ ] More AI providers (#38)
 - [ ] Profiles: a kids role with allowed bouquets (prepared: `users.bouquets`) and a Plex age limit (#45)

@@ -9,6 +9,7 @@ import (
 	"github.com/antonbier/DreamHub/backend/internal/apt"
 	"github.com/antonbier/DreamHub/backend/internal/connector"
 	"github.com/antonbier/DreamHub/backend/internal/httpx"
+	"github.com/antonbier/DreamHub/backend/internal/hub"
 )
 
 // AdminHub's package browser (docs/ADMINHUB_PLAN.md, A2, #47): the box's
@@ -19,12 +20,25 @@ import (
 // maxPackageRows caps one answer of the package list.
 const maxPackageRows = 400
 
+// packageNeeds: which hubs need which OS package (hub.Descriptor.Packages).
+var packageNeeds = hub.PackageNeeds(hub.V1())
+
+// packageRow is one package in the list, plus the hubs that need it.
+type packageRow struct {
+	apt.Package
+	NeededBy []string `json:"neededBy,omitempty"`
+	// Missing: a package a hub needs that isn't installed (only in the
+	// "needed" view, which shows those too, with an install button).
+	Missing bool `json:"missing,omitempty"`
+}
+
 // listPackages answers GET /api/v1/admin/packages, filtered by:
 //   - q: a case-insensitive substring of the name or description
 //   - category: an exact match against Package.Category
 //   - status: "upgradable" (only those with an update pending),
 //     "available" (the feeds' packages that aren't installed) or
-//     "installed" (everything dpkg knows about, the default)
+//     "installed" (everything dpkg knows about, the default) or "needed"
+//     (the packages a DreamHub hub uses, installed or not)
 func (h *Admin) listPackages(w http.ResponseWriter, r *http.Request) {
 	if h.Apt == nil {
 		httpx.WriteError(w, r, http.StatusServiceUnavailable, "apt_unavailable", "dpkg/apt aren't available on this system")
@@ -55,7 +69,11 @@ func (h *Admin) listPackages(w http.ResponseWriter, r *http.Request) {
 	q := strings.ToLower(strings.TrimSpace(r.URL.Query().Get("q")))
 	category := r.URL.Query().Get("category")
 
-	out := make([]apt.Package, 0, len(pkgs))
+	if status == "needed" {
+		pkgs = h.withMissingNeeds(r, pkgs)
+	}
+
+	out := make([]packageRow, 0, len(pkgs))
 	categories := map[string]bool{}
 	for _, p := range pkgs {
 		if p.Category != "" { // some feed packages carry no Section at all
@@ -70,7 +88,11 @@ func (h *Admin) listPackages(w http.ResponseWriter, r *http.Request) {
 		if status == "upgradable" && !p.Upgradable {
 			continue
 		}
-		out = append(out, p)
+		needed := packageNeeds[p.Name]
+		if status == "needed" && len(needed) == 0 {
+			continue
+		}
+		out = append(out, packageRow{Package: p, NeededBy: needed, Missing: status == "needed" && p.Version == ""})
 	}
 
 	// The catalog runs to thousands of packages on a real box; without a
@@ -87,6 +109,44 @@ func (h *Admin) listPackages(w http.ResponseWriter, r *http.Request) {
 	sort.Strings(cats)
 
 	httpx.WriteJSON(w, http.StatusOK, map[string]any{"packages": out, "categories": cats, "truncated": truncated})
+}
+
+// withMissingNeeds adds a row (version empty) for every package a hub
+// needs that isn't in installed — taken from the feeds' catalog when it's
+// there, so its description shows, otherwise just the name.
+func (h *Admin) withMissingNeeds(r *http.Request, installed []apt.Package) []apt.Package {
+	have := map[string]bool{}
+	for _, p := range installed {
+		have[p.Name] = true
+	}
+	var missing []string
+	for name := range packageNeeds {
+		if !have[name] {
+			missing = append(missing, name)
+		}
+	}
+	if len(missing) == 0 {
+		return installed
+	}
+	sort.Strings(missing)
+	feed := map[string]apt.Package{}
+	if h.Packages != nil {
+		if avail, err := h.Packages.Available(r.Context()); err == nil {
+			for _, p := range avail {
+				feed[p.Name] = p
+			}
+		}
+	}
+	out := append([]apt.Package(nil), installed...)
+	for _, name := range missing {
+		p, ok := feed[name]
+		if !ok {
+			p = apt.Package{Name: name}
+		}
+		p.Version, p.Upgradable, p.AvailableVersion = "", false, ""
+		out = append(out, p)
+	}
+	return out
 }
 
 // listFeeds answers GET /api/v1/admin/feeds: the box's configured apt

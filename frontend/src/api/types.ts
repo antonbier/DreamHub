@@ -702,6 +702,10 @@ export interface AdminPackage {
   availableVersion?: string
   upgradable: boolean
   description: string
+  // The DreamHub hubs that use this package (hub.Descriptor.Packages).
+  neededBy?: string[]
+  // A package a hub needs that isn't installed ("needed" view only).
+  missing?: boolean
 }
 
 // apt.Step — one package a package plan installs, upgrades or removes.

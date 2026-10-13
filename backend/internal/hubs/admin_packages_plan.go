@@ -33,6 +33,10 @@ const (
 	// CodePackageRecording: the box is recording right now (params:
 	// names); applying waits until it's done.
 	CodePackageRecording = "package.recordingRunning"
+	// CodePackageNeededByHub: a package a DreamHub hub uses would be
+	// removed (params: names, hubs) — e.g. ffmpeg, which AdScan and
+	// trimming run.
+	CodePackageNeededByHub = "package.neededByHub"
 )
 
 // selfPackage is DreamHub's own package. Changing it through DreamHub
@@ -197,6 +201,23 @@ func packageWarnings(steps []apt.Step, asked []string) []status.Problem {
 	}
 	if len(extra) > 0 {
 		warnings = append(warnings, status.Problem{Code: CodePackageAlsoRemoves, Params: map[string]any{"names": strings.Join(extra, ", "), "count": len(extra)}})
+	}
+	var needed, hubs []string
+	for _, s := range steps {
+		if s.Kind != "remove" {
+			continue
+		}
+		if by := packageNeeds[s.Name]; len(by) > 0 {
+			needed = append(needed, s.Name)
+			for _, h := range by {
+				if !slices.Contains(hubs, h) {
+					hubs = append(hubs, h)
+				}
+			}
+		}
+	}
+	if len(needed) > 0 {
+		warnings = append(warnings, status.Problem{Code: CodePackageNeededByHub, Params: map[string]any{"names": strings.Join(needed, ", "), "hubs": strings.Join(hubs, ", "), "count": len(needed)}})
 	}
 	if touchesEnigma2(steps) {
 		warnings = append(warnings, status.Problem{Code: CodePackageTouchesEnigma2})

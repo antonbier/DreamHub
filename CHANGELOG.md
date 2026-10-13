@@ -8,6 +8,7 @@ Format follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/); version
 
 ### Added
 - eWeLink/Sonoff extension (`extensions/ewelink`, its own package `dreamhub-ext-ewelink`): Sonoff devices with LAN control on, shown and switched in AppsHub → Extensions without the eWeLink cloud, switching through the usual preview. Needs each device's key from the eWeLink account; the reference extension for anyone building one.
+- Device → Administration → Packages: packages a DreamHub hub uses (ffmpeg for AdScan and trimming, the overlay kernel module for Docker apps) are marked "Needed by …"; a "Needed by DreamHub" filter lists them, including any that are missing, with an install button; and removing one warns which hub stops working.
 
 ### Fixed
 - The extension packaging template created its user on every install and never removed it on purge (DreamOS has no `getent`), and pointed at a `nologin` shell DreamOS doesn't have.

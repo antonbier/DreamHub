@@ -64,7 +64,8 @@
     "package": {
       "alsoRemoves": "Rimuove anche {count} pacchetto/i che non hai scelto: {names}.",
       "touchesEnigma2": "Modifica un plugin TV, una skin o enigma2 stesso — ha effetto dopo il riavvio di enigma2; alcuni pacchetti lo riavviano da soli (l'immagine TV sparisce per circa mezzo minuto).",
-      "recordingRunning": "Il box sta registrando ({names}); si potrà applicare a registrazione finita."
+      "recordingRunning": "Il box sta registrando ({names}); si potrà applicare a registrazione finita.",
+      "neededByHub": "Rimuove {names}, che serve a {hubs} — quella parte di DreamHub smette di funzionare."
     }
   },
   "fix": {
@@ -1289,7 +1290,10 @@
       "install": "Installa",
       "upgrade": "Aggiorna",
       "remove": "Rimuovi",
-      "truncated": "Vengono mostrati solo i primi pacchetti — usa la ricerca per restringere."
+      "truncated": "Vengono mostrati solo i primi pacchetti — usa la ricerca per restringere.",
+      "needed": "Richiesti da DreamHub",
+      "neededBy": "Richiesto da {hubs}",
+      "missing": "Non installato"
     },
     "scripts": {
       "title": "Script",

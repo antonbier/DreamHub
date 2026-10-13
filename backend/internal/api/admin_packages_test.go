@@ -43,6 +43,43 @@ func TestAdminPackages_ListAndFilter(t *testing.T) {
 	}
 }
 
+// The "needed" view: what a hub uses, installed or not — the mock has
+// neither installed, both in the feed.
+func TestAdminPackages_Needed(t *testing.T) {
+	e := newEnv(t)
+	resp, b := e.do(t, "GET", "/api/v1/admin/packages?status=needed", "", nil)
+	var v struct {
+		Packages []struct {
+			Name     string   `json:"name"`
+			Version  string   `json:"version"`
+			NeededBy []string `json:"neededBy"`
+			Missing  bool     `json:"missing"`
+		} `json:"packages"`
+	}
+	json.Unmarshal(b, &v)
+	if resp.StatusCode != http.StatusOK || len(v.Packages) != 2 {
+		t.Fatalf("needed: %d %s", resp.StatusCode, b)
+	}
+	byName := map[string]int{}
+	for i, p := range v.Packages {
+		byName[p.Name] = i
+	}
+	ff, ov := v.Packages[byName["ffmpeg"]], v.Packages[byName["kernel-module-overlay"]]
+	if !ff.Missing || ff.Version != "" || len(ff.NeededBy) != 1 || ff.NeededBy[0] != "MediaHub" {
+		t.Errorf("ffmpeg: %+v", ff)
+	}
+	if !ov.Missing || len(ov.NeededBy) != 1 || ov.NeededBy[0] != "AppsHub" {
+		t.Errorf("overlay: %+v", ov)
+	}
+
+	// The other views mark it too.
+	_, b = e.do(t, "GET", "/api/v1/admin/packages?status=available&q=ffmpeg", "", nil)
+	json.Unmarshal(b, &v)
+	if len(v.Packages) != 1 || len(v.Packages[0].NeededBy) != 1 {
+		t.Errorf("list: %s", b)
+	}
+}
+
 func TestAdminFeeds_List(t *testing.T) {
 	e := newEnv(t)
 	resp, b := e.do(t, "GET", "/api/v1/admin/feeds", "", nil)

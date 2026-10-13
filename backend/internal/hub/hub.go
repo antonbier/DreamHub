@@ -62,6 +62,24 @@ type Descriptor struct {
 	// "events it emits" (CONCEPT.md). Recording and conflict events are
 	// detected by the core's poller on TimerHub's behalf.
 	Emits []string
+	// Packages are the OS packages (dpkg names) this hub's features use
+	// — informational only, never part of the hub's status: DeviceHub's
+	// package list shows "needed by <hub>" next to them and warns before
+	// one is removed (docs/ADMINHUB_PLAN.md, A2). Only names confirmed on
+	// the reference box belong here, never a guessed one.
+	Packages []string
+}
+
+// PackageNeeds maps each package name in descs' Packages to the names of
+// the hubs that need it, in descs' order.
+func PackageNeeds(descs []Descriptor) map[string][]string {
+	needs := map[string][]string{}
+	for _, d := range descs {
+		for _, p := range d.Packages {
+			needs[p] = append(needs[p], d.Name)
+		}
+	}
+	return needs
 }
 
 // Capability is something on the device a hub may need (a binary, a

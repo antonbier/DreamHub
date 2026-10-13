@@ -32,6 +32,7 @@
         <option value="">{{ t('admin.packages.allStatus') }}</option>
         <option value="upgradable">{{ t('admin.packages.upgradable') }}</option>
         <option value="available">{{ t('admin.packages.notInstalled') }}</option>
+        <option value="needed">{{ t('admin.packages.needed') }}</option>
       </select>
     </div>
 
@@ -85,7 +86,8 @@
       <li v-for="p in packages" :key="p.name" class="border-b border-line-soft py-2 last:border-none">
         <div class="flex items-baseline gap-2">
           <span class="font-mono text-[13px] text-text">{{ p.name }}</span>
-          <span class="shrink-0 rounded bg-tile-2 px-1.5 py-0.5 text-[11px] text-faint">{{ p.category }}</span>
+          <span v-if="p.category" class="shrink-0 rounded bg-tile-2 px-1.5 py-0.5 text-[11px] text-faint">{{ p.category }}</span>
+          <span v-if="p.neededBy?.length" class="shrink-0 rounded border border-accent px-1.5 py-0.5 text-[11px] text-accent">{{ t('admin.packages.neededBy', { hubs: p.neededBy.join(', ') }) }}</span>
           <button
             type="button"
             class="ms-auto shrink-0 rounded px-2 py-0.5 text-[12px] text-accent hover:bg-tile-2"
@@ -96,7 +98,7 @@
           </button>
         </div>
         <div v-if="p.category !== 'self'" class="mt-1 flex gap-2">
-          <button v-if="catalog" type="button" class="rounded border border-line px-2 py-0.5 text-[12px] text-text hover:bg-field disabled:opacity-60" :disabled="!!pending" @click="preview('install', [p.name])">
+          <button v-if="catalog || p.missing" type="button" class="rounded border border-line px-2 py-0.5 text-[12px] text-text hover:bg-field disabled:opacity-60" :disabled="!!pending" @click="preview('install', [p.name])">
             {{ t('admin.packages.install') }}
           </button>
           <template v-else>
@@ -109,8 +111,8 @@
           </template>
         </div>
         <p class="truncate text-[12.5px] text-faint">{{ p.description }}</p>
-        <p class="text-[12.5px]" :class="p.upgradable ? 'text-warn' : 'text-muted'">
-          {{ p.upgradable ? t('admin.packages.upgradableFrom', { from: p.version, to: p.availableVersion }) : p.version }}
+        <p class="text-[12.5px]" :class="p.upgradable || p.missing ? 'text-warn' : 'text-muted'">
+          {{ p.missing ? t('admin.packages.missing') : p.upgradable ? t('admin.packages.upgradableFrom', { from: p.version, to: p.availableVersion }) : p.version }}
         </p>
         <p v-if="explained[p.name]" class="mt-1 rounded border border-line bg-bg p-2 text-[12.5px] text-text">{{ explained[p.name] }}</p>
       </li>

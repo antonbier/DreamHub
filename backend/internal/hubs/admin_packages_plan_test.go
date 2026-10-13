@@ -22,3 +22,14 @@ func TestPackageWarnings_Cascade(t *testing.T) {
 		t.Fatalf("a console tool needs no warning: %+v", w)
 	}
 }
+
+// Removing ffmpeg would take AdScan and trimming with it.
+func TestPackageWarnings_NeededByHub(t *testing.T) {
+	w := packageWarnings([]apt.Step{{Kind: "remove", Name: "ffmpeg"}}, []string{"ffmpeg"})
+	if len(w) != 1 || w[0].Code != CodePackageNeededByHub || w[0].Params["hubs"] != "MediaHub" {
+		t.Fatalf("got %+v", w)
+	}
+	if w := packageWarnings([]apt.Step{{Kind: "upgrade", Name: "ffmpeg"}}, []string{"ffmpeg"}); len(w) != 0 {
+		t.Fatalf("upgrading isn't removing: %+v", w)
+	}
+}

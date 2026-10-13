@@ -52,6 +52,7 @@ func New() *Lister {
 			{Name: "oscam-cycecplus", Version: "11742", Category: "console/network", Description: "Open Source Conditional Access Module", Upgradable: true, AvailableVersion: "11760"},
 		},
 		Avail: []apt.Package{
+			{Name: "ffmpeg", Version: "6.1.1-r0", Category: "multimedia", Description: "A complete solution to record, convert and stream audio and video"},
 			{Name: "htop", Version: "1.0.3-r0.0", Category: "console/utils", Description: "Interactive process viewer"},
 			{Name: "kernel-module-overlay", Version: "4.9-r0", Category: "kernel", Description: "overlay kernel module"},
 			{Name: "gp4-picon-astra19e", Version: "20260901", Category: "picon-skin", Description: "Picons for Astra 19.2E"},

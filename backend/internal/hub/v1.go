@@ -54,7 +54,10 @@ func V1() []Descriptor {
 	return []Descriptor{
 		{ID: IDMedia, Name: "MediaHub", Label: "hub.media", Icon: "recordings", Path: "/media", Group: GroupMedia, Order: 10,
 			Requires: []Requirement{wc, {Connector: connector.IDTMDB, Optional: true}},
-			Emits:    []string{events.DiskAboveLimit}},
+			Emits:    []string{events.DiskAboveLimit},
+			// AdScan and lossless trimming run the system ffmpeg (DreamHub's
+			// own package Depends on it).
+			Packages: []string{"ffmpeg"}},
 		{ID: IDSeries, Name: "SeriesHub", Label: "hub.series", Icon: "series", Path: "/series", Group: GroupMedia, Order: 20,
 			Requires: []Requirement{wc, {Connector: connector.IDSerienRecorder}},
 			Emits:    []string{events.MissingAiring}},
@@ -104,7 +107,10 @@ func V1() []Descriptor {
 		// instead, and installing/managing a Docker app needs `system`
 		// like any other AdminHub-style action (docs/APPSHUB_PLAN.md).
 		{ID: IDApps, Name: "AppsHub", Label: "hub.apps", Icon: "extension", Path: "/apps", Group: GroupBottom, Order: 20,
-			Emits: []string{events.AppUpgradable}},
+			Emits: []string{events.AppUpgradable},
+			// Docker apps need the overlay module matching the kernel build
+			// (docs/APPSHUB_PLAN.md, App7).
+			Packages: []string{"kernel-module-overlay"}},
 	}
 }
 

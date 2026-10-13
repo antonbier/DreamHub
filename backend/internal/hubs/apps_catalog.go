@@ -77,6 +77,9 @@ type Apps struct {
 	setupMu   sync.Mutex
 	// Now overrides the clock (tests); nil means time.Now.
 	Now func() time.Time
+	// PortFree overrides the install-time port check (tests); nil means a
+	// real bind attempt (portFree, apps_install.go).
+	PortFree func(appcatalog.Port) bool
 }
 
 func (h *Apps) now() time.Time {
@@ -135,7 +138,15 @@ type catalogEntry struct {
 	Category    string `json:"category"`
 	Description string `json:"description"`
 	Image       string `json:"image"`
-	Compatible  bool   `json:"compatible"`
+	// Note is the catalog's plain-English hint for this box ("" if none).
+	Note string `json:"note,omitempty"`
+	// Services names the helper containers installed along with it.
+	Services []string `json:"services,omitempty"`
+	// MemoryMB is the memory limit of all its containers together; Port
+	// its web port (0 for none).
+	MemoryMB   int  `json:"memoryMB"`
+	Port       int  `json:"port,omitempty"`
+	Compatible bool `json:"compatible"`
 	// Installed is set from a live List against the helper (App4), not
 	// stored anywhere — the same "always read live, never go stale"
 	// choice dockerd.Container.HostPort makes.
@@ -156,8 +167,12 @@ func (h *Apps) catalog(w http.ResponseWriter, r *http.Request) {
 	for _, a := range appcatalog.Apps {
 		out = append(out, catalogEntry{
 			ID: a.ID, Name: a.Name, Category: a.Category, Description: a.Description,
-			Image: a.Image, Compatible: a.SupportsArch(box), Installed: installed[a.ID],
+			Image: a.Image, Note: a.Note, MemoryMB: a.TotalMemoryMB(), Port: a.ContainerPort,
+			Compatible: a.SupportsArch(box), Installed: installed[a.ID],
 		})
+		for _, sv := range a.Services {
+			out[len(out)-1].Services = append(out[len(out)-1].Services, sv.Name)
+		}
 	}
 	httpx.WriteJSON(w, http.StatusOK, map[string]any{"apps": out})
 }

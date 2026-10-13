@@ -1075,8 +1075,9 @@
     "comingSoon": "Docker-Apps sind noch nicht verfügbar.",
     "category": {
       "network": "Netzwerk",
-      "media": "Medienverwaltung",
-      "files": "Dateien"
+      "cloud": "Cloud & Passwörter",
+      "home": "Hausautomation",
+      "downloads": "Downloads"
     },
     "compatible": "Läuft auf dieser Box",
     "notCompatible": "Nicht für den Prozessor dieser Box gebaut",
@@ -1146,7 +1147,14 @@
         "config": "Die Docker-Einstellungen schreiben: Daten in {dataRoot}, Apps im Netzwerk der Box.",
         "services": "Docker und DreamHubs Docker-Helfer starten, und bei jedem Hochfahren wieder."
       }
-    }
+    },
+    "service": {
+      "db": "Datenbank"
+    },
+    "withServices": "+ {services}",
+    "memory": "bis {mb} MB RAM",
+    "port": "Port {port}",
+    "serviceLogs": "Logs ({name})"
   },
   "timers": {
     "tuners": "{count} Tuner | {count} Tuner",
@@ -1419,7 +1427,7 @@
       "nothingToRestore": "Diese Datei entspricht dem aktuellen Stand; nichts wiederherzustellen.",
       "confirmRestore": "Wiederherstellen",
       "restorePreview": "0 Änderungen wiederherzustellen | {count} Änderung aus dieser Sicherung vom {date} wiederherstellen. | {count} Änderungen aus dieser Sicherung vom {date} wiederherstellen.",
-      "includeApps": "0 installierte Apps | Auch die Konfiguration von 1 installierten App einschließen ({size}) | Auch die Konfigurationen von {count} installierten Apps einschließen ({size})",
+      "includeApps": "0 App-Ordner | Auch 1 App-Ordner einschließen ({size}) | Auch {count} App-Ordner einschließen ({size})",
       "restoreIncludesApps": "Diese Datei enthält auch Konfigurationen installierter Apps.",
       "restored": "Aus der Sicherung wiederhergestellt.",
       "movedHint": "Backup und Wiederherstellen findest du jetzt in den Einstellungen.",

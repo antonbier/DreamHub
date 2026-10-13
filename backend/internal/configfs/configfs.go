@@ -38,6 +38,12 @@ type FS interface {
 	// overwriting files; nothing already in root but absent from archive
 	// is touched.
 	Restore(root string, archive []byte) error
+	// ReadFile reads one small file (an error wrapping fs.ErrNotExist if
+	// it isn't there); WriteFile writes one, readable by its owner only,
+	// creating its directory — for an app's generated passwords
+	// (StorageRoot/<id>.secrets.json, AppsHub).
+	ReadFile(path string) ([]byte, error)
+	WriteFile(path string, data []byte) error
 }
 
 // OS is the real file system.
@@ -150,4 +156,13 @@ func (OS) Restore(root string, archive []byte) error {
 			return err
 		}
 	}
+}
+
+func (OS) ReadFile(path string) ([]byte, error) { return os.ReadFile(path) }
+
+func (OS) WriteFile(path string, data []byte) error {
+	if err := os.MkdirAll(filepath.Dir(path), 0o755); err != nil {
+		return err
+	}
+	return os.WriteFile(path, data, 0o600)
 }

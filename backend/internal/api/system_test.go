@@ -207,3 +207,56 @@ func TestSystemRestore_AppsSectionWritesConfigBack(t *testing.T) {
 		t.Fatalf("got %v, want pihole.toml restored", e.appsConfigFS.Files)
 	}
 }
+
+// A multi-directory app: Nextcloud's own directory holds its code
+// (opt-in), its database's is in by default, its files never by default;
+// ?items.apps= picks exactly the listed ones. A restored item id that
+// would leave the storage root is ignored.
+func TestSystemBackup_AppItems(t *testing.T) {
+	e := newEnv(t)
+	code, p, b := e.planInstall(t, `{"appId":"nextcloud"}`)
+	if code != http.StatusOK {
+		t.Skip("nextcloud can't be planned on this machine:", string(b))
+	}
+	e.do(t, "POST", "/api/v1/plans/"+p.Plan.ID+"/apply", "", nil)
+	root := "/media/hdd/dreamhub-apps/"
+	e.appsConfigFS.Files[root+"nextcloud"] = map[string][]byte{"config.php": []byte("code")}
+	e.appsConfigFS.Files[root+"nextcloud.db"] = map[string][]byte{"ibdata1": []byte("rows")}
+	e.appsConfigFS.Files[root+"nextcloud.data"] = map[string][]byte{"photo.jpg": []byte("pixels")}
+
+	_, b = e.do(t, "GET", "/api/v1/system/backup/sections", "", nil)
+	var secs struct {
+		Sections []struct {
+			Items []struct {
+				ID              string `json:"id"`
+				DefaultIncluded bool   `json:"defaultIncluded"`
+			} `json:"items"`
+		} `json:"sections"`
+	}
+	json.Unmarshal(b, &secs)
+	got := map[string]bool{}
+	for _, it := range secs.Sections[0].Items {
+		got[it.ID] = it.DefaultIncluded
+	}
+	for id, def := range map[string]bool{"nextcloud": false, "nextcloud.db": true, "nextcloud.data": false} {
+		if v, ok := got[id]; !ok || v != def {
+			t.Fatalf("item %s: %v %v (%s)", id, v, ok, b)
+		}
+	}
+
+	_, b = e.do(t, "GET", "/api/v1/system/backup?sections=apps", "", nil)
+	var out struct {
+		Sections map[string]map[string]json.RawMessage `json:"sections"`
+	}
+	json.Unmarshal(b, &out)
+	if _, ok := out.Sections["apps"]["nextcloud.db"]; !ok || out.Sections["apps"]["nextcloud"] != nil || out.Sections["apps"]["nextcloud.data"] != nil {
+		t.Fatalf("default items: %v", out.Sections["apps"])
+	}
+
+	_, b = e.do(t, "GET", "/api/v1/system/backup?sections=apps&items.apps=nextcloud,nextcloud.data", "", nil)
+	out.Sections = nil
+	json.Unmarshal(b, &out)
+	if len(out.Sections["apps"]) != 2 || out.Sections["apps"]["nextcloud.data"] == nil {
+		t.Fatalf("picked items: %v", out.Sections["apps"])
+	}
+}

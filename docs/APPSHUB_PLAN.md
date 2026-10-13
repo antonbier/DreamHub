@@ -1,6 +1,6 @@
 # AppsHub — plan
 
-Status: **decided 2026-10-12 (brainstorm with the owner); App1 through App6 all built the same day — a complete, working vertical slice for curated apps (browse → install → manage → update → logs/console → backup → remove).** No issue opened yet — ask before creating one. Widens and renames Extension Hub (`docs/EXTENSIONHUB_PLAN.md`, #46, E1 already built 2026-10-12); this now shows in `ROADMAP.md` too. **App7 (Docker on the box, set up from the UI) built and confirmed on the reference box 2026-10-12** — see below. Still open: free-search install, multi-container/compose apps, a read-only viewer dashboard tile, the curated list's rework (the owner wants it changed; on hold), and a reboot check that Docker comes back by itself.
+Status: **decided 2026-10-12 (brainstorm with the owner); App1 through App6 all built the same day — a complete, working vertical slice for curated apps (browse → install → manage → update → logs/console → backup → remove).** No issue opened yet — ask before creating one. Widens and renames Extension Hub (`docs/EXTENSIONHUB_PLAN.md`, #46, E1 already built 2026-10-12); this now shows in `ROADMAP.md` too. **App7 (Docker on the box, set up from the UI) built and confirmed on the reference box 2026-10-12** — see below. **2026-10-13: the curated list reworked and multi-container apps built (App8, see below).** Still open: free-search install, a read-only viewer dashboard tile, a reboot check that Docker comes back by itself, and trying the new apps on the box.
 
 ## Why
 
@@ -64,7 +64,7 @@ Rather than an Apps-only special case, model this as a generic "backup sections"
 
 ### Compose/multi-container apps: later, not v1
 
-Single container per app covers the realistic first wave (Pi-hole, AdGuard-style tools). Multi-container (an app needing its own database alongside it) is real but adds real complexity — deferred, additive later, same versioning posture Extension Hub already uses for its own widget schema.
+Single container per app covers the realistic first wave (Pi-hole, AdGuard-style tools). Multi-container (an app needing its own database alongside it) is real but adds real complexity — deferred, additive later, same versioning posture Extension Hub already uses for its own widget schema. **Built 2026-10-13 as App8** (below) — as curated data, not as a compose file.
 
 ### Autostart and crash-loop protection
 
@@ -106,7 +106,8 @@ Like Extension Hub itself, AppsHub stays a power-user feature you find by naviga
 | App4 | Install/run as a plan | **built 2026-10-12** (pull + run through preview/confirm, a resource-budget check, a port bind check, `TZ` passthrough, start/stop, remove — curated apps only, see below) |
 | App5 | Updates, logs, console | **built 2026-10-12** (the notification-inbox update flow, the two-tier log viewer, the Terminal-equivalent per-container console — see below) |
 | App6 | Backup | **built 2026-10-12** (the general "backup sections" mechanism, config-only default for apps — see below) |
-| later | Compose, viewer dashboard tile | multi-container apps; a read-only "open app" tile for non-admin profiles |
+| App8 | Curated list rework, multi-container apps | **built 2026-10-13** against the mock (the owner's list; Nextcloud with its database as the first two-container app; per-folder backup — see below) |
+| later | Viewer dashboard tile, free-search install | a read-only "open app" tile for non-admin profiles; installing an image from free search |
 
 ### App1, built 2026-10-12
 
@@ -195,3 +196,28 @@ Decided with the owner after the 0.4.0 box checks found **no Docker on the refer
 - **From the UI, as a plan**: the Apps tab shows "Set up Docker …" while Docker isn't running; the preview lists exactly the missing steps (overlay module and where it comes from, the download, the config, the services), applying shows setup's own log. Refused with less than 1 GB free on `/data`.
 - **Confirmed on the box**: setup took 10.7 s (overlay already installed by the box check). Then through the normal App4 plan: Syncthing installed (9 s, image pulled), reachable on `:8384` from the LAN, 28 MiB RAM; logs, stop/start, the backup section and the per-container console over the real daemon (WebSocket → helper → `docker exec`) all worked; removed through its plan. Pi-hole refused (port 80). Idle Docker after cleanup: 211 MB on `/data`.
 
+
+### App8: the curated list reworked, multi-container apps (built 2026-10-13, mock only)
+
+The owner's wishes from the 0.5.0 evening (no *arr apps; Vaultwarden, Nextcloud, a reverse proxy, maybe Plex and Home Assistant), checked against what the box can actually run on the host network. Every fact below was read from the image's own documentation or Docker Hub's `tags/<tag>` API on 2026-10-13, not guessed.
+
+**The list** (`internal/appcatalog`): AdGuard Home, Pi-hole, Nextcloud, Vaultwarden, Syncthing, Home Assistant, qBittorrent, in four categories (network, cloud & passwords, home automation, downloads).
+
+- **Ports moved off the box's own** through each image's documented setting: Pi-hole `FTLCONF_webserver_port=8082` (it defaulted to 80/443 — the reason it was refused on the box in App7), Vaultwarden `ROCKET_PORT=8222` (default 80), qBittorrent `WEBUI_PORT=8090` (its default 8080 is DreamHub's — the old entry could never have started). A catalog test refuses any app port in the box's own set (80, 443, 8080, 8001, 4200, 139, 445).
+- **Every port is checked**, not only the web port: `appcatalog.Port` lists an app's others (DNS 53 TCP+UDP for AdGuard/Pi-hole, Syncthing's 22000/21027, qBittorrent's 6881), each tried with a real bind (UDP too) before installing. A `Local` port (a database's) is tried on 127.0.0.1, where the app binds it.
+- **Removed, and why**: Sonarr/Radarr/Prowlarr/Bazarr (owner); Heimdall (always binds 80 and 443, no setting to move it); WireGuard (needs `NET_ADMIN` and a kernel module — the helper never grants a container capabilities, so it could never have worked).
+- **Not added, and why**: a reverse proxy (it needs 80 and 443; 80 is WebControl's, and the owner's Unraid proxy already does the job); a Plex server (the owner's Plex runs on Unraid, and the box's CPU can't transcode in software).
+- **Per-app defaults**: `MemoryMB` (Home Assistant and Nextcloud 512, a database 256, small tools 128), `Tag` (Home Assistant follows `stable`, MariaDB `lts`), and a plain-English `Note` shown in the catalog (AdGuard: pick a web port other than 80 in its wizard; Pi-hole: the password is in the logs; Vaultwarden: the web vault needs HTTPS, so through a reverse proxy; Home Assistant: a ~620 MB download).
+
+**Multi-container apps** — curated data, not a compose file: an `App` has `Services` (helper containers with their own image, tag, arches, config path, env, cmd, ports and memory). The first one is Nextcloud: the official `library/nextcloud` image plus `library/mariadb:lts` as its `db`.
+
+- `dockerd.ContainerSpec` grew `Service` (container name `dreamhub-app-<id>-<service>`, label `dreamhub.service`, validated to lowercase letters/digits in the helper too), `Cmd` (replaces the image's CMD, catalog data only, runs inside the container under the same limits) and an optional second, fixed bind mount for bulk data (`DataHostDir`). Still no capabilities, no `--privileged`, no free-form mount: every host path is computed by AppsHub under its storage root.
+- All containers of an app share the box's network, so Nextcloud reaches its database on `127.0.0.1`; MariaDB runs with `--bind-address=127.0.0.1` (the image passes `-`-arguments to `mariadbd`), so the database is never on the LAN.
+- **Apache on 8088**: the official Nextcloud image listens on 80 and has no setting for it, so its `Cmd` rewrites the two lines (`Listen 80` in `ports.conf`, `<VirtualHost *:80>` in `000-default.conf`) and then `exec apache2-foreground`. Since that replaces the image's own CMD, `NEXTCLOUD_UPDATE=1` makes its entrypoint still run the install/upgrade step (it otherwise only does so for an `apache…`/`php-fpm` CMD). **Not yet tried against the real image** — the first thing to check on the box.
+- **Generated passwords**: an env value `{{secret:<name>}}` becomes a random password, made once at install and kept in `<storage>/<id>.secrets.json` (mode 0600, outside every container's mount) — the same name gives the same value to Nextcloud and MariaDB, and a remove + reinstall (an update) reuses it. Both images only read these at their first start; afterwards Nextcloud's `config.php` and MariaDB's own data hold them.
+- **Installed, managed and removed as one app**: one row in the Apps tab with its helpers listed under it (each with its own logs); install creates the helpers first and removes what it already created if a later one fails; start brings helpers up first, stop takes the app down first; remove deletes every container and keeps every directory; the memory check counts all containers together; the update check looks at every image.
+- **Storage**: `<root>/<id>` (the app's config), `<root>/<id>.<service>` (each helper's), `<root>/<id>.data` (bulk data: Nextcloud's files at `/var/www/html/data`, qBittorrent's `/downloads`).
+
+**Backup per folder** (App6's `BackupItem` fields finally earning their keep): one item per directory, with its own default — an app's config in, a helper's (a database) in, bulk data never, and Nextcloud's own directory out too (`LargeConfig`: the image copies its whole code there). `BackupPanel.vue` lists the folders with a checkbox and a size each; `GET /api/v1/system/backup?sections=apps&items.apps=a,b` picks exactly those. Restore now refuses an item id that isn't `<id>` or `<id>.<suffix>` — the ids come from an uploaded file, and before this an id like `../x` would have been written outside the storage root. A database directory copied while it runs may not be consistent; stop the app first for a clean copy.
+
+Confirmed against the mock in a headless browser (catalog with notes, Nextcloud preview and install, the installed row with its database, the per-folder backup list) and in Go tests (`TestAppsInstall_MultiContainer`, `TestSystemBackup_AppItems`, the catalog's own port/field rules, `TestExec_CreateService` against the fake daemon). **Nothing of App8 has run on the box yet**: Nextcloud's port rewrite, MariaDB on the box's kernel, Home Assistant's memory, and whether DNS port 53 is free there are the checks still to do.

@@ -11,11 +11,21 @@
 
     <!-- App6: opt-in sections beyond settings, each with its own real
          size shown before the admin includes it. -->
-    <div v-if="appsSection && appsSection.items?.length" class="mt-3 flex items-center gap-2">
-      <input id="backup-include-apps" v-model="includeApps" type="checkbox" class="rounded border-line" />
-      <label for="backup-include-apps" class="text-[13px] text-text">
-        {{ t('system.backup.includeApps', { count: appsSection.items.length, size: formatSize(appsTotalSize) }, appsSection.items.length) }}
-      </label>
+    <div v-if="appsSection && appsSection.items?.length" class="mt-3">
+      <div class="flex items-center gap-2">
+        <input id="backup-include-apps" v-model="includeApps" type="checkbox" class="rounded border-line" />
+        <label for="backup-include-apps" class="text-[13px] text-text">
+          {{ t('system.backup.includeApps', { count: pickedItems.length, size: formatSize(appsTotalSize) }, pickedItems.length) }}
+        </label>
+      </div>
+      <!-- Each app folder on its own: a database is in by default, an
+           app's bulk files (Nextcloud's, downloads) are not. -->
+      <ul v-if="includeApps" class="ms-6 mt-1.5 flex flex-col gap-1">
+        <li v-for="it in appsSection.items" :key="it.id" class="flex items-center gap-2">
+          <input :id="'backup-item-' + it.id" v-model="picked[it.id]" type="checkbox" class="rounded border-line" />
+          <label :for="'backup-item-' + it.id" class="text-[12.5px] text-muted">{{ it.name }} · {{ formatSize(it.sizeBytes) }}</label>
+        </li>
+      </ul>
     </div>
 
     <div class="mt-3 flex flex-wrap gap-2">
@@ -82,11 +92,15 @@ function formatSize(bytes: number): string {
 const sections = ref<BackupSectionsList['sections']>([])
 const includeApps = ref(true)
 const appsSection = computed(() => sections.value.find((s) => s.id === 'apps'))
-const appsTotalSize = computed(() => appsSection.value?.items?.reduce((sum, i) => sum + i.sizeBytes, 0) ?? 0)
+// Which app folders go in — starts from each one's own default.
+const picked = ref<Record<string, boolean>>({})
+const pickedItems = computed(() => appsSection.value?.items?.filter((i) => picked.value[i.id]) ?? [])
+const appsTotalSize = computed(() => pickedItems.value.reduce((sum, i) => sum + i.sizeBytes, 0))
 
 onMounted(async () => {
   try {
     sections.value = (await api.system.backupSections()).sections
+    picked.value = Object.fromEntries((appsSection.value?.items ?? []).map((i) => [i.id, i.defaultIncluded]))
   } catch {
     sections.value = []
   }
@@ -96,7 +110,8 @@ onMounted(async () => {
 // endpoint's own Content-Disposition header since fetch() already parsed
 // the body.
 async function download() {
-  const backup = await api.system.backup(appsSection.value && includeApps.value ? ['apps'] : undefined)
+  const withApps = !!appsSection.value && includeApps.value && pickedItems.value.length > 0
+  const backup = await api.system.backup(withApps ? ['apps'] : undefined, withApps ? { apps: pickedItems.value.map((i) => i.id) } : undefined)
   const blob = new Blob([JSON.stringify(backup, null, 2)], { type: 'application/json' })
   const url = URL.createObjectURL(blob)
   const a = document.createElement('a')

@@ -7,7 +7,9 @@
   PlanPreview.vue). Only a curated app can be installed in this first
   slice — a free-search result still only offers the compatibility check,
   since installing it needs a web port and config path App4 doesn't know
-  for an arbitrary image (docs/APPSHUB_PLAN.md).
+  for an arbitrary image (docs/APPSHUB_PLAN.md). A curated app may be
+  several containers (Nextcloud and its database): one row, its helpers
+  listed under it, each with its own logs.
 -->
 <template>
   <div>
@@ -30,6 +32,13 @@
                 <span class="h-1.5 w-1.5 rounded-full" :class="a.state === 'running' ? 'bg-ok' : 'bg-faint'" />
                 {{ a.state }}
                 <span v-if="a.upgradable" class="ml-1 rounded-full bg-tile-2 px-1.5 py-0.5 text-[11px] text-accent">{{ t('apps.upgradable') }}</span>
+              </p>
+              <p v-for="s in a.services ?? []" :key="s.id" class="mt-0.5 flex flex-wrap items-center gap-x-1.5 text-[12px] text-muted">
+                <span class="h-1.5 w-1.5 shrink-0 rounded-full" :class="s.state === 'running' ? 'bg-ok' : 'bg-faint'" />
+                {{ serviceLabel(s.service) }} · {{ s.state }}
+                <button type="button" class="ms-1 text-accent hover:underline" @click="openLogs({ ...a, id: s.id, name: a.name + ' · ' + serviceLabel(s.service) })">
+                  {{ t('apps.logs') }}
+                </button>
               </p>
             </div>
             <a v-if="a.hostPort" :href="openUrl(a.hostPort)" target="_blank" rel="noopener" class="shrink-0 text-[12.5px] text-accent hover:underline">
@@ -85,7 +94,13 @@
                 <h3 class="truncate text-[13.5px] font-semibold text-text">{{ app.name }}</h3>
                 <span class="rounded-full bg-tile-2 px-2 py-0.5 text-[11px] text-muted">{{ t('apps.category.' + app.category) }}</span>
               </div>
-              <p class="mt-0.5 truncate text-[12.5px] text-muted">{{ app.description }}</p>
+              <p class="mt-0.5 text-[12.5px] text-muted">{{ app.description }}</p>
+              <p class="mt-0.5 text-[12px] text-faint">
+                <span v-if="app.services?.length">{{ t('apps.withServices', { services: app.services.map(serviceLabel).join(', ') }) }} · </span>
+                <span v-if="app.port">{{ t('apps.port', { port: app.port }) }} · </span>
+                {{ t('apps.memory', { mb: app.memoryMB }) }}
+              </p>
+              <p v-if="app.note" class="mt-1 text-[12px] text-muted">{{ app.note }}</p>
             </div>
             <span v-if="!app.compatible" class="flex items-center gap-1.5 shrink-0 text-[12px] text-faint">
               <span class="h-1.5 w-1.5 rounded-full bg-faint" />
@@ -228,7 +243,7 @@ import { useFriendlyError } from '@/composables/useFriendlyError'
 import { usePlanError } from '@/composables/usePlanError'
 import type { AppConsoleStatus, AppSearchResult, CatalogApp, InstalledApp, Plan } from '@/api/types'
 
-const { t } = useI18n()
+const { t, te } = useI18n()
 const { friendly } = useFriendlyError()
 const { planErrorMessage } = usePlanError()
 
@@ -261,6 +276,12 @@ async function load() {
     installedError.value = dockerMissing.value ? '' : t('apps.installedLoadError')
   }
   loading.value = false
+}
+
+// A helper container's role ("db"), in the reader's language when known.
+function serviceLabel(name: string): string {
+  const key = 'apps.service.' + name
+  return te(key) ? t(key) : name
 }
 
 function openUrl(port: number): string {

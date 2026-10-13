@@ -44,7 +44,7 @@ func TestAppsInstall_PreviewAndApply(t *testing.T) {
 	e := newEnv(t)
 	before := e.installed(t)
 
-	code, p, b := e.planInstall(t, `{"appId":"sonarr"}`)
+	code, p, b := e.planInstall(t, `{"appId":"vaultwarden"}`)
 	if code != http.StatusOK || p.Plan.ID == "" {
 		t.Fatalf("plan: %d %s", code, b)
 	}
@@ -62,22 +62,22 @@ func TestAppsInstall_PreviewAndApply(t *testing.T) {
 	if len(after.Apps) != len(before.Apps)+1 {
 		t.Fatalf("expected one more installed app, got %+v", after)
 	}
-	var sonarr *struct {
+	var vw *struct {
 		ID       string `json:"id"`
 		Name     string `json:"name"`
 		State    string `json:"state"`
 		HostPort int    `json:"hostPort"`
 	}
 	for i := range after.Apps {
-		if after.Apps[i].Name == "Sonarr" {
-			sonarr = &after.Apps[i]
+		if after.Apps[i].Name == "Vaultwarden" {
+			vw = &after.Apps[i]
 		}
 	}
-	if sonarr == nil {
-		t.Fatalf("Sonarr not found in installed list: %+v", after)
+	if vw == nil {
+		t.Fatalf("Vaultwarden not found in installed list: %+v", after)
 	}
-	if sonarr.State != "running" || sonarr.HostPort != 8989 {
-		t.Fatalf("got %+v, want running on 8989", sonarr)
+	if vw.State != "running" || vw.HostPort != 8222 {
+		t.Fatalf("got %+v, want running on 8222", vw)
 	}
 }
 
@@ -105,37 +105,97 @@ func TestAppsInstall_AlreadyInstalledRefused(t *testing.T) {
 // refused, and so is the app's own when something already holds it.
 func TestAppsInstall_PortIsTheAppsOwn(t *testing.T) {
 	e := newEnv(t)
-	code, _, b := e.planInstall(t, `{"appId":"sonarr","hostPort":9999}`)
-	if code != http.StatusConflict || !strings.Contains(string(b), "8989") {
+	code, _, b := e.planInstall(t, `{"appId":"vaultwarden","hostPort":9999}`)
+	if code != http.StatusConflict || !strings.Contains(string(b), "8222") {
 		t.Fatalf("remapped port: got %d %s", code, b)
 	}
 
-	l, err := net.Listen("tcp", ":8989")
+	l, err := net.Listen("tcp", ":8222")
 	if err != nil {
-		t.Skip("port 8989 is busy on this machine:", err)
+		t.Skip("port 8222 is busy on this machine:", err)
 	}
 	defer l.Close()
-	code, _, b = e.planInstall(t, `{"appId":"sonarr"}`)
-	if code != http.StatusConflict || !strings.Contains(string(b), "8989") {
+	code, _, b = e.planInstall(t, `{"appId":"vaultwarden"}`)
+	if code != http.StatusConflict || !strings.Contains(string(b), "8222") {
 		t.Fatalf("taken port: got %d %s", code, b)
 	}
 }
 
-func TestAppsInstall_NoWebUIAppGetsNoPort(t *testing.T) {
+// Nextcloud is two containers — the app and its database — installed,
+// listed, stopped, started and removed as one app, with one generated
+// database password both sides get.
+func TestAppsInstall_MultiContainer(t *testing.T) {
+	for _, p := range []string{":8088", "127.0.0.1:3306"} {
+		l, err := net.Listen("tcp", p)
+		if err != nil {
+			t.Skip("port busy on this machine:", p)
+		}
+		l.Close()
+	}
 	e := newEnv(t)
-	code, p, b := e.planInstall(t, `{"appId":"wireguard"}`)
-	if code != http.StatusOK {
+	code, p, b := e.planInstall(t, `{"appId":"nextcloud"}`)
+	if code != http.StatusOK || !strings.Contains(p.Plan.Summary, "with its db (library/mariadb:lts)") || !strings.Contains(p.Plan.Summary, "768 MB") {
 		t.Fatalf("plan: %d %s", code, b)
 	}
-	resp, applyBody := e.do(t, "POST", "/api/v1/plans/"+p.Plan.ID+"/apply", "", nil)
-	if resp.StatusCode != http.StatusOK {
-		t.Fatalf("apply: %d %s", resp.StatusCode, applyBody)
+	if resp, b := e.do(t, "POST", "/api/v1/plans/"+p.Plan.ID+"/apply", "", nil); resp.StatusCode != http.StatusOK {
+		t.Fatalf("apply: %d %s", resp.StatusCode, b)
 	}
-	after := e.installed(t)
-	for _, a := range after.Apps {
-		if a.Name == "WireGuard" && a.HostPort != 0 {
-			t.Fatalf("wireguard (no web UI) got a host port: %+v", a)
+
+	_, b = e.do(t, "GET", "/api/v1/apps/installed", "", nil)
+	var list struct {
+		Apps []struct {
+			ID       string `json:"id"`
+			AppID    string `json:"appId"`
+			HostPort int    `json:"hostPort"`
+			Services []struct {
+				ID      string `json:"id"`
+				Service string `json:"service"`
+				State   string `json:"state"`
+			} `json:"services"`
+		} `json:"apps"`
+	}
+	json.Unmarshal(b, &list)
+	var id string
+	for _, a := range list.Apps {
+		if a.AppID == "nextcloud" {
+			if a.HostPort != 8088 || len(a.Services) != 1 || a.Services[0].Service != "db" || a.Services[0].State != "running" {
+				t.Fatalf("nextcloud row: %+v", a)
+			}
+			id = a.ID
 		}
+	}
+	if id == "" {
+		t.Fatalf("nextcloud not listed as one app: %s", b)
+	}
+	secrets := e.appsConfigFS.Files["/media/hdd/dreamhub-apps"]["nextcloud.secrets.json"]
+	if !strings.Contains(string(secrets), `"db":`) || !strings.Contains(string(secrets), `"dbroot":`) {
+		t.Fatalf("secrets: %s", secrets)
+	}
+
+	if resp, _ := e.do(t, "POST", "/api/v1/apps/installed/"+id+"/stop", "", nil); resp.StatusCode != http.StatusNoContent {
+		t.Fatalf("stop: %d", resp.StatusCode)
+	}
+	_, b = e.do(t, "GET", "/api/v1/apps/installed", "", nil)
+	if strings.Count(string(b), `"state":"exited"`) < 2 {
+		t.Fatalf("stop should stop both containers: %s", b)
+	}
+
+	resp, b := e.do(t, "POST", "/api/v1/apps/installed/"+id+"/remove/plan", "", nil)
+	if resp.StatusCode != http.StatusOK || !strings.Contains(string(b), "nextcloud.db") {
+		t.Fatalf("remove plan: %d %s", resp.StatusCode, b)
+	}
+	var rp installPlan
+	json.Unmarshal(b, &rp)
+	if resp, b := e.do(t, "POST", "/api/v1/plans/"+rp.Plan.ID+"/apply", "", nil); resp.StatusCode != http.StatusOK {
+		t.Fatalf("remove apply: %d %s", resp.StatusCode, b)
+	}
+	_, b = e.do(t, "GET", "/api/v1/apps/installed", "", nil)
+	if strings.Contains(string(b), "nextcloud") {
+		t.Fatalf("a container of nextcloud is left: %s", b)
+	}
+	// The password stays for a reinstall (the database keeps using it).
+	if e.appsConfigFS.Files["/media/hdd/dreamhub-apps"]["nextcloud.secrets.json"] == nil {
+		t.Fatal("secrets removed with the app")
 	}
 }
 
@@ -217,7 +277,7 @@ func TestAppsInstall_AdminOnly(t *testing.T) {
 	if resp, _ := e.do(t, "GET", "/api/v1/apps/installed", "", withProfile(viewer)); resp.StatusCode != http.StatusForbidden {
 		t.Errorf("viewer GET installed: expected 403, got %d", resp.StatusCode)
 	}
-	if resp, _ := e.do(t, "POST", "/api/v1/apps/install/plan", `{"appId":"sonarr"}`, withProfile(viewer)); resp.StatusCode != http.StatusForbidden {
+	if resp, _ := e.do(t, "POST", "/api/v1/apps/install/plan", `{"appId":"vaultwarden"}`, withProfile(viewer)); resp.StatusCode != http.StatusForbidden {
 		t.Errorf("viewer install: expected 403, got %d", resp.StatusCode)
 	}
 }

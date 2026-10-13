@@ -784,6 +784,13 @@ export interface CatalogApp {
   category: string
   description: string
   image: string
+  // The catalog's plain-English hint for this box.
+  note?: string
+  // Helper containers installed along with it (e.g. "db").
+  services?: string[]
+  // Memory limit of all its containers together; its web port.
+  memoryMB: number
+  port?: number
   compatible: boolean
   installed: boolean
 }
@@ -804,11 +811,14 @@ export interface AppManifest {
 // hubs.installedApp — one running or stopped app (docs/APPSHUB_PLAN.md, App4).
 export interface InstalledApp {
   id: string
+  appId: string
   name: string
   image: string
   state: string
   hostPort?: number
   upgradable?: boolean
+  // The app's helper containers (e.g. its database), each with own logs.
+  services?: { id: string; service: string; image: string; state: string }[]
 }
 
 // GET /api/v1/apps/console/status (docs/APPSHUB_PLAN.md, App5) — the

@@ -4,40 +4,74 @@ import (
 	"testing"
 
 	"github.com/antonbier/DreamHub/backend/internal/appcatalog"
+	"github.com/antonbier/DreamHub/backend/internal/dockerd"
 	"github.com/antonbier/DreamHub/backend/internal/dockerhub"
 )
+
+// boxPorts are the reference box's own ports (ARCHITECTURE.md): no app on
+// the host network may need one of them.
+var boxPorts = map[int]bool{80: true, 443: true, 8080: true, 8001: true, 4200: true, 139: true, 445: true}
 
 func TestApps_HaveRequiredFields(t *testing.T) {
 	seen := map[string]bool{}
 	for _, a := range appcatalog.Apps {
-		if a.ID == "" || a.Name == "" || a.Image == "" || len(a.Arches) == 0 {
+		if a.ID == "" || a.Name == "" || a.Image == "" || len(a.Arches) == 0 || a.ConfigPath == "" || a.MemoryMB <= 0 {
 			t.Errorf("app %+v is missing a required field", a)
 		}
 		if seen[a.ID] {
 			t.Errorf("duplicate app id %q", a.ID)
 		}
 		seen[a.ID] = true
+		if boxPorts[a.ContainerPort] {
+			t.Errorf("%s: web port %d is one of the box's own", a.ID, a.ContainerPort)
+		}
+		for _, p := range a.Ports {
+			if boxPorts[p.Port] {
+				t.Errorf("%s: port %d is one of the box's own", a.ID, p.Port)
+			}
+		}
+		for _, s := range a.Services {
+			// "data" and "secrets" name the app's other storage paths.
+			if s.Name == "" || s.Name == "data" || !dockerd.ValidService(s.Name) || s.Image == "" || len(s.Arches) == 0 || s.ConfigPath == "" || s.MemoryMB <= 0 {
+				t.Errorf("%s: service %+v is incomplete", a.ID, s)
+			}
+		}
 	}
 }
 
 func TestApp_SupportsArch(t *testing.T) {
-	piHole, ok := appcatalog.ByID("pihole")
-	if !ok {
-		t.Fatal("pihole missing from the curated list")
-	}
-	if !piHole.SupportsArch(dockerhub.Arch{Architecture: "arm64"}) {
-		t.Error("pihole should support arm64")
-	}
+	piHole, _ := appcatalog.ByID("pihole")
 	if !piHole.SupportsArch(dockerhub.Arch{Architecture: "arm", Variant: "v7"}) {
 		t.Error("pihole should support armhf (arm/v7)")
 	}
-
-	heimdall, ok := appcatalog.ByID("heimdall")
+	// Nextcloud itself runs on armhf, its MariaDB doesn't: the app as a
+	// whole doesn't.
+	nc, ok := appcatalog.ByID("nextcloud")
 	if !ok {
-		t.Fatal("heimdall missing from the curated list")
+		t.Fatal("nextcloud missing")
 	}
-	if heimdall.SupportsArch(dockerhub.Arch{Architecture: "arm", Variant: "v7"}) {
-		t.Error("heimdall (amd64+arm64 only) must not claim armhf support")
+	if nc.SupportsArch(dockerhub.Arch{Architecture: "arm", Variant: "v7"}) {
+		t.Error("nextcloud's database has no armhf image")
+	}
+	if !nc.SupportsArch(dockerhub.Arch{Architecture: "arm64"}) {
+		t.Error("nextcloud should run on arm64 (the reference box)")
+	}
+}
+
+func TestSecrets(t *testing.T) {
+	nc, _ := appcatalog.ByID("nextcloud")
+	names := nc.SecretNames()
+	if len(names) != 2 || names[0] != "db" || names[1] != "dbroot" {
+		t.Fatalf("got %v", names)
+	}
+	secrets := map[string]string{"db": "s1", "dbroot": "s2"}
+	app := appcatalog.ExpandEnv(nc.Env, secrets)
+	db := appcatalog.ExpandEnv(nc.Services[0].Env, secrets)
+	if app["MYSQL_PASSWORD"] != "s1" || db["MARIADB_PASSWORD"] != "s1" || db["MARIADB_ROOT_PASSWORD"] != "s2" || app["MYSQL_HOST"] != "127.0.0.1" {
+		t.Fatalf("app %v, db %v", app, db)
+	}
+	if nc.TotalMemoryMB() != 768 {
+		t.Errorf("total memory %d", nc.TotalMemoryMB())
 	}
 }
 

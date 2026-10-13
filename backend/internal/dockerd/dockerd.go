@@ -44,6 +44,26 @@ const AppLabel = "dreamhub.app"
 // the port can't be read back from them.
 const PortLabel = "dreamhub.port"
 
+// ServiceLabel names a helper container's role inside a multi-container
+// app (e.g. "db" next to Nextcloud) — unset on an app's main container.
+// Every container of one app shares its AppLabel value.
+const ServiceLabel = "dreamhub.service"
+
+// ValidService reports whether s is usable as a ContainerSpec.Service:
+// empty (the app's main container) or 1-20 lowercase letters/digits —
+// it ends up in the container's name.
+func ValidService(s string) bool {
+	if len(s) > 20 {
+		return false
+	}
+	for _, r := range s {
+		if (r < 'a' || r > 'z') && (r < '0' || r > '9') {
+			return false
+		}
+	}
+	return true
+}
+
 // Container is one container this package is willing to talk about,
 // trimmed to what AppsHub needs.
 type Container struct {
@@ -65,12 +85,19 @@ type Container struct {
 // implementations never return a Container missing it).
 func (c Container) AppID() string { return c.Labels[AppLabel] }
 
+// Service is the Labels[ServiceLabel] value: "" for an app's main
+// container, the helper's role (e.g. "db") otherwise.
+func (c Container) Service() string { return c.Labels[ServiceLabel] }
+
 // ErrNotFound means no container with that id carries AppLabel.
 var ErrNotFound = errors.New("dockerd: no such app container")
 
 // ErrAlreadyExists means AppID already has a container (Create is one
 // app, one container — a second install needs Remove first).
 var ErrAlreadyExists = errors.New("dockerd: this app is already installed")
+
+// ErrInvalidService means ContainerSpec.Service isn't ValidService.
+var ErrInvalidService = errors.New("dockerd: invalid service name")
 
 // ErrUnavailable means the Docker daemon (Exec) or the helper process
 // (HTTPClient) didn't answer at all — AppsHub's "Apps" tab shows this as
@@ -89,6 +116,11 @@ type ContainerSpec struct {
 	// ("dreamhub-app-" + AppID) — one container per AppID; Create refuses
 	// a second one (ErrAlreadyExists).
 	AppID string
+	// Service is "" for an app's main container, or a helper's role in a
+	// multi-container app (e.g. "db"): its container is named
+	// "dreamhub-app-" + AppID + "-" + Service and carries ServiceLabel.
+	// One container per AppID and Service.
+	Service string
 	// Image is pulled before the container is created ("image:tag",
 	// e.g. "pihole/pihole:latest").
 	Image string
@@ -96,6 +128,11 @@ type ContainerSpec struct {
 	// shell-interpreted, Docker's API takes them as plain KEY=VALUE
 	// strings.
 	Env map[string]string
+	// Cmd replaces the image's own CMD when set (its ENTRYPOINT stays) —
+	// curated catalog data only (internal/appcatalog), e.g. MariaDB's
+	// --bind-address=127.0.0.1 so a database stays off the LAN. It runs
+	// inside the container with the same limits as the image's own CMD.
+	Cmd []string
 	// HostPort/ContainerPort map one TCP port; 0/0 means no port is
 	// published at all (e.g. wireguard, which has no web UI — see
 	// appcatalog.App.ContainerPort). With HostNetwork the app listens on
@@ -110,6 +147,10 @@ type ContainerSpec struct {
 	// plus AppID), never taken from the image or any other untrusted
 	// source.
 	HostDir, ContainerDir string
+	// DataHostDir/DataContainerDir are an optional second bind mount for
+	// an app's bulk user data (Nextcloud's files, downloads), computed by
+	// the caller the same way as HostDir — both empty, or both set.
+	DataHostDir, DataContainerDir string
 	// MemoryLimitBytes caps the container's RAM; 0 means no limit
 	// (Create refuses this — AppsHub always sets one, see
 	// docs/APPSHUB_PLAN.md's resource-budget decision).

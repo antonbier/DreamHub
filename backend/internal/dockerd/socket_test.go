@@ -217,6 +217,34 @@ func TestExec_CreateHostNetwork(t *testing.T) {
 	}
 }
 
+// A multi-container app's helper: its own name and ServiceLabel, its Cmd
+// passed through, no port label.
+func TestExec_CreateService(t *testing.T) {
+	sock, closeFn := fakeDaemon(t)
+	defer closeFn()
+	e := Exec{SocketPath: sock}
+
+	c, err := e.Create(context.Background(), ContainerSpec{
+		AppID: "nextcloud", Service: "db", Image: "mariadb:11", HostNetwork: true,
+		Cmd: []string{"--bind-address=127.0.0.1"}, HostDir: "/x", ContainerDir: "/var/lib/mysql", MemoryLimitBytes: 1,
+		DataHostDir: "/x.data", DataContainerDir: "/data",
+	})
+	if err != nil {
+		t.Fatal(err)
+	}
+	body := string(lastCreateBody)
+	if !strings.Contains(body, `"dreamhub.service":"db"`) || !strings.Contains(body, `"Cmd":["--bind-address=127.0.0.1"]`) || strings.Contains(body, `"dreamhub.port"`) ||
+		!strings.Contains(body, `"Binds":["/x:/var/lib/mysql","/x.data:/data"]`) {
+		t.Fatalf("create body: %s", body)
+	}
+	if c.Name != "dreamhub-app-nextcloud-db" || c.Service() != "db" || c.AppID() != "nextcloud" {
+		t.Fatalf("got %+v", c)
+	}
+	if _, err := e.Create(context.Background(), ContainerSpec{AppID: "x", Service: "DB; rm", Image: "x", MemoryLimitBytes: 1}); err != ErrInvalidService {
+		t.Fatalf("got %v, want ErrInvalidService", err)
+	}
+}
+
 func TestFromDocker_PortFromLabel(t *testing.T) {
 	c := fromDocker(dockerContainer{ID: "a", Labels: map[string]string{AppLabel: "vw", PortLabel: "8000"}})
 	if c.HostPort != 8000 {

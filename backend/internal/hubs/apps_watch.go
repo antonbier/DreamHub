@@ -3,6 +3,7 @@ package hubs
 import (
 	"context"
 	"log/slog"
+	"slices"
 	"strings"
 	"time"
 
@@ -101,7 +102,8 @@ func (h *Apps) checkUpgradable(ctx context.Context) []string {
 	}
 	var upgradable []string
 	for _, c := range containers {
-		if h.imageUpgradable(ctx, c) {
+		// One entry per app, even when several of its containers are.
+		if !slices.Contains(upgradable, c.AppID()) && h.imageUpgradable(ctx, c) {
 			upgradable = append(upgradable, c.AppID())
 		}
 	}

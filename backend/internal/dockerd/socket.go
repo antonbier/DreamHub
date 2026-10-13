@@ -106,7 +106,12 @@ func networkMode(host bool) string {
 // container gets — "one container per app" is enforced by Create seeing
 // this name already taken (ErrAlreadyExists), not by a separate lookup
 // that could race.
-func containerName(appID string) string { return "dreamhub-app-" + appID }
+func containerName(appID, service string) string {
+	if service != "" {
+		return "dreamhub-app-" + appID + "-" + service
+	}
+	return "dreamhub-app-" + appID
+}
 
 func (e Exec) List(ctx context.Context) ([]Container, error) {
 	filters, err := json.Marshal(map[string][]string{"label": {AppLabel}})
@@ -313,7 +318,10 @@ func (e Exec) Create(ctx context.Context, spec ContainerSpec) (Container, error)
 	if spec.HostNetwork && spec.HostPort != spec.ContainerPort {
 		return Container{}, fmt.Errorf("dockerd: create %s: on the host network the port can't be remapped", spec.AppID)
 	}
-	name := containerName(spec.AppID)
+	if !ValidService(spec.Service) {
+		return Container{}, ErrInvalidService
+	}
+	name := containerName(spec.AppID, spec.Service)
 	resp, err := e.do(ctx, http.MethodGet, "/containers/"+url.PathEscape(name)+"/json", nil)
 	if err != nil {
 		return Container{}, err
@@ -334,6 +342,9 @@ func (e Exec) Create(ctx context.Context, spec ContainerSpec) (Container, error)
 	exposed := map[string]any{}
 	bindings := map[string]any{}
 	labels := map[string]string{AppLabel: spec.AppID}
+	if spec.Service != "" {
+		labels[ServiceLabel] = spec.Service
+	}
 	if spec.HostNetwork && spec.ContainerPort != 0 {
 		labels[PortLabel] = fmt.Sprint(spec.ContainerPort)
 	}
@@ -350,7 +361,7 @@ func (e Exec) Create(ctx context.Context, spec ContainerSpec) (Container, error)
 		"HostConfig": map[string]any{
 			"NetworkMode":  networkMode(spec.HostNetwork),
 			"PortBindings": bindings,
-			"Binds":        []string{spec.HostDir + ":" + spec.ContainerDir},
+			"Binds":        binds(spec),
 			"Memory":       spec.MemoryLimitBytes,
 			// A crash-looping app is reported, not restarted forever
 			// (docs/APPSHUB_PLAN.md, "Autostart and crash-loop
@@ -358,6 +369,9 @@ func (e Exec) Create(ctx context.Context, spec ContainerSpec) (Container, error)
 			// Docker's own retries either way.
 			"RestartPolicy": map[string]any{"Name": "on-failure", "MaximumRetryCount": 5},
 		},
+	}
+	if len(spec.Cmd) > 0 {
+		create["Cmd"] = spec.Cmd
 	}
 	body, err := json.Marshal(create)
 	if err != nil {
@@ -390,6 +404,15 @@ func (e Exec) Create(ctx context.Context, spec ContainerSpec) (Container, error)
 		ID: created.ID, Name: name, Image: spec.Image, State: "running", HostPort: spec.HostPort,
 		Labels: labels,
 	}, nil
+}
+
+// binds is HostDir plus, when set, the data directory.
+func binds(spec ContainerSpec) []string {
+	b := []string{spec.HostDir + ":" + spec.ContainerDir}
+	if spec.DataHostDir != "" && spec.DataContainerDir != "" {
+		b = append(b, spec.DataHostDir+":"+spec.DataContainerDir)
+	}
+	return b
 }
 
 func (e Exec) Remove(ctx context.Context, id string) error {

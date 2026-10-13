@@ -7,6 +7,7 @@ import (
 	"bytes"
 	"compress/gzip"
 	"io"
+	"io/fs"
 	"path/filepath"
 	"strings"
 
@@ -81,4 +82,22 @@ func (f *FS) Restore(root string, archive []byte) error {
 		}
 		f.Files[root][clean] = data
 	}
+}
+
+// ReadFile/WriteFile keep a single file under Files[dir][base].
+func (f *FS) ReadFile(path string) ([]byte, error) {
+	data, ok := f.Files[filepath.Dir(path)][filepath.Base(path)]
+	if !ok {
+		return nil, fs.ErrNotExist
+	}
+	return data, nil
+}
+
+func (f *FS) WriteFile(path string, data []byte) error {
+	dir := filepath.Dir(path)
+	if f.Files[dir] == nil {
+		f.Files[dir] = map[string][]byte{}
+	}
+	f.Files[dir][filepath.Base(path)] = append([]byte(nil), data...)
+	return nil
 }

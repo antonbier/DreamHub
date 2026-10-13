@@ -82,26 +82,31 @@ func (s Server) handleStop(w http.ResponseWriter, r *http.Request) {
 // absolute host root, or a privileged flag).
 type createRequest struct {
 	AppID         string            `json:"appId"`
+	Service       string            `json:"service"`
 	Image         string            `json:"image"`
 	Env           map[string]string `json:"env"`
+	Cmd           []string          `json:"cmd"`
 	HostPort      int               `json:"hostPort"`
 	ContainerPort int               `json:"containerPort"`
 	HostDir       string            `json:"hostDir"`
 	ContainerDir  string            `json:"containerDir"`
+	DataHostDir   string            `json:"dataHostDir"`
+	DataDir       string            `json:"dataContainerDir"`
 	MemoryLimit   int64             `json:"memoryLimitBytes"`
 	HostNetwork   bool              `json:"hostNetwork"`
 }
 
 func (s Server) handleCreate(w http.ResponseWriter, r *http.Request) {
 	var body createRequest
-	if err := json.NewDecoder(r.Body).Decode(&body); err != nil || body.AppID == "" || body.Image == "" || body.HostDir == "" || body.ContainerDir == "" || body.MemoryLimit <= 0 {
-		http.Error(w, "dockerd: create: appId, image, hostDir, containerDir and a positive memoryLimitBytes are required", http.StatusBadRequest)
+	if err := json.NewDecoder(r.Body).Decode(&body); err != nil || body.AppID == "" || body.Image == "" || body.HostDir == "" || body.ContainerDir == "" || body.MemoryLimit <= 0 || !ValidService(body.Service) || (body.DataHostDir == "") != (body.DataDir == "") {
+		http.Error(w, "dockerd: create: appId, image, hostDir, containerDir and a positive memoryLimitBytes are required, service is lowercase letters/digits", http.StatusBadRequest)
 		return
 	}
 	c, err := s.Client.Create(r.Context(), ContainerSpec{
-		AppID: body.AppID, Image: body.Image, Env: body.Env,
+		AppID: body.AppID, Service: body.Service, Image: body.Image, Env: body.Env, Cmd: body.Cmd,
 		HostPort: body.HostPort, ContainerPort: body.ContainerPort,
 		HostDir: body.HostDir, ContainerDir: body.ContainerDir,
+		DataHostDir: body.DataHostDir, DataContainerDir: body.DataDir,
 		MemoryLimitBytes: body.MemoryLimit, HostNetwork: body.HostNetwork,
 	})
 	if err != nil {

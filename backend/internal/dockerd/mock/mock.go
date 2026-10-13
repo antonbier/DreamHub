@@ -32,7 +32,7 @@ func New() *Client {
 	return &Client{containers: map[string]*dockerd.Container{
 		"pihole": {
 			ID: "pihole", Name: "dreamhub-app-pihole", Image: "pihole/pihole:latest",
-			State: "running", Status: "Up 2 hours", HostPort: 8081,
+			State: "running", Status: "Up 2 hours", HostPort: 8082,
 			Labels: map[string]string{dockerd.AppLabel: "pihole"},
 		},
 		"adguardhome": {
@@ -109,15 +109,24 @@ func (c *Client) Create(ctx context.Context, spec dockerd.ContainerSpec) (docker
 	// Exec's /containers/{id}/json inspect expects an id for, which is
 	// fine since AppID-as-id is unique per app the same way a real
 	// container id is unique per container.
-	if _, exists := c.containers[spec.AppID]; exists {
+	if !dockerd.ValidService(spec.Service) {
+		return dockerd.Container{}, dockerd.ErrInvalidService
+	}
+	id := spec.AppID
+	labels := map[string]string{dockerd.AppLabel: spec.AppID}
+	if spec.Service != "" {
+		id += "-" + spec.Service
+		labels[dockerd.ServiceLabel] = spec.Service
+	}
+	if _, exists := c.containers[id]; exists {
 		return dockerd.Container{}, dockerd.ErrAlreadyExists
 	}
 	created := dockerd.Container{
-		ID: spec.AppID, Name: "dreamhub-app-" + spec.AppID, Image: spec.Image,
+		ID: id, Name: "dreamhub-app-" + id, Image: spec.Image,
 		State: "running", Status: "Up less than a second", HostPort: spec.HostPort,
-		Labels: map[string]string{dockerd.AppLabel: spec.AppID},
+		Labels: labels,
 	}
-	c.containers[spec.AppID] = &created
+	c.containers[id] = &created
 	return created, nil
 }
 

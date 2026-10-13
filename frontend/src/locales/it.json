@@ -1075,8 +1075,9 @@
     "comingSoon": "Le app Docker non sono ancora disponibili.",
     "category": {
       "network": "Rete",
-      "media": "Gestione media",
-      "files": "File"
+      "cloud": "Cloud e password",
+      "home": "Domotica",
+      "downloads": "Download"
     },
     "compatible": "Funziona su questo box",
     "notCompatible": "Non compilata per il processore di questo box",
@@ -1146,7 +1147,14 @@
         "config": "Scrivere le impostazioni di Docker: dati in {dataRoot}, app sulla rete del box.",
         "services": "Avviare Docker e l'helper Docker di DreamHub, anche a ogni avvio."
       }
-    }
+    },
+    "service": {
+      "db": "database"
+    },
+    "withServices": "+ {services}",
+    "memory": "fino a {mb} MB di RAM",
+    "port": "porta {port}",
+    "serviceLogs": "Log ({name})"
   },
   "timers": {
     "tuners": "{count} tuner | {count} tuner",
@@ -1419,7 +1427,7 @@
       "nothingToRestore": "Questo file corrisponde allo stato attuale; nulla da ripristinare.",
       "confirmRestore": "Ripristina",
       "restorePreview": "0 modifiche da ripristinare | Ripristina {count} modifica da questo backup del {date}. | Ripristina {count} modifiche da questo backup del {date}.",
-      "includeApps": "0 app installate | Includi anche la configurazione di 1 app installata ({size}) | Includi anche le configurazioni di {count} app installate ({size})",
+      "includeApps": "0 cartelle di app | Includi anche 1 cartella di app ({size}) | Includi anche {count} cartelle di app ({size})",
       "restoreIncludesApps": "Questo file include anche le configurazioni delle app installate.",
       "restored": "Ripristinato dal backup.",
       "movedHint": "Backup e ripristino ora si trovano nelle impostazioni.",

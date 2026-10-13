@@ -418,8 +418,15 @@ export const api = {
   changes: (limit = 20, user = -1) =>
     request<{ changes: ChangeEntry[] }>('GET', `/api/v1/changes?limit=${limit}${user >= 0 ? `&user=${user}` : ''}`),
   system: {
-    backup: (sections?: string[]) =>
-      request<BackupFile>('GET', `/api/v1/system/backup${sections?.length ? `?sections=${sections.map(encodeURIComponent).join(',')}` : ''}`),
+    // items picks exactly those items of a section (?items.<section>=…);
+    // without it a section brings its default-included items.
+    backup: (sections?: string[], items?: Record<string, string[]>) => {
+      const params = new URLSearchParams()
+      if (sections?.length) params.set('sections', sections.join(','))
+      for (const [section, ids] of Object.entries(items ?? {})) params.set('items.' + section, ids.join(','))
+      const q = params.toString()
+      return request<BackupFile>('GET', `/api/v1/system/backup${q ? `?${q}` : ''}`)
+    },
     backupSections: () => request<BackupSectionsList>('GET', '/api/v1/system/backup/sections'),
     restorePlan: (file: BackupFile) => request<{ plan: Plan }>('POST', '/api/v1/system/backup/restore', file),
     // The box self-test (admin only): the last report, a new run, and the

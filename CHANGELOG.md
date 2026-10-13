@@ -9,8 +9,15 @@ Format follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/); version
 ### Added
 - eWeLink/Sonoff extension (`extensions/ewelink`, its own package `dreamhub-ext-ewelink`): Sonoff devices with LAN control on, shown and switched in AppsHub → Extensions without the eWeLink cloud, switching through the usual preview. Needs each device's key from the eWeLink account; the reference extension for anyone building one.
 - Device → Administration → Packages: packages a DreamHub hub uses (ffmpeg for AdScan and trimming, the overlay kernel module for Docker apps) are marked "Needed by …"; a "Needed by DreamHub" filter lists them, including any that are missing, with an install button; and removing one warns which hub stops working.
+- AppsHub: apps made of several containers, installed, started, stopped and removed as one — the first is Nextcloud with its own MariaDB, which only listens on the box itself; passwords between them are generated at install and kept for a reinstall. A helper container shows under its app with its own logs.
+- Settings → System → Backup: the app folders are listed one by one with their size and a checkbox — a database is in by default, bulk files (Nextcloud's, downloads) are not.
+
+### Changed
+- AppsHub's app list reworked: AdGuard Home, Pi-hole, Nextcloud, Vaultwarden, Syncthing, Home Assistant and qBittorrent, each with a short note for this box and its memory limit. Sonarr, Radarr, Prowlarr, Bazarr, Heimdall and WireGuard were removed (Heimdall always needs port 80, WireGuard extra kernel rights DreamHub doesn't give a container). Pi-hole, Vaultwarden and qBittorrent now use ports the box doesn't (8082, 8222, 8090), and every port an app needs — DNS 53 included — is checked before installing.
 
 ### Fixed
+- Restoring a backup could write an app folder outside AppsHub's storage directory if the file named one like `../x`; such names are now ignored.
+- qBittorrent from the app list could never start on the box: its web port was 8080, DreamHub's own.
 - The extension packaging template created its user on every install and never removed it on purge (DreamOS has no `getent`), and pointed at a `nologin` shell DreamOS doesn't have.
 
 ## [0.5.0] - 2026-10-12

@@ -215,9 +215,10 @@ func (h *System) backup(w http.ResponseWriter, r *http.Request) {
 	out.Dashboard = layout
 
 	// ?sections=apps,otherSection — each named, registered section's own
-	// default-included items (App6). An unknown name is ignored rather
-	// than refused: a backup download must never fail outright over one
-	// bad query value.
+	// default-included items (App6), or exactly the items listed in
+	// ?items.<section>=id1,id2. An unknown name is ignored rather than
+	// refused: a backup download must never fail outright over one bad
+	// query value.
 	if q := r.URL.Query().Get("sections"); q != "" {
 		out.Sections = map[string]json.RawMessage{}
 		for _, id := range strings.Split(q, ",") {
@@ -225,7 +226,16 @@ func (h *System) backup(w http.ResponseWriter, r *http.Request) {
 			if !ok {
 				continue
 			}
-			data, err := sec.Export(ctx, nil)
+			var itemIDs []string
+			if v, ok := r.URL.Query()["items."+sec.ID()]; ok {
+				itemIDs = []string{}
+				for _, part := range strings.Split(strings.Join(v, ","), ",") {
+					if part = strings.TrimSpace(part); part != "" {
+						itemIDs = append(itemIDs, part)
+					}
+				}
+			}
+			data, err := sec.Export(ctx, itemIDs)
 			if err != nil {
 				httpx.WriteError(w, r, http.StatusInternalServerError, "internal", "could not export "+sec.ID())
 				return

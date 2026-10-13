@@ -1075,8 +1075,9 @@
     "comingSoon": "Docker apps aren't available yet.",
     "category": {
       "network": "Network",
-      "media": "Media management",
-      "files": "Files"
+      "cloud": "Cloud & passwords",
+      "home": "Home automation",
+      "downloads": "Downloads"
     },
     "compatible": "Works on this box",
     "notCompatible": "Not built for this box's processor",
@@ -1146,7 +1147,14 @@
         "config": "Write the Docker settings: data in {dataRoot}, apps on the box's own network.",
         "services": "Start Docker and DreamHub's Docker helper, and start them again at every boot."
       }
-    }
+    },
+    "service": {
+      "db": "database"
+    },
+    "withServices": "+ {services}",
+    "memory": "up to {mb} MB RAM",
+    "port": "port {port}",
+    "serviceLogs": "Logs ({name})"
   },
   "timers": {
     "tuners": "{count} tuner | {count} tuners",
@@ -1419,7 +1427,7 @@
       "nothingToRestore": "This file matches the current state; nothing to restore.",
       "confirmRestore": "Restore",
       "restorePreview": "0 changes to restore | Restore {count} change from this backup, made {date}. | Restore {count} changes from this backup, made {date}.",
-      "includeApps": "0 installed apps | Also include 1 installed app's config ({size}) | Also include {count} installed apps' configs ({size})",
+      "includeApps": "0 app folders | Also include 1 app folder ({size}) | Also include {count} app folders ({size})",
       "restoreIncludesApps": "This file also includes installed apps' configs.",
       "restored": "Restored from the backup.",
       "movedHint": "Backup and restore are in the settings now.",

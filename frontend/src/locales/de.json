@@ -124,7 +124,11 @@
     "title": "Benachrichtigungen",
     "allOk": "Nichts braucht Aufmerksamkeit.",
     "clockSkew": "Die Uhr der Box geht etwa {minutes} Min. falsch.",
-    "recent": "Letzte Aktivität"
+    "recent": "Letzte Aktivität",
+    "browserOn": "Benachrichtigungen auf diesem Gerät anzeigen",
+    "browserIsOn": "Benachrichtigungen auf diesem Gerät sind an",
+    "browserOff": "Ausschalten",
+    "browserDenied": "Der Browser blockiert Benachrichtigungen für diese Seite – in den Website-Einstellungen erlauben."
   },
   "notification": {
     "recording": {
@@ -1612,7 +1616,8 @@
       "bars": "Spektrum",
       "scope": "Oszilloskop",
       "off": "Keine Visualisierung"
-    }
+    },
+    "listenHere": "Im Browser"
   },
   "stream": {
     "intro": "Fernsehen und Aufnahmen direkt im Browser – die Box schickt ihr Signal unverändert, dein Gerät dekodiert es.",

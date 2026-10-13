@@ -124,7 +124,11 @@
     "title": "Notifiche",
     "allOk": "Nessuna attenzione richiesta.",
     "clockSkew": "L'orologio del box è sfasato di circa {minutes} min.",
-    "recent": "Attività recente"
+    "recent": "Attività recente",
+    "browserOn": "Mostra le notifiche su questo dispositivo",
+    "browserIsOn": "Le notifiche su questo dispositivo sono attive",
+    "browserOff": "Disattiva",
+    "browserDenied": "Il browser blocca le notifiche per questo sito: consentile nelle impostazioni del sito."
   },
   "notification": {
     "recording": {
@@ -1612,7 +1616,8 @@
       "bars": "Spettro",
       "scope": "Oscilloscopio",
       "off": "Nessuna visualizzazione"
-    }
+    },
+    "listenHere": "Nel browser"
   },
   "stream": {
     "intro": "TV e registrazioni direttamente nel browser: il box invia il segnale così com’è, il tuo dispositivo lo decodifica.",

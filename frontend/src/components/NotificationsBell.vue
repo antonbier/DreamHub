@@ -32,6 +32,18 @@
           </li>
         </ul>
 
+        <!-- Browser notifications: only where the browser allows them. -->
+        <div v-if="browserNotes.supported" class="mt-3 border-t border-line-soft pt-2 text-[12.5px]">
+          <button v-if="!browserNotes.active.value" type="button" class="text-accent hover:underline" @click="browserNotes.enable()">
+            {{ t('notifications.browserOn') }}
+          </button>
+          <template v-else>
+            <span class="text-muted">{{ t('notifications.browserIsOn') }}</span>
+            <button type="button" class="ms-2 text-accent hover:underline" @click="browserNotes.disable()">{{ t('notifications.browserOff') }}</button>
+          </template>
+          <p v-if="browserNotes.permission.value === 'denied'" class="mt-1 text-faint">{{ t('notifications.browserDenied') }}</p>
+        </div>
+
         <template v-if="notifications.items.length > 0">
           <div class="mb-1.5 mt-3 text-[12.5px] text-faint">{{ t('notifications.recent') }}</div>
           <ul class="flex flex-col">
@@ -48,7 +60,8 @@
 <script setup lang="ts">
 import { useHubLabel } from '@/composables/useHubLabel'
 import { useAuth } from '@/composables/useAuth'
-import { computed, onMounted } from 'vue'
+import { useBrowserNotifications } from '@/composables/useBrowserNotifications'
+import { computed, onMounted, watch } from 'vue'
 import { useI18n } from 'vue-i18n'
 import Icon from './Icon.vue'
 import DropdownMenu from './DropdownMenu.vue'
@@ -66,6 +79,16 @@ const navigation = useNavigationStore()
 const notifications = useNotificationsStore()
 const { describe } = useProblem()
 const { clockSkew, checkClock } = useDeviceStatus()
+
+const browserNotes = useBrowserNotifications()
+// A new item arrives while the page is in the background: say so there too.
+watch(
+  () => notifications.items[0]?.id,
+  (id, before) => {
+    const n = notifications.items[0]
+    if (id !== undefined && before !== undefined && id !== before && !n.read) browserNotes.show('DreamHub', describeNotification(n))
+  },
+)
 
 onMounted(() => {
   checkClock()

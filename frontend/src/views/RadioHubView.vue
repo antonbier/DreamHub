@@ -176,13 +176,13 @@
             <button
               v-if="streamHubOn"
               type="button"
-              class="flex h-7 w-7 shrink-0 items-center justify-center rounded border border-line text-text hover:bg-field"
+              class="flex shrink-0 items-center gap-1.5 rounded border border-line px-2.5 py-1 text-[12.5px] text-text hover:bg-field"
               :class="{ 'border-accent text-accent': listening === st.serviceReference }"
               :aria-label="t('radio.listen', { station: st.serviceName })"
               :aria-pressed="listening === st.serviceReference"
               @click="listening === st.serviceReference ? stopListening() : listen(st.serviceReference)"
             >
-              <Icon :name="listening === st.serviceReference ? 'stop' : 'volume-up'" :size="14" />
+              <Icon :name="listening === st.serviceReference ? 'stop' : 'volume-up'" :size="14" />{{ t('radio.listenHere') }}
             </button>
           </li>
         </ul>

@@ -124,7 +124,11 @@
     "title": "Notifications",
     "allOk": "Nothing needs attention.",
     "clockSkew": "The box's clock is off by about {minutes} min.",
-    "recent": "Recent activity"
+    "recent": "Recent activity",
+    "browserOn": "Show notifications on this device",
+    "browserIsOn": "Notifications on this device are on",
+    "browserOff": "Turn off",
+    "browserDenied": "The browser has blocked notifications for this site — allow them in its site settings."
   },
   "notification": {
     "recording": {
@@ -1612,7 +1616,8 @@
       "bars": "Spectrum",
       "scope": "Oscilloscope",
       "off": "No visualization"
-    }
+    },
+    "listenHere": "In the browser"
   },
   "stream": {
     "intro": "TV and recordings right in the browser — the box sends its signal unchanged, your device decodes it.",

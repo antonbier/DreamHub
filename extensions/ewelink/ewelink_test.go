@@ -8,6 +8,7 @@ import (
 	"net/http"
 	"net/http/httptest"
 	"os"
+	"path/filepath"
 	"strings"
 	"testing"
 	"time"
@@ -87,7 +88,8 @@ func TestSwitchAgainstFakeDevice(t *testing.T) {
 	host, port, _ := net.SplitHostPort(strings.TrimPrefix(dev.URL, "http://"))
 
 	cfg := Config{Lang: "de", Devices: []DeviceConfig{{ID: "abc", Key: key, Name: "Unraid", OffWarning: "Vorher herunterfahren."}}}
-	ds := NewDevices(cfg)
+	store := NewConfigStore("", cfg)
+	ds := NewDevices(store)
 	ds.browse = func(context.Context, time.Duration) ([]Announcement, error) {
 		iv, data, _ := Encrypt(key, []byte(`{"switch":"`+state+`","power":"12.5"}`))
 		p := 0
@@ -101,7 +103,7 @@ func TestSwitchAgainstFakeDevice(t *testing.T) {
 		t.Fatal(err)
 	}
 
-	srv := httptest.NewServer((&Server{cfg: cfg, devices: ds}).Handler())
+	srv := httptest.NewServer((&Server{cfg: store, devices: ds}).Handler())
 	defer srv.Close()
 
 	resp, _ := http.Get(srv.URL + "/widgets")
@@ -133,14 +135,44 @@ func TestSwitchAgainstFakeDevice(t *testing.T) {
 
 func TestWidgets_UnconfiguredAndMissing(t *testing.T) {
 	cfg := Config{Lang: "en", Devices: []DeviceConfig{{ID: "gone", Name: "Lamp"}}}
-	ds := NewDevices(cfg)
+	store := NewConfigStore("", cfg)
+	ds := NewDevices(store)
 	ds.browse = func(context.Context, time.Duration) ([]Announcement, error) {
 		return []Announcement{{IP: net.IPv4(192, 168, 1, 64), TXT: map[string]string{"id": "1002a17548", "encrypt": "true"}}}, nil
 	}
 	ds.Refresh(context.Background())
 	rec := httptest.NewRecorder()
-	(&Server{cfg: cfg, devices: ds}).Handler().ServeHTTP(rec, httptest.NewRequest("GET", "/widgets", nil))
+	(&Server{cfg: store, devices: ds}).Handler().ServeHTTP(rec, httptest.NewRequest("GET", "/widgets", nil))
 	if !strings.Contains(rec.Body.String(), "not set up yet") || !strings.Contains(rec.Body.String(), "Not found on the network") {
 		t.Fatal(rec.Body.String())
+	}
+}
+
+func TestSettings_SaveKeyKeepsSecretAndPersists(t *testing.T) {
+	path := filepath.Join(t.TempDir(), "config.json")
+	store := NewConfigStore(path, Config{Lang: "de"})
+	srv := &Server{cfg: store, devices: NewDevices(store)}
+	h := srv.Handler()
+
+	put := func(body string) *httptest.ResponseRecorder {
+		rec := httptest.NewRecorder()
+		h.ServeHTTP(rec, httptest.NewRequest("PUT", "/settings", strings.NewReader(body)))
+		return rec
+	}
+	if rec := put(`{"values":{"key:abc":"s3cret","name:abc":"Unraid"}}`); rec.Code != 200 || strings.Contains(rec.Body.String(), "s3cret") {
+		t.Fatalf("save: %d %s", rec.Code, rec.Body)
+	}
+	if rec := put(`{"values":{"key:abc":""}}`); rec.Code != 200 {
+		t.Fatalf("empty secret: %d", rec.Code)
+	}
+	onDisk, err := loadConfig(path)
+	if err != nil || len(onDisk.Devices) != 1 || onDisk.Devices[0].Key != "s3cret" || onDisk.Devices[0].Name != "Unraid" {
+		t.Fatalf("file: %+v %v", onDisk, err)
+	}
+	if fi, _ := os.Stat(path); fi.Mode().Perm() != 0o600 {
+		t.Fatalf("mode %v", fi.Mode())
+	}
+	if rec := put(`{"values":{"lang":"fr"}}`); rec.Code != 400 {
+		t.Fatalf("bad language: %d", rec.Code)
 	}
 }

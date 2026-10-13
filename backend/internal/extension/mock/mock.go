@@ -21,15 +21,20 @@ const actionToggle = "toggle"
 
 // Client is a deterministic extension.Client: one socket, flips on Apply.
 type Client struct {
-	mu  sync.Mutex
-	on  bool
-	rev int // bumped on every flip, the fingerprint
+	mu   sync.Mutex
+	name string
+	key  string
+	on   bool
+	rev  int // bumped on every flip, the fingerprint
 }
 
-var _ extension.Client = (*Client)(nil)
+var (
+	_ extension.Client         = (*Client)(nil)
+	_ extension.SettingsClient = (*Client)(nil)
+)
 
 // New returns a mock client, socket on.
-func New() *Client { return &Client{on: true} }
+func New() *Client { return &Client{on: true, name: "Steckdose"} }
 
 func (c *Client) Widgets(ctx context.Context) ([]extension.Widget, error) {
 	c.mu.Lock()
@@ -40,8 +45,8 @@ func (c *Client) Widgets(ctx context.Context) ([]extension.Widget, error) {
 		value, tone, label = "An", extension.ToneGood, "Ausschalten"
 	}
 	return []extension.Widget{
-		{Type: extension.WidgetStatus, Label: "Steckdose", Value: value, Tone: tone},
-		{Type: extension.WidgetAction, Label: "Steckdose", ActionID: actionToggle, ButtonLabel: label},
+		{Type: extension.WidgetStatus, Label: c.name, Value: value, Tone: tone},
+		{Type: extension.WidgetAction, Label: c.name, ActionID: actionToggle, ButtonLabel: label},
 	}, nil
 }
 
@@ -84,3 +89,28 @@ type unknownActionError string
 func (e unknownActionError) Error() string { return "extension/mock: unknown action " + string(e) }
 
 func extensionUnknownAction(id string) error { return unknownActionError(id) }
+
+// Settings is a demo form: a name and a secret key, kept in memory.
+func (c *Client) Settings(context.Context) ([]extension.SettingField, error) {
+	c.mu.Lock()
+	defer c.mu.Unlock()
+	return []extension.SettingField{
+		{Key: "name", Label: "Name", Type: extension.SettingText, Value: c.name},
+		{Key: "key", Label: "Gerätekey", Type: extension.SettingSecret, Set: c.key != "", Help: "Aus dem Konto des Herstellers."},
+	}, nil
+}
+
+func (c *Client) SaveSettings(_ context.Context, values map[string]string) error {
+	c.mu.Lock()
+	defer c.mu.Unlock()
+	if v, ok := values["name"]; ok {
+		if v == "" {
+			return &extension.SettingsError{Message: "Der Name darf nicht leer sein."}
+		}
+		c.name = v
+	}
+	if v := values["key"]; v != "" {
+		c.key = v
+	}
+	return nil
+}

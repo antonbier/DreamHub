@@ -6,6 +6,7 @@ import (
 	"encoding/json"
 	"errors"
 	"fmt"
+	"io"
 	"net/http"
 	"time"
 )
@@ -102,4 +103,48 @@ func (c HTTPClient) doJSON(req *http.Request, dst any) error {
 		return fmt.Errorf("extension: unexpected status %d", resp.StatusCode)
 	}
 	return json.NewDecoder(resp.Body).Decode(dst)
+}
+
+var _ SettingsClient = HTTPClient{}
+
+func (c HTTPClient) Settings(ctx context.Context) ([]SettingField, error) {
+	req, err := http.NewRequestWithContext(ctx, http.MethodGet, c.BaseURL+"/settings", nil)
+	if err != nil {
+		return nil, err
+	}
+	var res struct {
+		Fields []SettingField `json:"fields"`
+	}
+	if err := c.doJSON(req, &res); err != nil {
+		return nil, err
+	}
+	return res.Fields, nil
+}
+
+func (c HTTPClient) SaveSettings(ctx context.Context, values map[string]string) error {
+	body, err := json.Marshal(map[string]any{"values": values})
+	if err != nil {
+		return err
+	}
+	req, err := http.NewRequestWithContext(ctx, http.MethodPut, c.BaseURL+"/settings", bytes.NewReader(body))
+	if err != nil {
+		return err
+	}
+	req.Header.Set("Content-Type", "application/json")
+	resp, err := c.client().Do(req)
+	if err != nil {
+		return fmt.Errorf("extension: save settings: %w", err)
+	}
+	defer resp.Body.Close()
+	switch resp.StatusCode {
+	case http.StatusOK, http.StatusNoContent:
+		return nil
+	case http.StatusBadRequest:
+		var e struct {
+			Error string `json:"error"`
+		}
+		_ = json.NewDecoder(io.LimitReader(resp.Body, 4096)).Decode(&e)
+		return &SettingsError{Message: e.Error}
+	}
+	return fmt.Errorf("extension: save settings: unexpected status %d", resp.StatusCode)
 }

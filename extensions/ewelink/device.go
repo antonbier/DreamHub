@@ -48,7 +48,7 @@ func (d Device) Fingerprint() string {
 // Devices keeps the latest announcement of every device, refreshed by
 // browsing the LAN in the background so /widgets answers at once.
 type Devices struct {
-	cfg    Config
+	cfg    *ConfigStore
 	browse func(context.Context, time.Duration) ([]Announcement, error)
 	client *http.Client
 
@@ -56,7 +56,7 @@ type Devices struct {
 	list map[string]Device
 }
 
-func NewDevices(cfg Config) *Devices {
+func NewDevices(cfg *ConfigStore) *Devices {
 	return &Devices{cfg: cfg, browse: Browse, client: &http.Client{Timeout: 5 * time.Second}, list: map[string]Device{}}
 }
 
@@ -84,7 +84,7 @@ func (ds *Devices) fromAnnouncement(a Announcement) Device {
 	if a.IP != nil {
 		d.Addr = net.JoinHostPort(a.IP.String(), strconv.Itoa(int(port)))
 	}
-	conf, _ := ds.cfg.device(id)
+	conf, _ := ds.cfg.Get().device(id)
 	d.State, d.Err = DecryptTXT(a.TXT, conf.Key)
 	return d
 }
@@ -95,7 +95,7 @@ func (ds *Devices) Snapshot() []Device {
 	defer ds.mu.Unlock()
 	var configured, other []Device
 	for _, d := range ds.list {
-		if _, ok := ds.cfg.device(d.ID); ok {
+		if _, ok := ds.cfg.Get().device(d.ID); ok {
 			configured = append(configured, d)
 		} else {
 			other = append(other, d)
@@ -120,7 +120,7 @@ func (ds *Devices) Switch(ctx context.Context, id string, on bool) error {
 	if !ok || d.Addr == "" {
 		return errors.New("device not found on the network")
 	}
-	conf, _ := ds.cfg.device(id)
+	conf, _ := ds.cfg.Get().device(id)
 	want := "off"
 	if on {
 		want = "on"

@@ -22,6 +22,7 @@ import type {
   PackageStep,
   AdminScript,
   ExtensionCard,
+  ExtensionSetting,
   CatalogApp,
   AppSearchResult,
   AppManifest,
@@ -509,6 +510,10 @@ export const api = {
     list: () => request<{ extensions: ExtensionCard[] }>('GET', '/api/v1/extensions'),
     planAction: (id: string, actionId: string) =>
       request<{ plan: Plan }>('POST', `/api/v1/extensions/${encodeURIComponent(id)}/actions/${encodeURIComponent(actionId)}/plan`),
+    settings: (id: string) => request<{ fields: ExtensionSetting[] }>('GET', `/api/v1/extensions/${encodeURIComponent(id)}/settings`),
+    // Only the values the person changed; an extension keeps the rest.
+    saveSettings: (id: string, values: Record<string, string>) =>
+      request<{ fields: ExtensionSetting[] }>('PUT', `/api/v1/extensions/${encodeURIComponent(id)}/settings`, { values }),
   },
   apps: {
     catalog: () => request<{ apps: CatalogApp[] }>('GET', '/api/v1/apps/catalog'),

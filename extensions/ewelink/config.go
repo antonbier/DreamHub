@@ -3,6 +3,8 @@ package main
 import (
 	"encoding/json"
 	"os"
+	"path/filepath"
+	"sync"
 )
 
 // Config is the extension's own file, by default
@@ -60,4 +62,58 @@ func (c Config) device(id string) (DeviceConfig, bool) {
 		}
 	}
 	return DeviceConfig{}, false
+}
+
+// ConfigStore is the live config: read on every use, changed from the
+// settings form and written back to the file (mode 0600, atomically).
+type ConfigStore struct {
+	mu   sync.Mutex
+	path string // "" keeps it in memory (tests)
+	cfg  Config
+}
+
+func NewConfigStore(path string, cfg Config) *ConfigStore { return &ConfigStore{path: path, cfg: cfg} }
+
+// Get returns a copy, safe to read while a save runs.
+func (s *ConfigStore) Get() Config {
+	s.mu.Lock()
+	defer s.mu.Unlock()
+	c := s.cfg
+	c.Devices = append([]DeviceConfig(nil), s.cfg.Devices...)
+	return c
+}
+
+// Update applies fn to a copy and saves it; nothing changes if fn fails
+// or the file can't be written.
+func (s *ConfigStore) Update(fn func(*Config) error) error {
+	s.mu.Lock()
+	defer s.mu.Unlock()
+	c := s.cfg
+	c.Devices = append([]DeviceConfig(nil), s.cfg.Devices...)
+	if err := fn(&c); err != nil {
+		return err
+	}
+	if s.path != "" {
+		b, err := json.MarshalIndent(c, "", "  ")
+		if err != nil {
+			return err
+		}
+		tmp, err := os.CreateTemp(filepath.Dir(s.path), ".config-*")
+		if err != nil {
+			return err
+		}
+		defer os.Remove(tmp.Name())
+		if _, err := tmp.Write(b); err != nil {
+			tmp.Close()
+			return err
+		}
+		if err := tmp.Close(); err != nil {
+			return err
+		}
+		if err := os.Rename(tmp.Name(), s.path); err != nil { // CreateTemp makes it 0600
+			return err
+		}
+	}
+	s.cfg = c
+	return nil
 }

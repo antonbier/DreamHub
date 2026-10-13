@@ -344,7 +344,7 @@ func New(ctx context.Context, o Options) (*App, error) {
 	extRegistry := extension.NewRegistry()
 	if o.Mock {
 		extRegistry.Register(extension.Entry{
-			Registration: extension.Registration{ID: "demo.socket", Name: "Steckdose (Demo)", Icon: "control", SchemaVersion: extension.SchemaVersion},
+			Registration: extension.Registration{ID: "demo.socket", Name: "Steckdose (Demo)", Icon: "control", SchemaVersion: extension.SchemaVersion, Settings: true},
 			Client:       extmock.New(),
 		})
 	}

@@ -3,6 +3,7 @@ package api_test
 import (
 	"encoding/json"
 	"net/http"
+	"strings"
 	"testing"
 )
 
@@ -139,5 +140,39 @@ func TestExtensions_RegisterRejectsANonLoopbackBaseURL(t *testing.T) {
 	resp, b := e.do(t, "POST", "/api/v1/extensions/register", `{"id":"new.ext","name":"New","schemaVersion":1,"baseUrl":"http://192.168.1.50:9"}`, nil)
 	if code, _, _ := errCode(t, b); resp.StatusCode != http.StatusBadRequest || code != "invalid_body" {
 		t.Fatalf("expected 400 invalid_body for a non-loopback baseUrl, got %d %s", resp.StatusCode, b)
+	}
+}
+
+func TestExtensions_SettingsAreRenderedSavedAndSecretsStayHidden(t *testing.T) {
+	e := newEnv(t)
+	if _, cards := e.listExtensions(t); len(cards) != 1 {
+		t.Fatalf("cards: %+v", cards)
+	}
+	var out struct {
+		Fields []struct {
+			Key, Type, Value string
+			Set              bool
+		} `json:"fields"`
+	}
+	resp, b := e.do(t, "PUT", "/api/v1/extensions/demo.socket/settings", `{"values":{"name":"Küche","key":"topsecret"}}`, nil)
+	if resp.StatusCode != http.StatusOK {
+		t.Fatalf("save: %d %s", resp.StatusCode, b)
+	}
+	json.Unmarshal(b, &out)
+	for _, f := range out.Fields {
+		switch f.Key {
+		case "name":
+			if f.Value != "Küche" {
+				t.Fatalf("name not saved: %+v", f)
+			}
+		case "key":
+			if !f.Set || f.Value != "" || strings.Contains(string(b), "topsecret") {
+				t.Fatalf("a secret must say it is set and never come back: %s", b)
+			}
+		}
+	}
+	resp, b = e.do(t, "PUT", "/api/v1/extensions/demo.socket/settings", `{"values":{"name":""}}`, nil)
+	if code, _, _ := errCode(t, b); resp.StatusCode != http.StatusBadRequest || code != "extension_setting_rejected" {
+		t.Fatalf("an extension's refusal: %d %s", resp.StatusCode, b)
 	}
 }

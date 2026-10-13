@@ -50,7 +50,7 @@ Content-Type: application/json
 - `name` — shown next to your widgets, literal text (an extension owns no DreamHub locale file, unlike a built-in hub's label — there's no i18n key to localize this into).
 - `icon` — one of the names `frontend/src/components/Icon.vue` recognizes; anything else falls back to a generic extension icon.
 - `admin` — `true` if only admins should see your card (the same binary on/off choice a built-in hub's own permission makes — there's no finer-grained permission an extension can ask for).
-- `schemaVersion` — the widget schema version you're writing against; `1` today (see "Versioning" below).
+- `schemaVersion` — the widget schema version you're writing against; `1` or `2` (settings) today (see "Versioning" below).
 - `baseUrl` — where DreamHub should reach *you*, e.g. `http://127.0.0.1:9100`. Must itself be a loopback address — DreamHub checks this and the request's own origin, and refuses anything else, the same loopback-only check `PlexHub`'s own box-side media handoff uses.
 
 The call answers `200 {"registered": true, "coreSchemaVersion": 1}` on success. There's no DreamHub login involved — the handshake is public but gated entirely by the fact that only a process already running on this device can reach `127.0.0.1`.
@@ -105,6 +105,27 @@ func applyToggle(fingerprint string) (status int) {
     return 200
 }
 ```
+
+## Settings (schema version 2, optional)
+
+An extension that needs something typed in — a device key, a name, a language — says so by registering with `"settings": true` and `"schemaVersion": 2`. Its card then gets a **Settings** button (admins only) that opens one generic form; the extension ships no frontend code for it. DreamHub stores nothing: **the extension keeps its own values** (it already owns a config file), and the form is just a view onto them.
+
+### `GET /settings` → `200 {"fields": [...]}`
+
+```json
+{"fields": [
+  {"key": "lang", "label": "Language", "type": "select", "value": "de", "options": [{"value": "de", "label": "Deutsch"}, {"value": "en", "label": "English"}]},
+  {"key": "key:1002a17548", "label": "Device key · 1002a17548", "type": "secret", "set": true, "help": "Fetched once from your eWeLink account."}
+]}
+```
+
+- `type` is `"text"`, `"secret"` (a password input; **never send its value** — `"set": true` only says one is stored), `"bool"` (`"true"`/`"false"`) or `"select"` (with `options`).
+- `help` is one plain sentence under the input: where the value comes from.
+- The list may differ from call to call — eWeLink lists one group of fields per device it has seen.
+
+### `PUT /settings` with `{"values": {key: value}}` → `200` (or `204`), or `400 {"error": "..."}`
+
+Only the keys the person changed are sent; an untouched or empty secret is not sent at all. Answer `400` with a sentence in your own words to refuse a value — it is shown as is. DreamHub then asks `GET /settings` again for the form's new state.
 
 ## Versioning: additive only
 

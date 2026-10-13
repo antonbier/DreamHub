@@ -22,7 +22,7 @@ import (
 	"time"
 )
 
-const schemaVersion = 1
+const schemaVersion = 2
 
 func main() {
 	path := os.Getenv("DREAMHUB_EWELINK_CONFIG")
@@ -36,11 +36,12 @@ func main() {
 	ctx, stop := signal.NotifyContext(context.Background(), syscall.SIGINT, syscall.SIGTERM)
 	defer stop()
 
-	devices := NewDevices(cfg)
+	store := NewConfigStore(path, cfg)
+	devices := NewDevices(store)
 	go refreshLoop(ctx, devices)
 	go registerLoop(ctx, cfg)
 
-	srv := &http.Server{Addr: cfg.Listen, Handler: (&Server{cfg: cfg, devices: devices}).Handler(), ReadHeaderTimeout: 5 * time.Second}
+	srv := &http.Server{Addr: cfg.Listen, Handler: (&Server{cfg: store, devices: devices}).Handler(), ReadHeaderTimeout: 5 * time.Second}
 	go func() {
 		<-ctx.Done()
 		shut, cancel := context.WithTimeout(context.Background(), 3*time.Second)
@@ -71,7 +72,7 @@ func refreshLoop(ctx context.Context, d *Devices) {
 func registerLoop(ctx context.Context, cfg Config) {
 	body, _ := json.Marshal(map[string]any{
 		"id": "ewelink", "name": "eWeLink", "icon": "control", "admin": false,
-		"schemaVersion": schemaVersion, "baseUrl": "http://" + cfg.Listen,
+		"schemaVersion": schemaVersion, "settings": true, "baseUrl": "http://" + cfg.Listen,
 	})
 	client := &http.Client{Timeout: 5 * time.Second}
 	for {

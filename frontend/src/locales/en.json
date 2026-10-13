@@ -1061,6 +1061,7 @@
     "close": "Close"
   },
   "extensions": {
+    "settings": {"close": "Close", "open": "Settings", "save": "Save", "done": "Saved.", "saved": "saved — type to replace", "none": "This extension has nothing to set up yet."},
     "empty": "No extensions installed yet.",
     "confirm": "Apply",
     "done": "Done."

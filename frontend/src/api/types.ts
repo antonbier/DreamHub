@@ -775,6 +775,18 @@ export interface ExtensionCard {
   status: 'available' | 'degraded' | 'unavailable'
   problems: Problem[]
   widgets: ExtensionWidget[]
+  settings?: boolean
+}
+
+// extension.SettingField — one input of an extension's settings form.
+export interface ExtensionSetting {
+  key: string
+  label: string
+  type: 'text' | 'secret' | 'bool' | 'select'
+  help?: string
+  value?: string
+  set?: boolean
+  options?: { value: string; label: string }[]
 }
 
 // hubs.catalogEntry — one curated AppsHub app (docs/APPSHUB_PLAN.md, App3).

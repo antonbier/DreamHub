@@ -24,8 +24,18 @@
         <div class="flex items-center gap-2">
           <Icon :name="card.icon || 'extension'" :size="18" class="text-muted" />
           <h2 class="text-[14px] font-semibold text-text">{{ card.name }}</h2>
-          <span v-if="card.status !== 'available'" class="ms-auto h-1.5 w-1.5 rounded-full" :class="card.status === 'degraded' ? 'bg-warn' : 'bg-faint'" />
+          <span v-if="card.status !== 'available'" class="h-1.5 w-1.5 rounded-full" :class="card.status === 'degraded' ? 'bg-warn' : 'bg-faint'" />
+          <button
+            v-if="card.settings"
+            type="button"
+            class="ms-auto rounded px-2 py-1 text-[12.5px] text-accent hover:bg-tile-2"
+            :aria-expanded="settingsOpen === card.id"
+            @click="settingsOpen = settingsOpen === card.id ? null : card.id"
+          >
+            {{ t('extensions.settings.open') }}
+          </button>
         </div>
+        <ExtensionSettings v-if="settingsOpen === card.id" :id="card.id" @close="settingsOpen = null" />
 
         <ul v-if="card.problems.length > 0" class="mt-1.5 flex flex-col gap-1 text-[12.5px] text-muted">
           <li v-for="(p, i) in card.problems" :key="i">
@@ -105,6 +115,7 @@ import { useI18n } from 'vue-i18n'
 import { api } from '@/api/client'
 import Icon from '@/components/Icon.vue'
 import PlanPreview from '@/components/PlanPreview.vue'
+import ExtensionSettings from '@/components/apps/ExtensionSettings.vue'
 import { useProblem } from '@/composables/useProblem'
 import { usePlanError } from '@/composables/usePlanError'
 import type { ExtensionCard, ExtensionWidget, Plan } from '@/api/types'
@@ -115,6 +126,7 @@ const { friendly } = useFriendlyError()
 const { planErrorMessage } = usePlanError()
 
 const cards = ref<ExtensionCard[]>([])
+const settingsOpen = ref<string | null>(null)
 const loading = ref(true)
 const error = ref('')
 

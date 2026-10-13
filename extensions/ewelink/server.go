@@ -51,24 +51,26 @@ var readings = []struct{ key, unit string }{
 }
 
 type Server struct {
-	cfg     Config
+	cfg     *ConfigStore
 	devices *Devices
 }
 
-func (s *Server) t() texts { return lang[s.cfg.Lang] }
+func (s *Server) t() texts { return lang[s.cfg.Get().Lang] }
 
 func (s *Server) Handler() http.Handler {
 	mux := http.NewServeMux()
 	mux.HandleFunc("GET /widgets", s.widgets)
 	mux.HandleFunc("POST /actions/{action}/plan", s.plan)
 	mux.HandleFunc("POST /actions/{action}/apply", s.apply)
+	mux.HandleFunc("GET /settings", s.settings)
+	mux.HandleFunc("PUT /settings", s.saveSettings)
 	return mux
 }
 
 func actionID(id string) string { return "toggle-" + id }
 
 func (s *Server) name(id string) string {
-	if c, ok := s.cfg.device(id); ok && c.Name != "" {
+	if c, ok := s.cfg.Get().device(id); ok && c.Name != "" {
 		return c.Name
 	}
 	return "eWeLink " + id
@@ -81,7 +83,7 @@ func (s *Server) widgets(w http.ResponseWriter, r *http.Request) {
 	for _, d := range s.devices.Snapshot() {
 		seen[d.ID] = true
 		name := s.name(d.ID)
-		conf, configured := s.cfg.device(d.ID)
+		conf, configured := s.cfg.Get().device(d.ID)
 		switch {
 		case !configured:
 			out = append(out, Widget{Type: "status", Label: name, Value: t.found, Tone: "warn"})
@@ -106,7 +108,7 @@ func (s *Server) widgets(w http.ResponseWriter, r *http.Request) {
 			out = append(out, Widget{Type: "action", Label: name, ActionID: actionID(d.ID), ButtonLabel: button})
 		}
 	}
-	for _, c := range s.cfg.Devices {
+	for _, c := range s.cfg.Get().Devices {
 		if !seen[c.ID] {
 			out = append(out, Widget{Type: "status", Label: s.name(c.ID), Value: t.notFound, Tone: "bad"})
 		}
@@ -133,7 +135,7 @@ func (s *Server) target(action string) (Device, DeviceConfig, bool) {
 	if !ok {
 		return Device{}, DeviceConfig{}, false
 	}
-	conf, configured := s.cfg.device(id)
+	conf, configured := s.cfg.Get().device(id)
 	d, seen := s.devices.Get(id)
 	if !configured || !seen || d.State == nil {
 		return Device{}, DeviceConfig{}, false
@@ -197,4 +199,115 @@ func writeJSON(w http.ResponseWriter, status int, v any) {
 	w.Header().Set("Content-Type", "application/json")
 	w.WriteHeader(status)
 	_ = json.NewEncoder(w).Encode(v)
+}
+
+// --- settings (schema 2): GET/PUT /settings --------------------------------
+
+type settingField struct {
+	Key     string          `json:"key"`
+	Label   string          `json:"label"`
+	Type    string          `json:"type"`
+	Help    string          `json:"help,omitempty"`
+	Value   string          `json:"value,omitempty"`
+	Set     bool            `json:"set,omitempty"`
+	Options []settingOption `json:"options,omitempty"`
+}
+
+type settingOption struct {
+	Value string `json:"value"`
+	Label string `json:"label"`
+}
+
+// settingsText is the form's wording, German or English like the widgets.
+func settingsText(l string) (language, name, key, keyHelp, warn, warnHelp string) {
+	if l == "en" {
+		return "Language of this card", "Name", "Device key", "Fetched once from your eWeLink account (dev.ewelink.cc); without it the device can be found but neither read nor switched.",
+			"Warning before switching off", "Shown in the preview, e.g. what is plugged in and must be shut down first."
+	}
+	return "Sprache dieser Karte", "Name", "Geräteschlüssel", "Wird einmal aus deinem eWeLink-Konto geholt (dev.ewelink.cc); ohne ihn wird das Gerät gefunden, aber nicht gelesen oder geschaltet.",
+		"Warnung vor dem Ausschalten", "Steht in der Vorschau, z. B. was angeschlossen ist und vorher heruntergefahren werden muss."
+}
+
+// settings lists a language and, per device (configured or just seen on
+// the network), its name, key and switch-off warning.
+func (s *Server) settings(w http.ResponseWriter, r *http.Request) {
+	cfg := s.cfg.Get()
+	language, name, key, keyHelp, warn, warnHelp := settingsText(cfg.Lang)
+	fields := []settingField{{Key: "lang", Label: language, Type: "select", Value: cfg.Lang,
+		Options: []settingOption{{"de", "Deutsch"}, {"en", "English"}}}}
+	ids := []string{}
+	seen := map[string]bool{}
+	for _, c := range cfg.Devices {
+		ids, seen[c.ID] = append(ids, c.ID), true
+	}
+	for _, d := range s.devices.Snapshot() {
+		if !seen[d.ID] {
+			ids, seen[d.ID] = append(ids, d.ID), true
+		}
+	}
+	for _, id := range ids {
+		c, _ := cfg.device(id)
+		fields = append(fields,
+			settingField{Key: "name:" + id, Label: name + " · " + id, Type: "text", Value: c.Name},
+			settingField{Key: "key:" + id, Label: key + " · " + id, Type: "secret", Set: c.Key != "", Help: keyHelp},
+			settingField{Key: "offWarning:" + id, Label: warn + " · " + id, Type: "text", Value: c.OffWarning, Help: warnHelp},
+		)
+	}
+	writeJSON(w, http.StatusOK, map[string]any{"fields": fields})
+}
+
+func (s *Server) saveSettings(w http.ResponseWriter, r *http.Request) {
+	var body struct {
+		Values map[string]string `json:"values"`
+	}
+	if err := json.NewDecoder(http.MaxBytesReader(w, r.Body, 64<<10)).Decode(&body); err != nil {
+		writeJSON(w, http.StatusBadRequest, map[string]string{"error": "expected {\"values\": {...}}"})
+		return
+	}
+	err := s.cfg.Update(func(c *Config) error {
+		for k, v := range body.Values {
+			field, id, _ := strings.Cut(k, ":")
+			if field == "lang" {
+				if v != "de" && v != "en" {
+					return fmt.Errorf("language must be de or en")
+				}
+				c.Lang = v
+				continue
+			}
+			if id == "" || len(id) > 64 {
+				return fmt.Errorf("unknown setting %q", k)
+			}
+			i := -1
+			for j := range c.Devices {
+				if c.Devices[j].ID == id {
+					i = j
+				}
+			}
+			if i < 0 {
+				c.Devices = append(c.Devices, DeviceConfig{ID: id})
+				i = len(c.Devices) - 1
+			}
+			d := &c.Devices[i]
+			switch field {
+			case "name":
+				d.Name = strings.TrimSpace(v)
+			case "offWarning":
+				d.OffWarning = strings.TrimSpace(v)
+			case "key":
+				// An empty secret means "keep", so a key can't be cleared
+				// here — that is deliberate (remove the device in the file).
+				if v = strings.TrimSpace(v); v != "" {
+					d.Key = v
+				}
+			default:
+				return fmt.Errorf("unknown setting %q", k)
+			}
+		}
+		return nil
+	})
+	if err != nil {
+		writeJSON(w, http.StatusBadRequest, map[string]string{"error": err.Error()})
+		return
+	}
+	s.settings(w, r)
 }

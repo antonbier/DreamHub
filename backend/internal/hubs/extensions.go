@@ -2,6 +2,7 @@ package hubs
 
 import (
 	"context"
+	"errors"
 	"net"
 	"net/http"
 	neturl "net/url"
@@ -30,7 +31,11 @@ type Extensions struct {
 // inside the handler, by the extension's own declared Admin flag — not
 // globally admin-only like an unannotated changing route would default to.
 func (h *Extensions) Perms() map[string]perm.Perm {
-	return map[string]perm.Perm{"POST /api/v1/extensions/{id}/actions/{action}/plan": perm.Watch}
+	return map[string]perm.Perm{
+		"POST /api/v1/extensions/{id}/actions/{action}/plan": perm.Watch,
+		"GET /api/v1/extensions/{id}/settings":               perm.System,
+		"PUT /api/v1/extensions/{id}/settings":               perm.System,
+	}
 }
 
 // Mount registers Extension Hub's own routes (behind DreamHub's login).
@@ -39,6 +44,8 @@ func (h *Extensions) Perms() map[string]perm.Perm {
 func (h *Extensions) Mount(mux httpx.Mux) {
 	mux.HandleFunc("GET /api/v1/extensions", h.list)
 	mux.HandleFunc("POST /api/v1/extensions/{id}/actions/{action}/plan", h.planAction)
+	mux.HandleFunc("GET /api/v1/extensions/{id}/settings", h.settings)
+	mux.HandleFunc("PUT /api/v1/extensions/{id}/settings", h.saveSettings)
 }
 
 // cardView is one extension's card, with its own status alongside the
@@ -53,6 +60,8 @@ type cardView struct {
 	Level    status.Level       `json:"status"`
 	Problems []status.Problem   `json:"problems"`
 	Widgets  []extension.Widget `json:"widgets"`
+	// Settings: the card offers a settings form (admins only).
+	Settings bool `json:"settings,omitempty"`
 }
 
 // Problem codes for a card's own status — local to this hub, like
@@ -75,6 +84,9 @@ func (h *Extensions) list(w http.ResponseWriter, r *http.Request) {
 			continue
 		}
 		card := cardView{ID: e.ID, Name: e.Name, Icon: e.Icon, Admin: e.Admin, Level: status.Available, Widgets: []extension.Widget{}, Problems: []status.Problem{}}
+		if _, ok := e.Client.(extension.SettingsClient); ok && e.Settings && perms.Has(perm.System) {
+			card.Settings = true
+		}
 		switch {
 		case e.SchemaVersion > extension.SchemaVersion:
 			card.Level = status.Unavailable
@@ -91,6 +103,68 @@ func (h *Extensions) list(w http.ResponseWriter, r *http.Request) {
 		cards = append(cards, card)
 	}
 	httpx.WriteJSON(w, http.StatusOK, map[string]any{"extensions": cards})
+}
+
+// settingsClient finds the extension and its settings, answering the
+// error itself when it has none.
+func (h *Extensions) settingsClient(w http.ResponseWriter, r *http.Request) (extension.SettingsClient, bool) {
+	e, ok := h.Registry.Get(r.PathValue("id"))
+	if !ok {
+		httpx.WriteError(w, r, http.StatusNotFound, "extension_not_found", "no such extension")
+		return nil, false
+	}
+	sc, ok := e.Client.(extension.SettingsClient)
+	if !ok || !e.Settings {
+		httpx.WriteError(w, r, http.StatusNotFound, "extension_no_settings", "this extension has no settings")
+		return nil, false
+	}
+	return sc, true
+}
+
+func (h *Extensions) settings(w http.ResponseWriter, r *http.Request) {
+	sc, ok := h.settingsClient(w, r)
+	if !ok {
+		return
+	}
+	fields, err := sc.Settings(r.Context())
+	if err != nil {
+		httpx.WriteError(w, r, http.StatusBadGateway, "extension_unavailable", "could not reach the extension")
+		return
+	}
+	if fields == nil {
+		fields = []extension.SettingField{}
+	}
+	for i := range fields { // a secret never leaves the extension, whatever it sends
+		if fields[i].Type == extension.SettingSecret {
+			fields[i].Set = fields[i].Set || fields[i].Value != ""
+			fields[i].Value = ""
+		}
+	}
+	httpx.WriteJSON(w, http.StatusOK, map[string]any{"fields": fields})
+}
+
+func (h *Extensions) saveSettings(w http.ResponseWriter, r *http.Request) {
+	sc, ok := h.settingsClient(w, r)
+	if !ok {
+		return
+	}
+	var body struct {
+		Values map[string]string `json:"values"`
+	}
+	if err := httpx.DecodeJSON(r, &body); err != nil || len(body.Values) > 100 {
+		httpx.WriteError(w, r, http.StatusBadRequest, "invalid_body", `expected {"values": {"key": "value"}}`)
+		return
+	}
+	if err := sc.SaveSettings(r.Context(), body.Values); err != nil {
+		var se *extension.SettingsError
+		if errors.As(err, &se) {
+			httpx.WriteError(w, r, http.StatusBadRequest, "extension_setting_rejected", se.Message)
+			return
+		}
+		httpx.WriteError(w, r, http.StatusBadGateway, "extension_unavailable", "could not reach the extension")
+		return
+	}
+	h.settings(w, r)
 }
 
 // actionFingerprint is PlanAction's own fingerprint, scoped to this
@@ -152,6 +226,7 @@ type registerRequest struct {
 	Icon          string `json:"icon"`
 	Admin         bool   `json:"admin"`
 	SchemaVersion int    `json:"schemaVersion"`
+	Settings      bool   `json:"settings"`
 	// BaseURL is where DreamHub's backend calls the extension back — must
 	// be a loopback address (ARCHITECTURE.md's systemd notes, E3's
 	// isolation: the extension binds only to localhost, nothing
@@ -181,7 +256,7 @@ func (h *Extensions) Register(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 	h.Registry.Register(extension.Entry{
-		Registration: extension.Registration{ID: req.ID, Name: req.Name, Icon: req.Icon, Admin: req.Admin, SchemaVersion: req.SchemaVersion},
+		Registration: extension.Registration{ID: req.ID, Name: req.Name, Icon: req.Icon, Admin: req.Admin, SchemaVersion: req.SchemaVersion, Settings: req.Settings},
 		Client:       extension.HTTPClient{BaseURL: req.BaseURL},
 	})
 	httpx.WriteJSON(w, http.StatusOK, map[string]any{"registered": true, "coreSchemaVersion": extension.SchemaVersion})

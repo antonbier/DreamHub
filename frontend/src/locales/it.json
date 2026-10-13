@@ -1061,6 +1061,7 @@
     "close": "Chiudi"
   },
   "extensions": {
+    "settings": {"close": "Chiudi", "open": "Impostazioni", "save": "Salva", "done": "Salvato.", "saved": "salvato — digita per sostituire", "none": "Questa estensione non ha ancora nulla da impostare."},
     "empty": "Ancora nessuna estensione installata.",
     "confirm": "Applica",
     "done": "Fatto."

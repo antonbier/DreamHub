@@ -24,7 +24,7 @@ import (
 
 // SchemaVersion is the widget schema this core understands. Bump only when
 // adding a new, optional widget type or field — see the package doc.
-const SchemaVersion = 1
+const SchemaVersion = 2
 
 // WidgetType names one of the fixed shapes an extension can ask for
 // (docs/EXTENSIONHUB_PLAN.md, "Extensions never ship frontend code").
@@ -101,6 +101,9 @@ type Registration struct {
 	// asking for e.g. channels.manage).
 	Admin         bool `json:"admin"`
 	SchemaVersion int  `json:"schemaVersion"`
+	// Settings (schema 2) says the extension answers GET/PUT /settings,
+	// so its card offers a Settings form (SettingsClient).
+	Settings bool `json:"settings,omitempty"`
 }
 
 // ActionPreview is what PlanAction returns: the same shape a built-in
@@ -131,3 +134,54 @@ type Client interface {
 	// with every other hub.
 	Apply(ctx context.Context, actionID, fingerprint string) error
 }
+
+// SettingType is the kind of input a setting is entered with.
+type SettingType string
+
+const (
+	SettingText   SettingType = "text"
+	SettingSecret SettingType = "secret" // never sent back to the browser
+	SettingBool   SettingType = "bool"
+	SettingSelect SettingType = "select"
+)
+
+// SettingField is one input of an extension's settings form (schema 2).
+// The extension declares the fields and keeps the values itself — the
+// core only renders, forwards and never stores them. The list may change
+// between calls (one field per device found, say).
+type SettingField struct {
+	Key   string      `json:"key"`
+	Label string      `json:"label"`
+	Type  SettingType `json:"type"`
+	// Help is one plain sentence under the input: where to get the value.
+	Help string `json:"help,omitempty"`
+	// Value is the current value ("true"/"false" for a bool). Left out
+	// for a secret, whose Set says only that one is stored.
+	Value   string          `json:"value,omitempty"`
+	Set     bool            `json:"set,omitempty"`
+	Options []SettingOption `json:"options,omitempty"`
+}
+
+// SettingOption is one choice of a select setting.
+type SettingOption struct {
+	Value string `json:"value"`
+	Label string `json:"label"`
+}
+
+// SettingsClient is implemented by an extension that registered with
+// Settings: true. Schema 2 is additive, so an extension without settings
+// simply doesn't have it.
+type SettingsClient interface {
+	// Settings answers GET /settings: {"fields": [...]}.
+	Settings(ctx context.Context) ([]SettingField, error)
+	// SaveSettings answers PUT /settings {"values": {key: value}} with
+	// only the keys the person changed. A secret left empty is never sent.
+	// A *SettingsError is a rejected value (400 {"error": "..."}), shown
+	// to the person as is.
+	SaveSettings(ctx context.Context, values map[string]string) error
+}
+
+// SettingsError is an extension refusing a value, with its own words.
+type SettingsError struct{ Message string }
+
+func (e *SettingsError) Error() string { return e.Message }

@@ -1061,6 +1061,7 @@
     "close": "Schließen"
   },
   "extensions": {
+    "settings": {"close": "Schließen", "open": "Einstellungen", "save": "Speichern", "done": "Gespeichert.", "saved": "gespeichert — zum Ersetzen eintippen", "none": "Diese Erweiterung hat noch nichts einzustellen."},
     "empty": "Noch keine Erweiterungen installiert.",
     "confirm": "Übernehmen",
     "done": "Erledigt."

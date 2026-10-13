@@ -2,8 +2,8 @@
   Batch rename by the naming scheme (POST /api/v1/media/rename/batch/plan,
   Settings → Recordings): the selected recordings, each before → after,
   plus those left alone and why (already named so, name taken, in use…).
-  The source switch re-plans with names completed by TMDB (a film's year,
-  an episode's title — exact title matches only). One confirm renames
+  With a TMDB key the names are completed from TMDB (a film's year, an
+  episode's title — exact title matches only), without one from the recording. One confirm renames
   every listed recording, all or nothing. Unlike the single-row forms this
   owns its API calls: it's one self-contained flow over a whole selection.
 -->
@@ -15,22 +15,7 @@
         <input v-model="folders" type="checkbox" class="rounded" :disabled="busy" @change="load" />
         {{ t('media.batch.folders') }}
       </label>
-      <div class="ms-auto flex items-center gap-1 rounded bg-field p-1 text-[12.5px]" role="radiogroup" :aria-label="t('media.batch.source')">
-        <button
-          v-for="s in sources"
-          :key="s.id"
-          type="button"
-          role="radio"
-          :aria-checked="source === s.id"
-          class="rounded px-2 py-0.5 disabled:opacity-50"
-          :class="source === s.id ? 'bg-tile text-text' : 'text-muted hover:text-text'"
-          :disabled="!s.enabled || busy"
-          :title="s.enabled ? undefined : t('media.suggest.needsKey.tmdb')"
-          @click="setSource(s.id)"
-        >
-          {{ t(`media.batch.sources.${s.id}`) }}
-        </button>
-      </div>
+      <span class="text-[12px] text-faint">{{ t('media.batch.foldersHint') }}</span>
     </div>
 
     <p v-if="busy && !items.length" class="mt-2 text-[13px] text-faint" aria-live="polite">{{ t('common.loading') }}</p>
@@ -55,6 +40,7 @@
       <span class="font-mono text-[12px] text-faint">{{ newFolders.map(shortFolder).join(' · ') }}</span>
     </p>
     <p class="mt-2 text-[12px] text-faint">{{ t('media.batch.schemeHint') }}</p>
+    <p v-if="!tmdb" class="mt-1 text-[12px] text-faint">{{ t('media.batch.noTmdb') }}</p>
     <p v-if="error" class="mt-2 text-[12.5px] text-warn">{{ error }}</p>
 
     <div class="mt-3 flex justify-end gap-2">
@@ -87,11 +73,9 @@ const emit = defineEmits<{ cancel: []; done: [count: number] }>()
 const { t } = useI18n()
 const { planErrorMessage } = usePlanError()
 
-const sources = computed(() => [
-  { id: 'metadata' as const, enabled: true },
-  { id: 'tmdb' as const, enabled: props.tmdb },
-])
-const source = ref<'metadata' | 'tmdb'>('metadata')
+// With a TMDB key the names are completed from TMDB (a film's year, an
+// episode's title); without one, from the recording's own details.
+const source: 'metadata' | 'tmdb' = props.tmdb ? 'tmdb' : 'metadata'
 // Also sort into folders by the folder schemes (Settings → Recordings).
 const folders = ref(false)
 const newFolders = ref<string[]>([])
@@ -128,7 +112,7 @@ async function load() {
   error.value = ''
   plan.value = null
   try {
-    const res = await api.media.batchRenamePlan(props.paths, source.value, folders.value)
+    const res = await api.media.batchRenamePlan(props.paths, source, folders.value)
     items.value = res.items
     plan.value = res.plan ?? null
     newFolders.value = res.folders ?? []
@@ -137,12 +121,6 @@ async function load() {
   } finally {
     busy.value = false
   }
-}
-
-function setSource(s: 'metadata' | 'tmdb') {
-  if (s === source.value) return
-  source.value = s
-  void load()
 }
 
 async function confirm() {

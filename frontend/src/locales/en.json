@@ -441,11 +441,6 @@
     "batch": {
       "open": "Rename by scheme",
       "title": "Rename by scheme",
-      "source": "Source of the details",
-      "sources": {
-        "metadata": "Recording",
-        "tmdb": "+ TMDB"
-      },
       "willRename": "Nothing to rename | 1 recording will be renamed | {n} recordings will be renamed",
       "unchanged": "1 already named so | {n} already named so",
       "skipped": "1 skipped | {n} skipped",
@@ -454,6 +449,8 @@
       "confirm": "Rename | Rename 1 | Rename {n}",
       "done": "1 recording renamed · undo in the change log | {n} recordings renamed · undo in the change log",
       "folders": "Sort into folders",
+      "foldersHint": "e.g. Series/Season 1/",
+      "noTmdb": "Add a TMDB key in Settings to complete missing years and episode titles.",
       "newFolders": "1 new folder: | {n} new folders:"
     },
     "covers": {
@@ -462,9 +459,9 @@
       "willWrite": "No covers to save | 1 recording gets a cover | {n} recordings get a cover",
       "hasCover": "1 already has one | {n} already have one",
       "alreadyThere": "already has a cover, left as is",
-      "hint": "Saved next to the recording, where Enigma2 and other plugins look. Existing covers are never replaced.",
+      "hint": "DreamHub shows posters even without saving. Saving writes them next to the recording so the TV's own recording list and other apps show them too. Existing covers are never replaced.",
       "confirm": "Save | Save 1 | Save {n}",
-      "done": "1 cover saved | {n} covers saved"
+      "done": "1 cover saved — now also visible on the TV | {n} covers saved — now also visible on the TV"
     },
     "detail": {
       "fromRecording": "From the recording",
@@ -539,7 +536,7 @@
         "preview": "Preview",
         "confirm": "Mark",
         "summary": "Marks {breaks} in {name}'s own cut list — nothing in the recording changes, but the box's own remote can jump past them (\"jump to next marked position\"). Any resume position or cut already there is kept.",
-        "done": "Marked in the cut list."
+        "done": "Marked in the cut list. While watching on the TV, press Next (⏭) on the remote when an ad break starts — it jumps to the marked position after the break. Previous (⏮) jumps back."
       }
     }
   },

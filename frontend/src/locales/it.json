@@ -441,11 +441,6 @@
     "batch": {
       "open": "Rinomina secondo lo schema",
       "title": "Rinomina secondo lo schema",
-      "source": "Fonte dei dati",
-      "sources": {
-        "metadata": "Registrazione",
-        "tmdb": "+ TMDB"
-      },
       "willRename": "Niente da rinominare | 1 registrazione verrà rinominata | {n} registrazioni verranno rinominate",
       "unchanged": "1 ha già questo nome | {n} hanno già questo nome",
       "skipped": "1 saltata | {n} saltate",
@@ -454,6 +449,8 @@
       "confirm": "Rinomina | Rinomina 1 | Rinomina {n}",
       "done": "1 registrazione rinominata · annullabile nel registro modifiche | {n} registrazioni rinominate · annullabile nel registro modifiche",
       "folders": "Ordina in cartelle",
+      "foldersHint": "es. Serie/Stagione 1/",
+      "noTmdb": "Aggiungi una chiave TMDB nelle impostazioni per completare anni e titoli degli episodi mancanti.",
       "newFolders": "1 nuova cartella: | {n} nuove cartelle:"
     },
     "covers": {
@@ -462,9 +459,9 @@
       "willWrite": "Nessuna copertina da salvare | 1 registrazione riceve una copertina | {n} registrazioni ricevono una copertina",
       "hasCover": "1 ne ha già una | {n} ne hanno già una",
       "alreadyThere": "ha già una copertina, resta invariata",
-      "hint": "Salvate accanto alla registrazione, dove le cercano Enigma2 e gli altri plugin. Le copertine esistenti non vengono mai sostituite.",
+      "hint": "DreamHub mostra le locandine anche senza salvarle. Salvandole le scrive accanto alla registrazione, così le vedono anche l'elenco del TV e altre app. Le copertine esistenti non vengono mai sostituite.",
       "confirm": "Salva | Salva 1 | Salva {n}",
-      "done": "1 copertina salvata | {n} copertine salvate"
+      "done": "1 copertina salvata — ora visibile anche sul TV | {n} copertine salvate — ora visibili anche sul TV"
     },
     "detail": {
       "fromRecording": "Dalla registrazione",
@@ -539,7 +536,7 @@
         "preview": "Anteprima",
         "confirm": "Segna",
         "summary": "Segna {breaks} nella lista dei tagli di {name} — nella registrazione non cambia nulla, ma il telecomando della box può saltarle (\"salta al prossimo segno\"). Una posizione di ripresa o un taglio già presenti vengono mantenuti.",
-        "done": "Segnato nella lista dei tagli."
+        "done": "Segnato nella lista dei tagli. Guardando sul TV, premi Avanti (⏭) sul telecomando quando inizia la pubblicità: salta alla posizione segnata dopo l'interruzione. Indietro (⏮) torna indietro."
       }
     }
   },

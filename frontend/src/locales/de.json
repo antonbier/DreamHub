@@ -441,11 +441,6 @@
     "batch": {
       "open": "Nach Schema umbenennen",
       "title": "Nach Schema umbenennen",
-      "source": "Quelle der Angaben",
-      "sources": {
-        "metadata": "Aufnahme",
-        "tmdb": "+ TMDB"
-      },
       "willRename": "Nichts umzubenennen | 1 Aufnahme wird umbenannt | {n} Aufnahmen werden umbenannt",
       "unchanged": "1 heißt schon so | {n} heißen schon so",
       "skipped": "1 übersprungen | {n} übersprungen",
@@ -454,6 +449,8 @@
       "confirm": "Umbenennen | 1 umbenennen | {n} umbenennen",
       "done": "1 Aufnahme umbenannt · rückgängig im Änderungsprotokoll | {n} Aufnahmen umbenannt · rückgängig im Änderungsprotokoll",
       "folders": "In Ordner einsortieren",
+      "foldersHint": "z. B. Serie/Staffel 1/",
+      "noTmdb": "TMDB-Schlüssel in den Einstellungen hinterlegen, um fehlende Jahre und Episodentitel zu ergänzen.",
       "newFolders": "1 neuer Ordner: | {n} neue Ordner:"
     },
     "covers": {
@@ -462,9 +459,9 @@
       "willWrite": "Kein Cover zu speichern | 1 Aufnahme bekommt ein Cover | {n} Aufnahmen bekommen ein Cover",
       "hasCover": "1 hat schon eins | {n} haben schon eins",
       "alreadyThere": "hat schon ein Cover, bleibt unverändert",
-      "hint": "Gespeichert wird neben der Aufnahme, wie es Enigma2 und andere Plugins erwarten. Vorhandene Cover werden nie überschrieben.",
+      "hint": "DreamHub zeigt Poster auch ohne Speichern. Beim Speichern werden sie neben die Aufnahme geschrieben, damit die Aufnahmeliste des TVs und andere Apps sie auch zeigen. Vorhandene Cover werden nie überschrieben.",
       "confirm": "Speichern | 1 speichern | {n} speichern",
-      "done": "1 Cover gespeichert | {n} Cover gespeichert"
+      "done": "1 Cover gespeichert — jetzt auch am TV sichtbar | {n} Cover gespeichert — jetzt auch am TV sichtbar"
     },
     "detail": {
       "fromRecording": "Aus der Aufnahme",
@@ -539,7 +536,7 @@
         "preview": "Vorschau",
         "confirm": "Markieren",
         "summary": "Markiert {breaks} in der eigenen Schnittliste von {name} — an der Aufnahme ändert sich nichts, aber die Box-Fernbedienung kann daran vorbeispringen (\"zur nächsten Markierung springen\"). Eine vorhandene Wiedergabeposition oder ein vorhandener Schnitt bleibt erhalten.",
-        "done": "In der Schnittliste markiert."
+        "done": "In der Schnittliste markiert. Beim Ansehen am TV die Taste Weiter (⏭) der Fernbedienung drücken, sobald die Werbung beginnt — sie springt zur markierten Stelle nach der Werbung. Zurück (⏮) springt zurück."
       }
     }
   },

@@ -98,3 +98,13 @@ func (e *env) doRaw(t *testing.T, method, path string, body []byte, contentType 
 	t.Helper()
 	return e.do(t, method, path, string(body), func(r *http.Request) { r.Header.Set("Content-Type", contentType) })
 }
+
+// A choose request without a set used to answer an empty 200.
+func TestChannelLogos_ChooseNeedsASet(t *testing.T) {
+	e := newEnv(t)
+	body, _ := json.Marshal(map[string]string{"ref": logoRef, "name": "RTL"})
+	resp, b := e.do(t, "PUT", "/api/v1/channels/logo", string(body), nil)
+	if resp.StatusCode != http.StatusBadRequest {
+		t.Fatalf("no set: %d %s", resp.StatusCode, b)
+	}
+}

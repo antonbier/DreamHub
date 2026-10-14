@@ -248,10 +248,11 @@ func (h *Channels) logoReady(w http.ResponseWriter, r *http.Request, ref string)
 // the picture an installed set has for this channel.
 func (h *Channels) chooseLogo(w http.ResponseWriter, r *http.Request) {
 	var body struct{ Ref, Name, Set string }
-	if err := httpx.DecodeJSON(r, &body); err != nil || body.Set == "" || !h.logoReady(w, r, body.Ref) {
-		if err != nil {
-			httpx.WriteError(w, r, http.StatusBadRequest, "invalid_body", `expected {"ref": "...", "name": "...", "set": "<set>"}`)
-		}
+	if err := httpx.DecodeJSON(r, &body); err != nil || body.Set == "" {
+		httpx.WriteError(w, r, http.StatusBadRequest, "invalid_body", `expected {"ref": "...", "name": "...", "set": "<set>"}`)
+		return
+	}
+	if !h.logoReady(w, r, body.Ref) {
 		return
 	}
 	for _, s := range h.piconSets() {

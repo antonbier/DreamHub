@@ -28,7 +28,7 @@
     <div class="relative flex aspect-video items-center justify-center overflow-hidden rounded bg-black">
       <img v-if="src" :src="src" :alt="t('control.screenshot.alt')" class="h-full w-full object-contain" />
       <p v-else class="px-4 text-center text-[13px] text-faint" aria-live="polite">
-        {{ failed ? t('error.plan.webcontrol_unavailable') : t('common.loading') }}
+        {{ failed ? t('error.discovery.webcontrol_unavailable') : t('common.loading') }}
       </p>
       <span v-if="src && remote.inStandby" class="absolute inset-x-0 bottom-2 text-center text-[12.5px] text-muted">
         {{ t('control.standby.banner') }}

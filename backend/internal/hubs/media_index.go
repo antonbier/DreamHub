@@ -42,6 +42,9 @@ type recIndex struct {
 	// again: a file operation happened while a build ran — that build may
 	// have read the old state, so build once more when it's done.
 	again bool
+	// first is closed once the very first build finished; callers that
+	// arrive while it runs wait on it instead of seeing no index.
+	first chan struct{}
 }
 
 // recordingIndex returns the index's entries, or ok=false when the file
@@ -58,8 +61,19 @@ func (h *Media) recordingIndex(ctx context.Context) ([]indexEntry, bool) {
 	x.mu.Lock()
 	if x.entries == nil && !x.building {
 		x.building = true
+		x.first = make(chan struct{})
 		x.mu.Unlock()
 		return h.buildIndex(roots), true
+	}
+	if x.entries == nil && x.first != nil {
+		first := x.first
+		x.mu.Unlock()
+		select {
+		case <-first:
+		case <-ctx.Done():
+			return nil, false
+		}
+		x.mu.Lock()
 	}
 	entries := x.entries
 	if time.Since(x.built) >= indexMaxAge && !x.building {
@@ -76,6 +90,10 @@ func (h *Media) buildIndex(roots []string) []indexEntry {
 		built := walkRecordings(h.FS, roots)
 		x.mu.Lock()
 		x.entries, x.built = built, time.Now()
+		if x.first != nil {
+			close(x.first)
+			x.first = nil
+		}
 		if !x.again {
 			x.building = false
 			x.mu.Unlock()

@@ -99,3 +99,23 @@ func TestHTTPClient_Unreachable(t *testing.T) {
 		t.Fatalf("got %v, want ErrUnavailable", err)
 	}
 }
+
+// A failed lookup is remembered briefly, so listing the installed apps
+// while Docker Hub is unreachable doesn't wait out a timeout per container.
+func TestHTTPClient_FailureIsCachedBriefly(t *testing.T) {
+	hits := 0
+	srv := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		hits++
+		w.WriteHeader(http.StatusInternalServerError)
+	}))
+	defer srv.Close()
+	client := &dockerhub.HTTPClient{BaseURL: srv.URL}
+	for i := 0; i < 3; i++ {
+		if _, err := client.Digest(context.Background(), "pihole/pihole", "latest"); !errors.Is(err, dockerhub.ErrUnavailable) {
+			t.Fatalf("call %d: got %v, want ErrUnavailable", i, err)
+		}
+	}
+	if hits != 1 {
+		t.Fatalf("Docker Hub was asked %d times, want 1", hits)
+	}
+}

@@ -21,6 +21,11 @@ const callTimeout = 8 * time.Second
 // the package doc).
 const manifestTTL = 10 * time.Minute
 
+// failureTTL is how long a failed lookup (Docker Hub unreachable, the box
+// offline) is remembered. Without it every listing of the installed apps
+// would wait out the call timeout once per container again.
+const failureTTL = time.Minute
+
 // HTTPClient calls Docker Hub's own v2 API. BaseURL defaults to the real
 // one; tests override it to a local httptest.Server.
 type HTTPClient struct {
@@ -40,6 +45,7 @@ type manifestCacheEntry struct {
 	// installed app's own pulled digest is still current.
 	digest string
 	notErr bool // whether this entry caches an ErrNotFound result
+	failed bool // whether this entry caches a failed lookup (failureTTL)
 	at     time.Time
 }
 
@@ -128,8 +134,11 @@ func (c *HTTPClient) entry(ctx context.Context, image, tag string) (manifestCach
 	if c.cache == nil {
 		c.cache = map[string]manifestCacheEntry{}
 	}
-	if e, ok := c.cache[key]; ok && time.Since(e.at) < manifestTTL {
+	if e, ok := c.cache[key]; ok && time.Since(e.at) < manifestTTL && (!e.failed || time.Since(e.at) < failureTTL) {
 		c.mu.Unlock()
+		if e.failed {
+			return manifestCacheEntry{}, fmt.Errorf("%w: lookup failed a moment ago", ErrUnavailable)
+		}
 		if e.notErr {
 			return manifestCacheEntry{}, ErrNotFound
 		}
@@ -146,6 +155,8 @@ func (c *HTTPClient) entry(ctx context.Context, image, tag string) (manifestCach
 		c.cache[key] = e
 	case err == ErrNotFound:
 		c.cache[key] = manifestCacheEntry{notErr: true, at: time.Now()}
+	case ctx.Err() == nil: // a canceled request says nothing about Docker Hub
+		c.cache[key] = manifestCacheEntry{failed: true, at: time.Now()}
 	}
 	c.mu.Unlock()
 

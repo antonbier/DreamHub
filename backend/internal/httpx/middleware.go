@@ -66,7 +66,12 @@ func RequestIDAndLogging(logger *slog.Logger, now func() time.Time, next http.Ha
 		rec := &statusRecorder{ResponseWriter: w, status: http.StatusOK}
 		start := now()
 		next.ServeHTTP(rec, r.WithContext(WithRequestID(r.Context(), id)))
-		logger.Info("request",
+		level := slog.LevelInfo
+		// Extensions re-register every minute; a successful one is noise.
+		if r.Method == http.MethodPost && r.URL.Path == "/api/v1/extensions/register" && rec.status < 400 {
+			level = slog.LevelDebug
+		}
+		logger.Log(r.Context(), level, "request",
 			"requestId", id, "method", r.Method, "path", r.URL.Path,
 			"status", rec.status, "durationMs", now().Sub(start).Milliseconds())
 	})

@@ -1,6 +1,14 @@
 package httpx
 
-import "testing"
+import (
+	"bytes"
+	"log/slog"
+	"net/http"
+	"net/http/httptest"
+	"strings"
+	"testing"
+	"time"
+)
 
 func TestHostAllowed(t *testing.T) {
 	allow := []string{"dreamhub.home.arpa"}
@@ -19,5 +27,29 @@ func TestHostAllowed(t *testing.T) {
 		if got := HostAllowed(host, allow); got != want {
 			t.Errorf("HostAllowed(%q) = %v, want %v", host, got, want)
 		}
+	}
+}
+
+func TestRequestLoggingQuietsExtensionReRegistration(t *testing.T) {
+	var buf bytes.Buffer
+	logger := slog.New(slog.NewTextHandler(&buf, &slog.HandlerOptions{Level: slog.LevelInfo}))
+	status := http.StatusOK
+	h := RequestIDAndLogging(logger, time.Now, http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) { w.WriteHeader(status) }))
+	do := func(method, path string) {
+		h.ServeHTTP(httptest.NewRecorder(), httptest.NewRequest(method, path, nil))
+	}
+	do("POST", "/api/v1/extensions/register")
+	if buf.Len() != 0 {
+		t.Fatalf("successful re-registration logged at INFO: %s", buf.String())
+	}
+	do("GET", "/api/v1/status")
+	if !strings.Contains(buf.String(), "/api/v1/status") {
+		t.Fatalf("normal request not logged: %q", buf.String())
+	}
+	buf.Reset()
+	status = http.StatusBadRequest
+	do("POST", "/api/v1/extensions/register")
+	if buf.Len() == 0 {
+		t.Fatal("a failed registration must still be logged")
 	}
 }

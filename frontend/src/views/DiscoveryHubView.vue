@@ -150,7 +150,7 @@ import { useNavigationStore } from '@/stores/navigation'
 import { useProblem } from '@/composables/useProblem'
 import { useDisplayTimeZone } from '@/composables/useDisplayTimeZone'
 import { usePlanError } from '@/composables/usePlanError'
-import { dayKey as zonedDayKey } from '@/lib/zonedTime'
+import { dayKey as zonedDayKey, zonedUnix } from '@/lib/zonedTime'
 import type { Bouquet, DiscoveryStatus, Recommendation, TasteCounts, TasteProfile } from '@/api/types'
 
 const { t, locale } = useI18n()
@@ -255,7 +255,7 @@ const dayKey = (unixSeconds: number) => zonedDayKey(unixSeconds, timeZone.value)
 // Picks grouped by day ("Today", "Tomorrow", else the date), in airing order.
 const groups = computed(() => {
   const today = dayKey(nowSec.value)
-  const tomorrow = dayKey(nowSec.value + 86400)
+  const tomorrow = dayKey(zonedUnix(timeZone.value, 1, 12, 0, nowSec.value * 1000))
   const sorted = [...recommendations.value].sort((a, b) => a.start - b.start)
   const out: { key: string; label: string; items: Recommendation[] }[] = []
   for (const r of sorted) {

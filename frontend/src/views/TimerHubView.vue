@@ -155,6 +155,7 @@ import { useNavigationStore } from '@/stores/navigation'
 import { useProblem } from '@/composables/useProblem'
 import { usePlanError } from '@/composables/usePlanError'
 import { useDisplayTimeZone } from '@/composables/useDisplayTimeZone'
+import { zonedUnix } from '@/lib/zonedTime'
 import type { AutoTimers, Plan, SimulatedTimer, Timer } from '@/api/types'
 
 const { t, locale } = useI18n()
@@ -189,7 +190,7 @@ function dayKey(unixSeconds: number): string {
 function dayLabel(unixSeconds: number): string {
   const key = dayKey(unixSeconds)
   if (key === dayKey(nowSec())) return t('timers.today')
-  if (key === dayKey(nowSec() + 86400)) return t('timers.tomorrow')
+  if (key === dayKey(zonedUnix(timeZone.value, 1, 12, 0))) return t('timers.tomorrow')
   return new Intl.DateTimeFormat(locale.value, { weekday: 'long', day: 'numeric', month: 'long', timeZone: timeZone.value }).format(unixSeconds * 1000)
 }
 const upcomingDays = computed(() => {

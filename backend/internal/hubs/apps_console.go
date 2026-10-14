@@ -65,13 +65,19 @@ func (c *consoleState) set(v bool) {
 	c.mu.Unlock()
 }
 
+// consoleOn: enabled, and password protection is still on — switching it
+// off later must not leave a container shell open to the LAN.
+func (h *Apps) consoleOn() bool {
+	return h.console.get() && h.Auth != nil && h.Auth.AuthConfig().Enabled
+}
+
 func (h *Apps) consoleStatus(w http.ResponseWriter, r *http.Request) {
 	available := h.Auth != nil && h.Docker != nil
 	authOn := available && h.Auth.AuthConfig().Enabled
 	httpx.WriteJSON(w, http.StatusOK, map[string]any{
 		"available": available,
 		"authOn":    authOn,
-		"enabled":   h.console.get(),
+		"enabled":   h.consoleOn(),
 	})
 }
 
@@ -117,7 +123,7 @@ func (h *Apps) disableConsole(w http.ResponseWriter, r *http.Request) {
 // logging every polled request); enabling and disabling the console
 // already bracket the capability in the change log.
 func (h *Apps) containerConsole(w http.ResponseWriter, r *http.Request) {
-	if !h.console.get() {
+	if !h.consoleOn() {
 		httpx.WriteError(w, r, http.StatusConflict, "console_disabled", "the console isn't enabled")
 		return
 	}

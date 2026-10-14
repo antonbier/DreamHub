@@ -187,3 +187,22 @@ func wsRecv(t *testing.T, br *bufio.Reader) (int, []byte) {
 	}
 	return op, data
 }
+
+// Switching password protection off later must close the console again.
+func TestAppsConsole_ClosesWhenAuthIsSwitchedOff(t *testing.T) {
+	e := newEnv(t)
+	e.do(t, "PATCH", "/api/v1/settings", `{"values":{"auth.enabled":true,"auth.username":"armin","auth.password":"correct horse"}}`, nil)
+	auth := func(r *http.Request) { r.SetBasicAuth("armin", "correct horse") }
+	if resp, _ := e.do(t, "POST", "/api/v1/apps/console/enable", `{"password":"correct horse"}`, auth); resp.StatusCode != http.StatusOK {
+		t.Fatalf("enable: %d", resp.StatusCode)
+	}
+	if resp, b := e.do(t, "PATCH", "/api/v1/settings", `{"values":{"auth.enabled":false}}`, auth); resp.StatusCode != http.StatusOK {
+		t.Fatalf("auth off: %d %s", resp.StatusCode, b)
+	}
+	if resp, _ := e.do(t, "GET", "/api/v1/apps/installed/pihole/console", "", nil); resp.StatusCode != http.StatusConflict {
+		t.Fatalf("console stayed open without password protection: %d", resp.StatusCode)
+	}
+	if s := e.consoleStatus(t, nil); s.Enabled {
+		t.Fatalf("status still enabled: %+v", s)
+	}
+}

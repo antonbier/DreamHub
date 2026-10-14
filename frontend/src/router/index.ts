@@ -8,7 +8,7 @@
 import type { Permission } from '@/api/types'
 import { useAuth } from '@/composables/useAuth'
 import { createRouter, createWebHistory } from 'vue-router'
-import { isOnboardingComplete } from '@/lib/onboarding'
+import { isSetupDone } from '@/lib/onboarding'
 
 const router = createRouter({
   history: createWebHistory(),
@@ -24,6 +24,14 @@ const router = createRouter({
       path: '/settings/:tab?',
       name: 'settings',
       component: () => import('@/views/SettingsView.vue'),
+    },
+    {
+      // Nothing to render: App.vue shows the password screen or the
+      // profile picker instead of the shell while nobody is signed in, and
+      // this path is where the address bar says so.
+      path: '/login',
+      name: 'login',
+      component: { render: () => null },
     },
     {
       path: '/onboarding',
@@ -133,21 +141,32 @@ const router = createRouter({
   ],
 })
 
-// First visit on this browser (CONCEPT.md, "Onboarding wizard: on first
-// start"): send everything to /onboarding until it finishes. Re-running it
-// later is a deliberate navigation from Settings, not this guard.
+// Signed-out visitors (password screen, profile picker) live at /login and
+// come back to where they were headed. The setup wizard is offered to an
+// admin only while the box has no configuration yet (lib/onboarding.ts);
+// re-running it later is a deliberate navigation from Settings.
 // A profile is known before the first page is chosen, so the guards below
 // can ask what it may do (the server refuses anyway — this only keeps a
 // viewer from landing on a page that can't show them anything).
 router.beforeEach(async (to) => {
   const { authState, me, can, check } = useAuth()
   if (!authState.checked) await check()
-  const signedIn = me.value !== null
+  if (me.value === null) {
+    if (to.name === 'login') return
+    return { name: 'login', query: to.fullPath === '/' ? {} : { redirect: to.fullPath } }
+  }
+  if (to.name === 'login') {
+    const target = typeof to.query.redirect === 'string' && to.query.redirect.startsWith('/') ? to.query.redirect : '/'
+    return target === '/login' ? { path: '/' } : { path: target }
+  }
   const need = to.meta.perm as Permission | undefined
-  if (signedIn && need && !can(need)) return { path: '/' }
+  if (need && !can(need)) return { path: '/' }
   // The wizard sets up the box for the household: only for those who may.
-  if (signedIn && !can('settings.global')) return
-  if (to.name !== 'onboarding' && to.name !== 'not-found' && !isOnboardingComplete()) {
+  if (!can('settings.global')) {
+    if (to.name === 'onboarding') return { path: '/' }
+    return
+  }
+  if (to.name !== 'onboarding' && to.name !== 'not-found' && !(await isSetupDone())) {
     return { name: 'onboarding' }
   }
 })

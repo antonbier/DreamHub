@@ -1,9 +1,8 @@
 <!--
   The onboarding wizard (CONCEPT.md, "Onboarding wizard"). Runs on first
-  visit (router/index.ts redirects here until lib/onboarding.ts's flag is
-  set) and is re-runnable any time from Settings. Every step other than
-  "Channels" (ChannelHub is v1.1 — see that step) works against real,
-  already-existing endpoints; nothing here is simulated.
+  start (router/index.ts sends an admin here until the box remembers the
+  setup, lib/onboarding.ts) and is re-runnable any time from Settings.
+  Every step works against real endpoints; nothing here is simulated.
 -->
 <template>
   <div class="mx-auto flex min-h-full max-w-[560px] flex-col justify-center p-6 below-md:p-4">
@@ -34,18 +33,16 @@ import OnboardingAuthStep from '@/components/onboarding/OnboardingAuthStep.vue'
 import OnboardingDeviceStep from '@/components/onboarding/OnboardingDeviceStep.vue'
 import OnboardingHubsStep from '@/components/onboarding/OnboardingHubsStep.vue'
 import OnboardingAiStep from '@/components/onboarding/OnboardingAiStep.vue'
-import OnboardingChannelsStep from '@/components/onboarding/OnboardingChannelsStep.vue'
 import OnboardingDoneStep from '@/components/onboarding/OnboardingDoneStep.vue'
-import { markOnboardingComplete } from '@/lib/onboarding'
+import { markSetupDone } from '@/lib/onboarding'
 
-const STEPS = ['language', 'auth', 'device', 'hubs', 'ai', 'channels', 'done'] as const
+const STEPS = ['language', 'auth', 'device', 'hubs', 'ai', 'done'] as const
 const COMPONENTS = {
   language: OnboardingLanguageStep,
   auth: OnboardingAuthStep,
   device: OnboardingDeviceStep,
   hubs: OnboardingHubsStep,
   ai: OnboardingAiStep,
-  channels: OnboardingChannelsStep,
   done: OnboardingDoneStep,
 }
 
@@ -59,8 +56,8 @@ function next() {
 function back() {
   if (step.value > 0) step.value--
 }
-function finish() {
-  markOnboardingComplete()
+async function finish() {
+  await markSetupDone()
   void router.push('/')
 }
 </script>

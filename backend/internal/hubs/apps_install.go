@@ -362,6 +362,12 @@ func (h *Apps) planInstall(w http.ResponseWriter, r *http.Request) {
 		app = app.WithPort(body.HostPort)
 	}
 
+	// Far above any box's RAM: refuse it before the MB→bytes shifts below
+	// can overflow and slip past the budget check.
+	if body.MemoryLimitMB > 1<<20 {
+		httpx.WriteError(w, r, http.StatusConflict, "insufficient_memory", "that is more memory than the box has")
+		return
+	}
 	memoryLimitMB := body.MemoryLimitMB
 	if memoryLimitMB <= 0 {
 		memoryLimitMB = app.MemoryMB

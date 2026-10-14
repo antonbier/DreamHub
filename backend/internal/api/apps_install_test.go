@@ -316,3 +316,12 @@ func TestAppsInstall_ChoosePortAndStorage(t *testing.T) {
 		t.Fatalf("box port: %d %s", code, b)
 	}
 }
+
+// A huge memory request must be refused, not wrap around the budget check.
+func TestAppsInstall_HugeMemoryLimitRefused(t *testing.T) {
+	e := newEnv(t)
+	code, _, b := e.planInstall(t, `{"appId":"vaultwarden","memoryLimitMB":9000000000000}`)
+	if code != http.StatusConflict {
+		t.Fatalf("got %d %s", code, b)
+	}
+}

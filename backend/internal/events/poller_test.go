@@ -2,6 +2,7 @@ package events
 
 import (
 	"context"
+	"errors"
 	"strings"
 	"testing"
 	"time"
@@ -17,11 +18,17 @@ type fakeClient struct {
 	webcontrol.Client
 	timers []webcontrol.Timer
 	hdds   []webcontrol.HDD
+	// frontends is the tuner list; infoErr makes DeviceInfo fail.
+	frontends []webcontrol.Frontend
+	infoErr   error
 }
 
 func (f *fakeClient) TimerList(context.Context) ([]webcontrol.Timer, error) { return f.timers, nil }
 func (f *fakeClient) DeviceInfo(context.Context) (*webcontrol.DeviceInfo, error) {
-	return &webcontrol.DeviceInfo{HDDs: f.hdds}, nil
+	if f.infoErr != nil {
+		return nil, f.infoErr
+	}
+	return &webcontrol.DeviceInfo{HDDs: f.hdds, Frontends: f.frontends}, nil
 }
 
 func newTestBus(t *testing.T) (*Bus, *store.Store) {
@@ -215,5 +222,23 @@ func TestPoller_NewTimerConflict(t *testing.T) {
 	p.tick(ctx)
 	if got := keys(t, st); len(got) != 1 {
 		t.Errorf("past timers must not raise conflicts, got %v", got)
+	}
+}
+
+// A failed device-info read must not make the poller assume one tuner and
+// announce conflicts a two-tuner box doesn't have.
+func TestPoller_NoConflictFromAMissingTunerList(t *testing.T) {
+	bus, st := newTestBus(t)
+	fc := &fakeClient{Client: mock.New(), frontends: []webcontrol.Frontend{{Name: "Tuner A", Model: "DVB-S2"}, {Name: "Tuner B", Model: "DVB-S2"}}}
+	p := &Poller{WC: fc, Bus: bus, Now: func() time.Time { return time.Unix(1000, 0) }}
+	ctx := context.Background()
+	a := webcontrol.Timer{ServiceReference: "1:0:19:2EE3:441:1:C00000:0:0:0:", Name: "A", Begin: 2000, End: 5000}
+	b := webcontrol.Timer{ServiceReference: "1:0:19:2B7A:3F3:1:C00000:0:0:0:", Name: "B", Begin: 4000, End: 7000}
+	fc.timers = []webcontrol.Timer{a, b}
+	p.tick(ctx) // baseline: two tuners, no clash
+	fc.infoErr = errors.New("device info unavailable")
+	p.tick(ctx)
+	if got := keys(t, st); len(got) != 0 {
+		t.Fatalf("announced %v without knowing the tuners", got)
 	}
 }

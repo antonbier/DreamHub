@@ -91,7 +91,11 @@ func (p *Poller) tick(ctx context.Context) {
 	}
 	if err == nil {
 		p.checkRecordings(ctx, timers)
-		p.checkConflicts(ctx, timers, info)
+		// Without the tuner list a clash can't be judged (a missing list
+		// would be read as "one tuner"), and the last known state stays.
+		if infoErr == nil {
+			p.checkConflicts(ctx, timers, info)
+		}
 	}
 	if infoErr == nil {
 		p.checkDisk(ctx, info)

@@ -82,6 +82,7 @@ type Service struct {
 	KeepFor time.Duration
 
 	mu        sync.Mutex
+	enqMu     sync.Mutex // makes Enqueue's check-then-insert atomic
 	kinds     map[string]Kind
 	running   map[int64]*Run
 	blockedBy string
@@ -135,6 +136,8 @@ func (s *Service) Enqueue(ctx context.Context, kind, key string, ownerID int64, 
 	if err != nil || params == nil {
 		raw = json.RawMessage(`{}`)
 	}
+	s.enqMu.Lock()
+	defer s.enqMu.Unlock()
 	if key != "" {
 		active, err := s.Store.ActiveJobs(ctx)
 		if err != nil {

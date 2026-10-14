@@ -286,3 +286,28 @@ func TestPruneKeepsActiveJobs(t *testing.T) {
 		t.Fatalf("after pruning to 1: %d jobs, first %+v", len(all), all)
 	}
 }
+
+func TestEnqueueSameKeyConcurrentCreatesOne(t *testing.T) {
+	s, _ := newService(t)
+	s.Register(Kind{Name: "test.noop", Run: func(context.Context, *Run) error { return nil }})
+	const n = 16
+	var wg sync.WaitGroup
+	var fresh atomic.Int32
+	for i := 0; i < n; i++ {
+		wg.Add(1)
+		go func() {
+			defer wg.Done()
+			_, existing, err := s.Enqueue(context.Background(), "test.noop", "k", 1, nil)
+			if err != nil {
+				t.Error(err)
+			}
+			if !existing {
+				fresh.Add(1)
+			}
+		}()
+	}
+	wg.Wait()
+	if fresh.Load() != 1 {
+		t.Fatalf("%d jobs created for one key, want 1", fresh.Load())
+	}
+}

@@ -21,6 +21,7 @@ import (
 	"os"
 	"path/filepath"
 	"strings"
+	"syscall"
 )
 
 // FS is implemented by OS (the real file system) and Mem (tests).
@@ -87,18 +88,33 @@ func (OS) Archive(root string) ([]byte, error) {
 			}
 			return err
 		}
-		if !d.Type().IsRegular() {
+		if path == root || !d.Type().IsRegular() && !d.IsDir() {
 			return nil
 		}
 		rel, err := filepath.Rel(root, path)
 		if err != nil {
 			return err
 		}
+		info, err := d.Info()
+		if err != nil {
+			return err
+		}
+		// Mode and owner travel along: a database or app running as its own
+		// user must find its files owned and readable again after a restore.
+		hdr := &tar.Header{Name: filepath.ToSlash(rel), Mode: int64(info.Mode().Perm())}
+		if st, ok := info.Sys().(*syscall.Stat_t); ok {
+			hdr.Uid, hdr.Gid = int(st.Uid), int(st.Gid)
+		}
+		if d.IsDir() {
+			hdr.Typeflag, hdr.Name = tar.TypeDir, hdr.Name+"/"
+			return tw.WriteHeader(hdr)
+		}
 		data, err := os.ReadFile(path)
 		if err != nil {
 			return err
 		}
-		if err := tw.WriteHeader(&tar.Header{Name: filepath.ToSlash(rel), Mode: 0o644, Size: int64(len(data))}); err != nil {
+		hdr.Size = int64(len(data))
+		if err := tw.WriteHeader(hdr); err != nil {
 			return err
 		}
 		_, err = tw.Write(data)
@@ -134,7 +150,7 @@ func (OS) Restore(root string, archive []byte) error {
 		if err != nil {
 			return err
 		}
-		if hdr.Typeflag != tar.TypeReg {
+		if hdr.Typeflag != tar.TypeReg && hdr.Typeflag != tar.TypeDir {
 			continue
 		}
 		// Reject anything that would escape root (a crafted ".." entry) —
@@ -145,6 +161,16 @@ func (OS) Restore(root string, archive []byte) error {
 			return errors.New("configfs: archive entry escapes its root: " + hdr.Name)
 		}
 		dest := filepath.Join(root, clean)
+		if hdr.Typeflag == tar.TypeDir {
+			if clean == "." {
+				continue
+			}
+			if err := os.MkdirAll(dest, 0o755); err != nil {
+				return err
+			}
+			applyOwner(dest, hdr, 0o755)
+			continue
+		}
 		if err := os.MkdirAll(filepath.Dir(dest), 0o755); err != nil {
 			return err
 		}
@@ -155,6 +181,19 @@ func (OS) Restore(root string, archive []byte) error {
 		if err := os.WriteFile(dest, data, 0o644); err != nil {
 			return err
 		}
+		applyOwner(dest, hdr, 0o644)
+	}
+}
+
+// applyOwner gives path the archived mode and owner, as far as this
+// process may (a non-root run keeps its own owner). An archive from before
+// modes were recorded has mode 0644 and owner 0; those stay as written.
+func applyOwner(path string, hdr *tar.Header, def os.FileMode) {
+	if m := os.FileMode(hdr.Mode).Perm(); m != 0 && m != def {
+		_ = os.Chmod(path, m)
+	}
+	if hdr.Uid != 0 || hdr.Gid != 0 {
+		_ = os.Lchown(path, hdr.Uid, hdr.Gid)
 	}
 }
 

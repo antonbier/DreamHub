@@ -113,3 +113,35 @@ func TestOS_RestoreRejectsPathEscape(t *testing.T) {
 		t.Fatal("the escaping file must not have been written")
 	}
 }
+
+// Modes and empty folders survive a round trip (a private key stays
+// private, an app's empty data folder is still there).
+func TestOS_RoundTripKeepsModesAndEmptyFolders(t *testing.T) {
+	src := t.TempDir()
+	if err := os.MkdirAll(filepath.Join(src, "empty", "deeper"), 0o700); err != nil {
+		t.Fatal(err)
+	}
+	if err := os.WriteFile(filepath.Join(src, "key"), []byte("k"), 0o600); err != nil {
+		t.Fatal(err)
+	}
+	if err := os.Chmod(filepath.Join(src, "empty"), 0o700); err != nil {
+		t.Fatal(err)
+	}
+	archive, err := OS{}.Archive(src)
+	if err != nil {
+		t.Fatal(err)
+	}
+	dst := filepath.Join(t.TempDir(), "restored")
+	if err := (OS{}).Restore(dst, archive); err != nil {
+		t.Fatal(err)
+	}
+	if fi, err := os.Stat(filepath.Join(dst, "key")); err != nil || fi.Mode().Perm() != 0o600 {
+		t.Fatalf("key: %v %v", fi, err)
+	}
+	if fi, err := os.Stat(filepath.Join(dst, "empty", "deeper")); err != nil || !fi.IsDir() {
+		t.Fatalf("empty folder missing: %v", err)
+	}
+	if fi, err := os.Stat(filepath.Join(dst, "empty")); err != nil || fi.Mode().Perm() != 0o700 {
+		t.Fatalf("folder mode: %v %v", fi, err)
+	}
+}

@@ -59,6 +59,9 @@ func (Exec) Run(ctx context.Context, content string) (string, int, error) {
 	var out bytes.Buffer
 	cmd := exec.CommandContext(ctx, path)
 	cmd.Stdout, cmd.Stderr = &out, &out
+	// After the timeout kills the script, a child still holding the output
+	// pipe must not keep this call (and the apply request) waiting.
+	cmd.WaitDelay = 5 * time.Second
 	runErr := cmd.Run()
 
 	output := out.String()

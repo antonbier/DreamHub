@@ -115,7 +115,14 @@ watch(
 // collapsed state" below 900px) — the drawer's own open/closed state lives
 // in the ui store instead, see the template above.
 const STORAGE_KEY = 'dreamhub.sidebarCollapsed'
-const collapsed = ref(localStorage.getItem(STORAGE_KEY) === '1')
+function readCollapsed(): boolean {
+  try {
+    return localStorage.getItem(STORAGE_KEY) === '1'
+  } catch {
+    return false // storage blocked: start expanded instead of failing the whole shell
+  }
+}
+const collapsed = ref(readCollapsed())
 function toggle() {
   collapsed.value = !collapsed.value
   try {

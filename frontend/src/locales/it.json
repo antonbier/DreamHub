@@ -10,7 +10,7 @@
     "group": {
       "media": "Media",
       "program": "Programma",
-      "device": "Dispositivo"
+      "device": "Box"
     }
   },
   "hub": {
@@ -45,7 +45,7 @@
       "missing": "Manca sul dispositivo: {capability}"
     },
     "hub": {
-      "dependencyUnavailable": "{hub} non è disponibile"
+      "dependencyUnavailable": "Richiede «{hub}», che non è disponibile."
     },
     "timer": {
       "conflict": "Probabile conflitto con un'altra registrazione (tuner: {tuners}). Il box verifica di nuovo al salvataggio.",
@@ -65,7 +65,7 @@
       "alsoRemoves": "Rimuove anche {count} pacchetto/i che non hai scelto: {names}.",
       "touchesEnigma2": "Modifica un plugin TV, una skin o enigma2 stesso — ha effetto dopo il riavvio di enigma2; alcuni pacchetti lo riavviano da soli (l'immagine TV sparisce per circa mezzo minuto).",
       "recordingRunning": "Il box sta registrando ({names}); si potrà applicare a registrazione finita.",
-      "neededByHub": "Rimuove {names}, che serve a {hubs} — quella parte di DreamHub smette di funzionare."
+      "neededByHub": "Rimuove {names}, che DreamHub usa per: {hubs}."
     },
     "feed": {
       "unsigned": "Aggiunge {url} come fonte. I suoi pacchetti vengono installati con tutti i diritti sul box e non sono firmati — aggiungine solo una di cui ti fidi."
@@ -74,7 +74,7 @@
   "fix": {
     "checkBoxConnection": "Controlla la connessione al box.",
     "configureInSettings": "Configuralo in Impostazioni → {section}.",
-    "enableHub": "Attiva {hub} nelle impostazioni.",
+    "enableHub": "Attiva «{hub}» nelle impostazioni.",
     "capability": {
       "journald": "journald non è disponibile su questa macchina."
     },
@@ -97,11 +97,6 @@
       "dark": "Scuro",
       "light": "Chiaro",
       "system": "Come il sistema"
-    },
-    "navLabels": {
-      "label": "Etichette barra laterale",
-      "descriptive": "Descrittive",
-      "hub": "Nomi degli hub"
     },
     "settings": "Impostazioni",
     "signOut": "Esci",
@@ -160,8 +155,8 @@
     "unreachable": "Non raggiungibile",
     "clockOk": "Orologio corretto",
     "clockOff": "Orologio sfasato di {minutes} min",
-    "issueSingular": "1 hub richiede attenzione",
-    "issuePlural": "{count} hub richiedono attenzione",
+    "issueSingular": "1 cosa richiede attenzione",
+    "issuePlural": "{count} cose richiedono attenzione",
     "label": "Stato della connessione"
   },
   "search": {
@@ -196,17 +191,12 @@
       "clockOff": "L'orologio del box è sfasato di circa {minutes} min — i timer potrebbero partire all'ora sbagliata."
     },
     "hubs": {
-      "title": "Hub",
-      "subtitle": "Scegli quali hub attivare. Modificabile in qualsiasi momento nelle impostazioni."
+      "title": "Funzioni",
+      "subtitle": "Scegli quali funzioni attivare. Modificabile in qualsiasi momento nelle impostazioni."
     },
     "ai": {
       "title": "Consigli IA",
       "subtitle": "I consigli richiedono una chiave API OpenAI. Se non ne hai una, salta e aggiungila più tardi."
-    },
-    "channels": {
-      "title": "Canali",
-      "subtitle": "Quali canali considerare per i consigli.",
-      "notBuilt": "La selezione dei canali non è ancora stata realizzata (richiede ChannelHub, in un rilascio successivo) — fino ad allora i consigli considerano tutti i canali."
     },
     "done": {
       "title": "Tutto pronto",
@@ -221,7 +211,7 @@
     "done": "Fatto",
     "empty": {
       "title": "Ancora nessuna scheda",
-      "body": "La dashboard si riempirà man mano che gli hub vengono costruiti: spazio disco, conflitti, cosa va in onda ora, prossimi timer, consigliati. Le schede personalizzate sono il prossimo passo."
+      "body": "La dashboard è ancora vuota. Con «Modifica» puoi aggiungere schede."
     },
     "allHidden": {
       "title": "Niente da mostrare",
@@ -250,18 +240,18 @@
     },
     "timersTile": {
       "empty": "Nessun timer in programma.",
-      "unavailable": "Timer non è disponibile."
+      "unavailable": "I timer non sono disponibili."
     },
     "hubsTile": {
-      "allOk": "Tutti gli hub sono disponibili."
+      "allOk": "Tutto funziona."
     },
     "mediaDiskTile": {
       "empty": "Nessuna informazione sullo spazio.",
-      "unavailable": "Registrazioni non è disponibile."
+      "unavailable": "Le registrazioni non sono disponibili."
     },
     "seriesTile": {
       "empty": "Nessun episodio in programma.",
-      "unavailable": "Serie non è disponibile."
+      "unavailable": "Le serie non sono disponibili."
     },
     "conflictsTile": {
       "none": "Nessun conflitto di tuner in vista.",
@@ -374,10 +364,6 @@
     "recent": {
       "empty": "Ancora nessuna registrazione."
     }
-  },
-  "hubPlaceholder": {
-    "title": "{name} — in arrivo",
-    "body": "Le schermate di questo hub non sono ancora state costruite. Navigazione, stato e impostazioni funzionano già."
   },
   "media": {
     "diskFree": "{free} liberi su {capacity}",
@@ -556,7 +542,7 @@
     "confirmRecord": "Crea timer",
     "recordPreview": "Verrà creato un timer per \"{name}\" su {channel}, registrazione {when}.",
     "timerCreated": "Timer creato.",
-    "timerHubUnavailable": "La registrazione richiede TimerHub, che non è disponibile.",
+    "timerHubUnavailable": "La registrazione al momento non è possibile — i timer non sono disponibili.",
     "views": {
       "label": "Vista",
       "grid": "Griglia",
@@ -656,7 +642,7 @@
     "empty": "Scegli un bouquet e genera consigli dalla sua guida TV.",
     "noPicks": "Nessun consiglio per questo bouquet al momento.",
     "createTimer": "Crea timer",
-    "timerHubUnavailable": "Timer non è disponibile.",
+    "timerHubUnavailable": "La registrazione al momento non è possibile — i timer non sono disponibili.",
     "confirm": "Conferma",
     "cancel": "Annulla",
     "created": "Timer creato",
@@ -853,8 +839,7 @@
       "language": "Lingua",
       "timezoneMode": "Fuso orario visualizzato",
       "timezone": "Fuso orario",
-      "appearance": "Aspetto",
-      "navLabels": "Etichette barra laterale"
+      "appearance": "Aspetto"
     },
     "auth": {
       "title": "Accesso",
@@ -894,14 +879,12 @@
       "dailyLimit": "Limite giornaliero di richieste"
     },
     "hubs": {
-      "title": "Hub"
+      "title": "Funzioni"
     },
     "option": {
       "dark": "Scuro",
       "light": "Chiaro",
       "system": "Come il sistema",
-      "descriptive": "Descrittive",
-      "hub": "Nomi degli hub",
       "box": "Come il box",
       "browser": "Come questo browser",
       "fixed": "Fisso",
@@ -992,13 +975,12 @@
       "recordings": "Registrazioni",
       "services": "Servizi",
       "notifications": "Notifiche",
-      "hubs": "Hub",
       "access": "Accesso",
       "system": "Sistema"
     },
     "tabIntro": {
       "services": "Collegamenti ai servizi usati da DreamHub. Solo WebControl è necessario, tutto il resto è facoltativo.",
-      "hubs": "Un hub disattivato scompare dalla navigazione, dalla ricerca e dalla dashboard."
+      "hubs": "Una funzione disattivata scompare dal menu, dalla ricerca e dalla dashboard."
     },
     "connectorState": {
       "ok": "Connesso",
@@ -1010,7 +992,7 @@
     "system": {
       "diagnostics": {
         "title": "Diagnostica",
-        "body": "Lo stato di ogni hub e l’autotest del box, il cui rapporto si può scaricare come ZIP.",
+        "body": "Lo stato di ogni funzione e l’autotest del box, il cui rapporto si può scaricare come ZIP.",
         "open": "Apri la diagnostica"
       },
       "wizard": {
@@ -1465,7 +1447,7 @@
     "about": {
       "title": "Informazioni su DreamHub",
       "version": "Versione {version}",
-      "copyright": "© 2027 antonbier",
+      "copyright": "© 2026 antonbier",
       "repo": "Codice sorgente su GitHub ↗"
     },
     "tabs": {
@@ -1549,7 +1531,7 @@
         "epg": "{withEpg} di {channels} canali hanno ora informazioni sul programma.",
         "noEpg": "Nessuno dei {channels} canali ha ora informazioni — il box è acceso da abbastanza tempo per caricare l'EPG?",
         "current": "{name} ({kind}); informazioni sul programma: {epg}.",
-        "radioBouquets": "{bouquets} bouquet radio, il primo «{first}» — la richiesta di RadioHub funziona su questo box.",
+        "radioBouquets": "{bouquets} bouquet radio, il primo «{first}» — l’elenco radio si può leggere su questo box.",
         "noRadioBouquets": "L'elenco radio è vuoto — questo box potrebbe organizzare i bouquet radio diversamente. La risposta salvata mostra come.",
         "radioStations": "{stations} emittenti, {withEpg} con informazioni sul programma.",
         "radioOther": "{stations} emittenti, {withEpg} con informazioni; {other} voci non sono servizi radio e vengono escluse.",
@@ -1568,7 +1550,7 @@
         "noEnigmaUnit": "Trovati: {found} — ma nessun enigma2.service; i nomi dei servizi sono diversi su questo box.",
         "noSystemd": "Nessun systemd qui (solo sul box).",
         "dmi": "Database trovato — usato per primo per i dettagli.",
-        "radioFavouritesEmpty": "I preferiti radio sono vuoti — RadioHub mostra invece tutte le {stations} emittenti ({withEpg} con informazioni sul programma)."
+        "radioFavouritesEmpty": "I preferiti radio sono vuoti — la pagina Radio mostra invece tutte le {stations} emittenti ({withEpg} con informazioni sul programma)."
       }
     }
   },

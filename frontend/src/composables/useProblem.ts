@@ -4,6 +4,7 @@
 // codes are (dots become nested JSON keys in the locale files).
 import { useI18n } from 'vue-i18n'
 import type { Problem } from '@/api/types'
+import { useHubLabel } from './useHubLabel'
 
 // `te()` checks the active locale only, not the English fallback, so a
 // problem/fix code missing from say Italian would wrongly report "doesn't
@@ -17,11 +18,21 @@ function translateOrRaw(t: (key: string, params: Record<string, unknown>) => str
 
 export function useProblem() {
   const { t } = useI18n()
+  const { hubName } = useHubLabel()
+
+  // The backend names hubs by id ("timer", or "media, timer"); the screen
+  // says what they are called there ("Timers").
+  function withHubNames(params: Record<string, unknown> | undefined): Record<string, unknown> {
+    const out = { ...(params ?? {}) }
+    if (typeof out.hub === 'string') out.hub = hubName(out.hub)
+    if (typeof out.hubs === 'string') out.hubs = out.hubs.split(', ').map(hubName).join(', ')
+    return out
+  }
 
   // problem.Code is unprefixed (e.g. "connector.notConfigured" — status.go)
   // and lives under the "problem" locale namespace here.
   function describe(problem: Problem): string {
-    return translateOrRaw(t, `problem.${problem.code}`, problem.code, problem.params ?? {})
+    return translateOrRaw(t, `problem.${problem.code}`, problem.code, withHubNames(problem.params))
   }
 
   // problem.Fix, unlike Code, already carries its own "fix." prefix in the
@@ -29,7 +40,7 @@ export function useProblem() {
   // so it's used as the locale key directly, not prefixed again.
   function describeFix(problem: Problem): string | undefined {
     if (!problem.fix) return undefined
-    return translateOrRaw(t, problem.fix, problem.fix, problem.fixParams ?? {})
+    return translateOrRaw(t, problem.fix, problem.fix, withHubNames(problem.fixParams))
   }
 
   return { describe, describeFix }

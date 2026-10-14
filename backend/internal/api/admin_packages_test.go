@@ -65,7 +65,7 @@ func TestAdminPackages_Needed(t *testing.T) {
 		byName[p.Name] = i
 	}
 	ff, ov := v.Packages[byName["ffmpeg"]], v.Packages[byName["kernel-module-overlay"]]
-	if !ff.Missing || ff.Version != "" || len(ff.NeededBy) != 1 || ff.NeededBy[0] != "MediaHub" {
+	if !ff.Missing || ff.Version != "" || len(ff.NeededBy) != 1 || ff.NeededBy[0] != "media" {
 		t.Errorf("ffmpeg: %+v", ff)
 	}
 	if !ov.Missing || len(ov.NeededBy) != 1 || ov.NeededBy[0] != "AppsHub" {

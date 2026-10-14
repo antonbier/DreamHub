@@ -10,7 +10,7 @@
     "group": {
       "media": "Media",
       "program": "Program",
-      "device": "Device"
+      "device": "Box"
     }
   },
   "hub": {
@@ -45,7 +45,7 @@
       "missing": "Missing on the device: {capability}"
     },
     "hub": {
-      "dependencyUnavailable": "{hub} isn't available"
+      "dependencyUnavailable": "Needs “{hub}”, which isn't available."
     },
     "timer": {
       "conflict": "Likely conflicts with another recording (tuners: {tuners}). The box checks again when saving.",
@@ -65,7 +65,7 @@
       "alsoRemoves": "Also removes {count} package(s) you didn't pick: {names}.",
       "touchesEnigma2": "Changes a TV plugin, skin or enigma2 itself — it takes effect after enigma2 restarts, and some packages restart it themselves (the TV picture is gone for about half a minute).",
       "recordingRunning": "The box is recording right now ({names}); applying waits until that's done.",
-      "neededByHub": "Removes {names}, which {hubs} needs — that part of DreamHub stops working."
+      "neededByHub": "Removes {names}, which DreamHub needs for: {hubs}."
     },
     "feed": {
       "unsigned": "Adds {url} as a source. Its packages are installed with full rights on the box and are not signed — only add one you trust."
@@ -74,7 +74,7 @@
   "fix": {
     "checkBoxConnection": "Check the connection to the box.",
     "configureInSettings": "Configure it in Settings → {section}.",
-    "enableHub": "Enable {hub} in Settings.",
+    "enableHub": "Turn on “{hub}” in Settings.",
     "capability": {
       "journald": "journald isn't available on this machine."
     },
@@ -97,11 +97,6 @@
       "dark": "Dark",
       "light": "Light",
       "system": "Follow system"
-    },
-    "navLabels": {
-      "label": "Sidebar labels",
-      "descriptive": "Descriptive",
-      "hub": "Hub names"
     },
     "settings": "Settings",
     "signOut": "Sign out",
@@ -160,8 +155,8 @@
     "unreachable": "Unreachable",
     "clockOk": "Clock OK",
     "clockOff": "Clock off by {minutes} min",
-    "issueSingular": "1 hub needs attention",
-    "issuePlural": "{count} hubs need attention",
+    "issueSingular": "1 thing needs attention",
+    "issuePlural": "{count} things need attention",
     "label": "Connection status"
   },
   "search": {
@@ -196,17 +191,12 @@
       "clockOff": "The box's clock is off by about {minutes} min — timers may start at the wrong time."
     },
     "hubs": {
-      "title": "Hubs",
-      "subtitle": "Choose which hubs to enable. You can change this any time in Settings."
+      "title": "Features",
+      "subtitle": "Choose which features to turn on. You can change this any time in Settings."
     },
     "ai": {
       "title": "AI recommendations",
-      "subtitle": "DiscoveryHub needs an OpenAI API key. Skip this and add one later if you don't have one yet."
-    },
-    "channels": {
-      "title": "Channels",
-      "subtitle": "Which channels DiscoveryHub should consider for recommendations.",
-      "notBuilt": "Channel selection isn't built yet (it needs ChannelHub, a later release) — DiscoveryHub considers every channel until then."
+      "subtitle": "Recommendations need an OpenAI API key. Skip this and add one later if you don't have one yet."
     },
     "done": {
       "title": "All set",
@@ -221,7 +211,7 @@
     "done": "Done",
     "empty": {
       "title": "No tiles yet",
-      "body": "The dashboard fills up as hubs are built: storage, conflicts, what's on now, upcoming timers, recommendations. Custom tiles are next."
+      "body": "Nothing on the dashboard yet. Use “Edit” to add tiles."
     },
     "allHidden": {
       "title": "Nothing to show",
@@ -250,18 +240,18 @@
     },
     "timersTile": {
       "empty": "No upcoming timers.",
-      "unavailable": "TimerHub isn't available."
+      "unavailable": "Timers aren't available."
     },
     "hubsTile": {
-      "allOk": "All hubs are available."
+      "allOk": "Everything is working."
     },
     "mediaDiskTile": {
       "empty": "No storage information.",
-      "unavailable": "MediaHub isn't available."
+      "unavailable": "Recordings aren't available."
     },
     "seriesTile": {
       "empty": "No upcoming episodes.",
-      "unavailable": "SeriesHub isn't available."
+      "unavailable": "Series aren't available."
     },
     "conflictsTile": {
       "none": "No tuner conflicts ahead.",
@@ -374,10 +364,6 @@
     "recent": {
       "empty": "No recordings yet."
     }
-  },
-  "hubPlaceholder": {
-    "title": "{name} — coming soon",
-    "body": "This hub's screens haven't been built yet. The navigation, status and settings behind it are already live."
   },
   "media": {
     "diskFree": "{free} free of {capacity}",
@@ -556,7 +542,7 @@
     "confirmRecord": "Create timer",
     "recordPreview": "A timer for “{name}” on {channel} will be created, recording {when}.",
     "timerCreated": "Timer created.",
-    "timerHubUnavailable": "Recording needs TimerHub, which isn't available.",
+    "timerHubUnavailable": "Recording isn't possible right now — timers aren't available.",
     "views": {
       "label": "View",
       "grid": "Grid",
@@ -656,7 +642,7 @@
     "empty": "Pick a bouquet and generate recommendations from its EPG.",
     "noPicks": "Nothing stood out for this bouquet right now.",
     "createTimer": "Create timer",
-    "timerHubUnavailable": "Timers isn't available.",
+    "timerHubUnavailable": "Recording isn't possible right now — timers aren't available.",
     "confirm": "Confirm",
     "cancel": "Cancel",
     "created": "Timer created",
@@ -853,8 +839,7 @@
       "language": "Language",
       "timezoneMode": "Display time zone",
       "timezone": "Time zone",
-      "appearance": "Appearance",
-      "navLabels": "Sidebar labels"
+      "appearance": "Appearance"
     },
     "auth": {
       "title": "Authentication",
@@ -894,14 +879,12 @@
       "dailyLimit": "Daily request limit"
     },
     "hubs": {
-      "title": "Hubs"
+      "title": "Features"
     },
     "option": {
       "dark": "Dark",
       "light": "Light",
       "system": "Follow system",
-      "descriptive": "Descriptive",
-      "hub": "Hub names",
       "box": "Same as the box",
       "browser": "Same as this browser",
       "fixed": "Fixed",
@@ -992,13 +975,12 @@
       "recordings": "Recordings",
       "services": "Services",
       "notifications": "Notifications",
-      "hubs": "Hubs",
       "access": "Access",
       "system": "System"
     },
     "tabIntro": {
       "services": "Connections to services DreamHub uses. Only WebControl is required; everything else is optional.",
-      "hubs": "A hub that is switched off disappears from the navigation, search and the dashboard."
+      "hubs": "A feature that is switched off disappears from the menu, search and the dashboard."
     },
     "connectorState": {
       "ok": "Connected",
@@ -1010,7 +992,7 @@
     "system": {
       "diagnostics": {
         "title": "Diagnostics",
-        "body": "The status of every hub and the box self-test, whose report can be downloaded as a ZIP.",
+        "body": "The status of every feature and the box self-test, whose report can be downloaded as a ZIP.",
         "open": "Open diagnostics"
       },
       "wizard": {
@@ -1465,7 +1447,7 @@
     "about": {
       "title": "About DreamHub",
       "version": "Version {version}",
-      "copyright": "© 2027 antonbier",
+      "copyright": "© 2026 antonbier",
       "repo": "Source on GitHub ↗"
     },
     "tabs": {
@@ -1549,7 +1531,7 @@
         "epg": "{withEpg} of {channels} channels have programme information right now.",
         "noEpg": "None of {channels} channels has programme information right now — has the box been on long enough to load the EPG?",
         "current": "{name} ({kind}); programme information: {epg}.",
-        "radioBouquets": "{bouquets} radio bouquet(s), the first “{first}” — RadioHub's way of asking works on this box.",
+        "radioBouquets": "{bouquets} radio bouquet(s), the first “{first}” — the radio list can be read on this box.",
         "noRadioBouquets": "The radio list came back empty — this box may keep its radio bouquets differently. The saved answer shows how.",
         "radioStations": "{stations} stations, {withEpg} with programme information.",
         "radioOther": "{stations} stations, {withEpg} with programme information; {other} entries aren't radio services and are left out.",
@@ -1568,7 +1550,7 @@
         "noEnigmaUnit": "Found: {found} — but no enigma2.service; the unit names differ on this box.",
         "noSystemd": "No systemd here (only on the box).",
         "dmi": "Database found — used first for details.",
-        "radioFavouritesEmpty": "The radio favourites are empty — RadioHub shows all {stations} radio stations instead ({withEpg} with programme information)."
+        "radioFavouritesEmpty": "The radio favourites are empty — the Radio page shows all {stations} radio stations instead ({withEpg} with programme information)."
       }
     }
   },

@@ -119,3 +119,14 @@ progress {
     transition-duration: 0.001ms !important;
   }
 }
+
+/* A sideways-scrolling row with more to see: fade out at the trailing edge
+   (composables/useScrollMore.ts). */
+.scroll-fade {
+  -webkit-mask-image: linear-gradient(to right, #000 calc(100% - 36px), transparent);
+  mask-image: linear-gradient(to right, #000 calc(100% - 36px), transparent);
+}
+[dir='rtl'] .scroll-fade {
+  -webkit-mask-image: linear-gradient(to left, #000 calc(100% - 36px), transparent);
+  mask-image: linear-gradient(to left, #000 calc(100% - 36px), transparent);
+}

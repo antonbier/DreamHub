@@ -16,12 +16,24 @@ import (
 	"bytes"
 	"compress/gzip"
 	"errors"
+	"fmt"
 	"io"
 	"io/fs"
 	"os"
 	"path/filepath"
 	"strings"
 	"syscall"
+)
+
+// Restore limits against archive bombs (a tiny gzip can expand to
+// terabytes). Generous: far above any app's config directory. Variables so
+// tests can lower them.
+var (
+	MaxRestoreTotal int64 = 8 << 30 // all files together
+	MaxRestoreFile  int64 = 4 << 30 // one file
+
+	// ErrTooLarge is returned when an archive would extract past the limits.
+	ErrTooLarge = errors.New("configfs: archive is too large to restore")
 )
 
 // FS is implemented by OS (the real file system) and Mem (tests).
@@ -142,6 +154,7 @@ func (OS) Restore(root string, archive []byte) error {
 	if err := os.MkdirAll(root, 0o755); err != nil {
 		return err
 	}
+	var total int64
 	for {
 		hdr, err := tr.Next()
 		if err == io.EOF {
@@ -174,12 +187,25 @@ func (OS) Restore(root string, archive []byte) error {
 		if err := os.MkdirAll(filepath.Dir(dest), 0o755); err != nil {
 			return err
 		}
-		data, err := io.ReadAll(tr)
+		// Count what is really extracted, not the header's claim.
+		f, err := os.OpenFile(dest, os.O_WRONLY|os.O_CREATE|os.O_TRUNC, 0o644)
 		if err != nil {
 			return err
 		}
-		if err := os.WriteFile(dest, data, 0o644); err != nil {
+		n, err := io.Copy(f, io.LimitReader(tr, MaxRestoreFile+1))
+		if cerr := f.Close(); err == nil {
+			err = cerr
+		}
+		if err != nil {
 			return err
+		}
+		total += n
+		if n > MaxRestoreFile {
+			_ = os.Remove(dest)
+			return fmt.Errorf("%w: %q is larger than %d bytes", ErrTooLarge, hdr.Name, MaxRestoreFile)
+		}
+		if total > MaxRestoreTotal {
+			return fmt.Errorf("%w: more than %d bytes in total", ErrTooLarge, MaxRestoreTotal)
 		}
 		applyOwner(dest, hdr, 0o644)
 	}

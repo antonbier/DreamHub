@@ -4,6 +4,7 @@ import (
 	"archive/tar"
 	"bytes"
 	"compress/gzip"
+	"errors"
 	"os"
 	"path/filepath"
 	"testing"
@@ -143,5 +144,39 @@ func TestOS_RoundTripKeepsModesAndEmptyFolders(t *testing.T) {
 	}
 	if fi, err := os.Stat(filepath.Join(dst, "empty")); err != nil || fi.Mode().Perm() != 0o700 {
 		t.Fatalf("folder mode: %v %v", fi, err)
+	}
+}
+
+func tarOf(t *testing.T, files map[string]int) []byte {
+	t.Helper()
+	var buf bytes.Buffer
+	gw := gzip.NewWriter(&buf)
+	tw := tar.NewWriter(gw)
+	for name, n := range files {
+		if err := tw.WriteHeader(&tar.Header{Name: name, Mode: 0o644, Size: int64(n)}); err != nil {
+			t.Fatal(err)
+		}
+		if _, err := tw.Write(make([]byte, n)); err != nil {
+			t.Fatal(err)
+		}
+	}
+	tw.Close()
+	gw.Close()
+	return buf.Bytes()
+}
+
+func TestOS_RestoreCapsFileAndTotalSize(t *testing.T) {
+	oldT, oldF := MaxRestoreTotal, MaxRestoreFile
+	defer func() { MaxRestoreTotal, MaxRestoreFile = oldT, oldF }()
+	MaxRestoreTotal, MaxRestoreFile = 1000, 600
+
+	if err := (OS{}).Restore(t.TempDir(), tarOf(t, map[string]int{"big": 601})); !errors.Is(err, ErrTooLarge) {
+		t.Fatalf("one file over the cap: %v", err)
+	}
+	if err := (OS{}).Restore(t.TempDir(), tarOf(t, map[string]int{"a": 500, "b": 500, "c": 500})); !errors.Is(err, ErrTooLarge) {
+		t.Fatalf("total over the cap: %v", err)
+	}
+	if err := (OS{}).Restore(t.TempDir(), tarOf(t, map[string]int{"a": 500, "b": 400})); err != nil {
+		t.Fatalf("within the caps: %v", err)
 	}
 }

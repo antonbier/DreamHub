@@ -47,6 +47,12 @@ func (t *terminalState) set(v bool) {
 	t.mu.Unlock()
 }
 
+// terminalOn: the terminal is enabled and password protection is still on —
+// switching protection off later must not leave a shell open to the LAN.
+func (h *Admin) terminalOn() bool {
+	return h.terminal.get() && h.Auth != nil && h.Auth.AuthConfig().Enabled
+}
+
 func (h *Admin) target() string {
 	if h.TerminalTarget != "" {
 		return h.TerminalTarget
@@ -60,7 +66,7 @@ func (h *Admin) terminalStatus(w http.ResponseWriter, r *http.Request) {
 	httpx.WriteJSON(w, http.StatusOK, map[string]any{
 		"available": available,
 		"authOn":    authOn,
-		"enabled":   h.terminal.get(),
+		"enabled":   h.terminalOn(),
 	})
 }
 
@@ -103,7 +109,7 @@ func (h *Admin) disableTerminal(w http.ResponseWriter, r *http.Request) {
 // request isn't logged (ShellInABox polls constantly while open); enabling
 // and disabling already bracket the session in the change log.
 func (h *Admin) terminalProxy(w http.ResponseWriter, r *http.Request) {
-	if !h.terminal.get() {
+	if !h.terminalOn() {
 		httpx.WriteError(w, r, http.StatusConflict, "terminal_disabled", "the terminal isn't enabled")
 		return
 	}

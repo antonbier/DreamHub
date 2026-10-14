@@ -83,3 +83,24 @@ func TestAdminTerminal_EnableDisableAndProxy(t *testing.T) {
 		t.Fatalf("expected 409 after disabling, got %d", resp.StatusCode)
 	}
 }
+
+// Switching password protection off later must close the terminal again.
+func TestAdminTerminal_ClosesWhenAuthIsSwitchedOff(t *testing.T) {
+	shell := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) { w.WriteHeader(http.StatusOK) }))
+	defer shell.Close()
+	e := newEnvWithTerminalTarget(t, shell.URL)
+	e.do(t, "PATCH", "/api/v1/settings", `{"values":{"auth.enabled":true,"auth.username":"armin","auth.password":"correct horse"}}`, nil)
+	auth := func(r *http.Request) { r.SetBasicAuth("armin", "correct horse") }
+	if resp, _ := e.do(t, "POST", "/api/v1/admin/terminal/enable", `{"password":"correct horse"}`, auth); resp.StatusCode != http.StatusOK {
+		t.Fatalf("enable: %d", resp.StatusCode)
+	}
+	if resp, b := e.do(t, "PATCH", "/api/v1/settings", `{"values":{"auth.enabled":false}}`, auth); resp.StatusCode != http.StatusOK {
+		t.Fatalf("auth off: %d %s", resp.StatusCode, b)
+	}
+	if resp, _ := e.do(t, "GET", "/api/v1/admin/terminal/proxy/", "", nil); resp.StatusCode != http.StatusConflict {
+		t.Fatalf("proxy stayed open without password protection: %d", resp.StatusCode)
+	}
+	if s := e.terminalStatus(t, nil); s.Enabled {
+		t.Fatalf("status still enabled: %+v", s)
+	}
+}

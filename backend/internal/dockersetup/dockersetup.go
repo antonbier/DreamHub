@@ -22,6 +22,8 @@ package dockersetup
 import (
 	"context"
 	"errors"
+	"path"
+	"strings"
 )
 
 // Paths on the box. Everything Docker writes lives under Base, on /data.
@@ -94,6 +96,46 @@ type Setup interface {
 	Status(ctx context.Context) (State, error)
 	Plan(ctx context.Context) ([]Step, error)
 	Apply(ctx context.Context, steps []Step) (log string, err error)
+	// PlanRemove works out what "Uninstall Docker" would still remove
+	// (nothing left means an empty list), Remove does it. The containers
+	// DreamHub created are removed by the caller first.
+	PlanRemove(ctx context.Context, opts RemoveOptions) ([]Step, error)
+	Remove(ctx context.Context, steps []Step, opts RemoveOptions) (log string, err error)
+}
+
+// ModulesFile makes the overlay module load at every boot; setup writes
+// it and uninstalling removes it (the kernel module package stays).
+const ModulesFile = "/etc/modules-load.d/dreamhub-docker.conf"
+
+// Uninstall step kinds: "services" (stop and disable both services),
+// "modules" (remove ModulesFile), "files" (the Docker binaries and
+// daemon config), "data" (only with DeleteData: Docker's own image and
+// volume store and the apps' storage folders).
+
+// RemoveOptions are the choices of an uninstall.
+type RemoveOptions struct {
+	// DeleteData also deletes the app data: Docker's data root and the
+	// apps' storage folders. The default (false) keeps them, so apps can
+	// come back after a reinstall.
+	DeleteData bool
+	// AppRoots are the apps' storage roots (e.g. /media/hdd/dreamhub-apps)
+	// that "data" deletes. Only a folder named dreamhub-apps, or one under
+	// Base, is ever deleted (SafeDataPath).
+	AppRoots []string
+}
+
+// SafeDataPath reports whether an uninstall may delete p: an absolute,
+// clean path under Base, or an apps storage root (a directory named
+// dreamhub-apps below the top level). Never enigma2's or the recordings'
+// folders, whatever the caller passes.
+func SafeDataPath(p string) bool {
+	if !path.IsAbs(p) || path.Clean(p) != p || strings.ContainsAny(p, "\n\r\x00") {
+		return false
+	}
+	if strings.HasPrefix(p, Base+"/") {
+		return true
+	}
+	return path.Base(p) == "dreamhub-apps" && path.Dir(p) != "/"
 }
 
 // ErrUnsupported: no pinned release for this processor.

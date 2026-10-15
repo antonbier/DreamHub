@@ -5,9 +5,11 @@ import (
 	"errors"
 	"fmt"
 	"net/http"
+	"strconv"
 	"strings"
 	"time"
 
+	"github.com/antonbier/DreamHub/backend/internal/dockerd"
 	"github.com/antonbier/DreamHub/backend/internal/dockersetup"
 	"github.com/antonbier/DreamHub/backend/internal/httpx"
 	"github.com/antonbier/DreamHub/backend/internal/plan"
@@ -125,4 +127,157 @@ func (h *Apps) planDockerSetup(w http.ResponseWriter, r *http.Request) {
 		},
 	})
 	httpx.WriteJSON(w, http.StatusOK, map[string]any{"plan": pl, "steps": steps})
+}
+
+// planDockerUninstall answers POST /api/v1/apps/docker/uninstall/plan,
+// body {"deleteData": false}. The plan lists what goes: the containers
+// DreamHub created (first), the two services, the overlay-module loading
+// and the Docker files — and, only when asked ("Also delete the app
+// data?", default no), Docker's data root and the apps' storage folders.
+// enigma2 and recordings are not touched; there is nothing to do once
+// nothing is left, so a second uninstall is a 409.
+func (h *Apps) planDockerUninstall(w http.ResponseWriter, r *http.Request) {
+	if h.Setup == nil {
+		httpx.WriteError(w, r, http.StatusServiceUnavailable, "docker_setup_unavailable", "removing Docker isn't available on this system")
+		return
+	}
+	var body struct {
+		DeleteData bool `json:"deleteData"`
+	}
+	if r.ContentLength != 0 {
+		if err := httpx.DecodeJSON(r, &body); err != nil {
+			httpx.WriteError(w, r, http.StatusBadRequest, "invalid_body", `expected {"deleteData": false}`)
+			return
+		}
+	}
+	ctx := r.Context()
+	containers := h.listForUninstall(ctx)
+	opts := dockersetup.RemoveOptions{DeleteData: body.DeleteData, AppRoots: h.appRoots(containers)}
+	steps, err := h.Setup.PlanRemove(ctx, opts)
+	if err != nil {
+		httpx.WriteError(w, r, http.StatusBadGateway, "docker_setup_failed", "could not work out what Docker has left")
+		return
+	}
+	if len(containers) > 0 {
+		steps = append([]dockersetup.Step{{Kind: "containers", Detail: map[string]string{"count": strconv.Itoa(len(containers))}}}, steps...)
+	}
+	if len(steps) == 0 {
+		httpx.WriteError(w, r, http.StatusConflict, "nothing_to_do", "Docker is not installed")
+		return
+	}
+
+	changes := make([]plan.Change, 0, len(steps))
+	kinds := make([]string, 0, len(steps))
+	for _, s := range steps {
+		changes = append(changes, plan.Change{Type: "docker.uninstall." + s.Kind, Before: s.Detail})
+		kinds = append(kinds, s.Kind)
+	}
+	fingerprint := func(containers []dockerd.Container, steps []dockersetup.Step) string {
+		k := make([]string, 0, len(steps)+1)
+		for _, s := range steps {
+			k = append(k, s.Kind)
+		}
+		return fmt.Sprintf("%s|%d|%t", strings.Join(k, ","), len(containers), body.DeleteData)
+	}
+	user, _ := httpx.User(ctx)
+	summary := "Uninstall Docker (" + strings.Join(kinds, ", ") + ")"
+	if body.DeleteData {
+		summary += " and delete the app data"
+	} else {
+		summary += ", keeping the app data"
+	}
+	pl := h.Plans.Create(user, plan.Draft{
+		Action:      "apps.docker.uninstall",
+		Changes:     changes,
+		Summary:     summary,
+		Detail:      map[string]any{"steps": steps, "deleteData": body.DeleteData},
+		Fingerprint: fingerprint(containers, steps),
+		Current: func(ctx context.Context) (string, error) {
+			cs := h.listForUninstall(ctx)
+			o := dockersetup.RemoveOptions{DeleteData: body.DeleteData, AppRoots: h.appRoots(cs)}
+			now, err := h.Setup.PlanRemove(ctx, o)
+			if err != nil {
+				return "", err
+			}
+			if len(cs) > 0 {
+				now = append([]dockersetup.Step{{Kind: "containers"}}, now...)
+			}
+			return fingerprint(cs, now), nil
+		},
+		Execute: func(ctx context.Context) error {
+			if h.ReadOnly {
+				return webcontrol.ErrWritesDisabled
+			}
+			var log strings.Builder
+			fail := func(runErr error) error {
+				h.setupMu.Lock()
+				h.lastSetup = dockerSetupRun{At: h.now(), OK: false, Log: log.String()}
+				h.setupMu.Unlock()
+				_ = h.Store.AppendChange(context.WithoutCancel(ctx), store.ChangeEntry{UserID: user.ID, Action: "apps.docker.uninstall", Summary: "Failed: " + summary})
+				return &plan.Failure{Status: http.StatusBadGateway, Code: "docker_setup_failed", Message: "uninstalling Docker failed; see the log", Err: runErr}
+			}
+			// The containers first, so nothing is left running on files
+			// that are about to go.
+			for _, c := range h.listForUninstall(ctx) {
+				if err := h.Docker.Remove(ctx, c.ID); err != nil && !errors.Is(err, dockerd.ErrNotFound) {
+					fmt.Fprintf(&log, "FAILED: removing %s: %v\n", c.Name, err)
+					return fail(err)
+				}
+				fmt.Fprintf(&log, "Removed container %s\n", c.Name)
+			}
+			now, err := h.Setup.PlanRemove(ctx, opts)
+			if err != nil {
+				return fail(err)
+			}
+			out, runErr := h.Setup.Remove(ctx, now, opts)
+			log.WriteString(out)
+			if runErr != nil {
+				return fail(runErr)
+			}
+			h.setupMu.Lock()
+			h.lastSetup = dockerSetupRun{At: h.now(), OK: true, Log: log.String()}
+			h.setupMu.Unlock()
+			_ = h.Store.AppendChange(context.WithoutCancel(ctx), store.ChangeEntry{UserID: user.ID, Action: "apps.docker.uninstall", Summary: summary})
+			return nil
+		},
+	})
+	httpx.WriteJSON(w, http.StatusOK, map[string]any{"plan": pl, "steps": steps})
+}
+
+// listForUninstall: the containers DreamHub created. A helper that
+// doesn't answer (Docker already stopped or gone) just means there are
+// none to remove.
+func (h *Apps) listForUninstall(ctx context.Context) []dockerd.Container {
+	if h.Docker == nil {
+		return nil
+	}
+	list, err := h.Docker.List(ctx)
+	if err != nil {
+		return nil
+	}
+	return list
+}
+
+// appRoots are the storage roots the apps live under: the default one and
+// whatever the installed apps were given at install. Only valid roots.
+func (h *Apps) appRoots(containers []dockerd.Container) []string {
+	seen := map[string]bool{}
+	var out []string
+	for _, r := range append([]string{h.StorageRoot}, rootsOf(containers)...) {
+		if r != "" && dockerd.ValidRoot(r) && !seen[r] {
+			seen[r] = true
+			out = append(out, r)
+		}
+	}
+	return out
+}
+
+func rootsOf(containers []dockerd.Container) []string {
+	var out []string
+	for _, c := range containers {
+		if r := c.Root(); r != "" {
+			out = append(out, r)
+		}
+	}
+	return out
 }

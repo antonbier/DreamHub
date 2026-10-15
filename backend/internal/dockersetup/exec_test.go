@@ -113,3 +113,24 @@ func TestReleasesPinned(t *testing.T) {
 		}
 	}
 }
+
+func TestSafeDataPath(t *testing.T) {
+	for p, want := range map[string]bool{
+		DataRoot:                       true,
+		Base + "/anything":             true,
+		"/media/hdd/dreamhub-apps":     true,
+		"/media/usb/dreamhub-apps":     true,
+		Base:                           false, // removed only when empty
+		"/media/hdd":                   false,
+		"/media/hdd/movie":             false,
+		"/dreamhub-apps":               false,
+		"/etc/enigma2":                 false,
+		"/data/dreamhub-docker/../etc": false,
+		"relative/dreamhub-apps":       false,
+		"":                             false,
+	} {
+		if got := SafeDataPath(p); got != want {
+			t.Errorf("SafeDataPath(%q) = %v, want %v", p, got, want)
+		}
+	}
+}

@@ -114,6 +114,7 @@ func (h *Apps) Perms() map[string]perm.Perm {
 		"GET /api/v1/apps/installed/{id}/console":      perm.System,
 		"GET /api/v1/apps/docker":                      perm.System,
 		"POST /api/v1/apps/docker/setup/plan":          perm.System,
+		"POST /api/v1/apps/docker/uninstall/plan":      perm.System,
 	}
 }
 
@@ -134,6 +135,7 @@ func (h *Apps) Mount(mux httpx.Mux) {
 	mux.HandleFunc("GET /api/v1/apps/installed/{id}/console", h.containerConsole)
 	mux.HandleFunc("GET /api/v1/apps/docker", h.dockerStatus)
 	mux.HandleFunc("POST /api/v1/apps/docker/setup/plan", h.planDockerSetup)
+	mux.HandleFunc("POST /api/v1/apps/docker/uninstall/plan", h.planDockerUninstall)
 }
 
 // catalogEntry is one curated app with box compatibility already

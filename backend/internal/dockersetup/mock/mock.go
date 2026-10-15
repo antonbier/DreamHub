@@ -5,6 +5,7 @@ package mock
 
 import (
 	"context"
+	"strings"
 	"sync"
 
 	"github.com/antonbier/DreamHub/backend/internal/dockerd"
@@ -15,8 +16,10 @@ import (
 type Setup struct {
 	mu    sync.Mutex
 	state dockersetup.State
-	// Fail makes Apply fail (tests).
+	// Fail makes Apply and Remove fail (tests).
 	Fail bool
+	// removedData: the last uninstall also deleted the app data (tests).
+	removedData bool
 }
 
 var _ dockersetup.Setup = (*Setup)(nil)
@@ -69,6 +72,48 @@ func (s *Setup) Apply(ctx context.Context, steps []dockersetup.Step) (string, er
 	return "overlay module loaded\nDownloaded Docker " + dockersetup.Version + ", checksum verified\nWrote " + dockersetup.ConfigFile + "\nDocker and DreamHub's Docker helper are running\n", nil
 }
 
+// PlanRemove: everything is there while Docker is set up; afterwards
+// nothing is left (a second uninstall has nothing to do).
+func (s *Setup) PlanRemove(ctx context.Context, opts dockersetup.RemoveOptions) ([]dockersetup.Step, error) {
+	s.mu.Lock()
+	defer s.mu.Unlock()
+	st := s.state
+	var steps []dockersetup.Step
+	if st.DockerRunning || st.HelperRunning {
+		steps = append(steps, dockersetup.Step{Kind: "services", Detail: map[string]string{"docker": dockersetup.DockerService, "helper": dockersetup.HelperService}})
+	}
+	if st.Overlay {
+		steps = append(steps, dockersetup.Step{Kind: "modules", Detail: map[string]string{"file": dockersetup.ModulesFile}})
+	}
+	if st.Version != "" || st.Configured {
+		steps = append(steps, dockersetup.Step{Kind: "files", Detail: map[string]string{"paths": dockersetup.BinDir + "," + dockersetup.ConfigFile}})
+	}
+	if opts.DeleteData && st.Version != "" {
+		paths := append([]string{dockersetup.DataRoot}, opts.AppRoots...)
+		steps = append(steps, dockersetup.Step{Kind: "data", Detail: map[string]string{"paths": strings.Join(paths, ",")}})
+	}
+	return steps, nil
+}
+
+func (s *Setup) Remove(ctx context.Context, steps []dockersetup.Step, opts dockersetup.RemoveOptions) (string, error) {
+	s.mu.Lock()
+	defer s.mu.Unlock()
+	if s.Fail {
+		return "Docker stopped\nFAILED: could not remove the Docker files\n", errFailed
+	}
+	free := s.state.FreeBytes
+	if opts.DeleteData {
+		free += 300 << 20
+	}
+	s.state = dockersetup.State{Supported: true, FreeBytes: free}
+	s.removedData = opts.DeleteData
+	log := "Docker and DreamHub's Docker helper stopped and switched off\nRemoved " + dockersetup.ModulesFile + "\nRemoved the Docker files\n"
+	if opts.DeleteData {
+		log += "Removed the app data\n"
+	}
+	return log, nil
+}
+
 type failed struct{}
 
 func (failed) Error() string { return "mock: setup failed" }
@@ -101,4 +146,11 @@ func (g gated) Create(ctx context.Context, spec dockerd.ContainerSpec) (dockerd.
 		return dockerd.Container{}, dockerd.ErrUnavailable
 	}
 	return g.Client.Create(ctx, spec)
+}
+
+// RemovedData reports whether the last Remove deleted the app data.
+func (s *Setup) RemovedData() bool {
+	s.mu.Lock()
+	defer s.mu.Unlock()
+	return s.removedData
 }

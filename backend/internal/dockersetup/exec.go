@@ -173,7 +173,7 @@ func (e Exec) applyOverlay(ctx context.Context, s Step, logf func(string, ...any
 	}
 	// Loaded again at every boot.
 	if err := os.MkdirAll("/etc/modules-load.d", 0o755); err == nil {
-		_ = os.WriteFile("/etc/modules-load.d/dreamhub-docker.conf", []byte("overlay\n"), 0o644)
+		_ = os.WriteFile(ModulesFile, []byte("overlay\n"), 0o644)
 	}
 	logf("overlay module loaded")
 	return nil

@@ -218,15 +218,19 @@ func run(logger *slog.Logger, level *logging.Level) error {
 		packages = aptmock.New()
 		dockerHub = dockerhubmock.Client{}
 		logoSearch = logosearchmock.Source{}
-		dockerClient = dockermock.New()
-		dockerSetup = dockersetupmock.Ready()
+		rawDocker := dockermock.New()
+		// Docker is set up by default, and "Uninstall Docker" takes it away
+		// (the helper then answers as unreachable, like on a real box).
+		ready := dockersetupmock.Ready()
+		dockerSetup = ready
+		dockerClient = dockersetupmock.Gate(rawDocker, ready)
 		// DREAMHUB_MOCK_DOCKER=absent: a box without Docker (like the
 		// reference box) — the helper answers only once "Set up Docker"
 		// has run.
 		if os.Getenv("DREAMHUB_MOCK_DOCKER") == "absent" {
 			s := dockersetupmock.New()
 			dockerSetup = s
-			dockerClient = dockersetupmock.Gate(dockerClient, s)
+			dockerClient = dockersetupmock.Gate(rawDocker, s)
 		}
 		appsStorageRoot = "/tmp/dreamhub-mock-apps"
 		memReader = meminfomock.New()

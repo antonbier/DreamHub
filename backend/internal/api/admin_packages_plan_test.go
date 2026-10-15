@@ -60,17 +60,61 @@ func TestAdminPackages_InstallFromCatalog(t *testing.T) {
 	}
 }
 
+// "Update all" is ONE plan covering every upgradable package, applied once.
 func TestAdminPackages_UpgradeAll(t *testing.T) {
 	e := newEnv(t)
-	code, p, b := e.planPackages(t, `{"action":"upgrade","packages":[]}`)
-	if code != http.StatusOK || len(p.Steps) != 1 || p.Steps[0].Kind != "upgrade" || p.Steps[0].OldVersion == "" {
-		t.Fatalf("plan: %d %s", code, b)
+	_, b := e.do(t, "GET", "/api/v1/admin/packages?status=upgradable", "", nil)
+	var before packageList
+	json.Unmarshal(b, &before)
+	if len(before.Packages) < 2 {
+		t.Fatalf("the mock should offer several updates: %s", b)
+	}
+
+	code, p, b2 := e.planPackages(t, `{"action":"upgrade","packages":[]}`)
+	if code != http.StatusOK || len(p.Steps) != len(before.Packages) {
+		t.Fatalf("plan: %d %s", code, b2)
+	}
+	for _, s := range p.Steps {
+		if s.Kind != "upgrade" || s.OldVersion == "" || s.NewVersion == "" {
+			t.Errorf("step: %+v", s)
+		}
+	}
+	// A preview alone changes nothing.
+	if _, b := e.do(t, "GET", "/api/v1/admin/packages?status=upgradable", "", nil); !strings.Contains(string(b), `"upgradable":true`) {
+		t.Fatal("preview alone upgraded packages")
 	}
 	if resp, b := e.do(t, "POST", "/api/v1/plans/"+p.Plan.ID+"/apply", "", nil); resp.StatusCode != http.StatusOK {
 		t.Fatalf("apply: %d %s", resp.StatusCode, b)
 	}
+	_, b = e.do(t, "GET", "/api/v1/admin/packages?status=upgradable", "", nil)
+	var after packageList
+	json.Unmarshal(b, &after)
+	if len(after.Packages) != 0 {
+		t.Fatalf("still upgradable after update all: %s", b)
+	}
 	if code, _, b := e.planPackages(t, `{"action":"upgrade","packages":[]}`); code != http.StatusConflict || !strings.Contains(b, "nothing_to_do") {
 		t.Fatalf("second upgrade: %d %s", code, b)
+	}
+}
+
+// Everything that plans or reads the package state is admin-only.
+func TestAdminPackages_ViewerRefused(t *testing.T) {
+	e := newEnv(t)
+	_, viewer, _ := e.household(t)
+	for _, tc := range []struct{ method, path, body string }{
+		{"GET", "/api/v1/admin/packages", ""},
+		{"POST", "/api/v1/admin/packages/plan", `{"action":"upgrade","packages":[]}`},
+		{"POST", "/api/v1/admin/packages/plan", `{"action":"install","packages":["htop"]}`},
+		{"POST", "/api/v1/admin/packages/explain", `{"name":"htop"}`},
+		{"GET", "/api/v1/admin/packages/last-run", ""},
+	} {
+		if resp, _ := e.do(t, tc.method, tc.path, tc.body, withProfile(viewer)); resp.StatusCode != http.StatusForbidden {
+			t.Errorf("viewer %s %s: expected 403, got %d", tc.method, tc.path, resp.StatusCode)
+		}
+	}
+	// And a plan can't be made without the CSRF header.
+	if resp, _ := e.doRaw(t, "POST", "/api/v1/admin/packages/plan", []byte(`{"action":"upgrade","packages":[]}`), "application/json"); resp.StatusCode == http.StatusOK {
+		t.Error("plan without the CSRF header was accepted")
 	}
 }
 

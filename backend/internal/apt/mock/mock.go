@@ -50,12 +50,17 @@ func New() *Lister {
 			{Name: "gp4-picon-hotbird13e", Version: "20260901", Category: "base", Description: "Picons for Hotbird 13E"},
 			{Name: "dropbear", Version: "2022.83", Category: "console/network", Description: "Lightweight SSH server"},
 			{Name: "python3-core", Version: "3.11.6-r2", Category: "devel/python", Description: "Minimal Python 3 interpreter"},
+			{Name: "enigma2-plugin-extensions-mediaportal", Version: "2026083001", Category: "plugin-extensions", Description: "MediaPortal", Upgradable: true, AvailableVersion: "2026100101"},
+			{Name: "enigma2-plugin-systemplugins-networkmanager", Version: "2.1", Category: "plugin-systemplugins", Description: "Network configuration screens", Upgradable: true, AvailableVersion: "2.2"},
+			{Name: "libfoo-internal", Version: "0.9", Category: "libs"},
 			{Name: "oscam-cycecplus", Version: "11742", Category: "console/network", Description: "Open Source Conditional Access Module", Upgradable: true, AvailableVersion: "11760"},
 		},
 		Avail: []apt.Package{
 			{Name: "ffmpeg", Version: "6.1.1-r0", Category: "multimedia", Description: "A complete solution to record, convert and stream audio and video"},
 			{Name: "htop", Version: "1.0.3-r0.0", Category: "console/utils", Description: "Interactive process viewer"},
 			{Name: "kernel-module-overlay", Version: "4.9-r0", Category: "kernel", Description: "overlay kernel module"},
+			{Name: "enigma2-plugin-extensions-autotimer", Version: "4.2-r0", Category: "plugin-extensions", Description: "Automatic timer creation"},
+			{Name: "enigma2-plugin-drivers-dvb-usb-extra", Version: "1.3", Category: "plugin-drivers", Description: "Extra DVB USB tuner drivers"},
 			{Name: "gp4-picon-astra19e", Version: "20260901", Category: "picon-skin", Description: "Picons for Astra 19.2E"},
 		},
 		Feeds: []apt.Feed{

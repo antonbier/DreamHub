@@ -3,6 +3,7 @@ package hubs
 import (
 	"errors"
 	"net/http"
+	"slices"
 	"sort"
 	"strings"
 
@@ -10,6 +11,7 @@ import (
 	"github.com/antonbier/DreamHub/backend/internal/connector"
 	"github.com/antonbier/DreamHub/backend/internal/httpx"
 	"github.com/antonbier/DreamHub/backend/internal/hub"
+	"github.com/antonbier/DreamHub/backend/internal/pkginfo"
 )
 
 // AdminHub's package browser (docs/ADMINHUB_PLAN.md, A2, #47): the box's
@@ -23,10 +25,15 @@ const maxPackageRows = 400
 // packageNeeds: which hubs need which OS package (hub.Descriptor.Packages).
 var packageNeeds = hub.PackageNeeds(hub.V1())
 
-// packageRow is one package in the list, plus the hubs that need it.
+// packageRow is one package in the list, plus the hubs that need it and
+// the resolved information (internal/pkginfo: curated text, else the
+// package's own description, else nothing) — no AI involved.
 type packageRow struct {
 	apt.Package
 	NeededBy []string `json:"neededBy,omitempty"`
+	// Info is what the Packages tab shows: description, category (a stable
+	// id plus its label in the asked language) and where the text came from.
+	Info pkginfo.Resolved `json:"info"`
 	// Missing: a package a hub needs that isn't installed (only in the
 	// "needed" view, which shows those too, with an install button).
 	Missing bool `json:"missing,omitempty"`
@@ -34,7 +41,9 @@ type packageRow struct {
 
 // listPackages answers GET /api/v1/admin/packages, filtered by:
 //   - q: a case-insensitive substring of the name or description
-//   - category: an exact match against Package.Category
+//   - category: a pkginfo category id ("extensions", "skins", …)
+//   - lang: de, en or it — the language of descriptions and category labels
+//     (default en)
 //   - status: "upgradable" (only those with an update pending),
 //     "available" (the feeds' packages that aren't installed) or
 //     "installed" (everything dpkg knows about, the default) or "needed"
@@ -68,6 +77,7 @@ func (h *Admin) listPackages(w http.ResponseWriter, r *http.Request) {
 
 	q := strings.ToLower(strings.TrimSpace(r.URL.Query().Get("q")))
 	category := r.URL.Query().Get("category")
+	lang := pkginfo.Lang(r.URL.Query().Get("lang"))
 
 	if status == "needed" {
 		pkgs = h.withMissingNeeds(r, pkgs)
@@ -76,23 +86,27 @@ func (h *Admin) listPackages(w http.ResponseWriter, r *http.Request) {
 	out := make([]packageRow, 0, len(pkgs))
 	categories := map[string]bool{}
 	for _, p := range pkgs {
-		if p.Category != "" { // some feed packages carry no Section at all
-			categories[p.Category] = true
-		}
-		if q != "" && !strings.Contains(strings.ToLower(p.Name), q) && !strings.Contains(strings.ToLower(p.Description), q) {
-			continue
-		}
-		if category != "" && p.Category != category {
+		info := pkginfo.Resolve(p.Name, p.Description, lang)
+		needed := mergeNeeds(packageNeeds[p.Name], info.NeededBy)
+		info.NeededBy = needed
+		if q != "" && !strings.Contains(strings.ToLower(p.Name), q) &&
+			!strings.Contains(strings.ToLower(p.Description), q) &&
+			!strings.Contains(strings.ToLower(info.Description), q) {
 			continue
 		}
 		if status == "upgradable" && !p.Upgradable {
 			continue
 		}
-		needed := packageNeeds[p.Name]
 		if status == "needed" && len(needed) == 0 {
 			continue
 		}
-		out = append(out, packageRow{Package: p, NeededBy: needed, Missing: status == "needed" && p.Version == ""})
+		// The category chips show what the current view holds, so the
+		// category itself is applied after they are collected.
+		categories[info.Category] = true
+		if category != "" && info.Category != category {
+			continue
+		}
+		out = append(out, packageRow{Package: p, NeededBy: needed, Info: info, Missing: status == "needed" && p.Version == ""})
 	}
 
 	// The catalog runs to thousands of packages on a real box; without a
@@ -102,13 +116,32 @@ func (h *Admin) listPackages(w http.ResponseWriter, r *http.Request) {
 		out, truncated = out[:maxPackageRows], true
 	}
 
-	cats := make([]string, 0, len(categories))
-	for c := range categories {
-		cats = append(cats, c)
+	// Chips in the order of pkginfo.Categories; only those with packages.
+	cats := make([]categoryChip, 0, len(categories))
+	for _, c := range pkginfo.Categories {
+		if categories[c.ID] {
+			cats = append(cats, categoryChip{ID: c.ID, Label: c.Label[lang]})
+		}
 	}
-	sort.Strings(cats)
 
 	httpx.WriteJSON(w, http.StatusOK, map[string]any{"packages": out, "categories": cats, "truncated": truncated})
+}
+
+type categoryChip struct {
+	ID    string `json:"id"`
+	Label string `json:"label"`
+}
+
+// mergeNeeds joins the hubs that declare a package (hub.Descriptor.Packages)
+// with the curated entry's, without duplicates.
+func mergeNeeds(a, b []string) []string {
+	var out []string
+	for _, id := range append(append([]string(nil), a...), b...) {
+		if !slices.Contains(out, id) {
+			out = append(out, id)
+		}
+	}
+	return out
 }
 
 // withMissingNeeds adds a row (version empty) for every package a hub

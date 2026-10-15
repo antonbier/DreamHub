@@ -3,16 +3,28 @@ package api_test
 import (
 	"encoding/json"
 	"net/http"
+	"strings"
 	"testing"
 )
 
 type packageList struct {
 	Packages []struct {
-		Name       string `json:"name"`
-		Category   string `json:"category"`
-		Upgradable bool   `json:"upgradable"`
+		Name       string   `json:"name"`
+		Category   string   `json:"category"`
+		Upgradable bool     `json:"upgradable"`
+		NeededBy   []string `json:"neededBy"`
+		Info       struct {
+			Description   string   `json:"description"`
+			Category      string   `json:"category"`
+			CategoryLabel string   `json:"categoryLabel"`
+			NeededBy      []string `json:"neededBy"`
+			Source        string   `json:"source"`
+		} `json:"info"`
 	} `json:"packages"`
-	Categories []string `json:"categories"`
+	Categories []struct {
+		ID    string `json:"id"`
+		Label string `json:"label"`
+	} `json:"categories"`
 }
 
 func TestAdminPackages_ListAndFilter(t *testing.T) {
@@ -123,5 +135,67 @@ func TestAdminPackages_ExplainReturnsAnExplanation(t *testing.T) {
 	json.Unmarshal(b, &v)
 	if resp.StatusCode != http.StatusOK || v.Explanation == "" {
 		t.Fatalf("explain: %d %+v", resp.StatusCode, v)
+	}
+}
+
+// The three sources of a description: curated, the package's own, none.
+func TestAdminPackages_Info(t *testing.T) {
+	e := newEnv(t)
+	get := func(q string) packageList {
+		t.Helper()
+		resp, b := e.do(t, "GET", "/api/v1/admin/packages?"+q, "", nil)
+		var l packageList
+		json.Unmarshal(b, &l)
+		if resp.StatusCode != http.StatusOK {
+			t.Fatalf("%s: %d %s", q, resp.StatusCode, b)
+		}
+		return l
+	}
+
+	l := get("status=available&q=ffmpeg&lang=de")
+	if len(l.Packages) != 1 {
+		t.Fatalf("ffmpeg: %+v", l)
+	}
+	ff := l.Packages[0]
+	if ff.Info.Source != "curated" || !strings.Contains(ff.Info.Description, "Video") || ff.Info.Category != "system" || ff.Info.CategoryLabel != "System" {
+		t.Errorf("curated: %+v", ff.Info)
+	}
+	if len(ff.NeededBy) != 1 || ff.NeededBy[0] != "media" || len(ff.Info.NeededBy) != 1 {
+		t.Errorf("neededBy: %+v", ff)
+	}
+	if en := get("status=available&q=ffmpeg&lang=en").Packages[0].Info.Description; en == ff.Info.Description {
+		t.Error("the language should change the curated text")
+	}
+
+	// No entry: the package's own description, the category from its name.
+	l = get("status=available&q=dvb-usb-extra&lang=it")
+	if len(l.Packages) != 1 || l.Packages[0].Info.Source != "package" || l.Packages[0].Info.Description != "Extra DVB USB tuner drivers" ||
+		l.Packages[0].Info.Category != "drivers" || l.Packages[0].Info.CategoryLabel != "Driver" {
+		t.Errorf("package source: %+v", l.Packages)
+	}
+
+	// Nothing known at all.
+	l = get("q=libfoo-internal")
+	if len(l.Packages) != 1 || l.Packages[0].Info.Source != "none" || l.Packages[0].Info.Description != "" {
+		t.Errorf("none source: %+v", l.Packages)
+	}
+
+	// Category chips: stable ids with labels, only those the view holds;
+	// the filter takes the id.
+	l = get("status=available&lang=de")
+	ids := map[string]string{}
+	for _, c := range l.Categories {
+		ids[c.ID] = c.Label
+	}
+	if ids["drivers"] != "Treiber" || ids["extensions"] != "Erweiterungen" || ids["skins"] != "" {
+		t.Errorf("categories: %+v", l.Categories)
+	}
+	l = get("status=available&category=drivers")
+	if len(l.Packages) != 1 || l.Packages[0].Name != "enigma2-plugin-drivers-dvb-usb-extra" {
+		t.Errorf("category filter: %+v", l.Packages)
+	}
+	// The description is searchable, the curated text included.
+	if l = get("status=available&q=convert"); len(l.Packages) != 1 || l.Packages[0].Name != "ffmpeg" {
+		t.Errorf("search in the curated text: %+v", l.Packages)
 	}
 }

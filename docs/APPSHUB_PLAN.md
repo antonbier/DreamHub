@@ -259,7 +259,7 @@ Brainstormed with the owner after the first full UX review, with Unraid (Apps + 
 
 ### App10: tabs and naming
 
-Rename the three tabs (Packages / Extensions / Docker), reorder, remember the last tab, move feeds behind the Packages gear, put Docker's setup into the Docker gear. Mostly structure and wording, with one addition (owner, 2026-10-15): **Docker is installed *and uninstalled* from there.** Install is today's "Set up Docker …" plan (App7). Uninstall is new and is a plan too: it lists what goes (the two services, the overlay-module loading, the Docker daemon files) and asks one plain question — *also delete the app data?* — with "keep the data" as the default, so apps can come back after a reinstall. It stops and removes containers first, and refuses while a recording is running only if that were needed (it isn't — Docker is separate from enigma2). Locale keys in de/en/it.
+Rename the three tabs (Packages / Extensions / Docker), reorder, remember the last tab, move feeds behind the Packages gear, put Docker's setup into the Docker gear. Mostly structure and wording, with one addition (owner, 2026-10-15): **Docker is installed *and uninstalled* from there.** Install is today's "Set up Docker …" plan (App7). Uninstall is new and is a plan too: it lists what goes (the two services, the overlay-module loading, the Docker daemon files) and asks one plain question — *also delete the app data?* — with "keep the data" as the default, so apps can come back after a reinstall. It stops and removes the containers first. A running recording is not affected (Docker is separate from enigma2). Locale keys in de/en/it.
 
 ### App11: package information without an AI
 

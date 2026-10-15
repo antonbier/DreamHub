@@ -122,6 +122,9 @@ func (h *Apps) prepareSameSettings(ctx context.Context, containers []dockerd.Con
 // recreateFailure is a plan failure naming the app the step was about.
 func recreateFailure(status int, code, message string, app string, err error, more map[string]any) *plan.Failure {
 	d := map[string]any{"app": app}
+	if err != nil {
+		d["reason"] = err.Error() // the short cause the person is shown
+	}
 	for k, v := range more {
 		d[k] = v
 	}

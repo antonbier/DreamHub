@@ -726,7 +726,7 @@ export interface PackageCategory {
 
 // apt.Step — one package a package plan installs, upgrades or removes.
 export interface PackageStep {
-  kind: 'install' | 'upgrade' | 'remove'
+  kind: 'install' | 'upgrade' | 'remove' | 'downgrade'
   name: string
   oldVersion?: string
   newVersion?: string
@@ -925,6 +925,47 @@ export interface AppEditView {
 export interface UnusedImages {
   images: { id: string; tags: string[]; sizeBytes: number }[]
   reclaimableBytes: number
+  // The previous versions kept for "Roll back"; the clean-up never removes them.
+  kept: { appId: string; service?: string; imageId: string; sizeBytes: number }[]
+  keptBytes: number
+}
+
+// GET /api/v1/apps/updates — one count over packages and containers (App14).
+export interface UpdatesView {
+  packages: { name: string; from: string; to: string; touchesEnigma2?: boolean }[]
+  containers: { id: string; appId: string; name: string }[]
+  count: number
+  // DreamHub's own package has an update; it is not part of "Update all".
+  selfUpdate: boolean
+  // Whether an update could start now; why not and until when (Unix seconds).
+  window: { closed: boolean; reason?: 'recording' | 'starting'; name?: string; until?: number }
+  auto: { containers: boolean; packages: boolean }
+}
+
+// One step of the combined update plan, in the order it runs.
+export interface UpdateStep {
+  kind: 'container' | 'package'
+  name: string
+  appId?: string
+  change?: 'upgrade' | 'install' | 'remove' | 'downgrade'
+  from?: string
+  to?: string
+  touchesEnigma2?: boolean
+}
+
+export interface UpdatePlan {
+  plan: Plan
+  steps: UpdateStep[]
+  // Apps that can't be updated (their settings no longer validate), with why.
+  skipped: { name: string; reason: string }[]
+  order: string[]
+}
+
+// What a failed "Update all" says (the error's details).
+export interface UpdateFailureDetails {
+  done: string[]
+  failed: { kind: 'container' | 'package'; name: string; appId?: string; code: string; reason: string; rolledBack?: boolean; output?: string }[]
+  skipped: string[]
 }
 
 // What an install plan will create (Plan.changes[0].after for apps.install).
@@ -964,6 +1005,8 @@ export interface InstalledApp {
   // Starts when the box starts; the edit form can be opened; the row's picture.
   autostart: boolean
   editable: boolean
+  // The version before the last update is kept: "Roll back" is offered.
+  rollBack?: boolean
   icon?: string
   category?: string
   // The app's helper containers (e.g. its database), each with own logs.

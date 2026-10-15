@@ -147,7 +147,13 @@
       "upgradable": "{count} package update(s) available"
     },
     "app": {
-      "upgradable": "A newer image is available for {name}"
+      "upgradable": "A newer image is available for {name}",
+      "crashLoop": "App {name} keeps stopping — see its logs"
+    },
+    "updates": {
+      "applied": "Updated automatically: {names}",
+      "failed": "Automatic update failed: {name} — {reason}",
+      "rolledBack": "Update of {name} rolled back ({reason}). The previous version is running again."
     }
   },
   "statusStrip": {
@@ -1200,8 +1206,8 @@
     "searchTitle": "Look for other apps on Docker Hub",
     "adminOnly": "Only admins can manage apps.",
     "feeds": {
-      "gear": "Package sources",
-      "title": "Package sources"
+      "gear": "Package settings",
+      "title": "Package settings"
     },
     "uninstall": {
       "title": "Uninstall Docker",
@@ -1408,7 +1414,8 @@
     "update": {
       "menu": "Update",
       "confirm": "Update",
-      "done": "Updated."
+      "done": "Updated.",
+      "hint": "The app is made again from the newest image. Its data stays, and the previous version is kept so you can roll back."
     },
     "removed": "Removed.",
     "prefs": {
@@ -1433,7 +1440,7 @@
         "72": "every 3 days",
         "168": "weekly"
       },
-      "updateHint": "Nothing is updated by itself; you choose when.",
+      "updateHint": "Checking only tells you; it never updates anything by itself.",
       "saved": "Saved.",
       "saveError": "The setting could not be saved.",
       "loadError": "The settings could not be loaded."
@@ -1448,7 +1455,32 @@
       "summary": "These {count} images are removed and about {size} is freed:",
       "untagged": "(untagged)",
       "done": "Cleaned up, about {size} freed.",
-      "loadError": "The images could not be listed."
+      "loadError": "The images could not be listed.",
+      "kept": "{count} previous version kept for rolling back ({size}) | {count} previous versions kept for rolling back ({size})",
+      "keptHint": "The clean-up above never removes them.",
+      "keptButton": "Remove them",
+      "keptConfirm": "Remove",
+      "keptSummary": "Remove the kept previous versions ({size}). Those apps can no longer be rolled back until their next update.",
+      "keptDone": "Removed."
+    },
+    "rollBack": {
+      "menu": "Roll back",
+      "confirm": "Roll back",
+      "done": "Rolled back.",
+      "hint": "The app goes back to the version it ran before its last update. Its data stays."
+    },
+    "auto": {
+      "containers": "Update containers automatically",
+      "containersHint": "Only when no recording is running or about to start. The result appears in the notifications.",
+      "packages": "Update packages automatically",
+      "packagesHint": "Only packages that do not restart enigma2. All others, and DreamHub itself, you still update by hand. The result appears in the notifications.",
+      "nightBefore": "Only update between",
+      "nightAnd": "and",
+      "nightAfter": "",
+      "nightHint": "Applies to automatic updates. When you press Update yourself, only a recording holds it back.",
+      "title": "Updates",
+      "from": "From",
+      "to": "to"
     }
   },
   "timers": {
@@ -1586,15 +1618,14 @@
       "explain": "Ask the AI (optional)",
       "feedAddedByHand": "Added by hand",
       "notInstalled": "Not installed",
-      "upgradableCount": "{count} update available | {count} updates available",
-      "upgradeAll": "Update all",
       "simulating": "Checking with apt what would change …",
       "confirm": "Apply",
       "previewIntro": "apt would change this package: | apt would change these {count} packages:",
       "step": {
         "install": "+ install {name} {to}",
         "upgrade": "↑ update {name} {from} → {to}",
-        "remove": "− remove {name} {from}"
+        "remove": "− remove {name} {from}",
+        "downgrade": "↓ downgrade {name} {from} → {to}"
       },
       "done": "Done",
       "failed": "apt reported an error",
@@ -1627,7 +1658,9 @@
         "curated": "DreamHub's list",
         "package": "The package itself",
         "none": "None available"
-      }
+      },
+      "downgrade": "Downgrade to {version}",
+      "downgradeConfirm": "Downgrade"
     },
     "scripts": {
       "title": "Scripts",
@@ -2275,5 +2308,36 @@
       "perChannelHint": "Pick the logo of one channel by hand — from any installed set, your own picture, or one found online. Only DreamHub's screens change; the TV keeps what the box has.",
       "searchChannel": "Type a channel name …"
     }
+  },
+  "updates": {
+    "title": "{count} update available | {count} updates available",
+    "packagesCount": "{count} package | {count} packages",
+    "containersCount": "{count} container | {count} containers",
+    "all": "Update all",
+    "selfNote": "DreamHub itself has an update too. It is not part of Update all: install it with the box's own tools.",
+    "working": "Working out what would change …",
+    "intro": "These are updated one after the other, in this order:",
+    "containers": "Containers",
+    "packages": "Packages",
+    "why": "Containers go first: an update that does not run is rolled back by itself, so nothing else changes when one fails. The packages follow only when every container is fine.",
+    "skipped": "Not updated: {names}",
+    "watching": "Every updated container is watched for a minute. One that does not keep running goes back to its previous version by itself. This can take a few minutes.",
+    "done": "Everything is updated.",
+    "result": {
+      "done": "Updated: {names}.",
+      "failed": "Failed: {name} — {reason}",
+      "skipped": "Not started: {names}",
+      "restored": "The previous version is running again.",
+      "notRestored": "The previous version could not be started again. Check the app.",
+      "output": "apt says:"
+    },
+    "held": {
+      "recording": "A recording is running ({name}). Updates are possible again at {time}.",
+      "starting": "A recording starts soon ({name}). Updates are possible again at {time}."
+    },
+    "rolledBack": "The update did not run ({reason}). The previous version is running again.",
+    "rollbackFailed": "The update did not run, and the previous version could not be started again ({reason}).",
+    "updateFailed": "The app could not be updated ({reason}).",
+    "restoredNote": "It runs as before."
   }
 }

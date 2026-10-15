@@ -65,19 +65,12 @@
       </button>
     </div>
 
-    <div v-if="upgradableCount > 0 && !pending" class="mt-3 flex flex-wrap items-center gap-x-3 gap-y-1 rounded-sm border border-accent bg-tile-2 px-3 py-2 text-[13px] text-text">
-      <span>{{ t('admin.packages.upgradableCount', { count: upgradableCount }, upgradableCount) }}</span>
-      <button type="button" class="tap ms-auto rounded-sm bg-accent px-3 py-1 text-[12.5px] font-semibold text-bg hover:opacity-90" @click="preview('upgrade', [])">
-        {{ t('admin.packages.upgradeAll') }}
-      </button>
-    </div>
-
     <div v-if="pending" class="mt-3">
       <p v-if="!pending.plan && !pending.error && !pending.run" class="text-[13px] text-faint">{{ t('admin.packages.simulating') }}</p>
       <PlanPreview
         v-else-if="pending.plan && !pending.run"
         :plan="pending.plan"
-        :confirm-label="t('admin.packages.confirm')"
+        :confirm-label="pending.downgrade ? t('admin.packages.downgradeConfirm') : t('admin.packages.confirm')"
         :busy="pending.applying"
         :error="pending.error"
         :danger="pending.steps.some((s) => s.kind === 'remove')"
@@ -127,7 +120,7 @@
             </button>
             <DropdownMenu>
               <template #trigger>
-                <button type="button" class="tap rounded-sm p-1.5 text-muted hover:bg-tile-2 hover:text-text" :aria-label="t('apps.more')">
+                <button type="button" class="tap rounded-sm p-1.5 text-muted hover:bg-tile-2 hover:text-text" :aria-label="t('apps.more')" @click="loadOlder(p)">
                   <Icon name="more" :size="16" />
                 </button>
               </template>
@@ -137,6 +130,9 @@
                 </button>
                 <button v-if="aiReady && p.info.source !== 'curated'" type="button" class="block w-full px-3 py-1.5 text-start text-[13px] text-text hover:bg-tile-2" :disabled="explaining === p.name" @click="close(); explain(p)">
                   {{ t('admin.packages.explain') }}
+                </button>
+                <button v-if="older[p.name]" type="button" class="block w-full px-3 py-1.5 text-start text-[13px] text-text hover:bg-tile-2" :disabled="!!pending" @click="close(); previewDowngrade(p.name, older[p.name])">
+                  {{ t('admin.packages.downgrade', { version: older[p.name] }) }}
                 </button>
                 <button v-if="p.upgradable && !catalog" type="button" class="block w-full px-3 py-1.5 text-start text-[13px] text-onair hover:bg-tile-2" :disabled="!!pending" @click="close(); preview('remove', [p.name])">
                   {{ t('admin.packages.remove') }}
@@ -181,6 +177,7 @@ import DropdownMenu from '@/components/DropdownMenu.vue'
 import Icon from '@/components/Icon.vue'
 import PlanPreview from '@/components/PlanPreview.vue'
 import { usePlanError } from '@/composables/usePlanError'
+import { useUpdates } from '@/composables/useUpdates'
 import { useHubLabel } from '@/composables/useHubLabel'
 import type { AdminPackage, PackageCategory, PackageRun, PackageStep, Plan } from '@/api/types'
 
@@ -188,6 +185,7 @@ const { t, locale } = useI18n()
 const { hubName } = useHubLabel()
 const { friendly } = useFriendlyError()
 const { planErrorMessage } = usePlanError()
+const { reload: reloadUpdates } = useUpdates()
 
 const packages = ref<AdminPackage[]>([])
 const categories = ref<PackageCategory[]>([])
@@ -259,7 +257,7 @@ async function countUpgradable() {
 
 // --- install, upgrade, remove: preview, confirm, show apt's output -------
 
-type Pending = { plan?: Plan; steps: PackageStep[]; applying?: boolean; error?: string; run?: PackageRun }
+type Pending = { plan?: Plan; steps: PackageStep[]; applying?: boolean; error?: string; run?: PackageRun; downgrade?: boolean }
 const pending = ref<Pending | null>(null)
 
 // Which preview request is current: a ref wraps its object in a proxy, so
@@ -281,6 +279,34 @@ async function preview(action: 'install' | 'remove' | 'upgrade', names: string[]
   }
 }
 
+// Downgrade: only offered where the feed still carries an older version —
+// asked for when a row's menu opens, since most feeds only have the latest.
+const older = reactive<Record<string, string>>({})
+const olderAsked = new Set<string>()
+async function loadOlder(p: AdminPackage) {
+  if (catalog.value || p.category === 'self' || olderAsked.has(p.name)) return
+  olderAsked.add(p.name)
+  try {
+    const res = await api.admin.packageVersions(p.name)
+    if (res.versions.length) older[p.name] = res.versions[0]
+  } catch {
+    olderAsked.delete(p.name)
+  }
+}
+
+async function previewDowngrade(name: string, version: string) {
+  const mine = ++previewSeq
+  pending.value = { steps: [], downgrade: true }
+  try {
+    const res = await api.admin.downgradePlan(name, version)
+    if (previewSeq === mine && pending.value) pending.value = { plan: res.plan, steps: res.steps, downgrade: true }
+  } catch (err) {
+    if (previewSeq !== mine || !pending.value) return
+    const aptSays = err instanceof ApiError && err.code === 'apt_refused' ? '\n' + err.message : ''
+    pending.value = { steps: [], error: planErrorMessage(err) + aptSays, downgrade: true }
+  }
+}
+
 async function apply() {
   const p = pending.value
   if (!p?.plan) return
@@ -298,12 +324,18 @@ async function apply() {
     const run = await api.admin.packagesLastRun().then((r) => r.run).catch(() => null)
     if (run) {
       pending.value = { steps: p.steps, run }
+      olderAsked.clear()
+      for (const k of Object.keys(older)) delete older[k]
       void load()
+      void reloadUpdates(true)
       return
     }
   }
   pending.value = failure ? { ...p, applying: false, error: failure } : null
+  olderAsked.clear()
+  for (const k of Object.keys(older)) delete older[k]
   void load()
+  void reloadUpdates(true)
 }
 
 let debounceTimer: number | undefined

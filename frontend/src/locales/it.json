@@ -147,7 +147,13 @@
       "upgradable": "{count} aggiornamento/i di pacchetto disponibile/i"
     },
     "app": {
-      "upgradable": "È disponibile una nuova immagine per {name}"
+      "upgradable": "È disponibile una nuova immagine per {name}",
+      "crashLoop": "L'app {name} continua a fermarsi — vedi i suoi log"
+    },
+    "updates": {
+      "applied": "Aggiornati automaticamente: {names}",
+      "failed": "Aggiornamento automatico non riuscito: {name} — {reason}",
+      "rolledBack": "Aggiornamento di {name} annullato ({reason}). La versione precedente è di nuovo in esecuzione."
     }
   },
   "statusStrip": {
@@ -1200,8 +1206,8 @@
     "searchTitle": "Cerca altre app su Docker Hub",
     "adminOnly": "Solo gli amministratori possono gestire le app.",
     "feeds": {
-      "gear": "Fonti dei pacchetti",
-      "title": "Fonti dei pacchetti"
+      "gear": "Impostazioni dei pacchetti",
+      "title": "Impostazioni dei pacchetti"
     },
     "uninstall": {
       "title": "Disinstalla Docker",
@@ -1408,7 +1414,8 @@
     "update": {
       "menu": "Aggiorna",
       "confirm": "Aggiorna",
-      "done": "Aggiornata."
+      "done": "Aggiornata.",
+      "hint": "L'app viene ricreata dall'immagine più recente. I suoi dati restano e la versione precedente viene conservata per poter tornare indietro."
     },
     "removed": "Rimossa.",
     "prefs": {
@@ -1433,7 +1440,7 @@
         "72": "ogni 3 giorni",
         "168": "ogni settimana"
       },
-      "updateHint": "Nulla si aggiorna da solo; scegli tu quando.",
+      "updateHint": "Il controllo ti avvisa soltanto; non aggiorna nulla da solo.",
       "saved": "Salvato.",
       "saveError": "Impossibile salvare l'impostazione.",
       "loadError": "Impossibile caricare le impostazioni."
@@ -1448,7 +1455,32 @@
       "summary": "Queste {count} immagini vengono rimosse e si liberano circa {size}:",
       "untagged": "(senza nome)",
       "done": "Pulito, liberati circa {size}.",
-      "loadError": "Impossibile elencare le immagini."
+      "loadError": "Impossibile elencare le immagini.",
+      "kept": "{count} versione precedente conservata per il ripristino ({size}) | {count} versioni precedenti conservate per il ripristino ({size})",
+      "keptHint": "La pulizia qui sopra non le rimuove mai.",
+      "keptButton": "Rimuovi",
+      "keptConfirm": "Rimuovi",
+      "keptSummary": "Rimuovere le versioni precedenti conservate ({size}). Queste app non potranno tornare indietro fino al prossimo aggiornamento.",
+      "keptDone": "Rimosso."
+    },
+    "rollBack": {
+      "menu": "Torna alla versione precedente",
+      "confirm": "Ripristina",
+      "done": "Versione precedente ripristinata.",
+      "hint": "L'app torna alla versione precedente all'ultimo aggiornamento. I suoi dati restano."
+    },
+    "auto": {
+      "containers": "Aggiorna i container automaticamente",
+      "containersHint": "Solo quando nessuna registrazione è in corso o sta per iniziare. Il risultato compare nelle notifiche.",
+      "packages": "Aggiorna i pacchetti automaticamente",
+      "packagesHint": "Solo i pacchetti che non riavviano enigma2. Tutti gli altri, e DreamHub stesso, li aggiorni come sempre a mano. Il risultato compare nelle notifiche.",
+      "nightBefore": "Aggiorna solo tra le",
+      "nightAnd": "e le",
+      "nightAfter": "",
+      "nightHint": "Vale per gli aggiornamenti automatici. Quando premi tu stesso «Aggiorna», solo una registrazione lo trattiene.",
+      "title": "Aggiornamenti",
+      "from": "Dalle",
+      "to": "alle"
     }
   },
   "timers": {
@@ -1586,15 +1618,14 @@
       "explain": "Chiedi all'IA (facoltativo)",
       "feedAddedByHand": "Aggiunto manualmente",
       "notInstalled": "Non installati",
-      "upgradableCount": "{count} aggiornamento disponibile | {count} aggiornamenti disponibili",
-      "upgradeAll": "Aggiorna tutto",
       "simulating": "apt sta verificando cosa cambierebbe …",
       "confirm": "Applica",
       "previewIntro": "apt cambierebbe questo pacchetto: | apt cambierebbe questi {count} pacchetti:",
       "step": {
         "install": "+ installa {name} {to}",
         "upgrade": "↑ aggiorna {name} {from} → {to}",
-        "remove": "− rimuovi {name} {from}"
+        "remove": "− rimuovi {name} {from}",
+        "downgrade": "↓ riporta {name} {from} → {to}"
       },
       "done": "Fatto",
       "failed": "apt ha segnalato un errore",
@@ -1627,7 +1658,9 @@
         "curated": "Elenco di DreamHub",
         "package": "Il pacchetto stesso",
         "none": "Nessuna disponibile"
-      }
+      },
+      "downgrade": "Torna alla versione {version}",
+      "downgradeConfirm": "Torna indietro"
     },
     "scripts": {
       "title": "Script",
@@ -2275,5 +2308,36 @@
       "perChannelHint": "Scegli a mano il logo di un canale — da un set installato, una tua immagine o una trovata online. Cambia solo DreamHub; la TV mostra ciò che ha il box.",
       "searchChannel": "Scrivi il nome di un canale …"
     }
+  },
+  "updates": {
+    "title": "{count} aggiornamento disponibile | {count} aggiornamenti disponibili",
+    "packagesCount": "{count} pacchetto | {count} pacchetti",
+    "containersCount": "{count} container | {count} container",
+    "all": "Aggiorna tutto",
+    "selfNote": "Esiste un aggiornamento anche per DreamHub stesso. Non fa parte di «Aggiorna tutto»: installalo con gli strumenti del box.",
+    "working": "Calcolo cosa cambierebbe …",
+    "intro": "Vengono aggiornati uno dopo l'altro, in quest'ordine:",
+    "containers": "Container",
+    "packages": "Pacchetti",
+    "why": "Prima i container: un aggiornamento che non funziona viene annullato da solo, quindi se uno fallisce non cambia nient'altro. I pacchetti seguono solo se tutti i container vanno bene.",
+    "skipped": "Non aggiornati: {names}",
+    "watching": "Ogni container aggiornato viene tenuto d'occhio per un minuto. Se non continua a funzionare, torna da solo alla versione precedente. Può richiedere alcuni minuti.",
+    "done": "Tutto è aggiornato.",
+    "result": {
+      "done": "Aggiornati: {names}.",
+      "failed": "Non riuscito: {name} — {reason}",
+      "skipped": "Non avviati: {names}",
+      "restored": "La versione precedente è di nuovo in esecuzione.",
+      "notRestored": "Non è stato possibile riavviare la versione precedente. Controlla l'app.",
+      "output": "apt riferisce:"
+    },
+    "held": {
+      "recording": "È in corso una registrazione ({name}). Gli aggiornamenti saranno di nuovo possibili alle {time}.",
+      "starting": "Sta per iniziare una registrazione ({name}). Gli aggiornamenti saranno di nuovo possibili alle {time}."
+    },
+    "rolledBack": "L'aggiornamento non funzionava ({reason}). La versione precedente è di nuovo in esecuzione.",
+    "rollbackFailed": "L'aggiornamento non funzionava e non è stato possibile riavviare la versione precedente ({reason}).",
+    "updateFailed": "Impossibile aggiornare l'app ({reason}).",
+    "restoredNote": "Funziona come prima."
   }
 }

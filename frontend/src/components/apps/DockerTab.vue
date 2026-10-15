@@ -119,6 +119,7 @@
                     <button type="button" class="block w-full px-3 py-1.5 text-start text-[13px] text-text hover:bg-tile-2" @click="close(); openEdit(a)">{{ t('apps.edit.menu') }}</button>
                     <RouterLink to="/settings/system" class="block w-full px-3 py-1.5 text-start text-[13px] text-text hover:bg-tile-2" @click="close()">{{ t('apps.backupMenu') }}</RouterLink>
                     <button type="button" class="block w-full px-3 py-1.5 text-start text-[13px] text-text hover:bg-tile-2" :disabled="!!busyId" @click="close(); previewUpdate(a)">{{ t('apps.update.menu') }}</button>
+                    <button v-if="a.rollBack" type="button" class="block w-full px-3 py-1.5 text-start text-[13px] text-text hover:bg-tile-2" :disabled="!!busyId" @click="close(); previewRollback(a)">{{ t('apps.rollBack.menu') }}</button>
                     <button type="button" class="block w-full px-3 py-1.5 text-start text-[13px] text-onair hover:bg-tile-2" :disabled="!!busyId" @click="close(); previewRemove(a)">{{ t('apps.remove') }}</button>
                   </template>
                 </DropdownMenu>
@@ -131,15 +132,18 @@
               <PlanPreview
                 v-if="removing.plan && !removing.done"
                 :plan="removing.plan"
-                :confirm-label="removing.kind === 'update' ? t('apps.update.confirm') : t('apps.removeConfirm')"
+                :confirm-label="removing.kind === 'update' ? t('apps.update.confirm') : removing.kind === 'rollback' ? t('apps.rollBack.confirm') : t('apps.removeConfirm')"
                 :busy="removing.applying"
                 :error="removing.error"
-                :danger="removing.kind !== 'update'"
+                :danger="!removing.kind"
                 @confirm="confirmRemove"
                 @cancel="removing = null"
               >
-                {{ removing.plan.summary }}
-                <InstallPlanDetails v-if="removing.kind === 'update'" :plan="removing.plan" />
+                <template v-if="removing.kind === 'update'">{{ t('apps.update.hint') }}</template>
+                <template v-else-if="removing.kind === 'rollback'">{{ t('apps.rollBack.hint') }}</template>
+                <template v-else>{{ removing.plan.summary }}</template>
+                <InstallPlanDetails v-if="removing.kind" :plan="removing.plan" />
+                <p v-if="removing.kind === 'update' && removing.applying" class="mt-2 text-[12.5px] text-faint">{{ t('updates.watching') }}</p>
               </PlanPreview>
               <p v-else-if="removing.error" class="text-[12.5px] text-warn">{{ removing.error }}</p>
             </div>
@@ -310,6 +314,7 @@
 <script setup lang="ts">
 import { nextTick, onMounted, onUnmounted, ref, watch } from 'vue'
 import { useI18n } from 'vue-i18n'
+import { useRoute, useRouter } from 'vue-router'
 import { api, ApiError } from '@/api/client'
 import DropdownMenu from '@/components/DropdownMenu.vue'
 import Icon from '@/components/Icon.vue'
@@ -321,11 +326,17 @@ import DockerSettingsDialog from '@/components/apps/DockerSettingsDialog.vue'
 import TabIntro from '@/components/apps/TabIntro.vue'
 import { useFriendlyError } from '@/composables/useFriendlyError'
 import { usePlanError } from '@/composables/usePlanError'
-import type { AppConsoleStatus, AppEditView, AppSearchResult, CatalogApp, InstallRequest, InstalledApp, ParsedApp, Plan } from '@/api/types'
+import { useUpdateError } from '@/composables/useUpdateError'
+import { useUpdates } from '@/composables/useUpdates'
+import type { AppConsoleStatus, AppEditView, AppSearchResult, CatalogApp, InstalledApp, ParsedApp, Plan } from '@/api/types'
 
 const { t, te, locale } = useI18n()
 const { friendly } = useFriendlyError()
 const { planErrorMessage } = usePlanError()
+const { updateErrorMessage } = useUpdateError()
+const { reload: reloadUpdates } = useUpdates()
+const route = useRoute()
+const router = useRouter()
 
 const settingsOpen = ref(false)
 const catalog = ref<CatalogApp[]>([])
@@ -387,7 +398,7 @@ watch(locale, load)
 
 // --- remove: preview, confirm -----------------------------------------------
 
-type RemovePending = { id: string; kind?: 'update'; plan?: Plan; applying?: boolean; done?: boolean; error?: string }
+type RemovePending = { id: string; kind?: 'update' | 'rollback'; plan?: Plan; applying?: boolean; done?: boolean; error?: string }
 const removing = ref<RemovePending | null>(null)
 
 async function previewRemove(a: InstalledApp) {
@@ -401,26 +412,29 @@ async function previewRemove(a: InstalledApp) {
   }
 }
 
-// Update = the edit plan with the choices as they are: the containers are made
-// again from the newest image of the same tag; the data stays.
+// Update: the containers are made again from the newest image of the same
+// tag, with the same settings; the data stays and the previous version is kept
+// for "Roll back" (App14). Held back while a recording runs.
 async function previewUpdate(a: InstalledApp) {
   removing.value = { id: a.id, kind: 'update' }
   editing.value = null
   try {
-    const view = await api.apps.editForm(a.id, locale.value)
-    const req: InstallRequest = {}
-    if (view.kind === 'catalog') req.appId = a.appId
-    else req.custom = { compose: (view.app as ParsedApp).compose, name: view.app.name }
-    if (Object.keys(view.values).length) req.values = view.values
-    if (view.memoryLimitMB) req.memoryLimitMB = view.memoryLimitMB
-    const { env, ports, paths } = view.extra
-    if (env.length + ports.length + paths.length > 0) req.extra = { env: env.map((e) => ({ key: e.key, value: e.value })), ports, paths }
-    // Already confirmed when it was installed; the preview lists it again.
-    if ((view.app as ParsedApp).elevated?.length) req.confirmElevated = true
-    const res = await api.apps.editPlan(a.id, req)
+    const res = await api.apps.updatePlan(a.id)
     if (removing.value?.id === a.id) removing.value = { id: a.id, kind: 'update', plan: res.plan }
   } catch (err) {
-    if (removing.value?.id === a.id) removing.value = { id: a.id, kind: 'update', error: planErrorMessage(err) }
+    if (removing.value?.id === a.id) removing.value = { id: a.id, kind: 'update', error: updateErrorMessage(err) }
+  }
+}
+
+// Roll back: the version the app ran before its last update comes back.
+async function previewRollback(a: InstalledApp) {
+  removing.value = { id: a.id, kind: 'rollback' }
+  editing.value = null
+  try {
+    const res = await api.apps.rollbackPlan(a.id)
+    if (removing.value?.id === a.id) removing.value = { id: a.id, kind: 'rollback', plan: res.plan }
+  } catch (err) {
+    if (removing.value?.id === a.id) removing.value = { id: a.id, kind: 'rollback', error: updateErrorMessage(err) }
   }
 }
 
@@ -431,10 +445,14 @@ async function confirmRemove() {
   try {
     await api.plans.apply(p.plan.id)
     removing.value = null
-    showToast(p.kind === 'update' ? t('apps.update.done') : t('apps.removed'))
+    showToast(p.kind === 'update' ? t('apps.update.done') : p.kind === 'rollback' ? t('apps.rollBack.done') : t('apps.removed'))
     await load()
+    void reloadUpdates(true)
   } catch (err) {
-    removing.value = { id: p.id, kind: p.kind, error: planErrorMessage(err) }
+    // An update that did not run: the app is back on its previous version, the
+    // list shows it.
+    removing.value = { id: p.id, kind: p.kind, error: updateErrorMessage(err) }
+    if (p.kind) await load()
   }
 }
 
@@ -572,7 +590,23 @@ async function checkManifest(image: string) {
   }
 }
 
-onMounted(load)
+// A notification's link (?logs=<app id>) opens that app's logs once.
+async function openLinkedLogs() {
+  const id = route.query.logs
+  if (typeof id !== 'string') return
+  const app = installed.value.find((a) => a.appId === id)
+  const { logs: _logs, ...rest } = route.query
+  void router.replace({ query: rest })
+  if (app) {
+    view.value = 'mine'
+    await openLogs(app)
+  }
+}
+
+onMounted(async () => {
+  await load()
+  await openLinkedLogs()
+})
 
 // --- per-container logs (App5) -----------------------------------------
 

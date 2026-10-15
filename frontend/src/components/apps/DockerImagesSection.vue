@@ -28,6 +28,21 @@
         </ul>
       </PlanPreview>
     </div>
+
+    <!-- The previous versions kept for "Roll back": the clean-up above never
+         removes them; they have their own line and their own plan. -->
+    <div v-if="info && info.kept.length > 0 && !pending" class="mt-4 border-t border-line-soft pt-3">
+      <template v-if="!keptPending">
+        <div class="flex flex-wrap items-center gap-3">
+          <span class="text-[13px] text-text">{{ t('apps.images.kept', { count: info.kept.length, size: formatBytes(info.keptBytes, locale) }, info.kept.length) }}</span>
+          <button type="button" class="rounded-sm border border-line px-3 py-1.5 text-[13px] text-text hover:bg-field disabled:opacity-60" :disabled="busy" @click="previewKept">{{ t('apps.images.keptButton') }}</button>
+        </div>
+        <p class="mt-1 text-[12px] text-faint">{{ t('apps.images.keptHint') }}</p>
+      </template>
+      <PlanPreview v-else :plan="keptPending" :confirm-label="t('apps.images.keptConfirm')" :busy="applying" :error="planError" @confirm="confirmKept" @cancel="keptPending = null">
+        {{ t('apps.images.keptSummary', { size: formatBytes(info.keptBytes, locale) }) }}
+      </PlanPreview>
+    </div>
   </section>
 </template>
 
@@ -46,6 +61,7 @@ const { planErrorMessage } = usePlanError()
 const info = ref<UnusedImages | null>(null)
 const error = ref('')
 const pending = ref<Plan | null>(null)
+const keptPending = ref<Plan | null>(null)
 const planError = ref('')
 const applying = ref(false)
 const busy = ref(false)
@@ -81,6 +97,35 @@ async function confirm() {
     await api.plans.apply(pending.value.id)
     pending.value = null
     done.value = t('apps.images.done', { size: formatBytes(freed, locale.value) })
+    await load()
+  } catch (err) {
+    planError.value = planErrorMessage(err)
+  } finally {
+    applying.value = false
+  }
+}
+
+async function previewKept() {
+  busy.value = true
+  planError.value = ''
+  done.value = ''
+  try {
+    keptPending.value = (await api.apps.dropKeptPlan()).plan
+  } catch (err) {
+    error.value = planErrorMessage(err)
+  } finally {
+    busy.value = false
+  }
+}
+
+async function confirmKept() {
+  if (!keptPending.value) return
+  applying.value = true
+  planError.value = ''
+  try {
+    await api.plans.apply(keptPending.value.id)
+    keptPending.value = null
+    done.value = t('apps.images.keptDone')
     await load()
   } catch (err) {
     planError.value = planErrorMessage(err)

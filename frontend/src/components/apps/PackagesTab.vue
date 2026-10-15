@@ -9,6 +9,7 @@
     <PackagesPanel :key="reloadKey" />
     <SettingsDialog v-if="feedsOpen" :title="t('apps.feeds.title')" @close="feedsOpen = false">
       <FeedsPanel @changed="reloadKey++" />
+      <AutoUpdateSettings kind="packages" />
     </SettingsDialog>
   </div>
 </template>
@@ -16,6 +17,7 @@
 <script setup lang="ts">
 import { ref } from 'vue'
 import { useI18n } from 'vue-i18n'
+import AutoUpdateSettings from '@/components/apps/AutoUpdateSettings.vue'
 import FeedsPanel from '@/components/apps/FeedsPanel.vue'
 import PackagesPanel from '@/components/apps/PackagesPanel.vue'
 import SettingsDialog from '@/components/apps/SettingsDialog.vue'

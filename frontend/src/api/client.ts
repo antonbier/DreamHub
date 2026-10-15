@@ -35,6 +35,8 @@ import type {
   InstalledApp,
   AppEditView,
   UnusedImages,
+  UpdatePlan,
+  UpdatesView,
   AdScanResult,
   BouquetEntry,
   ChannelBackup,
@@ -532,6 +534,10 @@ export const api = {
     packagesPlan: (action: 'install' | 'remove' | 'upgrade', packages: string[]) =>
       request<{ plan: Plan; steps: PackageStep[] }>('POST', '/api/v1/admin/packages/plan', { action, packages }),
     packagesLastRun: () => request<{ run: PackageRun | null }>('GET', '/api/v1/admin/packages/last-run'),
+    // Downgrade: the older versions the feeds carry (usually none), then a plan.
+    packageVersions: (name: string) => request<{ versions: string[] }>('GET', `/api/v1/admin/packages/${encodeURIComponent(name)}/versions`),
+    downgradePlan: (name: string, version: string) =>
+      request<{ plan: Plan; steps: PackageStep[] }>('POST', '/api/v1/admin/packages/downgrade/plan', { name, version }),
     // On-demand only — nothing sent unless this is actually called.
     explainPackage: (name: string, description: string) =>
       request<{ explanation: string }>('POST', '/api/v1/admin/packages/explain', { name, description }),
@@ -585,6 +591,13 @@ export const api = {
       request<AppEditView>('GET', `/api/v1/apps/installed/${encodeURIComponent(id)}/edit?lang=${encodeURIComponent(lang)}`),
     editPlan: (id: string, req: InstallRequest) =>
       request<{ plan: Plan }>('POST', `/api/v1/apps/installed/${encodeURIComponent(id)}/edit/plan`, req),
+    // One update notion (App14): the count, one plan over containers and
+    // packages, one container's update and roll back, the kept versions.
+    updates: () => request<UpdatesView>('GET', '/api/v1/apps/updates'),
+    updatesPlan: () => request<UpdatePlan>('POST', '/api/v1/apps/updates/plan'),
+    updatePlan: (id: string) => request<{ plan: Plan }>('POST', `/api/v1/apps/installed/${encodeURIComponent(id)}/update/plan`),
+    rollbackPlan: (id: string) => request<{ plan: Plan }>('POST', `/api/v1/apps/installed/${encodeURIComponent(id)}/rollback/plan`),
+    dropKeptPlan: () => request<{ plan: Plan }>('POST', '/api/v1/apps/docker/images/kept/plan'),
     // Clean up unused images: the list with sizes, then a plan.
     unusedImages: () => request<UnusedImages>('GET', '/api/v1/apps/docker/images'),
     pruneImagesPlan: () => request<{ plan: Plan }>('POST', '/api/v1/apps/docker/images/prune/plan'),

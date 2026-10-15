@@ -16,6 +16,8 @@
 
     <p v-if="!admin" class="mt-4 text-[14px] text-muted">{{ t('apps.adminOnly') }}</p>
     <template v-else>
+    <!-- One update notion for packages and containers (App14). -->
+    <UpdatesSummary @changed="reloadKey++" />
     <div
       ref="tabBar"
       class="mt-4 flex gap-1 overflow-x-auto border-b border-line-soft"
@@ -38,9 +40,9 @@
     </div>
     <!-- Each tab opens with one plain sentence (TabIntro), so the three
          kinds of "add-on" can't be mistaken for each other. -->
-    <PackagesTab v-if="tab === 'packages'" />
+    <PackagesTab v-if="tab === 'packages'" :key="reloadKey" />
     <ExtensionsTab v-else-if="tab === 'extensions'" />
-    <DockerTab v-else />
+    <DockerTab v-else :key="reloadKey" />
     </template>
   </div>
 </template>
@@ -54,11 +56,14 @@ import Icon from '@/components/Icon.vue'
 import DockerTab from '@/components/apps/DockerTab.vue'
 import ExtensionsTab from '@/components/apps/ExtensionsTab.vue'
 import PackagesTab from '@/components/apps/PackagesTab.vue'
+import UpdatesSummary from '@/components/apps/UpdatesSummary.vue'
 import { useHubLabel } from '@/composables/useHubLabel'
 import { useAuth } from '@/composables/useAuth'
 
 const { t } = useI18n()
 const tabBar = ref<HTMLElement | null>(null)
+// Bumped after "Update all": the tabs load their lists again.
+const reloadKey = ref(0)
 const { more: tabsMore, measure: measureTabs } = useScrollMore(tabBar)
 const { hubTitle } = useHubLabel()
 const admin = useAuth().can('system')

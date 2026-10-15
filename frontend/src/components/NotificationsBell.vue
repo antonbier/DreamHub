@@ -21,14 +21,15 @@
         <span v-if="issues.length > 0 || notifications.unread > 0" class="absolute inset-e-1 top-1 h-1.5 w-1.5 rounded-full bg-warn" />
       </button>
     </template>
-    <template #panel>
+    <template #panel="{ close }">
       <div class="max-w-[320px] px-3 pb-2 pt-1.5">
         <div class="mb-1.5 text-[12.5px] text-faint">{{ t('notifications.title') }}</div>
         <p v-if="issues.length === 0" class="py-1 text-[13px] text-muted">{{ t('notifications.allOk') }}</p>
         <ul v-else class="flex flex-col">
           <li v-for="(issue, i) in issues" :key="i" class="flex items-start gap-2 border-b border-line-soft py-2 last:border-none">
             <span class="mt-1.5 h-1.5 w-1.5 shrink-0 rounded-full" :class="issue.level === 'warn' ? 'bg-warn' : 'bg-faint'" />
-            <span class="min-w-0 flex-1 text-[13px] text-text">{{ issue.text }}</span>
+            <RouterLink v-if="issue.to" :to="issue.to" class="min-w-0 flex-1 text-[13px] text-accent hover:underline" @click="close()">{{ issue.text }}</RouterLink>
+            <span v-else class="min-w-0 flex-1 text-[13px] text-text">{{ issue.text }}</span>
           </li>
         </ul>
 
@@ -48,7 +49,8 @@
           <div class="mb-1.5 mt-3 text-[12.5px] text-faint">{{ t('notifications.recent') }}</div>
           <ul class="flex flex-col">
             <li v-for="n in notifications.items" :key="n.id" class="border-b border-line-soft py-1.5 text-[12.5px] text-muted last:border-none">
-              {{ describeNotification(n) }}
+              <RouterLink v-if="notificationLink(n)" :to="notificationLink(n)!" class="text-accent hover:underline" @click="close()">{{ describeNotification(n) }}</RouterLink>
+              <template v-else>{{ describeNotification(n) }}</template>
             </li>
           </ul>
         </template>
@@ -65,6 +67,8 @@ import { computed, onMounted, ref, watch } from 'vue'
 import { useI18n } from 'vue-i18n'
 import Icon from './Icon.vue'
 import DropdownMenu from './DropdownMenu.vue'
+import type { RouteLocationRaw } from 'vue-router'
+import { useUpdates } from '@/composables/useUpdates'
 import { useNavigationStore } from '@/stores/navigation'
 import { useNotificationsStore } from '@/stores/notifications'
 import { useProblem } from '@/composables/useProblem'
@@ -81,6 +85,7 @@ const navigation = useNavigationStore()
 const notifications = useNotificationsStore()
 const { describe } = useProblem()
 const { clockSkew, checkClock } = useDeviceStatus()
+const { summary: updates, reload: reloadUpdates } = useUpdates()
 
 const browserNotes = useBrowserNotifications()
 // A new item arrives while the page is in the background: say so there too.
@@ -100,6 +105,8 @@ onMounted(() => {
 interface Issue {
   text: string
   level: 'warn' | 'muted'
+  // Where the fix is, when there is a page for it.
+  to?: string
 }
 
 // Setup problems (a hub's missing key, the box's clock) are the admin's to
@@ -107,6 +114,10 @@ interface Issue {
 const { can } = useAuth()
 const issues = computed<Issue[]>(() => {
   const out: Issue[] = []
+  // The same update count as the Apps page's header (one update notion).
+  if (can('system') && updates.value && updates.value.count > 0) {
+    out.push({ text: t('updates.title', { count: updates.value.count }, updates.value.count), level: 'muted', to: '/apps' })
+  }
   if (!can('settings.global')) return out
   if (clockSkew.value !== null && clockSkew.value >= CLOCK_SKEW_WARN_MINUTES) {
     out.push({ text: t('notifications.clockSkew', { minutes: clockSkew.value }), level: 'warn' })
@@ -134,7 +145,26 @@ function describeNotification(n: Notification): string {
   return translated === `notification.${n.key}` ? n.key : translated
 }
 
+// An entry that has a page to go to: the crash notice opens the app's logs,
+// the update ones the Apps page.
+function notificationLink(n: Notification): RouteLocationRaw | null {
+  const params = n.params as Record<string, unknown>
+  switch (n.key) {
+    case 'app.crashLoop':
+      return typeof params.appId === 'string' && params.appId ? { path: '/apps', query: { tab: 'docker', logs: params.appId } } : null
+    case 'updates.applied':
+    case 'updates.failed':
+    case 'updates.rolledBack':
+    case 'app.upgradable':
+    case 'package.upgradable':
+      return '/apps'
+    default:
+      return null
+  }
+}
+
 function onOpen() {
   void notifications.markRead()
+  if (can('system')) void reloadUpdates()
 }
 </script>

@@ -69,6 +69,7 @@
           </select>
         </label>
         <span class="text-[12px] text-faint">{{ t('apps.prefs.updateHint') }}</span>
+        <div class="mt-2"><AutoUpdateSettings kind="containers" embedded /></div>
       </div>
     </div>
     <p v-if="saved" class="mt-2 flex items-center gap-1.5 text-[12.5px] text-ok" role="status"><span class="h-1.5 w-1.5 rounded-full bg-ok" />{{ t('apps.prefs.saved') }}</p>
@@ -80,6 +81,7 @@
 import { computed, onMounted, ref } from 'vue'
 import { useI18n } from 'vue-i18n'
 import { api, ApiError } from '@/api/client'
+import AutoUpdateSettings from '@/components/apps/AutoUpdateSettings.vue'
 import { useFriendlyError } from '@/composables/useFriendlyError'
 import { formatBytes } from '@/lib/format'
 import type { AppStorageChoice, SettingField } from '@/api/types'

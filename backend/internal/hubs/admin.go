@@ -122,6 +122,8 @@ func (h *Admin) Mount(mux httpx.Mux) {
 	mux.HandleFunc("POST /api/v1/admin/packages/explain", adminOnly(h.explainPackage))
 	mux.HandleFunc("POST /api/v1/admin/packages/plan", adminOnly(h.planPackages))
 	mux.HandleFunc("GET /api/v1/admin/packages/last-run", adminOnly(h.lastPackageRunView))
+	mux.HandleFunc("GET /api/v1/admin/packages/{name}/versions", adminOnly(h.packageVersions))
+	mux.HandleFunc("POST /api/v1/admin/packages/downgrade/plan", adminOnly(h.planDowngrade))
 	mux.HandleFunc("GET /api/v1/admin/feeds", adminOnly(h.listFeeds))
 	mux.HandleFunc("POST /api/v1/admin/feeds/plan", adminOnly(h.planFeed))
 	mux.HandleFunc("GET /api/v1/admin/terminal/status", adminOnly(h.terminalStatus))

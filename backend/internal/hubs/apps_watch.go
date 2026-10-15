@@ -126,24 +126,30 @@ func (h *Apps) WatchApps(ctx context.Context, bus Publisher, logger *slog.Logger
 		case <-timer.C:
 			cfg := h.config(ctx)
 			now := h.now()
-			// Switched off in the Docker settings: no request to any registry.
-			if cfg.UpdateNotify && (first || updateDue(last, now, cfg.UpdateHours)) {
+			// Switched off in the Docker settings: no request to any registry
+			// (unless automatic container updates are on — they need to know).
+			if (cfg.UpdateNotify || cfg.AutoContainers) && (first || updateDue(last, now, cfg.UpdateHours)) {
 				first = false
 				last = now
 				upgradable := h.checkUpgradable(ctx)
-				if newly := w.step(upgradable); len(newly) > 0 {
-					for _, id := range newly {
-						app, ok := appcatalog.ByID(id)
-						name := id
-						if ok {
-							name = app.Name
+				h.setPending(upgradable, now)
+				if cfg.UpdateNotify {
+					if newly := w.step(upgradable); len(newly) > 0 {
+						for _, id := range newly {
+							app, ok := appcatalog.ByID(id)
+							name := id
+							if ok {
+								name = app.Name
+							}
+							bus.Publish(ctx, events.AppUpgradable, map[string]any{"appId": id, "name": name})
 						}
-						bus.Publish(ctx, events.AppUpgradable, map[string]any{"appId": id, "name": name})
+					} else if logger != nil && len(upgradable) == 0 {
+						logger.Debug("app watch: nothing upgradable")
 					}
-				} else if logger != nil && len(upgradable) == 0 {
-					logger.Debug("app watch: nothing upgradable")
 				}
 			}
+			// Automatic updates, inside the window only (apps_updates.go).
+			h.autoUpdate(ctx, bus, logger)
 			timer.Reset(appWatchTick)
 		}
 	}

@@ -8,9 +8,11 @@ import (
 	"path"
 	"slices"
 	"strings"
+	"time"
 
 	"github.com/antonbier/DreamHub/backend/internal/httpx"
 	"github.com/antonbier/DreamHub/backend/internal/settings"
+	"github.com/antonbier/DreamHub/backend/internal/updatewindow"
 )
 
 // Docker settings (docs/APPSHUB_PLAN.md, App13): ordinary DreamHub settings,
@@ -31,6 +33,15 @@ const (
 	// images. KeyAppsUpdateNotify: whether it tells the notification inbox.
 	KeyAppsUpdateHours  = "apps.updateCheckHours"
 	KeyAppsUpdateNotify = "apps.updateNotify"
+	// Updates (App14). Both automatic switches are off by default. The night
+	// window applies to automatic updates only; the guard time is how many
+	// minutes before a recording starts updates already stay out of its way.
+	KeyAppsAutoContainers = "apps.autoUpdateContainers"
+	KeyAppsAutoPackages   = "apps.autoUpdatePackages"
+	KeyAppsNightOnly      = "apps.updateNightOnly"
+	KeyAppsNightStart     = "apps.updateNightStart"
+	KeyAppsNightEnd       = "apps.updateNightEnd"
+	KeyAppsGuardMinutes   = "apps.updateGuardMinutes"
 	// KeyAppsAutostart: the ids of the apps that start with the box
 	// (comma-separated). Not shown anywhere as a setting; the switch on each
 	// app's row sets it.
@@ -45,6 +56,10 @@ const (
 	defaultAutostartNew  = true
 	defaultUpdateHours   = 24
 	defaultUpdateNotify  = true
+	defaultNightStart    = "02:00"
+	defaultNightEnd      = "05:00"
+	defaultGuardMinutes  = 15
+	maxGuardMinutes      = 240
 	maxMemoryLimitMB     = 16384
 	minCustomMemoryLimit = 64
 )
@@ -53,6 +68,7 @@ const (
 func AppsSettingsSection() settings.Section {
 	zero, hours, maxHours := int64(0), int64(1), int64(24*30)
 	maxMB := int64(maxMemoryLimitMB)
+	maxGuard := int64(maxGuardMinutes)
 	return settings.Section{
 		ID: "apps", Label: "settings.apps", Tab: settings.TabHubs,
 		Fields: []settings.Field{
@@ -61,6 +77,12 @@ func AppsSettingsSection() settings.Section {
 			{Key: KeyAppsMemoryMB, Type: settings.TypeInt, Scope: settings.ScopeGlobal, Label: "settings.apps.memoryLimitMB", Default: int64(0), Min: &zero, Max: &maxMB, Hidden: true},
 			{Key: KeyAppsUpdateHours, Type: settings.TypeInt, Scope: settings.ScopeGlobal, Label: "settings.apps.updateCheckHours", Default: int64(defaultUpdateHours), Min: &hours, Max: &maxHours, Hidden: true},
 			{Key: KeyAppsUpdateNotify, Type: settings.TypeBool, Scope: settings.ScopeGlobal, Label: "settings.apps.updateNotify", Default: defaultUpdateNotify, Hidden: true},
+			{Key: KeyAppsAutoContainers, Type: settings.TypeBool, Scope: settings.ScopeGlobal, Label: "settings.apps.autoUpdateContainers", Default: false, Hidden: true},
+			{Key: KeyAppsAutoPackages, Type: settings.TypeBool, Scope: settings.ScopeGlobal, Label: "settings.apps.autoUpdatePackages", Default: false, Hidden: true},
+			{Key: KeyAppsNightOnly, Type: settings.TypeBool, Scope: settings.ScopeGlobal, Label: "settings.apps.updateNightOnly", Default: false, Hidden: true},
+			{Key: KeyAppsNightStart, Type: settings.TypeString, Scope: settings.ScopeGlobal, Label: "settings.apps.updateNightStart", Default: defaultNightStart, Hidden: true},
+			{Key: KeyAppsNightEnd, Type: settings.TypeString, Scope: settings.ScopeGlobal, Label: "settings.apps.updateNightEnd", Default: defaultNightEnd, Hidden: true},
+			{Key: KeyAppsGuardMinutes, Type: settings.TypeInt, Scope: settings.ScopeGlobal, Label: "settings.apps.updateGuardMinutes", Default: int64(defaultGuardMinutes), Min: &zero, Max: &maxGuard, Hidden: true},
 			{Key: KeyAppsAutostart, Type: settings.TypeString, Scope: settings.ScopeGlobal, Label: "settings.apps.autostartIds", Default: "", Hidden: true},
 			{Key: KeyAppsBootID, Type: settings.TypeString, Scope: settings.ScopeGlobal, Label: "settings.apps.autostartBoot", Default: "", Hidden: true},
 		},
@@ -71,6 +93,11 @@ func AppsSettingsSection() settings.Section {
 			}
 			if mb := v.Int(KeyAppsMemoryMB); mb != 0 && mb < minCustomMemoryLimit {
 				errs[KeyAppsMemoryMB] = settings.FieldError{Code: settings.ErrOutOfRange, Params: map[string]any{"min": minCustomMemoryLimit}}
+			}
+			for _, k := range []string{KeyAppsNightStart, KeyAppsNightEnd} {
+				if _, err := updatewindow.ParseClock(v.String(k)); err != nil {
+					errs[k] = settings.FieldError{Code: settings.ErrInvalidOption}
+				}
 			}
 			return errs
 		},
@@ -86,10 +113,26 @@ type appsConfig struct {
 	UpdateNotify     bool
 	Autostart        []string
 	BootID           string
+
+	AutoContainers bool
+	AutoPackages   bool
+	NightOnly      bool
+	NightStart     int // minutes since midnight
+	NightEnd       int
+	GuardMinutes   int
+}
+
+// guard is how long before a recording starts updates stay out of its way.
+func (c appsConfig) guard() time.Duration { return time.Duration(c.GuardMinutes) * time.Minute }
+
+// night is the optional "only between" window of the automatic updates.
+func (c appsConfig) night() updatewindow.Night {
+	return updatewindow.Night{Enabled: c.NightOnly, Start: c.NightStart, End: c.NightEnd}
 }
 
 func (h *Apps) config(ctx context.Context) appsConfig {
-	c := appsConfig{AutostartDefault: defaultAutostartNew, UpdateHours: defaultUpdateHours, UpdateNotify: defaultUpdateNotify}
+	c := appsConfig{AutostartDefault: defaultAutostartNew, UpdateHours: defaultUpdateHours, UpdateNotify: defaultUpdateNotify,
+		NightStart: 2 * 60, NightEnd: 5 * 60, GuardMinutes: defaultGuardMinutes}
 	if h.Settings == nil {
 		return c
 	}
@@ -110,6 +153,16 @@ func (h *Apps) config(ctx context.Context) appsConfig {
 		}
 	}
 	c.BootID = v.String(KeyAppsBootID)
+	c.AutoContainers = v.Bool(KeyAppsAutoContainers)
+	c.AutoPackages = v.Bool(KeyAppsAutoPackages)
+	c.NightOnly = v.Bool(KeyAppsNightOnly)
+	if m, err := updatewindow.ParseClock(v.String(KeyAppsNightStart)); err == nil {
+		c.NightStart = m
+	}
+	if m, err := updatewindow.ParseClock(v.String(KeyAppsNightEnd)); err == nil {
+		c.NightEnd = m
+	}
+	c.GuardMinutes = int(v.Int(KeyAppsGuardMinutes))
 	return c
 }
 

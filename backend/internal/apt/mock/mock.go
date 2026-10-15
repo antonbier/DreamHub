@@ -24,6 +24,12 @@ type Lister struct {
 	Avail []apt.Package
 	// Applied records every Apply call (tests).
 	Applied []string
+	// ApplyErr makes every Apply fail with it (tests: apt-get reporting an
+	// error); the output is what a failed run would have printed.
+	ApplyErr error
+	// Older are the older versions the feeds still carry, by package name
+	// (newest first) — most packages have none, like the real feeds.
+	Older map[string][]string
 
 	mu sync.Mutex
 }
@@ -33,10 +39,15 @@ var (
 	_ apt.FeedLister  = (*Lister)(nil)
 	_ apt.Manager     = (*Lister)(nil)
 	_ apt.FeedManager = (*Lister)(nil)
+	_ apt.Downgrader  = (*Lister)(nil)
 )
 
 func New() *Lister {
 	return &Lister{
+		Older: map[string][]string{
+			"oscam-cycecplus":                       {"11700", "11650"},
+			"enigma2-plugin-extensions-mediaportal": {"2026062001"},
+		},
 		Packages: []apt.Package{
 			// DreamHub's own package sets X-DreamHub-Category (control.in)
 			// so AdminHub never needs a bundled category lookup for it;
@@ -194,6 +205,9 @@ func (l *Lister) simulate(action apt.Action, names []string) ([]apt.Step, error)
 func (l *Lister) Apply(ctx context.Context, action apt.Action, names []string) (string, error) {
 	l.mu.Lock()
 	defer l.mu.Unlock()
+	if l.ApplyErr != nil {
+		return "E: Sub-process /usr/bin/dpkg returned an error code (1)\n", l.ApplyErr
+	}
 	steps, err := l.simulate(action, names)
 	if err != nil {
 		return "", err
@@ -222,4 +236,54 @@ func (l *Lister) Apply(ctx context.Context, action apt.Action, names []string) (
 	}
 	l.Applied = append(l.Applied, string(action)+" "+strings.Join(names, " "))
 	return out.String(), nil
+}
+
+func (l *Lister) installed(name string) (int, bool) {
+	i := slices.IndexFunc(l.Packages, func(p apt.Package) bool { return p.Name == name })
+	return i, i >= 0
+}
+
+func (l *Lister) OlderVersions(ctx context.Context, name string) ([]string, error) {
+	if err := apt.ValidNames(apt.ActionInstall, []string{name}); err != nil {
+		return nil, err
+	}
+	l.mu.Lock()
+	defer l.mu.Unlock()
+	if _, ok := l.installed(name); !ok {
+		return nil, nil
+	}
+	return slices.Clone(l.Older[name]), nil
+}
+
+func (l *Lister) SimulateDowngrade(ctx context.Context, name, version string) ([]apt.Step, error) {
+	if err := apt.ValidNames(apt.ActionInstall, []string{name}); err != nil {
+		return nil, err
+	}
+	if !apt.ValidVersion(version) {
+		return nil, apt.ErrInvalidVersion
+	}
+	l.mu.Lock()
+	defer l.mu.Unlock()
+	i, ok := l.installed(name)
+	if !ok || !slices.Contains(l.Older[name], version) {
+		return nil, &apt.SimulateError{Output: "E: Version '" + version + "' for '" + name + "' was not found"}
+	}
+	return []apt.Step{{Kind: "downgrade", Name: name, OldVersion: l.Packages[i].Version, NewVersion: version}}, nil
+}
+
+func (l *Lister) ApplyDowngrade(ctx context.Context, name, version string) (string, error) {
+	steps, err := l.SimulateDowngrade(ctx, name, version)
+	if err != nil {
+		return "", err
+	}
+	l.mu.Lock()
+	defer l.mu.Unlock()
+	i, _ := l.installed(name)
+	// The version that was installed becomes the one an upgrade would bring
+	// back; the older ones stay offered.
+	l.Packages[i].Upgradable, l.Packages[i].AvailableVersion = true, steps[0].OldVersion
+	l.Packages[i].Version = version
+	l.Older[name] = slices.DeleteFunc(slices.Clone(l.Older[name]), func(v string) bool { return v >= steps[0].OldVersion || v == version })
+	l.Applied = append(l.Applied, "downgrade "+name+"="+version)
+	return "Unpacking " + name + " (" + version + ") over (" + steps[0].OldVersion + ") ...\n", nil
 }

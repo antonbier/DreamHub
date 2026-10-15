@@ -67,6 +67,11 @@ type env struct {
 	appsConfigFS *configfsmock.FS
 	// routes are the protected routes with their permissions.
 	routes []api.Route
+	// docker, apt and wc are the in-memory Docker helper, package manager and
+	// box the app runs against (App14's tests change what they answer).
+	docker *dockermock.Client
+	apt    *aptmock.Lister
+	wc     *mock.Client
 }
 
 // newEnv builds the application exactly as production does (internal/app),
@@ -117,6 +122,7 @@ func newEnvFull(t *testing.T, wc webcontrol.Client, at autotimer.Client, recFS r
 	runner := &scriptsmock.Runner{}
 	plexServer := plexmock.New()
 	appsConfigFS := configfsmock.New()
+	docker, aptList := dockermock.New(), aptmock.New()
 	a, err := app.New(context.Background(), app.Options{
 		ReadOnlyFiles:   readOnly,
 		TMDB:            tmdbmock.New(),
@@ -135,10 +141,11 @@ func newEnvFull(t *testing.T, wc webcontrol.Client, at autotimer.Client, recFS r
 		Logs:            logs,
 		Systemd:         services,
 		Scripts:         runner,
-		Apt:             aptmock.New(),
+		Apt:             aptList,
 		DockerHub:       dockerhubmock.Client{},
 		LogoSearch:      logosearchmock.Source{},
-		Docker:          dockermock.New(),
+		Docker:          docker,
+		AppsSettle:      20 * time.Millisecond,
 		DockerSetup:     dockersetupmock.New(),
 		Mem:             meminfomock.New(),
 		AppsStorageRoot: "/media/hdd/dreamhub-apps",
@@ -162,7 +169,8 @@ func newEnvFull(t *testing.T, wc webcontrol.Client, at autotimer.Client, recFS r
 	for _, job := range a.Background {
 		go job(jobs)
 	}
-	return &env{srv: srv, store: a.Store, svc: a.Settings, events: a.Events, pushed: pushed, systemd: services, scripts: runner, plex: plexServer, appsConfigFS: appsConfigFS, routes: a.Routes}
+	m, _ := wc.(*mock.Client)
+	return &env{docker: docker, apt: aptList, wc: m, srv: srv, store: a.Store, svc: a.Settings, events: a.Events, pushed: pushed, systemd: services, scripts: runner, plex: plexServer, appsConfigFS: appsConfigFS, routes: a.Routes}
 }
 
 func (e *env) do(t *testing.T, method, path, body string, configure func(*http.Request)) (*http.Response, []byte) {

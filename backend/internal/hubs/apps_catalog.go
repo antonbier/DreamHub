@@ -99,6 +99,18 @@ type Apps struct {
 	cfgMu    sync.Mutex
 	// BootID names the current boot (tests); nil reads the kernel's.
 	BootID func() string
+	// Admin is where the box's own packages are updated (App14: one update
+	// plan over containers and packages); nil leaves packages out.
+	Admin *Admin
+	// Settle is how long an updated container must keep running before the
+	// update counts as good (default one minute; tests, mock mode).
+	Settle time.Duration
+	// Loc is the zone the night window is read in; nil means the box's own.
+	Loc *time.Location
+
+	// Update bookkeeping (updates.go, apps_crashloop.go).
+	updMu sync.Mutex
+	upd   updateState
 }
 
 func (h *Apps) now() time.Time {
@@ -113,29 +125,34 @@ func (h *Apps) now() time.Time {
 // manage") — there's no viewer-facing read of this tab yet.
 func (h *Apps) Perms() map[string]perm.Perm {
 	return map[string]perm.Perm{
-		"GET /api/v1/apps/catalog":                     perm.System,
-		"GET /api/v1/apps/storage":                     perm.System,
-		"GET /api/v1/apps/search":                      perm.System,
-		"GET /api/v1/apps/manifest":                    perm.System,
-		"GET /api/v1/apps/installed":                   perm.System,
-		"POST /api/v1/apps/install/plan":               perm.System,
-		"POST /api/v1/apps/custom/parse":               perm.System,
-		"POST /api/v1/apps/installed/{id}/remove/plan": perm.System,
-		"POST /api/v1/apps/installed/{id}/start":       perm.System,
-		"POST /api/v1/apps/installed/{id}/stop":        perm.System,
-		"PUT /api/v1/apps/installed/{id}/autostart":    perm.System,
-		"GET /api/v1/apps/installed/{id}/edit":         perm.System,
-		"POST /api/v1/apps/installed/{id}/edit/plan":   perm.System,
-		"GET /api/v1/apps/docker/images":               perm.System,
-		"POST /api/v1/apps/docker/images/prune/plan":   perm.System,
-		"GET /api/v1/apps/installed/{id}/logs":         perm.System,
-		"GET /api/v1/apps/console/status":              perm.System,
-		"POST /api/v1/apps/console/enable":             perm.System,
-		"POST /api/v1/apps/console/disable":            perm.System,
-		"GET /api/v1/apps/installed/{id}/console":      perm.System,
-		"GET /api/v1/apps/docker":                      perm.System,
-		"POST /api/v1/apps/docker/setup/plan":          perm.System,
-		"POST /api/v1/apps/docker/uninstall/plan":      perm.System,
+		"GET /api/v1/apps/catalog":                       perm.System,
+		"GET /api/v1/apps/storage":                       perm.System,
+		"GET /api/v1/apps/search":                        perm.System,
+		"GET /api/v1/apps/manifest":                      perm.System,
+		"GET /api/v1/apps/installed":                     perm.System,
+		"POST /api/v1/apps/install/plan":                 perm.System,
+		"POST /api/v1/apps/custom/parse":                 perm.System,
+		"POST /api/v1/apps/installed/{id}/remove/plan":   perm.System,
+		"POST /api/v1/apps/installed/{id}/start":         perm.System,
+		"POST /api/v1/apps/installed/{id}/stop":          perm.System,
+		"PUT /api/v1/apps/installed/{id}/autostart":      perm.System,
+		"GET /api/v1/apps/installed/{id}/edit":           perm.System,
+		"POST /api/v1/apps/installed/{id}/edit/plan":     perm.System,
+		"POST /api/v1/apps/installed/{id}/update/plan":   perm.System,
+		"POST /api/v1/apps/installed/{id}/rollback/plan": perm.System,
+		"GET /api/v1/apps/updates":                       perm.System,
+		"POST /api/v1/apps/updates/plan":                 perm.System,
+		"POST /api/v1/apps/docker/images/kept/plan":      perm.System,
+		"GET /api/v1/apps/docker/images":                 perm.System,
+		"POST /api/v1/apps/docker/images/prune/plan":     perm.System,
+		"GET /api/v1/apps/installed/{id}/logs":           perm.System,
+		"GET /api/v1/apps/console/status":                perm.System,
+		"POST /api/v1/apps/console/enable":               perm.System,
+		"POST /api/v1/apps/console/disable":              perm.System,
+		"GET /api/v1/apps/installed/{id}/console":        perm.System,
+		"GET /api/v1/apps/docker":                        perm.System,
+		"POST /api/v1/apps/docker/setup/plan":            perm.System,
+		"POST /api/v1/apps/docker/uninstall/plan":        perm.System,
 	}
 }
 
@@ -153,6 +170,11 @@ func (h *Apps) Mount(mux httpx.Mux) {
 	mux.HandleFunc("PUT /api/v1/apps/installed/{id}/autostart", h.putAutostart)
 	mux.HandleFunc("GET /api/v1/apps/installed/{id}/edit", h.editForm)
 	mux.HandleFunc("POST /api/v1/apps/installed/{id}/edit/plan", h.planEdit)
+	mux.HandleFunc("POST /api/v1/apps/installed/{id}/update/plan", h.planUpdate)
+	mux.HandleFunc("POST /api/v1/apps/installed/{id}/rollback/plan", h.planRollback)
+	mux.HandleFunc("GET /api/v1/apps/updates", h.updatesSummary)
+	mux.HandleFunc("POST /api/v1/apps/updates/plan", h.planUpdateAll)
+	mux.HandleFunc("POST /api/v1/apps/docker/images/kept/plan", h.planDropKept)
 	mux.HandleFunc("GET /api/v1/apps/docker/images", h.unusedImages)
 	mux.HandleFunc("POST /api/v1/apps/docker/images/prune/plan", h.planPruneImages)
 	mux.HandleFunc("GET /api/v1/apps/installed/{id}/logs", h.containerLogs)

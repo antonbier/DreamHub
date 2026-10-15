@@ -147,6 +147,13 @@ type Options struct {
 	// reads/writes (App6, internal/configfs); nil means configfs.OS, the
 	// real file system — tests inject configfs/mock instead.
 	AppsConfigFS configfs.FS
+	// AppsSettle is how long an updated container must keep running before
+	// the update counts as good (App14); zero is one minute, two seconds in
+	// mock mode.
+	AppsSettle time.Duration
+	// AppsLocation is the zone the update night window is read in (tests);
+	// nil is the box's own.
+	AppsLocation *time.Location
 	// TerminalTarget overrides shellinaboxd's address (tests only); empty
 	// means the box's real "http://127.0.0.1:4200".
 	TerminalTarget string
@@ -363,7 +370,10 @@ func New(ctx context.Context, o Options) (*App, error) {
 		DockerHub: o.DockerHub, Docker: o.Docker, Mem: o.Mem, WC: o.WebControl,
 		StorageRoot: o.AppsStorageRoot, DataDir: o.DataDir, Policy: o.AppsMountPolicy, Plans: plans, ReadOnly: o.ReadOnlyFiles,
 		Store: st, Auth: svc, ConfigFS: o.AppsConfigFS, Setup: o.DockerSetup, Now: now,
-		Settings: svc, User: user,
+		Settings: svc, User: user, Admin: adminHub, Settle: o.AppsSettle, Loc: o.AppsLocation,
+	}
+	if o.Mock && appsHub.Settle == 0 {
+		appsHub.Settle = 2 * time.Second
 	}
 	if o.Mock {
 		// Two demo disks, so the install dialog's storage choice has
@@ -473,6 +483,7 @@ func background(n *push.Notifier, series *hubs_.Series, admin *hubs_.Admin, apps
 		func(ctx context.Context) { admin.WatchPackages(ctx, bus, logger) },
 		func(ctx context.Context) { apps.WatchApps(ctx, bus, logger) },
 		func(ctx context.Context) { apps.AutostartOnBoot(ctx, logger) },
+		func(ctx context.Context) { apps.WatchContainers(ctx, bus, logger) },
 	}
 	if plexHub.Client != nil {
 		jobs = append(jobs, plexHub.Watch)

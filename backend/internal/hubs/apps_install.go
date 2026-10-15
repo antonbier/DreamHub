@@ -127,6 +127,9 @@ type installedApp struct {
 	Editable bool   `json:"editable"`
 	Icon     string `json:"icon,omitempty"`
 	Category string `json:"category,omitempty"`
+	// RollBack: the version the app ran before its last update is kept, so
+	// "Roll back" is offered in the row's menu.
+	RollBack bool `json:"rollBack,omitempty"`
 	// Services are the app's helper containers (e.g. Nextcloud's
 	// database), each with its own logs.
 	Services []installedService `json:"services,omitempty"`
@@ -225,6 +228,7 @@ func (h *Apps) listInstalled(w http.ResponseWriter, r *http.Request) {
 	}
 	groups := groupApps(containers)
 	cfg := h.config(r.Context())
+	kept := h.keptApps(r.Context())
 	out := make([]installedApp, 0, len(groups))
 	for _, g := range groups {
 		all := g.all()
@@ -232,7 +236,7 @@ func (h *Apps) listInstalled(w http.ResponseWriter, r *http.Request) {
 		row := installedApp{
 			ID: head.ID, AppID: g.appID, Name: groupName(g, head.Image), Image: head.Image,
 			State: head.State, HostPort: head.HostPort,
-			Autostart: cfg.isAutostart(g.appID), Editable: h.editable(g),
+			Autostart: cfg.isAutostart(g.appID), Editable: h.editable(g), RollBack: kept[g.appID],
 		}
 		if cat, ok := appcatalog.ByID(g.appID); ok {
 			row.Icon, row.Category = cat.Icon, cat.Category

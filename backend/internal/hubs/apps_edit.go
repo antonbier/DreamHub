@@ -1,19 +1,15 @@
 package hubs
 
 import (
-	"context"
 	"encoding/json"
-	"errors"
 	"fmt"
 	"net/http"
 	"path"
 
 	"github.com/antonbier/DreamHub/backend/internal/appcatalog"
 	"github.com/antonbier/DreamHub/backend/internal/compose"
-	"github.com/antonbier/DreamHub/backend/internal/dockerd"
 	"github.com/antonbier/DreamHub/backend/internal/dockerhub"
 	"github.com/antonbier/DreamHub/backend/internal/httpx"
-	"github.com/antonbier/DreamHub/backend/internal/plan"
 )
 
 // This file is AppsHub's App13 "edit" (docs/APPSHUB_PLAN.md): the install
@@ -314,122 +310,11 @@ func (h *Apps) planEdit(w http.ResponseWriter, r *http.Request) {
 	body.editID, body.Storage = g.appID, "" // an app keeps its id and its place
 	keepSecrets(&body, def)
 
-	// What runs now: the stored choices (else the defaults and the port it
-	// runs on) — its ports are free for the new containers, its limits count
-	// as given back.
-	oldBody := def.body(g.appID)
-	if !known {
-		oldBody = installBody{AppID: g.appID, ConfirmElevated: true, editID: g.appID}
-		if cat, ok := appcatalog.ByID(g.appID); ok && cat.PortEditable() {
-			if hp := g.all()[0].HostPort; hp != 0 && hp != cat.ContainerPort {
-				oldBody.Values = map[string]string{cat.PortVar: fmt.Sprint(hp)}
-			}
-		}
-	}
-	cfg := h.config(ctx)
-	target := &editTarget{group: g, root: root, oldPorts: map[[2]int]bool{}}
-	var oldApp appcatalog.App
-	var oldMain int
-	oldKnown := false
-	if app, _, ferr := h.resolveApp(oldBody); ferr == nil {
-		oldApp, oldKnown = app, true
-		target.oldPorts = portSetOf(app)
-		oldMain, target.oldMB = memorySizes(app, oldBody.MemoryLimitMB, cfg)
-	}
-	if hp := g.all()[0].HostPort; hp != 0 {
-		target.oldPorts[[2]int{hp, 0}] = true
-	}
-
-	prep, ferr := h.prepareInstall(ctx, body, containers, target)
+	rc, ferr := h.prepareRecreate(ctx, containers, g, root, body, def, known)
 	if ferr != nil {
 		ferr.write(w, r)
 		return
 	}
-	app, specs := prep.app, prep.specs
-	// To put the app back as it was if the new containers can't be made.
-	var rollback []dockerd.ContainerSpec
-	if known && oldKnown {
-		rollback = h.appSpecs(oldApp, oldMain, prep.tz, root, true, cfg.defaultMemoryMB())
-	}
-
-	images := make([]string, 0, len(specs))
-	for _, s := range specs {
-		images = append(images, s.Image)
-	}
-	var ids []string
-	for _, c := range g.all() {
-		ids = append(ids, c.ID)
-	}
-	name := app.Name
-	summary := fmt.Sprintf("Change %s: its containers are made again with the new settings, up to %d MB RAM (its data in %s is kept)", name, prep.totalMB, configDir(root, app.ID))
-	user, _ := httpx.User(ctx)
-	pl := h.Plans.Create(user, plan.Draft{
-		Action: "apps.edit",
-		Changes: []plan.Change{{Type: "apps.edit", Before: map[string]any{"id": g.all()[0].ID, "containers": ids}, After: map[string]any{
-			"appId": app.ID, "name": name, "custom": app.Custom, "images": images, "hostPort": app.ContainerPort,
-			"memoryLimitMB": prep.totalMB, "storage": configDir(root, app.ID), "tz": prep.tz,
-			"containers": prep.preview(), "elevated": prep.elevated, "edit": true,
-		}}},
-		Warnings:    prep.warnings,
-		Summary:     summary,
-		Detail:      map[string]any{"appId": app.ID, "edit": true},
-		Fingerprint: installedFingerprint(containers, g.appID),
-		Current: func(ctx context.Context) (string, error) {
-			list, err := h.Docker.List(ctx)
-			if err != nil {
-				return "", err
-			}
-			return installedFingerprint(list, g.appID), nil
-		},
-		Execute: func(ctx context.Context) error {
-			if h.ReadOnly {
-				return &plan.Failure{Status: http.StatusConflict, Code: "writes_disabled", Message: "device writes are disabled"}
-			}
-			secrets, err := h.appSecrets(app, root)
-			if err != nil {
-				return &plan.Failure{Status: http.StatusInternalServerError, Code: "edit_failed", Message: "the app's passwords could not be read", Err: err}
-			}
-			create := func(list []dockerd.ContainerSpec) (created []string, err error) {
-				for _, spec := range list {
-					spec.Env = appcatalog.ExpandEnv(spec.Env, secrets)
-					c, err := h.Docker.Create(ctx, spec)
-					if err != nil {
-						return created, err
-					}
-					created = append(created, c.ID)
-				}
-				return created, nil
-			}
-			// Put the old containers back (what is missing of them).
-			restore := func() {
-				ctx := context.WithoutCancel(ctx)
-				for _, spec := range rollback {
-					spec.Env = appcatalog.ExpandEnv(spec.Env, secrets)
-					_, _ = h.Docker.Create(ctx, spec)
-				}
-			}
-			// The app first, then what it depends on.
-			for _, cid := range ids {
-				if err := h.Docker.Remove(ctx, cid); err != nil && !errors.Is(err, dockerd.ErrNotFound) {
-					restore()
-					return &plan.Failure{Status: http.StatusBadGateway, Code: "edit_failed", Message: "the app could not be changed", Err: err}
-				}
-			}
-			created, err := create(specs)
-			if err != nil {
-				for _, id := range created {
-					_ = h.Docker.Remove(context.WithoutCancel(ctx), id)
-				}
-				restore()
-				if se, ok := dockerd.IsRefusal(err); ok {
-					return &plan.Failure{Status: http.StatusUnprocessableEntity, Code: "install_refused", Message: se.Message,
-						Details: map[string]any{"reason": se.Code, "path": se.Path}, Err: err}
-				}
-				return &plan.Failure{Status: http.StatusBadGateway, Code: "edit_failed", Message: "the app could not be changed; the previous settings were put back", Err: err}
-			}
-			h.saveDefinition(root, app.ID, definitionOf(body))
-			return nil
-		},
-	})
+	pl := h.recreatePlan(ctx, rc, containers, recreateEdit)
 	httpx.WriteJSON(w, http.StatusOK, map[string]any{"plan": pl})
 }

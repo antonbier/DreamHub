@@ -15,7 +15,12 @@ const (
 	ServiceRecovered  = "service.recovered"    // AdminHub's watch
 	PackageUpgradable = "package.upgradable"   // AdminHub's package watch
 	AppUpgradable     = "app.upgradable"       // AppsHub's app-update watch (App5)
+	// App14: what automatic updates did, and a container that keeps stopping.
+	UpdatesApplied    = "updates.applied"    // params: count, names
+	UpdatesFailed     = "updates.failed"     // params: name, reason
+	UpdatesRolledBack = "updates.rolledBack" // params: name, reason
+	AppCrashLoop      = "app.crashLoop"      // params: appId, name
 )
 
 // All lists every key above.
-var All = []string{RecordingStarted, RecordingFinished, TimerConflict, DiskAboveLimit, MissingAiring, ServiceFailed, ServiceRecovered, PackageUpgradable, AppUpgradable}
+var All = []string{RecordingStarted, RecordingFinished, TimerConflict, DiskAboveLimit, MissingAiring, ServiceFailed, ServiceRecovered, PackageUpgradable, AppUpgradable, UpdatesApplied, UpdatesFailed, UpdatesRolledBack, AppCrashLoop}

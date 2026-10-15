@@ -129,36 +129,57 @@ func (h *Admin) planPackages(w http.ResponseWriter, r *http.Request) {
 			return stepsFingerprint(now), nil
 		},
 		Execute: func(ctx context.Context) error {
-			if h.ReadOnly {
-				return webcontrol.ErrWritesDisabled
-			}
-			// Checked again at apply time: a timer may have started since
-			// the preview. A package that only adds a console tool can't
-			// cut a recording; one that touches enigma2 can.
-			if touchesEnigma2(steps) {
-				if names := h.runningRecordings(ctx); len(names) > 0 {
-					return &plan.Failure{Status: http.StatusConflict, Code: "recording_running", Message: "the box is recording; try again when it's done"}
-				}
-			}
-			output, runErr := h.Packages.Apply(ctx, action, names)
-			res := packageRunResult{At: h.now(), Action: string(action), Steps: steps, OK: runErr == nil, Output: output}
-			h.pkgMu.Lock()
-			h.lastPackageRun = res
-			h.pkgMu.Unlock()
-			prefix := ""
-			if runErr != nil {
-				prefix = "Failed: "
-			}
-			_ = h.Store.AppendChange(context.WithoutCancel(ctx), store.ChangeEntry{
-				UserID: user.ID, Action: "admin.package." + string(action), Summary: prefix + summary,
-			})
-			if runErr != nil {
-				return &plan.Failure{Status: http.StatusBadGateway, Code: "package_apply_failed", Message: "apt-get reported an error; see its output", Err: runErr}
+			if f := h.applyPackages(ctx, user, string(action), steps, summary, func(ctx context.Context) (string, error) {
+				return h.Packages.Apply(ctx, action, names)
+			}); f != nil {
+				return f
 			}
 			return nil
 		},
 	})
 	httpx.WriteJSON(w, http.StatusOK, map[string]any{"plan": pl, "steps": steps})
+}
+
+// applyPackages runs a package change that was previewed: the same checks and
+// bookkeeping whether a person confirmed it (the plan) or it is one step of
+// the combined update (apps_updates.go). A nil result means it was done.
+func (h *Admin) applyPackages(ctx context.Context, user store.User, action string, steps []apt.Step, summary string, run func(context.Context) (string, error)) *plan.Failure {
+	if h.ReadOnly {
+		return &plan.Failure{Status: http.StatusConflict, Code: "writes_disabled", Message: "device writes are disabled", Err: webcontrol.ErrWritesDisabled}
+	}
+	// Checked again at apply time: a timer may have started since the
+	// preview. A package that only adds a console tool can't cut a
+	// recording; one that touches enigma2 can.
+	if touchesEnigma2(steps) {
+		if names := h.runningRecordings(ctx); len(names) > 0 {
+			return &plan.Failure{Status: http.StatusConflict, Code: "recording_running", Message: "the box is recording; try again when it's done"}
+		}
+	}
+	output, runErr := run(ctx)
+	res := packageRunResult{At: h.now(), Action: action, Steps: steps, OK: runErr == nil, Output: output}
+	h.pkgMu.Lock()
+	h.lastPackageRun = res
+	h.pkgMu.Unlock()
+	prefix := ""
+	if runErr != nil {
+		prefix = "Failed: "
+	}
+	_ = h.Store.AppendChange(context.WithoutCancel(ctx), store.ChangeEntry{
+		UserID: user.ID, Action: "admin.package." + action, Summary: prefix + summary,
+	})
+	if runErr != nil {
+		return &plan.Failure{Status: http.StatusBadGateway, Code: "package_apply_failed", Message: "apt-get reported an error; see its output", Details: map[string]any{"output": lastLinesOf(output, 12)}, Err: runErr}
+	}
+	return nil
+}
+
+// lastLinesOf keeps the last n lines of apt's output for a failure report.
+func lastLinesOf(out string, n int) string {
+	lines := strings.Split(strings.TrimSpace(out), "\n")
+	if len(lines) > n {
+		lines = lines[len(lines)-n:]
+	}
+	return strings.Join(lines, "\n")
 }
 
 // writeSimulateError answers a failed simulate run; it reports whether
@@ -246,6 +267,8 @@ func describeSteps(steps []apt.Step) string {
 			parts = append(parts, "upgraded "+s.Name+" "+s.OldVersion+" → "+s.NewVersion)
 		case "remove":
 			parts = append(parts, "removed "+s.Name+" "+s.OldVersion)
+		case "downgrade":
+			parts = append(parts, "downgraded "+s.Name+" "+s.OldVersion+" → "+s.NewVersion)
 		}
 	}
 	out := strings.Join(parts, ", ")

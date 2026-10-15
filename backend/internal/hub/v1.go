@@ -107,7 +107,7 @@ func V1() []Descriptor {
 		// instead, and installing/managing a Docker app needs `system`
 		// like any other AdminHub-style action (docs/APPSHUB_PLAN.md).
 		{ID: IDApps, Name: "AppsHub", Label: "hub.apps", Icon: "extension", Path: "/apps", Group: GroupBottom, Order: 20,
-			Emits: []string{events.AppUpgradable},
+			Emits: []string{events.AppUpgradable, events.UpdatesApplied, events.UpdatesFailed, events.UpdatesRolledBack, events.AppCrashLoop},
 			// Docker apps need the overlay module matching the kernel build
 			// (docs/APPSHUB_PLAN.md, App7).
 			Packages: []string{"kernel-module-overlay"}},

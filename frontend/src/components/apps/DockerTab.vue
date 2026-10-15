@@ -72,55 +72,57 @@
                   </button>
                 </p>
               </div>
-              <button
-                type="button"
-                role="switch"
-                :aria-checked="a.autostart"
-                :aria-label="t('apps.autostart.label', { name: a.name })"
-                :title="t('apps.autostart.hint')"
-                class="flex shrink-0 items-center gap-2 text-[12px] text-muted"
-                @click="toggleAutostart(a)"
-              >
-                <span class="relative h-5 w-9 rounded-full transition-colors" :class="a.autostart ? 'bg-accent' : 'bg-field border border-line'">
-                  <span class="absolute top-0.5 h-4 w-4 rounded-full bg-bg transition-all" :class="a.autostart ? 'inset-s-[1.1rem]' : 'inset-s-0.5 !bg-faint'" />
-                </span>
-                {{ t('apps.autostart.short') }}
-              </button>
-              <a
-                v-if="a.state === 'running' && a.hostPort"
-                :href="openUrl(a.hostPort)"
-                target="_blank"
-                rel="noopener"
-                class="shrink-0 rounded-sm bg-accent px-3 py-1 text-[12.5px] font-semibold text-bg"
-              >
-                {{ t('apps.open') }}
-              </a>
-              <button
-                v-else
-                type="button"
-                class="shrink-0 rounded-sm px-3 py-1 text-[12.5px] disabled:opacity-60"
-                :class="a.state === 'running' ? 'border border-line text-text hover:bg-field' : 'bg-accent font-semibold text-bg'"
-                :disabled="!!busyId"
-                @click="toggleRunning(a)"
-              >
-                {{ a.state === 'running' ? t('apps.stop') : t('apps.start') }}
-              </button>
-              <DropdownMenu>
-                <template #trigger>
-                  <button type="button" class="rounded-sm p-1.5 text-muted hover:bg-tile-2 hover:text-text" :aria-label="t('apps.more')">
-                    <Icon name="more" :size="16" />
-                  </button>
-                </template>
-                <template #panel="{ close }">
-                  <button v-if="a.state === 'running' && a.hostPort" type="button" class="block w-full px-3 py-1.5 text-start text-[13px] text-text hover:bg-tile-2" :disabled="!!busyId" @click="close(); toggleRunning(a)">{{ t('apps.stop') }}</button>
-                  <button type="button" class="block w-full px-3 py-1.5 text-start text-[13px] text-text hover:bg-tile-2" @click="close(); openLogs(a)">{{ t('apps.logs') }}</button>
-                  <button type="button" class="block w-full px-3 py-1.5 text-start text-[13px] text-text hover:bg-tile-2" @click="close(); openConsole(a)">{{ t('apps.console.open') }}</button>
-                  <button type="button" class="block w-full px-3 py-1.5 text-start text-[13px] text-text hover:bg-tile-2" @click="close(); openEdit(a)">{{ t('apps.edit.menu') }}</button>
-                  <RouterLink to="/settings/system" class="block w-full px-3 py-1.5 text-start text-[13px] text-text hover:bg-tile-2" @click="close()">{{ t('apps.backupMenu') }}</RouterLink>
-                  <button type="button" class="block w-full px-3 py-1.5 text-start text-[13px] text-text hover:bg-tile-2" :disabled="!!busyId" @click="close(); previewUpdate(a)">{{ t('apps.update.menu') }}</button>
-                  <button type="button" class="block w-full px-3 py-1.5 text-start text-[13px] text-onair hover:bg-tile-2" :disabled="!!busyId" @click="close(); previewRemove(a)">{{ t('apps.remove') }}</button>
-                </template>
-              </DropdownMenu>
+              <div class="ms-auto flex shrink-0 items-center gap-3">
+                <button
+                  type="button"
+                  role="switch"
+                  :aria-checked="a.autostart"
+                  :aria-label="t('apps.autostart.label', { name: a.name })"
+                  :title="t('apps.autostart.hint')"
+                  class="flex shrink-0 items-center gap-2 text-[12px] text-muted"
+                  @click="toggleAutostart(a)"
+                >
+                  <span class="relative h-5 w-9 rounded-full transition-colors" :class="a.autostart ? 'bg-accent' : 'bg-field border border-line'">
+                    <span class="absolute top-0.5 h-4 w-4 rounded-full bg-bg transition-all" :class="a.autostart ? 'inset-s-[1.1rem]' : 'inset-s-0.5 !bg-faint'" />
+                  </span>
+                  {{ t('apps.autostart.short') }}
+                </button>
+                <a
+                  v-if="a.state === 'running' && a.hostPort"
+                  :href="openUrl(a.hostPort)"
+                  target="_blank"
+                  rel="noopener"
+                  class="shrink-0 rounded-sm bg-accent px-3 py-1 text-[12.5px] font-semibold text-bg"
+                >
+                  {{ t('apps.open') }}
+                </a>
+                <button
+                  v-else
+                  type="button"
+                  class="shrink-0 rounded-sm px-3 py-1 text-[12.5px] disabled:opacity-60"
+                  :class="a.state === 'running' ? 'border border-line text-text hover:bg-field' : 'bg-accent font-semibold text-bg'"
+                  :disabled="!!busyId"
+                  @click="toggleRunning(a)"
+                >
+                  {{ a.state === 'running' ? t('apps.stop') : t('apps.start') }}
+                </button>
+                <DropdownMenu>
+                  <template #trigger>
+                    <button type="button" class="rounded-sm p-1.5 text-muted hover:bg-tile-2 hover:text-text" :aria-label="t('apps.more')">
+                      <Icon name="more" :size="16" />
+                    </button>
+                  </template>
+                  <template #panel="{ close }">
+                    <button v-if="a.state === 'running' && a.hostPort" type="button" class="block w-full px-3 py-1.5 text-start text-[13px] text-text hover:bg-tile-2" :disabled="!!busyId" @click="close(); toggleRunning(a)">{{ t('apps.stop') }}</button>
+                    <button type="button" class="block w-full px-3 py-1.5 text-start text-[13px] text-text hover:bg-tile-2" @click="close(); openLogs(a)">{{ t('apps.logs') }}</button>
+                    <button type="button" class="block w-full px-3 py-1.5 text-start text-[13px] text-text hover:bg-tile-2" @click="close(); openConsole(a)">{{ t('apps.console.open') }}</button>
+                    <button type="button" class="block w-full px-3 py-1.5 text-start text-[13px] text-text hover:bg-tile-2" @click="close(); openEdit(a)">{{ t('apps.edit.menu') }}</button>
+                    <RouterLink to="/settings/system" class="block w-full px-3 py-1.5 text-start text-[13px] text-text hover:bg-tile-2" @click="close()">{{ t('apps.backupMenu') }}</RouterLink>
+                    <button type="button" class="block w-full px-3 py-1.5 text-start text-[13px] text-text hover:bg-tile-2" :disabled="!!busyId" @click="close(); previewUpdate(a)">{{ t('apps.update.menu') }}</button>
+                    <button type="button" class="block w-full px-3 py-1.5 text-start text-[13px] text-onair hover:bg-tile-2" :disabled="!!busyId" @click="close(); previewRemove(a)">{{ t('apps.remove') }}</button>
+                  </template>
+                </DropdownMenu>
+              </div>
             </div>
             <div v-if="editing?.id === a.id" class="rounded-b-sm border border-t-0 border-line bg-tile p-3">
               <AppInstallForm :source="editing.source" :edit="{ id: a.id, view: editing.view }" @done="onEdited" @cancel="editing = null" />

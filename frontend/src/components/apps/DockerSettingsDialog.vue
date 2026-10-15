@@ -1,8 +1,8 @@
 <!--
   "Docker settings" behind the Docker tab's gear: Docker's status, Set up
-  Docker (App7) and Uninstall Docker (App10). Later packages add the
-  storage location, auto-start and the like here (docs/APPSHUB_PLAN.md,
-  App13). Both changes are plans with a preview.
+  Docker (App7), the storage location, auto-start, memory and update
+  choices, clean-up of unused images (App13) and Uninstall Docker (App10).
+  Changes to Docker itself and the clean-up are plans with a preview.
 -->
 <template>
   <SettingsDialog :title="t('apps.docker.settingsTitle')" @close="emit('close')">
@@ -13,6 +13,10 @@
         {{ statusText }}
       </p>
       <DockerSetupSection v-if="!state.ready || setupTouched" :state="state" :version="version" :unavailable="unavailable" @changed="changed('setup')" />
+      <template v-if="state.ready">
+        <DockerPrefsSection />
+        <DockerImagesSection />
+      </template>
       <DockerUninstallSection v-if="installed || uninstallTouched" @changed="changed('uninstall')" />
     </template>
   </SettingsDialog>
@@ -22,6 +26,8 @@
 import { computed, onMounted, ref } from 'vue'
 import { useI18n } from 'vue-i18n'
 import { api } from '@/api/client'
+import DockerImagesSection from '@/components/apps/DockerImagesSection.vue'
+import DockerPrefsSection from '@/components/apps/DockerPrefsSection.vue'
 import DockerSetupSection from '@/components/apps/DockerSetupSection.vue'
 import DockerUninstallSection from '@/components/apps/DockerUninstallSection.vue'
 import SettingsDialog from '@/components/apps/SettingsDialog.vue'

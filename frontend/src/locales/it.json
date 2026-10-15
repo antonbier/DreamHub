@@ -1363,7 +1363,93 @@
         "mount_unresolvable": "il percorso non può essere risolto su questa box"
       }
     },
-    "addFromSearch": "Aggiungi come container"
+    "addFromSearch": "Aggiungi come container",
+    "views": {
+      "label": "Viste Docker",
+      "mine": "I miei container",
+      "catalog": "Catalogo app",
+      "mineHint": "Le app e i container di questo box: avvia, ferma, apri, modifica.",
+      "catalogHint": "Scegli un'app da installare o aggiungi un container tuo."
+    },
+    "mine": {
+      "empty": "Ancora nulla di installato.",
+      "emptyAction": "Vai al catalogo app"
+    },
+    "state": {
+      "running": "in esecuzione",
+      "exited": "fermo",
+      "created": "creato",
+      "restarting": "si riavvia",
+      "paused": "in pausa",
+      "dead": "fermo"
+    },
+    "autostart": {
+      "label": "Avvia {name} all'avvio del box",
+      "short": "Avvio automatico",
+      "hint": "Avvia questa app ogni volta che il box si avvia",
+      "on": "{name} partirà con il box.",
+      "off": "{name} non partirà più con il box.",
+      "error": "Impossibile salvare la scelta."
+    },
+    "edit": {
+      "menu": "Modifica",
+      "title": "Modifica {name}",
+      "unknown": "Questa app è stata installata prima che le sue scelte venissero conservate, quindi il modulo parte dai valori predefiniti. Controllali prima di applicare.",
+      "secretKept": "impostato – lascia vuoto per mantenerlo",
+      "storageFixed": "I suoi dati restano qui; solo le nuove app possono andare altrove.",
+      "preview": "Rivedi le modifiche",
+      "confirm": "Applica",
+      "summary": "{name} viene ricreata con le nuove impostazioni, fino a {mb} MB di RAM. Le cartelle dei dati restano.",
+      "done": "Modificata.",
+      "notEditable": "Questo container è stato aggiunto prima che la modifica esistesse. Rimuovilo e aggiungilo di nuovo per cambiarlo.",
+      "loadError": "Impossibile caricare le impostazioni."
+    },
+    "backupMenu": "Backup",
+    "update": {
+      "menu": "Aggiorna",
+      "confirm": "Aggiorna",
+      "done": "Aggiornata."
+    },
+    "removed": "Rimossa.",
+    "prefs": {
+      "title": "Per le nuove app",
+      "storage": "Salva i dati delle app su",
+      "storageHint": "Vale per le app che installi da ora. Le app già installate restano dove sono.",
+      "reset": "Ripristina",
+      "autostart": "Avvia le nuove app all'avvio del box",
+      "autostartHint": "Ogni app ha il proprio interruttore in «I miei container».",
+      "memory": "Limite di memoria per app",
+      "memoryAuto": "Automatico",
+      "memoryCustom": "Personalizzato",
+      "memoryHint": "Vale per i container che non indicano un limite. Le app del catalogo mantengono quello consigliato. Il controllo della memoria libera lo usa.",
+      "memoryRange": "Inserisci da 64 a 16384 MB.",
+      "updates": "Aggiornamenti",
+      "updateNotify": "Controlla nuove versioni delle app e avvisami nelle notifiche",
+      "updateEvery": "Controlla",
+      "hours": {
+        "6": "ogni 6 ore",
+        "12": "ogni 12 ore",
+        "24": "ogni giorno",
+        "72": "ogni 3 giorni",
+        "168": "ogni settimana"
+      },
+      "updateHint": "Nulla si aggiorna da solo; scegli tu quando.",
+      "saved": "Salvato.",
+      "saveError": "Impossibile salvare l'impostazione.",
+      "loadError": "Impossibile caricare le impostazioni."
+    },
+    "images": {
+      "title": "Pulisci le immagini inutilizzate",
+      "hint": "Rimuovendo o aggiornando un'app resta sul disco la sua vecchia immagine. Qui si tolgono quelle che nessun container usa.",
+      "none": "Niente da pulire.",
+      "reclaimable": "{count} immagini inutilizzate, circa {size}",
+      "button": "Pulisci …",
+      "confirm": "Rimuovi immagini",
+      "summary": "Queste {count} immagini vengono rimosse e si liberano circa {size}:",
+      "untagged": "(senza nome)",
+      "done": "Pulito, liberati circa {size}.",
+      "loadError": "Impossibile elencare le immagini."
+    }
   },
   "timers": {
     "cleanup": {

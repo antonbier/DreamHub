@@ -1363,7 +1363,93 @@
         "mount_unresolvable": "the path can't be resolved on this box"
       }
     },
-    "addFromSearch": "Add as container"
+    "addFromSearch": "Add as container",
+    "views": {
+      "label": "Docker views",
+      "mine": "My containers",
+      "catalog": "App catalog",
+      "mineHint": "The apps and containers on this box: start, stop, open, edit.",
+      "catalogHint": "Pick an app to install, or add a container of your own."
+    },
+    "mine": {
+      "empty": "Nothing installed yet.",
+      "emptyAction": "Browse the app catalog"
+    },
+    "state": {
+      "running": "running",
+      "exited": "stopped",
+      "created": "created",
+      "restarting": "restarting",
+      "paused": "paused",
+      "dead": "stopped"
+    },
+    "autostart": {
+      "label": "Start {name} when the box starts",
+      "short": "Auto-start",
+      "hint": "Start this app whenever the box starts",
+      "on": "{name} will start with the box.",
+      "off": "{name} will no longer start with the box.",
+      "error": "The choice could not be saved."
+    },
+    "edit": {
+      "menu": "Edit",
+      "title": "Edit {name}",
+      "unknown": "This app was installed before its choices were kept, so the form starts from the defaults. Check them before you apply.",
+      "secretKept": "set — leave empty to keep",
+      "storageFixed": "Its data stays here; only new apps can go elsewhere.",
+      "preview": "Review changes",
+      "confirm": "Apply",
+      "summary": "{name} is made again with the new settings, up to {mb} MB RAM. Its data folders are kept.",
+      "done": "Changed.",
+      "notEditable": "This container was added before editing existed. Remove it and add it again to change it.",
+      "loadError": "The settings could not be loaded."
+    },
+    "backupMenu": "Back up",
+    "update": {
+      "menu": "Update",
+      "confirm": "Update",
+      "done": "Updated."
+    },
+    "removed": "Removed.",
+    "prefs": {
+      "title": "For new apps",
+      "storage": "Store app data on",
+      "storageHint": "Applies to apps you install from now on. Apps that are already installed stay where they are.",
+      "reset": "Reset",
+      "autostart": "Start new apps when the box starts",
+      "autostartHint": "Each app has its own switch in My containers.",
+      "memory": "Memory limit per app",
+      "memoryAuto": "Automatic",
+      "memoryCustom": "Custom",
+      "memoryHint": "Used for containers that state no limit of their own. Apps from the catalog keep their recommended one. The check for free memory uses it.",
+      "memoryRange": "Enter 64 to 16384 MB.",
+      "updates": "Updates",
+      "updateNotify": "Check for newer app versions and tell me in the notifications",
+      "updateEvery": "Check",
+      "hours": {
+        "6": "every 6 hours",
+        "12": "every 12 hours",
+        "24": "daily",
+        "72": "every 3 days",
+        "168": "weekly"
+      },
+      "updateHint": "Nothing is updated by itself; you choose when.",
+      "saved": "Saved.",
+      "saveError": "The setting could not be saved.",
+      "loadError": "The settings could not be loaded."
+    },
+    "images": {
+      "title": "Clean up unused images",
+      "hint": "Removing or updating an app leaves its old image on the disk. This removes the ones no container uses.",
+      "none": "Nothing to clean up.",
+      "reclaimable": "{count} unused images, about {size}",
+      "button": "Clean up …",
+      "confirm": "Remove images",
+      "summary": "These {count} images are removed and about {size} is freed:",
+      "untagged": "(untagged)",
+      "done": "Cleaned up, about {size} freed.",
+      "loadError": "The images could not be listed."
+    }
   },
   "timers": {
     "cleanup": {

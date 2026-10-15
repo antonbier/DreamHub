@@ -10,7 +10,8 @@
   <div>
     <!-- Step 1: the form -->
     <form v-if="step === 'form'" class="flex flex-col gap-3" @submit.prevent="preview">
-      <h3 class="text-[14px] font-semibold text-text">{{ t('apps.installTitle', { name: title }) }}</h3>
+      <h3 class="text-[14px] font-semibold text-text">{{ edit ? t('apps.edit.title', { name: title }) : t('apps.installTitle', { name: title }) }}</h3>
+      <p v-if="edit && !edit.view.known" class="text-[12.5px] text-muted">{{ t('apps.edit.unknown') }}</p>
 
       <label v-if="source.kind === 'custom'" class="flex flex-col gap-1 text-[13px]">
         <span class="text-muted">{{ t('apps.form.nameLabel') }}</span>
@@ -33,9 +34,9 @@
           :type="f.secret ? 'password' : f.type === 'port' ? 'number' : 'text'"
           :min="f.type === 'port' ? (f.webPort ? 1024 : 1) : undefined"
           :max="f.type === 'port' ? 65535 : undefined"
-          :required="f.required"
+          :required="f.required && !secretKept(f)"
           :autocomplete="f.secret ? 'new-password' : 'off'"
-          :placeholder="f.default ?? ''"
+          :placeholder="secretKept(f) ? t('apps.edit.secretKept') : (f.default ?? '')"
           :class="f.type === 'port' ? 'w-32' : 'w-full'"
           class="rounded-sm border border-line bg-field px-2 py-1.5 text-text"
         />
@@ -44,7 +45,11 @@
         <span v-else-if="f.type === 'path'" class="text-[12px] text-faint">{{ t('apps.form.pathHint') }}</span>
       </label>
 
-      <label class="flex flex-col gap-1 text-[13px]">
+      <p v-if="edit" class="text-[13px] text-muted">
+        {{ t('apps.storageLabel') }}: <span class="break-all text-text">{{ edit.view.storage.path }}</span>
+        <span class="block text-[12px] text-faint">{{ t('apps.edit.storageFixed') }}</span>
+      </p>
+      <label v-else class="flex flex-col gap-1 text-[13px]">
         <span class="text-muted">{{ t('apps.storageLabel') }}</span>
         <select v-model="storage" class="rounded-sm border border-line bg-field px-2 py-1.5 text-text">
           <option v-for="c in choices" :key="c.path" :value="c.path" :disabled="c.freeBytes < 1 << 30">
@@ -84,7 +89,7 @@
           <legend class="text-[13px] font-semibold text-muted">{{ t('apps.form.envTitle') }}</legend>
           <div v-for="(row, i) in extraEnv" :key="i" class="flex items-center gap-2">
             <input v-model="row.key" type="text" :placeholder="t('apps.form.envName')" :aria-label="t('apps.form.envName')" class="w-2/5 rounded-sm border border-line bg-field px-2 py-1.5 text-[13px] text-text" />
-            <input v-model="row.value" type="text" :placeholder="t('apps.form.envValue')" :aria-label="t('apps.form.envValue')" class="min-w-0 flex-1 rounded-sm border border-line bg-field px-2 py-1.5 text-[13px] text-text" />
+            <input v-model="row.value" type="text" :placeholder="row.keep ? t('apps.edit.secretKept') : t('apps.form.envValue')" :aria-label="t('apps.form.envValue')" class="min-w-0 flex-1 rounded-sm border border-line bg-field px-2 py-1.5 text-[13px] text-text" />
             <button type="button" class="shrink-0 rounded-sm px-2 py-1 text-[13px] text-muted hover:bg-field" :aria-label="t('apps.form.rowRemove')" @click="extraEnv.splice(i, 1)">×</button>
           </div>
           <button type="button" class="self-start text-[12.5px] text-accent hover:underline" @click="extraEnv.push({ key: '', value: '' })">+ {{ t('apps.form.envAdd') }}</button>
@@ -122,7 +127,7 @@
       <div class="flex justify-end gap-2">
         <button type="button" class="rounded-sm px-3 py-1.5 text-[13px] text-text hover:bg-field" @click="emit('cancel')">{{ t('plan.cancel') }}</button>
         <button type="submit" class="rounded-sm bg-accent px-3 py-1.5 text-[13px] font-semibold text-bg disabled:opacity-60" :disabled="elevatedItems.length > 0 && !confirmElevated">
-          {{ t('apps.installPreview') }}
+          {{ edit ? t('apps.edit.preview') : t('apps.installPreview') }}
         </button>
       </div>
     </form>
@@ -133,18 +138,18 @@
     <PlanPreview
       v-else-if="step === 'plan' && plan"
       :plan="plan"
-      :confirm-label="t('apps.installConfirm')"
+      :confirm-label="edit ? t('apps.edit.confirm') : t('apps.installConfirm')"
       :busy="applying"
       :error="error"
       @confirm="confirm"
       @cancel="step = 'form'"
     >
-      {{ t('apps.plan.summary', { name: title, mb: totalMB }) }}
+      {{ edit ? t('apps.edit.summary', { name: title, mb: totalMB }) : t('apps.plan.summary', { name: title, mb: totalMB }) }}
       <InstallPlanDetails :plan="plan" :open="source.kind === 'custom'" />
     </PlanPreview>
 
     <p v-else-if="step === 'done'" class="flex items-center gap-1.5 text-[13px] text-ok" role="status">
-      <span class="h-1.5 w-1.5 rounded-full bg-ok" />{{ t('apps.installed') }}
+      <span class="h-1.5 w-1.5 rounded-full bg-ok" />{{ edit ? t('apps.edit.done') : t('apps.installed') }}
     </p>
   </div>
 </template>
@@ -157,9 +162,14 @@ import PlanPreview from '@/components/PlanPreview.vue'
 import InstallPlanDetails from '@/components/apps/InstallPlanDetails.vue'
 import { useAppForm } from '@/composables/useAppForm'
 import { formatBytes } from '@/lib/format'
-import type { AppField, AppStorageChoice, CatalogApp, ComposeIssue, ElevatedItem, InstallRequest, ParsedApp, Plan } from '@/api/types'
+import type { AppEditView, AppField, AppStorageChoice, CatalogApp, ComposeIssue, ElevatedItem, InstallRequest, ParsedApp, Plan } from '@/api/types'
 
-const props = defineProps<{ source: { kind: 'catalog'; app: CatalogApp } | { kind: 'custom'; app: ParsedApp } }>()
+// With edit set the form is the installed app's: pre-filled, its storage
+// shown but fixed, applied as a plan that makes its containers again.
+const props = defineProps<{
+  source: { kind: 'catalog'; app: CatalogApp } | { kind: 'custom'; app: ParsedApp }
+  edit?: { id: string; view: AppEditView }
+}>()
 const emit = defineEmits<{ done: []; cancel: [] }>()
 
 const { t, locale } = useI18n()
@@ -178,7 +188,9 @@ const advanced = ref(false)
 
 // Field values start at their defaults; only what differs is sent.
 const values = reactive<Record<string, string>>({})
-for (const f of fields.value) values[f.name] = f.default ?? ''
+for (const f of fields.value) values[f.name] = props.edit?.view.values[f.name] ?? f.default ?? ''
+// A secret that is set stays on the box; left empty it is kept.
+const secretKept = (f: AppField) => !!props.edit?.view.secretSet.includes(f.name) && !(values[f.name] ?? '')
 
 const visibleFields = computed(() => fields.value.filter((f) => advanced.value || !f.advanced))
 // A fixed web port (no field for it): shown as information.
@@ -187,15 +199,17 @@ const fixedPort = computed(() => {
   return props.source.kind === 'catalog' ? (props.source.app.port ?? 0) : (props.source.app.webPort ?? 0)
 })
 const defaultMemory = computed(() => props.source.app.memoryMB || 256)
-const memoryMB = ref('')
+const memoryMB = ref(props.edit?.view.memoryLimitMB ? String(props.edit.view.memoryLimitMB) : '')
 const totalMB = computed(() => {
   const items = plan.value?.changes[0]?.after as { memoryLimitMB?: number } | undefined
   return items?.memoryLimitMB ?? defaultMemory.value
 })
 
-const extraEnv = reactive<{ key: string; value: string }[]>([])
-const extraPorts = reactive<{ port: string; udp: boolean }[]>([])
-const extraPaths = reactive<{ host: string; container: string; readOnly: boolean }[]>([])
+const extraEnv = reactive<{ key: string; value: string; keep?: boolean }[]>(props.edit?.view.extra.env.map((r) => ({ ...r })) ?? [])
+const extraPorts = reactive<{ port: string; udp: boolean }[]>(props.edit?.view.extra.ports.map((r) => ({ port: String(r.port), udp: r.udp })) ?? [])
+const extraPaths = reactive<{ host: string; container: string; readOnly: boolean }[]>(props.edit?.view.extra.paths.map((r) => ({ ...r })) ?? [])
+// Advanced rows that exist are shown.
+if (props.edit && (extraEnv.length + extraPorts.length + extraPaths.length > 0 || props.edit.view.memoryLimitMB > 0)) advanced.value = true
 
 const elevatedItems = ref<ElevatedItem[]>(props.source.kind === 'custom' ? props.source.app.elevated : [])
 const confirmElevated = ref(false)
@@ -203,6 +217,7 @@ const confirmElevated = ref(false)
 const choices = ref<AppStorageChoice[]>([])
 const storage = ref('')
 onMounted(async () => {
+  if (props.edit) return
   try {
     choices.value = (await api.apps.storage()).choices
   } catch {
@@ -225,7 +240,7 @@ function request(): InstallRequest {
   }
   if (Object.keys(changed).length > 0) req.values = changed
   const defaultStorage = choices.value.find((c) => c.default)?.path
-  if (storage.value && storage.value !== defaultStorage) req.storage = storage.value
+  if (!props.edit && storage.value && storage.value !== defaultStorage) req.storage = storage.value
   const mem = parseInt(memoryMB.value, 10)
   if (mem > 0) req.memoryLimitMB = mem
   const env = extraEnv.filter((r) => r.key.trim() !== '').map((r) => ({ key: r.key.trim(), value: r.value }))
@@ -241,7 +256,7 @@ async function preview() {
   issues.value = []
   step.value = 'loading'
   try {
-    plan.value = (await api.apps.installPlan(request())).plan
+    plan.value = (props.edit ? await api.apps.editPlan(props.edit.id, request()) : await api.apps.installPlan(request())).plan
     step.value = 'plan'
   } catch (err) {
     const f = failure(err)

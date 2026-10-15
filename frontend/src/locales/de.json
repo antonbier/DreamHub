@@ -1363,7 +1363,93 @@
         "mount_unresolvable": "der Pfad lässt sich auf dieser Box nicht auflösen"
       }
     },
-    "addFromSearch": "Als Container hinzufügen"
+    "addFromSearch": "Als Container hinzufügen",
+    "views": {
+      "label": "Docker-Ansichten",
+      "mine": "Meine Container",
+      "catalog": "App-Katalog",
+      "mineHint": "Die Apps und Container auf dieser Box: starten, stoppen, öffnen, bearbeiten.",
+      "catalogHint": "Eine App zum Installieren wählen oder einen eigenen Container hinzufügen."
+    },
+    "mine": {
+      "empty": "Noch nichts installiert.",
+      "emptyAction": "App-Katalog ansehen"
+    },
+    "state": {
+      "running": "läuft",
+      "exited": "gestoppt",
+      "created": "angelegt",
+      "restarting": "startet neu",
+      "paused": "pausiert",
+      "dead": "gestoppt"
+    },
+    "autostart": {
+      "label": "{name} beim Start der Box starten",
+      "short": "Autostart",
+      "hint": "Diese App starten, sobald die Box startet",
+      "on": "{name} startet jetzt mit der Box.",
+      "off": "{name} startet nicht mehr mit der Box.",
+      "error": "Die Auswahl konnte nicht gespeichert werden."
+    },
+    "edit": {
+      "menu": "Bearbeiten",
+      "title": "{name} bearbeiten",
+      "unknown": "Diese App wurde installiert, bevor ihre Angaben gespeichert wurden. Das Formular beginnt deshalb mit den Standardwerten. Bitte vor dem Anwenden prüfen.",
+      "secretKept": "gesetzt – leer lassen zum Behalten",
+      "storageFixed": "Die Daten bleiben hier; nur neue Apps können woanders liegen.",
+      "preview": "Änderungen ansehen",
+      "confirm": "Anwenden",
+      "summary": "{name} wird mit den neuen Einstellungen neu erstellt, bis zu {mb} MB RAM. Die Datenordner bleiben erhalten.",
+      "done": "Geändert.",
+      "notEditable": "Dieser Container wurde hinzugefügt, bevor Bearbeiten möglich war. Entferne ihn und füge ihn neu hinzu, um ihn zu ändern.",
+      "loadError": "Die Einstellungen konnten nicht geladen werden."
+    },
+    "backupMenu": "Sichern",
+    "update": {
+      "menu": "Aktualisieren",
+      "confirm": "Aktualisieren",
+      "done": "Aktualisiert."
+    },
+    "removed": "Entfernt.",
+    "prefs": {
+      "title": "Für neue Apps",
+      "storage": "App-Daten speichern auf",
+      "storageHint": "Gilt für Apps, die du ab jetzt installierst. Bereits installierte Apps bleiben, wo sie sind.",
+      "reset": "Zurücksetzen",
+      "autostart": "Neue Apps beim Start der Box starten",
+      "autostartHint": "Jede App hat in „Meine Container“ ihren eigenen Schalter.",
+      "memory": "Speicherlimit pro App",
+      "memoryAuto": "Automatisch",
+      "memoryCustom": "Eigener Wert",
+      "memoryHint": "Gilt für Container, die kein eigenes Limit angeben. Apps aus dem Katalog behalten ihre empfohlene Größe. Die Prüfung auf freien Speicher nutzt den Wert.",
+      "memoryRange": "Gib 64 bis 16384 MB ein.",
+      "updates": "Aktualisierungen",
+      "updateNotify": "Nach neuen App-Versionen suchen und in den Benachrichtigungen melden",
+      "updateEvery": "Prüfen",
+      "hours": {
+        "6": "alle 6 Stunden",
+        "12": "alle 12 Stunden",
+        "24": "täglich",
+        "72": "alle 3 Tage",
+        "168": "wöchentlich"
+      },
+      "updateHint": "Nichts wird von selbst aktualisiert; du entscheidest, wann.",
+      "saved": "Gespeichert.",
+      "saveError": "Die Einstellung konnte nicht gespeichert werden.",
+      "loadError": "Die Einstellungen konnten nicht geladen werden."
+    },
+    "images": {
+      "title": "Nicht benutzte Images aufräumen",
+      "hint": "Beim Entfernen oder Aktualisieren einer App bleibt ihr altes Image auf der Platte. Das hier löscht die, die kein Container nutzt.",
+      "none": "Nichts aufzuräumen.",
+      "reclaimable": "{count} nicht benutzte Images, etwa {size}",
+      "button": "Aufräumen …",
+      "confirm": "Images entfernen",
+      "summary": "Diese {count} Images werden entfernt, etwa {size} werden frei:",
+      "untagged": "(ohne Namen)",
+      "done": "Aufgeräumt, etwa {size} frei.",
+      "loadError": "Die Images konnten nicht aufgelistet werden."
+    }
   },
   "timers": {
     "cleanup": {

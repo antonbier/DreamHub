@@ -903,6 +903,30 @@ export interface InstallRequest {
   confirmElevated?: boolean
 }
 
+// GET /api/v1/apps/installed/{id}/edit — what the install form is
+// pre-filled with (App13). Secret values never come back: secretSet names the
+// fields that have one, extra rows with keep are secrets that stay.
+export interface AppEditView {
+  kind: 'catalog' | 'custom'
+  app: CatalogApp | ParsedApp
+  known: boolean
+  values: Record<string, string>
+  secretSet: string[]
+  extra: {
+    env: { key: string; value: string; keep?: boolean }[]
+    ports: { port: number; udp: boolean }[]
+    paths: { host: string; container: string; readOnly: boolean }[]
+  }
+  memoryLimitMB: number
+  storage: { path: string; label: string; freeBytes: number }
+}
+
+// GET /api/v1/apps/docker/images — images no container uses.
+export interface UnusedImages {
+  images: { id: string; tags: string[]; sizeBytes: number }[]
+  reclaimableBytes: number
+}
+
 // What an install plan will create (Plan.changes[0].after for apps.install).
 export interface InstallPreviewContainer {
   service?: string
@@ -937,6 +961,11 @@ export interface InstalledApp {
   state: string
   hostPort?: number
   upgradable?: boolean
+  // Starts when the box starts; the edit form can be opened; the row's picture.
+  autostart: boolean
+  editable: boolean
+  icon?: string
+  category?: string
   // The app's helper containers (e.g. its database), each with own logs.
   services?: { id: string; service: string; image: string; state: string }[]
 }

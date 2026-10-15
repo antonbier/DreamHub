@@ -33,6 +33,8 @@ import type {
   AppManifest,
   AppConsoleStatus,
   InstalledApp,
+  AppEditView,
+  UnusedImages,
   AdScanResult,
   BouquetEntry,
   ChannelBackup,
@@ -575,6 +577,17 @@ export const api = {
     start: (id: string) => request<void>('POST', `/api/v1/apps/installed/${encodeURIComponent(id)}/start`),
     stop: (id: string) => request<void>('POST', `/api/v1/apps/installed/${encodeURIComponent(id)}/stop`),
     logs: (id: string) => request<{ text: string }>('GET', `/api/v1/apps/installed/${encodeURIComponent(id)}/logs`),
+    // Auto-start: a direct, reversible switch.
+    setAutostart: (id: string, enabled: boolean) =>
+      request<{ autostart: boolean }>('PUT', `/api/v1/apps/installed/${encodeURIComponent(id)}/autostart`, { enabled }),
+    // Edit (App13): the form's values, then a plan that makes the containers again.
+    editForm: (id: string, lang: string) =>
+      request<AppEditView>('GET', `/api/v1/apps/installed/${encodeURIComponent(id)}/edit?lang=${encodeURIComponent(lang)}`),
+    editPlan: (id: string, req: InstallRequest) =>
+      request<{ plan: Plan }>('POST', `/api/v1/apps/installed/${encodeURIComponent(id)}/edit/plan`, req),
+    // Clean up unused images: the list with sizes, then a plan.
+    unusedImages: () => request<UnusedImages>('GET', '/api/v1/apps/docker/images'),
+    pruneImagesPlan: () => request<{ plan: Plan }>('POST', '/api/v1/apps/docker/images/prune/plan'),
     // The console (docs/APPSHUB_PLAN.md, App5): same enable/disable shape
     // as admin.terminalStatus/enableTerminal/disableTerminal above, plus
     // a WebSocket path the component dials directly (browsers don't

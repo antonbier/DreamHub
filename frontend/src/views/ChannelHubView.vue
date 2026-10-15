@@ -265,8 +265,8 @@
         <p v-else-if="checkFailed" class="mt-2 text-[14px] text-muted"><ErrorText /></p>
         <details v-for="group in blk.groups" :key="group.kind" class="mt-3 rounded border border-line bg-tile" :open="blk.open">
           <summary class="flex cursor-pointer items-center gap-2 px-3 py-2.5">
-            <h3 class="text-[15px] font-semibold">{{ t(`channels.check.${group.kind}.title`) }}</h3>
-            <span class="rounded-full bg-tile-2 px-2 py-0.5 text-[12px] text-muted">{{ group.items.length }}</span>
+            <h3 class="text-[15px] font-semibold">{{ blk.open ? t('channels.check.shown', { n: group.items.length }, group.items.length) : t(`channels.check.${group.kind}.title`) }}</h3>
+            <span v-if="!blk.open" class="rounded-full bg-tile-2 px-2 py-0.5 text-[12px] text-muted">{{ group.items.length }}</span>
           </summary>
           <p class="px-3 pb-1 text-[13px] text-muted">{{ t(`channels.check.${group.kind}.explain`) }}</p>
           <ul class="flex flex-col px-3 pb-2">
@@ -375,10 +375,6 @@ const FilterChip = defineComponent({
       )
   },
 })
-
-function date(unix: number) {
-  return new Intl.DateTimeFormat(locale.value, { dateStyle: 'medium' }).format(unix * 1000)
-}
 
 // --- bouquets ---------------------------------------------------------------
 const bouquets = ref<ChannelBouquet[]>([])

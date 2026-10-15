@@ -51,14 +51,12 @@
 <script setup lang="ts">
 import HubStatusBanner from '@/components/HubStatusBanner.vue'
 import { useHubLabel } from '@/composables/useHubLabel'
-import { useI18n } from 'vue-i18n'
 import Icon from '@/components/Icon.vue'
 import RemotePad from '@/components/control/RemotePad.vue'
 import ScreenView from '@/components/control/ScreenView.vue'
 import TvMessage from '@/components/control/TvMessage.vue'
 import { useControlHub } from '@/composables/useControlHub'
 
-const { t } = useI18n()
 const { hubTitle } = useHubLabel()
 const { item } = useControlHub()
 </script>

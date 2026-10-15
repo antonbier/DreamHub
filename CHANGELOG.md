@@ -6,6 +6,22 @@ Format follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/); version
 
 ## [Unreleased]
 
+### Changed
+- The sidebar always shows plain page names (Recordings, TV Guide, Live TV, …) — the "Hub names / Descriptive" switch is gone, and no internal hub name (MediaHub, TimerHub, …) appears anywhere on screen, including problem texts and the "Needed by …" notes on packages. Settings and the setup wizard say "Features" instead of "Hubs"; "4 hubs need attention" is "4 things need attention"; the Settings "Hubs" tab is part of General. The navigation group "Device" is "Box"; Device → Administration is "Services & logs".
+- Setup wizard: offered to an admin only while the box has no configuration, remembered on the box (new hidden setting `general.setupDone`) so a second phone doesn't get it again, never for viewers, full screen without menus. Its dead Channels step is gone. The sign-in screen and profile picker live at `/login`; PIN profiles show a lock.
+- Status banners say what is wrong in a sentence instead of "Degraded" / "Unavailable"; a missing TMDB key is "Film details and ratings are off. Add a TMDB key in Settings to see them."
+- Live TV: one "Watch what the TV shows" button instead of the "Same as the TV" pseudo-channel, player controls appear once something plays, channel rows say "Play".
+- Channel list: the Check tab is part of Logos ("Channels without a logo", other findings folded below), "Find channels" is "All channels" with one summary sentence; channel logos are looked up by name and show initials when there is none, and no stream address with a password is ever put in a URL.
+- TV Guide: "Films only" / "Rated 7+" only appear when TMDB is set up.
+- Timers: one action visible per row (switch off/on, or delete), the rest under ⋯; status as a word, long titles wrap; AutoTimer explained in a sentence, "Dry run" is "Show what would be recorded".
+- Dashboard edit mode: one way to reorder (drag), no unlabelled width steppers, "Remove from dashboard".
+- Remote: the number keys behind a labelled "123" button. Radio: "In the browser" is the first choice, "Play on the box" the quieter second. Recordings rename: one sentence about the file name versus the title in the box's list instead of a checkbox. Notifications: the browser's "blocked" note only after you tried to switch them on.
+- The change log, curated app descriptions and the Scripts tab are shown in the interface language; tap targets are at least 44 px; Settings, Device and Apps tab bars fade at the edge instead of clipping on a phone; "Reset to default" only shows when the value differs; byte sizes use a decimal only where it helps.
+- Viewers no longer see Apps in the menu (a direct link says only admins can manage apps) and Recordings no longer asks the connectors for them (a 403).
+
+### Fixed
+- About said © 2027; it is 2026.
+
 ## [0.6.0] - 2026-10-13
 
 ### Added

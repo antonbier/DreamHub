@@ -11,7 +11,7 @@
     class="flex h-full flex-col rounded border bg-tile p-4"
     :class="editing ? 'border-dashed border-line' : 'border-line'"
   >
-    <div class="mb-3 flex items-center gap-2">
+    <div class="mb-3 flex flex-wrap items-center gap-x-2 gap-y-1">
       <Icon
         v-if="editing"
         name="menu"
@@ -19,7 +19,7 @@
         class="shrink-0 cursor-grab text-faint"
         :title="t('dashboard.tileFrame.dragHandle')"
       />
-      <h2 class="truncate text-[15.5px] font-semibold">{{ title }}</h2>
+      <h2 class="min-w-0 truncate text-[15.5px] font-semibold" :class="{ 'flex-1': editing }">{{ title }}</h2>
       <span v-if="editing && tile.hidden" class="ms-1 text-[11.5px] text-faint">{{ t('dashboard.tileFrame.hidden') }}</span>
       <span v-if="!editing && meta" class="ms-auto shrink-0 text-[12.5px] text-faint">{{ meta }}</span>
 

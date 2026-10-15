@@ -1893,7 +1893,8 @@
       },
       "showAll": "Alle {n} anzeigen",
       "noneNoPicon": "Alle Sender haben ein Logo.",
-      "others": "Weitere Auffälligkeiten in der Senderliste"
+      "others": "Weitere Auffälligkeiten in der Senderliste",
+      "shown": "{n} Sender | {n} Sender"
     },
     "picons": {
       "explain": "Die Logo-Sets, die auf der Box installiert sind, und wie viele Sender deiner Bouquets sie abdecken. DreamHub zeigt Logos aus dem gewählten Set zuerst — am TV ändert das nichts.",

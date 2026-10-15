@@ -1893,7 +1893,8 @@
       },
       "showAll": "Mostra tutti ({n})",
       "noneNoPicon": "Tutti i canali hanno un logo.",
-      "others": "Altre cose da controllare nella lista"
+      "others": "Altre cose da controllare nella lista",
+      "shown": "{n} canale | {n} canali"
     },
     "picons": {
       "explain": "I set di loghi installati sul box e quanti canali dei tuoi bouquet coprono. DreamHub mostra prima i loghi del set scelto — sulla TV non cambia nulla.",

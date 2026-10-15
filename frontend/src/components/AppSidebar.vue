@@ -201,10 +201,13 @@ const NavLink = defineComponent({
         },
         () => [
           h(Icon, { name: props.item.icon, size: 18 }),
-          !props.collapsed ? h('span', { class: 'truncate' }, hubLabel(props.item)) : null,
-          !props.collapsed && notSetUp(props.item)
-            ? h('span', { class: 'ms-auto shrink-0 text-[11.5px] text-faint' }, t('sidebar.notSetUp'))
-            : props.item.status && props.item.status !== 'available'
+          !props.collapsed
+            ? h('span', { class: 'flex min-w-0 flex-col leading-tight' }, [
+                h('span', { class: 'truncate' }, hubLabel(props.item)),
+                notSetUp(props.item) ? h('span', { class: 'truncate text-[11.5px] text-faint' }, t('sidebar.notSetUp')) : null,
+              ])
+            : null,
+          props.item.status && props.item.status !== 'available' && !notSetUp(props.item)
             ? h('span', {
                 class: [
                   'ms-auto h-1.5 w-1.5 shrink-0 rounded-full',

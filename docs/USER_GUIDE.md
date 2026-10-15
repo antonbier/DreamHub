@@ -139,9 +139,9 @@ Four views, switched at the top; your choice is remembered:
 
 ### Live TV
 
-TV channels right in the browser — on the phone, tablet or PC, no app needed. Pick a channel from the list; **Same as the TV** shows what the box is showing. The box sends its signal unchanged and your device decodes it, so the box itself does no extra work. **Space** pauses, **M** mutes, **F** or a double click switches to full screen; with several audio tracks (another language, Dolby) you choose one under the picture.
+TV channels right in the browser — on the phone, tablet or PC, no app needed. Pick a channel from the list; **Watch what the TV shows** next to the channel list plays what the box is showing. The box sends its signal unchanged and your device decodes it, so the box itself does no extra work. **Space** pauses, **M** mutes, **F** or a double click switches to full screen; with several audio tracks (another language, Dolby) you choose one under the picture.
 
-The box has one tuner: another channel only works while the TV and any recording are on the same frequency. Otherwise the picture says so — **Same as the TV** always works. In the **TV guide**, a programme that's on now has **Watch in the browser** too, and **Home** can show a **Live TV** tile with your channels (switch it on under **Edit**). In **Recordings**, **Watch in the browser** plays a recording, with a bar to jump anywhere in it.
+The box has one tuner: another channel only works while the TV and any recording are on the same frequency. Otherwise the picture says so — **Watch what the TV shows** always works. In the **TV guide**, a programme that's on now has **Watch in the browser** too, and **Home** can show a **Live TV** tile with your channels (switch it on under **Edit**). In **Recordings**, **Watch in the browser** plays a recording, with a bar to jump anywhere in it.
 
 Works in current Chrome, Edge, Firefox and Safari. HD channels use your device's own video decoder; older or very small devices may stutter on HD.
 
@@ -151,7 +151,7 @@ Your radio stations, with what's on now and next where the station sends program
 
 ### Timers
 
-All timers on the box, by day, with likely tuner conflicts marked. **Disable** keeps a timer in the list without recording; **Enable** turns it back on (with a conflict check first). **Delete** removes it — deleting a timer that is recording right now stops that recording, and the preview says so. **Clean up finished** removes every finished one-off timer in one preview (switched-off and repeating timers stay). **AutoTimer** shows the AutoTimer plugin's searches and a dry run of what they would add.
+All timers on the box, by day, with likely tuner conflicts marked. **Disable** keeps a timer in the list without recording; **Enable** turns it back on (with a conflict check first). **Delete** removes it — deleting a timer that is recording right now stops that recording, and the preview says so. **Clean up finished** removes every finished one-off timer in one preview (switched-off and repeating timers stay). **AutoTimer** records everything that matches its rules automatically; the page lists them, and **Show what would be recorded** previews what they would add. Each row has one action in sight (switch off/on, or delete when it can't be switched); the rest is under **⋯**.
 
 ### Recommendations
 
@@ -159,7 +159,7 @@ AI picks from a bouquet's programme for the next hours, optionally fitted to you
 
 ### Channel list
 
-Your bouquets, editable on the phone (admins). Move channels (buttons, or drag on a computer), put one on a given number, rename, remove, add from all the channels the box knows, add headings; create, rename and delete bouquets. **New since** shows the channels a channel scan brought, **Check** lists what deserves a look (channels gone after a scan, twice in a bouquet, without programme data or logo), **Logos** shows the installed logo sets and lets you pick the one DreamHub uses — and, for a single channel, a different logo: from any installed set, your own picture, or one found in the public TV-logos collection (also from the check's "Without a logo" list). That choice only changes DreamHub's screens, never the TV, and **Back to automatic** undoes it. **Find channels → Refresh the list from the box** reads the box's current channel list; it does not search for new channels. Every change is collected and shown as one preview ("ZDF HD moves from 14 to 2"); applying makes a backup of the whole channel list first and restores it by itself if the result isn't what was previewed. Older backups can be restored. Needs the BouquetEditor plugin on the box.
+Your bouquets, editable on the phone (admins). Move channels (buttons, or drag on a computer), put one on a given number, rename, remove, add from all the channels the box knows, add headings; create, rename and delete bouquets. **All channels** searches everything the box knows (new ones, ones in no bouquet, HD, by provider), **Logos** lists the channels without a logo and what else deserves a look (channels gone after a scan, twice in a bouquet, without programme data), shows the installed logo sets and lets you pick the one DreamHub uses — and, for a single channel, a different logo: from any installed set, your own picture, or one found in the public TV-logos collection (also from the check's "Without a logo" list). That choice only changes DreamHub's screens, never the TV, and **Back to automatic** undoes it. The list always reads the box's current channel list; it does not search for new channels — run a channel scan on the box for that. Every change is collected and shown as one preview ("ZDF HD moves from 14 to 2"); applying makes a backup of the whole channel list first and restores it by itself if the result isn't what was previewed. Older backups can be restored. Needs the BouquetEditor plugin on the box.
 
 ### Remote
 
@@ -169,7 +169,7 @@ A remote control for the box in the browser, with a live picture of the TV scree
 
 **Overview** shows the box, its disks, and the **Change log** of every change made through DreamHub. **Diagnostics** runs the box self-test. **Backup and restore** of DreamHub's own settings and dashboard are under **Settings → System** (admins installing apps through AppsHub can also include each app's own configuration in that backup).
 
-**Administration** (admins only) shows the box's **services** — enigma2, DreamHub, Samba and the others — with their state; **Restart** (or **Start**, when one is down) shows first what it interrupts, such as a recording running right now. Below that, logs — DreamHub's own and the box's — live if you like; **Logs** next to a service shows just its lines, and crash logs.
+**Services & logs** (admins only) shows the box's **services** — enigma2, DreamHub, Samba and the others — with their state; **Restart** (or **Start**, when one is down) shows first what it interrupts, such as a recording running right now. Below that, logs — DreamHub's own and the box's — live if you like; **Logs** next to a service shows just its lines, and crash logs.
 
 **Advanced** (admins only) is for people who know their way around a shell: a **script library** (upload a script, run it with a confirm) and a **terminal** — off by default, needs DreamHub's own password protection turned on and re-entered to switch on, with a standing warning while it's on.
 
@@ -231,6 +231,6 @@ Privacy: a message's text (a recording's or series' title, a channel name) passe
 - **"Could not reach WebControl":** the box's interface is restarting or busy (after an update, enigma2 takes a moment), or it now asks for a login — enter it under **Settings → Services → WebControl**.
 - **File actions are missing in Recordings:** they need DreamHub to run on the box itself; the page says so when they're not available.
 - **No pictures:** add a TMDB key and make sure *Load pictures, ratings and overviews* is on (Settings → Services → TMDB).
-- **More detail for a bug report:** **Device → Administration → Logs**, set the level to *debug* for a while (it switches back by itself).
+- **More detail for a bug report:** **Device → Services & logs → Logs**, set the level to *debug* for a while (it switches back by itself).
 
 Problems and ideas: the repository's issue tracker on GitHub.

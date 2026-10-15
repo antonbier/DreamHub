@@ -1893,7 +1893,8 @@
       },
       "showAll": "Show all {n}",
       "noneNoPicon": "Every channel has a logo.",
-      "others": "Other things to check in the list"
+      "others": "Other things to check in the list",
+      "shown": "{n} channel | {n} channels"
     },
     "picons": {
       "explain": "The logo sets installed on the box, and how many channels of your bouquets each covers. DreamHub shows logos from the chosen set first — nothing changes on the TV.",

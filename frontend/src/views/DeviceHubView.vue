@@ -322,6 +322,8 @@ import { useDisplayTimeZone } from '@/composables/useDisplayTimeZone'
 import type { ChangeEntry, CrashLog, DeviceInfo, HubStatus, LogEntry, LogLevel, Profile } from '@/api/types'
 
 const { t, te, locale } = useI18n()
+const tabBar = ref<HTMLElement | null>(null)
+const { more: tabsMore, measure: measureTabs } = useScrollMore(tabBar)
 const { hubLabel, hubTitle } = useHubLabel()
 const { lastFriendly } = useFriendlyError()
 const route = useRoute()

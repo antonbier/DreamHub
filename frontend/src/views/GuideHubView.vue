@@ -238,6 +238,7 @@ const bouquetsLoading = ref(true)
 const bouquetsFailed = ref(false)
 
 onMounted(async () => {
+  void enrich.probe()
   applyAt(route.query.at)
   try {
     const res = await api.guide.bouquets()

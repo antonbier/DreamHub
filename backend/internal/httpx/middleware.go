@@ -71,6 +71,10 @@ func RequestIDAndLogging(logger *slog.Logger, now func() time.Time, next http.Ha
 		if r.Method == http.MethodPost && r.URL.Path == "/api/v1/extensions/register" && rec.status < 400 {
 			level = slog.LevelDebug
 		}
+		// A channel without a logo is the normal case, not an event.
+		if rec.status == http.StatusNotFound && strings.HasSuffix(r.URL.Path, "/picon") {
+			level = slog.LevelDebug
+		}
 		logger.Log(r.Context(), level, "request",
 			"requestId", id, "method", r.Method, "path", r.URL.Path,
 			"status", rec.status, "durationMs", now().Sub(start).Milliseconds())

@@ -2,6 +2,8 @@ package hubs
 
 import (
 	"bytes"
+	"crypto/sha256"
+	"encoding/hex"
 	"image"
 	"image/color"
 	"image/draw"
@@ -10,8 +12,10 @@ import (
 	"image/png"
 	"io"
 	"net/http"
+	"net/url"
 	"os"
 	"path/filepath"
+	"regexp"
 	"strings"
 	"sync"
 
@@ -45,12 +49,33 @@ func logoDirectory() string {
 
 // logoKey is a service reference as a file name, the way picon files are
 // named ("1_0_19_2EE3_441_1_C00000_0_0_0"); "" if ref isn't one.
+//
+// An IPTV reference carries the stream URL after its ten fields, possibly
+// with credentials ("rtsp://user:pass@host/…"), and many of them share the
+// same ten fields. Those get a short hash of the URL without its user info
+// appended, so the key is unique per stream and never holds a credential.
 func logoKey(ref string) string {
 	m := piconRef.FindString(ref)
 	if m == "" {
 		return ""
 	}
-	return strings.ToUpper(strings.ReplaceAll(strings.TrimRight(m, ":"), ":", "_"))
+	key := strings.ToUpper(strings.ReplaceAll(strings.TrimRight(m, ":"), ":", "_"))
+	if rest := strings.TrimLeft(ref[len(m):], ":"); strings.Contains(strings.ToLower(rest), "//") || strings.Contains(strings.ToLower(rest), "%3a") {
+		sum := sha256.Sum256([]byte(stripUserinfo(rest)))
+		key += "_H" + hex.EncodeToString(sum[:4])
+	}
+	return key
+}
+
+var userinfoRe = regexp.MustCompile(`//[^/@\s]*@`)
+
+// stripUserinfo removes "user:pass@" from the stream URL in an IPTV
+// service reference's tail (percent-encoded or not).
+func stripUserinfo(rest string) string {
+	if dec, err := url.PathUnescape(rest); err == nil {
+		rest = dec
+	}
+	return userinfoRe.ReplaceAllString(rest, "//")
 }
 
 // readLogoOverride returns the hand-chosen logo of ref, if there is one.

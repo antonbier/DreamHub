@@ -53,3 +53,13 @@ func TestRequestLoggingQuietsExtensionReRegistration(t *testing.T) {
 		t.Fatal("a failed registration must still be logged")
 	}
 }
+
+func TestRequestLoggingQuietsMissingPicon(t *testing.T) {
+	var buf bytes.Buffer
+	logger := slog.New(slog.NewTextHandler(&buf, &slog.HandlerOptions{Level: slog.LevelInfo}))
+	h := RequestIDAndLogging(logger, time.Now, http.NotFoundHandler())
+	h.ServeHTTP(httptest.NewRecorder(), httptest.NewRequest("GET", "/api/v1/guide/picon?ref=x", nil))
+	if buf.Len() != 0 {
+		t.Fatalf("missing picon logged at INFO: %s", buf.String())
+	}
+}

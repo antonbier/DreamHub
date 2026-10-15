@@ -68,7 +68,7 @@ func TestAdminPackages_Needed(t *testing.T) {
 	if !ff.Missing || ff.Version != "" || len(ff.NeededBy) != 1 || ff.NeededBy[0] != "media" {
 		t.Errorf("ffmpeg: %+v", ff)
 	}
-	if !ov.Missing || len(ov.NeededBy) != 1 || ov.NeededBy[0] != "AppsHub" {
+	if !ov.Missing || len(ov.NeededBy) != 1 || ov.NeededBy[0] != "apps" {
 		t.Errorf("overlay: %+v", ov)
 	}
 

@@ -229,13 +229,11 @@
       "mediaRecent": "Neueste Aufnahmen"
     },
     "tileFrame": {
-      "hide": "Ausblenden",
-      "show": "Einblenden",
+      "hide": "Von der Startseite entfernen",
+      "show": "Auf der Startseite zeigen",
       "hidden": "Ausgeblendet",
-      "widthDecrease": "Schmaler",
-      "widthIncrease": "Breiter",
       "dragHandle": "Zum Umsortieren ziehen",
-      "remove": "Entfernen"
+      "remove": "Kachel löschen"
     },
     "timersTile": {
       "empty": "Keine anstehenden Timer.",
@@ -1379,10 +1377,11 @@
     },
     "pad": {
       "title": "Fernbedienung",
-      "digits": "Ziffern",
+      "digits": "123",
       "volume": "Vol",
       "channel": "P",
-      "keyboardHint": "Tastatur: Pfeile, Enter = OK, ⌫ = Zurück, 0–9, Bild↑/↓ = Programm, +/− = Lautstärke"
+      "keyboardHint": "Tastatur: Pfeile, Enter = OK, ⌫ = Zurück, 0–9, Bild↑/↓ = Programm, +/− = Lautstärke",
+      "digitsHint": "Zifferntasten ein- oder ausblenden"
     },
     "keys": {
       "up": "Hoch",

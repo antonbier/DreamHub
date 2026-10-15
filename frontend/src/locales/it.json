@@ -229,13 +229,11 @@
       "mediaRecent": "Registrazioni recenti"
     },
     "tileFrame": {
-      "hide": "Nascondi",
-      "show": "Mostra",
+      "hide": "Rimuovi dalla dashboard",
+      "show": "Mostra nella dashboard",
       "hidden": "Nascosta",
-      "widthDecrease": "Più stretta",
-      "widthIncrease": "Più larga",
       "dragHandle": "Trascina per riordinare",
-      "remove": "Rimuovi"
+      "remove": "Elimina scheda"
     },
     "timersTile": {
       "empty": "Nessun timer in programma.",
@@ -1379,10 +1377,11 @@
     },
     "pad": {
       "title": "Telecomando",
-      "digits": "Cifre",
+      "digits": "123",
       "volume": "Vol",
       "channel": "P",
-      "keyboardHint": "Tastiera: frecce, Invio = OK, ⌫ = indietro, 0–9, PagSu/PagGiù = canale, +/− = volume"
+      "keyboardHint": "Tastiera: frecce, Invio = OK, ⌫ = indietro, 0–9, PagSu/PagGiù = canale, +/− = volume",
+      "digitsHint": "Mostra o nascondi i tasti numerici"
     },
     "keys": {
       "up": "Su",

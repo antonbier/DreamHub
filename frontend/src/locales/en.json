@@ -229,13 +229,11 @@
       "mediaRecent": "Recent recordings"
     },
     "tileFrame": {
-      "hide": "Hide",
-      "show": "Show",
+      "hide": "Remove from dashboard",
+      "show": "Show on dashboard",
       "hidden": "Hidden",
-      "widthDecrease": "Narrower",
-      "widthIncrease": "Wider",
       "dragHandle": "Drag to reorder",
-      "remove": "Remove"
+      "remove": "Delete tile"
     },
     "timersTile": {
       "empty": "No upcoming timers.",
@@ -1379,10 +1377,11 @@
     },
     "pad": {
       "title": "Remote",
-      "digits": "Digits",
+      "digits": "123",
       "volume": "Vol",
       "channel": "CH",
-      "keyboardHint": "Keyboard: arrows, Enter = OK, ⌫ = back, 0–9, PgUp/PgDn = channel, +/− = volume"
+      "keyboardHint": "Keyboard: arrows, Enter = OK, ⌫ = back, 0–9, PgUp/PgDn = channel, +/− = volume",
+      "digitsHint": "Show or hide the number keys"
     },
     "keys": {
       "up": "Up",

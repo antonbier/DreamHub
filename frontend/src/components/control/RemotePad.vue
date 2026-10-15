@@ -35,7 +35,10 @@
       <button
         v-if="compact"
         type="button"
-        class="rounded px-2 py-1 text-[12.5px] text-muted hover:bg-tile-2 hover:text-text"
+        class="tap rounded border border-line px-3 py-1 text-[13px] font-semibold tabular-nums text-text hover:bg-tile-2"
+        :class="{ 'bg-tile-2': digitsShown }"
+        :title="t('control.pad.digitsHint')"
+        :aria-label="t('control.pad.digitsHint')"
         :aria-expanded="digitsShown"
         @click="digitsShown = !digitsShown"
       >

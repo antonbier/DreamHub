@@ -26,6 +26,8 @@ package dockerd
 
 import (
 	"context"
+	"crypto/sha256"
+	"encoding/hex"
 	"errors"
 	"io"
 	"path"
@@ -97,6 +99,48 @@ func ValidName(n string) bool {
 	return true
 }
 
+// RollbackRepo is the image repository prefix under which the image a
+// container ran before an update is kept (App14): one tag per app (and
+// service), "dreamhub-rollback/<app>[.<service>]:previous". The names are
+// built here from the container's own labels, never taken from a caller.
+const (
+	RollbackRepo = "dreamhub-rollback/"
+	RollbackTag  = "previous"
+)
+
+// KeptRef is the rollback image reference of an app's container (service ""
+// is the main one).
+func KeptRef(appID, service string) string {
+	name := appID
+	if service != "" {
+		name += "." + service
+	}
+	return RollbackRepo + name + ":" + RollbackTag
+}
+
+// originTag is a second rollback name that remembers which image name the
+// kept image had when it was in use ("origin-" and a hash of it). Restoring
+// a kept image only ever gives it back that name, so the call can't be
+// used to put an image under some other name.
+func originTag(ref string) string {
+	sum := sha256.Sum256([]byte(ref))
+	return "origin-" + hex.EncodeToString(sum[:])[:24]
+}
+
+// keptOf is the inverse of KeptRef for one RepoTags entry.
+func keptOf(ref string) (appID, service string, ok bool) {
+	rest, found := strings.CutPrefix(ref, RollbackRepo)
+	if !found {
+		return "", "", false
+	}
+	name, tag, found := strings.Cut(rest, ":")
+	if !found || tag != RollbackTag || name == "" {
+		return "", "", false
+	}
+	appID, service, _ = strings.Cut(name, ".")
+	return appID, service, true
+}
+
 // Container is one container this package is willing to talk about,
 // trimmed to what AppsHub needs.
 type Container struct {
@@ -112,6 +156,10 @@ type Container struct {
 	// itself; it's always read live, so it survives a restart without
 	// going stale.
 	HostPort int `json:"hostPort,omitempty"`
+	// RestartCount is how often the daemon restarted the container by its
+	// restart policy (read from the container's own state, 0 when unknown):
+	// what the crash-loop notice (App14) counts.
+	RestartCount int `json:"restartCount,omitempty"`
 }
 
 // AppID is the Labels[AppLabel] value, or "" if unset (Client
@@ -143,6 +191,19 @@ type PruneResult struct {
 	Removed        int   `json:"removed"`
 	ReclaimedBytes int64 `json:"reclaimedBytes"`
 }
+
+// KeptImage is an image kept for "Roll back": what an app's container ran
+// before its last update.
+type KeptImage struct {
+	AppID   string `json:"appId"`
+	Service string `json:"service,omitempty"`
+	ImageID string `json:"imageId"`
+	// SizeBytes is what removing it alone would free.
+	SizeBytes int64 `json:"sizeBytes"`
+}
+
+// ErrNoKeptImage means a create from the kept image found none.
+var ErrNoKeptImage = errors.New("dockerd: no previous image is kept for this app")
 
 // ErrNotFound means no container with that id carries AppLabel.
 var ErrNotFound = errors.New("dockerd: no such app container")
@@ -218,6 +279,12 @@ type ContainerSpec struct {
 	// (Create refuses this — AppsHub always sets one, see
 	// docs/APPSHUB_PLAN.md's resource-budget decision).
 	MemoryLimitBytes int64
+	// FromKept creates the container from the image kept for this app
+	// (and service) instead of pulling Image: the kept image gets Image's
+	// name back first, so the container looks exactly like one that was
+	// never updated. Create fails with ErrNoKeptImage when none is kept.
+	// This is how "Roll back" and a failed update's undo work.
+	FromKept bool
 }
 
 // Client is the whitelisted Docker API subset, implemented by Exec (real
@@ -266,7 +333,8 @@ type Client interface {
 	// id isn't AppLabel-tagged, ErrUnavailable if it isn't running.
 	Attach(ctx context.Context, id string) (io.ReadWriteCloser, error)
 	// UnusedImages lists the images no container uses (running or stopped,
-	// of any app), the ones PruneImages would remove. Read-only; takes no
+	// of any app) except the kept rollback images — the ones PruneImages
+	// would remove. Read-only; takes no
 	// argument, so nothing about it can be steered by the caller.
 	UnusedImages(ctx context.Context) ([]Image, error)
 	// PruneImages removes every unused image — exactly what UnusedImages
@@ -274,6 +342,18 @@ type Client interface {
 	// container uses, and the helper holds off while an install pulls one.
 	// Containers, volumes, networks and build cache are never touched.
 	PruneImages(ctx context.Context) (PruneResult, error)
+	// KeepImage remembers the image a container runs under its rollback
+	// name (KeptRef), replacing what was kept for that app and service
+	// before — one level only. Returns the image's ID. ErrNotFound if id
+	// isn't AppLabel-tagged.
+	KeepImage(ctx context.Context, id string) (string, error)
+	// KeptImages lists the images kept for rollback. Read-only.
+	KeptImages(ctx context.Context) ([]KeptImage, error)
+	// DropKeptImages gives up the kept images of one app (appID "" = all
+	// apps): their rollback names go, and with them the images when nothing
+	// else uses them. The names come from the kept list, nothing else can
+	// be removed through it.
+	DropKeptImages(ctx context.Context, appID string) (PruneResult, error)
 }
 
 // drainClosed discards and closes r, for defer sites that don't care

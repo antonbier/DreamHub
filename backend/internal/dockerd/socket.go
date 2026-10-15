@@ -12,6 +12,7 @@ import (
 	"net"
 	"net/http"
 	"net/url"
+	"slices"
 	"strconv"
 	"strings"
 	"sync"
@@ -150,9 +151,37 @@ func (e Exec) List(ctx context.Context) ([]Container, error) {
 		if _, ok := c.Labels[AppLabel]; !ok {
 			continue
 		}
-		out = append(out, fromDocker(c))
+		cc := fromDocker(c)
+		cc.RestartCount = e.restartCount(ctx, c.ID)
+		out = append(out, cc)
 	}
 	return out, nil
+}
+
+// restartCount reads how often the daemon restarted a container (0 when it
+// can't be read — the crash-loop notice then simply doesn't see it).
+func (e Exec) restartCount(ctx context.Context, id string) int {
+	resp, err := e.do(ctx, http.MethodGet, "/containers/"+url.PathEscape(id)+"/json", nil)
+	if err != nil {
+		return 0
+	}
+	defer drainClosed(resp.Body)
+	if resp.StatusCode != http.StatusOK {
+		return 0
+	}
+	var insp struct {
+		State struct {
+			RestartCount int `json:"RestartCount"`
+		} `json:"State"`
+		RestartCount int `json:"RestartCount"` // older daemons keep it at the top
+	}
+	if json.NewDecoder(resp.Body).Decode(&insp) != nil {
+		return 0
+	}
+	if insp.State.RestartCount > 0 {
+		return insp.State.RestartCount
+	}
+	return insp.RestartCount
 }
 
 // owns reports whether id carries AppLabel, the gate every mutating or
@@ -344,7 +373,11 @@ func (e Exec) Create(ctx context.Context, spec ContainerSpec) (Container, error)
 		return Container{}, ErrAlreadyExists
 	}
 
-	if err := e.pullImage(ctx, spec.Image); err != nil {
+	if spec.FromKept {
+		if err := e.restoreKept(ctx, spec); err != nil {
+			return Container{}, err
+		}
+	} else if err := e.pullImage(ctx, spec.Image); err != nil {
 		return Container{}, err
 	}
 
@@ -658,10 +691,55 @@ func demux(raw []byte) []byte {
 	return out.Bytes()
 }
 
-// UnusedImages lists the images that no container (of any kind, running or
-// stopped) uses. Dangling or tagged alike; intermediate layers the daemon
-// hides by default stay hidden.
-func (e Exec) UnusedImages(ctx context.Context) ([]Image, error) {
+// imageRow is one entry of the daemon's image list.
+type imageRow struct {
+	ID         string   `json:"Id"`
+	RepoTags   []string `json:"RepoTags"`
+	Size       int64    `json:"Size"`
+	SharedSize int64    `json:"SharedSize"`
+}
+
+func (r imageRow) own() int64 {
+	own := r.Size
+	if r.SharedSize > 0 {
+		own -= r.SharedSize
+	}
+	if own < 0 {
+		own = 0
+	}
+	return own
+}
+
+// kept reports whether the image carries a rollback name.
+func (r imageRow) kept() bool {
+	for _, t := range r.RepoTags {
+		if _, _, ok := keptOf(t); ok {
+			return true
+		}
+	}
+	return false
+}
+
+func (e Exec) listImages(ctx context.Context) ([]imageRow, error) {
+	resp, err := e.do(ctx, http.MethodGet, "/images/json?shared-size=1", nil)
+	if err != nil {
+		return nil, err
+	}
+	defer drainClosed(resp.Body)
+	if resp.StatusCode != http.StatusOK {
+		return nil, fmt.Errorf("dockerd: list images: unexpected status %d", resp.StatusCode)
+	}
+	var imgs []imageRow
+	if err := json.NewDecoder(resp.Body).Decode(&imgs); err != nil {
+		return nil, err
+	}
+	return imgs, nil
+}
+
+// unusedRows are the images no container (of any kind, running or stopped)
+// uses, kept rollback images aside. Dangling or tagged alike; intermediate
+// layers the daemon hides by default stay hidden.
+func (e Exec) unusedRows(ctx context.Context) ([]imageRow, error) {
 	resp, err := e.do(ctx, http.MethodGet, "/containers/json?all=1", nil)
 	if err != nil {
 		return nil, err
@@ -681,77 +759,273 @@ func (e Exec) UnusedImages(ctx context.Context) ([]Image, error) {
 	for _, c := range cs {
 		used[c.ImageID] = true
 	}
-
-	resp, err = e.do(ctx, http.MethodGet, "/images/json?shared-size=1", nil)
+	imgs, err := e.listImages(ctx)
 	if err != nil {
 		return nil, err
 	}
-	defer drainClosed(resp.Body)
-	if resp.StatusCode != http.StatusOK {
-		return nil, fmt.Errorf("dockerd: list images: unexpected status %d", resp.StatusCode)
-	}
-	var imgs []struct {
-		ID         string   `json:"Id"`
-		RepoTags   []string `json:"RepoTags"`
-		Size       int64    `json:"Size"`
-		SharedSize int64    `json:"SharedSize"`
-	}
-	if err := json.NewDecoder(resp.Body).Decode(&imgs); err != nil {
-		return nil, err
-	}
-	out := []Image{}
+	var out []imageRow
 	for _, i := range imgs {
-		if used[i.ID] {
-			continue
+		if !used[i.ID] && !i.kept() {
+			out = append(out, i)
 		}
-		own := i.Size
-		if i.SharedSize > 0 {
-			own -= i.SharedSize
-		}
-		if own < 0 {
-			own = 0
-		}
-		tags := i.RepoTags
-		if tags == nil {
-			tags = []string{}
-		}
-		out = append(out, Image{ID: i.ID, Tags: tags, SizeBytes: own})
 	}
 	return out, nil
 }
 
-// PruneImages is Docker's own "image prune -a": the filter is fixed here
-// (dangling=false means every unused image, not only untagged ones), no part
-// of it comes from a caller.
+func (e Exec) UnusedImages(ctx context.Context) ([]Image, error) {
+	rows, err := e.unusedRows(ctx)
+	if err != nil {
+		return nil, err
+	}
+	out := []Image{}
+	for _, i := range rows {
+		tags := i.RepoTags
+		if tags == nil {
+			tags = []string{}
+		}
+		out = append(out, Image{ID: i.ID, Tags: tags, SizeBytes: i.own()})
+	}
+	return out, nil
+}
+
+// removeImage deletes one image by id (forced: it is unused, and an image
+// with two names would otherwise refuse), reporting whether the daemon
+// really deleted it.
+func (e Exec) removeImage(ctx context.Context, ref string) (bool, error) {
+	resp, err := e.do(ctx, http.MethodDelete, "/images/"+refPath(ref)+"?force=1", nil)
+	if err != nil {
+		return false, err
+	}
+	defer drainClosed(resp.Body)
+	switch resp.StatusCode {
+	case http.StatusOK:
+		var out []struct {
+			Deleted string `json:"Deleted"`
+		}
+		_ = json.NewDecoder(resp.Body).Decode(&out)
+		for _, d := range out {
+			if d.Deleted != "" {
+				return true, nil
+			}
+		}
+		return false, nil
+	case http.StatusNotFound:
+		return false, nil
+	default:
+		return false, fmt.Errorf("dockerd: remove image: unexpected status %d", resp.StatusCode)
+	}
+}
+
+// PruneImages removes every unused image — what UnusedImages lists, nothing
+// a caller selects — except the images kept for rollback. (Docker's own
+// "image prune -a" can't leave those out, so the list is walked instead.)
 func (e Exec) PruneImages(ctx context.Context) (PruneResult, error) {
 	imageMu.Lock()
 	defer imageMu.Unlock()
-	filters, err := json.Marshal(map[string][]string{"dangling": {"false"}})
+	rows, err := e.unusedRows(ctx)
 	if err != nil {
 		return PruneResult{}, err
 	}
-	resp, err := e.do(ctx, http.MethodPost, "/images/prune?"+url.Values{"filters": {string(filters)}}.Encode(), nil)
-	if err != nil {
-		return PruneResult{}, err
-	}
-	defer drainClosed(resp.Body)
-	if resp.StatusCode != http.StatusOK {
-		return PruneResult{}, fmt.Errorf("dockerd: prune images: unexpected status %d", resp.StatusCode)
-	}
-	var out struct {
-		ImagesDeleted []struct {
-			Deleted string `json:"Deleted"`
-		} `json:"ImagesDeleted"`
-		SpaceReclaimed int64 `json:"SpaceReclaimed"`
-	}
-	if err := json.NewDecoder(resp.Body).Decode(&out); err != nil {
-		return PruneResult{}, err
-	}
-	res := PruneResult{ReclaimedBytes: out.SpaceReclaimed}
-	for _, d := range out.ImagesDeleted {
-		if d.Deleted != "" {
+	var res PruneResult
+	for _, i := range rows {
+		deleted, err := e.removeImage(ctx, i.ID)
+		if err != nil {
+			return res, err
+		}
+		if deleted {
 			res.Removed++
+			res.ReclaimedBytes += i.own()
 		}
 	}
 	return res, nil
+}
+
+// imageIDOf reads the image id and labels of a container the helper owns.
+func (e Exec) imageIDOf(ctx context.Context, id string) (imageID string, labels map[string]string, origin string, err error) {
+	resp, err := e.do(ctx, http.MethodGet, "/containers/"+url.PathEscape(id)+"/json", nil)
+	if err != nil {
+		return "", nil, "", err
+	}
+	var insp struct {
+		Image  string `json:"Image"`
+		Config struct {
+			Image  string            `json:"Image"`
+			Labels map[string]string `json:"Labels"`
+		} `json:"Config"`
+	}
+	decErr := json.NewDecoder(resp.Body).Decode(&insp)
+	drainClosed(resp.Body)
+	if resp.StatusCode == http.StatusNotFound {
+		return "", nil, "", ErrNotFound
+	}
+	if resp.StatusCode != http.StatusOK {
+		return "", nil, "", fmt.Errorf("dockerd: inspect: unexpected status %d", resp.StatusCode)
+	}
+	if decErr != nil {
+		return "", nil, "", decErr
+	}
+	if _, ok := insp.Config.Labels[AppLabel]; !ok {
+		return "", nil, "", ErrNotFound
+	}
+	return insp.Image, insp.Config.Labels, insp.Config.Image, nil
+}
+
+// tagImage gives an image another name.
+func (e Exec) tagImage(ctx context.Context, image, ref string) error {
+	repo, tag := splitRef(ref)
+	resp, err := e.do(ctx, http.MethodPost, "/images/"+refPath(image)+"/tag?"+url.Values{"repo": {repo}, "tag": {tag}}.Encode(), nil)
+	if err != nil {
+		return err
+	}
+	defer drainClosed(resp.Body)
+	if resp.StatusCode != http.StatusCreated {
+		return fmt.Errorf("dockerd: tag image: unexpected status %d", resp.StatusCode)
+	}
+	return nil
+}
+
+// refPath is an image name or id as a URL path: the slashes in a repository
+// name stay slashes, as the daemon's own CLI sends them.
+func refPath(ref string) string { return strings.ReplaceAll(url.PathEscape(ref), "%2F", "/") }
+
+// splitRef splits "registry:5000/repo/name:tag" at the tag; no tag is latest.
+func splitRef(ref string) (repo, tag string) {
+	slash := strings.LastIndex(ref, "/")
+	if colon := strings.LastIndex(ref, ":"); colon > slash {
+		return ref[:colon], ref[colon+1:]
+	}
+	return ref, "latest"
+}
+
+func (e Exec) KeepImage(ctx context.Context, id string) (string, error) {
+	imageMu.Lock()
+	defer imageMu.Unlock()
+	imageID, labels, origin, err := e.imageIDOf(ctx, id)
+	if err != nil {
+		return "", err
+	}
+	app, svc := labels[AppLabel], labels[ServiceLabel]
+	// One level: what was kept before gives up its origin name (the image
+	// keeps its :previous name until that moves below).
+	if err := e.untagOrigins(ctx, app, svc); err != nil {
+		return "", err
+	}
+	if err := e.tagImage(ctx, imageID, KeptRef(app, svc)); err != nil {
+		return "", err
+	}
+	if origin != "" {
+		repo, _ := splitRef(KeptRef(app, svc))
+		if err := e.tagImage(ctx, imageID, repo+":"+originTag(origin)); err != nil {
+			return "", err
+		}
+	}
+	return imageID, nil
+}
+
+// untagOrigins removes the origin names of an app's kept image.
+func (e Exec) untagOrigins(ctx context.Context, app, svc string) error {
+	imgs, err := e.listImages(ctx)
+	if err != nil {
+		return err
+	}
+	repo, _ := splitRef(KeptRef(app, svc))
+	for _, i := range imgs {
+		for _, t := range i.RepoTags {
+			if strings.HasPrefix(t, repo+":origin-") {
+				if _, err := e.removeImage(ctx, t); err != nil {
+					return err
+				}
+			}
+		}
+	}
+	return nil
+}
+
+func (e Exec) KeptImages(ctx context.Context) ([]KeptImage, error) {
+	imgs, err := e.listImages(ctx)
+	if err != nil {
+		return nil, err
+	}
+	out := []KeptImage{}
+	for _, i := range imgs {
+		for _, t := range i.RepoTags {
+			if app, svc, ok := keptOf(t); ok {
+				out = append(out, KeptImage{AppID: app, Service: svc, ImageID: i.ID, SizeBytes: i.own()})
+			}
+		}
+	}
+	return out, nil
+}
+
+func (e Exec) DropKeptImages(ctx context.Context, appID string) (PruneResult, error) {
+	imageMu.Lock()
+	defer imageMu.Unlock()
+	if appID != "" && !appIDRe.MatchString(appID) {
+		return PruneResult{}, refuse("invalid", "", "the app id %q is not valid", appID)
+	}
+	imgs, err := e.listImages(ctx)
+	if err != nil {
+		return PruneResult{}, err
+	}
+	var res PruneResult
+	for _, i := range imgs {
+		var names []string // origin names first, :previous last — that one takes the image with it
+		var previous string
+		app := ""
+		for _, t := range i.RepoTags {
+			if a, _, ok := keptOf(t); ok {
+				previous, app = t, a
+			} else if strings.HasPrefix(t, RollbackRepo) {
+				names = append(names, t)
+			}
+		}
+		if previous == "" || (appID != "" && app != appID) {
+			continue
+		}
+		names = append(names, previous)
+		deleted := false
+		for _, n := range names {
+			d, err := e.removeImage(ctx, n)
+			if err != nil {
+				return res, err
+			}
+			deleted = deleted || d
+		}
+		if deleted {
+			res.Removed++
+			res.ReclaimedBytes += i.own()
+		}
+	}
+	return res, nil
+}
+
+// restoreKept gives the kept image of spec's app and service the name
+// spec.Image has, so a container created from that name runs it. Only the
+// name the image was kept under is accepted (see originTag).
+func (e Exec) restoreKept(ctx context.Context, spec ContainerSpec) error {
+	kept := KeptRef(spec.AppID, spec.Service)
+	resp, err := e.do(ctx, http.MethodGet, "/images/"+refPath(kept)+"/json", nil)
+	if err != nil {
+		return err
+	}
+	var insp struct {
+		RepoTags []string `json:"RepoTags"`
+	}
+	decErr := json.NewDecoder(resp.Body).Decode(&insp)
+	drainClosed(resp.Body)
+	if resp.StatusCode == http.StatusNotFound {
+		return ErrNoKeptImage
+	}
+	if resp.StatusCode != http.StatusOK {
+		return fmt.Errorf("dockerd: inspect kept image: unexpected status %d", resp.StatusCode)
+	}
+	if decErr != nil {
+		return decErr
+	}
+	repo, _ := splitRef(kept)
+	want := repo + ":" + originTag(spec.Image)
+	if !slices.Contains(insp.RepoTags, want) {
+		return refuse("invalid", "", "the kept image of %s was not in use as %s", spec.AppID, spec.Image)
+	}
+	return e.tagImage(ctx, kept, spec.Image)
 }

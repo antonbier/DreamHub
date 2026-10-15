@@ -41,7 +41,7 @@ func fakeDaemon(t *testing.T) (sockPath string, close func()) {
 	})
 	mux.HandleFunc("GET /containers/abc123/json", func(w http.ResponseWriter, r *http.Request) {
 		w.Header().Set("Content-Type", "application/json")
-		_, _ = w.Write([]byte(`{"Image":"sha256:imageid1","Config":{"Labels":{"dreamhub.app":"pihole"}}}`))
+		_, _ = w.Write([]byte(`{"Image":"sha256:imageid1","State":{"RestartCount":3},"Config":{"Labels":{"dreamhub.app":"pihole"}}}`))
 	})
 	mux.HandleFunc("GET /images/sha256:imageid1/json", func(w http.ResponseWriter, r *http.Request) {
 		w.Header().Set("Content-Type", "application/json")
@@ -129,9 +129,11 @@ func fakeDaemon(t *testing.T) (sockPath string, close func()) {
 			`{"Id":"sha256:old1","RepoTags":["a/a:0"],"Size":100000000,"SharedSize":60000000},` +
 			`{"Id":"sha256:dangling1","RepoTags":null,"Size":5000,"SharedSize":-1}]`))
 	})
-	mux.HandleFunc("POST /images/prune", func(w http.ResponseWriter, r *http.Request) {
-		lastPruneFilters = r.URL.Query().Get("filters")
-		_, _ = w.Write([]byte(`{"ImagesDeleted":[{"Untagged":"a/a:0"},{"Deleted":"sha256:old1"},{"Deleted":"sha256:dangling1"}],"SpaceReclaimed":123}`))
+	// Deleting an image by id (the prune walks its own list; Docker's
+	// "prune -a" is never called).
+	mux.HandleFunc("DELETE /images/{id}", func(w http.ResponseWriter, r *http.Request) {
+		deletedImages = append(deletedImages, r.PathValue("id")+"?"+r.URL.RawQuery)
+		_, _ = w.Write([]byte(`[{"Untagged":"x"},{"Deleted":"` + r.PathValue("id") + `"}]`))
 	})
 
 	srv := &httptest.Server{Listener: listener, Config: &http.Server{Handler: mux}}
@@ -410,9 +412,8 @@ func TestExec_CreateElevatedAndRefusals(t *testing.T) {
 	}
 }
 
-// lastPruneFilters is the filters query the fake daemon saw on the last
-// prune request.
-var lastPruneFilters string
+// deletedImages are the image deletions the fake daemon saw.
+var deletedImages []string
 
 func TestExec_UnusedImages(t *testing.T) {
 	sock, closeFn := fakeDaemon(t)
@@ -432,19 +433,21 @@ func TestExec_UnusedImages(t *testing.T) {
 	}
 }
 
-// The prune filter is fixed in the helper: every unused image, nothing a
+// Prune removes what UnusedImages lists, one image by id (forced: it is
+// unused, and an image with two names would refuse otherwise), nothing a
 // caller chose.
-func TestExec_PruneImagesUsesAFixedFilter(t *testing.T) {
+func TestExec_PruneImagesRemovesTheUnusedListOnly(t *testing.T) {
 	sock, closeFn := fakeDaemon(t)
 	defer closeFn()
+	deletedImages = nil
 	res, err := Exec{SocketPath: sock}.PruneImages(context.Background())
 	if err != nil {
 		t.Fatal(err)
 	}
-	if res.Removed != 2 || res.ReclaimedBytes != 123 {
+	if res.Removed != 2 || res.ReclaimedBytes != 40000000+5000 {
 		t.Fatalf("got %+v", res)
 	}
-	if lastPruneFilters != `{"dangling":["false"]}` {
-		t.Fatalf("filters %q", lastPruneFilters)
+	if len(deletedImages) != 2 || deletedImages[0] != "sha256:old1?force=1" || deletedImages[1] != "sha256:dangling1?force=1" {
+		t.Fatalf("deleted %v: the used image must stay", deletedImages)
 	}
 }

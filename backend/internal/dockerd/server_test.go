@@ -330,3 +330,66 @@ func TestServer_PruneTakesNoParameters(t *testing.T) {
 		}
 	}
 }
+
+// Keeping the previous image, seen through the helper: the helper builds the
+// rollback name itself; DreamHub's side can name an app at most.
+func TestHTTPClient_KeepAndRestoreAnImage(t *testing.T) {
+	client, closeFn := newTestServer(t)
+	defer closeFn()
+	ctx := context.Background()
+
+	id, err := client.KeepImage(ctx, "pihole")
+	if err != nil || id == "" {
+		t.Fatalf("KeepImage = %q, %v", id, err)
+	}
+	kept, err := client.KeptImages(ctx)
+	if err != nil || len(kept) != 1 || kept[0].AppID != "pihole" || kept[0].ImageID != id {
+		t.Fatalf("kept = %+v, %v", kept, err)
+	}
+	if err := client.Remove(ctx, "pihole"); err != nil {
+		t.Fatal(err)
+	}
+	c, err := client.Create(ctx, dockerd.ContainerSpec{AppID: "pihole", Image: "pihole/pihole:latest", HostNetwork: true, HostPort: 80, ContainerPort: 80, MemoryLimitBytes: 1 << 28, FromKept: true})
+	if err != nil || c.AppID() != "pihole" {
+		t.Fatalf("restore: %+v, %v", c, err)
+	}
+	if d, _ := client.ImageDigest(ctx, "pihole"); d != "sha256:pihole-pulled-old" {
+		t.Errorf("the restored container runs the kept image: digest %q", d)
+	}
+	if res, err := client.DropKeptImages(ctx, "pihole"); err != nil || res.Removed != 1 {
+		t.Fatalf("drop = %+v, %v", res, err)
+	}
+	if kept, _ := client.KeptImages(ctx); len(kept) != 0 {
+		t.Errorf("still kept: %+v", kept)
+	}
+	// Restoring when nothing is kept says so (410 on the wire).
+	_ = client.Remove(ctx, "pihole")
+	if _, err := client.Create(ctx, dockerd.ContainerSpec{AppID: "pihole", Image: "pihole/pihole:latest", HostNetwork: true, HostPort: 80, ContainerPort: 80, MemoryLimitBytes: 1 << 28, FromKept: true}); !errors.Is(err, dockerd.ErrNoKeptImage) {
+		t.Errorf("nothing kept: %v", err)
+	}
+	if _, err := client.KeepImage(ctx, "nope"); !errors.Is(err, dockerd.ErrNotFound) {
+		t.Errorf("unknown container: %v", err)
+	}
+}
+
+// Dropping takes an app id and nothing else.
+func TestServer_DropKeptTakesOnlyAnAppID(t *testing.T) {
+	srv := httptest.NewServer(dockerd.Server{Client: mock.New()}.Handler())
+	defer srv.Close()
+	for path, want := range map[string]int{
+		"/images/kept/drop":                         http.StatusOK,
+		"/images/kept/drop?app=pihole":              http.StatusOK,
+		"/images/kept/drop?app=Bad%20ID":            http.StatusBadRequest,
+		"/images/kept/drop?image=sha256:aaaa1111":   http.StatusBadRequest,
+		"/images/kept/drop?app=pihole&tag=whatever": http.StatusBadRequest,
+	} {
+		resp, err := http.Post(srv.URL+path, "", nil)
+		if err != nil {
+			t.Fatal(err)
+		}
+		resp.Body.Close()
+		if resp.StatusCode != want {
+			t.Errorf("POST %s: %d, want %d", path, resp.StatusCode, want)
+		}
+	}
+}

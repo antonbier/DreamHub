@@ -63,6 +63,8 @@ func statusErr(resp *http.Response) error {
 		return ErrNotFound
 	case http.StatusConflict:
 		return ErrAlreadyExists
+	case http.StatusGone:
+		return ErrNoKeptImage
 	case http.StatusServiceUnavailable:
 		return ErrUnavailable
 	default:
@@ -133,6 +135,7 @@ func (c HTTPClient) Create(ctx context.Context, spec ContainerSpec) (Container, 
 		"hostPort": spec.HostPort, "containerPort": spec.ContainerPort,
 		"mounts": spec.Mounts, "elevated": spec.Elevated,
 		"memoryLimitBytes": spec.MemoryLimitBytes, "hostNetwork": spec.HostNetwork, "root": spec.Root,
+		"fromKept": spec.FromKept,
 	})
 	if err != nil {
 		return Container{}, err
@@ -260,6 +263,60 @@ func (c HTTPClient) UnusedImages(ctx context.Context) ([]Image, error) {
 
 func (c HTTPClient) PruneImages(ctx context.Context) (PruneResult, error) {
 	resp, err := c.doWithin(ctx, longTimeout, http.MethodPost, "/images/prune", nil)
+	if err != nil {
+		return PruneResult{}, err
+	}
+	defer drainClosed(resp.Body)
+	if resp.StatusCode != http.StatusOK {
+		return PruneResult{}, statusErr(resp)
+	}
+	var out PruneResult
+	if err := json.NewDecoder(resp.Body).Decode(&out); err != nil {
+		return PruneResult{}, err
+	}
+	return out, nil
+}
+
+func (c HTTPClient) KeepImage(ctx context.Context, id string) (string, error) {
+	resp, err := c.doWithin(ctx, longTimeout, http.MethodPost, "/containers/"+url.PathEscape(id)+"/keep-image", nil)
+	if err != nil {
+		return "", err
+	}
+	defer drainClosed(resp.Body)
+	if resp.StatusCode != http.StatusOK {
+		return "", statusErr(resp)
+	}
+	var out struct {
+		ImageID string `json:"imageId"`
+	}
+	if err := json.NewDecoder(resp.Body).Decode(&out); err != nil {
+		return "", err
+	}
+	return out.ImageID, nil
+}
+
+func (c HTTPClient) KeptImages(ctx context.Context) ([]KeptImage, error) {
+	resp, err := c.do(ctx, http.MethodGet, "/images/kept", nil)
+	if err != nil {
+		return nil, err
+	}
+	defer drainClosed(resp.Body)
+	if resp.StatusCode != http.StatusOK {
+		return nil, statusErr(resp)
+	}
+	var list []KeptImage
+	if err := json.NewDecoder(resp.Body).Decode(&list); err != nil {
+		return nil, err
+	}
+	return list, nil
+}
+
+func (c HTTPClient) DropKeptImages(ctx context.Context, appID string) (PruneResult, error) {
+	path := "/images/kept/drop"
+	if appID != "" {
+		path += "?" + url.Values{"app": {appID}}.Encode()
+	}
+	resp, err := c.doWithin(ctx, longTimeout, http.MethodPost, path, nil)
 	if err != nil {
 		return PruneResult{}, err
 	}

@@ -38,6 +38,9 @@ func (s Server) Handler() http.Handler {
 	mux.HandleFunc("GET /containers/{id}/attach", s.handleAttach)
 	mux.HandleFunc("GET /images/unused", s.handleUnusedImages)
 	mux.HandleFunc("POST /images/prune", s.handlePruneImages)
+	mux.HandleFunc("POST /containers/{id}/keep-image", s.handleKeepImage)
+	mux.HandleFunc("GET /images/kept", s.handleKeptImages)
+	mux.HandleFunc("POST /images/kept/drop", s.handleDropKept)
 	return mux
 }
 
@@ -54,6 +57,8 @@ func writeErr(w http.ResponseWriter, err error) {
 		http.Error(w, err.Error(), http.StatusBadRequest)
 	case errors.Is(err, ErrNotFound):
 		http.Error(w, err.Error(), http.StatusNotFound)
+	case errors.Is(err, ErrNoKeptImage):
+		http.Error(w, err.Error(), http.StatusGone)
 	case errors.Is(err, ErrAlreadyExists):
 		http.Error(w, err.Error(), http.StatusConflict)
 	case errors.Is(err, ErrUnavailable):
@@ -108,6 +113,7 @@ type createRequest struct {
 	MemoryLimit   int64             `json:"memoryLimitBytes"`
 	HostNetwork   bool              `json:"hostNetwork"`
 	Root          string            `json:"root"`
+	FromKept      bool              `json:"fromKept"`
 }
 
 func (s Server) handleCreate(w http.ResponseWriter, r *http.Request) {
@@ -123,7 +129,7 @@ func (s Server) handleCreate(w http.ResponseWriter, r *http.Request) {
 		AppID: body.AppID, Service: body.Service, Name: body.Name, Image: body.Image, Env: body.Env, Cmd: body.Cmd,
 		HostPort: body.HostPort, ContainerPort: body.ContainerPort,
 		Mounts: body.Mounts, Elevated: body.Elevated,
-		MemoryLimitBytes: body.MemoryLimit, HostNetwork: body.HostNetwork, Root: body.Root,
+		MemoryLimitBytes: body.MemoryLimit, HostNetwork: body.HostNetwork, Root: body.Root, FromKept: body.FromKept,
 	}
 	if err := ValidateSpec(spec, s.Policy); err != nil {
 		writeErr(w, err)
@@ -247,6 +253,50 @@ func (s Server) handlePruneImages(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 	res, err := s.Client.PruneImages(r.Context())
+	if err != nil {
+		writeErr(w, err)
+		return
+	}
+	writeJSON(w, res)
+}
+
+func (s Server) handleKeepImage(w http.ResponseWriter, r *http.Request) {
+	id, err := s.Client.KeepImage(r.Context(), r.PathValue("id"))
+	if err != nil {
+		writeErr(w, err)
+		return
+	}
+	writeJSON(w, map[string]string{"imageId": id})
+}
+
+func (s Server) handleKeptImages(w http.ResponseWriter, r *http.Request) {
+	list, err := s.Client.KeptImages(r.Context())
+	if err != nil {
+		writeErr(w, err)
+		return
+	}
+	if list == nil {
+		list = []KeptImage{}
+	}
+	writeJSON(w, list)
+}
+
+// handleDropKept takes at most the app id (?app=); there is no way to name
+// an image or a tag.
+func (s Server) handleDropKept(w http.ResponseWriter, r *http.Request) {
+	q := r.URL.Query()
+	for k := range q {
+		if k != "app" {
+			http.Error(w, "dockerd: drop kept images: only app is accepted", http.StatusBadRequest)
+			return
+		}
+	}
+	app := q.Get("app")
+	if app != "" && !appIDRe.MatchString(app) {
+		http.Error(w, "dockerd: drop kept images: not a valid app id", http.StatusBadRequest)
+		return
+	}
+	res, err := s.Client.DropKeptImages(r.Context(), app)
 	if err != nil {
 		writeErr(w, err)
 		return

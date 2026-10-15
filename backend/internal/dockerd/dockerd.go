@@ -129,6 +129,21 @@ func (c Container) Root() string { return c.Labels[RootLabel] }
 // DisplayName is the Labels[NameLabel] value: "" for a catalog app.
 func (c Container) DisplayName() string { return c.Labels[NameLabel] }
 
+// Image is one image no container uses, as listed for the "clean up unused
+// images" preview. SizeBytes is what removing it alone would free (its own
+// layers, not those shared with an image that stays).
+type Image struct {
+	ID        string   `json:"id"`
+	Tags      []string `json:"tags"`
+	SizeBytes int64    `json:"sizeBytes"`
+}
+
+// PruneResult is what PruneImages did.
+type PruneResult struct {
+	Removed        int   `json:"removed"`
+	ReclaimedBytes int64 `json:"reclaimedBytes"`
+}
+
 // ErrNotFound means no container with that id carries AppLabel.
 var ErrNotFound = errors.New("dockerd: no such app container")
 
@@ -250,6 +265,15 @@ type Client interface {
 	// what the user types, Close ends the session. Returns ErrNotFound if
 	// id isn't AppLabel-tagged, ErrUnavailable if it isn't running.
 	Attach(ctx context.Context, id string) (io.ReadWriteCloser, error)
+	// UnusedImages lists the images no container uses (running or stopped,
+	// of any app), the ones PruneImages would remove. Read-only; takes no
+	// argument, so nothing about it can be steered by the caller.
+	UnusedImages(ctx context.Context) ([]Image, error)
+	// PruneImages removes every unused image — exactly what UnusedImages
+	// lists, nothing selectable: the daemon itself refuses an image a
+	// container uses, and the helper holds off while an install pulls one.
+	// Containers, volumes, networks and build cache are never touched.
+	PruneImages(ctx context.Context) (PruneResult, error)
 }
 
 // drainClosed discards and closes r, for defer sites that don't care

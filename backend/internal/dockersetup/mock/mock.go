@@ -148,6 +148,20 @@ func (g gated) Create(ctx context.Context, spec dockerd.ContainerSpec) (dockerd.
 	return g.Client.Create(ctx, spec)
 }
 
+func (g gated) UnusedImages(ctx context.Context) ([]dockerd.Image, error) {
+	if !g.ready() {
+		return nil, dockerd.ErrUnavailable
+	}
+	return g.Client.UnusedImages(ctx)
+}
+
+func (g gated) PruneImages(ctx context.Context) (dockerd.PruneResult, error) {
+	if !g.ready() {
+		return dockerd.PruneResult{}, dockerd.ErrUnavailable
+	}
+	return g.Client.PruneImages(ctx)
+}
+
 // RemovedData reports whether the last Remove deleted the app data.
 func (s *Setup) RemovedData() bool {
 	s.mu.Lock()

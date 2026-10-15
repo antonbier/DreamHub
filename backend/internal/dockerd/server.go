@@ -36,6 +36,8 @@ func (s Server) Handler() http.Handler {
 	mux.HandleFunc("POST /containers/{id}/exec", s.handleExec)
 	mux.HandleFunc("GET /containers/{id}/image-digest", s.handleImageDigest)
 	mux.HandleFunc("GET /containers/{id}/attach", s.handleAttach)
+	mux.HandleFunc("GET /images/unused", s.handleUnusedImages)
+	mux.HandleFunc("POST /images/prune", s.handlePruneImages)
 	return mux
 }
 
@@ -222,6 +224,34 @@ func (s Server) handleAttach(w http.ResponseWriter, r *http.Request) {
 	go func() { defer wg.Done(); io.Copy(conn, upstream); stop() }()
 	go func() { defer wg.Done(); io.Copy(upstream, conn); stop() }()
 	wg.Wait()
+}
+
+func (s Server) handleUnusedImages(w http.ResponseWriter, r *http.Request) {
+	list, err := s.Client.UnusedImages(r.Context())
+	if err != nil {
+		writeErr(w, err)
+		return
+	}
+	if list == nil {
+		list = []Image{}
+	}
+	writeJSON(w, list)
+}
+
+// handlePruneImages takes no body at all: there is nothing a caller could
+// select, so anything sent is refused rather than ignored.
+func (s Server) handlePruneImages(w http.ResponseWriter, r *http.Request) {
+	var one [1]byte
+	if n, _ := io.ReadFull(http.MaxBytesReader(w, r.Body, 1), one[:]); n > 0 || r.URL.RawQuery != "" {
+		http.Error(w, "dockerd: prune images: takes no parameters", http.StatusBadRequest)
+		return
+	}
+	res, err := s.Client.PruneImages(r.Context())
+	if err != nil {
+		writeErr(w, err)
+		return
+	}
+	writeJSON(w, res)
 }
 
 func writeJSON(w http.ResponseWriter, v any) {

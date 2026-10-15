@@ -28,6 +28,10 @@ func fakeDaemon(t *testing.T) (sockPath string, close func()) {
 	mux := http.NewServeMux()
 	mux.HandleFunc("GET /containers/json", func(w http.ResponseWriter, r *http.Request) {
 		w.Header().Set("Content-Type", "application/json")
+		if r.URL.Query().Get("filters") == "" { // every container on the daemon, for the image check
+			_, _ = w.Write([]byte(`[{"Id":"abc123","ImageID":"sha256:inuse1"},{"Id":"def456","ImageID":"sha256:inuse1"}]`))
+			return
+		}
 		_ = json.NewEncoder(w).Encode([]dockerContainer{
 			{ID: "abc123", Names: []string{"/pihole"}, Image: "linuxserver/pihole", State: "running", Status: "Up 1 hour",
 				Labels: map[string]string{AppLabel: "pihole"}},
@@ -112,6 +116,22 @@ func fakeDaemon(t *testing.T) (sockPath string, close func()) {
 	})
 	mux.HandleFunc("DELETE /containers/abc123", func(w http.ResponseWriter, r *http.Request) {
 		w.WriteHeader(http.StatusNoContent)
+	})
+
+	// Images: "inuse1" is used by a container, "old1" and "dangling1" are not;
+	// old1 shares 60 MB of its layers with an image that stays.
+	mux.HandleFunc("GET /images/json", func(w http.ResponseWriter, r *http.Request) {
+		if r.URL.Query().Get("shared-size") != "1" {
+			w.WriteHeader(http.StatusBadRequest)
+			return
+		}
+		_, _ = w.Write([]byte(`[{"Id":"sha256:inuse1","RepoTags":["a/a:1"],"Size":100,"SharedSize":0},` +
+			`{"Id":"sha256:old1","RepoTags":["a/a:0"],"Size":100000000,"SharedSize":60000000},` +
+			`{"Id":"sha256:dangling1","RepoTags":null,"Size":5000,"SharedSize":-1}]`))
+	})
+	mux.HandleFunc("POST /images/prune", func(w http.ResponseWriter, r *http.Request) {
+		lastPruneFilters = r.URL.Query().Get("filters")
+		_, _ = w.Write([]byte(`{"ImagesDeleted":[{"Untagged":"a/a:0"},{"Deleted":"sha256:old1"},{"Deleted":"sha256:dangling1"}],"SpaceReclaimed":123}`))
 	})
 
 	srv := &httptest.Server{Listener: listener, Config: &http.Server{Handler: mux}}
@@ -387,5 +407,44 @@ func TestExec_CreateElevatedAndRefusals(t *testing.T) {
 	}
 	if lastCreateBody != nil {
 		t.Fatal("the daemon saw a refused create")
+	}
+}
+
+// lastPruneFilters is the filters query the fake daemon saw on the last
+// prune request.
+var lastPruneFilters string
+
+func TestExec_UnusedImages(t *testing.T) {
+	sock, closeFn := fakeDaemon(t)
+	defer closeFn()
+	imgs, err := Exec{SocketPath: sock}.UnusedImages(context.Background())
+	if err != nil {
+		t.Fatal(err)
+	}
+	if len(imgs) != 2 || imgs[0].ID != "sha256:old1" || imgs[1].ID != "sha256:dangling1" {
+		t.Fatalf("got %+v, want the two images no container uses", imgs)
+	}
+	if imgs[0].SizeBytes != 40000000 {
+		t.Errorf("size %d, want the image's own 40 MB (shared layers stay)", imgs[0].SizeBytes)
+	}
+	if imgs[1].Tags == nil || imgs[1].SizeBytes != 5000 {
+		t.Errorf("dangling image: %+v (tags must be a list, an unknown shared size counts as none)", imgs[1])
+	}
+}
+
+// The prune filter is fixed in the helper: every unused image, nothing a
+// caller chose.
+func TestExec_PruneImagesUsesAFixedFilter(t *testing.T) {
+	sock, closeFn := fakeDaemon(t)
+	defer closeFn()
+	res, err := Exec{SocketPath: sock}.PruneImages(context.Background())
+	if err != nil {
+		t.Fatal(err)
+	}
+	if res.Removed != 2 || res.ReclaimedBytes != 123 {
+		t.Fatalf("got %+v", res)
+	}
+	if lastPruneFilters != `{"dangling":["false"]}` {
+		t.Fatalf("filters %q", lastPruneFilters)
 	}
 }

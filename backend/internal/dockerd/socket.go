@@ -14,7 +14,13 @@ import (
 	"net/url"
 	"strconv"
 	"strings"
+	"sync"
 )
+
+// imageMu keeps "remove unused images" from running while an install pulls
+// an image that no container uses yet (pull, create and start are one Create
+// call).
+var imageMu sync.Mutex
 
 // Exec talks to a real Docker daemon over its unix socket — the only
 // thing in DreamHub that does. It is hand-rolled HTTP against Docker's
@@ -320,6 +326,8 @@ func (e Exec) pullImage(ctx context.Context, image string) error {
 }
 
 func (e Exec) Create(ctx context.Context, spec ContainerSpec) (Container, error) {
+	imageMu.Lock()
+	defer imageMu.Unlock()
 	if spec.HostNetwork && spec.HostPort != spec.ContainerPort {
 		return Container{}, fmt.Errorf("dockerd: create %s: on the host network the port can't be remapped", spec.AppID)
 	}
@@ -648,4 +656,102 @@ func demux(raw []byte) []byte {
 	}
 	out.Write(raw)
 	return out.Bytes()
+}
+
+// UnusedImages lists the images that no container (of any kind, running or
+// stopped) uses. Dangling or tagged alike; intermediate layers the daemon
+// hides by default stay hidden.
+func (e Exec) UnusedImages(ctx context.Context) ([]Image, error) {
+	resp, err := e.do(ctx, http.MethodGet, "/containers/json?all=1", nil)
+	if err != nil {
+		return nil, err
+	}
+	var cs []struct {
+		ImageID string `json:"ImageID"`
+	}
+	decErr := json.NewDecoder(resp.Body).Decode(&cs)
+	drainClosed(resp.Body)
+	if resp.StatusCode != http.StatusOK {
+		return nil, fmt.Errorf("dockerd: list containers: unexpected status %d", resp.StatusCode)
+	}
+	if decErr != nil {
+		return nil, decErr
+	}
+	used := map[string]bool{}
+	for _, c := range cs {
+		used[c.ImageID] = true
+	}
+
+	resp, err = e.do(ctx, http.MethodGet, "/images/json?shared-size=1", nil)
+	if err != nil {
+		return nil, err
+	}
+	defer drainClosed(resp.Body)
+	if resp.StatusCode != http.StatusOK {
+		return nil, fmt.Errorf("dockerd: list images: unexpected status %d", resp.StatusCode)
+	}
+	var imgs []struct {
+		ID         string   `json:"Id"`
+		RepoTags   []string `json:"RepoTags"`
+		Size       int64    `json:"Size"`
+		SharedSize int64    `json:"SharedSize"`
+	}
+	if err := json.NewDecoder(resp.Body).Decode(&imgs); err != nil {
+		return nil, err
+	}
+	out := []Image{}
+	for _, i := range imgs {
+		if used[i.ID] {
+			continue
+		}
+		own := i.Size
+		if i.SharedSize > 0 {
+			own -= i.SharedSize
+		}
+		if own < 0 {
+			own = 0
+		}
+		tags := i.RepoTags
+		if tags == nil {
+			tags = []string{}
+		}
+		out = append(out, Image{ID: i.ID, Tags: tags, SizeBytes: own})
+	}
+	return out, nil
+}
+
+// PruneImages is Docker's own "image prune -a": the filter is fixed here
+// (dangling=false means every unused image, not only untagged ones), no part
+// of it comes from a caller.
+func (e Exec) PruneImages(ctx context.Context) (PruneResult, error) {
+	imageMu.Lock()
+	defer imageMu.Unlock()
+	filters, err := json.Marshal(map[string][]string{"dangling": {"false"}})
+	if err != nil {
+		return PruneResult{}, err
+	}
+	resp, err := e.do(ctx, http.MethodPost, "/images/prune?"+url.Values{"filters": {string(filters)}}.Encode(), nil)
+	if err != nil {
+		return PruneResult{}, err
+	}
+	defer drainClosed(resp.Body)
+	if resp.StatusCode != http.StatusOK {
+		return PruneResult{}, fmt.Errorf("dockerd: prune images: unexpected status %d", resp.StatusCode)
+	}
+	var out struct {
+		ImagesDeleted []struct {
+			Deleted string `json:"Deleted"`
+		} `json:"ImagesDeleted"`
+		SpaceReclaimed int64 `json:"SpaceReclaimed"`
+	}
+	if err := json.NewDecoder(resp.Body).Decode(&out); err != nil {
+		return PruneResult{}, err
+	}
+	res := PruneResult{ReclaimedBytes: out.SpaceReclaimed}
+	for _, d := range out.ImagesDeleted {
+		if d.Deleted != "" {
+			res.Removed++
+		}
+	}
+	return res, nil
 }

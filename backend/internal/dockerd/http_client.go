@@ -18,6 +18,10 @@ import (
 // own process.
 const callTimeout = 10 * time.Second
 
+// longTimeout bounds the calls that legitimately take a while: pulling an
+// image inside Create, removing images.
+const longTimeout = 10 * time.Minute
+
 // HTTPClient is how DreamHub's main backend reaches the helper process
 // (cmd/dreamhub-dockerd-helper) — the only thing it is ever allowed to
 // say about Docker, since it never holds the socket itself. BaseURL is
@@ -30,11 +34,15 @@ type HTTPClient struct {
 
 var _ Client = HTTPClient{}
 
-func (c HTTPClient) client() *http.Client {
-	return &http.Client{Timeout: callTimeout, Transport: c.Transport}
+func (c HTTPClient) client(timeout time.Duration) *http.Client {
+	return &http.Client{Timeout: timeout, Transport: c.Transport}
 }
 
 func (c HTTPClient) do(ctx context.Context, method, path string, body io.Reader) (*http.Response, error) {
+	return c.doWithin(ctx, callTimeout, method, path, body)
+}
+
+func (c HTTPClient) doWithin(ctx context.Context, timeout time.Duration, method, path string, body io.Reader) (*http.Response, error) {
 	req, err := http.NewRequestWithContext(ctx, method, c.BaseURL+path, body)
 	if err != nil {
 		return nil, err
@@ -42,7 +50,7 @@ func (c HTTPClient) do(ctx context.Context, method, path string, body io.Reader)
 	if body != nil {
 		req.Header.Set("Content-Type", "application/json")
 	}
-	resp, err := c.client().Do(req)
+	resp, err := c.client(timeout).Do(req)
 	if err != nil {
 		return nil, fmt.Errorf("%w: %v", ErrUnavailable, err)
 	}
@@ -129,7 +137,7 @@ func (c HTTPClient) Create(ctx context.Context, spec ContainerSpec) (Container, 
 	if err != nil {
 		return Container{}, err
 	}
-	resp, err := c.do(ctx, http.MethodPost, "/containers", bytes.NewReader(body))
+	resp, err := c.doWithin(ctx, longTimeout, http.MethodPost, "/containers", bytes.NewReader(body))
 	if err != nil {
 		return Container{}, err
 	}
@@ -232,4 +240,36 @@ func (c HTTPClient) Exec(ctx context.Context, id string, cmd []string) ([]byte, 
 		return nil, statusErr(resp)
 	}
 	return io.ReadAll(resp.Body)
+}
+
+func (c HTTPClient) UnusedImages(ctx context.Context) ([]Image, error) {
+	resp, err := c.do(ctx, http.MethodGet, "/images/unused", nil)
+	if err != nil {
+		return nil, err
+	}
+	defer drainClosed(resp.Body)
+	if resp.StatusCode != http.StatusOK {
+		return nil, statusErr(resp)
+	}
+	var list []Image
+	if err := json.NewDecoder(resp.Body).Decode(&list); err != nil {
+		return nil, err
+	}
+	return list, nil
+}
+
+func (c HTTPClient) PruneImages(ctx context.Context) (PruneResult, error) {
+	resp, err := c.doWithin(ctx, longTimeout, http.MethodPost, "/images/prune", nil)
+	if err != nil {
+		return PruneResult{}, err
+	}
+	defer drainClosed(resp.Body)
+	if resp.StatusCode != http.StatusOK {
+		return PruneResult{}, statusErr(resp)
+	}
+	var out PruneResult
+	if err := json.NewDecoder(resp.Body).Decode(&out); err != nil {
+		return PruneResult{}, err
+	}
+	return out, nil
 }

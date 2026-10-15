@@ -274,3 +274,57 @@ func TestServer_CreateRejectsUnknownFields(t *testing.T) {
 		}
 	}
 }
+
+func TestHTTPClient_ImagePrune(t *testing.T) {
+	client, closeFn := newTestServer(t)
+	defer closeFn()
+	ctx := context.Background()
+
+	imgs, err := client.UnusedImages(ctx)
+	if err != nil || len(imgs) != 3 {
+		t.Fatalf("got %+v, %v", imgs, err)
+	}
+	res, err := client.PruneImages(ctx)
+	if err != nil || res.Removed != 3 || res.ReclaimedBytes == 0 {
+		t.Fatalf("got %+v, %v", res, err)
+	}
+	if imgs, _ = client.UnusedImages(ctx); len(imgs) != 0 {
+		t.Fatalf("still %d unused images after the prune", len(imgs))
+	}
+}
+
+// Prune takes no parameters at all: a body or a query string (a filter, a
+// reference to one image) is refused instead of being ignored or passed on.
+func TestServer_PruneTakesNoParameters(t *testing.T) {
+	c := mock.New()
+	srv := httptest.NewServer(dockerd.Server{Client: c}.Handler())
+	defer srv.Close()
+	for name, req := range map[string]func() (*http.Response, error){
+		"body":  func() (*http.Response, error) { return http.Post(srv.URL+"/images/prune", "application/json", strings.NewReader(`{"all":true}`)) },
+		"query": func() (*http.Response, error) { return http.Post(srv.URL+"/images/prune?filters=%7B%7D", "", nil) },
+	} {
+		resp, err := req()
+		if err != nil {
+			t.Fatal(err)
+		}
+		resp.Body.Close()
+		if resp.StatusCode != http.StatusBadRequest {
+			t.Errorf("%s: status %d, want 400", name, resp.StatusCode)
+		}
+	}
+	if imgs, _ := c.UnusedImages(context.Background()); len(imgs) != 3 {
+		t.Fatalf("a refused request removed images: %d left", len(imgs))
+	}
+	// And no other image route exists (no delete of a chosen image, no raw API).
+	for _, r := range []struct{ method, path string }{{"DELETE", "/images/sha256:aaaa1111"}, {"GET", "/images/json"}, {"POST", "/images/sha256:aaaa1111/tag"}} {
+		req, _ := http.NewRequest(r.method, srv.URL+r.path, nil)
+		resp, err := http.DefaultClient.Do(req)
+		if err != nil {
+			t.Fatal(err)
+		}
+		resp.Body.Close()
+		if resp.StatusCode != http.StatusNotFound && resp.StatusCode != http.StatusMethodNotAllowed {
+			t.Errorf("%s %s: status %d, want 404/405", r.method, r.path, resp.StatusCode)
+		}
+	}
+}

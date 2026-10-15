@@ -23,6 +23,9 @@ type Client struct {
 	Policy     dockerd.MountPolicy
 	mu         sync.Mutex
 	containers map[string]*dockerd.Container
+	// images are the demo images no container uses (what "clean up unused
+	// images" removes).
+	images []dockerd.Image
 }
 
 var _ dockerd.Client = (*Client)(nil)
@@ -32,7 +35,11 @@ var _ dockerd.Client = (*Client)(nil)
 // (internal/dockerhub/mock), so a mock-mode session can see them as
 // "already installed" consistently across both.
 func New() *Client {
-	return &Client{containers: map[string]*dockerd.Container{
+	return &Client{images: []dockerd.Image{
+		{ID: "sha256:aaaa1111", Tags: []string{"pihole/pihole:2024.01.0"}, SizeBytes: 214 << 20},
+		{ID: "sha256:bbbb2222", Tags: []string{"nextcloud:27"}, SizeBytes: 395 << 20},
+		{ID: "sha256:cccc3333", Tags: []string{}, SizeBytes: 38 << 20},
+	}, containers: map[string]*dockerd.Container{
 		"pihole": {
 			ID: "pihole", Name: "dreamhub-app-pihole", Image: "pihole/pihole:latest",
 			State: "running", Status: "Up 2 hours", HostPort: 8082,
@@ -229,4 +236,22 @@ func (c *Client) Remove(ctx context.Context, id string) error {
 	}
 	delete(c.containers, id)
 	return nil
+}
+
+func (c *Client) UnusedImages(ctx context.Context) ([]dockerd.Image, error) {
+	c.mu.Lock()
+	defer c.mu.Unlock()
+	return append([]dockerd.Image{}, c.images...), nil
+}
+
+func (c *Client) PruneImages(ctx context.Context) (dockerd.PruneResult, error) {
+	c.mu.Lock()
+	defer c.mu.Unlock()
+	var res dockerd.PruneResult
+	for _, i := range c.images {
+		res.Removed++
+		res.ReclaimedBytes += i.SizeBytes
+	}
+	c.images = nil
+	return res, nil
 }

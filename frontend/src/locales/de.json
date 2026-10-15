@@ -123,7 +123,7 @@
     "browserOn": "Benachrichtigungen auf diesem Gerät anzeigen",
     "browserIsOn": "Benachrichtigungen auf diesem Gerät sind an",
     "browserOff": "Ausschalten",
-    "browserDenied": "Der Browser blockiert Benachrichtigungen für diese Seite – in den Website-Einstellungen erlauben."
+    "browserDenied": "Dein Browser blockiert Benachrichtigungen für diese Seite. Erlaube sie in den Website-Einstellungen."
   },
   "notification": {
     "recording": {
@@ -425,8 +425,7 @@
         "ai": "Braucht einen OpenAI-API-Schlüssel (Einstellungen → KI). Jeder Vorschlag zählt zum täglichen KI-Limit."
       }
     },
-    "changeTitle": "Auch den Titel in der Box-Liste ändern",
-    "newTitle": "Neuer Titel",
+    "newTitle": "Titel in der Aufnahmeliste der Box",
     "titlePreview": "Titel in der Box-Liste:",
     "selectAll": "Alle auswählen",
     "batch": {
@@ -529,7 +528,8 @@
         "summary": "Markiert {breaks} in der eigenen Schnittliste von {name} — an der Aufnahme ändert sich nichts, aber die Box-Fernbedienung kann daran vorbeispringen (\"zur nächsten Markierung springen\"). Eine vorhandene Wiedergabeposition oder ein vorhandener Schnitt bleibt erhalten.",
         "done": "In der Schnittliste markiert. Beim Ansehen am TV die Taste Weiter (⏭) der Fernbedienung drücken, sobald die Werbung beginnt — sie springt zur markierten Stelle nach der Werbung. Zurück (⏮) springt zurück."
       }
-    }
+    },
+    "nameHint": "Das ist der Dateiname; die Endung .ts bleibt. Der Titel in der Aufnahmeliste der Box ist getrennt und ändert sich nur, wenn du ihn unten bearbeitest."
   },
   "guide": {
     "empty": "Keine Sender in diesem Bouquet.",
@@ -1764,7 +1764,7 @@
       "checking": "Wird geprüft …",
       "open": "Öffnen",
       "back": "Anderes Profil",
-      "hasPin": "Mit PIN",
+      "hasPin": "PIN nötig",
       "wrongPin": "Falsche PIN.",
       "locked": "Zu viele falsche PINs. Bitte kurz warten und noch einmal versuchen.",
       "failed": "Das hat nicht geklappt. Bitte noch einmal versuchen."

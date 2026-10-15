@@ -123,7 +123,7 @@
     "browserOn": "Show notifications on this device",
     "browserIsOn": "Notifications on this device are on",
     "browserOff": "Turn off",
-    "browserDenied": "The browser has blocked notifications for this site — allow them in its site settings."
+    "browserDenied": "Your browser blocks notifications for this site. Allow them in its site settings."
   },
   "notification": {
     "recording": {
@@ -425,8 +425,7 @@
         "ai": "Needs an OpenAI API key (Settings → AI). Each suggestion counts against the daily AI limit."
       }
     },
-    "changeTitle": "Also change the title in the box's list",
-    "newTitle": "New title",
+    "newTitle": "Title in the box's recording list",
     "titlePreview": "Title in the box's list:",
     "selectAll": "Select all",
     "batch": {
@@ -529,7 +528,8 @@
         "summary": "Marks {breaks} in {name}'s own cut list — nothing in the recording changes, but the box's own remote can jump past them (\"jump to next marked position\"). Any resume position or cut already there is kept.",
         "done": "Marked in the cut list. While watching on the TV, press Next (⏭) on the remote when an ad break starts — it jumps to the marked position after the break. Previous (⏮) jumps back."
       }
-    }
+    },
+    "nameHint": "This is the file name; the ending .ts stays. The title in the box's recording list is separate and only changes if you edit it below."
   },
   "guide": {
     "empty": "No channels in this bouquet.",
@@ -1764,7 +1764,7 @@
       "checking": "Checking…",
       "open": "Open",
       "back": "Other profile",
-      "hasPin": "With PIN",
+      "hasPin": "Needs a PIN",
       "wrongPin": "Wrong PIN.",
       "locked": "Too many wrong PINs. Wait a moment and try again.",
       "failed": "That didn't work. Try again."

@@ -10,13 +10,13 @@
     <div class="flex items-center justify-between gap-3">
       <h2 class="text-[14px] font-semibold text-text">{{ t('control.screenshot.title') }}</h2>
       <div class="flex items-center gap-1">
-        <label class="flex cursor-pointer items-center gap-1.5 rounded px-1.5 py-1 text-[12.5px] text-muted hover:text-text">
+        <label class="tap flex cursor-pointer items-center gap-1.5 rounded px-1.5 py-1 text-[12.5px] text-muted hover:text-text">
           <input v-model="autoRefresh" type="checkbox" class="rounded" />
           {{ t('control.screenshot.auto') }}
         </label>
         <button
           type="button"
-          class="flex h-7 w-7 items-center justify-center rounded text-muted hover:bg-tile-2 hover:text-text"
+          class="tap flex h-7 w-7 items-center justify-center rounded text-muted hover:bg-tile-2 hover:text-text"
           :aria-label="t('control.screenshot.refresh')"
           :title="t('control.screenshot.refresh')"
           @click="refresh"

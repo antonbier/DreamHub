@@ -150,28 +150,31 @@
                 <span class="tabular-nums text-faint">{{ t('guide.then', { time: clock(st.next.start) }) }}</span> {{ st.next.title }}
               </button>
             </div>
+            <!-- The default tap listens here, in the browser; playing on the box
+                 is the quieter second choice. -->
+            <button
+              v-if="streamHubOn"
+              type="button"
+              class="tap flex shrink-0 items-center gap-1.5 rounded border px-2.5 py-1 text-[12.5px] hover:bg-field"
+              :class="listening === st.serviceReference ? 'border-accent text-accent' : 'border-line text-text'"
+              :aria-label="t('radio.listen', { station: st.serviceName })"
+              :aria-pressed="listening === st.serviceReference"
+              @click="listening === st.serviceReference ? stopListening() : listen(st.serviceReference)"
+            >
+              <Icon :name="listening === st.serviceReference ? 'stop' : 'volume-up'" :size="14" />{{ t('radio.listenHere') }}
+            </button>
             <span v-if="playing === st.serviceReference" class="flex shrink-0 items-center gap-1.5 px-2.5 py-1 text-[12.5px] text-onair">
               <span class="h-1.5 w-1.5 rounded-full bg-onair" />{{ t('radio.playing') }}
             </span>
             <button
               v-else
               type="button"
-              class="shrink-0 rounded border border-line px-2.5 py-1 text-[12.5px] text-text hover:bg-field disabled:opacity-60"
+              class="tap shrink-0 rounded px-2 py-1 text-[12.5px] hover:bg-field disabled:opacity-60"
+              :class="streamHubOn ? 'text-muted hover:text-text' : 'border border-line text-text'"
               :disabled="zapping === st.serviceReference"
               @click="play(st.serviceReference)"
             >
               {{ t('radio.play') }}
-            </button>
-            <button
-              v-if="streamHubOn"
-              type="button"
-              class="flex shrink-0 items-center gap-1.5 rounded border border-line px-2.5 py-1 text-[12.5px] text-text hover:bg-field"
-              :class="{ 'border-accent text-accent': listening === st.serviceReference }"
-              :aria-label="t('radio.listen', { station: st.serviceName })"
-              :aria-pressed="listening === st.serviceReference"
-              @click="listening === st.serviceReference ? stopListening() : listen(st.serviceReference)"
-            >
-              <Icon :name="listening === st.serviceReference ? 'stop' : 'volume-up'" :size="14" />{{ t('radio.listenHere') }}
             </button>
           </li>
         </ul>

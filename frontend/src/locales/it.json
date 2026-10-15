@@ -123,7 +123,7 @@
     "browserOn": "Mostra le notifiche su questo dispositivo",
     "browserIsOn": "Le notifiche su questo dispositivo sono attive",
     "browserOff": "Disattiva",
-    "browserDenied": "Il browser blocca le notifiche per questo sito: consentile nelle impostazioni del sito."
+    "browserDenied": "Il browser blocca le notifiche per questo sito. Consentile nelle impostazioni del sito."
   },
   "notification": {
     "recording": {
@@ -425,8 +425,7 @@
         "ai": "Serve una chiave API OpenAI (Impostazioni → IA). Ogni suggerimento conta nel limite IA giornaliero."
       }
     },
-    "changeTitle": "Cambia anche il titolo nell'elenco del box",
-    "newTitle": "Nuovo titolo",
+    "newTitle": "Titolo nell'elenco registrazioni del box",
     "titlePreview": "Titolo nell'elenco del box:",
     "selectAll": "Seleziona tutto",
     "batch": {
@@ -529,7 +528,8 @@
         "summary": "Segna {breaks} nella lista dei tagli di {name} — nella registrazione non cambia nulla, ma il telecomando della box può saltarle (\"salta al prossimo segno\"). Una posizione di ripresa o un taglio già presenti vengono mantenuti.",
         "done": "Segnato nella lista dei tagli. Guardando sul TV, premi Avanti (⏭) sul telecomando quando inizia la pubblicità: salta alla posizione segnata dopo l'interruzione. Indietro (⏮) torna indietro."
       }
-    }
+    },
+    "nameHint": "È il nome del file; la desinenza .ts resta. Il titolo nell'elenco registrazioni del box è separato e cambia solo se lo modifichi qui sotto."
   },
   "guide": {
     "empty": "Nessun canale in questo bouquet.",
@@ -1764,7 +1764,7 @@
       "checking": "Verifica in corso…",
       "open": "Apri",
       "back": "Altro profilo",
-      "hasPin": "Con PIN",
+      "hasPin": "Richiede PIN",
       "wrongPin": "PIN errato.",
       "locked": "Troppi PIN errati. Attendi un momento e riprova.",
       "failed": "Non è andato a buon fine. Riprova."

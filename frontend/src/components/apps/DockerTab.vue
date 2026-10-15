@@ -159,8 +159,8 @@
         <p v-else-if="searched && results.length === 0" class="mt-3 text-[13px] text-faint">{{ t('apps.searchEmpty') }}</p>
 
         <ul v-else-if="results.length > 0" class="mt-3 flex flex-col gap-2">
-          <li v-for="r in results" :key="r.image" class="flex items-center gap-3 rounded-sm border border-line bg-tile p-3">
-            <div class="min-w-0 flex-1">
+          <li v-for="r in results" :key="r.image" class="flex flex-wrap items-center gap-3 rounded-sm border border-line bg-tile p-3">
+            <div class="min-w-[10rem] flex-1">
               <p class="truncate text-[13.5px] font-semibold text-text">{{ r.image }}</p>
               <p v-if="r.description" class="mt-0.5 truncate text-[12.5px] text-muted">{{ r.description }}</p>
             </div>

@@ -875,5 +875,5 @@ func composeForImage(image, name string) (string, error) {
 	}
 	// Built from parts that were validated above: the image and the name go
 	// through the YAML encoder in the parser's own tests (quoted).
-	return "x-dreamhub:\n  name: " + strconv.Quote(name) + "\n  webui:\n    port: ${WEB_PORT:-0}\nservices:\n  app:\n    image: " + strconv.Quote(ref) + "\n", nil
+	return "x-dreamhub:\n  name: " + strconv.Quote(name) + "\n  webui:\n    port: ${WEB_PORT:-}\nservices:\n  app:\n    image: " + strconv.Quote(ref) + "\n", nil
 }

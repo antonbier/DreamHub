@@ -1,0 +1,123 @@
+{
+  "_note": "Curated package information for the Packages tab (docs/APPSHUB_PLAN.md, App11). Written offline from what the repo documents and what is common knowledge about Enigma2/DreamOS; descriptions that were not certain are left out on purpose (the package's own apt Description is shown instead). The owner and the box feed fill the rest: run 'go run ./cmd/pkginfo-missing <Packages file>' to list the feed packages without an entry. Keys are package names; 'category' is optional (otherwise derived from the name, see category.go); 'neededBy' lists hub ids (the UI shows their plain page names). Names marked in 'unverified' follow the Enigma2 naming convention but have not been seen on the DreamOS feed yet; an entry whose name the feed does not use is simply never shown.",
+  "unverified": [
+    "enigma2-plugin-extensions-autotimer",
+    "enigma2-plugin-extensions-bouqueteditor",
+    "enigma2-plugin-extensions-serienrecorder",
+    "enigma2-plugin-extensions-epgrefresh",
+    "shellinabox"
+  ],
+  "packages": {
+    "enigma2": {
+      "category": "system",
+      "description": {
+        "de": "Die Hauptanwendung der Box: Fernsehen, Aufnahmen, Menüs und Plugins laufen darin.",
+        "en": "The box's main application: TV, recordings, menus and plugins all run inside it.",
+        "it": "L'applicazione principale del box: TV, registrazioni, menu e plugin funzionano al suo interno."
+      }
+    },
+    "ffmpeg": {
+      "category": "system",
+      "neededBy": ["media"],
+      "description": {
+        "de": "Werkzeug zum Umwandeln, Schneiden und Untersuchen von Video und Audio. Wird zum Kürzen von Aufnahmen und zur Werbeerkennung gebraucht.",
+        "en": "Tool for converting, cutting and inspecting video and audio. Used for trimming recordings and detecting ads.",
+        "it": "Strumento per convertire, tagliare e analizzare video e audio. Serve per accorciare le registrazioni e rilevare la pubblicità."
+      }
+    },
+    "kernel-module-overlay": {
+      "category": "kernel",
+      "neededBy": ["apps"],
+      "description": {
+        "de": "Kernel-Modul für das Overlay-Dateisystem. Docker braucht es, um Container-Schichten zu verwalten.",
+        "en": "Kernel module for the overlay file system. Docker needs it to manage container layers.",
+        "it": "Modulo del kernel per il file system overlay. Docker lo usa per gestire i livelli dei container."
+      }
+    },
+    "dreamhub": {
+      "category": "system",
+      "description": {
+        "de": "DreamHub selbst: diese Weboberfläche und alles dahinter.",
+        "en": "DreamHub itself: this web interface and everything behind it.",
+        "it": "DreamHub stesso: questa interfaccia web e tutto ciò che c'è dietro."
+      }
+    },
+    "enigma2-plugin-skincomponents-dreamhubbutton": {
+      "category": "skins",
+      "description": {
+        "de": "Fügt dem Bildschirm der Box eine DreamHub-Taste hinzu.",
+        "en": "Adds a DreamHub button to the box's on-screen skin.",
+        "it": "Aggiunge un pulsante DreamHub allo skin a schermo del box."
+      }
+    },
+    "enigma2-plugin-extensions-mediaportal": {
+      "description": {
+        "de": "MediaPortal: Mediatheken, Streaming-Seiten und weitere Videoquellen direkt auf dem Fernseher.",
+        "en": "MediaPortal: media libraries, streaming sites and other video sources directly on the TV.",
+        "it": "MediaPortal: mediateche, siti di streaming e altre fonti video direttamente sulla TV."
+      }
+    },
+    "enigma2-plugin-extensions-mediaportal-hosters": {
+      "description": {
+        "de": "Zusatzmodul für MediaPortal: Anbindungen an externe Videoportale.",
+        "en": "Add-on module for MediaPortal: connections to external video hosts.",
+        "it": "Modulo aggiuntivo per MediaPortal: collegamenti a servizi video esterni."
+      }
+    },
+    "enigma2-plugin-extensions-autotimer": {
+      "neededBy": ["timer"],
+      "description": {
+        "de": "AutoTimer: legt Aufnahmen automatisch an, wenn eine Sendung zu einer gespeicherten Suche passt.",
+        "en": "AutoTimer: creates recordings automatically when a programme matches a saved search.",
+        "it": "AutoTimer: crea automaticamente le registrazioni quando un programma corrisponde a una ricerca salvata."
+      }
+    },
+    "enigma2-plugin-extensions-bouqueteditor": {
+      "neededBy": ["channels"],
+      "description": {
+        "de": "Bouquet-Editor: Senderlisten anlegen, sortieren und umbenennen, auch von außen über die Weboberfläche.",
+        "en": "Bouquet editor: create, sort and rename channel lists, also from outside through the web interface.",
+        "it": "Editor dei bouquet: crea, ordina e rinomina le liste dei canali, anche dall'esterno tramite l'interfaccia web."
+      }
+    },
+    "enigma2-plugin-extensions-serienrecorder": {
+      "neededBy": ["series"],
+      "description": {
+        "de": "SerienRecorder: nimmt Serien automatisch auf, Folge für Folge, und merkt sich, was schon da ist.",
+        "en": "SerienRecorder: records series automatically, episode by episode, and remembers what you already have.",
+        "it": "SerienRecorder: registra automaticamente le serie, episodio per episodio, e ricorda cosa hai già."
+      }
+    },
+    "enigma2-plugin-extensions-epgrefresh": {
+      "description": {
+        "de": "EPGRefresh: aktualisiert das Programmheft regelmäßig im Hintergrund, indem es Sender nacheinander durchschaltet.",
+        "en": "EPGRefresh: keeps the programme guide up to date in the background by tuning through channels one after another.",
+        "it": "EPGRefresh: mantiene aggiornata la guida programmi in background sintonizzando i canali uno dopo l'altro."
+      }
+    },
+    "shellinabox": {
+      "neededBy": ["device"],
+      "description": {
+        "de": "Stellt ein Terminal im Browser bereit. DreamHub zeigt es unter Gerät, Erweitert hinter dem eigenen Login.",
+        "en": "Provides a terminal in the browser. DreamHub shows it under Device, Advanced, behind its own sign-in.",
+        "it": "Fornisce un terminale nel browser. DreamHub lo mostra in Dispositivo, Avanzate, dietro al proprio accesso."
+      }
+    },
+    "dropbear": {
+      "category": "system",
+      "description": {
+        "de": "Schlanker SSH-Server für den Fernzugriff auf die Kommandozeile der Box.",
+        "en": "Lightweight SSH server for remote access to the box's command line.",
+        "it": "Server SSH leggero per l'accesso remoto alla riga di comando del box."
+      }
+    },
+    "htop": {
+      "category": "system",
+      "description": {
+        "de": "Zeigt laufende Prozesse samt Prozessor- und Speicherverbrauch auf der Kommandozeile.",
+        "en": "Shows running processes with their CPU and memory use on the command line.",
+        "it": "Mostra i processi in esecuzione con l'uso di processore e memoria sulla riga di comando."
+      }
+    }
+  }
+}

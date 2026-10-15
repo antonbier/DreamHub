@@ -67,7 +67,8 @@
     },
     "feed": {
       "unsigned": "Fügt {url} als Quelle hinzu. Ihre Pakete werden mit vollen Rechten auf der Box installiert und sind nicht signiert – nur eine vertrauenswürdige hinzufügen."
-    }
+    },
+    "tmdbOff": "Filmdetails und Bewertungen sind aus. In den Einstellungen unter „TMDB“ einen Schlüssel eintragen, um sie zu sehen."
   },
   "fix": {
     "checkBoxConnection": "Verbindung zur Box prüfen.",
@@ -551,8 +552,7 @@
     "filters": {
       "label": "Filter",
       "movies": "Nur Filme",
-      "rated": "Bewertung ab 7",
-      "needsEnrichment": "Die Filter brauchen Infos aus TMDB – in den Einstellungen unter „TMDB“ einschalten."
+      "rated": "Bewertung ab 7"
     },
     "bouquet": "Bouquet",
     "day": "Tag",
@@ -1199,8 +1199,8 @@
     },
     "autoTimer": {
       "title": "AutoTimer",
-      "simulate": "Probelauf",
-      "simulating": "Läuft…",
+      "simulate": "Zeigen, was aufgenommen würde",
+      "simulating": "Wird geprüft…",
       "openEditor": "AutoTimer-Editor öffnen",
       "notInstalled": "Das AutoTimer-Plugin ist auf dieser Box nicht installiert. Kein Problem — es ist optional (Addon-Manager).",
       "none": "Keine AutoTimer eingerichtet.",
@@ -1208,8 +1208,9 @@
       "match": "sucht „{match}“",
       "enabled": "An",
       "disabled": "Aus",
-      "simulateEyebrow": "Probelauf · diese Timer würden angelegt, nichts wurde geändert",
-      "simulateNone": "Die AutoTimer würden gerade keine neuen Timer anlegen."
+      "simulateEyebrow": "Das würde aufgenommen – es wurde nichts geändert",
+      "simulateNone": "Die AutoTimer würden gerade keine neuen Timer anlegen.",
+      "intro": "Nimmt alles, was diesen Regeln entspricht, automatisch auf."
     },
     "enable": "Aktivieren",
     "disable": "Deaktivieren",
@@ -1227,7 +1228,8 @@
       "disable": "„{name}“ ist deaktiviert.",
       "enable": "„{name}“ ist wieder aktiv.",
       "delete": "„{name}“ gelöscht."
-    }
+    },
+    "more": "Weitere Aktionen"
   },
   "admin": {
     "tabs": {

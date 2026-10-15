@@ -17,7 +17,7 @@ function translateOrRaw(t: (key: string, params: Record<string, unknown>) => str
 }
 
 export function useProblem() {
-  const { t } = useI18n()
+  const { t, te } = useI18n()
   const { hubName } = useHubLabel()
 
   // The backend names hubs by id ("timer", or "media, timer"); the screen
@@ -25,13 +25,20 @@ export function useProblem() {
   function withHubNames(params: Record<string, unknown> | undefined): Record<string, unknown> {
     const out = { ...(params ?? {}) }
     if (typeof out.hub === 'string') out.hub = hubName(out.hub)
+    // A settings section id ("tmdb") as the section's title on screen.
+    if (typeof out.section === 'string' && te(`settings.${out.section}.title`)) out.section = t(`settings.${out.section}.title`)
     if (typeof out.hubs === 'string') out.hubs = out.hubs.split(', ').map(hubName).join(', ')
     return out
   }
 
   // problem.Code is unprefixed (e.g. "connector.notConfigured" — status.go)
   // and lives under the "problem" locale namespace here.
+  // The optional film database being off is not an error the household
+  // needs the technical wording for.
+  const isTmdbOff = (p: Problem) => p.code === 'connector.notConfigured' && p.params?.connector === 'TMDB'
+
   function describe(problem: Problem): string {
+    if (isTmdbOff(problem)) return t('problem.tmdbOff')
     return translateOrRaw(t, `problem.${problem.code}`, problem.code, withHubNames(problem.params))
   }
 
@@ -39,7 +46,7 @@ export function useProblem() {
   // backend (status.go: FixConfigureInSettings = "fix.configureInSettings"),
   // so it's used as the locale key directly, not prefixed again.
   function describeFix(problem: Problem): string | undefined {
-    if (!problem.fix) return undefined
+    if (!problem.fix || isTmdbOff(problem)) return undefined
     return translateOrRaw(t, problem.fix, problem.fix, withHubNames(problem.fixParams))
   }
 

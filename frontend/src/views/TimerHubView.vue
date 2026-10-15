@@ -88,14 +88,15 @@
         <div class="flex flex-wrap items-center gap-3">
           <h2 class="text-[15.5px] font-semibold text-text">{{ t('timers.autoTimer.title') }}</h2>
           <template v-if="autoTimers?.installed">
-            <button type="button" class="rounded px-2 py-1 text-[13px] text-accent hover:bg-tile-2" :disabled="simulating" @click="simulate">
+            <button type="button" class="tap rounded px-2 py-1 text-[13px] text-accent hover:bg-tile-2" :disabled="simulating" @click="simulate">
               {{ simulating ? t('timers.autoTimer.simulating') : t('timers.autoTimer.simulate') }}
             </button>
-            <a :href="autoTimerEditorUrl" target="_blank" rel="noopener" class="rounded px-2 py-1 text-[13px] text-accent hover:bg-tile-2">
+            <a :href="autoTimerEditorUrl" target="_blank" rel="noopener" class="tap rounded px-2 py-1 text-[13px] text-accent hover:bg-tile-2">
               {{ t('timers.autoTimer.openEditor') }}
             </a>
           </template>
         </div>
+        <p v-if="autoTimers?.installed" class="mt-1 text-[13px] text-muted">{{ t('timers.autoTimer.intro') }}</p>
         <p v-if="autoTimers && !autoTimers.installed" class="mt-2 text-[13px] text-faint">{{ t('timers.autoTimer.notInstalled') }}</p>
         <p v-else-if="autoTimerError" class="mt-2 text-[13px] text-muted">{{ autoTimerError }}</p>
         <template v-else-if="autoTimers?.installed">

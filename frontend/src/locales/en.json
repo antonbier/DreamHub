@@ -67,7 +67,8 @@
     },
     "feed": {
       "unsigned": "Adds {url} as a source. Its packages are installed with full rights on the box and are not signed — only add one you trust."
-    }
+    },
+    "tmdbOff": "Film details and ratings are off. Add a TMDB key in Settings to see them."
   },
   "fix": {
     "checkBoxConnection": "Check the connection to the box.",
@@ -551,8 +552,7 @@
     "filters": {
       "label": "Filters",
       "movies": "Films only",
-      "rated": "Rated 7+",
-      "needsEnrichment": "The filters need details from TMDB — turn it on in Settings under “TMDB”."
+      "rated": "Rated 7+"
     },
     "bouquet": "Bouquet",
     "day": "Day",
@@ -1199,8 +1199,8 @@
     },
     "autoTimer": {
       "title": "AutoTimer",
-      "simulate": "Dry run",
-      "simulating": "Running…",
+      "simulate": "Show what would be recorded",
+      "simulating": "Checking…",
       "openEditor": "Open AutoTimer editor",
       "notInstalled": "The AutoTimer plugin isn't installed on this box. That's fine — it's optional (Addon Manager).",
       "none": "No AutoTimers configured.",
@@ -1208,8 +1208,9 @@
       "match": "matches “{match}”",
       "enabled": "On",
       "disabled": "Off",
-      "simulateEyebrow": "Dry run · these timers would be created, nothing was changed",
-      "simulateNone": "The AutoTimers would create no new timers right now."
+      "simulateEyebrow": "This would be recorded — nothing was changed",
+      "simulateNone": "The AutoTimers would create no new timers right now.",
+      "intro": "Records everything that matches these rules automatically."
     },
     "enable": "Enable",
     "disable": "Disable",
@@ -1227,7 +1228,8 @@
       "disable": "“{name}” is disabled.",
       "enable": "“{name}” is enabled again.",
       "delete": "Deleted “{name}”."
-    }
+    },
+    "more": "More actions"
   },
   "admin": {
     "tabs": {

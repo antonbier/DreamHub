@@ -67,7 +67,8 @@
     },
     "feed": {
       "unsigned": "Aggiunge {url} come fonte. I suoi pacchetti vengono installati con tutti i diritti sul box e non sono firmati — aggiungine solo una di cui ti fidi."
-    }
+    },
+    "tmdbOff": "Dettagli e valutazioni dei film sono disattivati. Inserisci una chiave TMDB nelle impostazioni per vederli."
   },
   "fix": {
     "checkBoxConnection": "Controlla la connessione al box.",
@@ -551,8 +552,7 @@
     "filters": {
       "label": "Filtri",
       "movies": "Solo film",
-      "rated": "Voto da 7",
-      "needsEnrichment": "I filtri richiedono i dati di TMDB: attivalo nelle Impostazioni alla voce “TMDB”."
+      "rated": "Voto da 7"
     },
     "bouquet": "Bouquet",
     "day": "Giorno",
@@ -1199,8 +1199,8 @@
     },
     "autoTimer": {
       "title": "AutoTimer",
-      "simulate": "Prova",
-      "simulating": "In corso…",
+      "simulate": "Mostra cosa verrebbe registrato",
+      "simulating": "Controllo…",
       "openEditor": "Apri l'editor AutoTimer",
       "notInstalled": "Il plugin AutoTimer non è installato su questo box. Va bene così — è facoltativo (Addon Manager).",
       "none": "Nessun AutoTimer configurato.",
@@ -1208,8 +1208,9 @@
       "match": "cerca \"{match}\"",
       "enabled": "Attivo",
       "disabled": "Spento",
-      "simulateEyebrow": "Prova · questi timer verrebbero creati, nulla è cambiato",
-      "simulateNone": "Al momento gli AutoTimer non creerebbero nuovi timer."
+      "simulateEyebrow": "Questo verrebbe registrato — non è stato modificato nulla",
+      "simulateNone": "Al momento gli AutoTimer non creerebbero nuovi timer.",
+      "intro": "Registra automaticamente tutto ciò che corrisponde a queste regole."
     },
     "enable": "Attiva",
     "disable": "Disattiva",
@@ -1227,7 +1228,8 @@
       "disable": "«{name}» è disattivato.",
       "enable": "«{name}» è di nuovo attivo.",
       "delete": "\"{name}\" eliminato."
-    }
+    },
+    "more": "Altre azioni"
   },
   "admin": {
     "tabs": {

@@ -51,11 +51,11 @@
         >
           <option v-for="b in bouquets" :key="b.serviceReference" :value="b.serviceReference">{{ b.serviceName }}</option>
         </select>
-        <div class="flex items-center gap-1.5 text-[13px]" role="group" :aria-label="t('guide.filters.label')">
+        <div v-if="enrich.enabled" class="flex items-center gap-1.5 text-[13px]" role="group" :aria-label="t('guide.filters.label')">
           <button
             type="button"
             :aria-pressed="moviesOnly"
-            class="rounded-full border px-2.5 py-0.5"
+            class="tap rounded-full border px-2.5 py-0.5"
             :class="moviesOnly ? 'border-accent bg-accent/15 text-text' : 'border-line text-muted hover:text-text'"
             @click="moviesOnly = !moviesOnly"
           >
@@ -64,7 +64,7 @@
           <button
             type="button"
             :aria-pressed="topRated"
-            class="rounded-full border px-2.5 py-0.5"
+            class="tap rounded-full border px-2.5 py-0.5"
             :class="topRated ? 'border-accent bg-accent/15 text-text' : 'border-line text-muted hover:text-text'"
             @click="topRated = !topRated"
           >
@@ -72,7 +72,6 @@
           </button>
         </div>
       </div>
-      <p v-if="filterActive && !enrich.enabled" class="mt-2 text-[12.5px] text-faint">{{ t('guide.filters.needsEnrichment') }}</p>
 
       <p v-if="bouquetsFailed" class="mt-5 text-[14px] text-muted"><ErrorText /></p>
       <p v-else-if="!selectedBouquet && !bouquetsLoading" class="mt-5 text-[14px] text-muted">{{ t('guide.empty') }}</p>
@@ -192,7 +191,10 @@ const navigation = useNavigationStore()
 const enrich = useEnrichStore()
 const { timeZone } = useDisplayTimeZone()
 const { planErrorMessage } = usePlanError()
-const { moviesOnly, topRated, active: filterActive, passes } = useGuideFilters()
+const { moviesOnly, topRated, active: filterOn, passes } = useGuideFilters()
+// The filters need the film database; without it they are not offered, so
+// a choice remembered from before can't hide everything.
+const filterActive = computed(() => enrich.enabled && filterOn.value)
 const route = useRoute()
 
 const item = computed(() => navigation.navigation?.sections.flatMap((s) => s.items).find((i) => i.path === '/guide'))

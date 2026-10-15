@@ -2,7 +2,7 @@
   One timer in TimerHub's list — DESIGN.md's three-column Row: time range
   (leading), name plus channel/source (main), state and a text action
   (trailing). A likely conflict tints the time in `warn` and says so in the
-  secondary line; the state uses a dot, never a pill. Disable/enable and
+  secondary line; the state is a dot plus a word, never a pill. Disable/enable and
   delete preview in place below the row (PlanPreview).
 -->
 <template>
@@ -15,8 +15,8 @@
         {{ timeRange }}
       </span>
       <span class="min-w-0 flex-1">
-        <span class="block truncate text-[14px]" :class="timer.disabled ? 'text-muted' : 'text-text'">{{ timer.name }}</span>
-        <span class="block truncate text-[12.5px] text-muted">
+        <span class="block break-words text-[14px]" :class="timer.disabled ? 'text-muted' : 'text-text'">{{ timer.name }}</span>
+        <span class="block break-words text-[12.5px] text-muted">
           {{ timer.serviceName }}
           <template v-if="timer.source"> · {{ t(`timers.source.${timer.source}`) }}</template>
           <template v-if="timer.justPlay"> · {{ t('timers.zap') }}</template>
@@ -25,33 +25,40 @@
         </span>
       </span>
       <span class="flex shrink-0 items-center gap-1.5 text-[12.5px]" :class="stateClass">
-        <span class="h-1.5 w-1.5 rounded-full" :class="dotClass" :title="t(`timers.state.${stateKey}`)" />
-        <span class="below-sm:sr-only">{{ t(`timers.state.${stateKey}`) }}</span>
+        <span class="h-1.5 w-1.5 rounded-full" :class="dotClass" />
+        <span>{{ t(`timers.state.${stateKey}`) }}</span>
       </span>
-      <!-- Kept in the layout (invisible) while its preview is open or when
-           the timer can't be toggled — or this profile may not change it
-           (a viewer's are only their own) — so the state column lines up
-           with the other rows. -->
-      <button
-        type="button"
-        class="shrink-0 rounded px-2 py-1 text-[13px] text-accent hover:bg-tile opacity-0 focus:opacity-100 group-hover:opacity-100 below-md:opacity-100"
-        :class="{ invisible: deleting || !toggleable || !timer.mayChange }"
-        :disabled="!!deleting || !toggleable || !timer.mayChange"
-        :aria-hidden="!toggleable || !timer.mayChange || undefined"
-        @click="emit('toggle')"
-      >
-        {{ timer.disabled ? t('timers.enable') : t('timers.disable') }}
-      </button>
-      <button
-        type="button"
-        class="shrink-0 rounded px-2 py-1 text-[13px] text-accent hover:bg-tile opacity-0 focus:opacity-100 group-hover:opacity-100 below-md:opacity-100"
-        :class="{ invisible: deleting || !timer.mayChange }"
-        :disabled="!!deleting || !timer.mayChange"
-        :aria-hidden="!timer.mayChange || undefined"
-        @click="emit('delete')"
-      >
-        {{ t('timers.delete') }}
-      </button>
+      <!-- One action in sight: switch it off/on, or delete when it can't be
+           switched (running, finished). The other one is under "more". -->
+      <template v-if="timer.mayChange">
+        <button
+          type="button"
+          class="tap shrink-0 rounded px-2 py-1 text-[13px] text-accent hover:bg-tile"
+          :class="{ invisible: deleting }"
+          :disabled="!!deleting"
+          @click="toggleable ? emit('toggle') : emit('delete')"
+        >
+          {{ toggleable ? (timer.disabled ? t('timers.enable') : t('timers.disable')) : t('timers.delete') }}
+        </button>
+        <DropdownMenu v-if="toggleable" :class="{ invisible: deleting }">
+          <template #trigger="{ open }">
+            <button
+              type="button"
+              class="tap flex h-7 w-7 shrink-0 items-center justify-center rounded text-muted hover:bg-tile hover:text-text"
+              :class="{ 'bg-tile': open }"
+              :aria-label="t('timers.more')"
+              :disabled="!!deleting"
+            >
+              <Icon name="more" :size="16" />
+            </button>
+          </template>
+          <template #panel="{ close }">
+            <button type="button" class="block w-full px-3 py-2 text-start text-[13.5px] text-onair hover:bg-tile-2" @click="close(); emit('delete')">
+              {{ t('timers.delete') }}
+            </button>
+          </template>
+        </DropdownMenu>
+      </template>
     </div>
     <div v-if="deleting" class="pb-3">
       <p v-if="deleting.busy && !deleting.plan" class="text-[13px] text-faint">{{ t('common.loading') }}</p>
@@ -79,6 +86,8 @@
 import { computed } from 'vue'
 import { useI18n } from 'vue-i18n'
 import PlanPreview from '@/components/PlanPreview.vue'
+import DropdownMenu from '@/components/DropdownMenu.vue'
+import Icon from '@/components/Icon.vue'
 import type { DeleteState } from './types'
 import type { Timer } from '@/api/types'
 

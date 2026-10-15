@@ -312,3 +312,37 @@ func TestZeroPolicyIsMediaOnly(t *testing.T) {
 		t.Fatal("/etc allowed by the zero policy")
 	}
 }
+
+// The storage root is recorded on the container and used later for backup,
+// restore and removal, so it is checked even for a container that mounts
+// nothing from it.
+func TestValidateSpec_StorageRoot(t *testing.T) {
+	p := lexicalPolicy()
+	for _, c := range []struct{ root, want string }{
+		{"", ""},
+		{testRoot, ""},
+		{"/media/usb/dreamhub-apps", ""},
+		{"/", "mount_dreamhub"}, // contains the protected data below /media
+		{"/etc", "mount_system"},
+		{"/etc/ssh", "mount_system"},
+		{"/data/dreamhub-apps", "mount_system"},
+		{"/var/lib/apps", "mount_system"},
+		{"/tmp/apps", "mount_outside"},
+		{"/media", "mount_dreamhub"}, // contains the protected data below it
+		{"/media/hdd/dreamhub-data", "mount_dreamhub"},
+		{"/media/../etc", "invalid"},
+	} {
+		spec := goodSpec()
+		spec.Mounts = nil
+		spec.Root = c.root
+		if got := code(ValidateSpec(spec, p)); got != c.want {
+			t.Errorf("root %q: %q, want %q", c.root, got, c.want)
+		}
+	}
+	// "/" as a mount point inside the container.
+	spec := goodSpec()
+	spec.Mounts[0].ContainerDir = "/"
+	if code(ValidateSpec(spec, p)) != "invalid" {
+		t.Error("a mount at / in the container was allowed")
+	}
+}

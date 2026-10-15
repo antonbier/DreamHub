@@ -386,36 +386,40 @@ func hostDirOf(root, appID, service string, v compose.Volume) string {
 	return path.Join(root, appID+"."+v.Name)
 }
 
-// checkMounts applies the mount rules to every volume of every container.
+// checkMounts applies the mount rules to every volume of every container
+// and reports every refusal at once, not only the first.
 func (h *Apps) checkMounts(app appcatalog.App, root string) *formError {
 	policy := h.mountPolicy()
-	check := func(service string, vols []compose.Volume) *formError {
+	var issues compose.Issues
+	var first *formError
+	check := func(service string, vols []compose.Volume) {
 		for _, v := range vols {
 			host := hostDirOf(root, app.ID, service, v)
-			if err := policy.CheckMount(root, app.ID, host); err != nil {
-				se, _ := dockerd.IsRefusal(err)
-				code, msg, p := "mount_refused", err.Error(), host
-				if se != nil {
-					msg, p = se.Message, se.Path
-					code = "mount_refused"
-				}
-				return &formError{http.StatusUnprocessableEntity, code, msg, map[string]any{
+			err := policy.CheckMount(root, app.ID, host)
+			if err == nil {
+				continue
+			}
+			se, _ := dockerd.IsRefusal(err)
+			msg, p := err.Error(), host
+			if se != nil {
+				msg, p = se.Message, se.Path
+			}
+			issues = append(issues, compose.Issue{Code: "mount_refused", Service: service, Key: p, Detail: reasonOf(se), Message: msg})
+			if first == nil {
+				first = &formError{http.StatusUnprocessableEntity, "mount_refused", msg, map[string]any{
 					"service": service, "path": p, "reason": reasonOf(se), "container": v.Target,
-					"issues": compose.Issues{{Code: "mount_refused", Service: service, Key: p, Detail: reasonOf(se), Message: msg}},
 				}}
 			}
 		}
-		return nil
 	}
-	if ferr := check("", app.Mounts); ferr != nil {
-		return ferr
-	}
+	check("", app.Mounts)
 	for _, s := range app.Services {
-		if ferr := check(s.Name, s.Mounts); ferr != nil {
-			return ferr
-		}
+		check(s.Name, s.Mounts)
 	}
-	return nil
+	if first != nil {
+		first.details.(map[string]any)["issues"] = issues
+	}
+	return first
 }
 
 func reasonOf(se *dockerd.SpecError) string {

@@ -186,6 +186,54 @@ func (p MountPolicy) CheckMount(root, appID, host string) error {
 	return p.checkOne(rr, appID, rh, rb, rp)
 }
 
+// CheckRoot decides whether root may be an apps storage root: strictly
+// below one of the bases, as written and as the file system resolves it,
+// never a system directory or DreamHub's own data.
+func (p MountPolicy) CheckRoot(root string) error {
+	if !path.IsAbs(root) || path.Clean(root) != root || strings.ContainsAny(root, badPathChars) {
+		return refuse("mount_unclean", root, "the storage folder %q must be a clean absolute path", root)
+	}
+	rr, err := p.resolve(root)
+	if err != nil {
+		return refuse("mount_unresolvable", root, "the storage folder %q could not be resolved", root)
+	}
+	for _, form := range []struct {
+		root  string
+		bases []string
+	}{{root, p.bases()}, {rr, p.resolvedBases()}} {
+		for _, d := range systemDirs {
+			if within(form.root, d) {
+				return refuse("mount_system", root, "%s belongs to the box's system and can't hold apps' storage", d)
+			}
+		}
+		for _, d := range p.Protected {
+			if within(form.root, d) || within(d, form.root) {
+				return refuse("mount_dreamhub", root, "%s holds DreamHub's own data", d)
+			}
+		}
+		inBase := false
+		for _, b := range form.bases {
+			inBase = inBase || strictlyWithin(form.root, b)
+		}
+		if !inBase {
+			return refuse("mount_outside", root, "%s is not a place for apps' storage (below /media only)", root)
+		}
+	}
+	return nil
+}
+
+// resolvedBases are the bases with symlinks resolved; one that doesn't
+// resolve allows nothing.
+func (p MountPolicy) resolvedBases() []string {
+	var out []string
+	for _, b := range p.bases() {
+		if r, err := p.resolve(b); err == nil {
+			out = append(out, r)
+		}
+	}
+	return out
+}
+
 func (p MountPolicy) checkOne(root, appID, host string, bases, protected []string) error {
 	if host == "/" {
 		return refuse("mount_system", host, "the whole file system can't be mounted")
@@ -305,6 +353,14 @@ func ValidateSpec(spec ContainerSpec, policy MountPolicy) error {
 	if !ValidRoot(spec.Root) {
 		return refuse("invalid", spec.Root, "the storage root %q is not valid", spec.Root)
 	}
+	// The root is recorded on the container and later used to find the app's
+	// folders for backup, restore and removal: it must be a real place for
+	// apps, whether or not this container mounts anything from it.
+	if spec.Root != "" {
+		if err := policy.CheckRoot(spec.Root); err != nil {
+			return err
+		}
+	}
 	if !imageRe.MatchString(spec.Image) || strings.Contains(spec.Image, "..") || strings.Contains(spec.Image, "//") {
 		return refuse("invalid", "", "the image %q is not valid", spec.Image)
 	}
@@ -334,7 +390,7 @@ func ValidateSpec(spec ContainerSpec, policy MountPolicy) error {
 	}
 	targets := map[string]bool{}
 	for _, m := range spec.Mounts {
-		if !path.IsAbs(m.ContainerDir) || path.Clean(m.ContainerDir) != m.ContainerDir || strings.ContainsAny(m.ContainerDir, badPathChars) || len(m.ContainerDir) > 512 {
+		if m.ContainerDir == "/" || !path.IsAbs(m.ContainerDir) || path.Clean(m.ContainerDir) != m.ContainerDir || strings.ContainsAny(m.ContainerDir, badPathChars) || len(m.ContainerDir) > 512 {
 			return refuse("invalid", m.ContainerDir, "the mount point %q in the container is not valid", m.ContainerDir)
 		}
 		if targets[m.ContainerDir] {

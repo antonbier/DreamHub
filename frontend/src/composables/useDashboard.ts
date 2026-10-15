@@ -73,6 +73,17 @@ export function useDashboard(template = false) {
     void persist()
   }
 
+  // The touch-friendly counterpart of drag: one step up (-1) or down (+1).
+  function move(key: string, delta: -1 | 1) {
+    const tiles = layout.value.tiles
+    const from = tiles.findIndex((t) => tileKey(t) === key)
+    const to = from + delta
+    if (from === -1 || to < 0 || to >= tiles.length) return
+    const [moved] = tiles.splice(from, 1)
+    tiles.splice(to, 0, moved)
+    void persist()
+  }
+
   // Custom tiles: unlike the background saves above, these report failure,
   // since the builder dialog has to stay open and say so.
   async function addCustom(custom: CustomTileView) {
@@ -95,5 +106,5 @@ export function useDashboard(template = false) {
     layout.value = await api.dashboard.reset()
   }
 
-  return { layout, loading, loadFailed, editing, load, reset, toggleHidden, setWidth, reorder, addCustom, updateCustom, removeCustom }
+  return { layout, loading, loadFailed, editing, load, reset, toggleHidden, setWidth, reorder, move, addCustom, updateCustom, removeCustom }
 }

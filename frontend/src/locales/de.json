@@ -234,6 +234,8 @@
       "show": "Auf der Startseite zeigen",
       "hidden": "Ausgeblendet",
       "dragHandle": "Zum Umsortieren ziehen",
+      "moveUp": "Nach oben",
+      "moveDown": "Nach unten",
       "remove": "Kachel löschen"
     },
     "timersTile": {

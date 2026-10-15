@@ -234,6 +234,8 @@
       "show": "Show on dashboard",
       "hidden": "Hidden",
       "dragHandle": "Drag to reorder",
+      "moveUp": "Move up",
+      "moveDown": "Move down",
       "remove": "Delete tile"
     },
     "timersTile": {

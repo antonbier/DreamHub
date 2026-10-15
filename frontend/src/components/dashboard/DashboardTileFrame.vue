@@ -2,7 +2,8 @@
   Tile chrome (DESIGN.md, "Components: Tile" and its edit-mode variant):
   header with title, body in the default slot. In edit mode: dashed
   border, a drag handle (the actual native drag is wired on the grid item
-  in DashboardView.vue — this is the visual grip; the only way to reorder)
+  in DashboardView.vue — this is the visual grip; mouse only)
+  plus move up/down arrows, the way to reorder on touch,
   and a remove-from/show-on-dashboard button. One visual weight for every tile; nothing gets a
   louder treatment than another.
 -->
@@ -19,11 +20,29 @@
         class="shrink-0 cursor-grab text-faint"
         :title="t('dashboard.tileFrame.dragHandle')"
       />
-      <h2 class="min-w-0 truncate text-[15.5px] font-semibold" :class="{ 'flex-1': editing }">{{ title }}</h2>
+      <h2 class="text-[15.5px] font-semibold" :class="editing ? 'min-w-[9rem] flex-1' : 'min-w-0 truncate'">{{ title }}</h2>
       <span v-if="editing && tile.hidden" class="ms-1 text-[11.5px] text-faint">{{ t('dashboard.tileFrame.hidden') }}</span>
       <span v-if="!editing && meta" class="ms-auto shrink-0 text-[12.5px] text-faint">{{ meta }}</span>
 
       <div v-if="editing" class="ms-auto flex items-center gap-1">
+        <button
+          type="button"
+          class="tap flex min-w-[44px] justify-center rounded px-2 py-1 text-accent hover:bg-tile-2 disabled:text-faint disabled:opacity-40 disabled:hover:bg-transparent"
+          :disabled="!canUp"
+          :aria-label="t('dashboard.tileFrame.moveUp')"
+          @click="$emit('up')"
+        >
+          <Icon name="chevron-up" :size="16" />
+        </button>
+        <button
+          type="button"
+          class="tap flex min-w-[44px] justify-center rounded px-2 py-1 text-accent hover:bg-tile-2 disabled:text-faint disabled:opacity-40 disabled:hover:bg-transparent"
+          :disabled="!canDown"
+          :aria-label="t('dashboard.tileFrame.moveDown')"
+          @click="$emit('down')"
+        >
+          <Icon name="chevron-down" :size="16" />
+        </button>
         <button
           type="button"
           class="tap rounded px-2 py-1 text-[12px] text-accent hover:bg-tile-2"
@@ -58,7 +77,10 @@ defineProps<{
   meta?: string
   // Custom tiles can be removed for good; built-ins only hidden.
   removable?: boolean
+  // Move arrows (the touch way to reorder); disabled at the ends.
+  canUp?: boolean
+  canDown?: boolean
 }>()
-defineEmits<{ hide: []; remove: [] }>()
+defineEmits<{ hide: []; remove: []; up: []; down: [] }>()
 const { t } = useI18n()
 </script>

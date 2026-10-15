@@ -234,6 +234,8 @@
       "show": "Mostra nella dashboard",
       "hidden": "Nascosta",
       "dragHandle": "Trascina per riordinare",
+      "moveUp": "Sposta su",
+      "moveDown": "Sposta giù",
       "remove": "Elimina scheda"
     },
     "timersTile": {

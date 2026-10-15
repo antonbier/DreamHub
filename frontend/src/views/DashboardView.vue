@@ -49,7 +49,7 @@
 
     <div v-else class="grid grid-cols-4 gap-[14px] below-lg:grid-cols-2 below-sm:grid-cols-1">
       <div
-        v-for="tile in shownTiles"
+        v-for="(tile, i) in shownTiles"
         :key="tileKey(tile)"
         :draggable="dash.editing.value"
         class="transition-opacity"
@@ -65,6 +65,10 @@
           :meta="tile.custom ? t('dashboard.custom.meta') : undefined"
           :removable="tile.type === 'custom'"
           :editing="dash.editing.value"
+          :can-up="i > 0"
+          :can-down="i < shownTiles.length - 1"
+          @up="dash.move(tileKey(tile), -1)"
+          @down="dash.move(tileKey(tile), 1)"
           @hide="dash.toggleHidden(tileKey(tile))"
           @remove="dash.removeCustom(tileKey(tile))"
         >

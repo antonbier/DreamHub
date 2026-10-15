@@ -9,6 +9,7 @@ Format follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/); version
 - Clickable demo for a PC (mock data, no Dreambox): `packaging/build-mock.sh` builds zips for Windows, macOS and Linux; CI uploads them as the `dreamhub-demo` artifact. The backend now also compiles for Windows and macOS.
 
 ### Changed
+- Dashboard edit mode: every tile has "Move up" / "Move down" arrows (44px touch targets), so rearranging works on a phone; drag-and-drop still works with a mouse.
 - The sidebar always shows plain page names (Recordings, TV Guide, Live TV, …) — the "Hub names / Descriptive" switch is gone, and no internal hub name (MediaHub, TimerHub, …) appears anywhere on screen, including problem texts and the "Needed by …" notes on packages. Settings and the setup wizard say "Features" instead of "Hubs"; "4 hubs need attention" is "4 things need attention"; the Settings "Hubs" tab is part of General. The navigation group "Device" is "Box"; Device → Administration is "Services & logs".
 - Setup wizard: offered to an admin only while the box has no configuration, remembered on the box (new hidden setting `general.setupDone`) so a second phone doesn't get it again, never for viewers, full screen without menus. Its dead Channels step is gone. The sign-in screen and profile picker live at `/login`; PIN profiles show a lock.
 - Status banners say what is wrong in a sentence instead of "Degraded" / "Unavailable"; a missing TMDB key is "Film details and ratings are off. Add a TMDB key in Settings to see them."

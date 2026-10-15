@@ -52,6 +52,10 @@ type installBody struct {
 	// ConfirmElevated is the person's explicit extra confirmation for
 	// privileged mode, capabilities, devices and host PID/IPC.
 	ConfirmElevated bool `json:"confirmElevated"`
+
+	// editID is set by the edit endpoint (never decoded): the installed app
+	// this request changes, so a custom app keeps its id whatever its name.
+	editID string
 }
 
 type customBody struct {
@@ -171,6 +175,7 @@ type installPrep struct {
 	root     string
 	mainMB   int
 	totalMB  int
+	defMB    int // the limit for a container that states none
 	tz       string
 	specs    []dockerd.ContainerSpec // helpers first, the main container last
 	elevated []elevatedItem
@@ -214,6 +219,9 @@ func (h *Apps) resolveApp(body installBody) (appcatalog.App, map[string]bool, *f
 		id = customAppID(name)
 		if _, taken := appcatalog.ByID(id); taken {
 			id += "x"
+		}
+		if body.editID != "" {
+			id = body.editID
 		}
 	}
 
@@ -441,7 +449,10 @@ func allElevated(app appcatalog.App) []elevatedItem {
 // chooseRoot validates the storage choice (the same places GET
 // /api/v1/apps/storage lists).
 func (h *Apps) chooseRoot(ctx context.Context, storage string) (string, *formError) {
-	if storage == "" || storage == h.StorageRoot {
+	if storage == "" {
+		storage = h.defaultRoot(ctx)
+	}
+	if storage == h.StorageRoot {
 		return h.StorageRoot, nil
 	}
 	for _, c := range h.storageChoices(ctx) {
@@ -455,18 +466,51 @@ func (h *Apps) chooseRoot(ctx context.Context, storage string) (string, *formErr
 	return "", &formError{http.StatusBadRequest, "storage_invalid", "that isn't one of the places apps can be stored", nil}
 }
 
+// editTarget makes prepareInstall an edit of an installed app: the app stays
+// (same id, same storage, same data folders), its containers are made again.
+type editTarget struct {
+	group appGroup
+	root  string
+	// oldPorts are the ports the app holds now: they are free for the new
+	// containers, since the old ones go first.
+	oldPorts map[[2]int]bool
+	// oldMB is the memory limit of all its containers now.
+	oldMB int
+}
+
+// memorySizes works out the limits of a request: the main container's (the
+// person's choice, else the app's own, else the Docker setting) and all
+// containers together.
+func memorySizes(app appcatalog.App, requested int, cfg appsConfig) (mainMB, totalMB int) {
+	mainMB = requested
+	if mainMB <= 0 {
+		mainMB = app.MemoryMB
+	}
+	if mainMB <= 0 {
+		mainMB = cfg.defaultMemoryMB()
+	}
+	totalMB = mainMB
+	for _, s := range app.Services {
+		totalMB += serviceMemoryMB(s, cfg.defaultMemoryMB())
+	}
+	return mainMB, totalMB
+}
+
 // prepareInstall validates a whole install request against this box:
-// the mount rules, the elevated confirmation, memory, disk and ports.
-func (h *Apps) prepareInstall(ctx context.Context, body installBody, installed []dockerd.Container) (*installPrep, *formError) {
+// the mount rules, the elevated confirmation, memory, disk and ports. With
+// edit set it validates the same request as a change to an installed app.
+func (h *Apps) prepareInstall(ctx context.Context, body installBody, installed []dockerd.Container, edit *editTarget) (*installPrep, *formError) {
 	app, secret, ferr := h.resolveApp(body)
 	if ferr != nil {
 		return nil, ferr
 	}
-	if installedFingerprint(installed, app.ID) != "not-installed" {
+	if edit == nil && installedFingerprint(installed, app.ID) != "not-installed" {
 		return nil, &formError{http.StatusConflict, "already_installed", app.Name + " is already installed", nil}
 	}
-	root, ferr := h.chooseRoot(ctx, body.Storage)
-	if ferr != nil {
+	var root string
+	if edit != nil {
+		root = edit.root // where its data is; it can't move here
+	} else if root, ferr = h.chooseRoot(ctx, body.Storage); ferr != nil {
 		return nil, ferr
 	}
 	// Refusals first: a person must see "this mount is refused" before
@@ -496,24 +540,29 @@ func (h *Apps) prepareInstall(ctx context.Context, body installBody, installed [
 	if body.MemoryLimitMB > 1<<20 {
 		return nil, &formError{http.StatusConflict, "insufficient_memory", "that is more memory than the box has", nil}
 	}
-	prep.mainMB = body.MemoryLimitMB
-	if prep.mainMB <= 0 {
-		prep.mainMB = app.MemoryMB
+	cfg := h.config(ctx)
+	prep.mainMB, prep.totalMB = memorySizes(app, body.MemoryLimitMB, cfg)
+	prep.defMB = cfg.defaultMemoryMB()
+	// An edit takes the old containers away first: only the growth has to fit.
+	needMB := prep.totalMB
+	if edit != nil {
+		needMB = max(0, prep.totalMB-edit.oldMB)
 	}
-	if prep.mainMB <= 0 {
-		prep.mainMB = defaultMemoryLimitMB
+	if needMB > 0 {
+		if problem := h.checkResourceBudget(ctx, int64(needMB)<<20); problem != "" {
+			return nil, &formError{http.StatusConflict, "insufficient_memory", problem, nil}
+		}
 	}
-	prep.totalMB = prep.mainMB
-	for _, s := range app.Services {
-		prep.totalMB += serviceMemoryMB(s)
+	if edit == nil {
+		if problem := h.checkDiskSpace(ctx); problem != "" {
+			return nil, &formError{http.StatusConflict, "disk_full", problem, nil}
+		}
 	}
-	if problem := h.checkResourceBudget(ctx, int64(prep.totalMB)<<20); problem != "" {
-		return nil, &formError{http.StatusConflict, "insufficient_memory", problem, nil}
+	var except map[[2]int]bool
+	if edit != nil {
+		except = edit.oldPorts
 	}
-	if problem := h.checkDiskSpace(ctx); problem != "" {
-		return nil, &formError{http.StatusConflict, "disk_full", problem, nil}
-	}
-	if problem := h.checkPorts(app, 0); problem != "" {
+	if problem := h.checkPorts(app, 0, except); problem != "" {
 		return nil, &formError{http.StatusConflict, "port_in_use", problem, nil}
 	}
 	if app.Custom {
@@ -524,15 +573,15 @@ func (h *Apps) prepareInstall(ctx context.Context, body installBody, installed [
 	if len(prep.elevated) > 0 {
 		prep.warnings = append(prep.warnings, status.Problem{Code: "apps.elevated", Params: map[string]any{"count": len(prep.elevated)}})
 	}
-	prep.specs = h.appSpecs(app, prep.mainMB, prep.tz, root, body.ConfirmElevated)
+	prep.specs = h.appSpecs(app, prep.mainMB, prep.tz, root, body.ConfirmElevated, prep.defMB)
 	return prep, nil
 }
 
-func serviceMemoryMB(s appcatalog.Service) int {
+func serviceMemoryMB(s appcatalog.Service, def int) int {
 	if s.MemoryMB > 0 {
 		return s.MemoryMB
 	}
-	return defaultMemoryLimitMB
+	return def
 }
 
 // hubImage turns an image reference into the "namespace/repository" Docker
@@ -590,7 +639,7 @@ func (h *Apps) checkCustomImages(ctx context.Context, app appcatalog.App, prep *
 // appSpecs builds the containers of app, helpers first (the app expects
 // its database to be there), with env still holding "{{secret:…}}"
 // placeholders — Execute fills them in.
-func (h *Apps) appSpecs(app appcatalog.App, mainMB int, tz, root string, confirmed bool) []dockerd.ContainerSpec {
+func (h *Apps) appSpecs(app appcatalog.App, mainMB int, tz, root string, confirmed bool, defMB int) []dockerd.ContainerSpec {
 	var specs []dockerd.ContainerSpec
 	withTZ := func(env map[string]string) map[string]string {
 		out := map[string]string{"TZ": tz}
@@ -615,7 +664,7 @@ func (h *Apps) appSpecs(app appcatalog.App, mainMB int, tz, root string, confirm
 		specs = append(specs, dockerd.ContainerSpec{
 			AppID: app.ID, Service: s.Name, Image: appcatalog.ImageRef(s.Image, s.Tag),
 			Env: withTZ(s.Env), Cmd: s.Cmd, Mounts: mounts(s.Name, s.Mounts), Elevated: elevated(s.Elevated),
-			MemoryLimitBytes: int64(serviceMemoryMB(s)) << 20, HostNetwork: true, Root: root,
+			MemoryLimitBytes: int64(serviceMemoryMB(s, defMB)) << 20, HostNetwork: true, Root: root,
 		})
 	}
 	main := dockerd.ContainerSpec{
@@ -784,27 +833,40 @@ func (h *Apps) parseCustom(w http.ResponseWriter, r *http.Request) {
 		httpx.WriteError(w, r, http.StatusRequestEntityTooLarge, "compose_invalid", "the compose file is too large")
 		return
 	}
-	req := installBody{Custom: &customBody{Compose: text, Name: body.Name}}
-	// Defaults only: required fields without one are what the form asks.
-	f, err := compose.Parse([]byte(text))
-	if err != nil {
-		issuesError(err).write(w, r)
-		return
-	}
-	preview := h.previewDefaults(f, req)
-	if preview.err != nil {
-		preview.err.write(w, r)
-		return
-	}
 	lang := body.Lang
 	if lang != "de" && lang != "it" {
 		lang = "en"
+	}
+	out, ferr := h.parsedFrom(text, body.Name, lang, extraNotes, h.config(r.Context()).defaultMemoryMB())
+	if ferr != nil {
+		ferr.write(w, r)
+		return
+	}
+	httpx.WriteJSON(w, http.StatusOK, map[string]any{"app": out})
+}
+
+// parsedFrom builds the form's description of a compose file: its fields,
+// what it asks for beyond a plain container, notes. A file the mount rules
+// refuse (with the field defaults applied) is refused here already.
+func (h *Apps) parsedFrom(text, name, lang string, extraNotes []compose.Issue, defMB int) (parsedApp, *formError) {
+	req := installBody{Custom: &customBody{Compose: text, Name: name}}
+	// Defaults only: required fields without one are what the form asks.
+	f, err := compose.Parse([]byte(text))
+	if err != nil {
+		return parsedApp{}, issuesError(err)
+	}
+	preview := h.previewDefaults(f, req)
+	if preview.err != nil {
+		return parsedApp{}, preview.err
 	}
 	app := preview.app
 	out := parsedApp{
 		Compose: text, ID: app.ID, Name: app.Name, Fields: f.Fields(lang), Elevated: allElevated(app),
 		Notes: append(extraNotes, f.Notes...), WebPort: app.ContainerPort, PortEditable: app.PortEditable(),
 		MemoryMB: app.TotalMemoryMB(),
+	}
+	if out.MemoryMB == 0 {
+		out.MemoryMB = defMB
 	}
 	out.Description, out.Note = app.Localized(lang)
 	if out.Elevated == nil {
@@ -816,7 +878,7 @@ func (h *Apps) parseCustom(w http.ResponseWriter, r *http.Request) {
 	for _, s := range f.Services {
 		out.Services = append(out.Services, parsedService{Name: s.Name, Image: s.Image})
 	}
-	httpx.WriteJSON(w, http.StatusOK, map[string]any{"app": out})
+	return out, nil
 }
 
 type defaultsPreview struct {

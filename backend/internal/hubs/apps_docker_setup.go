@@ -152,7 +152,7 @@ func (h *Apps) planDockerUninstall(w http.ResponseWriter, r *http.Request) {
 	}
 	ctx := r.Context()
 	containers := h.listForUninstall(ctx)
-	opts := dockersetup.RemoveOptions{DeleteData: body.DeleteData, AppRoots: h.appRoots(containers)}
+	opts := dockersetup.RemoveOptions{DeleteData: body.DeleteData, AppRoots: h.appRoots(ctx, containers)}
 	steps, err := h.Setup.PlanRemove(ctx, opts)
 	if err != nil {
 		httpx.WriteError(w, r, http.StatusBadGateway, "docker_setup_failed", "could not work out what Docker has left")
@@ -194,7 +194,7 @@ func (h *Apps) planDockerUninstall(w http.ResponseWriter, r *http.Request) {
 		Fingerprint: fingerprint(containers, steps),
 		Current: func(ctx context.Context) (string, error) {
 			cs := h.listForUninstall(ctx)
-			o := dockersetup.RemoveOptions{DeleteData: body.DeleteData, AppRoots: h.appRoots(cs)}
+			o := dockersetup.RemoveOptions{DeleteData: body.DeleteData, AppRoots: h.appRoots(ctx, cs)}
 			now, err := h.Setup.PlanRemove(ctx, o)
 			if err != nil {
 				return "", err
@@ -260,10 +260,10 @@ func (h *Apps) listForUninstall(ctx context.Context) []dockerd.Container {
 
 // appRoots are the storage roots the apps live under: the default one and
 // whatever the installed apps were given at install. Only valid roots.
-func (h *Apps) appRoots(containers []dockerd.Container) []string {
+func (h *Apps) appRoots(ctx context.Context, containers []dockerd.Container) []string {
 	seen := map[string]bool{}
 	var out []string
-	for _, r := range append([]string{h.StorageRoot}, rootsOf(containers)...) {
+	for _, r := range append([]string{h.StorageRoot, h.defaultRoot(ctx)}, rootsOf(containers)...) {
 		if r != "" && dockerd.ValidRoot(r) && !seen[r] {
 			seen[r] = true
 			out = append(out, r)

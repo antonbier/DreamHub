@@ -38,11 +38,26 @@ var boxPorts = map[int]bool{80: true, 443: true, 8080: true, 8090: true, 8001: t
 // locking.
 var storageFS = map[string]bool{"ext2": true, "ext3": true, "ext4": true, "xfs": true, "btrfs": true, "f2fs": true}
 
-func (h *Apps) storageChoices(ctx context.Context) []StorageChoice {
+// rawStorageChoices are the places apps can be stored, before the chosen
+// default is marked.
+func (h *Apps) rawStorageChoices(ctx context.Context) []StorageChoice {
 	if h.Storage != nil {
 		return h.Storage(ctx)
 	}
 	return mountedStorage(h.StorageRoot)
+}
+
+// storageChoices are the places apps can be stored, the one new apps go to
+// by default (the Docker setting, else the recording disk) marked.
+func (h *Apps) storageChoices(ctx context.Context) []StorageChoice {
+	choices := h.rawStorageChoices(ctx)
+	def := h.defaultRoot(ctx)
+	out := make([]StorageChoice, len(choices))
+	for i, c := range choices {
+		c.Default = c.Path == def
+		out[i] = c
+	}
+	return out
 }
 
 // mountedStorage lists the writable disks mounted directly under /media,

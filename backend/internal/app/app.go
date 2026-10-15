@@ -269,6 +269,7 @@ func New(ctx context.Context, o Options) (*App, error) {
 	// Hubs' own sections, then the per-hub enable switches.
 	sections = append(sections, hubs_.MediaSettingsSection())
 	sections = append(sections, hubs_.ChannelsSettingsSection())
+	sections = append(sections, hubs_.AppsSettingsSection())
 	sections = append(sections, hubs.SettingsSection())
 	reg := settings.NewRegistry()
 	for _, sec := range sections {
@@ -362,6 +363,7 @@ func New(ctx context.Context, o Options) (*App, error) {
 		DockerHub: o.DockerHub, Docker: o.Docker, Mem: o.Mem, WC: o.WebControl,
 		StorageRoot: o.AppsStorageRoot, DataDir: o.DataDir, Policy: o.AppsMountPolicy, Plans: plans, ReadOnly: o.ReadOnlyFiles,
 		Store: st, Auth: svc, ConfigFS: o.AppsConfigFS, Setup: o.DockerSetup, Now: now,
+		Settings: svc, User: user,
 	}
 	if o.Mock {
 		// Two demo disks, so the install dialog's storage choice has
@@ -470,6 +472,7 @@ func background(n *push.Notifier, series *hubs_.Series, admin *hubs_.Admin, apps
 		func(ctx context.Context) { admin.WatchServices(ctx, bus, logger) },
 		func(ctx context.Context) { admin.WatchPackages(ctx, bus, logger) },
 		func(ctx context.Context) { apps.WatchApps(ctx, bus, logger) },
+		func(ctx context.Context) { apps.AutostartOnBoot(ctx, logger) },
 	}
 	if plexHub.Client != nil {
 		jobs = append(jobs, plexHub.Watch)

@@ -108,7 +108,7 @@ func TestAppSpecs_CuratedLayoutUnchanged(t *testing.T) {
 	h := &Apps{}
 	root := "/media/hdd/dreamhub-apps"
 	nc, _ := appcatalog.ByID("nextcloud")
-	specs := h.appSpecs(nc, 512, "Europe/Rome", root, false)
+	specs := h.appSpecs(nc, 512, "Europe/Rome", root, false, defaultMemoryLimitMB)
 	if len(specs) != 2 || specs[0].Service != "db" || specs[1].Service != "" {
 		t.Fatalf("order: %+v", specs)
 	}
@@ -130,7 +130,7 @@ func TestAppSpecs_CuratedLayoutUnchanged(t *testing.T) {
 		t.Fatal("a curated app is a plain container without a custom name")
 	}
 	qb, _ := appcatalog.ByID("qbittorrent")
-	specs = h.appSpecs(qb, 256, "UTC", root, false)
+	specs = h.appSpecs(qb, 256, "UTC", root, false, defaultMemoryLimitMB)
 	if len(specs) != 1 || specs[0].Mounts[1].HostDir != root+"/qbittorrent.data" || specs[0].Mounts[1].ContainerDir != "/downloads" {
 		t.Fatalf("qbittorrent: %+v", specs)
 	}

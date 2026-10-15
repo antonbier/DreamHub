@@ -300,7 +300,9 @@ func TestServer_PruneTakesNoParameters(t *testing.T) {
 	srv := httptest.NewServer(dockerd.Server{Client: c}.Handler())
 	defer srv.Close()
 	for name, req := range map[string]func() (*http.Response, error){
-		"body":  func() (*http.Response, error) { return http.Post(srv.URL+"/images/prune", "application/json", strings.NewReader(`{"all":true}`)) },
+		"body": func() (*http.Response, error) {
+			return http.Post(srv.URL+"/images/prune", "application/json", strings.NewReader(`{"all":true}`))
+		},
 		"query": func() (*http.Response, error) { return http.Post(srv.URL+"/images/prune?filters=%7B%7D", "", nil) },
 	} {
 		resp, err := req()

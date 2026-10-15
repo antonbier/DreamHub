@@ -20,6 +20,7 @@ import (
 	"github.com/antonbier/DreamHub/backend/internal/meminfo"
 	"github.com/antonbier/DreamHub/backend/internal/perm"
 	"github.com/antonbier/DreamHub/backend/internal/plan"
+	"github.com/antonbier/DreamHub/backend/internal/settings"
 	"github.com/antonbier/DreamHub/backend/internal/store"
 	"github.com/antonbier/DreamHub/backend/internal/webcontrol"
 )
@@ -90,6 +91,14 @@ type Apps struct {
 	// Storage lists the places an app can be stored (tests, mock mode); nil
 	// reads the box's mounts (apps_storage.go).
 	Storage func(context.Context) []StorageChoice
+	// Settings holds the Docker settings (apps_settings.go) and User is who
+	// they are read as (they are global, so any user's view is the same); nil
+	// Settings means the defaults.
+	Settings *settings.Service
+	User     store.User
+	cfgMu    sync.Mutex
+	// BootID names the current boot (tests); nil reads the kernel's.
+	BootID func() string
 }
 
 func (h *Apps) now() time.Time {
@@ -114,6 +123,11 @@ func (h *Apps) Perms() map[string]perm.Perm {
 		"POST /api/v1/apps/installed/{id}/remove/plan": perm.System,
 		"POST /api/v1/apps/installed/{id}/start":       perm.System,
 		"POST /api/v1/apps/installed/{id}/stop":        perm.System,
+		"PUT /api/v1/apps/installed/{id}/autostart":    perm.System,
+		"GET /api/v1/apps/installed/{id}/edit":         perm.System,
+		"POST /api/v1/apps/installed/{id}/edit/plan":   perm.System,
+		"GET /api/v1/apps/docker/images":               perm.System,
+		"POST /api/v1/apps/docker/images/prune/plan":   perm.System,
 		"GET /api/v1/apps/installed/{id}/logs":         perm.System,
 		"GET /api/v1/apps/console/status":              perm.System,
 		"POST /api/v1/apps/console/enable":             perm.System,
@@ -136,6 +150,11 @@ func (h *Apps) Mount(mux httpx.Mux) {
 	mux.HandleFunc("POST /api/v1/apps/installed/{id}/remove/plan", h.planRemove)
 	mux.HandleFunc("POST /api/v1/apps/installed/{id}/start", h.startInstalled)
 	mux.HandleFunc("POST /api/v1/apps/installed/{id}/stop", h.stopInstalled)
+	mux.HandleFunc("PUT /api/v1/apps/installed/{id}/autostart", h.putAutostart)
+	mux.HandleFunc("GET /api/v1/apps/installed/{id}/edit", h.editForm)
+	mux.HandleFunc("POST /api/v1/apps/installed/{id}/edit/plan", h.planEdit)
+	mux.HandleFunc("GET /api/v1/apps/docker/images", h.unusedImages)
+	mux.HandleFunc("POST /api/v1/apps/docker/images/prune/plan", h.planPruneImages)
 	mux.HandleFunc("GET /api/v1/apps/installed/{id}/logs", h.containerLogs)
 	mux.HandleFunc("GET /api/v1/apps/console/status", h.consoleStatus)
 	mux.HandleFunc("POST /api/v1/apps/console/enable", h.enableConsole)
@@ -198,17 +217,25 @@ func (h *Apps) catalog(w http.ResponseWriter, r *http.Request) {
 	lang := requestLang(r)
 	out := make([]catalogEntry, 0, len(appcatalog.Apps))
 	for _, a := range appcatalog.Apps {
-		desc, note := a.Localized(lang)
-		out = append(out, catalogEntry{
-			ID: a.ID, Name: a.Name, Category: a.Category, Description: desc,
-			Image: a.Image, Note: note, MemoryMB: a.TotalMemoryMB(), Port: a.ContainerPort, PortEditable: a.PortEditable(),
-			Compatible: a.SupportsArch(box), Installed: installed[a.ID], Icon: a.Icon, Fields: a.Fields(lang),
-		})
-		for _, sv := range a.Services {
-			out[len(out)-1].Services = append(out[len(out)-1].Services, sv.Name)
-		}
+		e := catalogEntryOf(a, lang, box)
+		e.Installed = installed[a.ID]
+		out = append(out, e)
 	}
 	httpx.WriteJSON(w, http.StatusOK, map[string]any{"apps": out})
+}
+
+// catalogEntryOf is a curated app as the install form and the list show it.
+func catalogEntryOf(a appcatalog.App, lang string, box dockerhub.Arch) catalogEntry {
+	desc, note := a.Localized(lang)
+	e := catalogEntry{
+		ID: a.ID, Name: a.Name, Category: a.Category, Description: desc,
+		Image: a.Image, Note: note, MemoryMB: a.TotalMemoryMB(), Port: a.ContainerPort, PortEditable: a.PortEditable(),
+		Compatible: a.SupportsArch(box), Icon: a.Icon, Fields: a.Fields(lang),
+	}
+	for _, sv := range a.Services {
+		e.Services = append(e.Services, sv.Name)
+	}
+	return e
 }
 
 // searchResult is one free-search hit — never pre-checked for arch

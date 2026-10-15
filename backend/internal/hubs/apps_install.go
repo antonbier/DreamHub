@@ -120,6 +120,13 @@ type installedApp struct {
 	// actually running. Always computed live, never stored, same as
 	// HostPort above.
 	Upgradable bool `json:"upgradable,omitempty"`
+	// Autostart: the app starts when the box starts (apps_settings.go).
+	Autostart bool `json:"autostart"`
+	// Editable: the edit form can be opened (an app of one's own needs its
+	// stored compose file). Icon and Category choose the row's picture.
+	Editable bool   `json:"editable"`
+	Icon     string `json:"icon,omitempty"`
+	Category string `json:"category,omitempty"`
 	// Services are the app's helper containers (e.g. Nextcloud's
 	// database), each with its own logs.
 	Services []installedService `json:"services,omitempty"`
@@ -217,6 +224,7 @@ func (h *Apps) listInstalled(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 	groups := groupApps(containers)
+	cfg := h.config(r.Context())
 	out := make([]installedApp, 0, len(groups))
 	for _, g := range groups {
 		all := g.all()
@@ -224,6 +232,10 @@ func (h *Apps) listInstalled(w http.ResponseWriter, r *http.Request) {
 		row := installedApp{
 			ID: head.ID, AppID: g.appID, Name: groupName(g, head.Image), Image: head.Image,
 			State: head.State, HostPort: head.HostPort,
+			Autostart: cfg.isAutostart(g.appID), Editable: h.editable(g),
+		}
+		if cat, ok := appcatalog.ByID(g.appID); ok {
+			row.Icon, row.Category = cat.Icon, cat.Category
 		}
 		for _, c := range all {
 			if h.imageUpgradable(r.Context(), c) {
@@ -293,7 +305,7 @@ func (h *Apps) planInstall(w http.ResponseWriter, r *http.Request) {
 		writeDockerError(w, r, err, "could not check installed apps")
 		return
 	}
-	prep, ferr := h.prepareInstall(ctx, body, containers)
+	prep, ferr := h.prepareInstall(ctx, body, containers, nil)
 	if ferr != nil {
 		ferr.write(w, r)
 		return
@@ -319,6 +331,7 @@ func (h *Apps) planInstall(w http.ResponseWriter, r *http.Request) {
 	}
 	storage := configDir(root, app.ID)
 	user, _ := httpx.User(ctx)
+	def := definitionOf(body)
 	pl := h.Plans.Create(user, plan.Draft{
 		Action: "apps.install",
 		Changes: []plan.Change{{Type: "apps.install", After: map[string]any{
@@ -362,6 +375,12 @@ func (h *Apps) planInstall(w http.ResponseWriter, r *http.Request) {
 					return &plan.Failure{Status: http.StatusBadGateway, Code: "install_failed", Message: "the app could not be installed", Err: err}
 				}
 				created = append(created, c.ID)
+			}
+			h.saveDefinition(root, app.ID, def)
+			// A new app starts with the box if the Docker setting says so;
+			// a failure to remember that does not undo the install.
+			if h.config(ctx).AutostartDefault {
+				_ = h.setAutostart(ctx, app.ID, true)
 			}
 			return nil
 		},
@@ -462,7 +481,7 @@ func (h *Apps) checkDiskSpace(ctx context.Context) string {
 // refused, naming who has it when it's one of the box's own services. An
 // explicit hostPort other than the app's own is refused too: an admin's
 // choice is never silently overridden.
-func (h *Apps) checkPorts(app appcatalog.App, explicit int) string {
+func (h *Apps) checkPorts(app appcatalog.App, explicit int, except map[[2]int]bool) string {
 	if explicit != 0 && explicit != app.ContainerPort {
 		if app.ContainerPort == 0 {
 			return fmt.Sprintf("%s has no web port", app.Name)
@@ -491,6 +510,11 @@ func (h *Apps) checkPorts(app appcatalog.App, explicit int) string {
 			return fmt.Sprintf("port %d is used twice by %s", p.Port, app.Name)
 		}
 		seen[key] = true
+		// A port the app holds itself today (an edit makes its containers
+		// again) is not "in use".
+		if except[key] && !boxPorts[p.Port] {
+			continue
+		}
 		if !boxPorts[p.Port] && free(p) {
 			continue
 		}
@@ -564,6 +588,7 @@ func (h *Apps) planRemove(w http.ResponseWriter, r *http.Request) {
 					return &plan.Failure{Status: http.StatusBadGateway, Code: "remove_failed", Message: "the app could not be removed", Err: err}
 				}
 			}
+			_ = h.setAutostart(ctx, g.appID, false)
 			return nil
 		},
 	})

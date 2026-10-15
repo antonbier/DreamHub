@@ -25,8 +25,8 @@ import (
 // against the registry's current digest (dockerhub.Client.Digest),
 // compared with what's actually running (dockerd.Client.ImageDigest).
 const (
-	appWatchInterval = time.Hour
-	appWatchFirst    = 2 * time.Minute // let the box settle after a boot, same as the package watch
+	appWatchTick  = 15 * time.Minute // how often the settings are looked at; the check itself runs at the chosen interval
+	appWatchFirst = 2 * time.Minute  // let the box settle after a boot, same as the package watch
 )
 
 // appWatch is the state between checks — same "already announced" shape
@@ -117,25 +117,39 @@ func (h *Apps) WatchApps(ctx context.Context, bus Publisher, logger *slog.Logger
 	w := newAppWatch()
 	timer := time.NewTimer(appWatchFirst)
 	defer timer.Stop()
+	var last time.Time
+	first := true
 	for {
 		select {
 		case <-ctx.Done():
 			return
 		case <-timer.C:
-			upgradable := h.checkUpgradable(ctx)
-			if newly := w.step(upgradable); len(newly) > 0 {
-				for _, id := range newly {
-					app, ok := appcatalog.ByID(id)
-					name := id
-					if ok {
-						name = app.Name
+			cfg := h.config(ctx)
+			now := h.now()
+			// Switched off in the Docker settings: no request to any registry.
+			if cfg.UpdateNotify && (first || updateDue(last, now, cfg.UpdateHours)) {
+				first = false
+				last = now
+				upgradable := h.checkUpgradable(ctx)
+				if newly := w.step(upgradable); len(newly) > 0 {
+					for _, id := range newly {
+						app, ok := appcatalog.ByID(id)
+						name := id
+						if ok {
+							name = app.Name
+						}
+						bus.Publish(ctx, events.AppUpgradable, map[string]any{"appId": id, "name": name})
 					}
-					bus.Publish(ctx, events.AppUpgradable, map[string]any{"appId": id, "name": name})
+				} else if logger != nil && len(upgradable) == 0 {
+					logger.Debug("app watch: nothing upgradable")
 				}
-			} else if logger != nil && len(upgradable) == 0 {
-				logger.Debug("app watch: nothing upgradable")
 			}
-			timer.Reset(appWatchInterval)
+			timer.Reset(appWatchTick)
 		}
 	}
+}
+
+// updateDue reports whether the check is due again at the chosen interval.
+func updateDue(last, now time.Time, hours int) bool {
+	return now.Sub(last) >= time.Duration(hours)*time.Hour
 }

@@ -24,6 +24,7 @@ import (
 	"net"
 	"net/http"
 	"os"
+	"path/filepath"
 	"time"
 
 	"github.com/antonbier/DreamHub/backend/internal/dockerd"
@@ -48,12 +49,22 @@ func run(logger *slog.Logger) error {
 	addr := envOr("DREAMHUB_DOCKERD_HELPER_ADDR", "127.0.0.1:8090")
 	sockPath := envOr("DREAMHUB_DOCKER_SOCKET", "/var/run/docker.sock")
 
+	// Which host paths a container may mount (docs/APPSHUB_PLAN.md, App12):
+	// only below /media — and never DreamHub's own data directory, which
+	// is protected even if someone points it under /media. Both lists can
+	// be changed in the unit's environment, never by a request.
+	policy := dockerd.DefaultPolicy()
+	if v := os.Getenv("DREAMHUB_HELPER_MOUNT_BASES"); v != "" {
+		policy.Bases = filepath.SplitList(v)
+	}
+	policy.Protected = []string{envOr("DREAMHUB_DATA_DIR", "/data/dreamhub")}
+
 	var client dockerd.Client
 	if os.Getenv("DREAMHUB_MOCK") == "1" {
 		client = mock.New()
 		logger.Info("dockerd-helper starting", "mode", "mock", "addr", addr)
 	} else {
-		client = dockerd.Exec{SocketPath: sockPath}
+		client = dockerd.Exec{SocketPath: sockPath, Policy: policy}
 		logger.Info("dockerd-helper starting", "mode", "live", "addr", addr, "socket", sockPath)
 	}
 
@@ -62,7 +73,7 @@ func run(logger *slog.Logger) error {
 		return err
 	}
 	srv := &http.Server{
-		Handler:           dockerd.Server{Client: client}.Handler(),
+		Handler:           dockerd.Server{Client: client, Policy: policy}.Handler(),
 		ReadHeaderTimeout: 5 * time.Second,
 	}
 	return srv.Serve(listener)

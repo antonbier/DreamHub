@@ -160,16 +160,19 @@ type ContainerSpec struct {
 	// (docker run --network host): what DreamHub's Docker setup uses,
 	// since the box's kernel can't do Docker's bridge network.
 	HostNetwork bool
-	// HostDir is bind-mounted to ContainerDir — HostDir is always a path
-	// this package's caller computed itself (AppsHub's own storage root
-	// plus AppID), never taken from the image or any other untrusted
-	// source.
-	HostDir, ContainerDir string
-	// DataHostDir/DataContainerDir are an optional second bind mount for
-	// an app's bulk user data (Nextcloud's files, downloads), computed by
-	// the caller the same way as HostDir — both empty, or both set.
-	DataHostDir, DataContainerDir string
-	// Root is the storage root HostDir and DataHostDir lie under, recorded
+	// Mounts are the bind mounts. Every HostDir is a path the caller
+	// computed itself or took from the person's own input, and Create
+	// checks each one against the mount rules (MountPolicy, paths.go)
+	// before anything reaches Docker: only the app's own folders under
+	// Root and paths below /media, never a system directory, DreamHub's
+	// own data, the Docker socket, or anything that resolves outside.
+	Mounts []Mount
+	// Elevated asks for more than a plain container (privileged,
+	// capabilities, devices, host PID/IPC). Create refuses any of it
+	// unless Elevated.Confirmed — the person's explicit extra
+	// confirmation, which only AppsHub's install plan sets.
+	Elevated Elevated
+	// Root is the storage root the app's own folders lie under, recorded
 	// as RootLabel; "" for the default.
 	Root string
 	// MemoryLimitBytes caps the container's RAM; 0 means no limit
@@ -205,7 +208,7 @@ type Client interface {
 	// spec.AppID already has a container.
 	Create(ctx context.Context, spec ContainerSpec) (Container, error)
 	// Remove stops (if running) and deletes a container — its bind-mounted
-	// HostDir is never touched, only the container itself. Returns
+	// folders are never touched, only the container itself. Returns
 	// ErrNotFound if id isn't AppLabel-tagged.
 	Remove(ctx context.Context, id string) error
 	// ImageDigest returns the registry digest ("sha256:...") of the image

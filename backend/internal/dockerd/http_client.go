@@ -123,8 +123,7 @@ func (c HTTPClient) Create(ctx context.Context, spec ContainerSpec) (Container, 
 	body, err := json.Marshal(map[string]any{
 		"appId": spec.AppID, "service": spec.Service, "image": spec.Image, "env": spec.Env, "cmd": spec.Cmd,
 		"hostPort": spec.HostPort, "containerPort": spec.ContainerPort,
-		"hostDir": spec.HostDir, "containerDir": spec.ContainerDir,
-		"dataHostDir": spec.DataHostDir, "dataContainerDir": spec.DataContainerDir,
+		"mounts": spec.Mounts, "elevated": spec.Elevated,
 		"memoryLimitBytes": spec.MemoryLimitBytes, "hostNetwork": spec.HostNetwork, "root": spec.Root,
 	})
 	if err != nil {
@@ -135,6 +134,12 @@ func (c HTTPClient) Create(ctx context.Context, spec ContainerSpec) (Container, 
 		return Container{}, err
 	}
 	defer resp.Body.Close()
+	if resp.StatusCode == http.StatusUnprocessableEntity {
+		var se struct{ Code, Message, Path string }
+		_ = json.NewDecoder(io.LimitReader(resp.Body, 1<<16)).Decode(&se)
+		drainClosed(resp.Body)
+		return Container{}, &SpecError{Code: se.Code, Message: se.Message, Path: se.Path}
+	}
 	if resp.StatusCode != http.StatusOK {
 		drainClosed(resp.Body)
 		return Container{}, statusErr(resp)

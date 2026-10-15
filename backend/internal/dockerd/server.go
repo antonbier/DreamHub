@@ -20,6 +20,9 @@ import (
 // a runtime check that a bug could skip.
 type Server struct {
 	Client Client
+	// Policy is which host paths a container may mount; the zero value is
+	// DefaultPolicy (/media only).
+	Policy MountPolicy
 }
 
 func (s Server) Handler() http.Handler {
@@ -37,7 +40,16 @@ func (s Server) Handler() http.Handler {
 }
 
 func writeErr(w http.ResponseWriter, err error) {
+	var se *SpecError
 	switch {
+	case errors.As(err, &se):
+		// 422: the request was understood and refused; the body says why
+		// (code and message) so the caller can tell the person.
+		w.Header().Set("Content-Type", "application/json")
+		w.WriteHeader(http.StatusUnprocessableEntity)
+		_ = json.NewEncoder(w).Encode(map[string]string{"code": se.Code, "message": se.Message, "path": se.Path})
+	case errors.Is(err, ErrInvalidService):
+		http.Error(w, err.Error(), http.StatusBadRequest)
 	case errors.Is(err, ErrNotFound):
 		http.Error(w, err.Error(), http.StatusNotFound)
 	case errors.Is(err, ErrAlreadyExists):
@@ -88,28 +100,33 @@ type createRequest struct {
 	Cmd           []string          `json:"cmd"`
 	HostPort      int               `json:"hostPort"`
 	ContainerPort int               `json:"containerPort"`
-	HostDir       string            `json:"hostDir"`
-	ContainerDir  string            `json:"containerDir"`
-	DataHostDir   string            `json:"dataHostDir"`
-	DataDir       string            `json:"dataContainerDir"`
+	Mounts        []Mount           `json:"mounts"`
+	Elevated      Elevated          `json:"elevated"`
 	MemoryLimit   int64             `json:"memoryLimitBytes"`
 	HostNetwork   bool              `json:"hostNetwork"`
 	Root          string            `json:"root"`
 }
 
 func (s Server) handleCreate(w http.ResponseWriter, r *http.Request) {
+	r.Body = http.MaxBytesReader(w, r.Body, 1<<20)
+	dec := json.NewDecoder(r.Body)
+	dec.DisallowUnknownFields() // an unknown field is a caller asking for something this surface doesn't offer
 	var body createRequest
-	if err := json.NewDecoder(r.Body).Decode(&body); err != nil || body.AppID == "" || body.Image == "" || body.HostDir == "" || body.ContainerDir == "" || body.MemoryLimit <= 0 || !ValidService(body.Service) || !ValidRoot(body.Root) || (body.DataHostDir == "") != (body.DataDir == "") {
-		http.Error(w, "dockerd: create: appId, image, hostDir, containerDir and a positive memoryLimitBytes are required, service is lowercase letters/digits", http.StatusBadRequest)
+	if err := dec.Decode(&body); err != nil || body.AppID == "" || body.Image == "" || body.MemoryLimit <= 0 || !ValidService(body.Service) || !ValidRoot(body.Root) {
+		http.Error(w, "dockerd: create: appId, image and a positive memoryLimitBytes are required, service is lowercase letters/digits", http.StatusBadRequest)
 		return
 	}
-	c, err := s.Client.Create(r.Context(), ContainerSpec{
+	spec := ContainerSpec{
 		AppID: body.AppID, Service: body.Service, Image: body.Image, Env: body.Env, Cmd: body.Cmd,
 		HostPort: body.HostPort, ContainerPort: body.ContainerPort,
-		HostDir: body.HostDir, ContainerDir: body.ContainerDir,
-		DataHostDir: body.DataHostDir, DataContainerDir: body.DataDir,
+		Mounts: body.Mounts, Elevated: body.Elevated,
 		MemoryLimitBytes: body.MemoryLimit, HostNetwork: body.HostNetwork, Root: body.Root,
-	})
+	}
+	if err := ValidateSpec(spec, s.Policy); err != nil {
+		writeErr(w, err)
+		return
+	}
+	c, err := s.Client.Create(r.Context(), spec)
 	if err != nil {
 		writeErr(w, err)
 		return

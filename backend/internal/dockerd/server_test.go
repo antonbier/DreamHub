@@ -5,6 +5,7 @@ import (
 	"errors"
 	"net/http"
 	"net/http/httptest"
+	"strings"
 	"testing"
 
 	"github.com/antonbier/DreamHub/backend/internal/dockerd"
@@ -137,7 +138,8 @@ func TestHTTPClient_CreateAndRemove(t *testing.T) {
 		AppID: "sonarr", Image: "linuxserver/sonarr:latest",
 		Env:      map[string]string{"TZ": "Europe/Rome"},
 		HostPort: 8989, ContainerPort: 8989,
-		HostDir: "/media/hdd/dreamhub-apps/sonarr", ContainerDir: "/config",
+		Root:             "/media/hdd/dreamhub-apps",
+		Mounts:           []dockerd.Mount{{HostDir: "/media/hdd/dreamhub-apps/sonarr", ContainerDir: "/config"}},
 		MemoryLimitBytes: 256 << 20,
 	}
 	created, err := client.Create(ctx, spec)
@@ -213,4 +215,62 @@ func state(list []dockerd.Container, id string) string {
 		}
 	}
 	return ""
+}
+
+// A refused create travels back through the loopback hop as a typed
+// refusal, and the mock daemon behind the Server never sees it.
+func TestHTTPClient_CreateRefusals(t *testing.T) {
+	client, closeFn := newTestServer(t)
+	defer closeFn()
+	ctx := context.Background()
+	good := dockerd.ContainerSpec{
+		AppID: "myapp", Image: "ghcr.io/x/y:1", MemoryLimitBytes: 1 << 20, HostNetwork: true, Root: "/media/hdd/dreamhub-apps",
+		Mounts: []dockerd.Mount{{HostDir: "/media/hdd/dreamhub-apps/myapp", ContainerDir: "/config"}},
+	}
+	for name, mutate := range map[string]func(*dockerd.ContainerSpec){
+		"host root":        func(s *dockerd.ContainerSpec) { s.Mounts[0].HostDir = "/" },
+		"etc":              func(s *dockerd.ContainerSpec) { s.Mounts[0].HostDir = "/etc" },
+		"docker socket":    func(s *dockerd.ContainerSpec) { s.Mounts[0].HostDir = "/var/run/docker.sock" },
+		"dot dot":          func(s *dockerd.ContainerSpec) { s.Mounts[0].HostDir = "/media/hdd/../../etc" },
+		"another app":      func(s *dockerd.ContainerSpec) { s.Mounts[0].HostDir = "/media/hdd/dreamhub-apps/pihole" },
+		"unconfirmed priv": func(s *dockerd.ContainerSpec) { s.Elevated.Privileged = true },
+	} {
+		spec := good
+		spec.Mounts = append([]dockerd.Mount{}, good.Mounts...)
+		mutate(&spec)
+		_, err := client.Create(ctx, spec)
+		se, ok := dockerd.IsRefusal(err)
+		if !ok || se.Code == "" || se.Message == "" {
+			t.Errorf("%s: got %v, want a typed refusal", name, err)
+		}
+	}
+	list, _ := client.List(ctx)
+	if len(list) != 2 {
+		t.Fatalf("a refused create changed the containers: %d", len(list))
+	}
+	if _, err := client.Create(ctx, good); err != nil {
+		t.Fatalf("the good spec: %v", err)
+	}
+}
+
+// The create surface takes the fixed shape only: a field it doesn't know
+// (a raw HostConfig, a privileged flag outside "elevated") is refused, not
+// ignored.
+func TestServer_CreateRejectsUnknownFields(t *testing.T) {
+	srv := httptest.NewServer(dockerd.Server{Client: mock.New()}.Handler())
+	defer srv.Close()
+	for _, body := range []string{
+		`{"appId":"x","image":"x/y","memoryLimitBytes":1,"privileged":true}`,
+		`{"appId":"x","image":"x/y","memoryLimitBytes":1,"hostConfig":{"Privileged":true}}`,
+		`{"appId":"x","image":"x/y","memoryLimitBytes":1,"binds":["/:/host"]}`,
+	} {
+		resp, err := http.Post(srv.URL+"/containers", "application/json", strings.NewReader(body))
+		if err != nil {
+			t.Fatal(err)
+		}
+		resp.Body.Close()
+		if resp.StatusCode != http.StatusBadRequest {
+			t.Errorf("%s: status %d, want 400", body, resp.StatusCode)
+		}
+	}
 }

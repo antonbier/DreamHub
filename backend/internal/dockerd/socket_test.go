@@ -179,7 +179,8 @@ func TestExec_Create(t *testing.T) {
 	c, err := e.Create(context.Background(), ContainerSpec{
 		AppID: "sonarr", Image: "linuxserver/sonarr:latest",
 		Env: map[string]string{"TZ": "Europe/Rome"}, HostPort: 8989, ContainerPort: 8989,
-		HostDir: "/media/hdd/dreamhub-apps/sonarr", ContainerDir: "/config",
+		Root:             "/media/hdd/dreamhub-apps",
+		Mounts:           []Mount{{HostDir: "/media/hdd/dreamhub-apps/sonarr", ContainerDir: "/config"}},
 		MemoryLimitBytes: 256 << 20,
 	})
 	if err != nil {
@@ -200,7 +201,7 @@ func TestExec_CreateHostNetwork(t *testing.T) {
 
 	c, err := e.Create(context.Background(), ContainerSpec{
 		AppID: "vaultwarden", Image: "vaultwarden/server:latest", HostNetwork: true,
-		HostPort: 8000, ContainerPort: 8000, HostDir: "/x", ContainerDir: "/data", MemoryLimitBytes: 1,
+		HostPort: 8000, ContainerPort: 8000, MemoryLimitBytes: 1,
 	})
 	if err != nil {
 		t.Fatal(err)
@@ -226,15 +227,18 @@ func TestExec_CreateService(t *testing.T) {
 
 	c, err := e.Create(context.Background(), ContainerSpec{
 		AppID: "nextcloud", Service: "db", Image: "mariadb:11", HostNetwork: true,
-		Cmd: []string{"--bind-address=127.0.0.1"}, HostDir: "/x", ContainerDir: "/var/lib/mysql", MemoryLimitBytes: 1,
-		DataHostDir: "/x.data", DataContainerDir: "/data",
+		Cmd: []string{"--bind-address=127.0.0.1"}, MemoryLimitBytes: 1, Root: "/media/hdd/dreamhub-apps",
+		Mounts: []Mount{
+			{HostDir: "/media/hdd/dreamhub-apps/nextcloud.db", ContainerDir: "/var/lib/mysql"},
+			{HostDir: "/media/hdd/dreamhub-apps/nextcloud.data", ContainerDir: "/data", ReadOnly: true},
+		},
 	})
 	if err != nil {
 		t.Fatal(err)
 	}
 	body := string(lastCreateBody)
 	if !strings.Contains(body, `"dreamhub.service":"db"`) || !strings.Contains(body, `"Cmd":["--bind-address=127.0.0.1"]`) || strings.Contains(body, `"dreamhub.port"`) ||
-		!strings.Contains(body, `"Binds":["/x:/var/lib/mysql","/x.data:/data"]`) {
+		!strings.Contains(body, `"Binds":["/media/hdd/dreamhub-apps/nextcloud.db:/var/lib/mysql","/media/hdd/dreamhub-apps/nextcloud.data:/data:ro"]`) {
 		t.Fatalf("create body: %s", body)
 	}
 	if c.Name != "dreamhub-app-nextcloud-db" || c.Service() != "db" || c.AppID() != "nextcloud" {
@@ -335,5 +339,53 @@ func TestDemux_PlainFallsThrough(t *testing.T) {
 	plain := []byte("already plain text\n")
 	if got := demux(plain); string(got) != string(plain) {
 		t.Fatalf("got %q, want unchanged %q", got, plain)
+	}
+}
+
+// Elevated settings reach Docker's HostConfig only when confirmed, and the
+// mounts are checked again at the socket (the second line of defence behind
+// the helper's HTTP surface).
+func TestExec_CreateElevatedAndRefusals(t *testing.T) {
+	sock, closeFn := fakeDaemon(t)
+	defer closeFn()
+	e := Exec{SocketPath: sock}
+	base := ContainerSpec{
+		AppID: "zigbee", Image: "koenkk/zigbee2mqtt:latest", HostNetwork: true, MemoryLimitBytes: 1, Root: "/media/hdd/dreamhub-apps",
+		Mounts: []Mount{{HostDir: "/media/hdd/dreamhub-apps/zigbee", ContainerDir: "/app/data"}},
+	}
+	spec := base
+	spec.Elevated = Elevated{Privileged: true, CapAdd: []string{"NET_ADMIN"}, Devices: []string{"/dev/ttyUSB0:/dev/zigbee:rw"}, PidHost: true, IpcHost: true}
+	if _, err := e.Create(context.Background(), spec); code(err) != "needs_confirmation" {
+		t.Fatalf("unconfirmed: %v", err)
+	}
+	spec.Elevated.Confirmed = true
+	if _, err := e.Create(context.Background(), spec); err != nil {
+		t.Fatal(err)
+	}
+	body := string(lastCreateBody)
+	for _, want := range []string{`"Privileged":true`, `"CapAdd":["NET_ADMIN"]`, `"PathOnHost":"/dev/ttyUSB0"`, `"PathInContainer":"/dev/zigbee"`, `"PidMode":"host"`, `"IpcMode":"host"`} {
+		if !strings.Contains(body, want) {
+			t.Errorf("create body lacks %s: %s", want, body)
+		}
+	}
+	// A plain container carries none of it.
+	if _, err := e.Create(context.Background(), base); err != nil {
+		t.Fatal(err)
+	}
+	for _, not := range []string{"Privileged", "CapAdd", "Devices", "PidMode", "IpcMode"} {
+		if strings.Contains(string(lastCreateBody), not) {
+			t.Errorf("a plain container's body has %s: %s", not, lastCreateBody)
+		}
+	}
+	// A refused mount never gets as far as the daemon.
+	lastCreateBody = nil
+	bad := base
+	bad.Mounts = append([]Mount{}, base.Mounts...)
+	bad.Mounts = append(bad.Mounts, Mount{HostDir: "/var/run/docker.sock", ContainerDir: "/var/run/docker.sock"})
+	if _, err := e.Create(context.Background(), bad); code(err) != "mount_system" {
+		t.Fatalf("socket mount: %v", err)
+	}
+	if lastCreateBody != nil {
+		t.Fatal("the daemon saw a refused create")
 	}
 }

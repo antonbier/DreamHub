@@ -282,7 +282,7 @@ func (h *Apps) appSpecs(app appcatalog.App, memoryLimitMB int, tz, root string) 
 		specs = append(specs, dockerd.ContainerSpec{
 			AppID: app.ID, Service: s.Name, Image: appcatalog.ImageRef(s.Image, s.Tag),
 			Env: withTZ(s.Env), Cmd: s.Cmd,
-			HostDir: serviceDir(root, app.ID, s.Name), ContainerDir: s.ConfigPath,
+			Mounts:           []dockerd.Mount{{HostDir: serviceDir(root, app.ID, s.Name), ContainerDir: s.ConfigPath}},
 			MemoryLimitBytes: int64(s.MemoryMB) << 20, HostNetwork: true, Root: root,
 		})
 	}
@@ -290,11 +290,11 @@ func (h *Apps) appSpecs(app appcatalog.App, memoryLimitMB int, tz, root string) 
 		AppID: app.ID, Image: appcatalog.ImageRef(app.Image, app.Tag),
 		Env: withTZ(app.Env), Cmd: app.Cmd,
 		HostPort: app.ContainerPort, ContainerPort: app.ContainerPort,
-		HostDir: configDir(root, app.ID), ContainerDir: app.ConfigPath,
+		Mounts:           []dockerd.Mount{{HostDir: configDir(root, app.ID), ContainerDir: app.ConfigPath}},
 		MemoryLimitBytes: int64(memoryLimitMB) << 20, HostNetwork: true, Root: root,
 	}
 	if app.DataPath != "" {
-		main.DataHostDir, main.DataContainerDir = dataDir(root, app.ID), app.DataPath
+		main.Mounts = append(main.Mounts, dockerd.Mount{HostDir: dataDir(root, app.ID), ContainerDir: app.DataPath})
 	}
 	return append(specs, main)
 }
@@ -397,9 +397,9 @@ func (h *Apps) planInstall(w http.ResponseWriter, r *http.Request) {
 	for _, s := range specs[:len(specs)-1] {
 		summary += fmt.Sprintf(" with its %s (%s)", s.Service, s.Image)
 	}
-	summary += fmt.Sprintf(", up to %d MB RAM, storage at %s", totalMB, main.HostDir)
-	if main.DataHostDir != "" {
-		summary += fmt.Sprintf(", data at %s", main.DataHostDir)
+	summary += fmt.Sprintf(", up to %d MB RAM, storage at %s", totalMB, main.Mounts[0].HostDir)
+	if len(main.Mounts) > 1 {
+		summary += fmt.Sprintf(", data at %s", main.Mounts[1].HostDir)
 	}
 	if app.ContainerPort != 0 {
 		summary = fmt.Sprintf("%s, reachable on port %d", summary, app.ContainerPort)
@@ -413,7 +413,7 @@ func (h *Apps) planInstall(w http.ResponseWriter, r *http.Request) {
 	pl := h.Plans.Create(user, plan.Draft{
 		Action: "apps.install",
 		Changes: []plan.Change{{Type: "apps.install", After: map[string]any{
-			"appId": app.ID, "images": images, "hostPort": app.ContainerPort, "memoryLimitMB": totalMB, "storage": main.HostDir, "tz": tz,
+			"appId": app.ID, "images": images, "hostPort": app.ContainerPort, "memoryLimitMB": totalMB, "storage": main.Mounts[0].HostDir, "tz": tz,
 		}}},
 		Summary:     summary,
 		Detail:      map[string]any{"appId": app.ID},

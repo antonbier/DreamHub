@@ -26,6 +26,11 @@ type Exec struct {
 	// SocketPath is the Docker daemon's unix socket, usually
 	// "/var/run/docker.sock".
 	SocketPath string
+	// Policy decides which host paths a container may mount; the zero
+	// value is DefaultPolicy (/media only). The helper's own Server checks
+	// every create request with its policy as well — the same rules,
+	// enforced at both the HTTP surface and the socket.
+	Policy MountPolicy
 }
 
 var _ Client = Exec{}
@@ -318,8 +323,8 @@ func (e Exec) Create(ctx context.Context, spec ContainerSpec) (Container, error)
 	if spec.HostNetwork && spec.HostPort != spec.ContainerPort {
 		return Container{}, fmt.Errorf("dockerd: create %s: on the host network the port can't be remapped", spec.AppID)
 	}
-	if !ValidService(spec.Service) {
-		return Container{}, ErrInvalidService
+	if err := ValidateSpec(spec, e.Policy); err != nil {
+		return Container{}, err
 	}
 	name := containerName(spec.AppID, spec.Service)
 	resp, err := e.do(ctx, http.MethodGet, "/containers/"+url.PathEscape(name)+"/json", nil)
@@ -356,22 +361,53 @@ func (e Exec) Create(ctx context.Context, spec ContainerSpec) (Container, error)
 		exposed[port] = map[string]any{}
 		bindings[port] = []map[string]string{{"HostPort": fmt.Sprint(spec.HostPort)}}
 	}
+	hostConfig := map[string]any{
+		"NetworkMode":  networkMode(spec.HostNetwork),
+		"PortBindings": bindings,
+		"Binds":        binds(spec),
+		"Memory":       spec.MemoryLimitBytes,
+		// A crash-looping app is reported, not restarted forever
+		// (docs/APPSHUB_PLAN.md, "Autostart and crash-loop
+		// protection") — App5 wires the notification; this caps
+		// Docker's own retries either way.
+		"RestartPolicy": map[string]any{"Name": "on-failure", "MaximumRetryCount": 5},
+	}
+	// Only ever reached with Elevated.Confirmed (ValidateSpec above).
+	if el := spec.Elevated; el.Any() {
+		if el.Privileged {
+			hostConfig["Privileged"] = true
+		}
+		if len(el.CapAdd) > 0 {
+			hostConfig["CapAdd"] = el.CapAdd
+		}
+		if len(el.Devices) > 0 {
+			devs := make([]map[string]string, 0, len(el.Devices))
+			for _, d := range el.Devices {
+				parts := strings.Split(d, ":")
+				dev := map[string]string{"PathOnHost": parts[0], "PathInContainer": parts[0], "CgroupPermissions": "rwm"}
+				if len(parts) > 1 {
+					dev["PathInContainer"] = parts[1]
+				}
+				if len(parts) > 2 {
+					dev["CgroupPermissions"] = parts[2]
+				}
+				devs = append(devs, dev)
+			}
+			hostConfig["Devices"] = devs
+		}
+		if el.PidHost {
+			hostConfig["PidMode"] = "host"
+		}
+		if el.IpcHost {
+			hostConfig["IpcMode"] = "host"
+		}
+	}
 	create := map[string]any{
 		"Image":        spec.Image,
 		"Env":          env,
 		"ExposedPorts": exposed,
 		"Labels":       labels,
-		"HostConfig": map[string]any{
-			"NetworkMode":  networkMode(spec.HostNetwork),
-			"PortBindings": bindings,
-			"Binds":        binds(spec),
-			"Memory":       spec.MemoryLimitBytes,
-			// A crash-looping app is reported, not restarted forever
-			// (docs/APPSHUB_PLAN.md, "Autostart and crash-loop
-			// protection") — App5 wires the notification; this caps
-			// Docker's own retries either way.
-			"RestartPolicy": map[string]any{"Name": "on-failure", "MaximumRetryCount": 5},
-		},
+		"HostConfig":   hostConfig,
 	}
 	if len(spec.Cmd) > 0 {
 		create["Cmd"] = spec.Cmd
@@ -409,11 +445,16 @@ func (e Exec) Create(ctx context.Context, spec ContainerSpec) (Container, error)
 	}, nil
 }
 
-// binds is HostDir plus, when set, the data directory.
+// binds is the bind mounts as Docker's "host:container[:ro]" strings; the
+// paths were checked by ValidateSpec.
 func binds(spec ContainerSpec) []string {
-	b := []string{spec.HostDir + ":" + spec.ContainerDir}
-	if spec.DataHostDir != "" && spec.DataContainerDir != "" {
-		b = append(b, spec.DataHostDir+":"+spec.DataContainerDir)
+	b := make([]string, 0, len(spec.Mounts))
+	for _, m := range spec.Mounts {
+		s := m.HostDir + ":" + m.ContainerDir
+		if m.ReadOnly {
+			s += ":ro"
+		}
+		b = append(b, s)
 	}
 	return b
 }

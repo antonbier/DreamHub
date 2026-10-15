@@ -9,6 +9,11 @@ BindsTo=dreamhub-docker.service
 
 [Service]
 Type=simple
+# Which host paths a container may mount (docs/APPSHUB_PLAN.md, App12): only
+# below /media, never DreamHub's own data directory (DREAMHUB_DATA_DIR, default
+# /data/dreamhub) or the system. The helper enforces this itself, whatever the
+# main process asks. DREAMHUB_HELPER_MOUNT_BASES (a ':'-separated list, default
+# /media) must match the main process's if apps are stored elsewhere.
 Environment=DREAMHUB_DOCKER_SOCKET=/run/dreamhub-docker.sock
 Environment=DREAMHUB_DOCKERD_HELPER_ADDR=127.0.0.1:8090
 ExecStart=/usr/bin/dreamhub-dockerd-helper

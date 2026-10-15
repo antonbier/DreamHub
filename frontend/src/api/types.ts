@@ -816,6 +816,11 @@ export interface AppStorageChoice {
 // hubs.catalogEntry — one curated AppsHub app (docs/APPSHUB_PLAN.md, App3).
 export interface CatalogApp {
   portEditable?: boolean
+  // A bundled UI icon name; empty: the category's.
+  icon?: string
+  // The install form's inputs (a compose file's variables), labels in the
+  // requested language.
+  fields: AppField[]
   id: string
   name: string
   category: string
@@ -830,6 +835,84 @@ export interface CatalogApp {
   port?: number
   compatible: boolean
   installed: boolean
+}
+
+// compose.Field — one input of the install form (docs/APPSHUB_PLAN.md, App12).
+export interface AppField {
+  name: string
+  label: string
+  description?: string
+  type: 'port' | 'path' | 'number' | 'text'
+  default?: string
+  required?: boolean
+  secret?: boolean
+  // Only shown in the advanced view (the web port and required fields never are).
+  advanced?: boolean
+  webPort?: boolean
+}
+
+// compose.Issue — one reason a compose file is refused, or one note about it.
+// `code` is stable and translated under apps.compose.issue.<code>.
+export interface ComposeIssue {
+  code: string
+  service?: string
+  key?: string
+  detail?: string
+  message: string
+}
+
+// hubs.elevatedItem — something beyond a plain container that needs the
+// person's explicit confirmation.
+export interface ElevatedItem {
+  service?: string
+  kind: 'privileged' | 'capability' | 'device' | 'pid' | 'ipc'
+  value?: string
+}
+
+// hubs.parsedApp — the form for an admin's own container (POST
+// /api/v1/apps/custom/parse).
+export interface ParsedApp {
+  // The normalized compose file, sent back with the install request.
+  compose: string
+  id: string
+  name: string
+  description?: string
+  note?: string
+  fields: AppField[]
+  services: { name: string; image: string }[]
+  elevated: ElevatedItem[]
+  notes: ComposeIssue[]
+  webPort?: number
+  portEditable?: boolean
+  memoryMB: number
+}
+
+// POST /api/v1/apps/install/plan — a curated app by id, or the admin's own
+// compose file; the same values, extra rows and storage choice for both.
+export interface InstallRequest {
+  appId?: string
+  custom?: { compose: string; name: string }
+  storage?: string
+  memoryLimitMB?: number
+  values?: Record<string, string>
+  extra?: {
+    env: { key: string; value: string }[]
+    ports: { port: number; udp: boolean }[]
+    paths: { host: string; container: string; readOnly: boolean }[]
+  }
+  confirmElevated?: boolean
+}
+
+// What an install plan will create (Plan.changes[0].after for apps.install).
+export interface InstallPreviewContainer {
+  service?: string
+  image: string
+  memoryMB: number
+  ports?: { port: number; udp?: boolean; local?: boolean }[]
+  mounts?: { host: string; container: string; readOnly?: boolean }[]
+  env?: { key: string; value: string; masked?: boolean; generated?: boolean }[]
+  command?: string[]
+  elevated?: { privileged?: boolean; capAdd?: string[]; devices?: string[]; pidHost?: boolean; ipcHost?: boolean }
 }
 
 // hubs.searchResult — one free-search hit, not yet arch-checked.

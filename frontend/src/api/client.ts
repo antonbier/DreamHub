@@ -27,6 +27,8 @@ import type {
   LogoResult,
   AppStorageChoice,
   CatalogApp,
+  InstallRequest,
+  ParsedApp,
   AppSearchResult,
   AppManifest,
   AppConsoleStatus,
@@ -550,7 +552,7 @@ export const api = {
       request<{ fields: ExtensionSetting[] }>('PUT', `/api/v1/extensions/${encodeURIComponent(id)}/settings`, { values }),
   },
   apps: {
-    catalog: () => request<{ apps: CatalogApp[] }>('GET', '/api/v1/apps/catalog'),
+    catalog: (lang: string) => request<{ apps: CatalogApp[] }>('GET', `/api/v1/apps/catalog?lang=${encodeURIComponent(lang)}`),
     search: (q: string) => request<{ results: AppSearchResult[] }>('GET', `/api/v1/apps/search?q=${encodeURIComponent(q)}`),
     manifest: (image: string) => request<AppManifest>('GET', `/api/v1/apps/manifest?image=${encodeURIComponent(image)}`),
     installed: () => request<{ apps: InstalledApp[] }>('GET', '/api/v1/apps/installed'),
@@ -562,8 +564,11 @@ export const api = {
     // "Uninstall Docker": deleteData = also delete the app data (default no).
     dockerUninstallPlan: (deleteData: boolean) =>
       request<{ plan: Plan; steps: DockerSetupStep[] }>('POST', '/api/v1/apps/docker/uninstall/plan', { deleteData }),
-    installPlan: (appId: string, opts: { hostPort?: number; storage?: string } = {}) =>
-      request<{ plan: Plan }>('POST', '/api/v1/apps/install/plan', { appId, ...opts }),
+    installPlan: (req: InstallRequest) => request<{ plan: Plan }>('POST', '/api/v1/apps/install/plan', req),
+    // An admin's own container (App12): turn a pasted compose file, an image
+    // name or an Unraid template into the install form.
+    parseCustom: (kind: 'compose' | 'image' | 'unraid', text: string, lang: string, name = '') =>
+      request<{ app: ParsedApp }>('POST', '/api/v1/apps/custom/parse', { kind, text, lang, name }),
     // The disks an app can be stored on (never the box's own flash).
     storage: () => request<{ choices: AppStorageChoice[] }>('GET', '/api/v1/apps/storage'),
     removePlan: (id: string) => request<{ plan: Plan }>('POST', `/api/v1/apps/installed/${encodeURIComponent(id)}/remove/plan`),

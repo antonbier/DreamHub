@@ -94,7 +94,17 @@
       </section>
 
       <section class="mt-5">
-        <h2 class="text-[13px] font-semibold text-muted">{{ t('apps.catalogTitle') }}</h2>
+        <div class="flex items-center justify-between gap-3">
+          <h2 class="text-[13px] font-semibold text-muted">{{ t('apps.catalogTitle') }}</h2>
+          <button
+            type="button"
+            class="rounded-sm border border-line px-2.5 py-1 text-[12.5px] text-text hover:bg-field disabled:opacity-60"
+            :disabled="dockerMissing"
+            @click="customOpen = { kind: 'compose', text: '' }"
+          >
+            {{ t('apps.custom.add') }}
+          </button>
+        </div>
         <div class="mt-2 flex flex-col gap-3">
           <div v-for="app in catalog" :key="app.id">
           <section class="flex items-center gap-3 rounded-sm border border-line bg-tile p-3">
@@ -103,7 +113,7 @@
                 <h3 class="truncate text-[13.5px] font-semibold text-text">{{ app.name }}</h3>
                 <span class="rounded-full bg-tile-2 px-2 py-0.5 text-[11px] text-muted">{{ t('apps.category.' + app.category) }}</span>
               </div>
-              <p class="mt-0.5 text-[12.5px] text-muted">{{ te('apps.desc.' + app.id) ? t('apps.desc.' + app.id) : app.description }}</p>
+              <p class="mt-0.5 text-[12.5px] text-muted">{{ app.description }}</p>
               <p class="mt-0.5 text-[12px] text-faint">
                 <span v-if="app.services?.length">{{ t('apps.withServices', { services: app.services.map(serviceLabel).join(', ') }) }} · </span>
                 <span v-if="app.port">{{ t('apps.port', { port: app.port }) }} · </span>
@@ -120,61 +130,14 @@
               v-else
               type="button"
               class="shrink-0 rounded-sm border border-line px-2.5 py-1 text-[12.5px] text-text hover:bg-field disabled:opacity-60"
-              :disabled="!!installing || dockerMissing"
-              @click="openInstall(app)"
+              :disabled="!!installingId || dockerMissing"
+              @click="installingId = app.id"
             >
               {{ t('apps.install') }}
             </button>
           </section>
-            <div v-if="installing?.appId === app.id" class="-mt-1 rounded-b-sm border border-t-0 border-line bg-tile p-3">
-              <!-- Step 1: which port and which disk — sensible defaults, always visible. -->
-              <form v-if="installing.form" class="flex flex-col gap-3" @submit.prevent="previewInstall">
-                <h3 class="text-[14px] font-semibold text-text">{{ t('apps.installTitle', { name: installing.form.app.name }) }}</h3>
-                <label class="flex flex-col gap-1 text-[13px]">
-                  <span class="text-muted">{{ t('apps.portLabel') }}</span>
-                  <input
-                    v-model.number="installing.form.port"
-                    type="number"
-                    min="1024"
-                    max="65535"
-                    :disabled="!installing.form.app.portEditable"
-                    class="w-32 rounded-sm border border-line bg-field px-2 py-1.5 text-text disabled:opacity-60"
-                  />
-                  <span class="text-[12px] text-faint">{{ installing.form.app.portEditable ? t('apps.portHint') : t('apps.portFixed') }}</span>
-                </label>
-                <label class="flex flex-col gap-1 text-[13px]">
-                  <span class="text-muted">{{ t('apps.storageLabel') }}</span>
-                  <select v-model="installing.form.storage" class="rounded-sm border border-line bg-field px-2 py-1.5 text-text">
-                    <option v-for="c in installing.form.choices" :key="c.path" :value="c.path" :disabled="c.freeBytes < 1 << 30">
-                      {{ c.label }} — {{ t('apps.storageFree', { size: formatBytes(c.freeBytes, locale) }) }}
-                    </option>
-                  </select>
-                  <span class="text-[12px] text-faint">{{ t('apps.storageHint') }}</span>
-                </label>
-                <div class="flex justify-end gap-2">
-                  <button type="button" class="rounded-sm px-3 py-1.5 text-[13px] text-text hover:bg-field" @click="installing = null">{{ t('plan.cancel') }}</button>
-                  <button type="submit" class="rounded-sm bg-accent px-3 py-1.5 text-[13px] font-semibold text-bg">{{ t('apps.installPreview') }}</button>
-                </div>
-              </form>
-              <p v-else-if="installing.loading" class="text-[13px] text-faint">{{ t('common.loading') }}</p>
-              <PlanPreview
-                v-else-if="installing.plan && !installing.done"
-                :plan="installing.plan"
-                :confirm-label="t('apps.installConfirm')"
-                :busy="installing.applying"
-                :error="installing.error"
-                @confirm="confirmInstall"
-                @cancel="installing = null"
-              >
-                {{ installing.plan.summary }}
-              </PlanPreview>
-              <p v-else-if="installing.done" class="flex items-center gap-1.5 text-[13px] text-ok" role="status">
-                <span class="h-1.5 w-1.5 rounded-full bg-ok" />{{ t('apps.installed') }}
-              </p>
-              <div v-else-if="installing.error" class="flex items-start justify-between gap-3">
-                <p class="text-[12.5px] text-warn">{{ installing.error }}</p>
-                <button type="button" class="shrink-0 text-[12.5px] text-accent hover:underline" @click="installing = null">{{ t('extensions.settings.close') }}</button>
-              </div>
+            <div v-if="installingId === app.id" class="-mt-1 rounded-b-sm border border-t-0 border-line bg-tile p-3">
+              <AppInstallForm :source="{ kind: 'catalog', app }" @done="onInstalled" @cancel="installingId = ''" />
             </div>
           </div>
         </div>
@@ -217,6 +180,14 @@
               @click="checkManifest(r.image)"
             >
               {{ t('apps.checkCompatibility') }}
+            </button>
+            <button
+              type="button"
+              class="shrink-0 rounded-sm border border-line px-2.5 py-1 text-[12.5px] text-text hover:bg-field disabled:opacity-60"
+              :disabled="dockerMissing"
+              @click="customOpen = { kind: 'image', text: r.image }"
+            >
+              {{ t('apps.addFromSearch') }}
             </button>
           </li>
         </ul>
@@ -274,23 +245,25 @@
       </div>
     </div>
 
+    <CustomContainerDialog v-if="customOpen" :initial="customOpen" @close="customOpen = null" @done="load" />
     <DockerSettingsDialog v-if="settingsOpen" @close="settingsOpen = false" @changed="load" />
   </div>
 </template>
 
 <script setup lang="ts">
-import { nextTick, onMounted, onUnmounted, ref } from 'vue'
+import { nextTick, onMounted, onUnmounted, ref, watch } from 'vue'
 import { useI18n } from 'vue-i18n'
 import { api, ApiError } from '@/api/client'
 import DropdownMenu from '@/components/DropdownMenu.vue'
 import Icon from '@/components/Icon.vue'
 import PlanPreview from '@/components/PlanPreview.vue'
+import AppInstallForm from '@/components/apps/AppInstallForm.vue'
+import CustomContainerDialog from '@/components/apps/CustomContainerDialog.vue'
 import DockerSettingsDialog from '@/components/apps/DockerSettingsDialog.vue'
 import TabIntro from '@/components/apps/TabIntro.vue'
 import { useFriendlyError } from '@/composables/useFriendlyError'
 import { usePlanError } from '@/composables/usePlanError'
-import { formatBytes } from '@/lib/format'
-import type { AppConsoleStatus, AppStorageChoice, AppSearchResult, CatalogApp, InstalledApp, Plan } from '@/api/types'
+import type { AppConsoleStatus, AppSearchResult, CatalogApp, InstalledApp, Plan } from '@/api/types'
 
 const { t, te, locale } = useI18n()
 const { friendly } = useFriendlyError()
@@ -309,7 +282,7 @@ const dockerMissing = ref(false)
 const installedError = ref('')
 
 async function load() {
-  const [c, i] = await Promise.allSettled([api.apps.catalog(), api.apps.installed()])
+  const [c, i] = await Promise.allSettled([api.apps.catalog(locale.value), api.apps.installed()])
   if (c.status === 'fulfilled') {
     catalog.value = c.value.apps
     loadError.value = ''
@@ -338,61 +311,21 @@ function openUrl(port: number): string {
   return `${location.protocol}//${location.hostname}:${port}/`
 }
 
-// --- install: preview, confirm --------------------------------------------
+// --- install: the form (AppInstallForm), then preview and confirm ----------
 
-type InstallForm = { app: CatalogApp; port: number; storage: string; choices: AppStorageChoice[] }
-type InstallPending = { appId: string; form?: InstallForm; loading?: boolean; plan?: Plan; applying?: boolean; done?: boolean; error?: string }
-const installing = ref<InstallPending | null>(null)
+const installingId = ref('')
+// "Add container" / "Add as container" (an admin's own, App12).
+const customOpen = ref<{ kind: 'compose' | 'image' | 'unraid'; text: string } | null>(null)
 
-// Step 1 asks for the port and the disk, with the defaults filled in.
-async function openInstall(app: CatalogApp) {
-  installing.value = { appId: app.id, loading: true }
-  let choices: AppStorageChoice[] = []
-  try {
-    choices = (await api.apps.storage()).choices
-  } catch {
-    // no choice offered: the default location is used
-  }
-  if (installing.value?.appId !== app.id) return
-  installing.value = {
-    appId: app.id,
-    form: { app, port: app.port ?? 0, storage: (choices.find((c) => c.default) ?? choices[0])?.path ?? '', choices },
-  }
+async function onInstalled() {
+  await load()
+  window.setTimeout(() => {
+    installingId.value = ''
+  }, 2500)
 }
 
-// Step 2: preview what that would do, then confirm.
-async function previewInstall() {
-  const f = installing.value?.form
-  if (!f) return
-  const appId = f.app.id
-  installing.value = { appId, loading: true }
-  try {
-    const defaultStorage = f.choices.find((c) => c.default)?.path
-    const res = await api.apps.installPlan(appId, {
-      hostPort: f.port && f.port !== f.app.port ? f.port : undefined,
-      storage: f.storage && f.storage !== defaultStorage ? f.storage : undefined,
-    })
-    if (installing.value?.appId === appId) installing.value = { appId, plan: res.plan }
-  } catch (err) {
-    if (installing.value?.appId === appId) installing.value = { appId, error: planErrorMessage(err) }
-  }
-}
-
-async function confirmInstall() {
-  const p = installing.value
-  if (!p?.plan) return
-  installing.value = { ...p, applying: true, error: undefined }
-  try {
-    await api.plans.apply(p.plan.id)
-    installing.value = { appId: p.appId, done: true }
-    await load()
-    window.setTimeout(() => {
-      if (installing.value?.done) installing.value = null
-    }, 3000)
-  } catch (err) {
-    installing.value = { appId: p.appId, error: planErrorMessage(err) }
-  }
-}
+// The catalog's texts come in the reader's language.
+watch(locale, load)
 
 // --- remove: preview, confirm -----------------------------------------------
 

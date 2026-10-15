@@ -242,3 +242,68 @@ Owner feedback after trying 0.5.0 (#48, #49): nobody could tell what an extensio
 - 8088, 8082, 8222, 8095, 8384, 8123 and 3306 were free; qBittorrent's old port 8090 is the Docker helper's own (fixed, `9e0a3c3`).
 - Storage: the only disk mounted under `/media` is `/media/hdd` (ext4, 216 GB free), so that is the one storage choice the install form will offer; `/data` (flash, 3.9 GB free) is never offered.
 - Memory: 2 GB total, about 1.1 GB available with Docker running and nothing installed — Nextcloud with its database (768 MB limit) fits, Home Assistant (512 MB) next to it does not comfortably.
+
+
+## App10–App15: the next shape of AppsHub (planned 2026-10-15, nothing built)
+
+Brainstormed with the owner after the first full UX review, with Unraid (Apps + Docker + Plugins) as the ideal picture. Rule for all of it stays **keep it simple, keep it clean**.
+
+### Decisions
+
+- **Focus is DreamOS.** Tab order, fixed: **Packages**, **Extensions**, **Docker**. Docker is a bonus most users won't use, so the Docker tab opens with one sentence ("Optional: extra apps in containers — not needed for normal operation") and the page **remembers the last-opened tab** (no setting for the order; someone who only uses Docker lands there by themselves).
+- **Packages** = every `.deb` for DreamOS (Enigma2 plugins, skins, drivers, picons, system packages), nothing else. What a hub needs (ffmpeg, the overlay module) keeps its "needed by …" note, in plain feature names.
+- **Extensions** = small DreamHub add-ons. Cards with status, settings, remove; a link to `docs/BUILDING_EXTENSIONS.md` for developers. A category per extension says what it is.
+- **Docker** = headline says "Docker", a gear for **Docker settings**, two views: *My containers* and *App catalog*.
+- **Feed management** (on/off/add) moves from the Packages page into a gear dialog there.
+- **Scripts and terminal stay** under Device → Advanced.
+
+### App10: tabs and naming
+
+Rename the three tabs (Packages / Extensions / Docker), reorder, remember the last tab, move feeds behind the Packages gear, put the Docker setup ("Set up Docker …") into the Docker gear. No new behaviour — structure and wording only; locale keys in de/en/it.
+
+### App11: package information without an AI
+
+- A curated, embedded data file (`internal/pkginfo`): per known package a short description in de/en/it, a category, and an optional "needed by <feature>". Filled from the feeds' package index once the box (or the feed) is reachable; the owner corrects what's wrong. Few packages are added over time, so this stays small.
+- Category defaults come from the package name where the feed follows the Enigma2 convention (`enigma2-plugin-extensions-*`, `-skins-*`, `-systemplugins-*`, `-drivers-*`, `-picons-*`); to be checked against the real DreamOS feeds.
+- Fallback for a package not in the file: the package's own `Description` field. The "ask the AI" button stays only as an optional last resort when an AI key exists — never required.
+- The list: search, filters *Installed / Available / Updates*, a bar "N updates → update all" (a plan with preview), one action per row, details behind "⋯".
+- Open: the i-have-a-dreambox.com plugin overview post may give names/descriptions for popular plugins — the owner is sending the link or its text.
+
+### App12: Docker apps defined as Compose, with a form
+
+- **A Docker app is a `docker-compose.yml`** plus a thin DreamHub layer in `x-dreamhub:` extension fields: icon, category, descriptions (de/en/it), web UI port/path, and the **form fields**. The compose spec is open and nearly every project already ships a compose file; multi-container (Nextcloud + MariaDB) is exactly what it's for. Variables like `${PORT:-8088}` become form fields with their default; `x-dreamhub.fields` adds label, description, `required`, `secret` (masked), `advanced`.
+- **Form**: simple view = web port, storage, required fields; **Advanced** view = every field plus free extra rows (environment variable, port, path). Same idea as Unraid's template form.
+- **Unraid templates**: not the base format. The Unraid XML (`<Container version="2">`) is publicly documented, but its templates' texts and icons belong to their authors and "Unraid" is a trademark, so nothing is bundled. Instead an **import**: the admin pastes an Unraid XML (or a compose file) and the form is built from it. (Legal reading is not verified by a lawyer; the choice avoids the question.)
+- **Curated catalog**: the existing apps move from Go structs to compose files with `x-dreamhub`, same behaviour (port moves, generated secrets, per-app memory).
+- **Own containers** (admin only): paste a compose file, or an image name with the same fields. A notice says it's the owner's responsibility, plus guard rails because recording and TV run on the same system:
+  - **extra confirmation**: `privileged`, extra devices, capabilities, host PID/IPC;
+  - **refused**: mounts of `/`, `/etc`, `/usr`, DreamHub's own data directory, the Docker socket; allowed mounts only under the chosen app storage and `/media`;
+  - the usual plan preview shows exactly what will be created.
+- Helper impact: the isolated helper's whitelisted API subset must learn what compose needs (several containers, networks, named volumes) — still no free-form host access.
+
+### App13: container list and Docker settings
+
+- **My containers**, Unraid-like: icon, name, status dot, auto-start switch, port / "Open", "update ready". One main action per row (Open or Start/Stop), the rest behind "⋯" (logs, console, edit, backup, update, remove). Edit reopens the same form.
+- **Docker settings (gear)**: set up / remove Docker and its status; storage location for app data (default `/media/hdd`, free space shown); auto-start after boot and the crash-loop guard; clean-up of unused images with the size shown; memory limit per app (default automatic); update check interval and notification.
+
+### App14: updates and maintenance
+
+- One update notion across Packages and Docker: a count, an "update all" plan with preview, and a **window** (never during a recording; optional night time).
+- Rollback: packages — downgrade to the previous version where the feed offers it; containers — keep the previous image tag until the new one runs.
+- Notifications use the existing inbox.
+
+### App15: backup and restore
+
+- **Granular stays** (the owner likes picking what to back up): sections and per-folder items as today (App6/App8).
+- One place, "Backup and restore", covering DreamHub settings, app data and Enigma2 configuration; target HDD or download.
+- **Restore on a new box**: from one backup, bring back settings, the app list (compose + x-dreamhub + chosen values) and the chosen data; apps are reinstalled through the normal plan.
+
+### Order and checks
+
+Build order: App10 → App11 → App12 → App13 → App14 → App15, each checked in the PC demo first (`packaging/build-mock.sh`); the box checks listed under App8/App9 stay open and join these once the box is online. The better mock (clock override, IPTV channels, several profiles) is the next topic after AppsHub.
+
+### Open questions
+
+- Which categories for Packages (from names vs. a hand-picked list) — decided once the real feed index is read.
+- Compose features to support in v1 (services, ports, volumes, environment, command, healthcheck?) and which to refuse.
+- Whether Unraid-XML import ships in the first compose slice or later.

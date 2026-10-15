@@ -38,6 +38,7 @@ import (
 	"net/http"
 	"os"
 	"os/exec"
+	"path/filepath"
 	"time"
 
 	"github.com/antonbier/DreamHub/backend/internal/ai"
@@ -102,6 +103,14 @@ func run(logger *slog.Logger, level *logging.Level) error {
 	var logoSearch logosearch.Source
 	var dockerClient dockerd.Client
 	var appsStorageRoot string
+	// Which host paths a container may mount (internal/dockerd): /media,
+	// and never DreamHub's own data directory. The helper enforces the same
+	// rules with its own copy of this setting.
+	mountPolicy := dockerd.DefaultPolicy()
+	if v := os.Getenv("DREAMHUB_HELPER_MOUNT_BASES"); v != "" {
+		mountPolicy.Bases = filepath.SplitList(v)
+	}
+	mountPolicy.Protected = []string{cfg.DataDir}
 	var dockerSetup dockersetup.Setup
 	var memReader meminfo.Reader
 	switch cfg.Mode {
@@ -218,7 +227,11 @@ func run(logger *slog.Logger, level *logging.Level) error {
 		packages = aptmock.New()
 		dockerHub = dockerhubmock.Client{}
 		logoSearch = logosearchmock.Source{}
+		// The mock helper checks the same rules; the mock storage root lives
+		// under /tmp, so /tmp is a base here (and only here).
+		mountPolicy.Bases = []string{"/media", "/tmp"}
 		rawDocker := dockermock.New()
+		rawDocker.Policy = mountPolicy
 		// Docker is set up by default, and "Uninstall Docker" takes it away
 		// (the helper then answers as unreachable, like on a real box).
 		ready := dockersetupmock.Ready()
@@ -263,6 +276,7 @@ func run(logger *slog.Logger, level *logging.Level) error {
 		Docker:          dockerClient,
 		Mem:             memReader,
 		AppsStorageRoot: appsStorageRoot,
+		AppsMountPolicy: &mountPolicy,
 		DockerSetup:     dockerSetup,
 		Mock:            cfg.Mode == config.ModeMock,
 		LookPath:        exec.LookPath,

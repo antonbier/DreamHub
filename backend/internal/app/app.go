@@ -135,6 +135,10 @@ type Options struct {
 	// default ("/media/hdd/dreamhub-apps"); nil/"" still works, it just
 	// means a path under this empty root, fine for mock mode and tests.
 	AppsStorageRoot string
+	// AppsMountPolicy decides which host paths a container may mount
+	// (AppsHub's install plan applies it before the helper does); nil means
+	// /media only, with DataDir protected.
+	AppsMountPolicy *dockerd.MountPolicy
 	// DockerSetup sets Docker up on the box from AppsHub
 	// (internal/dockersetup): Exec{} on the box, ./mock otherwise; nil
 	// hides "Set up Docker".
@@ -356,7 +360,7 @@ func New(ctx context.Context, o Options) (*App, error) {
 	extensionsHub := &hubs_.Extensions{Registry: extRegistry, Plans: plans, ReadOnly: o.ReadOnlyFiles}
 	appsHub := &hubs_.Apps{
 		DockerHub: o.DockerHub, Docker: o.Docker, Mem: o.Mem, WC: o.WebControl,
-		StorageRoot: o.AppsStorageRoot, Plans: plans, ReadOnly: o.ReadOnlyFiles,
+		StorageRoot: o.AppsStorageRoot, DataDir: o.DataDir, Policy: o.AppsMountPolicy, Plans: plans, ReadOnly: o.ReadOnlyFiles,
 		Store: st, Auth: svc, ConfigFS: o.AppsConfigFS, Setup: o.DockerSetup, Now: now,
 	}
 	if o.Mock {

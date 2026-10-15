@@ -188,6 +188,17 @@ func findApp(containers []dockerd.Container, id string) (appGroup, bool) {
 	return appGroup{}, false
 }
 
+// groupName is what an installed app is called: a custom app's own name
+// (dockerd.NameLabel), else its catalog entry's, else its image.
+func groupName(g appGroup, fallback string) string {
+	for _, c := range g.all() {
+		if n := c.DisplayName(); n != "" {
+			return n
+		}
+	}
+	return appName(g.appID, fallback)
+}
+
 func appName(appID, fallback string) string {
 	if a, ok := appcatalog.ByID(appID); ok {
 		return a.Name
@@ -211,7 +222,7 @@ func (h *Apps) listInstalled(w http.ResponseWriter, r *http.Request) {
 		all := g.all()
 		head := all[0] // the main container, or a helper left over without it
 		row := installedApp{
-			ID: head.ID, AppID: g.appID, Name: appName(g.appID, head.Image), Image: head.Image,
+			ID: head.ID, AppID: g.appID, Name: groupName(g, head.Image), Image: head.Image,
 			State: head.State, HostPort: head.HostPort,
 		}
 		for _, c := range all {
@@ -266,54 +277,10 @@ func (g appGroup) root(def string) string {
 	return def
 }
 
-// appSpecs builds the containers of app, helpers first (the app expects
-// its database to be there), with env still holding "{{secret:…}}"
-// placeholders — Execute fills them in.
-func (h *Apps) appSpecs(app appcatalog.App, memoryLimitMB int, tz, root string) []dockerd.ContainerSpec {
-	var specs []dockerd.ContainerSpec
-	withTZ := func(env map[string]string) map[string]string {
-		out := map[string]string{"TZ": tz}
-		for k, v := range env {
-			out[k] = v
-		}
-		return out
-	}
-	for _, s := range app.Services {
-		specs = append(specs, dockerd.ContainerSpec{
-			AppID: app.ID, Service: s.Name, Image: appcatalog.ImageRef(s.Image, s.Tag),
-			Env: withTZ(s.Env), Cmd: s.Cmd,
-			Mounts:           []dockerd.Mount{{HostDir: serviceDir(root, app.ID, s.Name), ContainerDir: s.ConfigPath}},
-			MemoryLimitBytes: int64(s.MemoryMB) << 20, HostNetwork: true, Root: root,
-		})
-	}
-	main := dockerd.ContainerSpec{
-		AppID: app.ID, Image: appcatalog.ImageRef(app.Image, app.Tag),
-		Env: withTZ(app.Env), Cmd: app.Cmd,
-		HostPort: app.ContainerPort, ContainerPort: app.ContainerPort,
-		Mounts:           []dockerd.Mount{{HostDir: configDir(root, app.ID), ContainerDir: app.ConfigPath}},
-		MemoryLimitBytes: int64(memoryLimitMB) << 20, HostNetwork: true, Root: root,
-	}
-	if app.DataPath != "" {
-		main.Mounts = append(main.Mounts, dockerd.Mount{HostDir: dataDir(root, app.ID), ContainerDir: app.DataPath})
-	}
-	return append(specs, main)
-}
-
 func (h *Apps) planInstall(w http.ResponseWriter, r *http.Request) {
-	var body struct {
-		AppID         string `json:"appId"`
-		HostPort      int    `json:"hostPort"`
-		MemoryLimitMB int    `json:"memoryLimitMB"`
-		// Storage is one of GET /api/v1/apps/storage's choices; "" is the default.
-		Storage string `json:"storage"`
-	}
-	if err := httpx.DecodeJSON(r, &body); err != nil || body.AppID == "" {
-		httpx.WriteError(w, r, http.StatusBadRequest, "invalid_body", `expected {"appId": "..."}`)
-		return
-	}
-	app, ok := appcatalog.ByID(body.AppID)
-	if !ok {
-		httpx.WriteError(w, r, http.StatusNotFound, "not_found", "no such app in the curated catalog")
+	var body installBody
+	if err := httpx.DecodeJSON(r, &body); err != nil {
+		httpx.WriteError(w, r, http.StatusBadRequest, "invalid_body", `expected {"appId": "..."} or {"custom": {...}}`)
 		return
 	}
 	if h.Docker == nil {
@@ -326,80 +293,21 @@ func (h *Apps) planInstall(w http.ResponseWriter, r *http.Request) {
 		writeDockerError(w, r, err, "could not check installed apps")
 		return
 	}
-	if installedFingerprint(containers, app.ID) != "not-installed" {
-		httpx.WriteError(w, r, http.StatusConflict, "already_installed", app.Name+" is already installed")
+	prep, ferr := h.prepareInstall(ctx, body, containers)
+	if ferr != nil {
+		ferr.write(w, r)
 		return
 	}
-
-	root := h.StorageRoot
-	if body.Storage != "" && body.Storage != h.StorageRoot {
-		var choice *StorageChoice
-		for _, c := range h.storageChoices(ctx) {
-			if c.Path == body.Storage {
-				c := c
-				choice = &c
-			}
-		}
-		if choice == nil {
-			httpx.WriteError(w, r, http.StatusBadRequest, "storage_invalid", "that isn't one of the places apps can be stored")
-			return
-		}
-		if choice.FreeBytes < minStorageFreeBytes {
-			httpx.WriteError(w, r, http.StatusConflict, "disk_full", "there is not enough free space at that location")
-			return
-		}
-		root = choice.Path
-	}
-	if body.HostPort != 0 && body.HostPort != app.ContainerPort {
-		if !app.PortEditable() {
-			httpx.WriteError(w, r, http.StatusConflict, "port_fixed", fmt.Sprintf("%s always uses port %d on this box", app.Name, app.ContainerPort))
-			return
-		}
-		if body.HostPort < 1024 || body.HostPort > 65535 || boxPorts[body.HostPort] {
-			httpx.WriteError(w, r, http.StatusBadRequest, "port_invalid", "pick a port between 1024 and 65535 that the box doesn't use itself")
-			return
-		}
-		app = app.WithPort(body.HostPort)
-	}
-
-	// Far above any box's RAM: refuse it before the MB→bytes shifts below
-	// can overflow and slip past the budget check.
-	if body.MemoryLimitMB > 1<<20 {
-		httpx.WriteError(w, r, http.StatusConflict, "insufficient_memory", "that is more memory than the box has")
-		return
-	}
-	memoryLimitMB := body.MemoryLimitMB
-	if memoryLimitMB <= 0 {
-		memoryLimitMB = app.MemoryMB
-	}
-	if memoryLimitMB <= 0 {
-		memoryLimitMB = defaultMemoryLimitMB
-	}
-	totalMB := memoryLimitMB + app.TotalMemoryMB() - app.MemoryMB
-	if problem := h.checkResourceBudget(ctx, int64(totalMB)<<20); problem != "" {
-		httpx.WriteError(w, r, http.StatusConflict, "insufficient_memory", problem)
-		return
-	}
-	if problem := h.checkDiskSpace(ctx); problem != "" {
-		httpx.WriteError(w, r, http.StatusConflict, "disk_full", problem)
-		return
-	}
-	if problem := h.checkPorts(app, 0); problem != "" {
-		httpx.WriteError(w, r, http.StatusConflict, "port_in_use", problem)
-		return
-	}
-
-	tz := containerTZ()
-	specs := h.appSpecs(app, memoryLimitMB, tz, root)
+	app, specs, root := prep.app, prep.specs, prep.root
 	main := specs[len(specs)-1]
 
 	summary := fmt.Sprintf("Install %s (%s)", app.Name, main.Image)
 	for _, s := range specs[:len(specs)-1] {
 		summary += fmt.Sprintf(" with its %s (%s)", s.Service, s.Image)
 	}
-	summary += fmt.Sprintf(", up to %d MB RAM, storage at %s", totalMB, main.Mounts[0].HostDir)
-	if len(main.Mounts) > 1 {
-		summary += fmt.Sprintf(", data at %s", main.Mounts[1].HostDir)
+	summary += fmt.Sprintf(", up to %d MB RAM", prep.totalMB)
+	if len(main.Mounts) > 0 {
+		summary += fmt.Sprintf(", storage at %s", main.Mounts[0].HostDir)
 	}
 	if app.ContainerPort != 0 {
 		summary = fmt.Sprintf("%s, reachable on port %d", summary, app.ContainerPort)
@@ -409,14 +317,18 @@ func (h *Apps) planInstall(w http.ResponseWriter, r *http.Request) {
 	for _, s := range specs {
 		images = append(images, s.Image)
 	}
+	storage := configDir(root, app.ID)
 	user, _ := httpx.User(ctx)
 	pl := h.Plans.Create(user, plan.Draft{
 		Action: "apps.install",
 		Changes: []plan.Change{{Type: "apps.install", After: map[string]any{
-			"appId": app.ID, "images": images, "hostPort": app.ContainerPort, "memoryLimitMB": totalMB, "storage": main.Mounts[0].HostDir, "tz": tz,
+			"appId": app.ID, "name": app.Name, "custom": app.Custom, "images": images, "hostPort": app.ContainerPort,
+			"memoryLimitMB": prep.totalMB, "storage": storage, "tz": prep.tz,
+			"containers": prep.preview(), "elevated": prep.elevated,
 		}}},
+		Warnings:    prep.warnings,
 		Summary:     summary,
-		Detail:      map[string]any{"appId": app.ID},
+		Detail:      map[string]any{"appId": app.ID, "custom": app.Custom},
 		Fingerprint: "not-installed",
 		Current: func(ctx context.Context) (string, error) {
 			list, err := h.Docker.List(ctx)
@@ -442,6 +354,10 @@ func (h *Apps) planInstall(w http.ResponseWriter, r *http.Request) {
 					// already created go again (their storage is kept).
 					for _, id := range created {
 						_ = h.Docker.Remove(context.WithoutCancel(ctx), id)
+					}
+					if se, ok := dockerd.IsRefusal(err); ok {
+						return &plan.Failure{Status: http.StatusUnprocessableEntity, Code: "install_refused", Message: se.Message,
+							Details: map[string]any{"reason": se.Code, "path": se.Path}, Err: err}
 					}
 					return &plan.Failure{Status: http.StatusBadGateway, Code: "install_failed", Message: "the app could not be installed", Err: err}
 				}
@@ -565,8 +481,17 @@ func (h *Apps) checkPorts(app appcatalog.App, explicit int) string {
 	if free == nil {
 		free = portFree
 	}
+	seen := map[[2]int]bool{}
 	for _, p := range ports {
-		if free(p) {
+		key := [2]int{p.Port, 0}
+		if p.UDP {
+			key[1] = 1
+		}
+		if seen[key] {
+			return fmt.Sprintf("port %d is used twice by %s", p.Port, app.Name)
+		}
+		seen[key] = true
+		if !boxPorts[p.Port] && free(p) {
 			continue
 		}
 		proto := "TCP"
@@ -599,7 +524,7 @@ func (h *Apps) planRemove(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 	all := g.all()
-	name := appName(g.appID, all[0].Image)
+	name := groupName(g, all[0].Image)
 	root := g.root(h.StorageRoot)
 	kept := []string{configDir(root, g.appID)}
 	var ids []string

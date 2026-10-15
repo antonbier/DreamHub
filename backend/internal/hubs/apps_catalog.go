@@ -12,6 +12,7 @@ import (
 
 	"github.com/antonbier/DreamHub/backend/internal/appcatalog"
 	"github.com/antonbier/DreamHub/backend/internal/auth"
+	"github.com/antonbier/DreamHub/backend/internal/compose"
 	"github.com/antonbier/DreamHub/backend/internal/configfs"
 	"github.com/antonbier/DreamHub/backend/internal/dockerd"
 	"github.com/antonbier/DreamHub/backend/internal/dockerhub"
@@ -53,8 +54,13 @@ type Apps struct {
 	// recording HDD"; letting an app opt into flash storage instead is
 	// deferred past this first slice).
 	StorageRoot string
-	Plans       *plan.Service
-	ReadOnly    bool
+	// DataDir is DreamHub's own data directory: no container may mount it
+	// (apps_form.go, mountPolicy). Policy overrides the whole mount policy
+	// (tests, mock mode); nil means /media plus DataDir protected.
+	DataDir  string
+	Policy   *dockerd.MountPolicy
+	Plans    *plan.Service
+	ReadOnly bool
 	// Store appends the change log entries the console's enable/disable
 	// make (apps_console.go), the same bar admin_terminal.go's own
 	// enable/disable already sets.
@@ -104,6 +110,7 @@ func (h *Apps) Perms() map[string]perm.Perm {
 		"GET /api/v1/apps/manifest":                    perm.System,
 		"GET /api/v1/apps/installed":                   perm.System,
 		"POST /api/v1/apps/install/plan":               perm.System,
+		"POST /api/v1/apps/custom/parse":               perm.System,
 		"POST /api/v1/apps/installed/{id}/remove/plan": perm.System,
 		"POST /api/v1/apps/installed/{id}/start":       perm.System,
 		"POST /api/v1/apps/installed/{id}/stop":        perm.System,
@@ -125,6 +132,7 @@ func (h *Apps) Mount(mux httpx.Mux) {
 	mux.HandleFunc("GET /api/v1/apps/manifest", h.manifest)
 	mux.HandleFunc("GET /api/v1/apps/installed", h.listInstalled)
 	mux.HandleFunc("POST /api/v1/apps/install/plan", h.planInstall)
+	mux.HandleFunc("POST /api/v1/apps/custom/parse", h.parseCustom)
 	mux.HandleFunc("POST /api/v1/apps/installed/{id}/remove/plan", h.planRemove)
 	mux.HandleFunc("POST /api/v1/apps/installed/{id}/start", h.startInstalled)
 	mux.HandleFunc("POST /api/v1/apps/installed/{id}/stop", h.stopInstalled)
@@ -157,10 +165,24 @@ type catalogEntry struct {
 	// PortEditable: the web port can be moved at install.
 	PortEditable bool `json:"portEditable,omitempty"`
 	Compatible   bool `json:"compatible"`
+	// Icon names a bundled UI icon ("" for the category's); Fields are the
+	// install form's inputs, in the requested language.
+	Icon   string          `json:"icon,omitempty"`
+	Fields []compose.Field `json:"fields"`
 	// Installed is set from a live List against the helper (App4), not
 	// stored anywhere — the same "always read live, never go stale"
 	// choice dockerd.Container.HostPort makes.
 	Installed bool `json:"installed"`
+}
+
+// requestLang is the ?lang= of a request when it is one DreamHub has
+// texts for, else English.
+func requestLang(r *http.Request) string {
+	switch l := r.URL.Query().Get("lang"); l {
+	case "de", "en", "it":
+		return l
+	}
+	return "en"
 }
 
 func (h *Apps) catalog(w http.ResponseWriter, r *http.Request) {
@@ -173,12 +195,14 @@ func (h *Apps) catalog(w http.ResponseWriter, r *http.Request) {
 			}
 		}
 	}
+	lang := requestLang(r)
 	out := make([]catalogEntry, 0, len(appcatalog.Apps))
 	for _, a := range appcatalog.Apps {
+		desc, note := a.Localized(lang)
 		out = append(out, catalogEntry{
-			ID: a.ID, Name: a.Name, Category: a.Category, Description: a.Description,
-			Image: a.Image, Note: a.Note, MemoryMB: a.TotalMemoryMB(), Port: a.ContainerPort, PortEditable: a.PortEditable(),
-			Compatible: a.SupportsArch(box), Installed: installed[a.ID],
+			ID: a.ID, Name: a.Name, Category: a.Category, Description: desc,
+			Image: a.Image, Note: note, MemoryMB: a.TotalMemoryMB(), Port: a.ContainerPort, PortEditable: a.PortEditable(),
+			Compatible: a.SupportsArch(box), Installed: installed[a.ID], Icon: a.Icon, Fields: a.Fields(lang),
 		})
 		for _, sv := range a.Services {
 			out[len(out)-1].Services = append(out[len(out)-1].Services, sv.Name)

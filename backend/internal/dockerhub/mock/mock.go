@@ -29,10 +29,18 @@ type fixture struct {
 	digest string
 }
 
+var multiArch = []dockerhub.Arch{{Architecture: "amd64"}, {Architecture: "arm64"}, {Architecture: "arm", Variant: "v7"}, {Architecture: "arm", Variant: "v6"}}
+
 var fixtures = map[string]fixture{
-	"pihole/pihole":           {arches: []dockerhub.Arch{{Architecture: "amd64"}, {Architecture: "arm64"}, {Architecture: "arm", Variant: "v7"}, {Architecture: "arm", Variant: "v6"}}, digest: "sha256:pihole-upstream-new"},
-	"adguard/adguardhome":     {arches: []dockerhub.Arch{{Architecture: "386"}, {Architecture: "amd64"}, {Architecture: "arm", Variant: "v6"}, {Architecture: "arm", Variant: "v7"}, {Architecture: "arm64"}, {Architecture: "ppc64le"}}, digest: "sha256:adguardhome-current"},
-	"linuxserver/heimdall":    {arches: []dockerhub.Arch{{Architecture: "amd64"}, {Architecture: "arm64"}}, digest: "sha256:heimdall-current"},
+	"pihole/pihole":        {arches: []dockerhub.Arch{{Architecture: "amd64"}, {Architecture: "arm64"}, {Architecture: "arm", Variant: "v7"}, {Architecture: "arm", Variant: "v6"}}, digest: "sha256:pihole-upstream-new"},
+	"adguard/adguardhome":  {arches: []dockerhub.Arch{{Architecture: "386"}, {Architecture: "amd64"}, {Architecture: "arm", Variant: "v6"}, {Architecture: "arm", Variant: "v7"}, {Architecture: "arm64"}, {Architecture: "ppc64le"}}, digest: "sha256:adguardhome-current"},
+	"linuxserver/heimdall": {arches: []dockerhub.Arch{{Architecture: "amd64"}, {Architecture: "arm64"}}, digest: "sha256:heimdall-current"},
+	// Images the custom-container demos and tests use.
+	"library/nginx":           {arches: multiArch, digest: "sha256:nginx-current"},
+	"traefik/whoami":          {arches: multiArch, digest: "sha256:whoami-current"},
+	"library/redis":           {arches: multiArch, digest: "sha256:redis-current"},
+	"koenkk/zigbee2mqtt":      {arches: multiArch, digest: "sha256:z2m-current"},
+	"library/postgres":        {arches: multiArch, digest: "sha256:postgres-current"},
 	"linuxserver/mariadb-old": {arches: []dockerhub.Arch{{Architecture: "amd64"}}, digest: "sha256:mariadb-old-current"}, // deliberately amd64-only, to exercise "not compatible"
 }
 

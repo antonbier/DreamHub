@@ -728,9 +728,9 @@ export interface DockerSetupState {
   freeBytes: number
 }
 
-// dockersetup.Step — one thing "Set up Docker" would do.
+// dockersetup.Step — one thing "Set up Docker" (or "Uninstall Docker") would do.
 export interface DockerSetupStep {
-  kind: 'overlay' | 'download' | 'config' | 'services'
+  kind: 'overlay' | 'download' | 'config' | 'services' | 'containers' | 'modules' | 'files' | 'data'
   detail?: Record<string, string>
 }
 

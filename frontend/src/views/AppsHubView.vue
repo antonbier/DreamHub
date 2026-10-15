@@ -1,10 +1,11 @@
 <!--
-  AppsHub (docs/APPSHUB_PLAN.md): one nav entry for everything that can be
-  added, in three tabs with one sentence each —
-  - Apps: programs in their own Docker containers (Nextcloud, Pi-hole …)
+  One nav entry for everything that can be added (docs/APPSHUB_PLAN.md,
+  App10), in three tabs in a fixed order, each opening with one sentence —
+  - Packages: the box's own DreamOS software (gear: where it comes from)
   - Extensions: small add-ons for DreamHub itself (docs/EXTENSIONHUB_PLAN.md)
-  - System: the box's own DreamOS packages and where they come from
-    (moved here from DeviceHub → Administration, docs/ADMINHUB_PLAN.md)
+  - Docker: optional extra apps in containers (gear: Docker settings)
+  The page remembers the last tab per viewer; ?tab= still wins, and the
+  old values (apps, system) lead to their new tab.
 -->
 <template>
   <div class="mx-auto max-w-content p-6 below-md:p-4">
@@ -35,13 +36,11 @@
         {{ t(`apps.tabs.${id}`) }}
       </button>
     </div>
-    <!-- One plain sentence per tab: what this is, so the three kinds of
-         "add-on" can't be mistaken for each other. -->
-    <p class="mt-3 text-[13px] text-muted">{{ t(`apps.intro.${tab}`) }}</p>
-
-    <AppsTab v-if="tab === 'apps'" />
+    <!-- Each tab opens with one plain sentence (TabIntro), so the three
+         kinds of "add-on" can't be mistaken for each other. -->
+    <PackagesTab v-if="tab === 'packages'" />
     <ExtensionsTab v-else-if="tab === 'extensions'" />
-    <SystemTab v-else />
+    <DockerTab v-else />
     </template>
   </div>
 </template>
@@ -52,9 +51,9 @@ import { ref, watch } from 'vue'
 import { useI18n } from 'vue-i18n'
 import { useRoute, useRouter } from 'vue-router'
 import Icon from '@/components/Icon.vue'
-import AppsTab from '@/components/apps/AppsTab.vue'
+import DockerTab from '@/components/apps/DockerTab.vue'
 import ExtensionsTab from '@/components/apps/ExtensionsTab.vue'
-import SystemTab from '@/components/apps/SystemTab.vue'
+import PackagesTab from '@/components/apps/PackagesTab.vue'
 import { useHubLabel } from '@/composables/useHubLabel'
 import { useAuth } from '@/composables/useAuth'
 
@@ -66,8 +65,36 @@ const admin = useAuth().can('system')
 const route = useRoute()
 const router = useRouter()
 
-type Tab = 'apps' | 'extensions' | 'system'
-const tabs: Tab[] = ['apps', 'extensions', 'system']
-const tab = ref<Tab>(tabs.find((x) => x === route.query.tab) ?? 'apps')
-watch(tab, (t) => router.replace({ query: { ...route.query, tab: t === 'apps' ? undefined : t } }))
+type Tab = 'packages' | 'extensions' | 'docker'
+const tabs: Tab[] = ['packages', 'extensions', 'docker']
+const LAST_TAB_KEY = 'dreamhub.apps.tab'
+// The tab ids before App10 (Apps, System) lead to where their content is now.
+const oldTabs: Record<string, Tab> = { apps: 'docker', system: 'packages' }
+
+function lastTab(): Tab | undefined {
+  try {
+    return tabs.find((x) => x === localStorage.getItem(LAST_TAB_KEY))
+  } catch {
+    return undefined
+  }
+}
+
+function fromQuery(): Tab | undefined {
+  const q = route.query.tab
+  return typeof q === 'string' ? (tabs.find((x) => x === q) ?? oldTabs[q]) : undefined
+}
+
+const tab = ref<Tab>(fromQuery() ?? lastTab() ?? 'packages')
+watch(
+  tab,
+  (t) => {
+    try {
+      localStorage.setItem(LAST_TAB_KEY, t)
+    } catch {
+      // private window or blocked storage: the page just doesn't remember
+    }
+    router.replace({ query: { ...route.query, tab: t === 'packages' ? undefined : t } })
+  },
+  { immediate: true },
+)
 </script>

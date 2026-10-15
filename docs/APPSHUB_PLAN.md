@@ -108,6 +108,7 @@ Like Extension Hub itself, AppsHub stays a power-user feature you find by naviga
 | App6 | Backup | **built 2026-10-12** (the general "backup sections" mechanism, config-only default for apps — see below) |
 | App8 | Curated list rework, multi-container apps | **built 2026-10-13** against the mock (the owner's list; Nextcloud with its database as the first two-container app; per-folder backup — see below) |
 | App9 | UX: understandable tabs, port and storage choice | **built 2026-10-13** against the mock (see below) |
+| App10 | Tabs Packages / Extensions / Docker, Docker settings with uninstall | **built 2026-10-15, mock only** (see "App10" below) |
 | later | Viewer dashboard tile, free-search install | a read-only "open app" tile for non-admin profiles; installing an image from free search |
 
 ### App1, built 2026-10-12
@@ -244,7 +245,7 @@ Owner feedback after trying 0.5.0 (#48, #49): nobody could tell what an extensio
 - Memory: 2 GB total, about 1.1 GB available with Docker running and nothing installed — Nextcloud with its database (768 MB limit) fits, Home Assistant (512 MB) next to it does not comfortably.
 
 
-## App10–App15: the next shape of AppsHub (planned 2026-10-15, nothing built)
+## App10–App15: the next shape of AppsHub (planned 2026-10-15; App10 built, mock only)
 
 Brainstormed with the owner after the first full UX review, with Unraid (Apps + Docker + Plugins) as the ideal picture. Rule for all of it stays **keep it simple, keep it clean**.
 
@@ -257,9 +258,16 @@ Brainstormed with the owner after the first full UX review, with Unraid (Apps + 
 - **Feed management** (on/off/add) moves from the Packages page into a gear dialog there.
 - **Scripts and terminal stay** under Device → Advanced.
 
-### App10: tabs and naming
+### App10: tabs and naming (built 2026-10-15, mock only)
 
 Rename the three tabs (Packages / Extensions / Docker), reorder, remember the last tab, move feeds behind the Packages gear, put Docker's setup into the Docker gear. Mostly structure and wording, with one addition (owner, 2026-10-15): **Docker is installed *and uninstalled* from there.** Install is today's "Set up Docker …" plan (App7). Uninstall is new and is a plan too: it lists what goes (the two services, the overlay-module loading, the Docker daemon files) and asks one plain question — *also delete the app data?* — with "keep the data" as the default, so apps can come back after a reinstall. It stops and removes the containers first. A running recording is not affected (Docker is separate from enigma2). Locale keys in de/en/it.
+
+**As built** (nothing tried on the box yet):
+- Tabs *Packages · Extensions · Docker* (`AppsHubView.vue`), `?tab=` still works, `apps` → `docker` and `system` → `packages` are redirected; the last tab is kept in `localStorage['dreamhub.apps.tab']` (try/catch, falls back to Packages). Each tab component opens with `TabIntro.vue` (the sentence, plus the gear where there is one).
+- Packages gear → `SettingsDialog` with the feeds (`FeedsPanel`, no longer a folded section). Docker gear → `DockerSettingsDialog`: status, `DockerSetupSection` (the App7 flow, unchanged backend) and `DockerUninstallSection`. Nothing else in that dialog yet; storage location, auto-start and the rest come with App13. When Docker is missing the tab shows one note with a link to the dialog instead of the old setup card.
+- **Uninstall Docker**: `POST /api/v1/apps/docker/uninstall/plan` `{"deleteData": false}` (System permission, admin only, CSRF header like every plan; the plan expires after 10 minutes, belongs to its owner, and is refused as stale if the state changed). Steps, each only when something is left: `containers` (every container DreamHub created, removed first through the helper), `services` (stop + disable `dreamhub-docker` and `dreamhub-dockerd-helper`; the unit files belong to the `.deb` and stay), `modules` (delete `/etc/modules-load.d/dreamhub-docker.conf`; the kernel module package stays), `files` (the Docker binaries and `daemon.json`), and with the answer *yes* `data` (Docker's data root `/data/dreamhub-docker/root` and the apps' storage roots, e.g. `/media/hdd/dreamhub-apps`). *No* (default) leaves Docker's data root and all app folders. Nothing left means 409 `nothing_to_do`, so running it again is harmless; a half-finished run is finished by the next one. Only `dockersetup.SafeDataPath` paths are ever deleted (under `/data/dreamhub-docker`, or a folder named `dreamhub-apps`), so enigma2's files and the recordings cannot be reached. `dockersetup.Setup` got `PlanRemove`/`Remove`; the mock implements them, and in mock mode Docker is now gated like on a real box (uninstalled → the helper answers as unreachable until "Set up Docker").
+- Go tests: `TestAppsDockerUninstall_*` (default keeps data and is idempotent, the data choice, viewer 403, missing CSRF header, other profile can't apply, 10-minute expiry, stale plan) and `TestSafeDataPath`. The real `Exec` removal is not unit-tested (it needs systemd and root paths).
+- Box checks still to do: the real uninstall on the box (services stop with the helper being DreamHub's own channel to Docker, `systemctl disable`, deleting ~210 MB of binaries), then a reinstall afterwards.
 
 ### App11: package information without an AI
 

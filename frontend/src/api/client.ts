@@ -557,6 +557,9 @@ export const api = {
     docker: () =>
       request<{ state: DockerSetupState; version: string; lastRun: { at: string; ok: boolean; log: string } | null }>('GET', '/api/v1/apps/docker'),
     dockerSetupPlan: () => request<{ plan: Plan; steps: DockerSetupStep[] }>('POST', '/api/v1/apps/docker/setup/plan'),
+    // "Uninstall Docker": deleteData = also delete the app data (default no).
+    dockerUninstallPlan: (deleteData: boolean) =>
+      request<{ plan: Plan; steps: DockerSetupStep[] }>('POST', '/api/v1/apps/docker/uninstall/plan', { deleteData }),
     installPlan: (appId: string, opts: { hostPort?: number; storage?: string } = {}) =>
       request<{ plan: Plan }>('POST', '/api/v1/apps/install/plan', { appId, ...opts }),
     // The disks an app can be stored on (never the box's own flash).

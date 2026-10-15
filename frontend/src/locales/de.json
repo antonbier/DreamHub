@@ -1066,9 +1066,9 @@
   },
   "apps": {
     "tabs": {
-      "apps": "Apps",
+      "packages": "Pakete",
       "extensions": "Erweiterungen",
-      "system": "System"
+      "docker": "Docker"
     },
     "comingSoon": "Docker-Apps sind noch nicht verfügbar.",
     "category": {
@@ -1125,7 +1125,6 @@
     "dockerMissing": "Docker ist auf dieser Box noch nicht eingerichtet. Liste und Suche funktionieren schon, zum Installieren braucht es Docker.",
     "installedLoadError": "Die installierten Apps konnten nicht gelesen werden.",
     "docker": {
-      "title": "Docker",
       "where": "Docker {version}, alles auf /data ({free} frei) — nie auf dem Root-Flash.",
       "unavailable": "Docker lässt sich auf dieser Box nicht von hier einrichten.",
       "setUp": "Docker einrichten …",
@@ -1144,7 +1143,15 @@
         "download": "Docker {version} herunterladen (offizielles statisches Release) und die Prüfsumme kontrollieren.",
         "config": "Die Docker-Einstellungen schreiben: Daten in {dataRoot}, Apps im Netzwerk der Box.",
         "services": "Docker und DreamHubs Docker-Helfer starten, und bei jedem Hochfahren wieder."
-      }
+      },
+      "gear": "Docker-Einstellungen",
+      "openSettings": "Docker-Einstellungen öffnen",
+      "settingsTitle": "Docker-Einstellungen",
+      "setUpTitle": "Docker einrichten",
+      "setUpIntro": "Docker führt die Apps aus. DreamHub lädt es einmal herunter und legt alles im /data-Speicher der Box ab.",
+      "statusRunning": "Docker {version} läuft.",
+      "statusPartial": "Docker ist nur teilweise eingerichtet oder läuft nicht.",
+      "statusMissing": "Docker ist auf dieser Box nicht eingerichtet."
     },
     "service": {
       "db": "Datenbank"
@@ -1154,9 +1161,9 @@
     "port": "Port {port}",
     "serviceLogs": "Logs ({name})",
     "intro": {
-      "apps": "Apps sind Programme, die in einem eigenen Container auf der Box laufen, getrennt von der TV-Software – zum Beispiel Nextcloud oder Pi-hole. Sie brauchen Docker, das DreamHub einrichten kann.",
+      "packages": "Software für die Box selbst (DreamOS): TV-Plugins, Skins und Werkzeuge.",
       "extensions": "Erweiterungen sind kleine Zusätze für DreamHub selbst – zum Beispiel eine, die eine Steckdose schaltet. Sie erscheinen hier als Karte.",
-      "system": "Die Software der Box selbst (DreamOS): TV-Plugins, Skins und Werkzeuge sowie die Quellen, aus denen sie installiert werden."
+      "docker": "Optional: zusätzliche Apps in Containern – für den normalen Betrieb nicht nötig."
     },
     "more": "Mehr",
     "installTitle": "{name} installieren",
@@ -1177,6 +1184,31 @@
       "syncthing": "Laufende Dateisynchronisation zwischen Geräten, ohne Cloud-Server.",
       "homeassistant": "Hausautomation: Lichter, Steckdosen, Sensoren und ihre Regeln an einem Ort.",
       "qbittorrent": "Ein BitTorrent-Client mit Weboberfläche."
+    },
+    "feeds": {
+      "gear": "Paketquellen",
+      "title": "Paketquellen"
+    },
+    "uninstall": {
+      "title": "Docker deinstallieren",
+      "intro": "Beendet die Apps und entfernt Docker von der Box. Aufnahmen und Fernsehen sind nicht betroffen.",
+      "start": "Docker deinstallieren …",
+      "question": "Auch die App-Daten löschen?",
+      "questionHint": "Aus: Einstellungen und Dateien der Apps bleiben erhalten, die Apps können nach einer neuen Einrichtung von Docker zurückkommen.",
+      "preview": "Vorschau",
+      "confirm": "Deinstallieren",
+      "previewIntro": "Das passiert:",
+      "step": {
+        "containers": "Alle von DreamHub angelegten App-Container beenden und entfernen ({count}).",
+        "services": "Docker und den Docker-Helfer von DreamHub beenden und beim Start der Box nicht mehr starten.",
+        "modules": "Das Overlay-Kernelmodul beim Start der Box nicht mehr laden.",
+        "files": "Die Docker-Programmdateien und -Einstellungen löschen: {paths}",
+        "data": "Die App-Daten löschen: {paths}"
+      },
+      "dataKept": "Die App-Daten bleiben auf der Box.",
+      "dataGone": "Die App-Daten werden gelöscht und lassen sich nicht wiederherstellen.",
+      "done": "Docker ist deinstalliert.",
+      "failed": "Docker konnte nicht deinstalliert werden."
     }
   },
   "timers": {
@@ -1312,7 +1344,6 @@
       "empty": "Keine Pakete gefunden.",
       "unavailable": "Die Paketliste ist auf diesem System nicht verfügbar.",
       "explain": "Was ist das?",
-      "feedsTitle": "Feeds",
       "feedAddedByHand": "Manuell hinzugefügt",
       "notInstalled": "Nicht installiert",
       "upgradableCount": "{count} Update verfügbar | {count} Updates verfügbar",

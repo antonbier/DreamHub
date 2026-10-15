@@ -1,5 +1,5 @@
 <!--
-  AppsHub's "Extensions" tab (docs/EXTENSIONHUB_PLAN.md, E1, #46 —
+  The "Extensions" tab (docs/EXTENSIONHUB_PLAN.md, E1, #46 —
   unchanged by the AppsHub rename, docs/APPSHUB_PLAN.md, App1): one card
   per registered extension — installing five extensions grows the
   navigation by zero entries, not five. Each card is a handful of
@@ -15,6 +15,7 @@
 -->
 <template>
   <div>
+    <TabIntro :text="t('apps.intro.extensions')" />
     <p v-if="loading" class="mt-4 text-[13px] text-faint">{{ t('common.loading') }}</p>
     <p v-else-if="error" class="mt-4 text-[13px] text-faint">{{ error }}</p>
     <p v-else-if="cards.length === 0" class="mt-4 text-[13px] text-faint">{{ t('extensions.empty') }}</p>
@@ -109,6 +110,7 @@
 </template>
 
 <script setup lang="ts">
+import TabIntro from '@/components/apps/TabIntro.vue'
 import { useFriendlyError } from '@/composables/useFriendlyError'
 import { onMounted, ref } from 'vue'
 import { useI18n } from 'vue-i18n'

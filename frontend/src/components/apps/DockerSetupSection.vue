@@ -1,17 +1,16 @@
 <!--
-  "Set up Docker" in AppsHub's Apps tab (backend/internal/dockersetup):
-  shown while Docker isn't running on the box. The preview lists exactly
-  what's still missing — the overlay kernel module matching this box's
-  kernel, the pinned Docker release (download, checksum), its config on
-  /data, the two services — and applying shows the setup's own log.
+  "Set up Docker" inside the Docker settings dialog
+  (backend/internal/dockersetup): shown while Docker isn't running on the
+  box. The preview lists exactly what's still missing — the overlay
+  kernel module matching this box's kernel, the pinned Docker release
+  (download, checksum), its config on /data, the two services — and
+  applying shows the setup's own log.
 -->
 <template>
-  <section class="mt-4 rounded-sm border border-line bg-tile p-4">
-    <h2 class="text-[14px] font-semibold text-text">{{ t('apps.docker.title') }}</h2>
-    <p class="mt-1 text-[13px] text-muted">{{ t('apps.dockerMissing') }}</p>
-    <p v-if="state" class="mt-1 text-[12.5px] text-faint">
-      {{ t('apps.docker.where', { version, free: formatSize(state.freeBytes) }) }}
-    </p>
+  <section class="mt-5 border-t border-line-soft pt-4">
+    <h3 class="text-[14px] font-semibold text-text">{{ t('apps.docker.setUpTitle') }}</h3>
+    <p class="mt-1 text-[13px] text-muted">{{ t('apps.docker.setUpIntro') }}</p>
+    <p class="mt-1 text-[12.5px] text-faint">{{ t('apps.docker.where', { version, free: formatSize(state.freeBytes) }) }}</p>
     <p v-if="unavailable" class="mt-2 text-[12.5px] text-faint">{{ t('apps.docker.unavailable') }}</p>
 
     <div v-else class="mt-3">
@@ -56,34 +55,20 @@
 </template>
 
 <script setup lang="ts">
-import { onMounted, ref } from 'vue'
+import { ref } from 'vue'
 import { useI18n } from 'vue-i18n'
-import { api, ApiError } from '@/api/client'
+import { api } from '@/api/client'
 import PlanPreview from '@/components/PlanPreview.vue'
 import { usePlanError } from '@/composables/usePlanError'
 import type { DockerSetupState, DockerSetupStep, Plan } from '@/api/types'
 
-const emit = defineEmits<{ ready: [] }>()
+const props = defineProps<{ state: DockerSetupState; version: string; unavailable: boolean }>()
+const emit = defineEmits<{ changed: [] }>()
 const { t, locale } = useI18n()
 const { planErrorMessage } = usePlanError()
 
-const state = ref<DockerSetupState | null>(null)
-const version = ref('')
-const unavailable = ref(false)
-
 type Pending = { plan?: Plan; steps: DockerSetupStep[]; applying?: boolean; error?: string; log?: string; ok?: boolean }
 const pending = ref<Pending | null>(null)
-
-async function loadState() {
-  try {
-    const res = await api.apps.docker()
-    state.value = res.state
-    version.value = res.version
-    unavailable.value = !res.state.supported
-  } catch (err) {
-    unavailable.value = err instanceof ApiError && err.code === 'docker_setup_unavailable'
-  }
-}
 
 function formatSize(bytes: number): string {
   return new Intl.NumberFormat(locale.value, { style: 'unit', unit: 'gigabyte', maximumFractionDigits: 1 }).format(bytes / 2 ** 30)
@@ -95,7 +80,7 @@ function stepVariant(s: DockerSetupStep): string {
 }
 
 function stepParams(s: DockerSetupStep): Record<string, string> {
-  return { version: s.detail?.version ?? version.value, dataRoot: s.detail?.dataRoot ?? '', to: s.detail?.to ?? '' }
+  return { version: s.detail?.version ?? props.version, dataRoot: s.detail?.dataRoot ?? '', to: s.detail?.to ?? '' }
 }
 
 async function preview() {
@@ -122,12 +107,9 @@ async function apply() {
   const run = res?.lastRun
   if (run) {
     pending.value = { steps: p.steps, log: run.log, ok: run.ok }
-    if (run.ok) emit('ready')
   } else {
     pending.value = { ...p, applying: false, error: failure || undefined }
   }
-  if (res) state.value = res.state
+  emit('changed')
 }
-
-onMounted(loadState)
 </script>

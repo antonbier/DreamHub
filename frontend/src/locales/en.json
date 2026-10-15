@@ -1066,9 +1066,9 @@
   },
   "apps": {
     "tabs": {
-      "apps": "Apps",
+      "packages": "Packages",
       "extensions": "Extensions",
-      "system": "System"
+      "docker": "Docker"
     },
     "comingSoon": "Docker apps aren't available yet.",
     "category": {
@@ -1125,7 +1125,6 @@
     "dockerMissing": "Docker isn't set up on this box yet. The list and search already work; installing needs Docker.",
     "installedLoadError": "The installed apps couldn't be read.",
     "docker": {
-      "title": "Docker",
       "where": "Docker {version}, everything on /data ({free} free) — never on the root flash.",
       "unavailable": "Docker can't be set up from here on this box.",
       "setUp": "Set up Docker …",
@@ -1144,7 +1143,15 @@
         "download": "Download Docker {version} (official static release) and check its checksum.",
         "config": "Write the Docker settings: data in {dataRoot}, apps on the box's own network.",
         "services": "Start Docker and DreamHub's Docker helper, and start them again at every boot."
-      }
+      },
+      "gear": "Docker settings",
+      "openSettings": "Open Docker settings",
+      "settingsTitle": "Docker settings",
+      "setUpTitle": "Set up Docker",
+      "setUpIntro": "Docker runs the apps. DreamHub downloads it once and keeps everything in the box's /data memory.",
+      "statusRunning": "Docker {version} is running.",
+      "statusPartial": "Docker is only partly set up or not running.",
+      "statusMissing": "Docker is not set up on this box."
     },
     "service": {
       "db": "database"
@@ -1154,9 +1161,9 @@
     "port": "port {port}",
     "serviceLogs": "Logs ({name})",
     "intro": {
-      "apps": "Apps are programs that run in their own container on the box, separate from the TV software — for example Nextcloud or Pi-hole. They need Docker, which DreamHub can set up.",
+      "packages": "Software for the box itself (DreamOS): TV plugins, skins and tools.",
       "extensions": "Extensions are small add-ons for DreamHub itself — for example one that switches a smart plug. They show up here as a card.",
-      "system": "The box's own software (DreamOS): TV plugins, skins and tools, and the sources they are installed from."
+      "docker": "Optional: extra apps in containers — not needed for normal operation."
     },
     "more": "More",
     "installTitle": "Install {name}",
@@ -1177,6 +1184,31 @@
       "syncthing": "Continuous, peer-to-peer file synchronization between devices.",
       "homeassistant": "Home automation: lights, sockets, sensors and their rules in one place.",
       "qbittorrent": "A BitTorrent client with a web UI."
+    },
+    "feeds": {
+      "gear": "Package sources",
+      "title": "Package sources"
+    },
+    "uninstall": {
+      "title": "Uninstall Docker",
+      "intro": "Stops the apps and removes Docker from the box. Recordings and TV are not affected.",
+      "start": "Uninstall Docker …",
+      "question": "Also delete the app data?",
+      "questionHint": "Off: the apps' settings and files stay, so the apps can come back after Docker is set up again.",
+      "preview": "Preview",
+      "confirm": "Uninstall",
+      "previewIntro": "This is what happens:",
+      "step": {
+        "containers": "Stop and remove all app containers DreamHub created ({count}).",
+        "services": "Stop Docker and DreamHub's Docker helper, and no longer start them when the box boots.",
+        "modules": "Stop loading the overlay kernel module when the box boots.",
+        "files": "Delete the Docker program files and settings: {paths}",
+        "data": "Delete the app data: {paths}"
+      },
+      "dataKept": "The app data stays on the box.",
+      "dataGone": "The app data is deleted and cannot be restored.",
+      "done": "Docker is uninstalled.",
+      "failed": "Uninstalling Docker failed."
     }
   },
   "timers": {
@@ -1312,7 +1344,6 @@
       "empty": "No packages found.",
       "unavailable": "The package list isn't available on this system.",
       "explain": "What's this?",
-      "feedsTitle": "Feeds",
       "feedAddedByHand": "Added by hand",
       "notInstalled": "Not installed",
       "upgradableCount": "{count} update available | {count} updates available",

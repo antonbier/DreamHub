@@ -3,14 +3,11 @@
   source can be switched on or off, and a new one added. Both go through
   preview-and-confirm; adding shows a standing warning, since a source's
   packages are installed with root rights and these feeds are unsigned.
-  Collapsed by default — most people never need this.
+  Lives in the dialog behind the Packages tab's gear.
 -->
 <template>
-  <details class="mt-5 rounded-sm border border-line bg-tile p-4" :open="open" @toggle="open = ($event.target as HTMLDetailsElement).open">
-    <summary class="cursor-pointer text-[14px] font-semibold text-text">
-      {{ t('admin.packages.feedsTitle') }}
-    </summary>
-    <p class="mt-1 text-[12.5px] text-muted">
+  <div>
+    <p class="mt-2 text-[12.5px] text-muted">
       {{ t('admin.packages.feedsIntro') }}
     </p>
     <p v-if="error" class="mt-2 text-[13px] text-faint">{{ error }}</p>
@@ -90,7 +87,7 @@
         </button>
       </div>
     </div>
-  </details>
+  </div>
 </template>
 
 <script setup lang="ts">
@@ -109,7 +106,6 @@ const { planErrorMessage } = usePlanError()
 
 const feeds = ref<AdminFeed[]>([])
 const error = ref('')
-const open = ref(false)
 const adding = ref(false)
 const newName = ref('')
 const newUrl = ref('')

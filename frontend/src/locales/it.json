@@ -1066,9 +1066,9 @@
   },
   "apps": {
     "tabs": {
-      "apps": "App",
+      "packages": "Pacchetti",
       "extensions": "Estensioni",
-      "system": "Sistema"
+      "docker": "Docker"
     },
     "comingSoon": "Le app Docker non sono ancora disponibili.",
     "category": {
@@ -1125,7 +1125,6 @@
     "dockerMissing": "Docker non è ancora configurato su questo box. Elenco e ricerca funzionano già; per installare serve Docker.",
     "installedLoadError": "Non è stato possibile leggere le app installate.",
     "docker": {
-      "title": "Docker",
       "where": "Docker {version}, tutto su /data ({free} liberi) — mai sulla flash di root.",
       "unavailable": "Docker non si può configurare da qui su questo box.",
       "setUp": "Configura Docker …",
@@ -1144,7 +1143,15 @@
         "download": "Scaricare Docker {version} (release statica ufficiale) e verificarne il checksum.",
         "config": "Scrivere le impostazioni di Docker: dati in {dataRoot}, app sulla rete del box.",
         "services": "Avviare Docker e l'helper Docker di DreamHub, anche a ogni avvio."
-      }
+      },
+      "gear": "Impostazioni Docker",
+      "openSettings": "Apri le impostazioni Docker",
+      "settingsTitle": "Impostazioni Docker",
+      "setUpTitle": "Configura Docker",
+      "setUpIntro": "Docker esegue le app. DreamHub lo scarica una volta e tiene tutto nella memoria /data del box.",
+      "statusRunning": "Docker {version} è in esecuzione.",
+      "statusPartial": "Docker è configurato solo in parte o non è in esecuzione.",
+      "statusMissing": "Docker non è configurato su questo box."
     },
     "service": {
       "db": "database"
@@ -1154,9 +1161,9 @@
     "port": "porta {port}",
     "serviceLogs": "Log ({name})",
     "intro": {
-      "apps": "Le app sono programmi che girano in un contenitore proprio sul box, separati dal software della TV — ad esempio Nextcloud o Pi-hole. Richiedono Docker, che DreamHub può configurare.",
+      "packages": "Software per il box stesso (DreamOS): plugin TV, skin e strumenti.",
       "extensions": "Le estensioni sono piccole aggiunte per DreamHub stesso — ad esempio una che comanda una presa smart. Compaiono qui come scheda.",
-      "system": "Il software del box (DreamOS): plugin TV, skin e strumenti, e le fonti da cui vengono installati."
+      "docker": "Facoltativo: app aggiuntive in contenitori — non servono per il normale funzionamento."
     },
     "more": "Altro",
     "installTitle": "Installa {name}",
@@ -1177,6 +1184,31 @@
       "syncthing": "Sincronizzazione continua dei file tra dispositivi, senza server cloud.",
       "homeassistant": "Domotica: luci, prese, sensori e le loro regole in un unico posto.",
       "qbittorrent": "Un client BitTorrent con interfaccia web."
+    },
+    "feeds": {
+      "gear": "Fonti dei pacchetti",
+      "title": "Fonti dei pacchetti"
+    },
+    "uninstall": {
+      "title": "Disinstalla Docker",
+      "intro": "Ferma le app e rimuove Docker dal box. Registrazioni e TV non sono interessate.",
+      "start": "Disinstalla Docker …",
+      "question": "Eliminare anche i dati delle app?",
+      "questionHint": "Disattivato: impostazioni e file delle app restano, così le app possono tornare dopo una nuova configurazione di Docker.",
+      "preview": "Anteprima",
+      "confirm": "Disinstalla",
+      "previewIntro": "Ecco cosa succede:",
+      "step": {
+        "containers": "Ferma e rimuove tutti i contenitori delle app creati da DreamHub ({count}).",
+        "services": "Ferma Docker e l'helper Docker di DreamHub e non avviarli più all'accensione del box.",
+        "modules": "Non caricare più il modulo kernel overlay all'accensione del box.",
+        "files": "Elimina i file di programma e le impostazioni di Docker: {paths}",
+        "data": "Elimina i dati delle app: {paths}"
+      },
+      "dataKept": "I dati delle app restano sul box.",
+      "dataGone": "I dati delle app vengono eliminati e non si possono ripristinare.",
+      "done": "Docker è stato disinstallato.",
+      "failed": "Disinstallazione di Docker non riuscita."
     }
   },
   "timers": {
@@ -1312,7 +1344,6 @@
       "empty": "Nessun pacchetto trovato.",
       "unavailable": "L'elenco dei pacchetti non è disponibile su questo sistema.",
       "explain": "Cos'è?",
-      "feedsTitle": "Feed",
       "feedAddedByHand": "Aggiunto manualmente",
       "notInstalled": "Non installati",
       "upgradableCount": "{count} aggiornamento disponibile | {count} aggiornamenti disponibili",

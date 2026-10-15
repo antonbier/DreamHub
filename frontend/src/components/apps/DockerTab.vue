@@ -1,5 +1,5 @@
 <!--
-  AppsHub's "Apps" tab: the curated catalog (backend/internal/appcatalog,
+  The "Docker" tab: the curated catalog (backend/internal/appcatalog,
   never AI-generated) with install-as-a-plan (App4, #46-adjacent — no
   issue yet), free search beyond it with an on-click arch check (App3),
   and the installed apps themselves (start/stop direct, remove through
@@ -13,11 +13,15 @@
 -->
 <template>
   <div>
+    <TabIntro :text="t('apps.intro.docker')" :gear-label="t('apps.docker.gear')" @gear="settingsOpen = true" />
     <p v-if="loading" class="mt-4 text-[13px] text-faint">{{ t('common.loading') }}</p>
     <p v-else-if="loadError" class="mt-4 text-[13px] text-faint">{{ loadError }}</p>
 
     <template v-else>
-      <DockerSetupCard v-if="dockerMissing" @ready="load" />
+      <p v-if="dockerMissing" class="mt-4 rounded-sm border border-line bg-tile p-4 text-[13px] text-muted">
+        {{ t('apps.dockerMissing') }}
+        <button type="button" class="ms-1 text-accent hover:underline" @click="settingsOpen = true">{{ t('apps.docker.openSettings') }}</button>
+      </p>
       <p v-else-if="installedError" class="mt-4 text-[13px] text-faint">{{ installedError }}</p>
       <section v-if="installed.length > 0" class="mt-4">
         <div class="flex items-center justify-between">
@@ -269,6 +273,8 @@
         </template>
       </div>
     </div>
+
+    <DockerSettingsDialog v-if="settingsOpen" @close="settingsOpen = false" @changed="load" />
   </div>
 </template>
 
@@ -279,7 +285,8 @@ import { api, ApiError } from '@/api/client'
 import DropdownMenu from '@/components/DropdownMenu.vue'
 import Icon from '@/components/Icon.vue'
 import PlanPreview from '@/components/PlanPreview.vue'
-import DockerSetupCard from '@/components/apps/DockerSetupCard.vue'
+import DockerSettingsDialog from '@/components/apps/DockerSettingsDialog.vue'
+import TabIntro from '@/components/apps/TabIntro.vue'
 import { useFriendlyError } from '@/composables/useFriendlyError'
 import { usePlanError } from '@/composables/usePlanError'
 import { formatBytes } from '@/lib/format'
@@ -289,6 +296,7 @@ const { t, te, locale } = useI18n()
 const { friendly } = useFriendlyError()
 const { planErrorMessage } = usePlanError()
 
+const settingsOpen = ref(false)
 const catalog = ref<CatalogApp[]>([])
 const installed = ref<InstalledApp[]>([])
 const loading = ref(true)

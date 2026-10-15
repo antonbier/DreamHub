@@ -1,55 +1,73 @@
 <!--
-  AdminHub's package browser (docs/ADMINHUB_PLAN.md, A2, #47): the box's
-  installed and upgradable packages, grouped by apt's own Section field —
-  no DreamHub-maintained category lookup, so an unseen Section just becomes
-  a new group. Install, upgrade and remove go through a plan whose
-  preview is apt-get's own simulate run — every package it would touch,
-  including the ones nobody named (removing one skin component can take
-  whole skins with it on the box).
+  The Packages tab's list (docs/APPSHUB_PLAN.md, App11): search, the filters
+  Installed / Available / Updates plus category chips, a bar "N updates →
+  Update all" (one plan, one preview), and one action per row. A row's
+  description is the curated text, else the package's own, else nothing
+  (internal/pkginfo) — an AI is only an optional last resort behind "⋯".
+  Install, update and remove go through a plan whose preview is apt-get's
+  own simulate run — every package it would touch, including the ones
+  nobody named (removing one skin component can take whole skins with it
+  on the box).
 -->
 <template>
   <section class="mt-5 rounded-sm border border-line bg-tile p-4">
-    <div class="flex items-center gap-3">
-      <h2 class="text-[14px] font-semibold text-text">{{ t('admin.packages.title') }}</h2>
-      <button type="button" class="ms-auto rounded-sm p-1 text-muted hover:bg-tile-2 hover:text-text" :aria-label="t('admin.logs.refresh')" :title="t('admin.logs.refresh')" @click="load">
-        <Icon name="refresh" :size="15" />
-      </button>
-    </div>
-
-    <p class="mt-1 text-[12.5px] text-muted">{{ t('admin.packages.intro') }}</p>
-
-    <div class="mt-3 flex flex-wrap gap-1 rounded-sm bg-field p-1 text-[12.5px]" role="radiogroup" :aria-label="t('admin.packages.title')">
-      <button
-        v-for="v in views"
-        :key="v.id"
-        type="button"
-        role="radio"
-        :aria-checked="status === v.id"
-        class="rounded-sm px-2.5 py-1"
-        :class="status === v.id ? 'bg-tile text-text' : 'text-muted hover:text-text'"
-        @click="setView(v.id)"
-      >
-        {{ t('admin.packages.view.' + (v.id || 'installed')) }}<template v-if="v.id === 'upgradable' && upgradableCount > 0"> ({{ upgradableCount }})</template>
-      </button>
-    </div>
-
-    <div class="mt-2 flex flex-wrap gap-2">
+    <div class="flex items-center gap-2">
       <input
         v-model="q"
         type="search"
         class="min-w-0 flex-1 rounded-sm border border-line bg-field px-2.5 py-1.5 text-[13px] text-text"
         :placeholder="t('admin.packages.search')"
+        :aria-label="t('admin.packages.search')"
         @input="debouncedLoad"
       />
-      <select v-model="category" class="rounded-sm border border-line bg-field px-2 py-1.5 text-[13px] text-text" @change="load">
-        <option value="">{{ t('admin.packages.allCategories') }}</option>
-        <option v-for="c in categories" :key="c" :value="c">{{ c }}</option>
-      </select>
+      <button type="button" class="tap shrink-0 rounded-sm p-1 text-muted hover:bg-tile-2 hover:text-text" :aria-label="t('admin.logs.refresh')" :title="t('admin.logs.refresh')" @click="load">
+        <Icon name="refresh" :size="15" />
+      </button>
     </div>
 
-    <div v-if="upgradableCount > 0 && !pending" class="mt-2 flex items-center gap-2 text-[12.5px] text-muted">
+    <div class="mt-3 flex flex-wrap gap-1.5" role="radiogroup" :aria-label="t('admin.packages.title')">
+      <button
+        v-for="v in views"
+        :key="v"
+        type="button"
+        role="radio"
+        :aria-checked="status === v"
+        class="tap rounded-full border px-3 py-1 text-[12.5px]"
+        :class="status === v ? 'border-accent bg-tile-2 text-text' : 'border-line text-muted hover:text-text'"
+        @click="setView(v)"
+      >
+        {{ t('admin.packages.view.' + (v || 'installed')) }}<template v-if="v === 'upgradable' && upgradableCount > 0"> ({{ upgradableCount }})</template>
+      </button>
+    </div>
+
+    <div v-if="categories.length > 1 || category" class="mt-2 flex flex-wrap gap-1.5" role="radiogroup" :aria-label="t('admin.packages.categories')">
+      <button
+        type="button"
+        role="radio"
+        :aria-checked="category === ''"
+        class="tap rounded-full border px-2.5 py-0.5 text-[12px]"
+        :class="category === '' ? 'border-accent bg-tile-2 text-text' : 'border-line text-muted hover:text-text'"
+        @click="setCategory('')"
+      >
+        {{ t('admin.packages.allCategories') }}
+      </button>
+      <button
+        v-for="c in categories"
+        :key="c.id"
+        type="button"
+        role="radio"
+        :aria-checked="category === c.id"
+        class="tap rounded-full border px-2.5 py-0.5 text-[12px]"
+        :class="category === c.id ? 'border-accent bg-tile-2 text-text' : 'border-line text-muted hover:text-text'"
+        @click="setCategory(c.id)"
+      >
+        {{ c.label }}
+      </button>
+    </div>
+
+    <div v-if="upgradableCount > 0 && !pending" class="mt-3 flex flex-wrap items-center gap-x-3 gap-y-1 rounded-sm border border-accent bg-tile-2 px-3 py-2 text-[13px] text-text">
       <span>{{ t('admin.packages.upgradableCount', { count: upgradableCount }, upgradableCount) }}</span>
-      <button type="button" class="rounded-sm border border-line px-2 py-0.5 text-text hover:bg-field" @click="preview('upgrade', [])">
+      <button type="button" class="tap ms-auto rounded-sm bg-accent px-3 py-1 text-[12.5px] font-semibold text-bg hover:opacity-90" @click="preview('upgrade', [])">
         {{ t('admin.packages.upgradeAll') }}
       </button>
     </div>
@@ -89,76 +107,115 @@
       </div>
     </div>
 
-    <p v-if="loading && !packages.length" class="mt-2 text-[13px] text-faint">{{ t('common.loading') }}</p>
-    <p v-else-if="error" class="mt-2 text-[13px] text-faint">{{ error }}</p>
-    <p v-else-if="packages.length === 0" class="mt-2 text-[13px] text-faint">{{ t('admin.packages.empty') }}</p>
-    <p v-if="truncated" class="mt-2 text-[12px] text-faint">{{ t('admin.packages.truncated') }}</p>
-    <ul v-else class="mt-2 flex max-h-96 flex-col overflow-auto">
-      <li v-for="p in packages" :key="p.name" class="border-b border-line-soft py-2 last:border-none">
-        <div class="flex items-baseline gap-2">
-          <span class="font-mono text-[13px] text-text">{{ p.name }}</span>
-          <span v-if="p.category" class="shrink-0 rounded-sm bg-tile-2 px-1.5 py-0.5 text-[11px] text-faint">{{ p.category }}</span>
-          <span v-if="p.neededBy?.length" class="shrink-0 rounded-sm border border-accent px-1.5 py-0.5 text-[11px] text-accent">{{ t('admin.packages.neededBy', { hubs: p.neededBy.map(hubName).join(', ') }) }}</span>
-          <button
-            v-if="aiReady"
-            type="button"
-            class="tap ms-auto shrink-0 rounded-sm px-2 py-0.5 text-[12px] text-accent hover:bg-tile-2"
-            :disabled="explaining === p.name"
-            @click="explain(p)"
-          >
-            {{ t('admin.packages.explain') }}
-          </button>
-        </div>
-        <div v-if="p.category !== 'self'" class="mt-1 flex gap-2">
-          <button v-if="catalog || p.missing" type="button" class="rounded-sm border border-line px-2 py-0.5 text-[12px] text-text hover:bg-field disabled:opacity-60" :disabled="!!pending" @click="preview('install', [p.name])">
-            {{ t('admin.packages.install') }}
-          </button>
-          <template v-else>
-            <button v-if="p.upgradable" type="button" class="rounded-sm border border-line px-2 py-0.5 text-[12px] text-text hover:bg-field disabled:opacity-60" :disabled="!!pending" @click="preview('upgrade', [p.name])">
-              {{ t('admin.packages.upgrade') }}
+    <p v-if="loading && !packages.length" class="mt-3 text-[13px] text-faint">{{ t('common.loading') }}</p>
+    <p v-else-if="error" class="mt-3 text-[13px] text-faint">{{ error }}</p>
+    <p v-else-if="packages.length === 0" class="mt-3 text-[13px] text-faint">{{ t('admin.packages.empty') }}</p>
+    <ul v-else class="mt-2 flex flex-col">
+      <li v-for="p in packages" :key="p.name" class="border-b border-line-soft py-2.5 last:border-none">
+        <div class="flex flex-wrap items-center gap-x-2 gap-y-1">
+          <span class="min-w-0 break-all font-mono text-[13px] text-text">{{ p.name }}</span>
+          <span v-if="p.info.categoryLabel" class="shrink-0 rounded-sm bg-tile-2 px-1.5 py-0.5 text-[11px] text-faint">{{ p.info.categoryLabel }}</span>
+          <div v-if="p.category !== 'self'" class="ms-auto flex shrink-0 items-center gap-1">
+            <button
+              type="button"
+              class="tap rounded-sm border px-2.5 py-0.5 text-[12.5px] disabled:opacity-60"
+              :class="primary(p).action === 'remove' ? 'border-line text-muted hover:bg-field hover:text-text' : 'border-accent text-accent hover:bg-tile-2'"
+              :disabled="!!pending"
+              @click="preview(primary(p).action, [p.name])"
+            >
+              {{ t('admin.packages.' + primary(p).label) }}
             </button>
-            <button type="button" class="rounded-sm px-2 py-0.5 text-[12px] text-muted hover:bg-field hover:text-text disabled:opacity-60" :disabled="!!pending" @click="preview('remove', [p.name])">
-              {{ t('admin.packages.remove') }}
-            </button>
-          </template>
+            <DropdownMenu>
+              <template #trigger>
+                <button type="button" class="tap rounded-sm p-1.5 text-muted hover:bg-tile-2 hover:text-text" :aria-label="t('apps.more')">
+                  <Icon name="more" :size="16" />
+                </button>
+              </template>
+              <template #panel="{ close }">
+                <button type="button" class="block w-full px-3 py-1.5 text-start text-[13px] text-text hover:bg-tile-2" @click="close(); toggleDetails(p.name)">
+                  {{ t('admin.packages.details') }}
+                </button>
+                <button v-if="aiReady && p.info.source !== 'curated'" type="button" class="block w-full px-3 py-1.5 text-start text-[13px] text-text hover:bg-tile-2" :disabled="explaining === p.name" @click="close(); explain(p)">
+                  {{ t('admin.packages.explain') }}
+                </button>
+                <button v-if="p.upgradable && !catalog" type="button" class="block w-full px-3 py-1.5 text-start text-[13px] text-onair hover:bg-tile-2" :disabled="!!pending" @click="close(); preview('remove', [p.name])">
+                  {{ t('admin.packages.remove') }}
+                </button>
+              </template>
+            </DropdownMenu>
+          </div>
         </div>
-        <p class="truncate text-[12.5px] text-faint">{{ p.description }}</p>
-        <p class="text-[12.5px]" :class="p.upgradable || p.missing ? 'text-warn' : 'text-muted'">
-          {{ p.missing ? t('admin.packages.missing') : p.upgradable ? t('admin.packages.upgradableFrom', { from: p.version, to: p.availableVersion }) : p.version }}
+        <p v-if="p.info.description" class="mt-0.5 text-[13px] text-muted">{{ p.info.description }}</p>
+        <p class="mt-0.5 text-[12.5px]" :class="p.upgradable ? 'text-warn' : 'text-faint'">
+          <template v-if="p.upgradable">{{ t('admin.packages.upgradableFrom', { from: p.version, to: p.availableVersion }) }}</template>
+          <template v-else>{{ p.version }}</template>
+          <template v-if="p.neededBy?.length"> · <span class="text-accent">{{ t('admin.packages.neededBy', { hubs: p.neededBy.map(hubName).join(', ') }) }}</span></template>
         </p>
+        <dl v-if="open.has(p.name)" class="mt-2 grid grid-cols-[max-content_1fr] gap-x-3 gap-y-0.5 rounded-sm border border-line bg-bg p-2.5 text-[12.5px]">
+          <dt class="text-faint">{{ t('admin.packages.detail.version') }}</dt>
+          <dd class="font-mono text-text">{{ p.version }}<template v-if="p.upgradable"> → {{ p.availableVersion }}</template></dd>
+          <template v-if="p.category">
+            <dt class="text-faint">{{ t('admin.packages.detail.section') }}</dt>
+            <dd class="font-mono text-text">{{ p.category }}</dd>
+          </template>
+          <dt class="text-faint">{{ t('admin.packages.detail.source') }}</dt>
+          <dd class="text-text">{{ t('admin.packages.source.' + p.info.source) }}</dd>
+          <template v-if="p.description && p.description !== p.info.description">
+            <dt class="text-faint">{{ t('admin.packages.detail.own') }}</dt>
+            <dd class="text-text">{{ p.description }}</dd>
+          </template>
+        </dl>
         <p v-if="explained[p.name]" class="mt-1 rounded-sm border border-line bg-bg p-2 text-[12.5px] text-text">{{ explained[p.name] }}</p>
       </li>
     </ul>
+    <p v-if="truncated" class="mt-2 text-[12px] text-faint">{{ t('admin.packages.truncated') }}</p>
   </section>
 </template>
 
 <script setup lang="ts">
 import { useFriendlyError } from '@/composables/useFriendlyError'
-import { onMounted, reactive, ref } from 'vue'
+import { onMounted, reactive, ref, watch } from 'vue'
 import { useI18n } from 'vue-i18n'
 import { api, ApiError } from '@/api/client'
+import DropdownMenu from '@/components/DropdownMenu.vue'
 import Icon from '@/components/Icon.vue'
 import PlanPreview from '@/components/PlanPreview.vue'
 import { usePlanError } from '@/composables/usePlanError'
 import { useHubLabel } from '@/composables/useHubLabel'
-import type { AdminPackage, PackageRun, PackageStep, Plan } from '@/api/types'
+import type { AdminPackage, PackageCategory, PackageRun, PackageStep, Plan } from '@/api/types'
 
-const { t } = useI18n()
+const { t, locale } = useI18n()
 const { hubName } = useHubLabel()
 const { friendly } = useFriendlyError()
 const { planErrorMessage } = usePlanError()
 
 const packages = ref<AdminPackage[]>([])
-const categories = ref<string[]>([])
+const categories = ref<PackageCategory[]>([])
 const loading = ref(true)
 const error = ref('')
 const q = ref('')
 const category = ref('')
 const status = ref('')
-const views = [{ id: '' }, { id: 'upgradable' }, { id: 'available' }, { id: 'needed' }]
+const views = ['', 'available', 'upgradable']
 function setView(id: string) {
   status.value = id
   void load()
+}
+function setCategory(id: string) {
+  category.value = id
+  void load()
+}
+
+// The one action a row offers up front; the rest is behind "⋯".
+function primary(p: AdminPackage): { action: 'install' | 'upgrade' | 'remove'; label: string } {
+  if (catalog.value || p.missing) return { action: 'install', label: 'install' }
+  if (p.upgradable) return { action: 'upgrade', label: 'upgrade' }
+  return { action: 'remove', label: 'remove' }
+}
+
+const open = reactive(new Set<string>())
+function toggleDetails(name: string) {
+  if (!open.delete(name)) open.add(name)
 }
 // The rows on screen are the "not installed" catalog (install buttons)
 // rather than installed packages (upgrade/remove).
@@ -168,10 +225,18 @@ const upgradableCount = ref(0)
 
 async function load() {
   loading.value = true
+  let again = false
   try {
-    const res = await api.admin.packages({ q: q.value, category: category.value, status: status.value })
+    const res = await api.admin.packages({ q: q.value, category: category.value, status: status.value, lang: locale.value })
     packages.value = res.packages
     categories.value = res.categories
+    // A category that this view doesn't hold (switched from Installed to
+    // Available, say) would show an empty list with no chip to undo it.
+    if (category.value && !res.categories.some((c) => c.id === category.value)) {
+      category.value = ''
+      again = true
+      return
+    }
     truncated.value = !!res.truncated
     catalog.value = status.value === 'available'
     error.value = ''
@@ -181,6 +246,7 @@ async function load() {
   } finally {
     loading.value = false
   }
+  if (again) await load()
 }
 
 async function countUpgradable() {
@@ -266,6 +332,7 @@ async function explain(p: AdminPackage) {
 // The explanation comes from the AI provider: without a key the button
 // would only fail, so it is not offered.
 const aiReady = ref(false)
+watch(locale, () => void load())
 onMounted(() => {
   void load()
   api

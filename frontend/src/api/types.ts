@@ -706,6 +706,22 @@ export interface AdminPackage {
   neededBy?: string[]
   // A package a hub needs that isn't installed ("needed" view only).
   missing?: boolean
+  // What the tab shows (backend internal/pkginfo): the curated text, else
+  // the package's own description, else nothing.
+  info: PackageInfo
+}
+
+export interface PackageInfo {
+  description: string
+  category: string
+  categoryLabel: string
+  neededBy?: string[]
+  source: 'curated' | 'package' | 'none'
+}
+
+export interface PackageCategory {
+  id: string
+  label: string
 }
 
 // apt.Step — one package a package plan installs, upgrades or removes.

@@ -1337,13 +1337,13 @@
     "packages": {
       "title": "Pacchetti",
       "search": "Cerca pacchetto …",
-      "allCategories": "Tutte le categorie",
+      "allCategories": "Tutti",
       "allStatus": "Tutti",
       "upgradable": "Aggiornamento disponibile",
       "upgradableFrom": "{from} → {to}",
       "empty": "Nessun pacchetto trovato.",
       "unavailable": "L'elenco dei pacchetti non è disponibile su questo sistema.",
-      "explain": "Cos'è?",
+      "explain": "Chiedi all'IA (facoltativo)",
       "feedAddedByHand": "Aggiunto manualmente",
       "notInstalled": "Non installati",
       "upgradableCount": "{count} aggiornamento disponibile | {count} aggiornamenti disponibili",
@@ -1362,22 +1362,32 @@
       "upgrade": "Aggiorna",
       "remove": "Rimuovi",
       "truncated": "Vengono mostrati solo i primi pacchetti — usa la ricerca per restringere.",
-      "needed": "Richiesti da DreamHub",
       "neededBy": "Richiesto da {hubs}",
-      "missing": "Non installato",
       "intro": "Software installato, aggiornamenti disponibili e nuovi pacchetti per il box.",
       "view": {
         "installed": "Installati",
         "upgradable": "Aggiornamenti",
-        "available": "Installa nuovo",
-        "needed": "Usati da DreamHub"
+        "available": "Disponibili"
       },
       "feedsIntro": "Le fonti sono i luoghi da cui arrivano i pacchetti. Disattivando una fonte i suoi pacchetti scompaiono.",
       "feedAdd": "Aggiungi una fonte …",
       "feedName": "Nome breve, es. mio-feed",
       "feedUrl": "Indirizzo, es. https://example.org/feed",
       "feedHint": "Aggiungi solo una fonte di cui ti fidi: i suoi pacchetti vengono installati con tutti i diritti sul box e non sono firmati.",
-      "feedPreview": "Anteprima"
+      "feedPreview": "Anteprima",
+      "categories": "Categorie",
+      "details": "Dettagli",
+      "detail": {
+        "version": "Versione",
+        "section": "Sezione (apt)",
+        "source": "Descrizione da",
+        "own": "Testo del pacchetto stesso"
+      },
+      "source": {
+        "curated": "Elenco di DreamHub",
+        "package": "Il pacchetto stesso",
+        "none": "Nessuna disponibile"
+      }
     },
     "scripts": {
       "title": "Script",

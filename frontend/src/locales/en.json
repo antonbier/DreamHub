@@ -1337,13 +1337,13 @@
     "packages": {
       "title": "Packages",
       "search": "Search packages …",
-      "allCategories": "All categories",
+      "allCategories": "All",
       "allStatus": "All",
       "upgradable": "Update available",
       "upgradableFrom": "{from} → {to}",
       "empty": "No packages found.",
       "unavailable": "The package list isn't available on this system.",
-      "explain": "What's this?",
+      "explain": "Ask the AI (optional)",
       "feedAddedByHand": "Added by hand",
       "notInstalled": "Not installed",
       "upgradableCount": "{count} update available | {count} updates available",
@@ -1362,22 +1362,32 @@
       "upgrade": "Update",
       "remove": "Remove",
       "truncated": "Only the first packages are shown — search to narrow it down.",
-      "needed": "Needed by DreamHub",
       "neededBy": "Needed by {hubs}",
-      "missing": "Not installed",
       "intro": "Installed software, available updates and new packages for the box itself.",
       "view": {
         "installed": "Installed",
         "upgradable": "Updates",
-        "available": "Install new",
-        "needed": "Used by DreamHub"
+        "available": "Available"
       },
       "feedsIntro": "Sources are the places packages come from. Switch one off to hide its packages.",
       "feedAdd": "Add a source …",
       "feedName": "Short name, e.g. my-feed",
       "feedUrl": "Address, e.g. https://example.org/feed",
       "feedHint": "Only add a source you trust: its packages are installed with full rights on the box and aren't signed.",
-      "feedPreview": "Preview"
+      "feedPreview": "Preview",
+      "categories": "Categories",
+      "details": "Details",
+      "detail": {
+        "version": "Version",
+        "section": "Section (apt)",
+        "source": "Description from",
+        "own": "The package's own text"
+      },
+      "source": {
+        "curated": "DreamHub's list",
+        "package": "The package itself",
+        "none": "None available"
+      }
     },
     "scripts": {
       "title": "Scripts",

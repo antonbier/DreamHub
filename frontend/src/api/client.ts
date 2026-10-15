@@ -16,6 +16,7 @@ import { authHeaders, handleUnauthorized } from './authState'
 import type {
   AdminFeed,
   AdminPackage,
+  PackageCategory,
   DockerSetupState,
   DockerSetupStep,
   PackageRun,
@@ -514,12 +515,13 @@ export const api = {
     terminalProxyPath: '/api/v1/admin/terminal/proxy/',
     // The package browser (docs/ADMINHUB_PLAN.md, A2); status "available"
     // is the feeds' catalog of packages that aren't installed.
-    packages: (filter: { q?: string; category?: string; status?: string } = {}) => {
+    packages: (filter: { q?: string; category?: string; status?: string; lang?: string } = {}) => {
       const params = new URLSearchParams()
       if (filter.q) params.set('q', filter.q)
       if (filter.category) params.set('category', filter.category)
       if (filter.status) params.set('status', filter.status)
-      return request<{ packages: AdminPackage[]; categories: string[]; truncated?: boolean }>('GET', `/api/v1/admin/packages?${params}`)
+      if (filter.lang) params.set('lang', filter.lang)
+      return request<{ packages: AdminPackage[]; categories: PackageCategory[]; truncated?: boolean }>('GET', `/api/v1/admin/packages?${params}`)
     },
     // Install, upgrade or remove as a plan: apt-get's own simulate run is
     // the preview. "upgrade" with no packages upgrades everything.

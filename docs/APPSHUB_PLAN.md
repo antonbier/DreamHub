@@ -269,7 +269,17 @@ Rename the three tabs (Packages / Extensions / Docker), reorder, remember the la
 - Go tests: `TestAppsDockerUninstall_*` (default keeps data and is idempotent, the data choice, viewer 403, missing CSRF header, other profile can't apply, 10-minute expiry, stale plan) and `TestSafeDataPath`. The real `Exec` removal is not unit-tested (it needs systemd and root paths).
 - Box checks still to do: the real uninstall on the box (services stop with the helper being DreamHub's own channel to Docker, `systemctl disable`, deleting ~210 MB of binaries), then a reinstall afterwards.
 
-### App11: package information without an AI
+### App11: package information without an AI (built 2026-10-15, mock only)
+
+**As built:**
+- `internal/pkginfo`: `entries.json` (embedded) holds per package a description in de/en/it, an optional category and `neededBy` (hub ids; the UI shows page names, merged with the hub registry's `Packages`). Only what was knowable offline went in (ffmpeg, kernel-module-overlay, DreamHub's own packages, MediaPortal, enigma2, dropbear, htop, and AutoTimer / BouquetEditor / SerienRecorder / EPGRefresh / shellinabox under their conventional names — listed as `unverified`); anything uncertain was left out. **The file is incomplete until the box feed is read**: `go run ./cmd/pkginfo-missing <Packages | Packages.gz | ->` lists the feed packages without an entry (name, derived category, own description).
+- Category ids (stable, labels de/en/it in `category.go`): `extensions`, `skins`, `systemplugins`, `drivers`, `picons`, `kernel`, `system`; derived from the name (`enigma2-plugin-extensions-*`, `-skins-*`, `-skincomponents-*`, `-systemplugins-*`, `-drivers-*`, `-picons-*`, `kernel-module-*`, also `*-picon-*` as the feeds name them; else System), overridable per entry. Still to check against the real DreamOS index.
+- `GET /api/v1/admin/packages?lang=de|en|it&category=<id>` returns per row `info {description, category, categoryLabel, neededBy, source: curated|package|none}`; `categories` is a list of `{id,label}` for the view. Search also looks in the resolved text. The old "Used by DreamHub" view is gone from the UI (the note replaces it; the API still accepts `status=needed`).
+- UI (`PackagesPanel.vue`): search, chips Installed / Available / Updates (n), category chips, update bar → the existing `POST /admin/packages/plan {"action":"upgrade","packages":[]}` (one plan, apt's simulate as preview), one primary action per row, "⋯" with Details and the optional AI entry (the existing `explain` endpoint, offered only when an AI key works and the text is not curated).
+- Tests: `pkginfo` (entries complete, categories, resolve, fallback, language), `cmd/pkginfo-missing`, API (`TestAdminPackages_Info`, update-all as one plan, viewer 403 on list/plan/explain/last-run).
+- Still open: the i-have-a-dreambox.com plugin overview link from the owner (names and descriptions for popular plugins); the real feed index to complete entries and verify the unverified names and the category rule; box check.
+
+**Plan as written:**
 
 - A curated, embedded data file (`internal/pkginfo`): per known package a short description in de/en/it, a category, and an optional "needed by <feature>". Filled from the feeds' package index once the box (or the feed) is reachable; the owner corrects what's wrong. Few packages are added over time, so this stays small.
 - Category defaults come from the package name where the feed follows the Enigma2 convention (`enigma2-plugin-extensions-*`, `-skins-*`, `-systemplugins-*`, `-drivers-*`, `-picons-*`); to be checked against the real DreamOS feeds.

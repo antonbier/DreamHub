@@ -1337,13 +1337,13 @@
     "packages": {
       "title": "Pakete",
       "search": "Paket suchen …",
-      "allCategories": "Alle Kategorien",
+      "allCategories": "Alle",
       "allStatus": "Alle",
       "upgradable": "Update verfügbar",
       "upgradableFrom": "{from} → {to}",
       "empty": "Keine Pakete gefunden.",
       "unavailable": "Die Paketliste ist auf diesem System nicht verfügbar.",
-      "explain": "Was ist das?",
+      "explain": "KI fragen (optional)",
       "feedAddedByHand": "Manuell hinzugefügt",
       "notInstalled": "Nicht installiert",
       "upgradableCount": "{count} Update verfügbar | {count} Updates verfügbar",
@@ -1362,22 +1362,32 @@
       "upgrade": "Aktualisieren",
       "remove": "Entfernen",
       "truncated": "Nur die ersten Pakete werden angezeigt — mit der Suche eingrenzen.",
-      "needed": "Von DreamHub benötigt",
       "neededBy": "Benötigt von {hubs}",
-      "missing": "Nicht installiert",
       "intro": "Installierte Software, verfügbare Updates und neue Pakete für die Box selbst.",
       "view": {
         "installed": "Installiert",
         "upgradable": "Updates",
-        "available": "Neu installieren",
-        "needed": "Von DreamHub genutzt"
+        "available": "Verfügbar"
       },
       "feedsIntro": "Quellen sind die Orte, von denen Pakete kommen. Eine Quelle ausschalten blendet ihre Pakete aus.",
       "feedAdd": "Quelle hinzufügen …",
       "feedName": "Kurzname, z. B. mein-feed",
       "feedUrl": "Adresse, z. B. https://example.org/feed",
       "feedHint": "Nur eine Quelle hinzufügen, der du vertraust: Ihre Pakete werden mit vollen Rechten auf der Box installiert und sind nicht signiert.",
-      "feedPreview": "Vorschau"
+      "feedPreview": "Vorschau",
+      "categories": "Kategorien",
+      "details": "Details",
+      "detail": {
+        "version": "Version",
+        "section": "Bereich (apt)",
+        "source": "Beschreibung von",
+        "own": "Text des Pakets selbst"
+      },
+      "source": {
+        "curated": "Liste von DreamHub",
+        "package": "Das Paket selbst",
+        "none": "Keine vorhanden"
+      }
     },
     "scripts": {
       "title": "Skripte",

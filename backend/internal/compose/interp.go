@@ -79,7 +79,9 @@ func splitRefs(s string) ([]segment, error) {
 				return nil, fmt.Errorf("unclosed ${ in %q", s)
 			}
 			body := s[i+2 : i+end]
-			if strings.Contains(body, "${") || strings.Contains(body, "$") {
+			// $$ inside a default is a literal $; any other $ is a nested
+			// reference.
+			if strings.Contains(strings.ReplaceAll(body, "$$", ""), "$") {
 				return nil, fmt.Errorf("nested variables are not supported in %q", s)
 			}
 			j := 0
@@ -95,9 +97,9 @@ func splitRefs(s string) ([]segment, error) {
 			case rest == "":
 				r.required = true
 			case strings.HasPrefix(rest, ":-"):
-				r.colon, r.hasDefault, r.def = true, true, rest[2:]
+				r.colon, r.hasDefault, r.def = true, true, strings.ReplaceAll(rest[2:], "$$", "$")
 			case strings.HasPrefix(rest, "-"):
-				r.hasDefault, r.def = true, rest[1:]
+				r.hasDefault, r.def = true, strings.ReplaceAll(rest[1:], "$$", "$")
 			case strings.HasPrefix(rest, ":?"):
 				r.colon, r.required, r.message = true, true, rest[2:]
 			case strings.HasPrefix(rest, "?"):

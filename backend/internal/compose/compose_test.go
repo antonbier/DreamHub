@@ -172,6 +172,7 @@ services:
       B: "${REQ:?need it}"
       C: "cost: $$5"
       D: "${E:-}"
+      F: "${P:-$$5}"
 `))
 	if err != nil {
 		t.Fatal(err)
@@ -193,6 +194,9 @@ services:
 	env := map[string]string{}
 	for _, p := range r.Services[0].Env {
 		env[p.Key] = p.Value
+	}
+	if env["F"] != "$5" {
+		t.Fatalf("$$ in a default is a literal $: %q", env["F"])
 	}
 	if env["A"] != "p" || env["B"] != "r" || env["C"] != "cost: $5" || env["D"] != "" || r.Services[0].Tag != "1.0" {
 		t.Fatalf("env %v tag %s", env, r.Services[0].Tag)

@@ -37,7 +37,7 @@
         </div>
         <button
           type="button"
-          class="shrink-0 rounded border border-line px-2.5 py-1 text-[12.5px] text-text hover:bg-field disabled:opacity-60"
+          class="shrink-0 rounded-sm border border-line px-2.5 py-1 text-[12.5px] text-text hover:bg-field disabled:opacity-60"
           :disabled="zapping === ch.serviceReference"
           @click="zap(ch.serviceReference)"
         >

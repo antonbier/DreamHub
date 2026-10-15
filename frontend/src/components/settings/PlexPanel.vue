@@ -13,7 +13,7 @@
   checkboxes, saved with one button; at least one stays chosen.
 -->
 <template>
-  <section class="rounded border border-line bg-tile p-5">
+  <section class="rounded-sm border border-line bg-tile p-5">
     <h2 class="text-[15.5px] font-semibold">{{ t('settings.plexPanel.title') }}</h2>
 
     <!-- Signing in -->
@@ -21,12 +21,12 @@
       <template v-if="!servers">
         <p class="mt-1 text-[13.5px] text-muted">{{ t('settings.plexPanel.enterCode') }}</p>
         <div class="mt-3 flex flex-wrap items-center gap-4">
-          <span class="rounded bg-field px-4 py-2 font-mono text-[26px] font-semibold tracking-[0.2em] text-text">{{ pin.code }}</span>
+          <span class="rounded-sm bg-field px-4 py-2 font-mono text-[26px] font-semibold tracking-[0.2em] text-text">{{ pin.code }}</span>
           <a :href="pin.linkUrl" target="_blank" rel="noopener noreferrer" class="text-[14px] text-accent hover:underline">plex.tv/link ↗</a>
         </div>
         <p class="mt-3 text-[12.5px] text-faint">{{ expired ? t('settings.plexPanel.expired') : t('settings.plexPanel.waiting') }}</p>
         <div class="mt-3 flex gap-3">
-          <button v-if="expired" type="button" class="rounded bg-accent px-3 py-1.5 text-[13px] font-semibold text-bg" @click="start">{{ t('settings.plexPanel.newCode') }}</button>
+          <button v-if="expired" type="button" class="rounded-sm bg-accent px-3 py-1.5 text-[13px] font-semibold text-bg" @click="start">{{ t('settings.plexPanel.newCode') }}</button>
           <button type="button" class="text-[13px] text-muted hover:text-text" @click="reset">{{ t('settings.page.cancel') }}</button>
         </div>
       </template>
@@ -35,19 +35,19 @@
         <fieldset v-for="srv in servers" :key="srv.id" class="mt-3">
           <legend class="text-[14px] font-semibold text-text">{{ srv.name }}</legend>
           <label v-for="c in srv.connections" :key="c.uri" class="mt-1.5 flex items-center gap-2 text-[13px] text-text">
-            <input v-model="choice" type="radio" :value="`${srv.id}|${c.uri}`" class="accent-[var(--dh-accent)]" />
+            <input v-model="choice" type="radio" :value="`${srv.id}|${c.uri}`" class="accent-(--dh-accent)" />
             <span class="break-all font-mono text-[12.5px]">{{ c.uri }}</span>
             <span class="shrink-0 text-faint">{{ c.local ? t('settings.plexPanel.local') : t('settings.plexPanel.remote') }}</span>
           </label>
           <label class="mt-1.5 flex flex-wrap items-center gap-2 text-[13px] text-text">
-            <input v-model="choice" type="radio" :value="`${srv.id}|custom`" class="accent-[var(--dh-accent)]" />
+            <input v-model="choice" type="radio" :value="`${srv.id}|custom`" class="accent-(--dh-accent)" />
             {{ t('settings.plexPanel.otherAddress') }}
             <input
               v-if="choice === `${srv.id}|custom`"
               v-model="customUrl"
               type="url"
               placeholder="https://plex.example.org"
-              class="min-w-0 flex-1 rounded border border-line bg-field px-2.5 py-1.5 font-mono text-[12.5px] text-text"
+              class="min-w-0 flex-1 rounded-sm border border-line bg-field px-2.5 py-1.5 font-mono text-[12.5px] text-text"
             />
           </label>
         </fieldset>
@@ -55,7 +55,7 @@
         <div class="mt-3 flex items-center gap-3">
           <button
             type="button"
-            class="rounded bg-accent px-3.5 py-1.5 text-[13.5px] font-semibold text-bg disabled:opacity-60"
+            class="rounded-sm bg-accent px-3.5 py-1.5 text-[13.5px] font-semibold text-bg disabled:opacity-60"
             :disabled="!choice || busy || (choice.endsWith('|custom') && !customUrl.trim())"
             @click="connect"
           >
@@ -78,14 +78,14 @@
       <template v-if="libraries.length">
         <p class="mt-3 text-[13.5px] text-text">{{ t('settings.plexPanel.libraries') }}</p>
         <label v-for="lib in libraries" :key="lib.id" class="mt-1.5 flex items-center gap-2 text-[13.5px] text-text">
-          <input v-model="chosen" type="checkbox" :value="lib.id" class="accent-[var(--dh-accent)]" />
+          <input v-model="chosen" type="checkbox" :value="lib.id" class="accent-(--dh-accent)" />
           {{ lib.title }}
           <span class="text-faint">{{ t(`settings.plexPanel.kind.${lib.type}`) }}<template v-if="lib.count"> · {{ lib.count }}</template></span>
         </label>
         <div v-if="librariesChanged" class="mt-3 flex items-center gap-3">
           <button
             type="button"
-            class="rounded bg-accent px-3.5 py-1.5 text-[13.5px] font-semibold text-bg disabled:opacity-60"
+            class="rounded-sm bg-accent px-3.5 py-1.5 text-[13.5px] font-semibold text-bg disabled:opacity-60"
             :disabled="chosen.length === 0 || busy"
             @click="saveLibraries"
           >
@@ -101,7 +101,7 @@
     <!-- Not connected -->
     <template v-else>
       <p class="mt-1 text-[13.5px] text-muted">{{ t('settings.plexPanel.intro') }}</p>
-      <button type="button" class="mt-3 rounded bg-accent px-3.5 py-1.5 text-[13.5px] font-semibold text-bg disabled:opacity-60" :disabled="busy" @click="start">
+      <button type="button" class="mt-3 rounded-sm bg-accent px-3.5 py-1.5 text-[13.5px] font-semibold text-bg disabled:opacity-60" :disabled="busy" @click="start">
         {{ t('settings.plexPanel.signIn') }}
       </button>
       <p class="mt-2 text-[12.5px] text-faint">{{ t('settings.plexPanel.manualHint') }}</p>

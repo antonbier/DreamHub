@@ -9,7 +9,7 @@
 -->
 <template>
   <div class="mx-auto max-w-content p-6 below-md:p-4">
-    <RouterLink to="/series" class="inline-flex items-center gap-1 rounded text-[13px] text-accent hover:underline">
+    <RouterLink to="/series" class="inline-flex items-center gap-1 rounded-sm text-[13px] text-accent hover:underline">
       <Icon name="chevron-left" :size="14" />
       {{ t('series.detail.back') }}
     </RouterLink>
@@ -47,7 +47,7 @@
             <span v-if="detail.info?.info">{{ detail.info.info }}</span>
             <span v-else-if="tmdb?.genres?.length">{{ tmdb.genres.join(', ') }}</span>
             <RatingBadge v-if="tmdb" :rating="tmdb.rating" :votes="tmdb.votes" />
-            <span v-for="c in chips" :key="c.id" class="whitespace-nowrap rounded-sm border border-line px-1 text-[11.5px] tabular-nums text-muted" :title="c.title">
+            <span v-for="c in chips" :key="c.id" class="whitespace-nowrap rounded-xs border border-line px-1 text-[11.5px] tabular-nums text-muted" :title="c.title">
               {{ c.label }} <span class="text-text">{{ c.value }}</span>
             </span>
           </p>
@@ -62,7 +62,7 @@
       </div>
 
       <dl class="mt-4 grid grid-cols-4 gap-3 below-md:grid-cols-2 below-sm:grid-cols-1">
-        <div v-for="fact in facts" :key="fact.label" class="rounded border border-line bg-tile px-3 py-2.5">
+        <div v-for="fact in facts" :key="fact.label" class="rounded-sm border border-line bg-tile px-3 py-2.5">
           <dt class="text-[12.5px] text-faint">{{ fact.label }}</dt>
           <dd class="mt-0.5 truncate text-[14px] text-text" :class="{ 'font-mono text-[13px]': fact.mono }" :title="fact.value">
             {{ fact.value }}
@@ -121,7 +121,7 @@
                   <button
                     v-else-if="record[key(b)]?.status !== 'previewing'"
                     type="button"
-                    class="shrink-0 rounded px-2 py-1 text-[13px] text-accent hover:bg-tile-2 disabled:text-faint"
+                    class="shrink-0 rounded-sm px-2 py-1 text-[13px] text-accent hover:bg-tile-2 disabled:text-faint"
                     :disabled="!canCreateTimers"
                     :title="canCreateTimers ? undefined : t('discovery.timerHubUnavailable')"
                     @click="previewRecord(b)"

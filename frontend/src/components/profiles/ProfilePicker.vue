@@ -26,13 +26,13 @@
             inputmode="numeric"
             autocomplete="off"
             maxlength="8"
-            class="w-full rounded border border-line bg-field px-2.5 py-2 text-center font-mono text-[20px] tracking-[0.3em] text-text"
+            class="w-full rounded-sm border border-line bg-field px-2.5 py-2 text-center font-mono text-[20px] tracking-[0.3em] text-text"
           />
         </label>
         <p v-if="error" class="mb-3 text-[13px] text-warn" role="alert">{{ error }}</p>
         <button
           type="submit"
-          class="w-full rounded bg-accent py-2 text-[14px] font-semibold text-bg disabled:opacity-60"
+          class="w-full rounded-sm bg-accent py-2 text-[14px] font-semibold text-bg disabled:opacity-60"
           :disabled="busy || pin.length < 4"
         >
           {{ busy ? t('profiles.picker.checking') : t('profiles.picker.open') }}

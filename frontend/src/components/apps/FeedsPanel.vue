@@ -6,7 +6,7 @@
   Collapsed by default — most people never need this.
 -->
 <template>
-  <details class="mt-5 rounded border border-line bg-tile p-4" :open="open" @toggle="open = ($event.target as HTMLDetailsElement).open">
+  <details class="mt-5 rounded-sm border border-line bg-tile p-4" :open="open" @toggle="open = ($event.target as HTMLDetailsElement).open">
     <summary class="cursor-pointer text-[14px] font-semibold text-text">
       {{ t('admin.packages.feedsTitle') }}
     </summary>
@@ -20,7 +20,7 @@
           <span class="block font-mono text-[13px] text-text">{{ f.name }}</span>
           <span v-if="f.url" class="block truncate text-[12px] text-faint">{{ f.url }}</span>
         </div>
-        <span v-if="!f.known" class="shrink-0 rounded border border-warn px-1.5 py-0.5 text-[11px] text-warn">{{ t('admin.packages.feedAddedByHand') }}</span>
+        <span v-if="!f.known" class="shrink-0 rounded-sm border border-warn px-1.5 py-0.5 text-[11px] text-warn">{{ t('admin.packages.feedAddedByHand') }}</span>
         <button
           type="button"
           role="switch"
@@ -48,21 +48,21 @@
         required
         maxlength="60"
         :placeholder="t('admin.packages.feedName')"
-        class="rounded border border-line bg-field px-2.5 py-1.5 font-mono text-[13px] text-text"
+        class="rounded-sm border border-line bg-field px-2.5 py-1.5 font-mono text-[13px] text-text"
       />
       <input
         v-model="newUrl"
         type="url"
         required
         :placeholder="t('admin.packages.feedUrl')"
-        class="rounded border border-line bg-field px-2.5 py-1.5 font-mono text-[13px] text-text"
+        class="rounded-sm border border-line bg-field px-2.5 py-1.5 font-mono text-[13px] text-text"
       />
       <p class="text-[12px] text-faint">{{ t('admin.packages.feedHint') }}</p>
       <div class="flex justify-end gap-2">
-        <button type="button" class="rounded px-3 py-1.5 text-[13px] text-text hover:bg-field" @click="adding = false">
+        <button type="button" class="rounded-sm px-3 py-1.5 text-[13px] text-text hover:bg-field" @click="adding = false">
           {{ t('plan.cancel') }}
         </button>
-        <button type="submit" class="rounded bg-accent px-3 py-1.5 text-[13px] font-semibold text-bg">
+        <button type="submit" class="rounded-sm bg-accent px-3 py-1.5 text-[13px] font-semibold text-bg">
           {{ t('admin.packages.feedPreview') }}
         </button>
       </div>

@@ -12,7 +12,7 @@
     <li v-for="item in items" :key="item.recording ?? item.title" class="border-b border-line-soft last:border-none">
       <RouterLink
         :to="item.recording ? { path: '/stream', query: { recording: item.recording, title: item.title } } : (item.path ?? '/media')"
-        class="-mx-2 flex items-center gap-3 rounded px-2 py-1.5 hover:bg-tile-2"
+        class="-mx-2 flex items-center gap-3 rounded-sm px-2 py-1.5 hover:bg-tile-2"
       >
         <Icon name="play" :size="16" class="shrink-0 text-accent" />
         <span class="min-w-0 flex-1">

@@ -20,12 +20,12 @@
     >
       <div v-if="info?.backdrop" class="relative h-[220px] below-sm:h-[180px]">
         <PosterImage :path="info.backdrop" size="w780" fill alt="" />
-        <div class="absolute inset-0 bg-gradient-to-t from-tile via-tile/30 to-transparent" />
+        <div class="absolute inset-0 bg-linear-to-t/srgb from-tile to-transparent" />
       </div>
       <button
         ref="closeButton"
         type="button"
-        class="absolute end-3 top-3 rounded bg-tile/80 px-2.5 py-1 text-[13px] text-text backdrop-blur hover:bg-tile-2"
+        class="absolute inset-e-3 top-3 rounded-sm px-2.5 py-1 text-[13px] text-text backdrop-blur-sm hover:bg-tile-2"
         @click="$emit('close')"
       >
         {{ t('plan.close') }}

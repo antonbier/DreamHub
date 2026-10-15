@@ -4,10 +4,10 @@
   (backend/internal/perm, Switchable).
 -->
 <template>
-  <form class="rounded border border-line bg-field p-4" @submit.prevent="submit">
+  <form class="rounded-sm border border-line bg-field p-4" @submit.prevent="submit">
     <label class="mb-3 block">
       <span class="mb-1 block text-[13px] text-muted">{{ t('profiles.form.name') }}</span>
-      <input v-model="name" type="text" maxlength="30" class="w-full max-w-[280px] rounded border border-line bg-tile px-2.5 py-1.5 text-[14px] text-text" />
+      <input v-model="name" type="text" maxlength="30" class="w-full max-w-[280px] rounded-sm border border-line bg-tile px-2.5 py-1.5 text-[14px] text-text" />
     </label>
 
     <fieldset class="mb-3">
@@ -26,7 +26,7 @@
 
     <label class="mb-3 block">
       <span class="mb-1 block text-[13px] text-muted">{{ t('profiles.form.role') }}</span>
-      <select v-model="role" class="rounded border border-line bg-tile px-2.5 py-1.5 text-[14px] text-text">
+      <select v-model="role" class="rounded-sm border border-line bg-tile px-2.5 py-1.5 text-[14px] text-text">
         <option value="user">{{ t('profiles.role.user') }}</option>
         <option value="admin">{{ t('profiles.role.admin') }}</option>
       </select>
@@ -50,7 +50,7 @@
         inputmode="numeric"
         autocomplete="new-password"
         maxlength="8"
-        class="w-[160px] rounded border border-line bg-tile px-2.5 py-1.5 font-mono text-[14px] text-text"
+        class="w-[160px] rounded-sm border border-line bg-tile px-2.5 py-1.5 font-mono text-[14px] text-text"
       />
     </label>
     <label v-if="profile?.hasPin" class="mb-1 flex items-center gap-2 text-[13.5px]">
@@ -61,16 +61,16 @@
 
     <p v-if="error" class="mb-3 text-[13px] text-warn" role="alert">{{ error }}</p>
     <div class="flex flex-wrap items-center gap-2">
-      <button type="submit" class="rounded bg-accent px-3 py-1.5 text-[13px] font-semibold text-bg disabled:opacity-60" :disabled="busy || !valid">
+      <button type="submit" class="rounded-sm bg-accent px-3 py-1.5 text-[13px] font-semibold text-bg disabled:opacity-60" :disabled="busy || !valid">
         {{ busy ? t('settings.page.saving') : t('profiles.form.save') }}
       </button>
-      <button type="button" class="rounded px-3 py-1.5 text-[13px] text-muted hover:bg-tile hover:text-text" @click="emit('cancel')">
+      <button type="button" class="rounded-sm px-3 py-1.5 text-[13px] text-muted hover:bg-tile hover:text-text" @click="emit('cancel')">
         {{ t('settings.page.cancel') }}
       </button>
       <button
         v-if="profile && !self"
         type="button"
-        class="ms-auto rounded px-3 py-1.5 text-[13px]"
+        class="ms-auto rounded-sm px-3 py-1.5 text-[13px]"
         :class="confirmDelete ? 'bg-warn font-semibold text-bg' : 'text-warn hover:bg-tile'"
         :disabled="busy"
         @click="confirmDelete ? emit('remove') : (confirmDelete = true)"

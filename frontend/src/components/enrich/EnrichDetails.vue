@@ -24,8 +24,8 @@
         <span v-if="info.year" class="tabular-nums">{{ info.year }}</span>
         <span v-if="info.genres?.length">{{ info.genres.join(', ') }}</span>
         <RatingBadge :rating="info.rating" :votes="info.votes" />
-        <span v-if="info.fsk" class="rounded-sm border border-line px-1 text-[11.5px] text-muted">{{ t('enrich.fsk', { age: info.fsk }) }}</span>
-        <span v-for="c in chips" :key="c.id" class="whitespace-nowrap rounded-sm border border-line px-1 text-[11.5px] tabular-nums text-muted" :title="c.title">
+        <span v-if="info.fsk" class="rounded-xs border border-line px-1 text-[11.5px] text-muted">{{ t('enrich.fsk', { age: info.fsk }) }}</span>
+        <span v-for="c in chips" :key="c.id" class="whitespace-nowrap rounded-xs border border-line px-1 text-[11.5px] tabular-nums text-muted" :title="c.title">
           {{ c.label }} <span class="text-text">{{ c.value }}</span>
         </span>
       </p>

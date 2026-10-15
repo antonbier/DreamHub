@@ -2,15 +2,96 @@
    Sans 3 covers Latin/Greek/Cyrillic/Vietnamese; a script-specific fallback
    is added only when a language needing it is selected (CONCEPT.md,
    Internationalization, "Fonts per script"). @import must precede every
-   other rule, including @tailwind, or PostCSS rejects it. */
+   other rule. */
 @import '@fontsource/source-sans-3/400.css';
 @import '@fontsource/source-sans-3/600.css';
 @import '@fontsource/source-sans-3/700.css';
 @import '@fontsource/source-code-pro/500.css';
 
-@tailwind base;
-@tailwind components;
-@tailwind utilities;
+@import 'tailwindcss';
+
+/* Theme: the scale, radii and breakpoints mirror ../DESIGN.md exactly —
+   that file is the source of truth; keep the two in sync when either
+   changes. Colors are the --dh-* tokens below, so `inline` keeps every
+   utility pointing straight at the token (and therefore at the active
+   appearance). Don't use opacity modifiers (bg-tile/80) on these: they used
+   to produce nothing with var() colors and the design was tuned without
+   them. */
+@theme inline {
+  --color-bg: var(--dh-bg);
+  --color-side: var(--dh-side);
+  --color-tile: var(--dh-tile);
+  --color-tile-2: var(--dh-tile-2);
+  --color-field: var(--dh-field);
+  --color-line: var(--dh-line);
+  --color-line-soft: var(--dh-line-soft);
+  --color-text: var(--dh-text);
+  --color-muted: var(--dh-muted);
+  --color-faint: var(--dh-faint);
+  --color-accent: var(--dh-accent);
+  --color-onair: var(--dh-onair);
+  --color-warn: var(--dh-warn);
+  --color-ok: var(--dh-ok);
+}
+
+@theme {
+  --font-sans: 'Source Sans 3', system-ui, sans-serif;
+  --font-mono: 'Source Code Pro', ui-monospace, monospace;
+
+  /* 6 px tiles and buttons (bare `rounded`), 4 px picons and inputs, 10 px
+     dialogs. */
+  --radius-xs: 4px;
+  --radius-sm: 6px;
+  --radius-lg: 10px;
+
+  --container-content: 1480px;
+  --spacing-sidebar: 232px;
+  --spacing-sidebar-collapsed: 60px;
+
+  /* DESIGN.md, "Layout": the three breakpoints the shell responds to are
+     the below-* variants further down; Tailwind's own min-width screens
+     (sm:, md:, lg:...) are not part of the design and stay off. */
+  --breakpoint-*: initial;
+}
+
+/* Appearance (dark/light/system) is applied as `data-theme` on <html> by
+   src/stores/preferences.ts, not the OS-only `prefers-color-scheme`. */
+@custom-variant dark (&:where([data-theme='dark'], [data-theme='dark'] *));
+
+/* Named for what happens at them, not by size, so usage stays legible.
+   Declared widest first: the narrower one wins when several apply. */
+@custom-variant below-lg (@media (max-width: 1180px)); /* dashboard grid: 4 -> 2 columns */
+@custom-variant below-md (@media (max-width: 900px)); /* sidebar becomes a drawer */
+@custom-variant below-sm (@media (max-width: 640px)); /* dashboard grid: -> 1 column */
+
+/* Hover styles also apply after a tap on touch screens, as they always did
+   here: actions revealed by hover (group-hover) must stay reachable on a
+   tablet wider than the drawer breakpoint. Tailwind 4 would otherwise limit
+   them to devices that can hover. */
+@custom-variant hover (&:hover);
+@custom-variant group-hover (&:is(:where(.group):hover *));
+
+/* Tailwind 4 changed three Preflight defaults; keep the Tailwind 3 look:
+   a bare `border` is light gray (not currentColor), buttons show the
+   pointer, placeholders are gray-400 (not the text color at 50 %). */
+@layer base {
+  *,
+  ::after,
+  ::before,
+  ::backdrop,
+  ::file-selector-button {
+    border-color: #e5e7eb;
+  }
+  button:not(:disabled),
+  [role='button']:not(:disabled) {
+    cursor: pointer;
+  }
+  input::placeholder,
+  textarea::placeholder {
+    color: #9ca3af;
+    opacity: 1;
+  }
+}
 
 /* Design tokens — see ../DESIGN.md, "Design tokens". Dark is the default
    appearance; :root carries the dark values so an unstyled flash (before
@@ -75,39 +156,43 @@
   --dh-profile-slate: #505a64;
 }
 
-* {
-  /* Logical properties only in component CSS below — RTL-ready
-     (CONCEPT.md, Internationalization). This just keeps box-sizing sane. */
-  box-sizing: border-box;
-}
+/* Base rules live in a layer so that utilities (focus:outline-hidden,
+   rounded, ...) always win over them, as they did in Tailwind 3. */
+@layer base {
+  * {
+    /* Logical properties only in component CSS below — RTL-ready
+       (CONCEPT.md, Internationalization). This just keeps box-sizing sane. */
+    box-sizing: border-box;
+  }
 
-html,
-body,
-#app {
-  height: 100%;
-}
+  html,
+  body,
+  #app {
+    height: 100%;
+  }
 
-body {
-  margin: 0;
-  background: var(--dh-bg);
-  color: var(--dh-text);
-  font-family: 'Source Sans 3', system-ui, sans-serif;
-  font-size: 15px;
-  line-height: 1.5;
-  font-variant-numeric: tabular-nums; /* times, sizes, counts (DESIGN.md) */
-}
+  body {
+    margin: 0;
+    background: var(--dh-bg);
+    color: var(--dh-text);
+    font-family: 'Source Sans 3', system-ui, sans-serif;
+    font-size: 15px;
+    line-height: 1.5;
+    font-variant-numeric: tabular-nums; /* times, sizes, counts (DESIGN.md) */
+  }
 
-input[type='checkbox'],
-input[type='radio'],
-input[type='range'],
-progress {
-  accent-color: var(--dh-accent);
-}
+  input[type='checkbox'],
+  input[type='radio'],
+  input[type='range'],
+  progress {
+    accent-color: var(--dh-accent);
+  }
 
-/* Focus is always visible (DESIGN.md, Interaction). */
-:focus-visible {
-  outline: 2px solid var(--dh-accent);
-  outline-offset: 2px;
+  /* Focus is always visible (DESIGN.md, Interaction). */
+  :focus-visible {
+    outline: 2px solid var(--dh-accent);
+    outline-offset: 2px;
+  }
 }
 
 @media (prefers-reduced-motion: reduce) {

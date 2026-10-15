@@ -37,7 +37,7 @@
           </span>
           <button
             type="button"
-            class="min-w-0 flex-1 rounded px-1 py-1 text-start hover:bg-tile-2"
+            class="min-w-0 flex-1 rounded-sm px-1 py-1 text-start hover:bg-tile-2"
             :aria-expanded="open === row.key"
             @click="toggle(row.key)"
           >
@@ -45,31 +45,31 @@
             <span v-else class="block truncate text-[14.5px] text-text">{{ row.name }}</span>
             <span v-if="row.added" class="text-[11.5px] text-accent">{{ t('channels.edit.added') }}</span>
           </button>
-          <button type="button" class="h-9 w-9 shrink-0 rounded text-muted hover:bg-tile-2 hover:text-text disabled:opacity-30" :disabled="i === 0" :aria-label="t('channels.edit.up', { name: row.name })" @click="move(i, i - 1)">
+          <button type="button" class="h-9 w-9 shrink-0 rounded-sm text-muted hover:bg-tile-2 hover:text-text disabled:opacity-30" :disabled="i === 0" :aria-label="t('channels.edit.up', { name: row.name })" @click="move(i, i - 1)">
             <Icon name="chevron-up" :size="16" />
           </button>
-          <button type="button" class="h-9 w-9 shrink-0 rounded text-muted hover:bg-tile-2 hover:text-text disabled:opacity-30" :disabled="i === draft.length - 1" :aria-label="t('channels.edit.down', { name: row.name })" @click="move(i, i + 1)">
+          <button type="button" class="h-9 w-9 shrink-0 rounded-sm text-muted hover:bg-tile-2 hover:text-text disabled:opacity-30" :disabled="i === draft.length - 1" :aria-label="t('channels.edit.down', { name: row.name })" @click="move(i, i + 1)">
             <Icon name="chevron-down" :size="16" />
           </button>
         </div>
 
         <!-- The row's other actions, opened by tapping it. -->
-        <div v-if="open === row.key" class="mb-2 flex flex-wrap items-end gap-2 rounded bg-tile-2 p-2 text-[13px]">
+        <div v-if="open === row.key" class="mb-2 flex flex-wrap items-end gap-2 rounded-sm bg-tile-2 p-2 text-[13px]">
           <form v-if="!row.marker" class="flex items-end gap-1.5" @submit.prevent="moveToNumber(i)">
             <label class="flex flex-col gap-0.5">
               <span class="text-faint">{{ t('channels.edit.toNumber') }}</span>
-              <input v-model.number="targetNumber" type="number" min="1" :max="channelCount" inputmode="numeric" class="w-20 rounded border border-line bg-field px-2 py-1 text-text" />
+              <input v-model.number="targetNumber" type="number" min="1" :max="channelCount" inputmode="numeric" class="w-20 rounded-sm border border-line bg-field px-2 py-1 text-text" />
             </label>
-            <button type="submit" class="rounded px-2 py-1 text-accent hover:bg-tile" :disabled="!targetNumber">{{ t('channels.edit.move') }}</button>
+            <button type="submit" class="rounded-sm px-2 py-1 text-accent hover:bg-tile" :disabled="!targetNumber">{{ t('channels.edit.move') }}</button>
           </form>
           <form class="flex items-end gap-1.5" @submit.prevent="rename(i)">
             <label class="flex flex-col gap-0.5">
               <span class="text-faint">{{ t('channels.edit.name') }}</span>
-              <input v-model="newName" type="text" maxlength="100" class="w-44 rounded border border-line bg-field px-2 py-1 text-text" />
+              <input v-model="newName" type="text" maxlength="100" class="w-44 rounded-sm border border-line bg-field px-2 py-1 text-text" />
             </label>
-            <button type="submit" class="rounded px-2 py-1 text-accent hover:bg-tile" :disabled="!newName.trim() || newName.trim() === row.name">{{ t('channels.edit.rename') }}</button>
+            <button type="submit" class="rounded-sm px-2 py-1 text-accent hover:bg-tile" :disabled="!newName.trim() || newName.trim() === row.name">{{ t('channels.edit.rename') }}</button>
           </form>
-          <button type="button" class="ms-auto rounded px-2 py-1 text-onair hover:bg-tile" @click="remove(i)">{{ t('channels.edit.remove') }}</button>
+          <button type="button" class="ms-auto rounded-sm px-2 py-1 text-onair hover:bg-tile" @click="remove(i)">{{ t('channels.edit.remove') }}</button>
         </div>
       </li>
     </ol>
@@ -77,21 +77,21 @@
 
     <!-- Adding -->
     <div class="mt-3 flex flex-wrap gap-2">
-      <button type="button" class="rounded border border-line px-3 py-1.5 text-[13.5px] text-accent hover:bg-tile-2" :aria-expanded="adding" @click="toggleAdding">
+      <button type="button" class="rounded-sm border border-line px-3 py-1.5 text-[13.5px] text-accent hover:bg-tile-2" :aria-expanded="adding" @click="toggleAdding">
         {{ t('channels.edit.addChannels') }}
       </button>
       <form class="flex items-center gap-1.5" @submit.prevent="addMarker">
         <label class="sr-only" for="new-heading">{{ t('channels.edit.headingName') }}</label>
-        <input id="new-heading" v-model="headingName" type="text" maxlength="60" :placeholder="t('channels.edit.headingName')" class="w-40 rounded border border-line bg-field px-2 py-1.5 text-[13.5px] text-text" />
-        <button type="submit" class="rounded px-2 py-1.5 text-[13.5px] text-accent hover:bg-tile-2" :disabled="!headingName.trim()">{{ t('channels.edit.addHeading') }}</button>
+        <input id="new-heading" v-model="headingName" type="text" maxlength="60" :placeholder="t('channels.edit.headingName')" class="w-40 rounded-sm border border-line bg-field px-2 py-1.5 text-[13.5px] text-text" />
+        <button type="submit" class="rounded-sm px-2 py-1.5 text-[13.5px] text-accent hover:bg-tile-2" :disabled="!headingName.trim()">{{ t('channels.edit.addHeading') }}</button>
       </form>
     </div>
 
-    <div v-if="adding" class="mt-3 rounded border border-line bg-tile p-3">
+    <div v-if="adding" class="mt-3 rounded-sm border border-line bg-tile p-3">
       <div class="flex flex-wrap items-center gap-2">
         <label class="min-w-0 flex-1">
           <span class="sr-only">{{ t('channels.find.search') }}</span>
-          <input v-model="search" type="search" :placeholder="t('channels.find.search')" class="w-full rounded border border-line bg-field px-3 py-1.5 text-[14px] text-text" />
+          <input v-model="search" type="search" :placeholder="t('channels.find.search')" class="w-full rounded-sm border border-line bg-field px-3 py-1.5 text-[14px] text-text" />
         </label>
         <button
           type="button"
@@ -112,7 +112,7 @@
             <span class="block truncate text-[14px] text-text">{{ c.name }}</span>
             <span class="block truncate text-[12px] text-muted">{{ c.provider }}<template v-if="c.new"> · {{ t('channels.find.new') }}</template></span>
           </span>
-          <button type="button" class="shrink-0 rounded px-2 py-1 text-[13px] text-accent hover:bg-tile-2" @click="add(c)">{{ t('channels.edit.add') }}</button>
+          <button type="button" class="shrink-0 rounded-sm px-2 py-1 text-[13px] text-accent hover:bg-tile-2" @click="add(c)">{{ t('channels.edit.add') }}</button>
         </li>
         <li v-if="candidates.length === 0" class="py-2 text-[13px] text-muted">{{ t('channels.edit.noCandidates') }}</li>
       </ul>
@@ -139,10 +139,10 @@
         <span class="text-[13px]" :class="dirty ? 'text-text' : 'text-faint'" aria-live="polite">
           {{ dirty ? t('channels.edit.unsaved') : t('channels.edit.noChanges') }}
         </span>
-        <button type="button" class="ms-auto rounded px-3 py-1.5 text-[13.5px] text-muted hover:bg-tile-2 hover:text-text" @click="emit('cancel')">
+        <button type="button" class="ms-auto rounded-sm px-3 py-1.5 text-[13.5px] text-muted hover:bg-tile-2 hover:text-text" @click="emit('cancel')">
           {{ dirty ? t('channels.edit.discard') : t('channels.edit.close') }}
         </button>
-        <button type="button" class="rounded bg-accent px-3 py-1.5 text-[13.5px] font-semibold text-bg disabled:opacity-50" :disabled="!dirty || reviewing" @click="review">
+        <button type="button" class="rounded-sm bg-accent px-3 py-1.5 text-[13.5px] font-semibold text-bg disabled:opacity-50" :disabled="!dirty || reviewing" @click="review">
           {{ reviewing ? t('common.loading') : t('channels.edit.review') }}
         </button>
       </div>

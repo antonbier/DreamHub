@@ -6,7 +6,7 @@
   /data, the two services — and applying shows the setup's own log.
 -->
 <template>
-  <section class="mt-4 rounded border border-line bg-tile p-4">
+  <section class="mt-4 rounded-sm border border-line bg-tile p-4">
     <h2 class="text-[14px] font-semibold text-text">{{ t('apps.docker.title') }}</h2>
     <p class="mt-1 text-[13px] text-muted">{{ t('apps.dockerMissing') }}</p>
     <p v-if="state" class="mt-1 text-[12.5px] text-faint">
@@ -18,7 +18,7 @@
       <button
         v-if="!pending"
         type="button"
-        class="rounded bg-accent px-3 py-1.5 text-[13px] font-semibold text-bg"
+        class="rounded-sm bg-accent px-3 py-1.5 text-[13px] font-semibold text-bg"
         @click="preview"
       >
         {{ t('apps.docker.setUp') }}
@@ -39,12 +39,12 @@
         </ul>
         <p class="mt-2 text-[12.5px] text-faint">{{ t('apps.docker.takesAWhile') }}</p>
       </PlanPreview>
-      <div v-else-if="pending.log !== undefined" class="rounded border border-line bg-bg p-3">
+      <div v-else-if="pending.log !== undefined" class="rounded-sm border border-line bg-bg p-3">
         <span class="flex items-center gap-1.5 text-[13px]" :class="pending.ok ? 'text-ok' : 'text-onair'">
           <span class="h-1.5 w-1.5 rounded-full" :class="pending.ok ? 'bg-ok' : 'bg-onair'" />
           {{ pending.ok ? t('apps.docker.done') : t('apps.docker.failed') }}
         </span>
-        <pre v-if="pending.log" class="mt-2 max-h-64 overflow-auto whitespace-pre-wrap break-words font-mono text-[12px] text-text">{{ pending.log }}</pre>
+        <pre v-if="pending.log" class="mt-2 max-h-64 overflow-auto whitespace-pre-wrap wrap-break-word font-mono text-[12px] text-text">{{ pending.log }}</pre>
         <button v-if="!pending.ok" type="button" class="mt-2 text-[12.5px] text-accent hover:underline" @click="pending = null">{{ t('apps.docker.retry') }}</button>
       </div>
       <div v-else-if="pending.error" class="flex items-start justify-between gap-3">

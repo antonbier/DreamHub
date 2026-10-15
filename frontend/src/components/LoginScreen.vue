@@ -17,7 +17,7 @@
           type="text"
           autocomplete="username"
           autofocus
-          class="w-full rounded border border-line bg-field px-2.5 py-1.5 text-[14px] text-text"
+          class="w-full rounded-sm border border-line bg-field px-2.5 py-1.5 text-[14px] text-text"
         />
       </label>
       <label class="mb-4 block">
@@ -26,7 +26,7 @@
           v-model="password"
           type="password"
           autocomplete="current-password"
-          class="w-full rounded border border-line bg-field px-2.5 py-1.5 text-[14px] text-text"
+          class="w-full rounded-sm border border-line bg-field px-2.5 py-1.5 text-[14px] text-text"
         />
       </label>
 
@@ -34,7 +34,7 @@
 
       <button
         type="submit"
-        class="w-full rounded bg-accent py-2 text-[14px] font-semibold text-bg disabled:opacity-60"
+        class="w-full rounded-sm bg-accent py-2 text-[14px] font-semibold text-bg disabled:opacity-60"
         :disabled="submitting || !username || !password"
       >
         {{ submitting ? t('login.submitting') : t('login.submit') }}

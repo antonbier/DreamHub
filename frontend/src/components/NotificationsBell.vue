@@ -14,11 +14,11 @@
       <button
         type="button"
         :aria-label="t('topbar.notifications')"
-        class="relative flex h-8 w-8 items-center justify-center rounded text-muted hover:bg-tile-2 hover:text-text"
+        class="relative flex h-8 w-8 items-center justify-center rounded-sm text-muted hover:bg-tile-2 hover:text-text"
         @click="onOpen"
       >
         <Icon name="bell" :size="18" />
-        <span v-if="issues.length > 0 || notifications.unread > 0" class="absolute end-1 top-1 h-1.5 w-1.5 rounded-full bg-warn" />
+        <span v-if="issues.length > 0 || notifications.unread > 0" class="absolute inset-e-1 top-1 h-1.5 w-1.5 rounded-full bg-warn" />
       </button>
     </template>
     <template #panel>

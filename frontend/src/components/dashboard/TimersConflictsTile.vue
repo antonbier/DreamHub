@@ -25,7 +25,7 @@
         </span>
       </li>
     </ul>
-    <RouterLink to="/timers" class="mt-2 inline-block rounded px-2 py-1 text-[13px] text-accent hover:bg-tile-2">
+    <RouterLink to="/timers" class="mt-2 inline-block rounded-sm px-2 py-1 text-[13px] text-accent hover:bg-tile-2">
       {{ t('dashboard.conflictsTile.open') }}
     </RouterLink>
   </template>

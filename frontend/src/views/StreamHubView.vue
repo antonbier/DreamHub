@@ -23,7 +23,7 @@
 
     <HubStatusBanner :item="item" />
 
-    <p v-if="!supported" class="mt-5 rounded border border-line bg-tile p-4 text-[14px] text-muted">{{ t('stream.unsupported') }}</p>
+    <p v-if="!supported" class="mt-5 rounded-sm border border-line bg-tile p-4 text-[14px] text-muted">{{ t('stream.unsupported') }}</p>
 
     <div v-else-if="!item || item.status !== 'unavailable'" class="mt-5 grid grid-cols-[minmax(0,1fr)_320px] gap-6 below-lg:grid-cols-1">
       <!-- The player -->
@@ -31,7 +31,7 @@
         <div
           ref="frame"
           tabindex="0"
-          class="group relative aspect-video overflow-hidden rounded bg-black focus-visible:outline focus-visible:outline-2 focus-visible:outline-accent"
+          class="group relative aspect-video overflow-hidden rounded-sm bg-black focus-visible:outline-solid focus-visible:outline-2 focus-visible:outline-accent"
           :class="{ 'rounded-none': fullscreen }"
           @keydown="onKey"
           @dblclick="toggleFullscreen"
@@ -46,14 +46,14 @@
             <div v-else-if="state === 'error'" class="max-w-md">
               <p class="text-[14.5px] font-semibold text-white">{{ errorText }}</p>
               <p v-if="errorHint" class="mt-1.5 text-[13px] text-white/70">{{ errorHint }}</p>
-              <button type="button" class="mt-3 rounded border border-white/40 px-3 py-1 text-[13px] text-white hover:bg-white/10" @click="restart()">
+              <button type="button" class="mt-3 rounded-sm border border-white/40 px-3 py-1 text-[13px] text-white hover:bg-white/10" @click="restart()">
                 {{ t('stream.retry') }}
               </button>
             </div>
           </div>
           <span
             v-if="source?.kind === 'live' && state === 'playing'"
-            class="pointer-events-none absolute start-3 top-3 flex items-center gap-1.5 rounded bg-black/60 px-2 py-0.5 text-[11.5px] font-semibold uppercase tracking-wide text-white"
+            class="pointer-events-none absolute inset-s-3 top-3 flex items-center gap-1.5 rounded-sm bg-black/60 px-2 py-0.5 text-[11.5px] font-semibold uppercase tracking-wide text-white"
           >
             <span class="h-1.5 w-1.5 rounded-full bg-onair" />{{ t('stream.live') }}
           </span>
@@ -79,7 +79,7 @@
             min="0"
             max="1000"
             :value="Math.round(position * 1000)"
-            class="h-1 flex-1 accent-[var(--dh-accent)]"
+            class="h-1 flex-1 accent-(--dh-accent)"
             :aria-label="t('stream.position')"
             :aria-valuetext="positionText"
             @change="seek(($event.target as HTMLInputElement).valueAsNumber / 1000)"
@@ -91,7 +91,7 @@
         <div v-if="source" class="mt-3 flex flex-wrap items-center gap-2">
           <button
             type="button"
-            class="flex h-9 w-9 items-center justify-center rounded border border-line text-text hover:bg-field disabled:opacity-50"
+            class="flex h-9 w-9 items-center justify-center rounded-sm border border-line text-text hover:bg-field disabled:opacity-50"
             :disabled="state !== 'playing' && state !== 'paused'"
             :aria-label="state === 'paused' ? t('stream.resume') : t('stream.pause')"
             @click="togglePause"
@@ -100,7 +100,7 @@
           </button>
           <button
             type="button"
-            class="flex h-9 w-9 items-center justify-center rounded border border-line text-text hover:bg-field disabled:opacity-50"
+            class="flex h-9 w-9 items-center justify-center rounded-sm border border-line text-text hover:bg-field disabled:opacity-50"
             :disabled="!source"
             :aria-label="t('stream.stop')"
             @click="stop"
@@ -109,7 +109,7 @@
           </button>
           <button
             type="button"
-            class="flex h-9 w-9 items-center justify-center rounded border border-line text-text hover:bg-field"
+            class="flex h-9 w-9 items-center justify-center rounded-sm border border-line text-text hover:bg-field"
             :aria-label="muted ? t('stream.unmute') : t('stream.mute')"
             :aria-pressed="muted"
             @click="setMuted(!muted)"
@@ -121,14 +121,14 @@
             min="0"
             max="100"
             :value="Math.round(volume * 100)"
-            class="h-1 w-28 accent-[var(--dh-accent)]"
+            class="h-1 w-28 accent-(--dh-accent)"
             :aria-label="t('stream.volume')"
             @input="setVolume(($event.target as HTMLInputElement).valueAsNumber / 100)"
           />
           <select
             v-if="tracks.length > 1"
             :value="track"
-            class="rounded border border-line bg-field px-2 py-1.5 text-[13px] text-text"
+            class="rounded-sm border border-line bg-field px-2 py-1.5 text-[13px] text-text"
             :aria-label="t('stream.audioTrack')"
             @change="selectTrack(Number(($event.target as HTMLSelectElement).value))"
           >
@@ -137,7 +137,7 @@
           <span class="flex-1" />
           <button
             type="button"
-            class="rounded px-2 py-1 text-[12.5px] text-muted hover:text-text"
+            class="rounded-sm px-2 py-1 text-[12.5px] text-muted hover:text-text"
             :aria-pressed="showInfo"
             :title="t('stream.infoHint')"
             @click="showInfo = !showInfo"
@@ -146,14 +146,14 @@
           </button>
           <button
             type="button"
-            class="flex h-9 w-9 items-center justify-center rounded border border-line text-text hover:bg-field"
+            class="flex h-9 w-9 items-center justify-center rounded-sm border border-line text-text hover:bg-field"
             :aria-label="t('stream.fullscreen')"
             @click="toggleFullscreen"
           >
             <Icon name="fullscreen" :size="16" />
           </button>
         </div>
-        <dl v-if="showInfo && source" class="mt-3 grid grid-cols-[minmax(0,auto)_minmax(0,1fr)] gap-x-4 gap-y-0.5 break-words rounded border border-line-soft bg-tile p-3 font-mono text-[12px] text-muted below-sm:grid-cols-1">
+        <dl v-if="showInfo && source" class="mt-3 grid grid-cols-[minmax(0,auto)_minmax(0,1fr)] gap-x-4 gap-y-0.5 wrap-break-word rounded-sm border border-line-soft bg-tile p-3 font-mono text-[12px] text-muted below-sm:grid-cols-1">
           <dt class="text-faint">{{ t('stream.stats.video') }}</dt><dd>{{ stats.path || stats.video }} · {{ stats.width }}×{{ stats.height }}</dd>
           <dt class="text-faint">{{ t('stream.stats.audio') }}</dt><dd>{{ stats.audio }}</dd>
           <dt class="text-faint">{{ t('stream.stats.data') }}</dt><dd>{{ stats.kbps }} kbit/s</dd>
@@ -171,7 +171,7 @@
             <button
               v-if="playingChannel"
               type="button"
-              class="flex min-h-[44px] w-full items-center justify-center gap-2 rounded border px-3 py-2 text-[13.5px] font-semibold hover:bg-tile-2"
+              class="flex min-h-[44px] w-full items-center justify-center gap-2 rounded-sm border px-3 py-2 text-[13.5px] font-semibold hover:bg-tile-2"
               :class="source?.kind === 'live' && source.ref === playingChannel.serviceReference ? 'border-accent text-text' : 'border-line text-text'"
               :title="playingChannel.serviceName"
               @click="watch_(playingChannel.serviceReference)"
@@ -182,7 +182,7 @@
             <select
               v-if="bouquets.length > 1"
               v-model="selectedBouquet"
-              class="min-w-0 flex-1 rounded border border-line bg-field px-3 py-1.5 text-[13.5px] text-text"
+              class="min-w-0 flex-1 rounded-sm border border-line bg-field px-3 py-1.5 text-[13.5px] text-text"
               :aria-label="t('stream.bouquet')"
             >
               <option v-for="b in bouquets" :key="b.serviceReference" :value="b.serviceReference">{{ b.serviceName }}</option>
@@ -193,7 +193,7 @@
               type="search"
               :placeholder="t('stream.find')"
               :aria-label="t('stream.find')"
-              class="w-full rounded border border-line bg-field px-2.5 py-1.5 text-[13.5px] text-text"
+              class="w-full rounded-sm border border-line bg-field px-2.5 py-1.5 text-[13.5px] text-text"
             />
           </div>
           <p v-if="channelsLoading && !channels.length" class="mt-3 text-[14px] text-muted">{{ t('common.loading') }}</p>
@@ -202,7 +202,7 @@
             <li v-for="ch in shownChannels" :key="ch.serviceReference">
               <button
                 type="button"
-                class="flex w-full items-center gap-2.5 rounded px-2 py-2 text-start hover:bg-tile-2"
+                class="flex w-full items-center gap-2.5 rounded-sm px-2 py-2 text-start hover:bg-tile-2"
                 :class="{ 'bg-tile-2': source?.kind === 'live' && source.ref === ch.serviceReference }"
                 :aria-current="source?.kind === 'live' && source.ref === ch.serviceReference ? 'true' : undefined"
                 @click="watch_(ch.serviceReference)"

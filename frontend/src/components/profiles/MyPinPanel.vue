@@ -4,7 +4,7 @@
   the server refuses with profile_admin_pin_required.
 -->
 <template>
-  <section class="rounded border border-line bg-tile p-5">
+  <section class="rounded-sm border border-line bg-tile p-5">
     <h2 class="mb-1 text-[15.5px] font-semibold">{{ t('profiles.myPin.title') }}</h2>
     <p class="mb-4 text-[13px] text-muted">
       {{ me?.hasPin ? t('profiles.myPin.hasPin') : t('profiles.myPin.noPin') }}
@@ -18,13 +18,13 @@
           inputmode="numeric"
           autocomplete="new-password"
           maxlength="8"
-          class="w-[160px] rounded border border-line bg-field px-2.5 py-1.5 font-mono text-[14px] text-text"
+          class="w-[160px] rounded-sm border border-line bg-field px-2.5 py-1.5 font-mono text-[14px] text-text"
         />
       </label>
-      <button type="submit" class="rounded bg-accent px-3 py-1.5 text-[13px] font-semibold text-bg disabled:opacity-60" :disabled="busy || !/^\d{4,8}$/.test(pin)">
+      <button type="submit" class="rounded-sm bg-accent px-3 py-1.5 text-[13px] font-semibold text-bg disabled:opacity-60" :disabled="busy || !/^\d{4,8}$/.test(pin)">
         {{ t('profiles.myPin.save') }}
       </button>
-      <button v-if="me?.hasPin" type="button" class="rounded px-3 py-1.5 text-[13px] text-muted hover:bg-tile-2 hover:text-text" :disabled="busy" @click="save('')">
+      <button v-if="me?.hasPin" type="button" class="rounded-sm px-3 py-1.5 text-[13px] text-muted hover:bg-tile-2 hover:text-text" :disabled="busy" @click="save('')">
         {{ t('profiles.myPin.remove') }}
       </button>
     </form>

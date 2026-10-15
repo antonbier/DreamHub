@@ -31,14 +31,14 @@
       <p v-if="bouquetsLoading" class="text-[14px] text-muted">{{ t('common.loading') }}</p>
       <p v-else-if="bouquetsFailed" class="text-[14px] text-muted"><ErrorText /></p>
       <template v-else>
-        <p v-if="!editor" class="mb-3 rounded border border-line bg-tile px-4 py-3 text-[13.5px] text-muted">{{ t('channels.noEditor') }}</p>
-        <p v-if="saved" class="mb-3 rounded border border-ok bg-tile px-4 py-3 text-[13.5px] text-text" role="status">{{ saved }}</p>
+        <p v-if="!editor" class="mb-3 rounded-sm border border-line bg-tile px-4 py-3 text-[13.5px] text-muted">{{ t('channels.noEditor') }}</p>
+        <p v-if="saved" class="mb-3 rounded-sm border border-ok bg-tile px-4 py-3 text-[13.5px] text-text" role="status">{{ saved }}</p>
         <div class="flex flex-wrap gap-2">
           <button
             v-for="b in bouquets"
             :key="b.ref"
             type="button"
-            class="rounded border px-3 py-2 text-start text-[14px] disabled:opacity-50"
+            class="rounded-sm border px-3 py-2 text-start text-[14px] disabled:opacity-50"
             :class="openRef === b.ref ? 'border-accent bg-tile-2 text-text' : 'border-line bg-tile text-muted hover:text-text'"
             :aria-pressed="openRef === b.ref"
             :disabled="editing"
@@ -50,7 +50,7 @@
           <button
             v-if="editor && !editing"
             type="button"
-            class="rounded border border-dashed border-line px-3 py-2 text-[14px] text-accent hover:bg-tile-2"
+            class="rounded-sm border border-dashed border-line px-3 py-2 text-[14px] text-accent hover:bg-tile-2"
             :aria-expanded="bouquetForm?.action === 'create'"
             @click="startBouquetAction('create')"
           >
@@ -59,7 +59,7 @@
         </div>
 
         <!-- Creating, renaming or deleting a bouquet: a name, then the preview. -->
-        <div v-if="bouquetForm" class="mt-3 rounded border border-line bg-tile p-3">
+        <div v-if="bouquetForm" class="mt-3 rounded-sm border border-line bg-tile p-3">
           <PlanPreview
             v-if="bouquetForm.plan"
             :plan="bouquetForm.plan"
@@ -76,28 +76,28 @@
           <form v-else class="flex flex-wrap items-end gap-2" @submit.prevent="reviewBouquetAction">
             <label v-if="bouquetForm.action !== 'delete'" class="flex flex-col gap-0.5 text-[13px]">
               <span class="text-faint">{{ t('channels.bouquet.name') }}</span>
-              <input v-model="bouquetForm.name" type="text" maxlength="60" class="w-56 rounded border border-line bg-field px-2 py-1.5 text-[14px] text-text" />
+              <input v-model="bouquetForm.name" type="text" maxlength="60" class="w-56 rounded-sm border border-line bg-field px-2 py-1.5 text-[14px] text-text" />
             </label>
             <label v-if="bouquetForm.action === 'create'" class="flex flex-col gap-0.5 text-[13px]">
               <span class="text-faint">{{ t('channels.find.kind') }}</span>
-              <select v-model="bouquetForm.kind" class="rounded border border-line bg-field px-2 py-1.5 text-[14px] text-text">
+              <select v-model="bouquetForm.kind" class="rounded-sm border border-line bg-field px-2 py-1.5 text-[14px] text-text">
                 <option value="tv">{{ t('channels.kind.tv') }}</option>
                 <option value="radio">{{ t('channels.kind.radio') }}</option>
               </select>
             </label>
             <p v-if="bouquetForm.action === 'delete'" class="text-[13.5px] text-text">{{ t('channels.bouquet.deleteAsk', { name: currentBouquet?.name ?? '' }) }}</p>
-            <button type="submit" class="rounded bg-accent px-3 py-1.5 text-[13.5px] font-semibold text-bg disabled:opacity-50" :disabled="bouquetForm.busy || (bouquetForm.action !== 'delete' && !bouquetForm.name.trim())">
+            <button type="submit" class="rounded-sm bg-accent px-3 py-1.5 text-[13.5px] font-semibold text-bg disabled:opacity-50" :disabled="bouquetForm.busy || (bouquetForm.action !== 'delete' && !bouquetForm.name.trim())">
               {{ t('channels.edit.review') }}
             </button>
-            <button type="button" class="rounded px-3 py-1.5 text-[13.5px] text-muted hover:bg-tile-2" @click="bouquetForm = null">{{ t('plan.cancel') }}</button>
+            <button type="button" class="rounded-sm px-3 py-1.5 text-[13.5px] text-muted hover:bg-tile-2" @click="bouquetForm = null">{{ t('plan.cancel') }}</button>
             <p v-if="bouquetForm.error" class="w-full text-[13px] text-warn" role="alert">{{ bouquetForm.error }}</p>
           </form>
         </div>
 
         <div v-if="currentBouquet && editor && !editing && !bouquetForm" class="mt-4 flex flex-wrap gap-2">
-          <button type="button" class="rounded bg-accent px-3 py-1.5 text-[13.5px] font-semibold text-bg" @click="startEditing">{{ t('channels.edit.start') }}</button>
-          <button type="button" class="rounded px-3 py-1.5 text-[13.5px] text-accent hover:bg-tile-2" @click="startBouquetAction('rename')">{{ t('channels.bouquet.rename') }}</button>
-          <button type="button" class="rounded px-3 py-1.5 text-[13.5px] text-onair hover:bg-tile-2" @click="startBouquetAction('delete')">{{ t('channels.bouquet.delete') }}</button>
+          <button type="button" class="rounded-sm bg-accent px-3 py-1.5 text-[13.5px] font-semibold text-bg" @click="startEditing">{{ t('channels.edit.start') }}</button>
+          <button type="button" class="rounded-sm px-3 py-1.5 text-[13.5px] text-accent hover:bg-tile-2" @click="startBouquetAction('rename')">{{ t('channels.bouquet.rename') }}</button>
+          <button type="button" class="rounded-sm px-3 py-1.5 text-[13.5px] text-onair hover:bg-tile-2" @click="startBouquetAction('delete')">{{ t('channels.bouquet.delete') }}</button>
         </div>
 
         <p v-if="entriesLoading" class="mt-4 text-[14px] text-muted">{{ t('common.loading') }}</p>
@@ -128,7 +128,7 @@
         </ol>
 
         <!-- Backups (C3) -->
-        <details v-if="editor && !editing" class="mt-6 rounded border border-line bg-tile p-3" @toggle="onBackupsToggle">
+        <details v-if="editor && !editing" class="mt-6 rounded-sm border border-line bg-tile p-3" @toggle="onBackupsToggle">
           <summary class="cursor-pointer text-[14px] font-semibold">{{ t('channels.backups.title') }}</summary>
           <p class="mt-1 text-[13px] text-muted">{{ t('channels.backups.explain') }}</p>
           <p v-if="backupsLoading" class="mt-2 text-[13px] text-muted">{{ t('common.loading') }}</p>
@@ -140,7 +140,7 @@
                   <span class="block text-[13.5px] text-text">{{ dateTime(b.createdAt) }}</span>
                   <span class="block truncate text-[12.5px] text-muted">{{ t('channels.backups.before', { what: b.summary }) }}</span>
                 </span>
-                <button type="button" class="shrink-0 rounded px-2 py-1 text-[13px] text-accent hover:bg-tile-2" @click="reviewRestore(b.filename)">{{ t('channels.backups.restore') }}</button>
+                <button type="button" class="shrink-0 rounded-sm px-2 py-1 text-[13px] text-accent hover:bg-tile-2" @click="reviewRestore(b.filename)">{{ t('channels.backups.restore') }}</button>
               </div>
               <PlanPreview
                 v-if="restore?.filename === b.filename && restore.plan"
@@ -171,16 +171,16 @@
             v-model="query"
             type="search"
             :placeholder="t('channels.find.search')"
-            class="w-full rounded border border-line bg-field px-3 py-2 text-[15px] text-text"
+            class="w-full rounded-sm border border-line bg-field px-3 py-2 text-[15px] text-text"
           />
         </label>
         <div class="flex flex-wrap items-center gap-2 text-[13.5px]">
-          <div class="flex gap-1 rounded bg-field p-1" role="group" :aria-label="t('channels.find.kind')">
+          <div class="flex gap-1 rounded-sm bg-field p-1" role="group" :aria-label="t('channels.find.kind')">
             <button
               v-for="k in ['tv', 'radio'] as const"
               :key="k"
               type="button"
-              class="rounded px-3 py-1"
+              class="rounded-sm px-3 py-1"
               :class="kind === k ? 'bg-tile text-text' : 'text-muted hover:text-text'"
               :aria-pressed="kind === k"
               @click="kind = k"
@@ -193,7 +193,7 @@
           <FilterChip v-if="kind === 'tv'" v-model="onlyHD">{{ t('channels.find.onlyHD') }}</FilterChip>
           <label class="flex items-center gap-1.5">
             <span class="text-muted">{{ t('channels.find.provider') }}</span>
-            <select v-model="provider" class="rounded border border-line bg-field px-2 py-1 text-text">
+            <select v-model="provider" class="rounded-sm border border-line bg-field px-2 py-1 text-text">
               <option value="">{{ t('channels.find.anyProvider') }}</option>
               <option v-for="p in providers" :key="p" :value="p">{{ p }}</option>
             </select>
@@ -213,7 +213,7 @@
                 <span class="flex flex-wrap items-center gap-1.5">
                   <span class="truncate text-[14.5px] text-text">{{ c.name }}</span>
                   <QualityBadge :quality="c.quality" />
-                  <span v-if="c.new" class="rounded bg-accent px-1.5 text-[11px] font-semibold text-bg">{{ t('channels.find.new') }}</span>
+                  <span v-if="c.new" class="rounded-sm bg-accent px-1.5 text-[11px] font-semibold text-bg">{{ t('channels.find.new') }}</span>
                   <span v-if="c.gone" class="text-[12px] text-warn">{{ t('channels.find.gone') }}</span>
                 </span>
                 <span class="block truncate text-[12.5px] text-muted">
@@ -249,8 +249,8 @@
           <input v-model="chosen" type="radio" name="picon-set" :value="s.name" @change="choose(s.name)" />
           <span class="min-w-0 flex-1">
             <span class="block truncate text-[14.5px] text-text">{{ s.name }}</span>
-            <span class="mt-1 block h-[4px] w-full max-w-[240px] rounded bg-field">
-              <span class="block h-full rounded bg-accent" :style="{ width: `${piconTotal ? (s.covered / piconTotal) * 100 : 0}%` }" />
+            <span class="mt-1 block h-[4px] w-full max-w-[240px] rounded-sm bg-field">
+              <span class="block h-full rounded-sm bg-accent" :style="{ width: `${piconTotal ? (s.covered / piconTotal) * 100 : 0}%` }" />
             </span>
           </span>
           <span class="shrink-0 text-[12.5px] tabular-nums text-muted">{{ t('channels.picons.coverage', { covered: s.covered, total: piconTotal }) }}</span>
@@ -263,7 +263,7 @@
         <h2 class="text-[15.5px] font-semibold">{{ t(blk.title) }}</h2>
         <p v-if="checkLoading && !checkLoaded" class="mt-2 text-[14px] text-muted">{{ t('common.loading') }}</p>
         <p v-else-if="checkFailed" class="mt-2 text-[14px] text-muted"><ErrorText /></p>
-        <details v-for="group in blk.groups" :key="group.kind" class="mt-3 rounded border border-line bg-tile" :open="blk.open">
+        <details v-for="group in blk.groups" :key="group.kind" class="mt-3 rounded-sm border border-line bg-tile" :open="blk.open">
           <summary class="flex cursor-pointer items-center gap-2 px-3 py-2.5">
             <h3 class="text-[15px] font-semibold">{{ blk.open ? t('channels.check.shown', { n: group.items.length }, group.items.length) : t(`channels.check.${group.kind}.title`) }}</h3>
             <span v-if="!blk.open" class="rounded-full bg-tile-2 px-2 py-0.5 text-[12px] text-muted">{{ group.items.length }}</span>
@@ -298,7 +298,7 @@
       <section class="mt-6 border-t border-line-soft pt-4">
         <h2 class="text-[15.5px] font-semibold">{{ t('channels.logo.perChannel') }}</h2>
         <p class="mt-1 text-[13px] text-muted">{{ t('channels.logo.perChannelHint') }}</p>
-        <input v-model="logoQuery" type="search" :placeholder="t('channels.logo.searchChannel')" class="mt-3 w-full rounded border border-line bg-field px-3 py-2 text-[15px] text-text" />
+        <input v-model="logoQuery" type="search" :placeholder="t('channels.logo.searchChannel')" class="mt-3 w-full rounded-sm border border-line bg-field px-3 py-2 text-[15px] text-text" />
         <ul class="mt-2 flex flex-col">
           <li v-for="c in logoMatches" :key="c.ref" class="border-b border-line-soft last:border-none">
             <div class="flex min-h-[48px] items-center gap-3 py-2">
@@ -352,7 +352,7 @@ const QualityBadge = defineComponent({
   setup(props) {
     return () =>
       props.quality === 'hd' || props.quality === 'uhd'
-        ? h('span', { class: 'shrink-0 rounded border border-line px-1 text-[10.5px] font-semibold text-muted' }, props.quality.toUpperCase())
+        ? h('span', { class: 'shrink-0 rounded-sm border border-line px-1 text-[10.5px] font-semibold text-muted' }, props.quality.toUpperCase())
         : null
   },
 })

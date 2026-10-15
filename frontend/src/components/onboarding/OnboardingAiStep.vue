@@ -12,7 +12,7 @@
   >
     <label class="mb-3 block max-w-[320px]">
       <span class="mb-1 block text-[13px] text-muted">{{ t('settings.ai.provider') }}</span>
-      <select disabled class="w-full rounded border border-line bg-field px-2.5 py-1.5 text-[14px] text-text opacity-70">
+      <select disabled class="w-full rounded-sm border border-line bg-field px-2.5 py-1.5 text-[14px] text-text opacity-70">
         <option>OpenAI</option>
       </select>
     </label>
@@ -23,7 +23,7 @@
         type="password"
         autocomplete="off"
         :placeholder="t('settings.page.secretPlaceholder')"
-        class="w-full rounded border border-line bg-field px-2.5 py-1.5 text-[14px] text-text"
+        class="w-full rounded-sm border border-line bg-field px-2.5 py-1.5 text-[14px] text-text"
       />
     </label>
   </OnboardingStepFrame>

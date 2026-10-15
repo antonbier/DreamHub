@@ -17,13 +17,13 @@
   <div>
     <div class="flex flex-wrap items-center gap-3">
       <div class="flex items-center gap-1.5">
-        <button type="button" class="rounded border border-line px-2.5 py-1 text-[13px] text-text hover:bg-tile" :aria-label="t('guide.earlier')" @click="shiftWindow(-WINDOW_HOURS)">
+        <button type="button" class="rounded-sm border border-line px-2.5 py-1 text-[13px] text-text hover:bg-tile" :aria-label="t('guide.earlier')" @click="shiftWindow(-WINDOW_HOURS)">
           {{ '←' }}
         </button>
-        <button type="button" class="rounded border border-line px-2.5 py-1 text-[13px] text-text hover:bg-tile" @click="jumpToNow">
+        <button type="button" class="rounded-sm border border-line px-2.5 py-1 text-[13px] text-text hover:bg-tile" @click="jumpToNow">
           {{ t('guide.now') }}
         </button>
-        <button type="button" class="rounded border border-line px-2.5 py-1 text-[13px] text-text hover:bg-tile" :aria-label="t('guide.later')" @click="shiftWindow(WINDOW_HOURS)">
+        <button type="button" class="rounded-sm border border-line px-2.5 py-1 text-[13px] text-text hover:bg-tile" :aria-label="t('guide.later')" @click="shiftWindow(WINDOW_HOURS)">
           {{ '→' }}
         </button>
       </div>
@@ -60,7 +60,7 @@
             v-for="(e, i) in ch.events"
             :key="i"
             type="button"
-            class="absolute top-1 bottom-1 overflow-hidden text-ellipsis whitespace-nowrap rounded px-1.5 py-1 text-start text-[12px] text-text hover:bg-tile-2"
+            class="absolute top-1 bottom-1 overflow-hidden text-ellipsis whitespace-nowrap rounded-sm px-1.5 py-1 text-start text-[12px] text-text hover:bg-tile-2"
             :class="[isSelected(e) ? 'bg-tile-2 ring-1 ring-accent' : 'bg-tile', { 'opacity-35': filterActive && !passes(e.title) }]"
             :style="eventStyle(e)"
             :title="e.inPlex ? `${e.title} · ${t('discovery.inPlex')}` : e.title"

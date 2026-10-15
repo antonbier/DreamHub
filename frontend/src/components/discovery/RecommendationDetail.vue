@@ -14,7 +14,7 @@
     :info="info"
     @close="$emit('close')"
   >
-    <section class="mt-4 rounded border border-line-soft bg-bg p-3">
+    <section class="mt-4 rounded-sm border border-line-soft bg-bg p-3">
       <h3 class="text-[12.5px] text-faint">{{ t('discovery.why') }}</h3>
       <p class="mt-1 text-[14px] text-text">{{ rec.reason }}</p>
     </section>
@@ -37,7 +37,7 @@
       <template v-else>
         <button
           type="button"
-          class="rounded bg-accent px-3.5 py-1.5 text-[13.5px] font-semibold text-bg disabled:opacity-60"
+          class="rounded-sm bg-accent px-3.5 py-1.5 text-[13.5px] font-semibold text-bg disabled:opacity-60"
           :disabled="!canCreateTimers"
           :title="canCreateTimers ? undefined : t('discovery.timerHubUnavailable')"
           @click="$emit('previewTimer')"

@@ -21,7 +21,7 @@
     </div>
 
     <p v-if="form.loading.value" class="text-[14px] text-muted">{{ t('common.loading') }}</p>
-    <div v-else-if="form.loadFailed.value" class="rounded border border-line bg-tile p-5">
+    <div v-else-if="form.loadFailed.value" class="rounded-sm border border-line bg-tile p-5">
       <p class="mb-3 text-[14px] text-muted">{{ t('settings.page.loadFailed') }}</p>
       <button type="button" class="text-[13.5px] text-accent hover:underline" @click="form.load()">
         {{ t('common.retry') }}
@@ -76,25 +76,25 @@
 
         <template v-if="activeTab === 'system' && can('system')">
           <BackupPanel @restored="form.load()" />
-          <section class="rounded border border-line bg-tile p-5">
+          <section class="rounded-sm border border-line bg-tile p-5">
             <h2 class="text-[15.5px] font-semibold">{{ t('settings.system.diagnostics.title') }}</h2>
             <p class="mt-1 text-[13px] text-muted">{{ t('settings.system.diagnostics.body') }}</p>
             <RouterLink to="/device?tab=diagnostics" class="mt-3 inline-block text-[13.5px] text-accent hover:underline">
               {{ t('settings.system.diagnostics.open') }}
             </RouterLink>
           </section>
-          <section class="rounded border border-line bg-tile p-5">
+          <section class="rounded-sm border border-line bg-tile p-5">
             <h2 class="text-[15.5px] font-semibold">{{ t('settings.system.wizard.title') }}</h2>
             <p class="mt-1 text-[13px] text-muted">{{ t('settings.system.wizard.body') }}</p>
             <RouterLink to="/onboarding" class="mt-3 inline-block text-[13.5px] text-accent hover:underline">
               {{ t('settings.page.runWizard') }}
             </RouterLink>
           </section>
-          <section class="rounded border border-line bg-tile p-5">
+          <section class="rounded-sm border border-line bg-tile p-5">
             <h2 class="text-[15.5px] font-semibold">{{ t('system.about.title') }}</h2>
             <dl class="mt-2 grid grid-cols-[max-content_1fr] gap-x-6 gap-y-1.5 text-[13px] below-sm:grid-cols-1 below-sm:gap-y-0">
               <dt class="text-muted below-sm:mt-1.5">{{ t('system.about.version', { version }) }}</dt>
-              <dd class="min-w-0 break-words text-text">{{ t('system.about.copyright') }}</dd>
+              <dd class="min-w-0 wrap-break-word text-text">{{ t('system.about.copyright') }}</dd>
             </dl>
             <a
               href="https://github.com/antonbier/DreamHub"

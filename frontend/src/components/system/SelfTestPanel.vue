@@ -9,7 +9,7 @@
   run.
 -->
 <template>
-  <section v-if="!forbidden" class="mt-5 rounded border border-line bg-tile p-4">
+  <section v-if="!forbidden" class="mt-5 rounded-sm border border-line bg-tile p-4">
     <div class="flex flex-wrap items-center gap-3">
       <div class="min-w-0 flex-1">
         <h2 class="text-[14px] font-semibold text-text">{{ t('system.selftest.title') }}</h2>
@@ -17,7 +17,7 @@
       </div>
       <button
         type="button"
-        class="rounded bg-accent px-3.5 py-1.5 text-[13px] font-semibold text-bg disabled:opacity-60"
+        class="rounded-sm bg-accent px-3.5 py-1.5 text-[13px] font-semibold text-bg disabled:opacity-60"
         :disabled="running"
         @click="run"
       >
@@ -36,7 +36,7 @@
         <button
           v-if="report.captured.length > 0"
           type="button"
-          class="ms-auto rounded px-2 py-1 text-accent hover:bg-tile-2"
+          class="ms-auto rounded-sm px-2 py-1 text-accent hover:bg-tile-2"
           @click="downloadZip"
         >
           {{ t('system.selftest.download', { count: report.captured.length }) }}
@@ -48,7 +48,7 @@
           <span class="mt-1.5 h-2 w-2 shrink-0 rounded-full" :class="STYLE[c.status].dot" :title="t(`system.selftest.status.${c.status}`)" />
           <span class="min-w-0 flex-1">
             <span class="block text-[13.5px] text-text">{{ t(`system.selftest.check.${c.id}`) }}</span>
-            <span class="block break-words text-[12.5px]" :class="STYLE[c.status].text">{{ detail(c) }}</span>
+            <span class="block wrap-break-word text-[12.5px]" :class="STYLE[c.status].text">{{ detail(c) }}</span>
           </span>
           <span class="shrink-0 text-[11.5px] tabular-nums text-faint">{{ c.ms }} ms</span>
         </li>

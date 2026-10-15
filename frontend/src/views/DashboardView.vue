@@ -14,14 +14,14 @@
       <button
         v-if="canReset"
         type="button"
-        class="ms-auto rounded px-3 py-1.5 text-[13.5px] text-muted hover:bg-tile-2 hover:text-text"
+        class="ms-auto rounded-sm px-3 py-1.5 text-[13.5px] text-muted hover:bg-tile-2 hover:text-text"
         @click="resetToTemplate"
       >
         {{ t('dashboard.template.reset') }}
       </button>
       <button
         type="button"
-        class="tap rounded px-3 py-1.5 text-[13.5px] font-semibold"
+        class="tap rounded-sm px-3 py-1.5 text-[13.5px] font-semibold"
         :class="[dash.editing.value ? 'bg-accent text-bg' : 'text-accent hover:bg-tile-2', canReset ? '' : 'ms-auto']"
         @click="dash.editing.value = !dash.editing.value"
       >
@@ -29,20 +29,20 @@
       </button>
     </div>
 
-    <p v-if="template" class="mb-4 rounded border border-accent bg-tile px-4 py-3 text-[13.5px] text-muted">
+    <p v-if="template" class="mb-4 rounded-sm border border-accent bg-tile px-4 py-3 text-[13.5px] text-muted">
       {{ t('dashboard.template.explain') }}
       <RouterLink to="/settings/profiles" class="ms-1 text-accent hover:underline">{{ t('dashboard.template.back') }}</RouterLink>
     </p>
 
     <p v-if="dash.loading.value" class="text-[14px] text-muted">{{ t('common.loading') }}</p>
-    <div v-else-if="dash.loadFailed.value" class="rounded border border-line bg-tile p-5">
+    <div v-else-if="dash.loadFailed.value" class="rounded-sm border border-line bg-tile p-5">
       <p class="mb-3 text-[14px] text-muted">{{ t('dashboard.loadFailed') }}</p>
       <button type="button" class="text-[13.5px] text-accent hover:underline" @click="dash.load()">
         {{ t('common.retry') }}
       </button>
     </div>
 
-    <div v-else-if="visibleTiles.length === 0 && !dash.editing.value" class="rounded border border-line bg-tile p-6">
+    <div v-else-if="visibleTiles.length === 0 && !dash.editing.value" class="rounded-sm border border-line bg-tile p-6">
       <h2 class="mb-1.5 text-[15.5px] font-semibold">{{ t('dashboard.allHidden.title') }}</h2>
       <p class="text-[14px] text-muted">{{ t('dashboard.allHidden.body') }}</p>
     </div>
@@ -86,9 +86,9 @@
       </div>
 
       <!-- Edit mode: add a custom tile (DESIGN mockup's "Add tile" block). -->
-      <div v-if="dash.editing.value" class="col-span-2 flex flex-col items-start gap-2 rounded border border-dashed border-line p-4 below-sm:col-span-1">
+      <div v-if="dash.editing.value" class="col-span-2 flex flex-col items-start gap-2 rounded-sm border border-dashed border-line p-4 below-sm:col-span-1">
         <h3 class="text-[15.5px] font-semibold">{{ t('dashboard.add.title') }}</h3>
-        <button type="button" class="rounded py-1 text-[13.5px] text-accent hover:underline" @click="openBuilder()">
+        <button type="button" class="rounded-sm py-1 text-[13.5px] text-accent hover:underline" @click="openBuilder()">
           {{ t('dashboard.add.custom') }}
         </button>
         <p class="text-[12.5px] text-faint">{{ t('dashboard.add.hint') }}</p>

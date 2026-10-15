@@ -15,8 +15,8 @@
         {{ timeRange }}
       </span>
       <span class="min-w-0 flex-1">
-        <span class="block break-words text-[14px]" :class="timer.disabled ? 'text-muted' : 'text-text'">{{ timer.name }}</span>
-        <span class="block break-words text-[12.5px] text-muted">
+        <span class="block wrap-break-word text-[14px]" :class="timer.disabled ? 'text-muted' : 'text-text'">{{ timer.name }}</span>
+        <span class="block wrap-break-word text-[12.5px] text-muted">
           {{ timer.serviceName }}
           <template v-if="timer.source"> · {{ t(`timers.source.${timer.source}`) }}</template>
           <template v-if="timer.justPlay"> · {{ t('timers.zap') }}</template>
@@ -33,7 +33,7 @@
       <template v-if="timer.mayChange">
         <button
           type="button"
-          class="tap shrink-0 rounded px-2 py-1 text-[13px] text-accent hover:bg-tile"
+          class="tap shrink-0 rounded-sm px-2 py-1 text-[13px] text-accent hover:bg-tile"
           :class="{ invisible: deleting }"
           :disabled="!!deleting"
           @click="toggleable ? emit('toggle') : emit('delete')"
@@ -44,7 +44,7 @@
           <template #trigger="{ open }">
             <button
               type="button"
-              class="tap flex h-7 w-7 shrink-0 items-center justify-center rounded text-muted hover:bg-tile hover:text-text"
+              class="tap flex h-7 w-7 shrink-0 items-center justify-center rounded-sm text-muted hover:bg-tile hover:text-text"
               :class="{ 'bg-tile': open }"
               :aria-label="t('timers.more')"
               :disabled="!!deleting"

@@ -25,7 +25,7 @@
           <RouterLink to="/device?logUnit=docker" class="text-[12px] text-accent hover:underline">{{ t('apps.dockerServiceLogs') }}</RouterLink>
         </div>
         <div class="mt-2 flex flex-col gap-2">
-          <div v-for="a in installed" :key="a.id" class="flex items-center gap-3 rounded border border-line bg-tile p-3">
+          <div v-for="a in installed" :key="a.id" class="flex items-center gap-3 rounded-sm border border-line bg-tile p-3">
             <div class="min-w-0 flex-1">
               <p class="truncate text-[13.5px] font-semibold text-text">{{ a.name }}</p>
               <p class="mt-0.5 flex items-center gap-1.5 text-[12px]" :class="a.state === 'running' ? 'text-ok' : 'text-muted'">
@@ -46,13 +46,13 @@
               :href="openUrl(a.hostPort)"
               target="_blank"
               rel="noopener"
-              class="shrink-0 rounded bg-accent px-2.5 py-1 text-[12.5px] font-semibold text-bg"
+              class="shrink-0 rounded-sm bg-accent px-2.5 py-1 text-[12.5px] font-semibold text-bg"
             >
               {{ t('apps.open') }}
             </a>
             <button
               type="button"
-              class="shrink-0 rounded border border-line px-2.5 py-1 text-[12.5px] text-text hover:bg-field disabled:opacity-60"
+              class="shrink-0 rounded-sm border border-line px-2.5 py-1 text-[12.5px] text-text hover:bg-field disabled:opacity-60"
               :disabled="!!busyId"
               @click="toggleRunning(a)"
             >
@@ -60,7 +60,7 @@
             </button>
             <DropdownMenu>
               <template #trigger>
-                <button type="button" class="rounded p-1.5 text-muted hover:bg-tile-2 hover:text-text" :aria-label="t('apps.more')">
+                <button type="button" class="rounded-sm p-1.5 text-muted hover:bg-tile-2 hover:text-text" :aria-label="t('apps.more')">
                   <Icon name="more" :size="16" />
                 </button>
               </template>
@@ -71,7 +71,7 @@
               </template>
             </DropdownMenu>
           </div>
-          <div v-if="removing" class="rounded border border-line bg-tile p-3">
+          <div v-if="removing" class="rounded-sm border border-line bg-tile p-3">
             <PlanPreview
               v-if="removing.plan && !removing.done"
               :plan="removing.plan"
@@ -93,7 +93,7 @@
         <h2 class="text-[13px] font-semibold text-muted">{{ t('apps.catalogTitle') }}</h2>
         <div class="mt-2 flex flex-col gap-3">
           <div v-for="app in catalog" :key="app.id">
-          <section class="flex items-center gap-3 rounded border border-line bg-tile p-3">
+          <section class="flex items-center gap-3 rounded-sm border border-line bg-tile p-3">
             <div class="min-w-0 flex-1">
               <div class="flex items-center gap-2">
                 <h3 class="truncate text-[13.5px] font-semibold text-text">{{ app.name }}</h3>
@@ -115,14 +115,14 @@
             <button
               v-else
               type="button"
-              class="shrink-0 rounded border border-line px-2.5 py-1 text-[12.5px] text-text hover:bg-field disabled:opacity-60"
+              class="shrink-0 rounded-sm border border-line px-2.5 py-1 text-[12.5px] text-text hover:bg-field disabled:opacity-60"
               :disabled="!!installing || dockerMissing"
               @click="openInstall(app)"
             >
               {{ t('apps.install') }}
             </button>
           </section>
-            <div v-if="installing?.appId === app.id" class="-mt-1 rounded-b border border-t-0 border-line bg-tile p-3">
+            <div v-if="installing?.appId === app.id" class="-mt-1 rounded-b-sm border border-t-0 border-line bg-tile p-3">
               <!-- Step 1: which port and which disk — sensible defaults, always visible. -->
               <form v-if="installing.form" class="flex flex-col gap-3" @submit.prevent="previewInstall">
                 <h3 class="text-[14px] font-semibold text-text">{{ t('apps.installTitle', { name: installing.form.app.name }) }}</h3>
@@ -134,13 +134,13 @@
                     min="1024"
                     max="65535"
                     :disabled="!installing.form.app.portEditable"
-                    class="w-32 rounded border border-line bg-field px-2 py-1.5 text-text disabled:opacity-60"
+                    class="w-32 rounded-sm border border-line bg-field px-2 py-1.5 text-text disabled:opacity-60"
                   />
                   <span class="text-[12px] text-faint">{{ installing.form.app.portEditable ? t('apps.portHint') : t('apps.portFixed') }}</span>
                 </label>
                 <label class="flex flex-col gap-1 text-[13px]">
                   <span class="text-muted">{{ t('apps.storageLabel') }}</span>
-                  <select v-model="installing.form.storage" class="rounded border border-line bg-field px-2 py-1.5 text-text">
+                  <select v-model="installing.form.storage" class="rounded-sm border border-line bg-field px-2 py-1.5 text-text">
                     <option v-for="c in installing.form.choices" :key="c.path" :value="c.path" :disabled="c.freeBytes < 1 << 30">
                       {{ c.label }} — {{ t('apps.storageFree', { size: formatBytes(c.freeBytes, locale) }) }}
                     </option>
@@ -148,8 +148,8 @@
                   <span class="text-[12px] text-faint">{{ t('apps.storageHint') }}</span>
                 </label>
                 <div class="flex justify-end gap-2">
-                  <button type="button" class="rounded px-3 py-1.5 text-[13px] text-text hover:bg-field" @click="installing = null">{{ t('plan.cancel') }}</button>
-                  <button type="submit" class="rounded bg-accent px-3 py-1.5 text-[13px] font-semibold text-bg">{{ t('apps.installPreview') }}</button>
+                  <button type="button" class="rounded-sm px-3 py-1.5 text-[13px] text-text hover:bg-field" @click="installing = null">{{ t('plan.cancel') }}</button>
+                  <button type="submit" class="rounded-sm bg-accent px-3 py-1.5 text-[13px] font-semibold text-bg">{{ t('apps.installPreview') }}</button>
                 </div>
               </form>
               <p v-else-if="installing.loading" class="text-[13px] text-faint">{{ t('common.loading') }}</p>
@@ -181,7 +181,7 @@
         <input
           v-model="query"
           type="search"
-          class="mt-3 w-full rounded border border-line bg-field px-3 py-2 text-[13.5px] text-text placeholder:text-faint"
+          class="mt-3 w-full rounded-sm border border-line bg-field px-3 py-2 text-[13.5px] text-text placeholder:text-faint"
           :placeholder="t('apps.searchPlaceholder')"
           @keyup.enter="search"
         />
@@ -192,7 +192,7 @@
         <p v-else-if="searched && results.length === 0" class="mt-3 text-[13px] text-faint">{{ t('apps.searchEmpty') }}</p>
 
         <ul v-else-if="results.length > 0" class="mt-3 flex flex-col gap-2">
-          <li v-for="r in results" :key="r.image" class="flex items-center gap-3 rounded border border-line bg-tile p-3">
+          <li v-for="r in results" :key="r.image" class="flex items-center gap-3 rounded-sm border border-line bg-tile p-3">
             <div class="min-w-0 flex-1">
               <p class="truncate text-[13.5px] font-semibold text-text">{{ r.image }}</p>
               <p v-if="r.description" class="mt-0.5 truncate text-[12.5px] text-muted">{{ r.description }}</p>
@@ -209,7 +209,7 @@
             <button
               v-else
               type="button"
-              class="shrink-0 rounded border border-line px-2.5 py-1 text-[12.5px] text-text hover:bg-field"
+              class="shrink-0 rounded-sm border border-line px-2.5 py-1 text-[12.5px] text-text hover:bg-field"
               @click="checkManifest(r.image)"
             >
               {{ t('apps.checkCompatibility') }}
@@ -223,7 +223,7 @@
          the daemon's own health reuses DeviceHub's existing viewer via
          the link above). -->
     <div v-if="logsFor" class="fixed inset-0 z-50 flex items-center justify-center bg-black/50 p-4" @click.self="logsFor = null">
-      <div class="flex max-h-[80vh] w-full max-w-2xl flex-col rounded border border-line bg-bg p-4">
+      <div class="flex max-h-[80vh] w-full max-w-2xl flex-col rounded-sm border border-line bg-bg p-4">
         <div class="flex items-center justify-between">
           <h3 class="text-[14px] font-semibold text-text">{{ t('apps.logsTitle', { name: logsFor.name }) }}</h3>
           <button type="button" class="text-[12.5px] text-muted hover:text-text" @click="logsFor = null">{{ t('apps.logsClose') }}</button>
@@ -231,14 +231,14 @@
         <p v-if="logsLoading" class="mt-3 text-[13px] text-faint">{{ t('common.loading') }}</p>
         <p v-else-if="logsError" class="mt-3 text-[12.5px] text-warn">{{ logsError }}</p>
         <p v-else-if="!logsText" class="mt-3 text-[13px] text-faint">{{ t('apps.logsEmpty') }}</p>
-        <pre v-else class="mt-3 overflow-auto whitespace-pre-wrap rounded border border-line-soft bg-tile p-3 text-[12px] text-muted">{{ logsText }}</pre>
+        <pre v-else class="mt-3 overflow-auto whitespace-pre-wrap rounded-sm border border-line-soft bg-tile p-3 text-[12px] text-muted">{{ logsText }}</pre>
       </div>
     </div>
 
     <!-- Console modal (App5, Terminal's exact safety posture): off by
          default, needs a fresh password re-entry, a standing warning. -->
     <div v-if="consoleFor" class="fixed inset-0 z-50 flex items-center justify-center bg-black/50 p-4" @click.self="closeConsole">
-      <div class="flex max-h-[80vh] w-full max-w-2xl flex-col rounded border border-line bg-bg p-4">
+      <div class="flex max-h-[80vh] w-full max-w-2xl flex-col rounded-sm border border-line bg-bg p-4">
         <div class="flex items-center justify-between">
           <h3 class="text-[14px] font-semibold text-text">{{ t('apps.console.title', { name: consoleFor.name }) }}</h3>
           <button type="button" class="text-[12.5px] text-muted hover:text-text" @click="closeConsole">{{ t('apps.console.close') }}</button>
@@ -251,19 +251,19 @@
         <template v-else-if="!consoleStatusInfo.enabled">
           <p class="mt-3 text-[12.5px] text-warn">{{ t('apps.console.warning') }}</p>
           <form class="mt-3 flex items-center gap-2" @submit.prevent="enableConsoleNow">
-            <input v-model="consolePassword" type="password" :placeholder="t('apps.console.password')" class="flex-1 rounded border border-line bg-field px-3 py-2 text-[13.5px] text-text" />
-            <button type="submit" class="shrink-0 rounded border border-line px-3 py-2 text-[13px] text-text hover:bg-field">{{ t('apps.console.enable') }}</button>
+            <input v-model="consolePassword" type="password" :placeholder="t('apps.console.password')" class="flex-1 rounded-sm border border-line bg-field px-3 py-2 text-[13.5px] text-text" />
+            <button type="submit" class="shrink-0 rounded-sm border border-line px-3 py-2 text-[13px] text-text hover:bg-field">{{ t('apps.console.enable') }}</button>
           </form>
           <p v-if="consolePasswordError" class="mt-1.5 text-[12.5px] text-warn">{{ consolePasswordError }}</p>
         </template>
 
         <template v-else>
           <p class="mt-2 text-[12px] text-warn">{{ t('apps.console.warning') }}</p>
-          <pre ref="consoleOutputEl" class="mt-2 h-64 overflow-auto whitespace-pre-wrap rounded border border-line-soft bg-tile p-3 text-[12px] text-muted">{{ consoleOutput }}</pre>
+          <pre ref="consoleOutputEl" class="mt-2 h-64 overflow-auto whitespace-pre-wrap rounded-sm border border-line-soft bg-tile p-3 text-[12px] text-muted">{{ consoleOutput }}</pre>
           <p v-if="consoleConnStatus" class="mt-1 text-[12px] text-faint">{{ consoleConnStatus }}</p>
           <form class="mt-2 flex items-center gap-2" @submit.prevent="sendConsoleInput">
-            <input v-model="consoleInput" type="text" :placeholder="t('apps.console.inputPlaceholder')" class="flex-1 rounded border border-line bg-field px-3 py-2 text-[13.5px] text-text" />
-            <button type="submit" class="shrink-0 rounded border border-line px-3 py-2 text-[13px] text-text hover:bg-field">{{ t('apps.console.send') }}</button>
+            <input v-model="consoleInput" type="text" :placeholder="t('apps.console.inputPlaceholder')" class="flex-1 rounded-sm border border-line bg-field px-3 py-2 text-[13.5px] text-text" />
+            <button type="submit" class="shrink-0 rounded-sm border border-line px-3 py-2 text-[13px] text-text hover:bg-field">{{ t('apps.console.send') }}</button>
           </form>
           <button type="button" class="mt-2 self-start text-[12.5px] text-warn hover:underline" @click="disableConsoleNow">{{ t('apps.console.disable') }}</button>
         </template>

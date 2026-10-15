@@ -10,13 +10,13 @@
     <div class="flex items-center justify-between gap-3">
       <h2 class="text-[14px] font-semibold text-text">{{ t('control.screenshot.title') }}</h2>
       <div class="flex items-center gap-1">
-        <label class="tap flex cursor-pointer items-center gap-1.5 rounded px-1.5 py-1 text-[12.5px] text-muted hover:text-text">
-          <input v-model="autoRefresh" type="checkbox" class="rounded" />
+        <label class="tap flex cursor-pointer items-center gap-1.5 rounded-sm px-1.5 py-1 text-[12.5px] text-muted hover:text-text">
+          <input v-model="autoRefresh" type="checkbox" class="rounded-sm" />
           {{ t('control.screenshot.auto') }}
         </label>
         <button
           type="button"
-          class="tap flex h-7 w-7 items-center justify-center rounded text-muted hover:bg-tile-2 hover:text-text"
+          class="tap flex h-7 w-7 items-center justify-center rounded-sm text-muted hover:bg-tile-2 hover:text-text"
           :aria-label="t('control.screenshot.refresh')"
           :title="t('control.screenshot.refresh')"
           @click="refresh"
@@ -25,7 +25,7 @@
         </button>
       </div>
     </div>
-    <div class="relative flex aspect-video items-center justify-center overflow-hidden rounded bg-black">
+    <div class="relative flex aspect-video items-center justify-center overflow-hidden rounded-sm bg-black">
       <img v-if="src" :src="src" :alt="t('control.screenshot.alt')" class="h-full w-full object-contain" />
       <p v-else class="px-4 text-center text-[13px] text-faint" aria-live="polite">
         {{ failed ? t('error.discovery.webcontrol_unavailable') : t('common.loading') }}

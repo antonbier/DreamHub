@@ -15,20 +15,20 @@
     <HubStatusBanner :item="item" />
 
     <template v-if="!item || item.status !== 'unavailable'">
-      <section class="mt-5 flex flex-wrap items-center justify-between gap-3 rounded border border-line bg-tile p-4">
+      <section class="mt-5 flex flex-wrap items-center justify-between gap-3 rounded-sm border border-line bg-tile p-4">
         <div>
           <h2 class="text-[14px] font-semibold text-text">{{ t('series.webInterface.title') }}</h2>
           <p class="mt-0.5 text-[12.5px] text-muted">{{ t('series.webInterface.body') }}</p>
         </div>
         <div class="flex shrink-0 gap-2">
-          <button type="button" class="rounded border border-line px-3 py-1.5 text-[13px] text-text hover:bg-field" @click="showEmbed = !showEmbed">
+          <button type="button" class="rounded-sm border border-line px-3 py-1.5 text-[13px] text-text hover:bg-field" @click="showEmbed = !showEmbed">
             {{ showEmbed ? t('series.webInterface.hide') : t('series.webInterface.show') }}
           </button>
           <a
             :href="serienRecorderUrl"
             target="_blank"
             rel="noopener"
-            class="rounded bg-accent px-3 py-1.5 text-[13px] font-semibold text-bg"
+            class="rounded-sm bg-accent px-3 py-1.5 text-[13px] font-semibold text-bg"
           >
             {{ t('series.webInterface.openTab') }}
           </a>
@@ -38,7 +38,7 @@
         v-if="showEmbed"
         :src="serienRecorderUrl"
         :title="t('series.webInterface.title')"
-        class="mt-3 h-[600px] w-full rounded border border-line"
+        class="mt-3 h-[600px] w-full rounded-sm border border-line"
       />
 
       <p v-if="loading" class="mt-5 text-[14px] text-muted">{{ t('common.loading') }}</p>
@@ -51,7 +51,7 @@
             <li v-for="m in markers" :key="m.id" class="border-b border-line-soft last:border-none">
               <RouterLink
                 :to="`/series/${m.id}`"
-                class="-mx-2 flex items-center gap-3 rounded px-2 py-2.5 hover:bg-tile-2"
+                class="-mx-2 flex items-center gap-3 rounded-sm px-2 py-2.5 hover:bg-tile-2"
                 :class="{ 'opacity-60': !m.active }"
               >
                 <PosterImage v-if="enrich.enabled" :path="enrich.info(m.name, 'tv')?.poster" :alt="m.name" />

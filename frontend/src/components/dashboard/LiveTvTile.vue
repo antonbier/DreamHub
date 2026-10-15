@@ -11,14 +11,14 @@
     <li v-for="ch in channels" :key="ch.serviceReference">
       <RouterLink
         :to="{ path: '/stream', query: { ref: ch.serviceReference } }"
-        class="flex items-center gap-2 rounded px-1.5 py-1.5 hover:bg-tile-2"
+        class="flex items-center gap-2 rounded-sm px-1.5 py-1.5 hover:bg-tile-2"
       >
         <span class="flex w-9 shrink-0 justify-center"><ChannelLogo source="stream" :service-reference="ch.serviceReference" :service-name="ch.serviceName" :height="18" /></span>
         <span class="min-w-0 flex-1">
           <span class="block truncate text-[13px] font-semibold text-text">{{ ch.serviceName }}</span>
           <span v-if="ch.now" class="block truncate text-[12px] text-muted">{{ ch.now.title }}</span>
-          <span v-if="ch.now && progress(ch.now) !== null" class="mt-1 block h-[3px] w-full rounded bg-field">
-            <span class="block h-full rounded bg-accent" :style="{ width: `${(progress(ch.now) ?? 0) * 100}%` }" />
+          <span v-if="ch.now && progress(ch.now) !== null" class="mt-1 block h-[3px] w-full rounded-sm bg-field">
+            <span class="block h-full rounded-sm bg-accent" :style="{ width: `${(progress(ch.now) ?? 0) * 100}%` }" />
           </span>
         </span>
       </RouterLink>

@@ -16,7 +16,7 @@
   <span
     ref="box"
     class="block shrink-0 overflow-hidden"
-    :class="[{ 'h-full w-full': fill }, logo ? '' : 'rounded-sm bg-field']"
+    :class="[{ 'h-full w-full': fill }, logo ? '' : 'rounded-xs bg-field']"
     :style="fill ? undefined : { width: `${width}px`, height: `${height}px` }"
   >
     <img v-if="src" :src="src" :alt="alt" class="h-full w-full" :class="logo ? 'object-contain object-left' : 'object-cover'" loading="lazy" />

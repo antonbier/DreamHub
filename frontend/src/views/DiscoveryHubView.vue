@@ -33,13 +33,13 @@
         <select
           v-if="bouquets.length > 1"
           v-model="selectedBouquet"
-          class="rounded border border-line bg-field px-3 py-1.5 text-[13.5px] text-text"
+          class="rounded-sm border border-line bg-field px-3 py-1.5 text-[13.5px] text-text"
         >
           <option v-for="b in bouquets" :key="b.serviceReference" :value="b.serviceReference">{{ b.serviceName }}</option>
         </select>
         <button
           type="button"
-          class="rounded bg-accent px-3.5 py-1.5 text-[13.5px] font-semibold text-bg disabled:opacity-60"
+          class="rounded-sm bg-accent px-3.5 py-1.5 text-[13.5px] font-semibold text-bg disabled:opacity-60"
           :disabled="generating || !selectedBouquet || budgetExhausted"
           @click="generate"
         >
@@ -53,12 +53,12 @@
 
       <div class="mt-3 flex flex-wrap items-center gap-x-3 gap-y-1">
         <label class="flex cursor-pointer items-center gap-2 text-[13.5px] text-text">
-          <input v-model="useTaste" type="checkbox" class="rounded" />
+          <input v-model="useTaste" type="checkbox" class="rounded-sm" />
           {{ t('discovery.taste.use') }}
         </label>
         <button
           type="button"
-          class="rounded px-1.5 py-0.5 text-[13px] text-accent hover:bg-tile-2"
+          class="rounded-sm px-1.5 py-0.5 text-[13px] text-accent hover:bg-tile-2"
           :aria-expanded="tasteShown"
           aria-controls="taste-panel"
           @click="toggleTaste"
@@ -66,7 +66,7 @@
           {{ tasteShown ? t('discovery.taste.hide') : t('discovery.taste.show') }}
         </button>
       </div>
-      <section v-if="tasteShown" id="taste-panel" class="mt-2 rounded border border-line bg-tile p-4">
+      <section v-if="tasteShown" id="taste-panel" class="mt-2 rounded-sm border border-line bg-tile p-4">
         <p class="text-[12.5px] text-faint">{{ t('discovery.taste.explain') }}</p>
         <p v-if="tasteLoading" class="mt-2 text-[13px] text-muted">{{ t('common.loading') }}</p>
         <p v-else-if="!taste" class="mt-2 text-[13px] text-muted"><ErrorText /></p>
@@ -81,7 +81,7 @@
       <p v-if="genError" class="mt-3 text-[13px] text-warn">{{ genError }}</p>
       <p v-if="usedTaste && hasGenerated" class="mt-3 text-[12.5px] text-faint">{{ usedTaste }}</p>
 
-      <div v-if="!hasGenerated && !loading" class="mt-6 flex flex-col items-center gap-3 rounded border border-dashed border-line px-6 py-10 text-center">
+      <div v-if="!hasGenerated && !loading" class="mt-6 flex flex-col items-center gap-3 rounded-sm border border-dashed border-line px-6 py-10 text-center">
         <Icon name="recommendations" :size="28" class="text-faint" />
         <p class="max-w-md text-[14px] text-muted">{{ bouquets.length > 1 ? t('discovery.empty') : t('discovery.emptySingle') }}</p>
       </div>

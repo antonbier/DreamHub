@@ -12,14 +12,14 @@
       <button
         v-if="showBack"
         type="button"
-        class="rounded px-3.5 py-1.5 text-[13.5px] text-muted hover:bg-tile-2"
+        class="rounded-sm px-3.5 py-1.5 text-[13.5px] text-muted hover:bg-tile-2"
         @click="$emit('back')"
       >
         {{ t('onboarding.back') }}
       </button>
       <button
         type="button"
-        class="rounded bg-accent px-3.5 py-1.5 text-[13.5px] font-semibold text-bg disabled:opacity-60"
+        class="rounded-sm bg-accent px-3.5 py-1.5 text-[13.5px] font-semibold text-bg disabled:opacity-60"
         :disabled="nextDisabled || busy"
         @click="$emit('next')"
       >

@@ -5,7 +5,7 @@
 -->
 <template>
   <img v-if="src" :src="src" alt="" class="object-contain" :style="{ height: `${height}px`, maxWidth: `${height * 2.2}px` }" />
-  <span v-else class="inline-block rounded bg-field" :style="{ height: `${height}px`, width: `${height * 1.6}px` }" />
+  <span v-else class="inline-block rounded-sm bg-field" :style="{ height: `${height}px`, width: `${height * 1.6}px` }" />
 </template>
 
 <script setup lang="ts">

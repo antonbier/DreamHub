@@ -19,12 +19,12 @@
     >
       <div v-if="item.art" class="relative h-[220px] below-sm:h-[180px]">
         <PosterImage :plex="item.art" :plex-width="1280" fill alt="" />
-        <div class="absolute inset-0 bg-gradient-to-t from-tile via-tile/30 to-transparent" />
+        <div class="absolute inset-0 bg-linear-to-t/srgb from-tile to-transparent" />
       </div>
       <button
         ref="closeButton"
         type="button"
-        class="absolute end-3 top-3 rounded bg-tile/80 px-2.5 py-1 text-[13px] text-text backdrop-blur hover:bg-tile-2"
+        class="absolute inset-e-3 top-3 rounded-sm px-2.5 py-1 text-[13px] text-text backdrop-blur-sm hover:bg-tile-2"
         @click="$emit('close')"
       >
         {{ t('plan.close') }}
@@ -55,13 +55,13 @@
         <div v-if="hasChoice" class="mt-3 flex flex-wrap gap-3 text-[13px]">
           <label v-if="versions.length > 1" class="flex items-center gap-1.5 text-muted">
             {{ t('plex.version') }}
-            <select v-model.number="mediaIndex" class="rounded border border-line bg-tile-2 px-1.5 py-0.5 text-text">
+            <select v-model.number="mediaIndex" class="rounded-sm border border-line bg-tile-2 px-1.5 py-0.5 text-text">
               <option v-for="(m, i) in versions" :key="i" :value="i">{{ versionLabel(m) }}</option>
             </select>
           </label>
           <label v-if="parts.length > 1" class="flex items-center gap-1.5 text-muted">
             {{ t('plex.part') }}
-            <select v-model.number="partIndex" class="rounded border border-line bg-tile-2 px-1.5 py-0.5 text-text">
+            <select v-model.number="partIndex" class="rounded-sm border border-line bg-tile-2 px-1.5 py-0.5 text-text">
               <option v-for="(_, i) in parts" :key="i" :value="i">{{ i + 1 }}</option>
             </select>
           </label>
@@ -71,7 +71,7 @@
           <button
             v-if="canPlay"
             type="button"
-            class="rounded bg-accent px-3.5 py-1.5 text-[13.5px] font-semibold text-bg disabled:opacity-60"
+            class="rounded-sm bg-accent px-3.5 py-1.5 text-[13.5px] font-semibold text-bg disabled:opacity-60"
             :disabled="!online || playing"
             @click="$emit('play', { media: mediaIndex, part: partIndex })"
           >
@@ -79,7 +79,7 @@
           </button>
           <button
             type="button"
-            class="rounded px-2 py-1 text-[13.5px] text-accent hover:bg-tile-2 disabled:text-faint"
+            class="rounded-sm px-2 py-1 text-[13.5px] text-accent hover:bg-tile-2 disabled:text-faint"
             :disabled="!online || busy"
             @click="$emit('toggleWatched')"
           >
@@ -90,7 +90,7 @@
             :href="plexLink"
             target="_blank"
             rel="noopener"
-            class="rounded px-2 py-1 text-[13.5px] text-accent hover:bg-tile-2"
+            class="rounded-sm px-2 py-1 text-[13.5px] text-accent hover:bg-tile-2"
           >
             {{ t('plex.openInPlex') }}
           </a>

@@ -28,7 +28,7 @@
       <ul v-else-if="custom.display === 'posters'" class="flex gap-3 overflow-x-auto pb-1">
         <li v-for="(item, i) in result.items" :key="i" class="w-[96px] shrink-0">
           <RouterLink :to="item.path ?? '/'" class="group block" :title="item.title">
-            <span class="relative block aspect-[2/3] w-full overflow-hidden rounded border border-line-soft bg-field group-hover:border-accent">
+            <span class="relative block aspect-2/3 w-full overflow-hidden rounded-sm border border-line-soft bg-field group-hover:border-accent">
               <PosterImage v-if="item.image" :plex="item.image" :plex-width="240" fill lazy alt="" />
             </span>
             <span class="mt-1 block truncate text-[12.5px] text-text group-hover:text-accent">{{ item.title }}</span>
@@ -41,10 +41,10 @@
           <component
             :is="item.path ? RouterLink : 'div'"
             :to="item.path"
-            class="-mx-2 flex items-center gap-3 rounded px-2 py-1.5"
+            class="-mx-2 flex items-center gap-3 rounded-sm px-2 py-1.5"
             :class="{ 'hover:bg-tile-2': item.path }"
           >
-            <span class="w-[5.5rem] shrink-0 whitespace-nowrap text-[12.5px] tabular-nums" :class="item.warn ? 'text-warn' : 'text-faint'">
+            <span class="w-22 shrink-0 whitespace-nowrap text-[12.5px] tabular-nums" :class="item.warn ? 'text-warn' : 'text-faint'">
               {{ lead(item) }}
             </span>
             <span class="min-w-0 flex-1">
@@ -58,7 +58,7 @@
     </template>
 
     <div v-if="editable" class="mt-auto">
-      <button type="button" class="rounded py-1 text-[13px] text-accent hover:underline" @click="$emit('edit')">
+      <button type="button" class="rounded-sm py-1 text-[13px] text-accent hover:underline" @click="$emit('edit')">
         {{ t('dashboard.custom.editFilters') }}
       </button>
     </div>

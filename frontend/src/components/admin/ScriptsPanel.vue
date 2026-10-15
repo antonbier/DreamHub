@@ -8,10 +8,10 @@
   own copies.
 -->
 <template>
-  <section class="mt-5 rounded border border-line bg-tile p-4">
+  <section class="mt-5 rounded-sm border border-line bg-tile p-4">
     <div class="flex items-center gap-3">
       <h2 class="text-[14px] font-semibold text-text">{{ t('admin.scripts.title') }}</h2>
-      <button type="button" class="ms-auto rounded border border-line px-3 py-1.5 text-[13px] text-text hover:bg-field disabled:opacity-60" :disabled="uploading" @click="fileInput?.click()">
+      <button type="button" class="ms-auto rounded-sm border border-line px-3 py-1.5 text-[13px] text-text hover:bg-field disabled:opacity-60" :disabled="uploading" @click="fileInput?.click()">
         {{ t('admin.scripts.upload') }}
       </button>
       <input ref="fileInput" type="file" class="hidden" @change="onFileChosen" />
@@ -30,14 +30,14 @@
           <div class="flex shrink-0 items-center gap-1 below-sm:basis-full below-sm:justify-end">
             <template v-if="confirmingDelete === s.id">
               <span class="text-[12.5px] text-muted">{{ t('admin.scripts.deleteConfirm') }}</span>
-              <button type="button" class="rounded px-2 py-1 text-[12.5px] text-onair hover:bg-tile-2" @click="remove(s.id)">{{ t('admin.scripts.deleteYes') }}</button>
-              <button type="button" class="rounded px-2 py-1 text-[12.5px] text-text hover:bg-tile-2" @click="confirmingDelete = null">{{ t('plan.cancel') }}</button>
+              <button type="button" class="rounded-sm px-2 py-1 text-[12.5px] text-onair hover:bg-tile-2" @click="remove(s.id)">{{ t('admin.scripts.deleteYes') }}</button>
+              <button type="button" class="rounded-sm px-2 py-1 text-[12.5px] text-text hover:bg-tile-2" @click="confirmingDelete = null">{{ t('plan.cancel') }}</button>
             </template>
             <template v-else>
-              <button type="button" class="rounded px-2 py-1 text-[12.5px] text-text hover:bg-tile-2" :disabled="!!pending" @click="confirmingDelete = s.id">
+              <button type="button" class="rounded-sm px-2 py-1 text-[12.5px] text-text hover:bg-tile-2" :disabled="!!pending" @click="confirmingDelete = s.id">
                 {{ t('admin.scripts.delete') }}
               </button>
-              <button type="button" class="rounded border border-line px-2.5 py-1 text-[12.5px] text-text hover:bg-field disabled:opacity-60" :disabled="!!pending" @click="preview(s)">
+              <button type="button" class="rounded-sm border border-line px-2.5 py-1 text-[12.5px] text-text hover:bg-field disabled:opacity-60" :disabled="!!pending" @click="preview(s)">
                 {{ t('admin.scripts.run') }}
               </button>
             </template>
@@ -56,7 +56,7 @@
             {{ t('admin.scripts.previewRun', { name: s.name }) }}
           </PlanPreview>
           <p v-else-if="pending.error" class="text-[12.5px] text-warn">{{ pending.error }}</p>
-          <div v-else-if="pending.result" class="rounded border border-line bg-bg p-3">
+          <div v-else-if="pending.result" class="rounded-sm border border-line bg-bg p-3">
             <div class="flex items-center justify-between gap-3">
               <span class="flex items-center gap-1.5 text-[13px]" :class="pending.result.exitCode === 0 ? 'text-ok' : 'text-onair'">
                 <span class="h-1.5 w-1.5 rounded-full" :class="pending.result.exitCode === 0 ? 'bg-ok' : 'bg-onair'" />
@@ -64,7 +64,7 @@
               </span>
               <button type="button" class="text-[12.5px] text-accent hover:underline" @click="pending = null">{{ t('admin.crashLogs.close') }}</button>
             </div>
-            <pre v-if="pending.result.output" class="mt-2 max-h-64 overflow-auto whitespace-pre-wrap break-words font-mono text-[12px] text-text">{{ pending.result.output }}</pre>
+            <pre v-if="pending.result.output" class="mt-2 max-h-64 overflow-auto whitespace-pre-wrap wrap-break-word font-mono text-[12px] text-text">{{ pending.result.output }}</pre>
           </div>
         </div>
       </li>

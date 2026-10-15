@@ -11,7 +11,7 @@
       type="button"
       role="radio"
       :aria-checked="modelValue === d.offset"
-      class="rounded px-2.5 py-1"
+      class="rounded-sm px-2.5 py-1"
       :class="modelValue === d.offset ? 'bg-tile-2 text-text ring-1 ring-line' : 'text-muted hover:bg-tile hover:text-text'"
       @click="$emit('update:modelValue', d.offset)"
     >

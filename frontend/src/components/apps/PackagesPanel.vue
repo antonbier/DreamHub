@@ -8,24 +8,24 @@
   whole skins with it on the box).
 -->
 <template>
-  <section class="mt-5 rounded border border-line bg-tile p-4">
+  <section class="mt-5 rounded-sm border border-line bg-tile p-4">
     <div class="flex items-center gap-3">
       <h2 class="text-[14px] font-semibold text-text">{{ t('admin.packages.title') }}</h2>
-      <button type="button" class="ms-auto rounded p-1 text-muted hover:bg-tile-2 hover:text-text" :aria-label="t('admin.logs.refresh')" :title="t('admin.logs.refresh')" @click="load">
+      <button type="button" class="ms-auto rounded-sm p-1 text-muted hover:bg-tile-2 hover:text-text" :aria-label="t('admin.logs.refresh')" :title="t('admin.logs.refresh')" @click="load">
         <Icon name="refresh" :size="15" />
       </button>
     </div>
 
     <p class="mt-1 text-[12.5px] text-muted">{{ t('admin.packages.intro') }}</p>
 
-    <div class="mt-3 flex flex-wrap gap-1 rounded bg-field p-1 text-[12.5px]" role="radiogroup" :aria-label="t('admin.packages.title')">
+    <div class="mt-3 flex flex-wrap gap-1 rounded-sm bg-field p-1 text-[12.5px]" role="radiogroup" :aria-label="t('admin.packages.title')">
       <button
         v-for="v in views"
         :key="v.id"
         type="button"
         role="radio"
         :aria-checked="status === v.id"
-        class="rounded px-2.5 py-1"
+        class="rounded-sm px-2.5 py-1"
         :class="status === v.id ? 'bg-tile text-text' : 'text-muted hover:text-text'"
         @click="setView(v.id)"
       >
@@ -37,11 +37,11 @@
       <input
         v-model="q"
         type="search"
-        class="min-w-0 flex-1 rounded border border-line bg-field px-2.5 py-1.5 text-[13px] text-text"
+        class="min-w-0 flex-1 rounded-sm border border-line bg-field px-2.5 py-1.5 text-[13px] text-text"
         :placeholder="t('admin.packages.search')"
         @input="debouncedLoad"
       />
-      <select v-model="category" class="rounded border border-line bg-field px-2 py-1.5 text-[13px] text-text" @change="load">
+      <select v-model="category" class="rounded-sm border border-line bg-field px-2 py-1.5 text-[13px] text-text" @change="load">
         <option value="">{{ t('admin.packages.allCategories') }}</option>
         <option v-for="c in categories" :key="c" :value="c">{{ c }}</option>
       </select>
@@ -49,7 +49,7 @@
 
     <div v-if="upgradableCount > 0 && !pending" class="mt-2 flex items-center gap-2 text-[12.5px] text-muted">
       <span>{{ t('admin.packages.upgradableCount', { count: upgradableCount }, upgradableCount) }}</span>
-      <button type="button" class="rounded border border-line px-2 py-0.5 text-text hover:bg-field" @click="preview('upgrade', [])">
+      <button type="button" class="rounded-sm border border-line px-2 py-0.5 text-text hover:bg-field" @click="preview('upgrade', [])">
         {{ t('admin.packages.upgradeAll') }}
       </button>
     </div>
@@ -73,7 +73,7 @@
           </li>
         </ul>
       </PlanPreview>
-      <div v-else-if="pending.run" class="rounded border border-line bg-bg p-3">
+      <div v-else-if="pending.run" class="rounded-sm border border-line bg-bg p-3">
         <div class="flex items-center justify-between gap-3">
           <span class="flex items-center gap-1.5 text-[13px]" :class="pending.run.ok ? 'text-ok' : 'text-onair'">
             <span class="h-1.5 w-1.5 rounded-full" :class="pending.run.ok ? 'bg-ok' : 'bg-onair'" />
@@ -81,7 +81,7 @@
           </span>
           <button type="button" class="text-[12.5px] text-accent hover:underline" @click="pending = null">{{ t('admin.crashLogs.close') }}</button>
         </div>
-        <pre v-if="pending.run.output" class="mt-2 max-h-64 overflow-auto whitespace-pre-wrap break-words font-mono text-[12px] text-text">{{ pending.run.output }}</pre>
+        <pre v-if="pending.run.output" class="mt-2 max-h-64 overflow-auto whitespace-pre-wrap wrap-break-word font-mono text-[12px] text-text">{{ pending.run.output }}</pre>
       </div>
       <div v-else-if="pending.error" class="flex items-start justify-between gap-3">
         <p class="whitespace-pre-wrap text-[12.5px] text-warn">{{ pending.error }}</p>
@@ -97,12 +97,12 @@
       <li v-for="p in packages" :key="p.name" class="border-b border-line-soft py-2 last:border-none">
         <div class="flex items-baseline gap-2">
           <span class="font-mono text-[13px] text-text">{{ p.name }}</span>
-          <span v-if="p.category" class="shrink-0 rounded bg-tile-2 px-1.5 py-0.5 text-[11px] text-faint">{{ p.category }}</span>
-          <span v-if="p.neededBy?.length" class="shrink-0 rounded border border-accent px-1.5 py-0.5 text-[11px] text-accent">{{ t('admin.packages.neededBy', { hubs: p.neededBy.map(hubName).join(', ') }) }}</span>
+          <span v-if="p.category" class="shrink-0 rounded-sm bg-tile-2 px-1.5 py-0.5 text-[11px] text-faint">{{ p.category }}</span>
+          <span v-if="p.neededBy?.length" class="shrink-0 rounded-sm border border-accent px-1.5 py-0.5 text-[11px] text-accent">{{ t('admin.packages.neededBy', { hubs: p.neededBy.map(hubName).join(', ') }) }}</span>
           <button
             v-if="aiReady"
             type="button"
-            class="tap ms-auto shrink-0 rounded px-2 py-0.5 text-[12px] text-accent hover:bg-tile-2"
+            class="tap ms-auto shrink-0 rounded-sm px-2 py-0.5 text-[12px] text-accent hover:bg-tile-2"
             :disabled="explaining === p.name"
             @click="explain(p)"
           >
@@ -110,14 +110,14 @@
           </button>
         </div>
         <div v-if="p.category !== 'self'" class="mt-1 flex gap-2">
-          <button v-if="catalog || p.missing" type="button" class="rounded border border-line px-2 py-0.5 text-[12px] text-text hover:bg-field disabled:opacity-60" :disabled="!!pending" @click="preview('install', [p.name])">
+          <button v-if="catalog || p.missing" type="button" class="rounded-sm border border-line px-2 py-0.5 text-[12px] text-text hover:bg-field disabled:opacity-60" :disabled="!!pending" @click="preview('install', [p.name])">
             {{ t('admin.packages.install') }}
           </button>
           <template v-else>
-            <button v-if="p.upgradable" type="button" class="rounded border border-line px-2 py-0.5 text-[12px] text-text hover:bg-field disabled:opacity-60" :disabled="!!pending" @click="preview('upgrade', [p.name])">
+            <button v-if="p.upgradable" type="button" class="rounded-sm border border-line px-2 py-0.5 text-[12px] text-text hover:bg-field disabled:opacity-60" :disabled="!!pending" @click="preview('upgrade', [p.name])">
               {{ t('admin.packages.upgrade') }}
             </button>
-            <button type="button" class="rounded px-2 py-0.5 text-[12px] text-muted hover:bg-field hover:text-text disabled:opacity-60" :disabled="!!pending" @click="preview('remove', [p.name])">
+            <button type="button" class="rounded-sm px-2 py-0.5 text-[12px] text-muted hover:bg-field hover:text-text disabled:opacity-60" :disabled="!!pending" @click="preview('remove', [p.name])">
               {{ t('admin.packages.remove') }}
             </button>
           </template>
@@ -126,7 +126,7 @@
         <p class="text-[12.5px]" :class="p.upgradable || p.missing ? 'text-warn' : 'text-muted'">
           {{ p.missing ? t('admin.packages.missing') : p.upgradable ? t('admin.packages.upgradableFrom', { from: p.version, to: p.availableVersion }) : p.version }}
         </p>
-        <p v-if="explained[p.name]" class="mt-1 rounded border border-line bg-bg p-2 text-[12.5px] text-text">{{ explained[p.name] }}</p>
+        <p v-if="explained[p.name]" class="mt-1 rounded-sm border border-line bg-bg p-2 text-[12.5px] text-text">{{ explained[p.name] }}</p>
       </li>
     </ul>
   </section>

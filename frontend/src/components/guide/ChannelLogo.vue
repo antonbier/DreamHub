@@ -13,7 +13,7 @@
   <span
     v-else-if="missed"
     aria-hidden="true"
-    class="flex shrink-0 items-center justify-center rounded bg-tile-2 font-semibold text-muted"
+    class="flex shrink-0 items-center justify-center rounded-sm bg-tile-2 font-semibold text-muted"
     :style="{ height: `${height}px`, width: `${height}px`, fontSize: `${Math.max(9, Math.round(height * 0.45))}px` }"
     >{{ initials }}</span
   >

@@ -13,7 +13,7 @@
       <label
         v-for="field in fields"
         :key="field.key"
-        class="flex items-center justify-between rounded border border-line px-3.5 py-2.5"
+        class="flex items-center justify-between rounded-sm border border-line px-3.5 py-2.5"
       >
         <span class="text-[14px] text-text">{{ t(field.label) }}</span>
         <button
@@ -24,7 +24,7 @@
           :class="draft[field.key] ? 'bg-accent justify-end' : 'bg-field justify-start'"
           @click="draft[field.key] = !draft[field.key]"
         >
-          <span class="h-5 w-5 rounded-full bg-tile shadow" />
+          <span class="h-5 w-5 rounded-full bg-tile shadow-sm" />
         </button>
       </label>
     </div>

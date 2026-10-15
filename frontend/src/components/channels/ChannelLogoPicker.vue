@@ -6,7 +6,7 @@
   all visible at once; no mode to switch.
 -->
 <template>
-  <div class="rounded border border-line bg-tile p-3">
+  <div class="rounded-sm border border-line bg-tile p-3">
     <div class="flex items-center gap-3">
       <ChannelLogo source="channels" :service-reference="channel.ref" :service-name="channel.name" :height="32" />
       <span class="min-w-0 flex-1 truncate text-[14px] font-semibold text-text">{{ channel.name }}</span>
@@ -22,7 +22,7 @@
         v-for="s in sets"
         :key="s"
         type="button"
-        class="flex flex-col items-center gap-1 rounded border border-line bg-bg p-2 hover:bg-field disabled:opacity-60"
+        class="flex flex-col items-center gap-1 rounded-sm border border-line bg-bg p-2 hover:bg-field disabled:opacity-60"
         :disabled="busy"
         :title="s"
         @click="chooseSet(s)"
@@ -35,7 +35,7 @@
     <h3 class="mt-4 text-[12.5px] font-semibold text-muted">{{ t('channels.logo.upload') }}</h3>
     <div class="mt-1 flex flex-wrap items-center gap-2">
       <input ref="fileInput" type="file" accept="image/png,image/jpeg,image/gif" class="hidden" @change="onFile" />
-      <button type="button" class="rounded border border-line px-3 py-1.5 text-[13px] text-text hover:bg-field disabled:opacity-60" :disabled="busy" @click="fileInput?.click()">
+      <button type="button" class="rounded-sm border border-line px-3 py-1.5 text-[13px] text-text hover:bg-field disabled:opacity-60" :disabled="busy" @click="fileInput?.click()">
         {{ t('channels.logo.chooseFile') }}
       </button>
       <span class="text-[12px] text-faint">{{ t('channels.logo.uploadHint') }}</span>
@@ -44,8 +44,8 @@
     <template v-if="onlineAvailable">
       <h3 class="mt-4 text-[12.5px] font-semibold text-muted">{{ t('channels.logo.online') }}</h3>
       <form class="mt-1 flex gap-2" @submit.prevent="search">
-        <input v-model="query" type="search" class="min-w-0 flex-1 rounded border border-line bg-field px-2.5 py-1.5 text-[13px] text-text" :aria-label="t('channels.logo.online')" />
-        <button type="submit" class="shrink-0 rounded border border-line px-3 py-1.5 text-[13px] text-text hover:bg-field disabled:opacity-60" :disabled="searching || !query.trim()">
+        <input v-model="query" type="search" class="min-w-0 flex-1 rounded-sm border border-line bg-field px-2.5 py-1.5 text-[13px] text-text" :aria-label="t('channels.logo.online')" />
+        <button type="submit" class="shrink-0 rounded-sm border border-line px-3 py-1.5 text-[13px] text-text hover:bg-field disabled:opacity-60" :disabled="searching || !query.trim()">
           {{ t('channels.logo.search') }}
         </button>
       </form>
@@ -57,7 +57,7 @@
           v-for="r in results"
           :key="r.path"
           type="button"
-          class="flex flex-col items-center gap-1 rounded border border-line bg-bg p-2 hover:bg-field disabled:opacity-60"
+          class="flex flex-col items-center gap-1 rounded-sm border border-line bg-bg p-2 hover:bg-field disabled:opacity-60"
           :disabled="busy"
           :title="r.path"
           @click="chooseOnline(r)"

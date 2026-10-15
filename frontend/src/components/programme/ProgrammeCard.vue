@@ -9,7 +9,7 @@
 <template>
   <button
     type="button"
-    class="flex w-full gap-3 rounded border border-line bg-tile p-3 text-start transition-colors hover:border-accent/60 hover:bg-tile-2"
+    class="flex w-full gap-3 rounded-sm border border-line bg-tile p-3 text-start transition-colors hover:bg-tile-2"
     :aria-label="t('discovery.openDetails', { title })"
     @click="$emit('open')"
   >

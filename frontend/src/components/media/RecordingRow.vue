@@ -22,7 +22,7 @@
       <input
         v-if="selectable"
         type="checkbox"
-        class="tap h-4 w-4 shrink-0 accent-[var(--dh-accent)]"
+        class="tap h-4 w-4 shrink-0 accent-(--dh-accent)"
         :checked="selected"
         :aria-label="t('media.select', { title: movie.title })"
         @change="emit('toggle')"
@@ -60,7 +60,7 @@
       <span v-if="actions" class="flex shrink-0 below-sm:basis-full below-sm:justify-end">
         <button
           type="button"
-          class="tap shrink-0 rounded px-2 py-1 text-[13px] text-accent opacity-0 hover:bg-tile focus:opacity-100 group-hover:opacity-100 below-md:opacity-100"
+          class="tap shrink-0 rounded-sm px-2 py-1 text-[13px] text-accent opacity-0 hover:bg-tile focus:opacity-100 group-hover:opacity-100 below-md:opacity-100"
           :class="{ invisible: state }"
           :disabled="!!state"
           @click="emit('rename')"
@@ -69,7 +69,7 @@
         </button>
         <button
           type="button"
-          class="tap shrink-0 rounded px-2 py-1 text-[13px] text-accent opacity-0 hover:bg-tile focus:opacity-100 group-hover:opacity-100 below-md:opacity-100"
+          class="tap shrink-0 rounded-sm px-2 py-1 text-[13px] text-accent opacity-0 hover:bg-tile focus:opacity-100 group-hover:opacity-100 below-md:opacity-100"
           :class="{ invisible: state }"
           :disabled="!!state"
           @click="emit('trash')"
@@ -87,12 +87,12 @@
           ref="nameInput"
           v-model="draft"
           type="text"
-          class="min-w-0 flex-1 rounded border border-line bg-field px-2.5 py-1.5 font-mono text-[13px] text-text"
+          class="min-w-0 flex-1 rounded-sm border border-line bg-field px-2.5 py-1.5 font-mono text-[13px] text-text"
           spellcheck="false"
         />
         <span class="font-mono text-[13px] text-faint" aria-hidden="true">.ts</span>
-        <button type="button" class="rounded px-3 py-1.5 text-[13px] text-text hover:bg-field" @click="emit('cancel')">{{ t('plan.cancel') }}</button>
-        <button type="submit" class="rounded bg-accent px-3 py-1.5 text-[13px] font-semibold text-bg disabled:opacity-60" :disabled="state.busy || draft.trim() === ''">
+        <button type="button" class="rounded-sm px-3 py-1.5 text-[13px] text-text hover:bg-field" @click="emit('cancel')">{{ t('plan.cancel') }}</button>
+        <button type="submit" class="rounded-sm bg-accent px-3 py-1.5 text-[13px] font-semibold text-bg disabled:opacity-60" :disabled="state.busy || draft.trim() === ''">
           {{ t('media.previewRename') }}
         </button>
         <p v-if="state.error" class="basis-full text-[12.5px] text-warn">{{ state.error }}</p>
@@ -107,7 +107,7 @@
             v-model="titleDraft"
             type="text"
             maxlength="200"
-            class="min-w-0 flex-1 rounded border border-line bg-field px-2.5 py-1.5 text-[13px] text-text"
+            class="min-w-0 flex-1 rounded-sm border border-line bg-field px-2.5 py-1.5 text-[13px] text-text"
           />
         </label>
 
@@ -119,7 +119,7 @@
             v-for="src in sourceList"
             :key="src.id"
             type="button"
-            class="rounded px-2 py-1 text-accent hover:bg-tile-2 disabled:text-faint disabled:hover:bg-transparent"
+            class="rounded-sm px-2 py-1 text-accent hover:bg-tile-2 disabled:text-faint disabled:hover:bg-transparent"
             :disabled="!src.enabled || !!state.suggesting"
             :title="src.enabled ? undefined : t(`media.suggest.needsKey.${src.id}`)"
             @click="emit('suggest', src.id)"
@@ -133,7 +133,7 @@
           <li v-for="(sg, i) in state.suggestions" :key="i">
             <button
               type="button"
-              class="flex w-full items-baseline gap-2 rounded px-2 py-1 text-start hover:bg-tile-2"
+              class="flex w-full items-baseline gap-2 rounded-sm px-2 py-1 text-start hover:bg-tile-2"
               @click="useSuggestion(sg.name)"
             >
               <span class="min-w-0 flex-1 truncate font-mono text-[13px] text-text">{{ sg.name }}</span>

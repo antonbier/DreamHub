@@ -17,14 +17,14 @@
   <aside
     ref="asideEl"
     :inert="narrow && !ui.mobileNavOpen"
-    class="z-30 flex h-full shrink-0 flex-col border-e border-line bg-side transition-[width] duration-150 below-md:fixed below-md:inset-y-0 below-md:start-0 below-md:w-[260px] below-md:transition-transform below-md:duration-200 below-md:ease-out"
+    class="z-30 flex h-full shrink-0 flex-col border-e border-line bg-side transition-[width] duration-150 below-md:fixed below-md:inset-y-0 below-md:inset-s-0 below-md:w-[260px] below-md:transition-transform below-md:duration-200 below-md:ease-out"
     :class="ui.mobileNavOpen ? 'below-md:translate-x-0' : 'below-md:-translate-x-full below-md:rtl:translate-x-full'"
     :style="{ width: collapsed ? '60px' : '232px' }"
   >
     <div class="flex items-center gap-2 p-3">
       <button
         type="button"
-        class="flex h-8 w-8 shrink-0 items-center justify-center rounded text-muted hover:bg-tile-2 hover:text-text below-md:hidden"
+        class="flex h-8 w-8 shrink-0 items-center justify-center rounded-sm text-muted hover:bg-tile-2 hover:text-text below-md:hidden"
         :title="collapsed ? t('sidebar.expand') : t('sidebar.collapse')"
         @click="toggle"
       >
@@ -33,7 +33,7 @@
       <span v-if="!collapsed" class="truncate text-[15.5px] font-bold">{{ t('app.name') }}</span>
       <button
         type="button"
-        class="ms-auto hidden h-8 w-8 shrink-0 items-center justify-center rounded text-muted hover:bg-tile-2 hover:text-text below-md:flex"
+        class="ms-auto hidden h-8 w-8 shrink-0 items-center justify-center rounded-sm text-muted hover:bg-tile-2 hover:text-text below-md:flex"
         :aria-label="t('sidebar.collapse')"
         @click="ui.closeMobileNav()"
       >
@@ -194,7 +194,7 @@ const NavLink = defineComponent({
           title: tooltip.value,
           onClick: () => emit('navigate'),
           class: [
-            'flex items-center gap-2.5 rounded px-2 py-[7px] text-[14.5px] hover:bg-tile-2',
+            'flex items-center gap-2.5 rounded-sm px-2 py-[7px] text-[14.5px] hover:bg-tile-2',
             isActive(route.path, props.item.path) ? 'bg-tile-2 text-text' : 'text-muted',
             props.item.status === 'unavailable' ? 'opacity-60' : '',
           ],

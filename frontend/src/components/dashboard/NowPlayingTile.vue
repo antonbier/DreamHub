@@ -53,7 +53,7 @@
 
     <div class="mt-auto flex flex-wrap items-center gap-1.5 pt-3">
       <template v-if="cur.inStandby">
-        <button type="button" class="flex items-center gap-1.5 rounded border border-line px-2.5 py-1 text-[12.5px] text-text hover:bg-field" @click="press(KEY.POWER)">
+        <button type="button" class="flex items-center gap-1.5 rounded-sm border border-line px-2.5 py-1 text-[12.5px] text-text hover:bg-field" @click="press(KEY.POWER)">
           <Icon name="power" :size="14" />{{ t('dashboard.nowPlaying.wake') }}
         </button>
       </template>
@@ -75,7 +75,7 @@
           <Icon name="mute" :size="16" />
         </button>
       </template>
-      <button type="button" class="tap ms-auto flex items-center gap-1.5 rounded px-2 py-1 text-[12.5px] text-accent hover:bg-tile-2" @click="remote.setPanelOpen(true)">
+      <button type="button" class="tap ms-auto flex items-center gap-1.5 rounded-sm px-2 py-1 text-[12.5px] text-accent hover:bg-tile-2" @click="remote.setPanelOpen(true)">
         <Icon name="control" :size="14" />{{ t('dashboard.nowPlaying.remote') }}
       </button>
     </div>
@@ -97,7 +97,7 @@ const { t, locale } = useI18n()
 const { timeZone } = useDisplayTimeZone()
 const remote = useRemoteStore()
 
-const iconButton = 'tap flex h-7 w-7 items-center justify-center rounded border border-line text-text hover:bg-field'
+const iconButton = 'tap flex h-7 w-7 items-center justify-center rounded-sm border border-line text-text hover:bg-field'
 
 const cur = ref<CurrentService | null>(null)
 const loading = ref(true)

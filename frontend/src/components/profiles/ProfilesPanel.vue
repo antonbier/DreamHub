@@ -5,7 +5,7 @@
   settings: DreamHub's own state, recorded in the change log.
 -->
 <template>
-  <section class="rounded border border-line bg-tile p-5">
+  <section class="rounded-sm border border-line bg-tile p-5">
     <h2 class="mb-1 text-[15.5px] font-semibold">{{ t('profiles.manage.title') }}</h2>
     <p class="mb-4 text-[13px] text-muted">{{ t('profiles.manage.subtitle') }}</p>
 
@@ -47,7 +47,7 @@
       @save="(input) => save(null, input)"
       @cancel="adding = false"
     />
-    <button v-else type="button" class="rounded bg-accent px-3 py-1.5 text-[13px] font-semibold text-bg" @click="add">
+    <button v-else type="button" class="rounded-sm bg-accent px-3 py-1.5 text-[13px] font-semibold text-bg" @click="add">
       {{ t('profiles.manage.add') }}
     </button>
     <p v-if="!adding && !me?.hasPin" class="mt-2 text-[12.5px] text-faint">{{ t('profiles.manage.adminPinFirst') }}</p>

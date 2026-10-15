@@ -8,11 +8,11 @@
   owns its API calls: it's one self-contained flow over a whole selection.
 -->
 <template>
-  <div class="rounded border border-line-soft bg-bg p-3" role="group" :aria-label="t('media.batch.title')">
+  <div class="rounded-sm border border-line-soft bg-bg p-3" role="group" :aria-label="t('media.batch.title')">
     <div class="flex flex-wrap items-center gap-3">
       <p class="text-[12px] text-faint">{{ t('plan.eyebrow') }}</p>
       <label class="flex cursor-pointer items-center gap-2 text-[12.5px] text-text">
-        <input v-model="folders" type="checkbox" class="rounded" :disabled="busy" @change="load" />
+        <input v-model="folders" type="checkbox" class="rounded-sm" :disabled="busy" @change="load" />
         {{ t('media.batch.folders') }}
       </label>
       <span class="text-[12px] text-faint">{{ t('media.batch.foldersHint') }}</span>
@@ -44,13 +44,13 @@
     <p v-if="error" class="mt-2 text-[12.5px] text-warn">{{ error }}</p>
 
     <div class="mt-3 flex justify-end gap-2">
-      <button type="button" class="rounded px-3 py-1.5 text-[13px] text-text hover:bg-field" :disabled="applying" @click="$emit('cancel')">
+      <button type="button" class="rounded-sm px-3 py-1.5 text-[13px] text-text hover:bg-field" :disabled="applying" @click="$emit('cancel')">
         {{ t('plan.cancel') }}
       </button>
       <button
         ref="confirmButton"
         type="button"
-        class="rounded bg-accent px-3 py-1.5 text-[13px] font-semibold text-bg disabled:opacity-60"
+        class="rounded-sm bg-accent px-3 py-1.5 text-[13px] font-semibold text-bg disabled:opacity-60"
         :disabled="!plan || busy || applying"
         @click="confirm"
       >

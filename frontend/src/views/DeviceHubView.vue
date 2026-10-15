@@ -74,13 +74,13 @@
       <p v-else-if="loadFailed" class="mt-5 text-[14px] text-muted"><ErrorText /></p>
       <template v-else>
         <!-- Device info -->
-        <section class="mt-5 rounded border border-line bg-tile p-4">
+        <section class="mt-5 rounded-sm border border-line bg-tile p-4">
           <h2 class="text-[14px] font-semibold text-text">{{ t('system.device.title') }}</h2>
           <!-- Label and value side by side; one under the other on phones. -->
           <dl class="mt-2 grid grid-cols-[max-content_1fr] gap-x-6 gap-y-1.5 text-[13px] below-sm:grid-cols-1 below-sm:gap-y-0">
             <template v-for="row in deviceRows" :key="row.label">
               <dt class="text-muted below-sm:mt-1.5">{{ row.label }}</dt>
-              <dd class="min-w-0 break-words text-text">{{ row.value }}</dd>
+              <dd class="min-w-0 wrap-break-word text-text">{{ row.value }}</dd>
             </template>
           </dl>
         </section>
@@ -100,7 +100,7 @@
             <div class="flex flex-wrap items-center gap-2">
               <label v-if="profiles.length > 1" class="flex items-center gap-1.5 text-[13px]">
                 <span class="text-muted">{{ t('system.changes.by') }}</span>
-                <select v-model="byUser" class="rounded border border-line bg-field px-2 py-1.5 text-text" @change="loadChanges">
+                <select v-model="byUser" class="rounded-sm border border-line bg-field px-2 py-1.5 text-text" @change="loadChanges">
                   <option :value="-1">{{ t('system.changes.everyone') }}</option>
                   <option v-for="p in profiles" :key="p.id" :value="p.id">{{ p.name }}</option>
                   <option :value="0">{{ t('system.changes.system') }}</option>
@@ -110,7 +110,7 @@
                 v-model="filter"
                 type="search"
                 :placeholder="t('system.changes.filterPlaceholder')"
-                class="w-64 max-w-full rounded border border-line bg-field px-2.5 py-1.5 text-[13px] text-text"
+                class="w-64 max-w-full rounded-sm border border-line bg-field px-2.5 py-1.5 text-[13px] text-text"
               />
             </div>
           </div>
@@ -129,7 +129,7 @@
           <button
             v-if="changes.length >= changesLimit"
             type="button"
-            class="mt-3 rounded border border-line px-3 py-1.5 text-[13px] text-text hover:bg-field"
+            class="mt-3 rounded-sm border border-line px-3 py-1.5 text-[13px] text-text hover:bg-field"
             @click="loadMoreChanges"
           >
             {{ t('system.changes.loadMore') }}
@@ -180,7 +180,7 @@
       <ServicesPanel @logs="showLogsFor" />
 
       <!-- Log level -->
-      <section class="mt-5 rounded border border-line bg-tile p-4">
+      <section class="mt-5 rounded-sm border border-line bg-tile p-4">
         <h2 class="text-[14px] font-semibold text-text">{{ t('admin.logLevel.title') }}</h2>
         <p class="mt-0.5 text-[12.5px] text-muted">
           {{ level?.until ? t('admin.logLevel.currentUntil', { level: level.level, until: formatDate(level.until) }) : t('admin.logLevel.current', { level: level?.level }) }}
@@ -188,7 +188,7 @@
         <div class="mt-3 flex flex-wrap gap-2">
           <button
             type="button"
-            class="rounded border border-line px-3 py-1.5 text-[13px] text-text hover:bg-field disabled:opacity-60"
+            class="rounded-sm border border-line px-3 py-1.5 text-[13px] text-text hover:bg-field disabled:opacity-60"
             :disabled="levelBusy || level?.level === 'debug'"
             @click="setLevel('debug')"
           >
@@ -196,7 +196,7 @@
           </button>
           <button
             type="button"
-            class="rounded border border-line px-3 py-1.5 text-[13px] text-text hover:bg-field disabled:opacity-60"
+            class="rounded-sm border border-line px-3 py-1.5 text-[13px] text-text hover:bg-field disabled:opacity-60"
             :disabled="levelBusy || level?.level === 'info'"
             @click="setLevel('info')"
           >
@@ -212,7 +212,7 @@
           <div class="flex items-center gap-2">
             <button
               type="button"
-              class="flex items-center gap-1.5 rounded border px-3 py-1.5 text-[13px] hover:bg-field"
+              class="flex items-center gap-1.5 rounded-sm border px-3 py-1.5 text-[13px] hover:bg-field"
               :class="live ? 'border-accent text-accent' : 'border-line text-text'"
               @click="toggleLive"
             >
@@ -221,7 +221,7 @@
             </button>
             <button
               type="button"
-              class="rounded border border-line px-3 py-1.5 text-[13px] text-text hover:bg-field disabled:opacity-60"
+              class="rounded-sm border border-line px-3 py-1.5 text-[13px] text-text hover:bg-field disabled:opacity-60"
               :disabled="live"
               @click="loadLogs"
             >
@@ -236,10 +236,10 @@
             type="text"
             :placeholder="t('admin.logs.unitPlaceholder')"
             :aria-label="t('admin.logs.unitPlaceholder')"
-            class="w-56 max-w-full rounded border border-line bg-field px-2.5 py-1.5 text-[13px] text-text"
+            class="w-56 max-w-full rounded-sm border border-line bg-field px-2.5 py-1.5 text-[13px] text-text"
             @change="onFilterChange"
           />
-          <select v-model="logLevelFilter" :aria-label="t('admin.logs.levelFilter')" class="rounded border border-line bg-field px-2.5 py-1.5 text-[13px] text-text" @change="onFilterChange">
+          <select v-model="logLevelFilter" :aria-label="t('admin.logs.levelFilter')" class="rounded-sm border border-line bg-field px-2.5 py-1.5 text-[13px] text-text" @change="onFilterChange">
             <option value="">{{ t('admin.logs.levelAny') }}</option>
             <option v-for="lv in logLevels" :key="lv" :value="lv">{{ t(`admin.logs.level.${lv}`) }}</option>
           </select>
@@ -248,7 +248,7 @@
             type="search"
             :placeholder="t('admin.logs.textPlaceholder')"
             :aria-label="t('admin.logs.textPlaceholder')"
-            class="w-56 max-w-full rounded border border-line bg-field px-2.5 py-1.5 text-[13px] text-text"
+            class="w-56 max-w-full rounded-sm border border-line bg-field px-2.5 py-1.5 text-[13px] text-text"
             @change="onFilterChange"
           />
         </div>
@@ -266,7 +266,7 @@
             <span class="w-40 shrink-0 truncate text-faint below-sm:w-auto below-sm:min-w-0 below-sm:flex-1">{{ e.unit }}</span>
             <!-- On phones the message gets its own full-width line: squeezed
                  next to time and unit it would wrap after every letter. -->
-            <span class="min-w-0 flex-1 break-words below-sm:basis-full">{{ e.message }}</span>
+            <span class="min-w-0 flex-1 wrap-break-word below-sm:basis-full">{{ e.message }}</span>
           </li>
         </ul>
       </section>
@@ -281,17 +281,17 @@
               <span class="block truncate text-[13.5px] text-text">{{ c.name }}</span>
               <span class="block text-[12px] text-faint">{{ c.at ? formatDate(c.at) : '' }} · {{ formatBytes(c.size, locale) }}</span>
             </span>
-            <button type="button" class="shrink-0 rounded border border-line px-2.5 py-1 text-[12.5px] text-text hover:bg-field" @click="viewCrashLog(c.name)">
+            <button type="button" class="shrink-0 rounded-sm border border-line px-2.5 py-1 text-[12.5px] text-text hover:bg-field" @click="viewCrashLog(c.name)">
               {{ t('admin.crashLogs.view') }}
             </button>
           </li>
         </ul>
-        <div v-if="openCrashLog" class="mt-3 rounded border border-line bg-tile p-3">
+        <div v-if="openCrashLog" class="mt-3 rounded-sm border border-line bg-tile p-3">
           <div class="mb-2 flex items-center justify-between gap-3">
             <span class="truncate text-[13px] font-semibold text-text">{{ openCrashLog.name }}</span>
             <button type="button" class="shrink-0 text-[12.5px] text-accent hover:underline" @click="openCrashLog = null">{{ t('admin.crashLogs.close') }}</button>
           </div>
-          <pre class="max-h-96 overflow-auto whitespace-pre-wrap break-words font-mono text-[12px] text-text">{{ openCrashLog.content }}</pre>
+          <pre class="max-h-96 overflow-auto whitespace-pre-wrap wrap-break-word font-mono text-[12px] text-text">{{ openCrashLog.content }}</pre>
         </div>
       </section>
     </template>

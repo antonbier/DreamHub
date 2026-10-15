@@ -8,10 +8,10 @@
 -->
 <template>
   <div class="flex items-stretch gap-2">
-    <canvas ref="canvas" class="h-16 min-w-0 flex-1 rounded bg-field" aria-hidden="true" />
+    <canvas ref="canvas" class="h-16 min-w-0 flex-1 rounded-sm bg-field" aria-hidden="true" />
     <button
       type="button"
-      class="shrink-0 rounded border border-line px-2 text-[12px] text-muted hover:bg-field hover:text-text"
+      class="shrink-0 rounded-sm border border-line px-2 text-[12px] text-muted hover:bg-field hover:text-text"
       :title="t('radio.visual.switch')"
       @click="next"
     >

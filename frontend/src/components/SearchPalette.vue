@@ -24,14 +24,14 @@
       @keydown="onKeydown"
     >
       <label class="relative block border-b border-line-soft">
-        <Icon name="search" :size="16" class="pointer-events-none absolute start-3 top-1/2 -translate-y-1/2 text-faint" />
+        <Icon name="search" :size="16" class="pointer-events-none absolute inset-s-3 top-1/2 -translate-y-1/2 text-faint" />
         <input
           ref="inputEl"
           v-model="query"
           type="text"
           :placeholder="t('topbar.searchPlaceholder')"
           :aria-label="t('search.label')"
-          class="w-full bg-transparent py-3 ps-10 pe-3 text-[14.5px] text-text outline-none"
+          class="w-full bg-transparent py-3 ps-10 pe-3 text-[14.5px] text-text"
         />
       </label>
       <ul v-if="results.length > 0" class="max-h-[320px] overflow-y-auto py-1.5">

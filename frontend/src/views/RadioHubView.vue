@@ -29,7 +29,7 @@
       <p v-else-if="bouquets.length === 0" class="mt-5 text-[14px] text-muted">{{ t('radio.noBouquets') }}</p>
       <template v-else>
         <!-- What the box plays right now, when it's one of these stations. -->
-        <section v-if="playingStation" class="mt-5 flex items-center gap-4 rounded border border-line bg-tile p-4 below-sm:flex-wrap" aria-live="polite">
+        <section v-if="playingStation" class="mt-5 flex items-center gap-4 rounded-sm border border-line bg-tile p-4 below-sm:flex-wrap" aria-live="polite">
           <ChannelLogo source="radio" :service-reference="playingStation.serviceReference" :service-name="playingStation.serviceName" :height="36" />
           <div class="min-w-0 flex-1">
             <div class="flex items-center gap-1.5 text-[12.5px] text-onair">
@@ -54,7 +54,7 @@
         </section>
 
         <!-- Listening in the browser (StreamHub's player, sound only). -->
-        <section v-if="listening" class="mt-5 flex flex-wrap items-center gap-3 rounded border border-accent bg-tile p-3" :aria-label="t('radio.inBrowser')">
+        <section v-if="listening" class="mt-5 flex flex-wrap items-center gap-3 rounded-sm border border-accent bg-tile p-3" :aria-label="t('radio.inBrowser')">
           <ChannelLogo source="radio" :service-reference="listening" :service-name="listeningStation?.serviceName ?? ''" :height="28" />
           <!-- On a phone the controls wrap below, so the name has the width. -->
           <div class="min-w-0 flex-1 below-sm:basis-[calc(100%-5rem)]" aria-live="polite">
@@ -69,19 +69,19 @@
             min="0"
             max="100"
             :value="Math.round(listenVolume * 100)"
-            class="h-1 w-28 accent-[var(--dh-accent)]"
+            class="h-1 w-28 accent-(--dh-accent)"
             :aria-label="t('stream.volume')"
             @input="setListenVolume(($event.target as HTMLInputElement).valueAsNumber / 100)"
           />
           <button
             v-if="listenState === 'playing' || listenState === 'paused'"
             type="button"
-            class="rounded border border-line px-2.5 py-1 text-[12.5px] text-text hover:bg-field"
+            class="rounded-sm border border-line px-2.5 py-1 text-[12.5px] text-text hover:bg-field"
             @click="togglePause"
           >
             {{ listenState === 'paused' ? t('radio.resume') : t('radio.pause') }}
           </button>
-          <button type="button" class="rounded border border-line px-2.5 py-1 text-[12.5px] text-text hover:bg-field" @click="stopListening">
+          <button type="button" class="rounded-sm border border-line px-2.5 py-1 text-[12.5px] text-text hover:bg-field" @click="stopListening">
             {{ t('stream.stop') }}
           </button>
           <RadioVisualizer v-if="listenState === 'playing' || listenState === 'paused'" class="w-full basis-full" :analyser="listenAnalyser" />
@@ -94,7 +94,7 @@
           <select
             v-if="bouquets.length > 1"
             v-model="selectedBouquet"
-            class="rounded border border-line bg-field px-3 py-1.5 text-[13.5px] text-text"
+            class="rounded-sm border border-line bg-field px-3 py-1.5 text-[13.5px] text-text"
             :aria-label="t('radio.bouquet')"
             @change="autoPicked = false"
           >
@@ -106,7 +106,7 @@
             type="search"
             :placeholder="t('radio.find')"
             :aria-label="t('radio.find')"
-            class="w-60 max-w-full rounded border border-line bg-field px-2.5 py-1.5 text-[13.5px] text-text"
+            class="w-60 max-w-full rounded-sm border border-line bg-field px-2.5 py-1.5 text-[13.5px] text-text"
           />
         </div>
 
@@ -119,7 +119,7 @@
             v-for="st in shown"
             :id="rowId(st.serviceReference)"
             :key="st.serviceReference"
-            class="flex scroll-mt-20 items-center gap-3 rounded border-b border-line-soft px-1 py-2.5 transition-colors last:border-none below-sm:flex-wrap"
+            class="flex scroll-mt-20 items-center gap-3 rounded-sm border-b border-line-soft px-1 py-2.5 transition-colors last:border-none below-sm:flex-wrap"
             :class="{ 'bg-tile-2': highlighted === st.serviceReference }"
           >
             <div class="flex w-44 shrink-0 items-center gap-2 below-sm:w-auto below-sm:min-w-0 below-sm:flex-1">
@@ -155,7 +155,7 @@
             <button
               v-if="streamHubOn"
               type="button"
-              class="tap flex shrink-0 items-center gap-1.5 rounded border px-2.5 py-1 text-[12.5px] hover:bg-field"
+              class="tap flex shrink-0 items-center gap-1.5 rounded-sm border px-2.5 py-1 text-[12.5px] hover:bg-field"
               :class="listening === st.serviceReference ? 'border-accent text-accent' : 'border-line text-text'"
               :aria-label="t('radio.listen', { station: st.serviceName })"
               :aria-pressed="listening === st.serviceReference"
@@ -169,7 +169,7 @@
             <button
               v-else
               type="button"
-              class="tap shrink-0 rounded px-2 py-1 text-[12.5px] hover:bg-field disabled:opacity-60"
+              class="tap shrink-0 rounded-sm px-2 py-1 text-[12.5px] hover:bg-field disabled:opacity-60"
               :class="streamHubOn ? 'text-muted hover:text-text' : 'border border-line text-text'"
               :disabled="zapping === st.serviceReference"
               @click="play(st.serviceReference)"
@@ -214,7 +214,7 @@
       :now="Date.now() / 1000"
       @close="closeSelected"
     >
-      <section v-if="selected.description" class="mt-4 rounded border border-line-soft bg-bg p-3">
+      <section v-if="selected.description" class="mt-4 rounded-sm border border-line-soft bg-bg p-3">
         <h3 class="text-[12.5px] text-faint">{{ t('guide.epgText') }}</h3>
         <p class="mt-1 text-[14px] text-text">{{ selected.description }}</p>
       </section>
@@ -239,7 +239,7 @@
             <button
               v-if="!selectedEnded"
               type="button"
-              class="rounded bg-accent px-3.5 py-1.5 text-[13.5px] font-semibold text-bg disabled:opacity-60"
+              class="rounded-sm bg-accent px-3.5 py-1.5 text-[13.5px] font-semibold text-bg disabled:opacity-60"
               :disabled="record.status === 'loading' || !canRecord"
               :title="canRecord ? undefined : t('guide.timerHubUnavailable')"
               @click="previewRecord"
@@ -249,7 +249,7 @@
             <button
               v-if="selectedLive && playing !== selected.serviceReference"
               type="button"
-              class="rounded border border-line px-3.5 py-1.5 text-[13.5px] text-text hover:bg-field disabled:opacity-60"
+              class="rounded-sm border border-line px-3.5 py-1.5 text-[13.5px] text-text hover:bg-field disabled:opacity-60"
               :disabled="zapping === selected.serviceReference"
               @click="play(selected.serviceReference)"
             >

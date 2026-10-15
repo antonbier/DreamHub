@@ -1,7 +1,7 @@
 <template>
   <OnboardingStepFrame :title="t('onboarding.done.title')" :subtitle="t('onboarding.done.subtitle')" show-back :next-label="t('onboarding.done.finish')" @next="$emit('finish')" @back="$emit('back')">
-    <div class="flex flex-col items-center gap-3 rounded border border-line bg-field p-5">
-      <img v-if="qrDataUrl" :src="qrDataUrl" :alt="t('onboarding.done.qrAlt')" width="176" height="176" class="rounded bg-white p-2" />
+    <div class="flex flex-col items-center gap-3 rounded-sm border border-line bg-field p-5">
+      <img v-if="qrDataUrl" :src="qrDataUrl" :alt="t('onboarding.done.qrAlt')" width="176" height="176" class="rounded-sm bg-white p-2" />
       <p class="max-w-[280px] text-center text-[12.5px] text-faint">{{ origin }}</p>
     </div>
   </OnboardingStepFrame>

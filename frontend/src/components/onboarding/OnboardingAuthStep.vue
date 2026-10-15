@@ -16,18 +16,18 @@
       :class="enabled ? 'bg-accent justify-end' : 'bg-field justify-start'"
       @click="enabled = !enabled"
     >
-      <span class="h-5 w-5 rounded-full bg-tile shadow" />
+      <span class="h-5 w-5 rounded-full bg-tile shadow-sm" />
     </button>
     <span class="mb-4 block text-[14px] text-text">{{ t('settings.auth.enabled') }}</span>
 
     <div v-if="enabled" class="flex flex-col gap-3">
       <label class="block">
         <span class="mb-1 block text-[13px] text-muted">{{ t('settings.auth.username') }}</span>
-        <input v-model="username" type="text" autocomplete="username" class="w-full max-w-[320px] rounded border border-line bg-field px-2.5 py-1.5 text-[14px] text-text" />
+        <input v-model="username" type="text" autocomplete="username" class="w-full max-w-[320px] rounded-sm border border-line bg-field px-2.5 py-1.5 text-[14px] text-text" />
       </label>
       <label class="block">
         <span class="mb-1 block text-[13px] text-muted">{{ t('settings.auth.password') }}</span>
-        <input v-model="password" type="password" autocomplete="new-password" class="w-full max-w-[320px] rounded border border-line bg-field px-2.5 py-1.5 text-[14px] text-text" />
+        <input v-model="password" type="password" autocomplete="new-password" class="w-full max-w-[320px] rounded-sm border border-line bg-field px-2.5 py-1.5 text-[14px] text-text" />
       </label>
     </div>
   </OnboardingStepFrame>

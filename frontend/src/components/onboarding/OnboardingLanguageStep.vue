@@ -5,7 +5,7 @@
         v-for="locale in SUPPORTED_LOCALES"
         :key="locale"
         type="button"
-        class="flex items-center justify-between rounded border px-3.5 py-2.5 text-start text-[14px]"
+        class="flex items-center justify-between rounded-sm border px-3.5 py-2.5 text-start text-[14px]"
         :class="preferences.language === locale ? 'border-accent bg-tile-2 text-text' : 'border-line text-muted hover:bg-tile-2'"
         @click="preferences.setLanguage(locale)"
       >

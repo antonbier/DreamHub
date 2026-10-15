@@ -16,13 +16,13 @@
 <template>
   <!-- Someone who can't start it sees the section only once there's
        something to see. -->
-  <section v-if="result || canStart || active || trimActive" class="mt-4 rounded border border-line-soft bg-bg p-3" :aria-busy="active">
+  <section v-if="result || canStart || active || trimActive" class="mt-4 rounded-sm border border-line-soft bg-bg p-3" :aria-busy="active">
     <div class="flex items-center gap-3">
       <h3 class="text-[12.5px] text-faint">{{ t('media.ads.heading') }}</h3>
       <button
         v-if="result && !active && canStart"
         type="button"
-        class="ms-auto rounded px-2 py-0.5 text-[12.5px] text-accent hover:bg-tile-2"
+        class="ms-auto rounded-sm px-2 py-0.5 text-[12.5px] text-accent hover:bg-tile-2"
         @click="start"
       >
         {{ t('media.ads.again') }}
@@ -33,7 +33,7 @@
     <div v-if="trimActive && trimJob" class="mt-2">
       <div class="flex items-center gap-3 text-[13.5px]">
         <span class="text-muted" aria-live="polite">{{ trimProgressText }}</span>
-        <button type="button" class="ms-auto rounded px-2 py-0.5 text-[12.5px] text-accent hover:bg-tile-2" @click="jobs.cancel(trimJob.id)">
+        <button type="button" class="ms-auto rounded-sm px-2 py-0.5 text-[12.5px] text-accent hover:bg-tile-2" @click="jobs.cancel(trimJob.id)">
           {{ t('media.ads.stop') }}
         </button>
       </div>
@@ -58,7 +58,7 @@
     <div v-else-if="active && job" class="mt-2">
       <div class="flex items-center gap-3 text-[13.5px]">
         <span class="text-muted" aria-live="polite">{{ progressText }}</span>
-        <button type="button" class="ms-auto rounded px-2 py-0.5 text-[12.5px] text-accent hover:bg-tile-2" @click="jobs.cancel(job.id)">
+        <button type="button" class="ms-auto rounded-sm px-2 py-0.5 text-[12.5px] text-accent hover:bg-tile-2" @click="jobs.cancel(job.id)">
           {{ t('media.ads.stop') }}
         </button>
       </div>
@@ -76,7 +76,7 @@
 
     <!-- The result -->
     <template v-else-if="result">
-      <div class="relative mt-2 h-6 overflow-hidden rounded-sm bg-field">
+      <div class="relative mt-2 h-6 overflow-hidden rounded-xs bg-field">
         <component
           :is="canPlay ? 'button' : 'span'"
           v-for="(b, i) in result.blocks"
@@ -84,7 +84,7 @@
           :type="canPlay ? 'button' : undefined"
           :role="canPlay ? undefined : 'img'"
           class="absolute inset-y-0 border-x border-bg"
-          :class="[b.uncertain ? 'ad-uncertain' : 'bg-muted', canPlay ? 'hover:opacity-80 focus-visible:outline focus-visible:outline-2 focus-visible:outline-accent' : '']"
+          :class="[b.uncertain ? 'ad-uncertain' : 'bg-muted', canPlay ? 'hover:opacity-80 focus-visible:outline-solid focus-visible:outline-2 focus-visible:outline-accent' : '']"
           :style="{ insetInlineStart: pct(b.start), width: pct(b.end - b.start) }"
           :aria-label="blockLabel(b)"
           :title="blockLabel(b)"
@@ -103,10 +103,10 @@
 
       <!-- Cutting out, or marking in the cut list: choose, preview, confirm -->
       <div v-if="canTrim && result.blocks.length > 0 && !choosing && !markChoosing" class="mt-3 flex flex-wrap gap-2">
-        <button type="button" class="rounded border border-line px-3 py-1 text-[13.5px] text-text hover:bg-field" @click="startChoosing">
+        <button type="button" class="rounded-sm border border-line px-3 py-1 text-[13.5px] text-text hover:bg-field" @click="startChoosing">
           {{ t('media.ads.cut.open') }}
         </button>
-        <button type="button" class="rounded border border-line px-3 py-1 text-[13.5px] text-text hover:bg-field" @click="startMarkChoosing">
+        <button type="button" class="rounded-sm border border-line px-3 py-1 text-[13.5px] text-text hover:bg-field" @click="startMarkChoosing">
           {{ t('media.ads.mark.open') }}
         </button>
       </div>
@@ -114,7 +114,7 @@
         <fieldset :disabled="!!trimPlan">
           <legend class="text-[12.5px] text-faint">{{ t('media.ads.cut.which') }}</legend>
           <label v-for="(b, i) in result.blocks" :key="i" class="mt-1 flex items-center gap-2 text-[13.5px] text-text">
-            <input v-model="ticked[i]" type="checkbox" class="accent-[var(--dh-accent)]" />
+            <input v-model="ticked[i]" type="checkbox" class="accent-(--dh-accent)" />
             <span>{{ t('media.ads.block', { from: formatPosition(b.start), to: formatPosition(b.end) }) }}</span>
             <span v-if="b.uncertain" class="text-[12.5px] text-warn">{{ t('media.ads.uncertain') }}</span>
           </label>
@@ -122,13 +122,13 @@
         <div v-if="!trimPlan" class="flex flex-wrap items-center gap-2">
           <button
             type="button"
-            class="rounded bg-accent px-3 py-1 text-[13.5px] font-semibold text-bg disabled:opacity-60"
+            class="rounded-sm bg-accent px-3 py-1 text-[13.5px] font-semibold text-bg disabled:opacity-60"
             :disabled="tickedCount === 0 || trimBusy"
             @click="previewTrim"
           >
             {{ t('media.ads.cut.preview') }}
           </button>
-          <button type="button" class="rounded px-3 py-1 text-[13.5px] text-text hover:bg-field" @click="stopChoosing">{{ t('plan.cancel') }}</button>
+          <button type="button" class="rounded-sm px-3 py-1 text-[13.5px] text-text hover:bg-field" @click="stopChoosing">{{ t('plan.cancel') }}</button>
         </div>
         <PlanPreview
           v-else
@@ -147,7 +147,7 @@
         <fieldset :disabled="!!markPlan">
           <legend class="text-[12.5px] text-faint">{{ t('media.ads.cut.which') }}</legend>
           <label v-for="(b, i) in result.blocks" :key="i" class="mt-1 flex items-center gap-2 text-[13.5px] text-text">
-            <input v-model="markTicked[i]" type="checkbox" class="accent-[var(--dh-accent)]" />
+            <input v-model="markTicked[i]" type="checkbox" class="accent-(--dh-accent)" />
             <span>{{ t('media.ads.block', { from: formatPosition(b.start), to: formatPosition(b.end) }) }}</span>
             <span v-if="b.uncertain" class="text-[12.5px] text-warn">{{ t('media.ads.uncertain') }}</span>
           </label>
@@ -155,13 +155,13 @@
         <div v-if="!markPlan" class="flex flex-wrap items-center gap-2">
           <button
             type="button"
-            class="rounded bg-accent px-3 py-1 text-[13.5px] font-semibold text-bg disabled:opacity-60"
+            class="rounded-sm bg-accent px-3 py-1 text-[13.5px] font-semibold text-bg disabled:opacity-60"
             :disabled="markTickedCount === 0 || markBusy"
             @click="previewMark"
           >
             {{ t('media.ads.mark.preview') }}
           </button>
-          <button type="button" class="rounded px-3 py-1 text-[13.5px] text-text hover:bg-field" @click="stopMarkChoosing">{{ t('plan.cancel') }}</button>
+          <button type="button" class="rounded-sm px-3 py-1 text-[13.5px] text-text hover:bg-field" @click="stopMarkChoosing">{{ t('plan.cancel') }}</button>
         </div>
         <PlanPreview
           v-else
@@ -183,7 +183,7 @@
       <button
         v-if="canStart"
         type="button"
-        class="rounded border border-line px-3 py-1 text-[13.5px] text-text hover:bg-field disabled:opacity-60"
+        class="rounded-sm border border-line px-3 py-1 text-[13.5px] text-text hover:bg-field disabled:opacity-60"
         :disabled="starting"
         @click="start"
       >

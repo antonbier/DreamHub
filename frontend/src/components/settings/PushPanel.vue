@@ -6,7 +6,7 @@
   settings (POST /api/v1/push/test).
 -->
 <template>
-  <section class="rounded border border-line bg-tile p-5">
+  <section class="rounded-sm border border-line bg-tile p-5">
     <h2 class="mb-1 text-[15.5px] font-semibold">{{ t('settings.pushHelp.title') }}</h2>
     <ol class="mb-3 list-decimal ps-5 text-[13px] text-muted">
       <li>{{ t('settings.pushHelp.step1') }}</li>
@@ -15,13 +15,13 @@
     </ol>
     <div class="mb-4 flex flex-wrap items-center gap-2 text-[13px]">
       <span class="text-faint">{{ t('settings.pushHelp.suggestion') }}</span>
-      <code class="rounded bg-field px-2 py-1 font-mono text-[12.5px] text-text">{{ suggestion }}</code>
-      <button type="button" class="rounded px-2 py-1 text-[12.5px] text-accent hover:bg-tile-2" @click="copy">
+      <code class="rounded-sm bg-field px-2 py-1 font-mono text-[12.5px] text-text">{{ suggestion }}</code>
+      <button type="button" class="rounded-sm px-2 py-1 text-[12.5px] text-accent hover:bg-tile-2" @click="copy">
         {{ copied ? t('settings.tokens.copied') : t('settings.tokens.copy') }}
       </button>
     </div>
     <div class="flex flex-wrap items-center gap-3">
-      <button type="button" class="rounded border border-line px-3 py-1.5 text-[13px] text-text hover:bg-field disabled:opacity-60" :disabled="sending" @click="sendTest">
+      <button type="button" class="rounded-sm border border-line px-3 py-1.5 text-[13px] text-text hover:bg-field disabled:opacity-60" :disabled="sending" @click="sendTest">
         {{ sending ? t('settings.pushHelp.sending') : t('settings.pushHelp.test') }}
       </button>
       <span v-if="result === 'ok'" class="text-[13px] text-ok" role="status">{{ t('settings.pushHelp.sent') }}</span>

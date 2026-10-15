@@ -8,7 +8,7 @@
   the proxy path; ShellInABox still asks for its own OS login inside.
 -->
 <template>
-  <section class="mt-5 rounded border border-line bg-tile p-4">
+  <section class="mt-5 rounded-sm border border-line bg-tile p-4">
     <h2 class="text-[14px] font-semibold text-text">{{ t('admin.terminal.title') }}</h2>
 
     <p v-if="loading" class="mt-2 text-[13px] text-faint">{{ t('common.loading') }}</p>
@@ -28,10 +28,10 @@
             v-model="password"
             type="password"
             autocomplete="current-password"
-            class="w-56 rounded border border-line bg-field px-2.5 py-1.5 text-[13px] text-text"
+            class="w-56 rounded-sm border border-line bg-field px-2.5 py-1.5 text-[13px] text-text"
           />
         </label>
-        <button type="submit" class="rounded bg-accent px-3 py-1.5 text-[13px] font-semibold text-bg disabled:opacity-60" :disabled="enabling || !password">
+        <button type="submit" class="rounded-sm bg-accent px-3 py-1.5 text-[13px] font-semibold text-bg disabled:opacity-60" :disabled="enabling || !password">
           {{ t('admin.terminal.enable') }}
         </button>
       </form>
@@ -44,11 +44,11 @@
           <span class="h-1.5 w-1.5 rounded-full bg-warn" />
           {{ t('admin.terminal.enabledWarning') }}
         </span>
-        <button type="button" class="rounded border border-line px-3 py-1.5 text-[13px] text-text hover:bg-field" @click="disable">
+        <button type="button" class="rounded-sm border border-line px-3 py-1.5 text-[13px] text-text hover:bg-field" @click="disable">
           {{ t('admin.terminal.disable') }}
         </button>
       </div>
-      <iframe :src="proxyPath" class="mt-3 h-96 w-full rounded border border-line bg-black" :title="t('admin.terminal.title')" />
+      <iframe :src="proxyPath" class="mt-3 h-96 w-full rounded-sm border border-line bg-black" :title="t('admin.terminal.title')" />
     </template>
   </section>
 </template>

@@ -47,7 +47,7 @@
           </label>
         </div>
 
-        <fieldset class="flex flex-col gap-2.5 rounded border border-line-soft p-3">
+        <fieldset class="flex flex-col gap-2.5 rounded-sm border border-line-soft p-3">
           <legend class="px-1 text-[13px] text-muted">{{ t('dashboard.builder.conditions') }}</legend>
 
           <label v-if="has('bouquet')" :class="row">
@@ -90,11 +90,11 @@
           </label>
           <p v-if="has('minDuration')" class="text-[12px] text-faint">{{ t('dashboard.builder.minDurationHint') }}</p>
           <label v-if="has('warnOnly')" class="flex items-center gap-2 text-[13.5px] text-text">
-            <input v-model="q.warnOnly" type="checkbox" class="rounded" />
+            <input v-model="q.warnOnly" type="checkbox" class="rounded-sm" />
             {{ t(sourceId === 'discovery.picks' ? 'dashboard.criteriaField.withoutTimer' : 'dashboard.criteriaField.warnOnly') }}
           </label>
           <label v-if="has('unwatched')" class="flex items-center gap-2 text-[13.5px] text-text">
-            <input v-model="q.unwatched" type="checkbox" class="rounded" />
+            <input v-model="q.unwatched" type="checkbox" class="rounded-sm" />
             {{ t('dashboard.criteriaField.unwatched') }}
           </label>
           <p v-if="sourceId === 'media.recordings'" class="text-[12px] text-faint">{{ t('dashboard.builder.topFolderOnly') }}</p>
@@ -124,12 +124,12 @@
 
       <p v-if="saveError" class="mt-3 text-[12.5px] text-warn">{{ saveError }}</p>
       <div class="mt-4 flex justify-end gap-2">
-        <button type="button" class="rounded px-3 py-1.5 text-[13.5px] text-text hover:bg-field" @click="$emit('close')">
+        <button type="button" class="rounded-sm px-3 py-1.5 text-[13.5px] text-text hover:bg-field" @click="$emit('close')">
           {{ t('plan.cancel') }}
         </button>
         <button
           type="submit"
-          class="rounded bg-accent px-3 py-1.5 text-[13.5px] font-semibold text-bg disabled:opacity-60"
+          class="rounded-sm bg-accent px-3 py-1.5 text-[13.5px] font-semibold text-bg disabled:opacity-60"
           :disabled="saving || !source || !title.trim()"
         >
           {{ initial ? t('dashboard.builder.save') : t('dashboard.builder.create') }}
@@ -154,7 +154,7 @@ const { t } = useI18n()
 const { zoneName } = useViewText()
 
 const labelClass = 'text-[13px] text-muted'
-const field = 'rounded border border-line bg-field px-2.5 py-1.5 text-[14px] text-text'
+const field = 'rounded-sm border border-line bg-field px-2.5 py-1.5 text-[14px] text-text'
 const row = 'grid grid-cols-[180px_1fr] items-center gap-3 below-sm:grid-cols-1 below-sm:gap-1'
 const rowLabel = 'text-[13.5px] text-text'
 

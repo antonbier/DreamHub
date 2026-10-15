@@ -7,7 +7,7 @@
   file, all or nothing. Self-contained like BatchRenamePreview.
 -->
 <template>
-  <div class="rounded border border-line-soft bg-bg p-3" role="group" :aria-label="t('media.covers.title')">
+  <div class="rounded-sm border border-line-soft bg-bg p-3" role="group" :aria-label="t('media.covers.title')">
     <p class="text-[12px] text-faint">{{ t('plan.eyebrow') }}</p>
 
     <p v-if="busy && !items.length" class="mt-2 text-[13px] text-faint" aria-live="polite">{{ t('common.loading') }}</p>
@@ -26,13 +26,13 @@
     <p v-if="error" class="mt-2 text-[12.5px] text-warn">{{ error }}</p>
 
     <div class="mt-3 flex justify-end gap-2">
-      <button type="button" class="rounded px-3 py-1.5 text-[13px] text-text hover:bg-field" :disabled="applying" @click="$emit('cancel')">
+      <button type="button" class="rounded-sm px-3 py-1.5 text-[13px] text-text hover:bg-field" :disabled="applying" @click="$emit('cancel')">
         {{ t('plan.cancel') }}
       </button>
       <button
         ref="confirmButton"
         type="button"
-        class="rounded bg-accent px-3 py-1.5 text-[13px] font-semibold text-bg disabled:opacity-60"
+        class="rounded-sm bg-accent px-3 py-1.5 text-[13px] font-semibold text-bg disabled:opacity-60"
         :disabled="!plan || busy || applying"
         @click="confirm"
       >

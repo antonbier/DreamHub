@@ -9,10 +9,10 @@
   30 s.
 -->
 <template>
-  <section class="mt-5 rounded border border-line bg-tile p-4">
+  <section class="mt-5 rounded-sm border border-line bg-tile p-4">
     <div class="flex items-center gap-3">
       <h2 class="text-[14px] font-semibold text-text">{{ t('admin.services.title') }}</h2>
-      <button type="button" class="ms-auto rounded p-1 text-muted hover:bg-tile-2 hover:text-text" :aria-label="t('admin.logs.refresh')" :title="t('admin.logs.refresh')" @click="load">
+      <button type="button" class="ms-auto rounded-sm p-1 text-muted hover:bg-tile-2 hover:text-text" :aria-label="t('admin.logs.refresh')" :title="t('admin.logs.refresh')" @click="load">
         <Icon name="refresh" :size="15" />
       </button>
     </div>
@@ -32,12 +32,12 @@
             </div>
           </div>
           <div class="flex shrink-0 items-center gap-1 below-sm:basis-full below-sm:justify-end">
-            <button type="button" class="rounded px-2 py-1 text-[12.5px] text-accent hover:bg-tile-2" @click="$emit('logs', u.name)">
+            <button type="button" class="rounded-sm px-2 py-1 text-[12.5px] text-accent hover:bg-tile-2" @click="$emit('logs', u.name)">
               {{ t('admin.services.logs') }}
             </button>
             <button
               type="button"
-              class="rounded border border-line px-2.5 py-1 text-[12.5px] text-text hover:bg-field disabled:opacity-60"
+              class="rounded-sm border border-line px-2.5 py-1 text-[12.5px] text-text hover:bg-field disabled:opacity-60"
               :disabled="!!pending"
               @click="preview(u)"
             >

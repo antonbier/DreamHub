@@ -23,7 +23,7 @@
     <!-- First stop for keyboard users: past sidebar and top bar. -->
     <a
       href="#main"
-      class="sr-only focus:not-sr-only focus:fixed focus:start-3 focus:top-3 focus:z-50 focus:rounded focus:bg-accent focus:px-3 focus:py-2 focus:text-[13.5px] focus:font-semibold focus:text-bg"
+      class="sr-only focus:not-sr-only focus:fixed focus:inset-s-3 focus:top-3 focus:z-50 focus:rounded-sm focus:bg-accent focus:px-3 focus:py-2 focus:text-[13.5px] focus:font-semibold focus:text-bg"
       @click.prevent="focusMain"
     >
       {{ t('app.skipToContent') }}
@@ -32,7 +32,7 @@
     <div class="flex min-w-0 flex-1 flex-col">
       <AppTopBar />
       <StatusStrip />
-      <main id="main" ref="mainEl" tabindex="-1" class="flex-1 overflow-y-auto focus:outline-none">
+      <main id="main" ref="mainEl" tabindex="-1" class="flex-1 overflow-y-auto focus:outline-hidden">
         <RouterView />
       </main>
     </div>

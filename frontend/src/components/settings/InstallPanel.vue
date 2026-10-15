@@ -5,7 +5,7 @@
   iOS share-sheet steps, or why the browser won't offer it (plain http).
 -->
 <template>
-  <section class="rounded border border-line bg-tile p-5">
+  <section class="rounded-sm border border-line bg-tile p-5">
     <div class="flex items-start gap-4">
       <img src="/icons/icon-192.png" alt="" class="h-12 w-12 shrink-0 rounded-lg" />
       <div class="min-w-0 flex-1">
@@ -14,7 +14,7 @@
         <button
           v-if="kind === 'prompt'"
           type="button"
-          class="mt-3 rounded bg-accent px-3 py-1.5 text-[13px] font-semibold text-bg"
+          class="mt-3 rounded-sm bg-accent px-3 py-1.5 text-[13px] font-semibold text-bg"
           @click="pwa.install()"
         >
           {{ t('settings.install.button') }}

@@ -26,7 +26,7 @@
     <HubStatusBanner :item="item" />
 
     <template v-if="!item || item.status !== 'unavailable'">
-      <section v-if="disks.length > 0" class="mt-5 flex flex-col gap-3 rounded border border-line bg-tile p-4">
+      <section v-if="disks.length > 0" class="mt-5 flex flex-col gap-3 rounded-sm border border-line bg-tile p-4">
         <div v-for="(disk, i) in disks" :key="i">
           <div class="mb-1 flex items-baseline justify-between gap-2 text-[13px]">
             <span class="text-text">{{ disk.model }}</span>
@@ -67,7 +67,7 @@
             <button
               v-if="i < breadcrumbs.length - 1"
               type="button"
-              class="rounded px-1 text-accent hover:bg-tile-2"
+              class="rounded-sm px-1 text-accent hover:bg-tile-2"
               @click="open(crumb.path)"
             >
               {{ crumb.name }}
@@ -78,20 +78,20 @@
 
         <p v-if="folder && !folder.fileOps.available && can('recordings.manage')" class="mt-2 text-[13px] text-faint">{{ t(`media.fileOps.${folder.fileOps.reason ?? 'notOnBox'}`) }}</p>
 
-        <div v-if="selection.size > 0" class="mt-3 flex flex-wrap items-center gap-3 rounded border border-line bg-tile px-3 py-2 text-[13.5px]">
+        <div v-if="selection.size > 0" class="mt-3 flex flex-wrap items-center gap-3 rounded-sm border border-line bg-tile px-3 py-2 text-[13.5px]">
           <span class="text-text">{{ t('media.selected', { count: selection.size }, selection.size) }}</span>
-          <button type="button" class="rounded px-2 py-1 text-accent hover:bg-tile-2" @click="selection.clear()">{{ t('media.clearSelection') }}</button>
+          <button type="button" class="rounded-sm px-2 py-1 text-accent hover:bg-tile-2" @click="selection.clear()">{{ t('media.clearSelection') }}</button>
           <button
             v-if="selection.size < selectableCount"
             type="button"
-            class="rounded px-2 py-1 text-accent hover:bg-tile-2"
+            class="rounded-sm px-2 py-1 text-accent hover:bg-tile-2"
             @click="selectAll"
           >
             {{ t('media.selectAll') }}
           </button>
           <button
             type="button"
-            class="ms-auto rounded px-3 py-1.5 text-accent hover:bg-tile-2 disabled:opacity-60"
+            class="ms-auto rounded-sm px-3 py-1.5 text-accent hover:bg-tile-2 disabled:opacity-60"
             :disabled="bulk?.busy || batchOpen || coversOpen"
             @click="openBatch"
           >
@@ -100,7 +100,7 @@
           <button
             v-if="suggestSources.tmdb"
             type="button"
-            class="rounded px-3 py-1.5 text-accent hover:bg-tile-2 disabled:opacity-60"
+            class="rounded-sm px-3 py-1.5 text-accent hover:bg-tile-2 disabled:opacity-60"
             :disabled="bulk?.busy || batchOpen || coversOpen"
             @click="openCovers"
           >
@@ -109,24 +109,24 @@
           <button
             v-if="adScanOn"
             type="button"
-            class="rounded px-3 py-1.5 text-accent hover:bg-tile-2 disabled:opacity-60"
+            class="rounded-sm px-3 py-1.5 text-accent hover:bg-tile-2 disabled:opacity-60"
             :disabled="bulk?.busy || batchOpen || coversOpen || adsStarting"
             @click="startBatchAds"
           >
             {{ t('media.ads.detect') }}
           </button>
-          <button type="button" class="rounded bg-accent px-3 py-1.5 font-semibold text-bg disabled:opacity-60" :disabled="bulk?.busy || batchOpen || coversOpen" @click="previewBulkTrash">
+          <button type="button" class="rounded-sm bg-accent px-3 py-1.5 font-semibold text-bg disabled:opacity-60" :disabled="bulk?.busy || batchOpen || coversOpen" @click="previewBulkTrash">
             {{ t('media.moveSelectedToTrash') }}
           </button>
         </div>
         <!-- Ad detection over a selection runs in the background: its
              progress stays here, even after the selection is cleared. -->
-        <div v-if="adsBatch" class="mt-3 flex flex-wrap items-center gap-3 rounded border border-line-soft px-3 py-2 text-[13.5px]" aria-live="polite">
+        <div v-if="adsBatch" class="mt-3 flex flex-wrap items-center gap-3 rounded-sm border border-line-soft px-3 py-2 text-[13.5px]" aria-live="polite">
           <span class="text-text">{{ adsBatchText }}</span>
-          <button v-if="adsBatchProgress.active > 0" type="button" class="ms-auto rounded px-2 py-1 text-accent hover:bg-tile-2" @click="stopBatchAds">
+          <button v-if="adsBatchProgress.active > 0" type="button" class="ms-auto rounded-sm px-2 py-1 text-accent hover:bg-tile-2" @click="stopBatchAds">
             {{ t('media.ads.stop') }}
           </button>
-          <button v-else type="button" class="ms-auto rounded px-2 py-1 text-accent hover:bg-tile-2" @click="adsBatch = null">
+          <button v-else type="button" class="ms-auto rounded-sm px-2 py-1 text-accent hover:bg-tile-2" @click="adsBatch = null">
             {{ t('media.ads.dismiss') }}
           </button>
         </div>
@@ -201,7 +201,7 @@
         <template v-else>
           <div class="mt-3 flex items-center gap-3 text-[13px]">
             <span class="text-muted">{{ t('media.trashTotal', { count: trash.length, size: formatBytes(trashTotal, locale) }, trash.length) }}</span>
-            <button type="button" class="ms-auto rounded px-2 py-1 text-accent hover:bg-tile-2" @click="previewTrashAction('empty', trash.map((x) => x.path))">
+            <button type="button" class="ms-auto rounded-sm px-2 py-1 text-accent hover:bg-tile-2" @click="previewTrashAction('empty', trash.map((x) => x.path))">
               {{ t('media.emptyTrash') }}
             </button>
           </div>
@@ -218,7 +218,7 @@
                 <span class="shrink-0 whitespace-nowrap font-mono text-[12.5px] tabular-nums text-faint">{{ formatBytes(entry.size, locale) }}</span>
                 <button
                   type="button"
-                  class="shrink-0 rounded px-2 py-1 text-[13px] text-accent hover:bg-tile"
+                  class="shrink-0 rounded-sm px-2 py-1 text-[13px] text-accent hover:bg-tile"
                   :class="{ invisible: trashAction }"
                   @click="previewTrashAction('restore', [entry.path])"
                 >
@@ -226,7 +226,7 @@
                 </button>
                 <button
                   type="button"
-                  class="shrink-0 rounded px-2 py-1 text-[13px] text-onair hover:bg-tile"
+                  class="shrink-0 rounded-sm px-2 py-1 text-[13px] text-onair hover:bg-tile"
                   :class="{ invisible: trashAction }"
                   @click="previewTrashAction('empty', [entry.path])"
                 >
@@ -254,7 +254,7 @@
       :recording="openMovie.cover ? openMovie.filename : undefined"
       @close="openMovie = null"
     >
-      <section v-if="openMovie.description || openMovie.descriptionExtended" class="mt-4 rounded border border-line-soft bg-bg p-3">
+      <section v-if="openMovie.description || openMovie.descriptionExtended" class="mt-4 rounded-sm border border-line-soft bg-bg p-3">
         <h3 class="text-[12.5px] text-faint">{{ t('media.detail.fromRecording') }}</h3>
         <p v-if="openMovie.description" class="mt-1 text-[14px] text-text">{{ openMovie.description }}</p>
         <p v-if="openMovie.descriptionExtended" class="mt-1 whitespace-pre-line text-[13.5px] text-muted">{{ openMovie.descriptionExtended }}</p>
@@ -275,7 +275,7 @@
         <div class="flex flex-wrap items-center gap-2">
           <button
             type="button"
-            class="rounded bg-accent px-3.5 py-1.5 text-[13.5px] font-semibold text-bg disabled:opacity-60"
+            class="rounded-sm bg-accent px-3.5 py-1.5 text-[13.5px] font-semibold text-bg disabled:opacity-60"
             :disabled="playing"
             @click="playOnTv(openMovie)"
           >
@@ -284,7 +284,7 @@
           <RouterLink
             v-if="streamHubOn && openMovie.filename.endsWith('.ts')"
             :to="{ path: '/stream', query: { recording: openMovie.filename, title: openMovie.title, length: openMovie.length, channel: openMovie.serviceName } }"
-            class="rounded border border-line px-3.5 py-1.5 text-[13.5px] text-text hover:bg-field"
+            class="rounded-sm border border-line px-3.5 py-1.5 text-[13.5px] text-text hover:bg-field"
           >
             {{ t('media.detail.watchInBrowser') }}
           </RouterLink>

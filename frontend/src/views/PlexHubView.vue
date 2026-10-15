@@ -39,10 +39,10 @@
     <p v-if="loading" class="mt-5 text-[14px] text-muted">{{ t('common.loading') }}</p>
 
     <!-- Not set up: say what it is and where to set it up. -->
-    <section v-else-if="status && !status.configured" class="mt-5 rounded border border-line bg-tile p-5">
+    <section v-else-if="status && !status.configured" class="mt-5 rounded-sm border border-line bg-tile p-5">
       <h2 class="text-[15.5px] font-semibold">{{ t('plex.setup.title') }}</h2>
       <p class="mt-1 text-[13.5px] text-muted">{{ t('plex.setup.body') }}</p>
-      <RouterLink to="/settings/services#plex" class="mt-3 inline-block rounded bg-accent px-3.5 py-1.5 text-[13.5px] font-semibold text-bg">
+      <RouterLink to="/settings/services#plex" class="mt-3 inline-block rounded-sm bg-accent px-3.5 py-1.5 text-[13.5px] font-semibold text-bg">
         {{ t('plex.setup.action') }}
       </RouterLink>
     </section>
@@ -67,7 +67,7 @@
           <p class="mt-3 line-clamp-5 text-[13.5px] text-text">{{ show.summary }}</p>
           <button
             type="button"
-            class="mt-3 rounded px-2 py-1 text-[13.5px] text-accent hover:bg-tile-2 disabled:text-faint"
+            class="mt-3 rounded-sm px-2 py-1 text-[13.5px] text-accent hover:bg-tile-2 disabled:text-faint"
             :disabled="!online || !!planFor"
             @click="previewWatched(show, !show.watched)"
           >
@@ -103,7 +103,7 @@
           <span class="text-muted">{{ t('plex.episodesSeen', { seen: season.viewedLeafCount ?? 0, total: season.leafCount ?? episodes.length }) }}</span>
           <button
             type="button"
-            class="rounded px-2 py-1 text-accent hover:bg-tile-2 disabled:text-faint"
+            class="rounded-sm px-2 py-1 text-accent hover:bg-tile-2 disabled:text-faint"
             :disabled="!online || !!planFor"
             @click="previewWatched(season, !season.watched)"
           >
@@ -158,15 +158,15 @@
           type="search"
           :placeholder="t('plex.filterPlaceholder')"
           :aria-label="t('plex.filterPlaceholder')"
-          class="w-56 max-w-full rounded border border-line bg-field px-2.5 py-1.5 text-[13px] text-text below-sm:w-full"
+          class="w-56 max-w-full rounded-sm border border-line bg-field px-2.5 py-1.5 text-[13px] text-text below-sm:w-full"
         />
-        <select v-model="seenFilter" class="rounded border border-line bg-field px-2 py-1.5 text-[13px] text-text" :aria-label="t('plex.filter.label')">
+        <select v-model="seenFilter" class="rounded-sm border border-line bg-field px-2 py-1.5 text-[13px] text-text" :aria-label="t('plex.filter.label')">
           <option value="all">{{ t('plex.filter.all') }}</option>
           <option value="unwatched">{{ t('plex.filter.unwatched') }}</option>
           <option value="started">{{ t('plex.filter.started') }}</option>
           <option value="watched">{{ t('plex.filter.watched') }}</option>
         </select>
-        <select v-model="sort" class="rounded border border-line bg-field px-2 py-1.5 text-[13px] text-text" :aria-label="t('plex.sort.label')">
+        <select v-model="sort" class="rounded-sm border border-line bg-field px-2 py-1.5 text-[13px] text-text" :aria-label="t('plex.sort.label')">
           <option value="title">{{ t('plex.sort.title') }}</option>
           <option value="added">{{ t('plex.sort.added') }}</option>
           <option value="year">{{ t('plex.sort.year') }}</option>
@@ -174,12 +174,12 @@
         </select>
         <span class="ms-auto text-[12.5px] text-faint tabular-nums">{{ t('plex.count', { n: shownItems.length }, shownItems.length) }}</span>
         <!-- Tiles or list: a small segmented switch. -->
-        <div class="flex rounded bg-field p-0.5" role="group" :aria-label="t('plex.view.label')">
+        <div class="flex rounded-sm bg-field p-0.5" role="group" :aria-label="t('plex.view.label')">
           <button
             v-for="v in (['grid', 'list'] as const)"
             :key="v"
             type="button"
-            class="flex items-center gap-1.5 rounded px-2 py-1 text-[12.5px]"
+            class="flex items-center gap-1.5 rounded-sm px-2 py-1 text-[12.5px]"
             :class="view === v ? 'bg-tile text-text' : 'text-muted hover:text-text'"
             :aria-pressed="view === v"
             @click="view = v"
@@ -226,7 +226,7 @@
     <!-- A short notice at the bottom, with Undo after marking. -->
     <div
       v-if="notice"
-      class="fixed inset-x-0 bottom-5 z-50 mx-auto flex w-fit max-w-[calc(100%-2rem)] items-center gap-3 rounded border border-line bg-tile-2 px-4 py-2.5 text-[13.5px] text-text shadow-lg"
+      class="fixed inset-x-0 bottom-5 z-50 mx-auto flex w-fit max-w-[calc(100%-2rem)] items-center gap-3 rounded-sm border border-line bg-tile-2 px-4 py-2.5 text-[13.5px] text-text shadow-lg"
       role="status"
     >
       <span class="min-w-0">{{ notice.text }}</span>

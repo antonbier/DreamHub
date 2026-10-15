@@ -19,14 +19,14 @@
         :class="modelValue ? 'bg-accent justify-end' : 'bg-field justify-start'"
         @click="$emit('update:modelValue', !modelValue)"
       >
-        <span class="h-5 w-5 rounded-full bg-tile shadow" />
+        <span class="h-5 w-5 rounded-full bg-tile shadow-sm" />
       </button>
 
       <!-- enum -->
       <select
         v-else-if="field.type === 'enum'"
         :id="inputId"
-        class="w-full rounded border border-line bg-field px-2.5 py-1.5 text-[14px] text-text"
+        class="w-full rounded-sm border border-line bg-field px-2.5 py-1.5 text-[14px] text-text"
         :value="modelValue"
         @change="$emit('update:modelValue', ($event.target as HTMLSelectElement).value)"
       >
@@ -40,7 +40,7 @@
         type="number"
         :min="field.min"
         :max="field.max"
-        class="w-full rounded border border-line bg-field px-2.5 py-1.5 text-[14px] text-text"
+        class="w-full rounded-sm border border-line bg-field px-2.5 py-1.5 text-[14px] text-text"
         :value="modelValue as number"
         @input="$emit('update:modelValue', Number(($event.target as HTMLInputElement).value))"
       />
@@ -53,7 +53,7 @@
         type="password"
         autocomplete="new-password"
         :placeholder="secretPlaceholder"
-        class="w-full rounded border border-line bg-field px-2.5 py-1.5 text-[14px] text-text"
+        class="w-full rounded-sm border border-line bg-field px-2.5 py-1.5 text-[14px] text-text"
         :value="(modelValue as string) ?? ''"
         @focus="onSecretFocus"
         @blur="onSecretBlur"
@@ -66,7 +66,7 @@
         :id="inputId"
         type="text"
         :placeholder="field.type === 'timezone' ? 'Europe/Rome' : undefined"
-        class="w-full rounded border border-line bg-field px-2.5 py-1.5 text-[14px] text-text"
+        class="w-full rounded-sm border border-line bg-field px-2.5 py-1.5 text-[14px] text-text"
         :value="(modelValue as string) ?? ''"
         @input="$emit('update:modelValue', ($event.target as HTMLInputElement).value)"
       />

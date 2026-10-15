@@ -12,18 +12,18 @@
     <aside
       id="remote-panel"
       :aria-label="t('control.pad.title')"
-      class="z-30 flex w-[320px] shrink-0 flex-col border-s border-line bg-side below-md:fixed below-md:inset-y-0 below-md:end-0 below-md:w-[min(340px,100%)]"
+      class="z-30 flex w-[320px] shrink-0 flex-col border-s border-line bg-side below-md:fixed below-md:inset-y-0 below-md:inset-e-0 below-md:w-[min(340px,100%)]"
       @keydown.esc.stop="close"
     >
       <div class="flex h-14 shrink-0 items-center gap-2 border-b border-line px-3">
         <Icon name="control" :size="18" class="text-muted" />
         <h2 class="flex-1 truncate text-[14px] font-semibold">{{ t('control.pad.title') }}</h2>
-        <RouterLink to="/control" class="rounded px-2 py-1 text-[12.5px] text-accent hover:bg-tile-2">
+        <RouterLink to="/control" class="rounded-sm px-2 py-1 text-[12.5px] text-accent hover:bg-tile-2">
           {{ t('control.panel.openPage') }}
         </RouterLink>
         <button
           type="button"
-          class="flex h-8 w-8 items-center justify-center rounded text-muted hover:bg-tile-2 hover:text-text"
+          class="flex h-8 w-8 items-center justify-center rounded-sm text-muted hover:bg-tile-2 hover:text-text"
           :aria-label="t('control.panel.close')"
           @click="close"
         >

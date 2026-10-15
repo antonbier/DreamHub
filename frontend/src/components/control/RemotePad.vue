@@ -18,12 +18,12 @@
     role="group"
     :aria-label="t('control.pad.title')"
     tabindex="0"
-    class="mx-auto flex w-full max-w-[280px] flex-col gap-3 rounded-lg outline-none focus-visible:ring-2 focus-visible:ring-accent"
+    class="mx-auto flex w-full max-w-[280px] flex-col gap-3 rounded-lg focus-visible:ring-2 focus-visible:ring-accent"
     @keydown="onKeydown"
   >
-    <div v-if="remote.inStandby" class="flex items-center justify-between gap-2 rounded border border-line bg-field px-3 py-2">
+    <div v-if="remote.inStandby" class="flex items-center justify-between gap-2 rounded-sm border border-line bg-field px-3 py-2">
       <span class="text-[12.5px] text-muted">{{ t('control.standby.banner') }}</span>
-      <button type="button" class="shrink-0 rounded bg-accent px-2.5 py-1 text-[12.5px] font-semibold text-bg" @click="press(KEY.POWER)">
+      <button type="button" class="shrink-0 rounded-sm bg-accent px-2.5 py-1 text-[12.5px] font-semibold text-bg" @click="press(KEY.POWER)">
         {{ t('control.standby.wake') }}
       </button>
     </div>
@@ -35,7 +35,7 @@
       <button
         v-if="compact"
         type="button"
-        class="tap rounded border border-line px-3 py-1 text-[13px] font-semibold tabular-nums text-text hover:bg-tile-2"
+        class="tap rounded-sm border border-line px-3 py-1 text-[13px] font-semibold tabular-nums text-text hover:bg-tile-2"
         :class="{ 'bg-tile-2': digitsShown }"
         :title="t('control.pad.digitsHint')"
         :aria-label="t('control.pad.digitsHint')"
@@ -126,7 +126,7 @@
         v-for="c in colorKeys"
         :key="c.code"
         type="button"
-        class="h-7 rounded transition-transform hover:brightness-110 active:scale-95 motion-reduce:transition-none"
+        class="h-7 rounded-sm transition-transform hover:brightness-110 active:scale-95 motion-reduce:transition-none"
         :class="c.bg"
         :aria-label="t(c.label)"
         :title="t(c.label)"
@@ -175,7 +175,7 @@ const keyBase = 'flex items-center justify-center transition-transform hover:bg-
 const base = `${keyBase} text-text`
 const round = `${base} h-10 w-10 rounded-full border border-line`
 const powerKey = `${keyBase} h-10 w-10 rounded-full border border-line text-onair`
-const pill = `${base} h-9 rounded border border-line text-[13px] font-semibold`
+const pill = `${base} h-9 rounded-sm border border-line text-[13px] font-semibold`
 const rocker = `${base} h-11 w-11`
 const arrow = `${base} rounded-full text-muted hover:text-text`
 

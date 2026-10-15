@@ -13,7 +13,7 @@
       <p class="mb-5 text-[13.5px] text-muted">{{ t('unreachable.body') }}</p>
       <button
         type="button"
-        class="w-full rounded bg-accent py-2 text-[14px] font-semibold text-bg disabled:opacity-60"
+        class="w-full rounded-sm bg-accent py-2 text-[14px] font-semibold text-bg disabled:opacity-60"
         :disabled="retrying"
         @click="retry"
       >

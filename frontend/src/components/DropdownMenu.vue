@@ -10,7 +10,7 @@
     </span>
     <div
       v-if="open"
-      class="absolute end-0 z-20 mt-2 min-w-[220px] rounded-lg border border-line bg-tile py-1.5 shadow-lg"
+      class="absolute inset-e-0 z-20 mt-2 min-w-[220px] rounded-lg border border-line bg-tile py-1.5 shadow-lg"
       @keydown.esc="close"
     >
       <slot name="panel" :close="close" />

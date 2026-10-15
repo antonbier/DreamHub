@@ -17,7 +17,7 @@
     <ul class="flex gap-3 overflow-x-auto pb-1">
       <li v-for="it in items" :key="it.ratingKey" class="w-[96px] shrink-0">
         <RouterLink :to="`/plex?item=${it.ratingKey}`" class="group block" :title="text.title(it)">
-          <span class="relative block aspect-[2/3] w-full overflow-hidden rounded border border-line-soft bg-field group-hover:border-accent/60">
+          <span class="relative block aspect-2/3 w-full overflow-hidden rounded-sm border border-line-soft bg-field">
             <PosterImage :plex="it.thumb" :plex-width="240" fill lazy alt="" />
             <span v-if="text.progress(it) !== null" class="absolute inset-x-0 bottom-0 h-[3px] bg-field">
               <span class="block h-full bg-accent" :style="{ width: `${(text.progress(it) ?? 0) * 100}%` }" />

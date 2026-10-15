@@ -88,10 +88,10 @@
         <div class="flex flex-wrap items-center gap-3">
           <h2 class="text-[15.5px] font-semibold text-text">{{ t('timers.autoTimer.title') }}</h2>
           <template v-if="autoTimers?.installed">
-            <button type="button" class="tap rounded px-2 py-1 text-[13px] text-accent hover:bg-tile-2" :disabled="simulating" @click="simulate">
+            <button type="button" class="tap rounded-sm px-2 py-1 text-[13px] text-accent hover:bg-tile-2" :disabled="simulating" @click="simulate">
               {{ simulating ? t('timers.autoTimer.simulating') : t('timers.autoTimer.simulate') }}
             </button>
-            <a :href="autoTimerEditorUrl" target="_blank" rel="noopener" class="tap rounded px-2 py-1 text-[13px] text-accent hover:bg-tile-2">
+            <a :href="autoTimerEditorUrl" target="_blank" rel="noopener" class="tap rounded-sm px-2 py-1 text-[13px] text-accent hover:bg-tile-2">
               {{ t('timers.autoTimer.openEditor') }}
             </a>
           </template>
@@ -114,7 +114,7 @@
               <span class="shrink-0 text-[12.5px] text-faint">{{ at.enabled ? t('timers.autoTimer.enabled') : t('timers.autoTimer.disabled') }}</span>
             </li>
           </ul>
-          <div v-if="simulated !== null" class="mt-3 rounded border border-line-soft bg-bg p-3">
+          <div v-if="simulated !== null" class="mt-3 rounded-sm border border-line-soft bg-bg p-3">
             <p class="mb-1.5 text-[12px] text-faint">{{ t('timers.autoTimer.simulateEyebrow') }}</p>
             <p v-if="simulated.length === 0" class="text-[13px] text-muted">{{ t('timers.autoTimer.simulateNone') }}</p>
             <ul v-else class="flex flex-col">

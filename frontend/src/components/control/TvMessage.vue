@@ -15,22 +15,22 @@
         type="text"
         maxlength="300"
         :placeholder="t('control.message.placeholder')"
-        class="min-w-0 flex-1 rounded border border-line bg-field px-2.5 py-1.5 text-[13.5px] text-text"
+        class="min-w-0 flex-1 rounded-sm border border-line bg-field px-2.5 py-1.5 text-[13.5px] text-text"
       />
       <label class="sr-only" for="tv-message-kind">{{ t('control.message.kind') }}</label>
-      <select id="tv-message-kind" v-model="kind" class="rounded border border-line bg-field px-2 py-1.5 text-[13px] text-text">
+      <select id="tv-message-kind" v-model="kind" class="rounded-sm border border-line bg-field px-2 py-1.5 text-[13px] text-text">
         <option value="info">{{ t('control.message.kinds.info') }}</option>
         <option value="warning">{{ t('control.message.kinds.warning') }}</option>
         <option value="error">{{ t('control.message.kinds.error') }}</option>
       </select>
       <label class="sr-only" for="tv-message-timeout">{{ t('control.message.timeout') }}</label>
-      <select id="tv-message-timeout" v-model.number="timeout" class="rounded border border-line bg-field px-2 py-1.5 text-[13px] text-text">
+      <select id="tv-message-timeout" v-model.number="timeout" class="rounded-sm border border-line bg-field px-2 py-1.5 text-[13px] text-text">
         <option v-for="s in [5, 10, 30, 60]" :key="s" :value="s">{{ t('control.message.seconds', { n: s }) }}</option>
         <option :value="0">{{ t('control.message.untilClosed') }}</option>
       </select>
       <button
         type="submit"
-        class="rounded bg-accent px-3 py-1.5 text-[13px] font-semibold text-bg disabled:opacity-60"
+        class="rounded-sm bg-accent px-3 py-1.5 text-[13px] font-semibold text-bg disabled:opacity-60"
         :disabled="sending || !text.trim()"
       >
         {{ t('control.message.send') }}

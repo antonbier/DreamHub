@@ -6,15 +6,15 @@
   the one hand-built exception to the otherwise fully generic settings page.
 -->
 <template>
-  <section class="rounded border border-line bg-tile p-5">
+  <section class="rounded-sm border border-line bg-tile p-5">
     <h2 class="mb-1 text-[15.5px] font-semibold">{{ t('settings.tokens.title') }}</h2>
     <p class="mb-4 text-[13px] text-muted">{{ t('settings.tokens.subtitle') }}</p>
 
-    <div v-if="created" class="mb-4 rounded border border-accent bg-field p-3.5">
+    <div v-if="created" class="mb-4 rounded-sm border border-accent bg-field p-3.5">
       <p class="mb-2 text-[13px] text-text">{{ t('settings.tokens.createdOnce') }}</p>
       <div class="flex items-center gap-2">
-        <code class="flex-1 overflow-x-auto whitespace-nowrap rounded bg-tile px-2 py-1.5 font-mono text-[12.5px] text-text">{{ created.token }}</code>
-        <button type="button" class="shrink-0 rounded px-2.5 py-1.5 text-[12.5px] text-accent hover:bg-tile-2" @click="copy">
+        <code class="flex-1 overflow-x-auto whitespace-nowrap rounded-sm bg-tile px-2 py-1.5 font-mono text-[12.5px] text-text">{{ created.token }}</code>
+        <button type="button" class="shrink-0 rounded-sm px-2.5 py-1.5 text-[12.5px] text-accent hover:bg-tile-2" @click="copy">
           {{ copied ? t('settings.tokens.copied') : t('settings.tokens.copy') }}
         </button>
       </div>
@@ -46,11 +46,11 @@
         v-model="newName"
         type="text"
         :placeholder="t('settings.tokens.namePlaceholder')"
-        class="max-w-[240px] flex-1 rounded border border-line bg-field px-2.5 py-1.5 text-[14px] text-text"
+        class="max-w-[240px] flex-1 rounded-sm border border-line bg-field px-2.5 py-1.5 text-[14px] text-text"
       />
       <button
         type="submit"
-        class="shrink-0 rounded bg-accent px-3 py-1.5 text-[13px] font-semibold text-bg disabled:opacity-60"
+        class="shrink-0 rounded-sm bg-accent px-3 py-1.5 text-[13px] font-semibold text-bg disabled:opacity-60"
         :disabled="!newName.trim() || creating"
       >
         {{ creating ? t('settings.page.saving') : t('settings.tokens.create') }}

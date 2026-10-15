@@ -4,7 +4,7 @@
   every page above its content when its sidebar entry isn't fine.
 -->
 <template>
-  <div v-if="item && item.status && item.status !== 'available'" class="mt-4 flex gap-2.5 rounded border border-line bg-tile p-4">
+  <div v-if="item && item.status && item.status !== 'available'" class="mt-4 flex gap-2.5 rounded-sm border border-line bg-tile p-4">
     <span class="mt-[7px] h-1.5 w-1.5 shrink-0 rounded-full" :class="item.status === 'degraded' ? 'bg-warn' : 'bg-faint'" />
     <ul class="flex flex-col gap-1 text-[13.5px] text-muted">
       <li v-for="(p, i) in item.problems ?? []" :key="i">

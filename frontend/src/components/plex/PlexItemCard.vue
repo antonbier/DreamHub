@@ -12,11 +12,11 @@
     :aria-label="item.watched ? t('plex.openWatched', { title: item.title }) : t('plex.open', { title: item.title })"
     @click="$emit('open')"
   >
-    <span class="relative block aspect-[2/3] w-full overflow-hidden rounded border border-line-soft bg-field transition-colors group-hover:border-accent/60">
+    <span class="relative block aspect-2/3 w-full overflow-hidden rounded-sm border border-line-soft bg-field transition-colors">
       <PosterImage v-if="item.thumb" :plex="item.thumb" :plex-width="240" fill lazy alt="" />
       <span
         v-if="item.watched"
-        class="absolute end-1.5 top-1.5 flex h-5 w-5 items-center justify-center rounded-full border border-line bg-bg text-ok"
+        class="absolute inset-e-1.5 top-1.5 flex h-5 w-5 items-center justify-center rounded-full border border-line bg-bg text-ok"
         :title="t('plex.watched')"
       >
         <Icon name="check" :size="14" />

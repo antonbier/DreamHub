@@ -10,7 +10,7 @@
     <div class="flex flex-wrap items-center gap-3">
       <div class="flex items-center gap-2">
         <ChannelLogo v-if="channel" :service-reference="channel" :service-name="channelName" :height="22" />
-        <select v-model="channel" class="rounded border border-line bg-field px-3 py-1.5 text-[13.5px] text-text" :aria-label="t('guide.channel')">
+        <select v-model="channel" class="rounded-sm border border-line bg-field px-3 py-1.5 text-[13.5px] text-text" :aria-label="t('guide.channel')">
           <option v-for="c in channelList" :key="c.serviceReference" :value="c.serviceReference">{{ c.serviceName }}</option>
         </select>
       </div>

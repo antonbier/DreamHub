@@ -39,7 +39,7 @@
         <button
           v-if="item.type !== 'show' && item.type !== 'season'"
           type="button"
-          class="rounded px-2 py-1 text-[13px] text-accent opacity-0 hover:bg-tile focus:opacity-100 disabled:text-faint group-hover:opacity-100 below-md:opacity-100"
+          class="rounded-sm px-2 py-1 text-[13px] text-accent opacity-0 hover:bg-tile focus:opacity-100 disabled:text-faint group-hover:opacity-100 below-md:opacity-100"
           :disabled="!online || busy"
           :title="online ? undefined : t('plex.offlineAction')"
           @click="$emit('toggleWatched')"
@@ -49,7 +49,7 @@
         <button
           v-if="canPlay && (item.type === 'movie' || item.type === 'episode')"
           type="button"
-          class="rounded px-2 py-1 text-[13px] text-accent opacity-0 hover:bg-tile focus:opacity-100 disabled:text-faint group-hover:opacity-100 below-md:opacity-100"
+          class="rounded-sm px-2 py-1 text-[13px] text-accent opacity-0 hover:bg-tile focus:opacity-100 disabled:text-faint group-hover:opacity-100 below-md:opacity-100"
           :disabled="!online"
           :title="online ? undefined : t('plex.offlineAction')"
           @click="$emit('play')"

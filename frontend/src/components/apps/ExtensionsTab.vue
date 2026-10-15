@@ -20,7 +20,7 @@
     <p v-else-if="cards.length === 0" class="mt-4 text-[13px] text-faint">{{ t('extensions.empty') }}</p>
 
     <div v-else class="mt-5 flex flex-col gap-4">
-      <section v-for="card in cards" :key="card.id" class="rounded border border-line bg-tile p-4">
+      <section v-for="card in cards" :key="card.id" class="rounded-sm border border-line bg-tile p-4">
         <div class="flex items-center gap-2">
           <Icon :name="card.icon || 'extension'" :size="18" class="text-muted" />
           <h2 class="text-[14px] font-semibold text-text">{{ card.name }}</h2>
@@ -28,7 +28,7 @@
           <button
             v-if="card.settings"
             type="button"
-            class="ms-auto rounded px-2 py-1 text-[12.5px] text-accent hover:bg-tile-2"
+            class="ms-auto rounded-sm px-2 py-1 text-[12.5px] text-accent hover:bg-tile-2"
             :aria-expanded="settingsOpen === card.id"
             @click="settingsOpen = settingsOpen === card.id ? null : card.id"
           >
@@ -77,7 +77,7 @@
             <div v-else-if="w.type === 'action'">
               <button
                 type="button"
-                class="rounded border border-line px-2.5 py-1 text-[12.5px] text-text hover:bg-field disabled:opacity-60"
+                class="rounded-sm border border-line px-2.5 py-1 text-[12.5px] text-text hover:bg-field disabled:opacity-60"
                 :disabled="!!pending"
                 @click="preview(card.id, w)"
               >

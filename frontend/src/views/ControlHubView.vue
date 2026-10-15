@@ -30,18 +30,18 @@
     >
       <!-- Stays in view while scrolling down to the remote on a phone. -->
       <div class="flex flex-col gap-5">
-        <div class="rounded border border-line bg-tile p-3 below-md:sticky below-md:top-0 below-md:z-10">
+        <div class="rounded-sm border border-line bg-tile p-3 below-md:sticky below-md:top-0 below-md:z-10">
           <ScreenView />
         </div>
-        <div class="rounded border border-line bg-tile p-4 below-md:hidden">
+        <div class="rounded-sm border border-line bg-tile p-4 below-md:hidden">
           <TvMessage />
         </div>
       </div>
-      <div class="rounded border border-line bg-tile p-4">
+      <div class="rounded-sm border border-line bg-tile p-4">
         <RemotePad />
       </div>
       <!-- Below 900px the message form follows the remote instead. -->
-      <div class="hidden rounded border border-line bg-tile p-4 below-md:block">
+      <div class="hidden rounded-sm border border-line bg-tile p-4 below-md:block">
         <TvMessage />
       </div>
     </div>

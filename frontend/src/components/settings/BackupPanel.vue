@@ -5,7 +5,7 @@
   (preview-and-confirm, PRINCIPLES.md). Used to live in SystemHub.
 -->
 <template>
-  <section class="rounded border border-line bg-tile p-5">
+  <section class="rounded-sm border border-line bg-tile p-5">
     <h2 class="text-[15.5px] font-semibold">{{ t('system.backup.title') }}</h2>
     <p class="mt-1 text-[13px] text-muted">{{ t('system.backup.body') }}</p>
 
@@ -13,7 +13,7 @@
          size shown before the admin includes it. -->
     <div v-if="appsSection && appsSection.items?.length" class="mt-3">
       <div class="flex items-center gap-2">
-        <input id="backup-include-apps" v-model="includeApps" type="checkbox" class="rounded border-line" />
+        <input id="backup-include-apps" v-model="includeApps" type="checkbox" class="rounded-sm border-line" />
         <label for="backup-include-apps" class="text-[13px] text-text">
           {{ t('system.backup.includeApps', { count: pickedItems.length, size: formatSize(appsTotalSize) }, pickedItems.length) }}
         </label>
@@ -22,19 +22,19 @@
            app's bulk files (Nextcloud's, downloads) are not. -->
       <ul v-if="includeApps" class="ms-6 mt-1.5 flex flex-col gap-1">
         <li v-for="it in appsSection.items" :key="it.id" class="flex items-center gap-2">
-          <input :id="'backup-item-' + it.id" v-model="picked[it.id]" type="checkbox" class="rounded border-line" />
+          <input :id="'backup-item-' + it.id" v-model="picked[it.id]" type="checkbox" class="rounded-sm border-line" />
           <label :for="'backup-item-' + it.id" class="text-[12.5px] text-muted">{{ it.name }} · {{ formatSize(it.sizeBytes) }}</label>
         </li>
       </ul>
     </div>
 
     <div class="mt-3 flex flex-wrap gap-2">
-      <button type="button" class="rounded border border-line px-3 py-1.5 text-[13px] text-text hover:bg-field" @click="download">
+      <button type="button" class="rounded-sm border border-line px-3 py-1.5 text-[13px] text-text hover:bg-field" @click="download">
         {{ t('system.backup.download') }}
       </button>
       <button
         type="button"
-        class="rounded border border-line px-3 py-1.5 text-[13px] text-text hover:bg-field disabled:opacity-60"
+        class="rounded-sm border border-line px-3 py-1.5 text-[13px] text-text hover:bg-field disabled:opacity-60"
         :disabled="restoring"
         @click="fileInput?.click()"
       >

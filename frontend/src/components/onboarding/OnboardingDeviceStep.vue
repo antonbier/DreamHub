@@ -8,7 +8,7 @@
   >
     <p v-if="loading" class="text-[14px] text-muted">{{ t('common.loading') }}</p>
 
-    <div v-else-if="!info" class="rounded border border-line bg-field p-3.5">
+    <div v-else-if="!info" class="rounded-sm border border-line bg-field p-3.5">
       <p class="flex items-center gap-2 text-[13.5px] text-warn">
         <Icon name="warning" :size="14" />
         {{ t('onboarding.device.unreachable') }}
@@ -27,7 +27,7 @@
         <dd class="text-text">{{ info.frontends.map((f) => f.model).join(', ') || '—' }}</dd>
       </dl>
 
-      <div class="mt-1 flex items-center gap-2 rounded border border-line bg-field p-3">
+      <div class="mt-1 flex items-center gap-2 rounded-sm border border-line bg-field p-3">
         <span class="h-1.5 w-1.5 shrink-0 rounded-full" :class="clockDotClass" />
         <span class="text-[13px] text-text">{{ clockText }}</span>
       </div>

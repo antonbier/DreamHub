@@ -18,7 +18,7 @@
       <div v-for="(s, i) in guide.seasons" :key="s.season" class="mt-3 border-b border-line-soft pb-2 last:border-none">
         <button
           type="button"
-          class="flex w-full items-center gap-2 rounded py-1 text-start hover:bg-tile-2"
+          class="flex w-full items-center gap-2 rounded-sm py-1 text-start hover:bg-tile-2"
           :aria-expanded="isOpen(s.season, i)"
           @click="toggle(s.season, i)"
         >

@@ -29,14 +29,14 @@
 
     <template v-if="!item || item.status !== 'unavailable'">
       <div class="mt-5 flex flex-wrap items-center gap-3">
-        <div class="flex items-center gap-1 rounded bg-field p-1 text-[13px]" role="radiogroup" :aria-label="t('guide.views.label')">
+        <div class="flex items-center gap-1 rounded-sm bg-field p-1 text-[13px]" role="radiogroup" :aria-label="t('guide.views.label')">
           <button
             v-for="v in VIEWS"
             :key="v"
             type="button"
             role="radio"
             :aria-checked="view === v"
-            class="rounded px-2.5 py-1"
+            class="rounded-sm px-2.5 py-1"
             :class="view === v ? 'bg-tile text-text' : 'text-muted hover:text-text'"
             @click="view = v"
           >
@@ -46,7 +46,7 @@
         <select
           v-if="bouquets.length > 1"
           v-model="selectedBouquet"
-          class="rounded border border-line bg-field px-3 py-1.5 text-[13.5px] text-text"
+          class="rounded-sm border border-line bg-field px-3 py-1.5 text-[13.5px] text-text"
           :aria-label="t('guide.bouquet')"
         >
           <option v-for="b in bouquets" :key="b.serviceReference" :value="b.serviceReference">{{ b.serviceName }}</option>
@@ -56,7 +56,7 @@
             type="button"
             :aria-pressed="moviesOnly"
             class="tap rounded-full border px-2.5 py-0.5"
-            :class="moviesOnly ? 'border-accent bg-accent/15 text-text' : 'border-line text-muted hover:text-text'"
+            :class="moviesOnly ? 'border-accent text-text' : 'border-line text-muted hover:text-text'"
             @click="moviesOnly = !moviesOnly"
           >
             {{ t('guide.filters.movies') }}
@@ -65,7 +65,7 @@
             type="button"
             :aria-pressed="topRated"
             class="tap rounded-full border px-2.5 py-0.5"
-            :class="topRated ? 'border-accent bg-accent/15 text-text' : 'border-line text-muted hover:text-text'"
+            :class="topRated ? 'border-accent text-text' : 'border-line text-muted hover:text-text'"
             @click="topRated = !topRated"
           >
             {{ t('guide.filters.rated') }}
@@ -102,7 +102,7 @@
       :info="enrich.info(selected.title)"
       @close="closeSelected"
     >
-      <section v-if="selected.description" class="mt-4 rounded border border-line-soft bg-bg p-3">
+      <section v-if="selected.description" class="mt-4 rounded-sm border border-line-soft bg-bg p-3">
         <h3 class="text-[12.5px] text-faint">{{ t('guide.epgText') }}</h3>
         <p class="mt-1 text-[14px] text-text">{{ selected.description }}</p>
       </section>
@@ -127,7 +127,7 @@
             <button
               v-if="!selectedEnded"
               type="button"
-              class="rounded bg-accent px-3.5 py-1.5 text-[13.5px] font-semibold text-bg disabled:opacity-60"
+              class="rounded-sm bg-accent px-3.5 py-1.5 text-[13.5px] font-semibold text-bg disabled:opacity-60"
               :disabled="record.status === 'loading' || !canRecord"
               :title="canRecord ? undefined : t('guide.timerHubUnavailable')"
               @click="previewRecord"
@@ -137,7 +137,7 @@
             <button
               v-if="selectedLive"
               type="button"
-              class="rounded border border-line px-3.5 py-1.5 text-[13.5px] text-text hover:bg-field disabled:opacity-60"
+              class="rounded-sm border border-line px-3.5 py-1.5 text-[13.5px] text-text hover:bg-field disabled:opacity-60"
               :disabled="zapping"
               @click="zapToSelected"
             >
@@ -146,7 +146,7 @@
             <RouterLink
               v-if="selectedLive && streamHubOn"
               :to="{ path: '/stream', query: { ref: selected!.serviceReference } }"
-              class="rounded border border-line px-3.5 py-1.5 text-[13.5px] text-text hover:bg-field"
+              class="rounded-sm border border-line px-3.5 py-1.5 text-[13.5px] text-text hover:bg-field"
             >
               {{ t('media.detail.watchInBrowser') }}
             </RouterLink>

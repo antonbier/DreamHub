@@ -4,7 +4,7 @@
   (DESIGN.md: "At most one filled primary button per tile").
 -->
 <template>
-  <section class="rounded border border-line bg-tile p-5">
+  <section class="rounded-sm border border-line bg-tile p-5">
     <div class="mb-4 flex items-center gap-3">
       <h2 class="text-[15.5px] font-semibold">{{ sectionTitle(section) }}</h2>
       <!-- A connector's state, on the services tab. -->
@@ -28,7 +28,7 @@
     <div v-if="form.sectionDirty(section)" class="mt-5 flex items-center gap-3 border-t border-line-soft pt-4">
       <button
         type="button"
-        class="rounded bg-accent px-3.5 py-1.5 text-[13.5px] font-semibold text-bg disabled:opacity-60"
+        class="rounded-sm bg-accent px-3.5 py-1.5 text-[13.5px] font-semibold text-bg disabled:opacity-60"
         :disabled="form.savingSection.value === section.id"
         @click="save"
       >

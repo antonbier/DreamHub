@@ -27,7 +27,7 @@
         :title="s"
         @click="chooseSet(s)"
       >
-        <LogoThumb :load="() => api.channels.piconInSet(channel.ref, channel.name, s)" />
+        <LogoThumb :load="() => loadSetPicon(s)" />
         <span class="max-w-[110px] truncate text-[11px] text-faint">{{ s }}</span>
       </button>
     </div>
@@ -62,7 +62,7 @@
           :title="r.path"
           @click="chooseOnline(r)"
         >
-          <LogoThumb :load="() => api.channels.logoPreview(r.path)" />
+          <LogoThumb :load="() => loadPreview(r.path)" />
           <span class="max-w-[110px] truncate text-[11px] text-faint">{{ r.name }} · {{ r.country }}</span>
         </button>
       </div>
@@ -133,6 +133,10 @@ async function save(action: () => Promise<unknown>) {
   }
 }
 
+// Thumbnails fetch their picture through these (not `api` straight from the
+// template, which vue-tsc 3 mistakes for a ref).
+const loadSetPicon = (set: string) => api.channels.piconInSet(props.channel.ref, props.channel.name, set)
+const loadPreview = (path: string) => api.channels.logoPreview(path)
 const chooseSet = (set: string) => save(() => api.channels.chooseLogo(props.channel.ref, props.channel.name, set))
 const chooseOnline = (r: LogoResult) => save(() => api.channels.fetchLogo(props.channel.ref, r.path))
 

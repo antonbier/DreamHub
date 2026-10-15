@@ -28,9 +28,7 @@
     "apps": "Apps"
   },
   "status": {
-    "available": "Available",
-    "degraded": "Degraded",
-    "unavailable": "Unavailable"
+    "noDetail": "This isn't working right now."
   },
   "problem": {
     "connector": {
@@ -1104,7 +1102,7 @@
     "logsEmpty": "No log output yet.",
     "logsError": "The logs couldn't be loaded.",
     "logsClose": "Close",
-    "dockerServiceLogs": "Docker service logs",
+    "dockerServiceLogs": "Open service logs on the Device page",
     "console": {
       "open": "Console",
       "title": "Console — {name}",
@@ -1168,7 +1166,8 @@
     "storageFree": "{size} free",
     "storageHint": "Config and data are kept here and survive removing the app. The box's own flash memory is never offered.",
     "installPreview": "Preview",
-    "searchTitle": "Look for other apps on Docker Hub"
+    "searchTitle": "Look for other apps on Docker Hub",
+    "adminOnly": "Only admins can manage apps."
   },
   "timers": {
     "cleanup": {
@@ -1232,7 +1231,7 @@
   },
   "admin": {
     "tabs": {
-      "admin": "Administration",
+      "admin": "Services & logs",
       "advanced": "Advanced"
     },
     "logLevel": {
@@ -1625,7 +1624,6 @@
     "channels": "Channels",
     "bouquet": "Channel list",
     "find": "Find a channel",
-    "sameAsTv": "Same as the TV",
     "onTv": "On the TV",
     "tunerHint": "Another channel needs a free tuner. With one tuner that only works while the TV and recordings are on the same frequency — \"Same as the TV\" always works.",
     "unsupported": "This browser can't play the stream (it lacks WebAssembly or WebCodecs). Current versions of Chrome, Edge, Firefox and Safari can.",
@@ -1643,7 +1641,9 @@
       "data": "Data",
       "frames": "Frames (shown / skipped · buffered)",
       "sync": "Offset · audio gaps"
-    }
+    },
+    "watchTv": "Watch what the TV shows",
+    "play": "Play"
   },
   "plex": {
     "server": "Plex server",

@@ -22,18 +22,7 @@
       <h1 class="text-[26px] font-bold">{{ hubTitle('control', 'hub.control') }}</h1>
     </div>
 
-    <div v-if="item && item.status && item.status !== 'available'" class="mt-4 rounded border border-line bg-tile p-4">
-      <div class="mb-1.5 flex items-center gap-2 text-[13.5px] font-semibold">
-        <span class="h-1.5 w-1.5 rounded-full" :class="item.status === 'degraded' ? 'bg-warn' : 'bg-faint'" />
-        {{ t(`status.${item.status}`) }}
-      </div>
-      <ul class="flex flex-col gap-1 text-[13px] text-muted">
-        <li v-for="(p, i) in item.problems ?? []" :key="i">
-          {{ describe(p) }}
-          <span v-if="describeFix(p)" class="text-faint">{{ ' — ' + describeFix(p) }}</span>
-        </li>
-      </ul>
-    </div>
+    <HubStatusBanner :item="item" />
 
     <div
       v-if="!item || item.status !== 'unavailable'"
@@ -60,6 +49,7 @@
 </template>
 
 <script setup lang="ts">
+import HubStatusBanner from '@/components/HubStatusBanner.vue'
 import { useHubLabel } from '@/composables/useHubLabel'
 import { useI18n } from 'vue-i18n'
 import Icon from '@/components/Icon.vue'
@@ -67,10 +57,8 @@ import RemotePad from '@/components/control/RemotePad.vue'
 import ScreenView from '@/components/control/ScreenView.vue'
 import TvMessage from '@/components/control/TvMessage.vue'
 import { useControlHub } from '@/composables/useControlHub'
-import { useProblem } from '@/composables/useProblem'
 
 const { t } = useI18n()
 const { hubTitle } = useHubLabel()
-const { describe, describeFix } = useProblem()
 const { item } = useControlHub()
 </script>

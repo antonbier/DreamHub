@@ -12,18 +12,7 @@
       <h1 class="text-[26px] font-bold">{{ hubTitle('series', 'hub.series') }}</h1>
     </div>
 
-    <div v-if="item && item.status && item.status !== 'available'" class="mt-4 rounded border border-line bg-tile p-4">
-      <div class="mb-1.5 flex items-center gap-2 text-[13.5px] font-semibold">
-        <span class="h-1.5 w-1.5 rounded-full" :class="item.status === 'degraded' ? 'bg-warn' : 'bg-faint'" />
-        {{ t(`status.${item.status}`) }}
-      </div>
-      <ul class="flex flex-col gap-1 text-[13px] text-muted">
-        <li v-for="(p, i) in item.problems ?? []" :key="i">
-          {{ describe(p) }}
-          <span v-if="describeFix(p)" class="text-faint">{{ ' — ' + describeFix(p) }}</span>
-        </li>
-      </ul>
-    </div>
+    <HubStatusBanner :item="item" />
 
     <template v-if="!item || item.status !== 'unavailable'">
       <section class="mt-5 flex flex-wrap items-center justify-between gap-3 rounded border border-line bg-tile p-4">
@@ -105,6 +94,7 @@
 </template>
 
 <script setup lang="ts">
+import HubStatusBanner from '@/components/HubStatusBanner.vue'
 import { useHubLabel } from '@/composables/useHubLabel'
 import ErrorText from '@/components/ErrorText.vue'
 import { computed, onMounted, ref } from 'vue'
@@ -115,7 +105,6 @@ import Icon from '@/components/Icon.vue'
 import PosterImage from '@/components/enrich/PosterImage.vue'
 import { useEnrichStore } from '@/stores/enrich'
 import { useNavigationStore } from '@/stores/navigation'
-import { useProblem } from '@/composables/useProblem'
 import { useDisplayTimeZone } from '@/composables/useDisplayTimeZone'
 import type { SeriesMarker, UpcomingEpisode } from '@/api/types'
 
@@ -123,7 +112,6 @@ const { t, locale } = useI18n()
 const { hubTitle } = useHubLabel()
 const navigation = useNavigationStore()
 const enrich = useEnrichStore()
-const { describe, describeFix } = useProblem()
 const { timeZone } = useDisplayTimeZone()
 
 const item = computed(() => navigation.navigation?.sections.flatMap((s) => s.items).find((i) => i.path === '/series'))

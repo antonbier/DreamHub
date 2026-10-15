@@ -28,9 +28,7 @@
     "apps": "Apps"
   },
   "status": {
-    "available": "Verfügbar",
-    "degraded": "Eingeschränkt",
-    "unavailable": "Nicht verfügbar"
+    "noDetail": "Das funktioniert gerade nicht."
   },
   "problem": {
     "connector": {
@@ -1104,7 +1102,7 @@
     "logsEmpty": "Noch keine Log-Ausgabe.",
     "logsError": "Die Logs konnten nicht geladen werden.",
     "logsClose": "Schließen",
-    "dockerServiceLogs": "Docker-Dienst-Logs",
+    "dockerServiceLogs": "Dienst-Protokolle auf der Geräteseite öffnen",
     "console": {
       "open": "Konsole",
       "title": "Konsole — {name}",
@@ -1168,7 +1166,8 @@
     "storageFree": "{size} frei",
     "storageHint": "Einstellungen und Daten liegen hier und bleiben beim Entfernen der App erhalten. Der Flash-Speicher der Box wird nie angeboten.",
     "installPreview": "Vorschau",
-    "searchTitle": "Weitere Apps auf Docker Hub suchen"
+    "searchTitle": "Weitere Apps auf Docker Hub suchen",
+    "adminOnly": "Apps können nur Administratoren verwalten."
   },
   "timers": {
     "cleanup": {
@@ -1232,7 +1231,7 @@
   },
   "admin": {
     "tabs": {
-      "admin": "Administration",
+      "admin": "Dienste & Protokolle",
       "advanced": "Erweitert"
     },
     "logLevel": {
@@ -1625,7 +1624,6 @@
     "channels": "Sender",
     "bouquet": "Senderliste",
     "find": "Sender suchen",
-    "sameAsTv": "Wie am Fernseher",
     "onTv": "Läuft am Fernseher",
     "tunerHint": "Ein anderer Sender braucht einen freien Tuner. Mit einem Tuner geht das nur, solange Fernseher und Aufnahmen auf derselben Frequenz sind – „Wie am Fernseher“ klappt immer.",
     "unsupported": "Dieser Browser kann den Stream nicht abspielen (ihm fehlen WebAssembly oder WebCodecs). Aktuelle Versionen von Chrome, Edge, Firefox und Safari können es.",
@@ -1643,7 +1641,9 @@
       "data": "Daten",
       "frames": "Bilder (gezeigt / übersprungen · im Puffer)",
       "sync": "Versatz · Tonaussetzer"
-    }
+    },
+    "watchTv": "Ansehen, was der Fernseher zeigt",
+    "play": "Abspielen"
   },
   "plex": {
     "server": "Plex-Server",

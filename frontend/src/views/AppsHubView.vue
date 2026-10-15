@@ -13,14 +13,22 @@
       <h1 class="text-[26px] font-bold">{{ hubTitle('apps', 'hub.apps') }}</h1>
     </div>
 
-    <div class="mt-4 flex gap-1 border-b border-line-soft" role="tablist">
+    <p v-if="!admin" class="mt-4 text-[14px] text-muted">{{ t('apps.adminOnly') }}</p>
+    <template v-else>
+    <div
+      ref="tabBar"
+      class="mt-4 flex gap-1 overflow-x-auto border-b border-line-soft"
+      :class="{ 'scroll-fade': tabsMore }"
+      role="tablist"
+      @scroll.passive="measureTabs"
+    >
       <button
         v-for="id in tabs"
         :key="id"
         type="button"
         role="tab"
         :aria-selected="tab === id"
-        class="border-b-2 px-3 py-2 text-[13.5px] font-semibold"
+        class="shrink-0 whitespace-nowrap border-b-2 px-3 py-2.5 text-[13.5px] font-semibold"
         :class="tab === id ? 'border-accent text-text' : 'border-transparent text-muted hover:text-text'"
         @click="tab = id"
       >
@@ -34,10 +42,12 @@
     <AppsTab v-if="tab === 'apps'" />
     <ExtensionsTab v-else-if="tab === 'extensions'" />
     <SystemTab v-else />
+    </template>
   </div>
 </template>
 
 <script setup lang="ts">
+import { useScrollMore } from '@/composables/useScrollMore'
 import { ref, watch } from 'vue'
 import { useI18n } from 'vue-i18n'
 import { useRoute, useRouter } from 'vue-router'
@@ -46,9 +56,13 @@ import AppsTab from '@/components/apps/AppsTab.vue'
 import ExtensionsTab from '@/components/apps/ExtensionsTab.vue'
 import SystemTab from '@/components/apps/SystemTab.vue'
 import { useHubLabel } from '@/composables/useHubLabel'
+import { useAuth } from '@/composables/useAuth'
 
 const { t } = useI18n()
+const tabBar = ref<HTMLElement | null>(null)
+const { more: tabsMore, measure: measureTabs } = useScrollMore(tabBar)
 const { hubTitle } = useHubLabel()
+const admin = useAuth().can('system')
 const route = useRoute()
 const router = useRouter()
 

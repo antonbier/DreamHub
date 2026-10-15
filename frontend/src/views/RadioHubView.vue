@@ -21,18 +21,7 @@
     </div>
     <p class="mt-1 text-[13.5px] text-muted">{{ t('radio.intro') }}</p>
 
-    <div v-if="item && item.status && item.status !== 'available'" class="mt-4 rounded border border-line bg-tile p-4">
-      <div class="mb-1.5 flex items-center gap-2 text-[13.5px] font-semibold">
-        <span class="h-1.5 w-1.5 rounded-full" :class="item.status === 'degraded' ? 'bg-warn' : 'bg-faint'" />
-        {{ t(`status.${item.status}`) }}
-      </div>
-      <ul class="flex flex-col gap-1 text-[13px] text-muted">
-        <li v-for="(p, i) in item.problems ?? []" :key="i">
-          {{ describe(p) }}
-          <span v-if="describeFix(p)" class="text-faint">{{ ' — ' + describeFix(p) }}</span>
-        </li>
-      </ul>
-    </div>
+    <HubStatusBanner :item="item" />
 
     <template v-if="!item || item.status !== 'unavailable'">
       <p v-if="bouquetsLoading" class="mt-5 text-[14px] text-muted">{{ t('common.loading') }}</p>
@@ -273,6 +262,7 @@
 </template>
 
 <script setup lang="ts">
+import HubStatusBanner from '@/components/HubStatusBanner.vue'
 import { useHubLabel } from '@/composables/useHubLabel'
 import ErrorText from '@/components/ErrorText.vue'
 import { computed, nextTick, onBeforeUnmount, onMounted, ref, shallowRef, watch, watchEffect } from 'vue'
@@ -285,7 +275,6 @@ import ProgrammeDialog from '@/components/programme/ProgrammeDialog.vue'
 import ChannelLogo from '@/components/guide/ChannelLogo.vue'
 import { usePlanError } from '@/composables/usePlanError'
 import { useNavigationStore } from '@/stores/navigation'
-import { useProblem } from '@/composables/useProblem'
 import { useDisplayTimeZone } from '@/composables/useDisplayTimeZone'
 import { formatWhen } from '@/lib/format'
 import { TsPlayer, type PlayerState } from '@/streaming/tsPlayer'
@@ -297,7 +286,6 @@ const BOUQUET_KEY = 'dreamhub.radioBouquet'
 const { t, locale } = useI18n()
 const { hubTitle } = useHubLabel()
 const navigation = useNavigationStore()
-const { describe, describeFix } = useProblem()
 const { timeZone } = useDisplayTimeZone()
 const { planErrorMessage } = usePlanError()
 const route = useRoute()

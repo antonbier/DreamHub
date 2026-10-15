@@ -28,9 +28,7 @@
     "apps": "App"
   },
   "status": {
-    "available": "Disponibile",
-    "degraded": "Limitato",
-    "unavailable": "Non disponibile"
+    "noDetail": "Al momento non funziona."
   },
   "problem": {
     "connector": {
@@ -1104,7 +1102,7 @@
     "logsEmpty": "Ancora nessun log.",
     "logsError": "I log non sono stati caricati.",
     "logsClose": "Chiudi",
-    "dockerServiceLogs": "Log del servizio Docker",
+    "dockerServiceLogs": "Apri i log del servizio nella pagina Dispositivo",
     "console": {
       "open": "Console",
       "title": "Console — {name}",
@@ -1168,7 +1166,8 @@
     "storageFree": "{size} liberi",
     "storageHint": "Configurazione e dati restano qui anche se rimuovi l'app. La memoria flash del box non viene mai proposta.",
     "installPreview": "Anteprima",
-    "searchTitle": "Cerca altre app su Docker Hub"
+    "searchTitle": "Cerca altre app su Docker Hub",
+    "adminOnly": "Solo gli amministratori possono gestire le app."
   },
   "timers": {
     "cleanup": {
@@ -1232,7 +1231,7 @@
   },
   "admin": {
     "tabs": {
-      "admin": "Amministrazione",
+      "admin": "Servizi e log",
       "advanced": "Avanzate"
     },
     "logLevel": {
@@ -1625,7 +1624,6 @@
     "channels": "Canali",
     "bouquet": "Lista canali",
     "find": "Cerca un canale",
-    "sameAsTv": "Come sulla TV",
     "onTv": "In onda sulla TV",
     "tunerHint": "Un altro canale richiede un sintonizzatore libero. Con un solo sintonizzatore funziona solo finché TV e registrazioni sono sulla stessa frequenza; «Come sulla TV» funziona sempre.",
     "unsupported": "Questo browser non può riprodurre lo stream (mancano WebAssembly o WebCodecs). Le versioni attuali di Chrome, Edge, Firefox e Safari ci riescono.",
@@ -1643,7 +1641,9 @@
       "data": "Dati",
       "frames": "Fotogrammi (mostrati / saltati · in buffer)",
       "sync": "Scarto · interruzioni audio"
-    }
+    },
+    "watchTv": "Guarda ciò che mostra la TV",
+    "play": "Riproduci"
   },
   "plex": {
     "server": "Server Plex",

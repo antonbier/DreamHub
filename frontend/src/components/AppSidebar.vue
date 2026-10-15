@@ -138,11 +138,13 @@ function toggle() {
 // out instead of shown greyed.
 const { can } = useAuth()
 const admin = computed(() => can('settings.global'))
+// Pages that only an admin can do anything on.
+const adminOnly = new Set(['apps'])
 function forProfile(s: NavSection): NavSection {
   if (admin.value) return s
   return {
     ...s,
-    items: s.items.filter((i) => i.status !== 'unavailable').map((i) => ({ ...i, status: undefined, problems: undefined })),
+    items: s.items.filter((i) => i.status !== 'unavailable' && !adminOnly.has(i.id)).map((i) => ({ ...i, status: undefined, problems: undefined })),
   }
 }
 const mainSections = computed(() => props.sections.filter((s) => s.id !== 'bottom').map(forProfile).filter((s) => s.items.length > 0))
@@ -170,7 +172,7 @@ const NavLink = defineComponent({
     const tooltip = computed(() => {
       const item = props.item
       if (!item.status || item.status === 'available') return props.collapsed ? hubLabel(item) : undefined
-      const parts = [t(`status.${item.status}`)]
+      const parts: string[] = []
       for (const p of item.problems ?? []) {
         parts.push(describe(p))
         const fix = describeFix(p)

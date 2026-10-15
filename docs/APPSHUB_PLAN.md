@@ -259,7 +259,7 @@ Brainstormed with the owner after the first full UX review, with Unraid (Apps + 
 
 ### App10: tabs and naming
 
-Rename the three tabs (Packages / Extensions / Docker), reorder, remember the last tab, move feeds behind the Packages gear, put the Docker setup ("Set up Docker …") into the Docker gear. No new behaviour — structure and wording only; locale keys in de/en/it.
+Rename the three tabs (Packages / Extensions / Docker), reorder, remember the last tab, move feeds behind the Packages gear, put Docker's setup into the Docker gear. Mostly structure and wording, with one addition (owner, 2026-10-15): **Docker is installed *and uninstalled* from there.** Install is today's "Set up Docker …" plan (App7). Uninstall is new and is a plan too: it lists what goes (the two services, the overlay-module loading, the Docker daemon files) and asks one plain question — *also delete the app data?* — with "keep the data" as the default, so apps can come back after a reinstall. It stops and removes containers first, and refuses while a recording is running only if that were needed (it isn't — Docker is separate from enigma2). Locale keys in de/en/it.
 
 ### App11: package information without an AI
 
@@ -297,6 +297,10 @@ Rename the three tabs (Packages / Extensions / Docker), reorder, remember the la
 - **Granular stays** (the owner likes picking what to back up): sections and per-folder items as today (App6/App8).
 - One place, "Backup and restore", covering DreamHub settings, app data and Enigma2 configuration; target HDD or download.
 - **Restore on a new box**: from one backup, bring back settings, the app list (compose + x-dreamhub + chosen values) and the chosen data; apps are reinstalled through the normal plan.
+
+### Extensions grow fields (planned, later)
+
+Owner idea (2026-10-15), like SAP's user-defined fields (UDFs): **an extension can add its own fields to DreamHub's functions** — see `docs/EXTENSIONHUB_PLAN.md` "E5". Not part of App10–App15, but the Extensions tab must be designed so it fits: an extension card will later list "adds fields to: Timers, Recordings …".
 
 ### Order and checks
 

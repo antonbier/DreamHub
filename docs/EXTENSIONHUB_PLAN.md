@@ -106,3 +106,18 @@ The owner's device: a **Sonoff S60TPF** smart plug with "LAN control" on, at `19
 - **On the box**: installed as `dreamhub-ext-ewelink` 0.1.0, runs as its own user `dreamhub-ext-ewelink` with the template's hardening, finds the plug, registers; the card in AppsHub → Extensions reads "Unraid-Steckdose: Geräteschlüssel fehlt" until the key is in `/var/lib/dreamhub-ext-ewelink/config.json`.
 - **Still open**: the one-time key fetch (built once there's a developer account to test it against), reading the S60TPF's real state fields (power/voltage/current names and scaling are guessed from other eWeLink plugs and shown as received), the first real switch (only with Unraid shut down cleanly first), extension-contributed dashboard tiles.
 
+
+### E5: extension-defined fields, like SAP's UDFs (idea, 2026-10-15, nothing built)
+
+**The idea (owner):** an extension can attach its own fields to the things DreamHub already has — a timer, a recording, a channel, a series, a profile — the way SAP lets a customer add user-defined fields to a standard business object. A "Watch together" extension adds *who is watching* to a timer, a "Kids" extension adds *age rating* to a recording, a smart-home extension adds *switch the plug on before this recording* to a timer.
+
+**Principles that fit the existing contract**
+- **Declared, not coded**: the extension's manifest (schema, additive like the widget types) lists fields: the target (`timer`, `recording`, `channel`, `series`, `profile`, …), key, label (de/en/it), type (`text`, `number`, `yesno`, `choice`, `date`), default, who may see/edit. Still **no frontend code**: the core draws the fields in the existing detail views, edit dialogs and list columns with its own widgets.
+- **Stored by the core**, keyed by (extension, target, entity id, key): values survive restarts and — an open decision — also the extension being removed (SAP keeps the column; DreamHub would keep the values hidden until the extension returns, with a "delete its data" choice on removal).
+- **The extension reads and writes values through the API** and is told about changes (an event/webhook), so it can act on them (switch the plug when a timer with that field starts).
+- **Only DreamHub-side**: Enigma2 timers and recordings have no custom attributes, so values live in DreamHub's own database next to the box's ids; if a timer is recreated by the box under a new id the value must follow (match rule needed).
+- **Filter and sort** by such a field in lists (e.g. show timers where *who* = Anna) — the cost question: fine for dozens of items, an index only if needed.
+- **Roles**: a field can be admin-only, or visible to all profiles; kids profiles never see fields marked adult.
+
+**Open questions**: which targets first (timers and recordings are the natural start); id stability across box rebuilds; what happens to values when a field's type changes; how many fields per target before a form gets noisy (a cap, and grouping under the extension's name); whether an extension may also contribute *actions* on an entity (a "⋯" menu entry) — likely the next step after fields.
+

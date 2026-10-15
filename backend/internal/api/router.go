@@ -399,13 +399,13 @@ func recordStatusTransitions(d Deps, r *http.Request, statuses []hub.Status) {
 
 func handleNavigation(d Deps) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
-		statuses, v, err := hubStatuses(d, r)
+		statuses, _, err := hubStatuses(d, r)
 		if err != nil {
 			d.Logger.Error("navigation failed", "requestId", httpx.RequestID(r.Context()), "error", err)
 			httpx.WriteError(w, r, http.StatusInternalServerError, "internal", "could not build navigation")
 			return
 		}
-		httpx.WriteJSON(w, http.StatusOK, d.Hubs.Navigation(statuses, perms(r), v.String(settings.KeyNavLabels)))
+		httpx.WriteJSON(w, http.StatusOK, d.Hubs.Navigation(statuses, perms(r), ""))
 	}
 }
 

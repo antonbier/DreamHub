@@ -14,6 +14,11 @@
   <UnreachableScreen v-else-if="authState.unreachable" :check="check" @retry="onRetried" />
   <LoginScreen v-else-if="!authState.authenticated" @success="onAuthenticated" />
   <ProfilePicker v-else-if="authState.profileRequired" @chosen="onProfileChosen" />
+  <!-- The setup wizard has the whole screen to itself: no menu, no search,
+       nothing to wander off to before the box is set up. -->
+  <main v-else-if="route.name === 'onboarding'" class="h-screen w-screen overflow-y-auto bg-bg text-text">
+    <RouterView />
+  </main>
   <div v-else class="flex h-screen w-screen overflow-hidden bg-bg text-text">
     <!-- First stop for keyboard users: past sidebar and top bar. -->
     <a
@@ -81,6 +86,19 @@ watch(
     await nextTick()
     focusMain()
   },
+)
+
+// Signed in while the address still says /login (a password just typed, a
+// profile just picked, the box answering again): carry on to where the
+// visitor was headed.
+watch(
+  () => authState.authenticated && !authState.profileRequired && !authState.unreachable,
+  (inShell) => {
+    if (!inShell || route.name !== 'login') return
+    const target = typeof route.query.redirect === 'string' && route.query.redirect.startsWith('/') ? route.query.redirect : '/'
+    void router.replace(target)
+  },
+  { flush: 'post' },
 )
 
 // Shown only while the backend has never answered yet, so the sidebar

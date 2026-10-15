@@ -22,7 +22,7 @@
       <input
         v-if="selectable"
         type="checkbox"
-        class="h-4 w-4 shrink-0 accent-[var(--dh-accent)]"
+        class="tap h-4 w-4 shrink-0 accent-[var(--dh-accent)]"
         :checked="selected"
         :aria-label="t('media.select', { title: movie.title })"
         @change="emit('toggle')"
@@ -60,7 +60,7 @@
       <span v-if="actions" class="flex shrink-0 below-sm:basis-full below-sm:justify-end">
         <button
           type="button"
-          class="shrink-0 rounded px-2 py-1 text-[13px] text-accent opacity-0 hover:bg-tile focus:opacity-100 group-hover:opacity-100 below-md:opacity-100"
+          class="tap shrink-0 rounded px-2 py-1 text-[13px] text-accent opacity-0 hover:bg-tile focus:opacity-100 group-hover:opacity-100 below-md:opacity-100"
           :class="{ invisible: state }"
           :disabled="!!state"
           @click="emit('rename')"
@@ -69,7 +69,7 @@
         </button>
         <button
           type="button"
-          class="shrink-0 rounded px-2 py-1 text-[13px] text-accent opacity-0 hover:bg-tile focus:opacity-100 group-hover:opacity-100 below-md:opacity-100"
+          class="tap shrink-0 rounded px-2 py-1 text-[13px] text-accent opacity-0 hover:bg-tile focus:opacity-100 group-hover:opacity-100 below-md:opacity-100"
           :class="{ invisible: state }"
           :disabled="!!state"
           @click="emit('trash')"
@@ -80,7 +80,7 @@
     </div>
 
     <div v-if="state" class="pb-3">
-      <form v-if="state.kind === 'rename' && !state.plan" class="flex flex-wrap items-center gap-2" @submit.prevent="emit('previewRename', draft, changeTitle ? titleDraft : undefined)">
+      <form v-if="state.kind === 'rename' && !state.plan" class="flex flex-wrap items-center gap-2" @submit.prevent="emit('previewRename', draft, titleDraft.trim() !== movie.title ? titleDraft : undefined)">
         <label class="sr-only" :for="inputId">{{ t('media.newName') }}</label>
         <input
           :id="inputId"
@@ -90,30 +90,26 @@
           class="min-w-0 flex-1 rounded border border-line bg-field px-2.5 py-1.5 font-mono text-[13px] text-text"
           spellcheck="false"
         />
-        <span class="font-mono text-[13px] text-faint">.ts</span>
+        <span class="font-mono text-[13px] text-faint" aria-hidden="true">.ts</span>
         <button type="button" class="rounded px-3 py-1.5 text-[13px] text-text hover:bg-field" @click="emit('cancel')">{{ t('plan.cancel') }}</button>
         <button type="submit" class="rounded bg-accent px-3 py-1.5 text-[13px] font-semibold text-bg disabled:opacity-60" :disabled="state.busy || draft.trim() === ''">
           {{ t('media.previewRename') }}
         </button>
         <p v-if="state.error" class="basis-full text-[12.5px] text-warn">{{ state.error }}</p>
 
-        <!-- The title the box's own movie list shows (.ts.meta), optional. -->
-        <div class="flex basis-full flex-wrap items-center gap-2">
-          <label class="flex items-center gap-2 text-[13px] text-text">
-            <input v-model="changeTitle" type="checkbox" class="accent-[var(--dh-accent)]" />
-            {{ t('media.changeTitle') }}
-          </label>
-          <template v-if="changeTitle">
-            <label class="sr-only" :for="inputId + '-title'">{{ t('media.newTitle') }}</label>
-            <input
-              :id="inputId + '-title'"
-              v-model="titleDraft"
-              type="text"
-              maxlength="200"
-              class="min-w-0 flex-1 rounded border border-line bg-field px-2.5 py-1.5 text-[13px] text-text"
-            />
-          </template>
-        </div>
+        <!-- Two names, said plainly: the file's and the title the box's own
+             recording list shows (.ts.meta). The title is only changed when
+             it is edited here. -->
+        <p class="basis-full text-[12.5px] text-faint">{{ t('media.nameHint') }}</p>
+        <label class="flex basis-full flex-wrap items-center gap-2 text-[13px] text-muted">
+          <span class="shrink-0">{{ t('media.newTitle') }}</span>
+          <input
+            v-model="titleDraft"
+            type="text"
+            maxlength="200"
+            class="min-w-0 flex-1 rounded border border-line bg-field px-2.5 py-1.5 text-[13px] text-text"
+          />
+        </label>
 
         <!-- Name suggestions: each fills the box; the rename still goes
              through the preview. -->
@@ -262,7 +258,6 @@ const inputId = `rename-${Math.random().toString(36).slice(2)}`
 const nameInput = ref<HTMLInputElement | null>(null)
 const baseName = () => fileName(props.movie.filename).replace(/\.ts$/, '')
 const draft = ref(baseName())
-const changeTitle = ref(false)
 const titleDraft = ref(props.movie.title)
 
 // Opening the rename form starts from the current name, focused and selected.
@@ -272,7 +267,6 @@ watch(
     if (!open) return
     if (!props.state?.error) {
       draft.value = baseName()
-      changeTitle.value = false
       titleDraft.value = props.movie.title
     }
     await nextTick()

@@ -26,7 +26,7 @@ func TestPackageWarnings_Cascade(t *testing.T) {
 // Removing ffmpeg would take AdScan and trimming with it.
 func TestPackageWarnings_NeededByHub(t *testing.T) {
 	w := packageWarnings([]apt.Step{{Kind: "remove", Name: "ffmpeg"}}, []string{"ffmpeg"})
-	if len(w) != 1 || w[0].Code != CodePackageNeededByHub || w[0].Params["hubs"] != "MediaHub" {
+	if len(w) != 1 || w[0].Code != CodePackageNeededByHub || w[0].Params["hubs"] != "media" {
 		t.Fatalf("got %+v", w)
 	}
 	if w := packageWarnings([]apt.Step{{Kind: "upgrade", Name: "ffmpeg"}}, []string{"ffmpeg"}); len(w) != 0 {

@@ -99,7 +99,7 @@
                 <h3 class="truncate text-[13.5px] font-semibold text-text">{{ app.name }}</h3>
                 <span class="rounded-full bg-tile-2 px-2 py-0.5 text-[11px] text-muted">{{ t('apps.category.' + app.category) }}</span>
               </div>
-              <p class="mt-0.5 text-[12.5px] text-muted">{{ app.description }}</p>
+              <p class="mt-0.5 text-[12.5px] text-muted">{{ te('apps.desc.' + app.id) ? t('apps.desc.' + app.id) : app.description }}</p>
               <p class="mt-0.5 text-[12px] text-faint">
                 <span v-if="app.services?.length">{{ t('apps.withServices', { services: app.services.map(serviceLabel).join(', ') }) }} · </span>
                 <span v-if="app.port">{{ t('apps.port', { port: app.port }) }} · </span>

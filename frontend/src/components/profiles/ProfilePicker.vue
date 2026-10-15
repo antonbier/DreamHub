@@ -53,7 +53,7 @@
             >
               <ProfileAvatar :name="p.name" :color="p.color" :size="72" />
               <span class="max-w-full truncate text-[14.5px] font-semibold">{{ p.name }}</span>
-              <span v-if="p.hasPin" class="text-[12px] text-faint">{{ t('profiles.picker.hasPin') }}</span>
+              <span v-if="p.hasPin" class="flex items-center gap-1 text-[12px] text-muted"><Icon name="lock" :size="13" />{{ t('profiles.picker.hasPin') }}</span>
             </button>
           </li>
         </ul>
@@ -67,6 +67,7 @@
 import { nextTick, onMounted, ref } from 'vue'
 import { useI18n } from 'vue-i18n'
 import ProfileAvatar from './ProfileAvatar.vue'
+import Icon from '@/components/Icon.vue'
 import { api, ApiError } from '@/api/client'
 import { authState, setProfileToken } from '@/api/authState'
 import type { Profile } from '@/api/types'

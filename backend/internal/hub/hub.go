@@ -70,13 +70,13 @@ type Descriptor struct {
 	Packages []string
 }
 
-// PackageNeeds maps each package name in descs' Packages to the names of
-// the hubs that need it, in descs' order.
+// PackageNeeds maps each package name in descs' Packages to the ids of
+// the hubs that need it (the UI turns an id into the translated page name), in descs' order.
 func PackageNeeds(descs []Descriptor) map[string][]string {
 	needs := map[string][]string{}
 	for _, d := range descs {
 		for _, p := range d.Packages {
-			needs[p] = append(needs[p], d.Name)
+			needs[p] = append(needs[p], d.ID)
 		}
 	}
 	return needs
@@ -236,10 +236,9 @@ func (r *Registry) Statuses(v settings.Values, reports map[string]connector.Repo
 			if ok && own[j].Enabled && own[j].Level != status.Unavailable {
 				continue
 			}
+			// The id, not the internal hub name: the UI shows the translated
+			// page name ("Timers"), never "TimerHub".
 			name := req.Hub
-			if ok {
-				name = own[j].Name
-			}
 			out[i].Level = worse(out[i].Level, failLevel(req))
 			p := status.Problem{Code: status.CodeHubDependencyUnavailable, Params: map[string]any{"hub": name}}
 			if ok && !own[j].Enabled {

@@ -18,25 +18,20 @@
       <h1 class="text-[26px] font-bold">{{ hubTitle('device', 'hub.device') }}</h1>
     </div>
 
-    <div v-if="item && item.status && item.status !== 'available'" class="mt-4 rounded border border-line bg-tile p-4">
-      <div class="mb-1.5 flex items-center gap-2 text-[13.5px] font-semibold">
-        <span class="h-1.5 w-1.5 rounded-full" :class="item.status === 'degraded' ? 'bg-warn' : 'bg-faint'" />
-        {{ t(`status.${item.status}`) }}
-      </div>
-      <ul class="flex flex-col gap-1 text-[13px] text-muted">
-        <li v-for="(p, i) in item.problems ?? []" :key="i">
-          {{ describe(p) }}
-          <span v-if="describeFix(p)" class="text-faint">{{ ' — ' + describeFix(p) }}</span>
-        </li>
-      </ul>
-    </div>
+    <HubStatusBanner :item="item" />
 
-    <div class="mt-4 flex gap-1 border-b border-line-soft" role="tablist">
+    <div
+      ref="tabBar"
+      class="mt-4 flex gap-1 overflow-x-auto border-b border-line-soft"
+      :class="{ 'scroll-fade': tabsMore }"
+      role="tablist"
+      @scroll.passive="measureTabs"
+    >
       <button
         type="button"
         role="tab"
         :aria-selected="tab === 'overview'"
-        class="border-b-2 px-3 py-2 text-[13.5px] font-semibold"
+        class="shrink-0 whitespace-nowrap border-b-2 px-3 py-2.5 text-[13.5px] font-semibold"
         :class="tab === 'overview' ? 'border-accent text-text' : 'border-transparent text-muted hover:text-text'"
         @click="tab = 'overview'"
       >
@@ -46,7 +41,7 @@
         type="button"
         role="tab"
         :aria-selected="tab === 'diagnostics'"
-        class="border-b-2 px-3 py-2 text-[13.5px] font-semibold"
+        class="shrink-0 whitespace-nowrap border-b-2 px-3 py-2.5 text-[13.5px] font-semibold"
         :class="tab === 'diagnostics' ? 'border-accent text-text' : 'border-transparent text-muted hover:text-text'"
         @click="tab = 'diagnostics'"
       >
@@ -56,7 +51,7 @@
         type="button"
         role="tab"
         :aria-selected="tab === 'admin'"
-        class="border-b-2 px-3 py-2 text-[13.5px] font-semibold"
+        class="shrink-0 whitespace-nowrap border-b-2 px-3 py-2.5 text-[13.5px] font-semibold"
         :class="tab === 'admin' ? 'border-accent text-text' : 'border-transparent text-muted hover:text-text'"
         @click="tab = 'admin'"
       >
@@ -66,7 +61,7 @@
         type="button"
         role="tab"
         :aria-selected="tab === 'advanced'"
-        class="border-b-2 px-3 py-2 text-[13.5px] font-semibold"
+        class="shrink-0 whitespace-nowrap border-b-2 px-3 py-2.5 text-[13.5px] font-semibold"
         :class="tab === 'advanced' ? 'border-accent text-text' : 'border-transparent text-muted hover:text-text'"
         @click="tab = 'advanced'"
       >
@@ -124,9 +119,9 @@
             <li v-for="c in filteredChanges" :key="c.id" class="flex items-start gap-3 border-b border-line-soft py-2 last:border-none">
               <span class="w-36 shrink-0 whitespace-nowrap text-[12px] font-mono text-faint">{{ formatDate(c.at) }}</span>
               <span class="min-w-0 flex-1">
-                <span class="block truncate text-[13.5px] text-text">{{ c.summary }}</span>
-                <span class="block truncate text-[12px] text-faint">
-                  <template v-if="profiles.length > 1">{{ c.userName || (c.userId ? t('system.changes.deletedProfile') : t('system.changes.system')) }} · </template>{{ c.action }}
+                <span class="block truncate text-[13.5px] text-text">{{ changeText(c.summary, t, te) }}</span>
+                <span v-if="profiles.length > 1" class="block truncate text-[12px] text-faint">
+                  <template v-if="profiles.length > 1">{{ c.userName || (c.userId ? t('system.changes.deletedProfile') : t('system.changes.system')) }}</template>
                 </span>
               </span>
             </li>
@@ -304,6 +299,9 @@
 </template>
 
 <script setup lang="ts">
+import HubStatusBanner from '@/components/HubStatusBanner.vue'
+import { useScrollMore } from '@/composables/useScrollMore'
+import { changeText } from '@/lib/changeText'
 import { useHubLabel } from '@/composables/useHubLabel'
 import { useFriendlyError } from '@/composables/useFriendlyError'
 import ErrorText from '@/components/ErrorText.vue'
@@ -323,7 +321,9 @@ import { useProblem } from '@/composables/useProblem'
 import { useDisplayTimeZone } from '@/composables/useDisplayTimeZone'
 import type { ChangeEntry, CrashLog, DeviceInfo, HubStatus, LogEntry, LogLevel, Profile } from '@/api/types'
 
-const { t, locale } = useI18n()
+const { t, te, locale } = useI18n()
+const tabBar = ref<HTMLElement | null>(null)
+const { more: tabsMore, measure: measureTabs } = useScrollMore(tabBar)
 const { hubLabel, hubTitle } = useHubLabel()
 const { lastFriendly } = useFriendlyError()
 const route = useRoute()
@@ -384,7 +384,7 @@ const loadFailed = ref(false)
 const filteredChanges = computed(() => {
   const q = filter.value.trim().toLowerCase()
   if (!q) return changes.value
-  return changes.value.filter((c) => c.summary.toLowerCase().includes(q) || c.action.toLowerCase().includes(q))
+  return changes.value.filter((c) => changeText(c.summary, t, te).toLowerCase().includes(q) || c.summary.toLowerCase().includes(q) || c.action.toLowerCase().includes(q))
 })
 
 // Whose changes: everyone's (-1), a profile's, or the system's own (0) —

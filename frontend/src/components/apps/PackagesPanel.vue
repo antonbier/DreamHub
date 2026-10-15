@@ -98,10 +98,11 @@
         <div class="flex items-baseline gap-2">
           <span class="font-mono text-[13px] text-text">{{ p.name }}</span>
           <span v-if="p.category" class="shrink-0 rounded bg-tile-2 px-1.5 py-0.5 text-[11px] text-faint">{{ p.category }}</span>
-          <span v-if="p.neededBy?.length" class="shrink-0 rounded border border-accent px-1.5 py-0.5 text-[11px] text-accent">{{ t('admin.packages.neededBy', { hubs: p.neededBy.join(', ') }) }}</span>
+          <span v-if="p.neededBy?.length" class="shrink-0 rounded border border-accent px-1.5 py-0.5 text-[11px] text-accent">{{ t('admin.packages.neededBy', { hubs: p.neededBy.map(hubName).join(', ') }) }}</span>
           <button
+            v-if="aiReady"
             type="button"
-            class="ms-auto shrink-0 rounded px-2 py-0.5 text-[12px] text-accent hover:bg-tile-2"
+            class="tap ms-auto shrink-0 rounded px-2 py-0.5 text-[12px] text-accent hover:bg-tile-2"
             :disabled="explaining === p.name"
             @click="explain(p)"
           >
@@ -139,9 +140,11 @@ import { api, ApiError } from '@/api/client'
 import Icon from '@/components/Icon.vue'
 import PlanPreview from '@/components/PlanPreview.vue'
 import { usePlanError } from '@/composables/usePlanError'
+import { useHubLabel } from '@/composables/useHubLabel'
 import type { AdminPackage, PackageRun, PackageStep, Plan } from '@/api/types'
 
 const { t } = useI18n()
+const { hubName } = useHubLabel()
 const { friendly } = useFriendlyError()
 const { planErrorMessage } = usePlanError()
 
@@ -260,5 +263,14 @@ async function explain(p: AdminPackage) {
   }
 }
 
-onMounted(load)
+// The explanation comes from the AI provider: without a key the button
+// would only fail, so it is not offered.
+const aiReady = ref(false)
+onMounted(() => {
+  void load()
+  api
+    .connectors()
+    .then((res) => (aiReady.value = res.connectors.some((c) => c.id === 'openai' && c.state === 'ok')))
+    .catch(() => (aiReady.value = false))
+})
 </script>

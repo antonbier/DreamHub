@@ -138,11 +138,13 @@ function toggle() {
 // out instead of shown greyed.
 const { can } = useAuth()
 const admin = computed(() => can('settings.global'))
+// Pages that only an admin can do anything on.
+const adminOnly = new Set(['apps'])
 function forProfile(s: NavSection): NavSection {
   if (admin.value) return s
   return {
     ...s,
-    items: s.items.filter((i) => i.status !== 'unavailable').map((i) => ({ ...i, status: undefined, problems: undefined })),
+    items: s.items.filter((i) => i.status !== 'unavailable' && !adminOnly.has(i.id)).map((i) => ({ ...i, status: undefined, problems: undefined })),
   }
 }
 const mainSections = computed(() => props.sections.filter((s) => s.id !== 'bottom').map(forProfile).filter((s) => s.items.length > 0))
@@ -155,6 +157,11 @@ const bottomSection = computed(() => {
 // /series); the dashboard at "/" only on exactly "/".
 function isActive(current: string, itemPath: string): boolean {
   return itemPath === '/' ? current === '/' : current === itemPath || current.startsWith(itemPath + '/')
+}
+
+// A page waiting for a key or an address says so, instead of a bare dot.
+function notSetUp(item: NavItem): boolean {
+  return item.status === 'unavailable' && (item.problems ?? []).some((p) => p.code === 'connector.notConfigured')
 }
 
 // One nav row: icon, label (or a tooltip when collapsed), active state and
@@ -170,7 +177,7 @@ const NavLink = defineComponent({
     const tooltip = computed(() => {
       const item = props.item
       if (!item.status || item.status === 'available') return props.collapsed ? hubLabel(item) : undefined
-      const parts = [t(`status.${item.status}`)]
+      const parts: string[] = []
       for (const p of item.problems ?? []) {
         parts.push(describe(p))
         const fix = describeFix(p)
@@ -194,8 +201,13 @@ const NavLink = defineComponent({
         },
         () => [
           h(Icon, { name: props.item.icon, size: 18 }),
-          !props.collapsed ? h('span', { class: 'truncate' }, hubLabel(props.item)) : null,
-          props.item.status && props.item.status !== 'available'
+          !props.collapsed
+            ? h('span', { class: 'flex min-w-0 flex-col leading-tight' }, [
+                h('span', { class: 'truncate' }, hubLabel(props.item)),
+                notSetUp(props.item) ? h('span', { class: 'truncate text-[11.5px] text-faint' }, t('sidebar.notSetUp')) : null,
+              ])
+            : null,
+          props.item.status && props.item.status !== 'available' && !notSetUp(props.item)
             ? h('span', {
                 class: [
                   'ms-auto h-1.5 w-1.5 shrink-0 rounded-full',

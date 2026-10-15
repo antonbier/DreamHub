@@ -55,5 +55,15 @@ export const useEnrichStore = defineStore('enrich', () => {
     return undefined
   }
 
-  return { info, enabled }
+  // Asks whether enrichment is on at all, without looking anything up — for
+  // a screen that offers or hides controls depending on it.
+  async function probe() {
+    try {
+      enabled.value = (await api.enrich.lookup([])).enabled
+    } catch {
+      // Unreachable: keep what is known.
+    }
+  }
+
+  return { info, enabled, probe }
 })

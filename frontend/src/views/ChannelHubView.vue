@@ -18,12 +18,11 @@
         v-for="id in TABS"
         :key="id"
         :to="{ query: { tab: id } }"
-        class="-mb-px shrink-0 whitespace-nowrap border-b-2 px-3 py-2 text-[14px]"
+        class="-mb-px shrink-0 whitespace-nowrap border-b-2 px-3 py-2.5 text-[14px]"
         :class="tab === id ? 'border-accent text-text' : 'border-transparent text-muted hover:text-text'"
         :aria-current="tab === id ? 'page' : undefined"
       >
         {{ t(`channels.tabs.${id}`) }}
-        <span v-if="id === 'check' && issues.length" class="ms-1 text-[12px] text-faint">{{ issues.length }}</span>
       </RouterLink>
     </nav>
 
@@ -205,12 +204,7 @@
       <p v-if="allLoading" class="mt-4 text-[14px] text-muted">{{ t('common.loading') }}</p>
       <p v-else-if="allFailed" class="mt-4 text-[14px] text-muted"><ErrorText /></p>
       <template v-else>
-        <p class="mt-3 flex flex-wrap items-center gap-x-3 text-[12.5px] text-faint" aria-live="polite">
-          <span>{{ t('channels.find.matches', { n: matches.length }, matches.length) }}</span>
-          <span v-if="since">{{ t('channels.find.newSince', { date: date(since) }) }}</span>
-          <button type="button" class="text-accent hover:underline" :disabled="allLoading" :title="t('channels.find.reloadHint')" @click="loadAll(true)">{{ t('channels.find.reload') }}</button>
-        </p>
-        <p class="mt-1 text-[12px] text-faint">{{ t('channels.find.reloadHint') }}</p>
+        <p class="mt-3 text-[12.5px] text-faint" aria-live="polite">{{ t('channels.find.summary', { n: matches.length }, matches.length) }}</p>
         <ul class="mt-2 flex flex-col">
           <li v-for="c in shownMatches" :key="c.ref" class="border-b border-line-soft last:border-none">
             <div class="flex min-h-[52px] items-center gap-3 py-2" :class="{ 'opacity-60': c.gone }">
@@ -233,43 +227,6 @@
         <p v-if="matches.length > shownMatches.length" class="mt-2 text-[13px] text-faint">
           {{ t('channels.find.more', { n: matches.length - shownMatches.length }) }}
         </p>
-      </template>
-    </section>
-
-    <!-- Check -->
-    <section v-else-if="tab === 'check'" class="mt-4">
-      <p v-if="checkLoading" class="text-[14px] text-muted">{{ t('common.loading') }}</p>
-      <p v-else-if="checkFailed" class="text-[14px] text-muted"><ErrorText /></p>
-      <p v-else-if="issues.length === 0" class="text-[14px] text-muted">{{ t('channels.check.allGood') }}</p>
-      <template v-else>
-        <details v-for="(group, gi) in issueGroups" :key="group.kind" class="mb-3 rounded border border-line bg-tile" :open="gi === 0">
-          <summary class="flex cursor-pointer items-center gap-2 px-3 py-2.5">
-            <h2 class="text-[15px] font-semibold">{{ t(`channels.check.${group.kind}.title`) }}</h2>
-            <span class="rounded-full bg-tile-2 px-2 py-0.5 text-[12px] text-muted">{{ group.items.length }}</span>
-          </summary>
-          <p class="px-3 pb-1 text-[13px] text-muted">{{ t(`channels.check.${group.kind}.explain`) }}</p>
-          <ul class="flex flex-col px-3 pb-2">
-            <li v-for="(i, n) in group.items.slice(0, shownIssues[group.kind] ?? 25)" :key="n" class="border-b border-line-soft last:border-none">
-              <div class="flex items-center gap-3 py-2">
-                <span class="flex w-12 shrink-0 justify-center"><ChannelLogo source="channels" :service-reference="i.ref" :service-name="i.name" :height="20" /></span>
-                <span class="min-w-0 flex-1 truncate text-[14px] text-text">{{ i.name }}</span>
-                <button v-if="group.kind === 'noPicon'" type="button" class="shrink-0 text-[12.5px] text-accent hover:underline" @click="toggleLogo(`${n}|${i.ref}`, i)">
-                  {{ t('channels.logo.choose') }}
-                </button>
-                <span class="shrink-0 truncate text-[12.5px] text-faint">{{ i.bouquet }}</span>
-              </div>
-              <ChannelLogoPicker v-if="logoFor?.at === `${n}|${i.ref}`" class="mb-2" :channel="logoFor" @close="logoFor = null" @changed="loadCheck()" />
-            </li>
-          </ul>
-          <button
-            v-if="group.items.length > (shownIssues[group.kind] ?? 25)"
-            type="button"
-            class="mx-3 mb-3 text-[13px] text-accent hover:underline"
-            @click="shownIssues[group.kind] = group.items.length"
-          >
-            {{ t('channels.check.showAll', { n: group.items.length }) }}
-          </button>
-        </details>
       </template>
     </section>
 
@@ -300,6 +257,42 @@
         </label>
       </fieldset>
       <p v-if="chooseMessage" class="mt-2 text-[13px]" :class="chooseFailed ? 'text-warn' : 'text-ok'" role="status">{{ chooseMessage }}</p>
+
+      <!-- Channels without a logo, and the other things the list check finds. -->
+      <section v-for="blk in checkBlocks" :key="blk.title" class="mt-6 border-t border-line-soft pt-4">
+        <h2 class="text-[15.5px] font-semibold">{{ t(blk.title) }}</h2>
+        <p v-if="checkLoading && !checkLoaded" class="mt-2 text-[14px] text-muted">{{ t('common.loading') }}</p>
+        <p v-else-if="checkFailed" class="mt-2 text-[14px] text-muted"><ErrorText /></p>
+        <details v-for="group in blk.groups" :key="group.kind" class="mt-3 rounded border border-line bg-tile" :open="blk.open">
+          <summary class="flex cursor-pointer items-center gap-2 px-3 py-2.5">
+            <h3 class="text-[15px] font-semibold">{{ blk.open ? t('channels.check.shown', { n: group.items.length }, group.items.length) : t(`channels.check.${group.kind}.title`) }}</h3>
+            <span v-if="!blk.open" class="rounded-full bg-tile-2 px-2 py-0.5 text-[12px] text-muted">{{ group.items.length }}</span>
+          </summary>
+          <p class="px-3 pb-1 text-[13px] text-muted">{{ t(`channels.check.${group.kind}.explain`) }}</p>
+          <ul class="flex flex-col px-3 pb-2">
+            <li v-for="(i, n) in group.items.slice(0, shownIssues[group.kind] ?? 25)" :key="n" class="border-b border-line-soft last:border-none">
+              <div class="flex items-center gap-3 py-2">
+                <span class="flex w-12 shrink-0 justify-center"><ChannelLogo source="channels" :service-reference="i.ref" :service-name="i.name" :height="20" /></span>
+                <span class="min-w-0 flex-1 truncate text-[14px] text-text">{{ i.name }}</span>
+                <button v-if="group.kind === 'noPicon'" type="button" class="shrink-0 py-2 text-[12.5px] text-accent hover:underline" @click="toggleLogo(`${n}|${i.ref}`, i)">
+                  {{ t('channels.logo.choose') }}
+                </button>
+                <span class="shrink-0 truncate text-[12.5px] text-faint">{{ i.bouquet }}</span>
+              </div>
+              <ChannelLogoPicker v-if="logoFor?.at === `${n}|${i.ref}`" class="mb-2" :channel="logoFor" @close="logoFor = null" @changed="loadCheck()" />
+            </li>
+          </ul>
+          <button
+            v-if="group.items.length > (shownIssues[group.kind] ?? 25)"
+            type="button"
+            class="mx-3 mb-3 text-[13px] text-accent hover:underline"
+            @click="shownIssues[group.kind] = group.items.length"
+          >
+            {{ t('channels.check.showAll', { n: group.items.length }) }}
+          </button>
+        </details>
+        <p v-if="checkLoaded && blk.groups.length === 0" class="mt-2 text-[14px] text-muted">{{ t(blk.none) }}</p>
+      </section>
 
       <!-- One channel's logo, chosen by hand. -->
       <section class="mt-6 border-t border-line-soft pt-4">
@@ -338,7 +331,7 @@ import { useFriendlyError } from '@/composables/useFriendlyError'
 import { usePlanError } from '@/composables/usePlanError'
 import type { BouquetEntry, ChannelBackup, ChannelBouquet, ChannelInfo, ChannelIssue, PiconSet, Plan } from '@/api/types'
 
-const TABS = ['bouquets', 'find', 'check', 'picons'] as const
+const TABS = ['bouquets', 'find', 'picons'] as const
 type Tab = (typeof TABS)[number]
 
 const { t, locale } = useI18n()
@@ -347,7 +340,11 @@ const { friendly } = useFriendlyError()
 const { planErrorMessage } = usePlanError()
 const { describeChange } = useChannelChange()
 const route = useRoute()
-const tab = computed<Tab>(() => (TABS as readonly string[]).includes(route.query.tab as string) ? (route.query.tab as Tab) : 'bouquets')
+// The old ?tab=check lives under Logos now.
+const tab = computed<Tab>(() => {
+  const q = route.query.tab === 'check' ? 'picons' : route.query.tab
+  return (TABS as readonly string[]).includes(q as string) ? (q as Tab) : 'bouquets'
+})
 
 // "HD"/"UHD" next to a channel's name; nothing for SD and radio.
 const QualityBadge = defineComponent({
@@ -378,10 +375,6 @@ const FilterChip = defineComponent({
       )
   },
 })
-
-function date(unix: number) {
-  return new Intl.DateTimeFormat(locale.value, { dateStyle: 'medium' }).format(unix * 1000)
-}
 
 // --- bouquets ---------------------------------------------------------------
 const bouquets = ref<ChannelBouquet[]>([])
@@ -623,6 +616,13 @@ const ISSUE_ORDER = ['gone', 'duplicate', 'noEpg', 'noPicon'] as const
 const issueGroups = computed(() =>
   ISSUE_ORDER.map((kind) => ({ kind, items: issues.value.filter((i) => i.kind === kind) })).filter((g) => g.items.length > 0),
 )
+// Logos first and open; the rest of the list check below, closed.
+const checkBlocks = computed(() => [
+  { title: 'channels.check.noPicon.title', none: 'channels.check.noneNoPicon', open: true, groups: issueGroups.value.filter((g) => g.kind === 'noPicon') },
+  ...(issueGroups.value.some((g) => g.kind !== 'noPicon')
+    ? [{ title: 'channels.check.others', none: 'channels.check.allGood', open: false, groups: issueGroups.value.filter((g) => g.kind !== 'noPicon') }]
+    : []),
+])
 
 // --- picons -----------------------------------------------------------------
 const sets = ref<PiconSet[]>([])
@@ -684,13 +684,11 @@ const logoMatches = computed(() => {
 function loadTab(t: Tab) {
   if ((t === 'find' || t === 'picons') && !allLoaded.value) void loadAll()
   if (t === 'picons' && !piconsLoaded.value) void loadPicons()
-  if (t === 'check' && !checkLoaded.value) void loadCheck()
+  if (t === 'picons' && !checkLoaded.value) void loadCheck()
 }
 watch(tab, loadTab)
 onMounted(() => {
   void loadBouquets()
-  // The check's count shows on its tab from the start.
-  void loadCheck()
   loadTab(tab.value)
 })
 </script>

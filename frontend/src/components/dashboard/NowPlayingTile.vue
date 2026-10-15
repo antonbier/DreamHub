@@ -9,7 +9,7 @@
 <template>
   <p v-if="loading" class="text-[13px] text-faint">{{ t('common.loading') }}</p>
   <p v-else-if="unavailable" class="text-[13px] text-faint">{{ t('dashboard.nowPlaying.unavailable') }}</p>
-  <div v-else-if="cur">
+  <div v-else-if="cur" class="flex h-full flex-col">
     <div class="flex items-center gap-3">
       <ChannelLogo
         v-if="cur.kind !== 'recording'"
@@ -51,7 +51,7 @@
       <p v-else-if="cur.kind !== 'recording'" class="mt-3 text-[13px] text-faint">{{ t('radio.noEpg') }}</p>
     </template>
 
-    <div class="mt-3 flex flex-wrap items-center gap-1.5">
+    <div class="mt-auto flex flex-wrap items-center gap-1.5 pt-3">
       <template v-if="cur.inStandby">
         <button type="button" class="flex items-center gap-1.5 rounded border border-line px-2.5 py-1 text-[12.5px] text-text hover:bg-field" @click="press(KEY.POWER)">
           <Icon name="power" :size="14" />{{ t('dashboard.nowPlaying.wake') }}
@@ -75,7 +75,7 @@
           <Icon name="mute" :size="16" />
         </button>
       </template>
-      <button type="button" class="ms-auto flex items-center gap-1.5 rounded px-2 py-1 text-[12.5px] text-accent hover:bg-tile-2" @click="remote.setPanelOpen(true)">
+      <button type="button" class="tap ms-auto flex items-center gap-1.5 rounded px-2 py-1 text-[12.5px] text-accent hover:bg-tile-2" @click="remote.setPanelOpen(true)">
         <Icon name="control" :size="14" />{{ t('dashboard.nowPlaying.remote') }}
       </button>
     </div>
@@ -97,7 +97,7 @@ const { t, locale } = useI18n()
 const { timeZone } = useDisplayTimeZone()
 const remote = useRemoteStore()
 
-const iconButton = 'flex h-7 w-7 items-center justify-center rounded border border-line text-text hover:bg-field'
+const iconButton = 'tap flex h-7 w-7 items-center justify-center rounded border border-line text-text hover:bg-field'
 
 const cur = ref<CurrentService | null>(null)
 const loading = ref(true)

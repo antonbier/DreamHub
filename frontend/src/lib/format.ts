@@ -14,7 +14,8 @@ export function formatBytes(bytes: number, locale: string): string {
     style: 'unit',
     unit: UNITS[unit],
     unitDisplay: 'short',
-    maximumFractionDigits: unit >= 3 ? 1 : 0,
+    // 1.5 MB, 830 MB, 1.2 GB: a decimal only where the number is small or big units.
+    maximumFractionDigits: unit >= 3 || (unit >= 1 && value < 10) ? 1 : 0,
   }).format(value)
 }
 

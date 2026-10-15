@@ -119,3 +119,28 @@ progress {
     transition-duration: 0.001ms !important;
   }
 }
+
+/* A sideways-scrolling row with more to see: fade out at the trailing edge
+   (composables/useScrollMore.ts). */
+.scroll-fade {
+  -webkit-mask-image: linear-gradient(to right, #000 calc(100% - 36px), transparent);
+  mask-image: linear-gradient(to right, #000 calc(100% - 36px), transparent);
+}
+[dir='rtl'] .scroll-fade {
+  -webkit-mask-image: linear-gradient(to left, #000 calc(100% - 36px), transparent);
+  mask-image: linear-gradient(to left, #000 calc(100% - 36px), transparent);
+}
+
+/* A small control whose touch target is at least 44px tall without the
+   control itself growing: an invisible hit area around it. */
+.tap {
+  position: relative;
+}
+.tap::after {
+  content: '';
+  position: absolute;
+  inset-inline: 0;
+  top: 50%;
+  height: max(100%, 44px);
+  transform: translateY(-50%);
+}

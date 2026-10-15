@@ -33,15 +33,15 @@
         </ul>
 
         <!-- Browser notifications: only where the browser allows them. -->
-        <div v-if="browserNotes.supported" class="mt-3 border-t border-line-soft pt-2 text-[12.5px]">
-          <button v-if="!browserNotes.active.value" type="button" class="text-accent hover:underline" @click="browserNotes.enable()">
+        <div v-if="browserNotes.supported && (browserNotes.permission.value !== 'denied' || tried)" class="mt-3 border-t border-line-soft pt-2 text-[12.5px]">
+          <button v-if="!browserNotes.active.value" type="button" class="text-accent hover:underline" @click="tried = true; browserNotes.enable()">
             {{ t('notifications.browserOn') }}
           </button>
           <template v-else>
             <span class="text-muted">{{ t('notifications.browserIsOn') }}</span>
             <button type="button" class="ms-2 text-accent hover:underline" @click="browserNotes.disable()">{{ t('notifications.browserOff') }}</button>
           </template>
-          <p v-if="browserNotes.permission.value === 'denied'" class="mt-1 text-faint">{{ t('notifications.browserDenied') }}</p>
+          <p v-if="tried && browserNotes.permission.value === 'denied'" class="mt-1 text-faint">{{ t('notifications.browserDenied') }}</p>
         </div>
 
         <template v-if="notifications.items.length > 0">
@@ -61,7 +61,7 @@
 import { useHubLabel } from '@/composables/useHubLabel'
 import { useAuth } from '@/composables/useAuth'
 import { useBrowserNotifications } from '@/composables/useBrowserNotifications'
-import { computed, onMounted, watch } from 'vue'
+import { computed, onMounted, ref, watch } from 'vue'
 import { useI18n } from 'vue-i18n'
 import Icon from './Icon.vue'
 import DropdownMenu from './DropdownMenu.vue'
@@ -73,6 +73,8 @@ import { useDisplayTimeZone } from '@/composables/useDisplayTimeZone'
 import type { Notification } from '@/api/types'
 
 const { t, locale } = useI18n()
+// The browser's "blocked" note only matters once someone asked for notifications.
+const tried = ref(false)
 const { hubLabel } = useHubLabel()
 const { timeZone } = useDisplayTimeZone()
 const navigation = useNavigationStore()

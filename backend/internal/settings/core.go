@@ -8,7 +8,10 @@ const (
 	KeyTimezoneMode = "general.timezoneMode"
 	KeyTimezone     = "general.timezone"
 	KeyAppearance   = "general.appearance"
-	KeyNavLabels    = "general.navLabels"
+	// KeySetupDone: the first-run wizard has been finished (or skipped) once
+	// on this box. Kept on the box, not per browser, so a second device
+	// doesn't offer the wizard again. Not shown in the settings form.
+	KeySetupDone = "general.setupDone"
 
 	KeyAuthEnabled  = "auth.enabled"
 	KeyAuthUsername = "auth.username"
@@ -44,7 +47,7 @@ func CoreSections() []Section {
 				{Key: KeyTimezoneMode, Type: TypeEnum, Scope: ScopeUser, Label: "settings.general.timezoneMode", Default: "box", Options: []string{"box", "browser", "fixed"}},
 				{Key: KeyTimezone, Type: TypeTimezone, Scope: ScopeUser, Label: "settings.general.timezone", Default: ""},
 				{Key: KeyAppearance, Type: TypeEnum, Scope: ScopeUser, Label: "settings.general.appearance", Default: "dark", Options: []string{"dark", "light", "system"}},
-				{Key: KeyNavLabels, Type: TypeEnum, Scope: ScopeUser, Label: "settings.general.navLabels", Default: "descriptive", Options: []string{"descriptive", "hub"}},
+				{Key: KeySetupDone, Type: TypeBool, Scope: ScopeGlobal, Label: "settings.general.setupDone", Default: false, Hidden: true},
 			},
 			Check: func(v Values) map[string]FieldError {
 				if v.String(KeyTimezoneMode) == "fixed" && v.String(KeyTimezone) == "" {

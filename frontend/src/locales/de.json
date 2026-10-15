@@ -10,7 +10,7 @@
     "group": {
       "media": "Medien",
       "program": "Programm",
-      "device": "Gerät"
+      "device": "Box"
     }
   },
   "hub": {
@@ -28,9 +28,7 @@
     "apps": "Apps"
   },
   "status": {
-    "available": "Verfügbar",
-    "degraded": "Eingeschränkt",
-    "unavailable": "Nicht verfügbar"
+    "noDetail": "Das funktioniert gerade nicht."
   },
   "problem": {
     "connector": {
@@ -45,7 +43,7 @@
       "missing": "Fehlt auf dem Gerät: {capability}"
     },
     "hub": {
-      "dependencyUnavailable": "{hub} ist nicht verfügbar"
+      "dependencyUnavailable": "Braucht „{hub}“, das nicht verfügbar ist."
     },
     "timer": {
       "conflict": "Kollidiert wahrscheinlich mit einer anderen Aufnahme (Tuner: {tuners}). Die Box prüft beim Speichern erneut.",
@@ -65,16 +63,17 @@
       "alsoRemoves": "Entfernt zusätzlich {count} Paket(e), die du nicht ausgewählt hast: {names}.",
       "touchesEnigma2": "Ändert ein TV-Plugin, einen Skin oder enigma2 selbst — wirksam nach einem Neustart von enigma2; manche Pakete starten es selbst neu (das TV-Bild ist dann etwa eine halbe Minute weg).",
       "recordingRunning": "Die Box nimmt gerade auf ({names}); Ausführen geht erst, wenn das vorbei ist.",
-      "neededByHub": "Entfernt {names}, das {hubs} braucht — dieser Teil von DreamHub funktioniert dann nicht mehr."
+      "neededByHub": "Entfernt {names}; DreamHub braucht das für: {hubs}."
     },
     "feed": {
       "unsigned": "Fügt {url} als Quelle hinzu. Ihre Pakete werden mit vollen Rechten auf der Box installiert und sind nicht signiert – nur eine vertrauenswürdige hinzufügen."
-    }
+    },
+    "tmdbOff": "Filmdetails und Bewertungen sind aus. In den Einstellungen unter „TMDB“ einen Schlüssel eintragen, um sie zu sehen."
   },
   "fix": {
     "checkBoxConnection": "Verbindung zur Box prüfen.",
     "configureInSettings": "In den Einstellungen unter „{section}“ konfigurieren.",
-    "enableHub": "{hub} in den Einstellungen aktivieren.",
+    "enableHub": "„{hub}“ in den Einstellungen einschalten.",
     "capability": {
       "journald": "journald ist auf diesem Rechner nicht verfügbar."
     },
@@ -83,7 +82,8 @@
   },
   "sidebar": {
     "collapse": "Seitenleiste einklappen",
-    "expand": "Seitenleiste ausklappen"
+    "expand": "Seitenleiste ausklappen",
+    "notSetUp": "Nicht eingerichtet"
   },
   "topbar": {
     "searchPlaceholder": "Aufnahmen, Timer, Programm durchsuchen…",
@@ -97,11 +97,6 @@
       "dark": "Dunkel",
       "light": "Hell",
       "system": "Systemeinstellung"
-    },
-    "navLabels": {
-      "label": "Beschriftung der Seitenleiste",
-      "descriptive": "Beschreibend",
-      "hub": "Hub-Namen"
     },
     "settings": "Einstellungen",
     "signOut": "Abmelden",
@@ -128,7 +123,7 @@
     "browserOn": "Benachrichtigungen auf diesem Gerät anzeigen",
     "browserIsOn": "Benachrichtigungen auf diesem Gerät sind an",
     "browserOff": "Ausschalten",
-    "browserDenied": "Der Browser blockiert Benachrichtigungen für diese Seite – in den Website-Einstellungen erlauben."
+    "browserDenied": "Dein Browser blockiert Benachrichtigungen für diese Seite. Erlaube sie in den Website-Einstellungen."
   },
   "notification": {
     "recording": {
@@ -160,8 +155,8 @@
     "unreachable": "Nicht erreichbar",
     "clockOk": "Uhr stimmt",
     "clockOff": "Uhr geht {minutes} Min. falsch",
-    "issueSingular": "1 Hub braucht Aufmerksamkeit",
-    "issuePlural": "{count} Hubs brauchen Aufmerksamkeit",
+    "issueSingular": "1 Sache braucht Aufmerksamkeit",
+    "issuePlural": "{count} Dinge brauchen Aufmerksamkeit",
     "label": "Verbindungsstatus"
   },
   "search": {
@@ -196,17 +191,12 @@
       "clockOff": "Die Uhr der Box geht etwa {minutes} Min. falsch — Timer könnten zur falschen Zeit starten."
     },
     "hubs": {
-      "title": "Hubs",
-      "subtitle": "Auswählen, welche Hubs aktiv sein sollen. Später jederzeit in den Einstellungen änderbar."
+      "title": "Funktionen",
+      "subtitle": "Auswählen, welche Funktionen aktiv sein sollen. Später jederzeit in den Einstellungen änderbar."
     },
     "ai": {
       "title": "KI-Empfehlungen",
       "subtitle": "Empfehlungen brauchen einen OpenAI-API-Schlüssel. Ohne Schlüssel einfach überspringen und später nachtragen."
-    },
-    "channels": {
-      "title": "Sender",
-      "subtitle": "Welche Sender für Empfehlungen berücksichtigt werden sollen.",
-      "notBuilt": "Die Senderauswahl ist noch nicht gebaut (dafür wird ein späteres Release gebraucht) — bis dahin berücksichtigen Empfehlungen alle Sender."
     },
     "done": {
       "title": "Fertig eingerichtet",
@@ -221,7 +211,7 @@
     "done": "Fertig",
     "empty": {
       "title": "Noch keine Kacheln",
-      "body": "Das Dashboard füllt sich, sobald die Hubs gebaut sind: Speicherplatz, Konflikte, was gerade läuft, anstehende Timer, Empfehlungen. Eigene Kacheln folgen als Nächstes."
+      "body": "Noch ist nichts auf der Startseite. Mit „Bearbeiten“ lassen sich Kacheln hinzufügen."
     },
     "allHidden": {
       "title": "Nichts anzuzeigen",
@@ -240,28 +230,26 @@
       "mediaRecent": "Neueste Aufnahmen"
     },
     "tileFrame": {
-      "hide": "Ausblenden",
-      "show": "Einblenden",
+      "hide": "Von der Startseite entfernen",
+      "show": "Auf der Startseite zeigen",
       "hidden": "Ausgeblendet",
-      "widthDecrease": "Schmaler",
-      "widthIncrease": "Breiter",
       "dragHandle": "Zum Umsortieren ziehen",
-      "remove": "Entfernen"
+      "remove": "Kachel löschen"
     },
     "timersTile": {
       "empty": "Keine anstehenden Timer.",
-      "unavailable": "Timer ist nicht verfügbar."
+      "unavailable": "Timer sind nicht verfügbar."
     },
     "hubsTile": {
-      "allOk": "Alle Hubs sind verfügbar."
+      "allOk": "Alles läuft."
     },
     "mediaDiskTile": {
       "empty": "Keine Speicherinformationen.",
-      "unavailable": "Aufnahmen ist nicht verfügbar."
+      "unavailable": "Aufnahmen sind nicht verfügbar."
     },
     "seriesTile": {
       "empty": "Keine anstehenden Folgen.",
-      "unavailable": "Serien ist nicht verfügbar."
+      "unavailable": "Serien sind nicht verfügbar."
     },
     "conflictsTile": {
       "none": "Keine Tuner-Konflikte in Sicht.",
@@ -375,10 +363,6 @@
       "empty": "Noch keine Aufnahmen."
     }
   },
-  "hubPlaceholder": {
-    "title": "{name} — folgt in Kürze",
-    "body": "Die Ansichten dieses Hubs sind noch nicht gebaut. Navigation, Status und Einstellungen dahinter funktionieren bereits."
-  },
   "media": {
     "diskFree": "{free} frei von {capacity}",
     "empty": "Keine Aufnahmen.",
@@ -441,8 +425,7 @@
         "ai": "Braucht einen OpenAI-API-Schlüssel (Einstellungen → KI). Jeder Vorschlag zählt zum täglichen KI-Limit."
       }
     },
-    "changeTitle": "Auch den Titel in der Box-Liste ändern",
-    "newTitle": "Neuer Titel",
+    "newTitle": "Titel in der Aufnahmeliste der Box",
     "titlePreview": "Titel in der Box-Liste:",
     "selectAll": "Alle auswählen",
     "batch": {
@@ -545,7 +528,8 @@
         "summary": "Markiert {breaks} in der eigenen Schnittliste von {name} — an der Aufnahme ändert sich nichts, aber die Box-Fernbedienung kann daran vorbeispringen (\"zur nächsten Markierung springen\"). Eine vorhandene Wiedergabeposition oder ein vorhandener Schnitt bleibt erhalten.",
         "done": "In der Schnittliste markiert. Beim Ansehen am TV die Taste Weiter (⏭) der Fernbedienung drücken, sobald die Werbung beginnt — sie springt zur markierten Stelle nach der Werbung. Zurück (⏮) springt zurück."
       }
-    }
+    },
+    "nameHint": "Das ist der Dateiname; die Endung .ts bleibt. Der Titel in der Aufnahmeliste der Box ist getrennt und ändert sich nur, wenn du ihn unten bearbeitest."
   },
   "guide": {
     "empty": "Keine Sender in diesem Bouquet.",
@@ -556,7 +540,7 @@
     "confirmRecord": "Timer anlegen",
     "recordPreview": "Ein Timer für „{name}“ auf {channel} wird angelegt, Aufnahme {when}.",
     "timerCreated": "Timer angelegt.",
-    "timerHubUnavailable": "Aufnehmen braucht TimerHub, der nicht verfügbar ist.",
+    "timerHubUnavailable": "Aufnehmen ist gerade nicht möglich — die Timer sind nicht verfügbar.",
     "views": {
       "label": "Ansicht",
       "grid": "Raster",
@@ -567,8 +551,7 @@
     "filters": {
       "label": "Filter",
       "movies": "Nur Filme",
-      "rated": "Bewertung ab 7",
-      "needsEnrichment": "Die Filter brauchen Infos aus TMDB – in den Einstellungen unter „TMDB“ einschalten."
+      "rated": "Bewertung ab 7"
     },
     "bouquet": "Bouquet",
     "day": "Tag",
@@ -656,7 +639,7 @@
     "empty": "Bouquet wählen und Empfehlungen aus dessen EPG generieren.",
     "noPicks": "Für dieses Bouquet gab es gerade nichts Passendes.",
     "createTimer": "Timer anlegen",
-    "timerHubUnavailable": "Timer ist nicht verfügbar.",
+    "timerHubUnavailable": "Aufnehmen ist gerade nicht möglich — die Timer sind nicht verfügbar.",
     "confirm": "Bestätigen",
     "cancel": "Abbrechen",
     "created": "Timer angelegt",
@@ -835,7 +818,7 @@
       "cancel": "Abbrechen",
       "notSet": "Nicht gesetzt",
       "isSet": "Gesetzt",
-      "passwordPlaceholder": "Neues Passwort",
+      "passwordPlaceholder": "Passwort",
       "secretPlaceholder": "Neuer Schlüssel",
       "timezoneHint": "IANA-Zeitzonenname, z. B. „Europe/Rome“.",
       "allowedHostsHint": "Kommagetrennte Hostnamen, zusätzlich zu IP-Adressen, localhost und *.local.",
@@ -853,8 +836,7 @@
       "language": "Sprache",
       "timezoneMode": "Angezeigte Zeitzone",
       "timezone": "Zeitzone",
-      "appearance": "Darstellung",
-      "navLabels": "Beschriftung der Seitenleiste"
+      "appearance": "Darstellung"
     },
     "auth": {
       "title": "Anmeldung",
@@ -894,14 +876,12 @@
       "dailyLimit": "Tägliches Anfragelimit"
     },
     "hubs": {
-      "title": "Hubs"
+      "title": "Funktionen"
     },
     "option": {
       "dark": "Dunkel",
       "light": "Hell",
       "system": "Systemeinstellung",
-      "descriptive": "Beschreibend",
-      "hub": "Hub-Namen",
       "box": "Wie die Box",
       "browser": "Wie dieser Browser",
       "fixed": "Fest",
@@ -992,13 +972,12 @@
       "recordings": "Aufnahmen",
       "services": "Dienste",
       "notifications": "Benachrichtigungen",
-      "hubs": "Hubs",
       "access": "Zugriff",
       "system": "System"
     },
     "tabIntro": {
       "services": "Verbindungen zu Diensten, die DreamHub nutzt. Nur WebControl ist nötig, alles andere ist optional.",
-      "hubs": "Ein ausgeschalteter Hub verschwindet aus der Navigation, der Suche und vom Dashboard."
+      "hubs": "Eine ausgeschaltete Funktion verschwindet aus dem Menü, der Suche und vom Dashboard."
     },
     "connectorState": {
       "ok": "Verbunden",
@@ -1010,7 +989,7 @@
     "system": {
       "diagnostics": {
         "title": "Diagnose",
-        "body": "Status aller Hubs und der Selbsttest der Box, dessen Bericht sich als ZIP herunterladen lässt.",
+        "body": "Der Status aller Funktionen und der Selbsttest der Box, dessen Bericht sich als ZIP herunterladen lässt.",
         "open": "Diagnose öffnen"
       },
       "wizard": {
@@ -1122,7 +1101,7 @@
     "logsEmpty": "Noch keine Log-Ausgabe.",
     "logsError": "Die Logs konnten nicht geladen werden.",
     "logsClose": "Schließen",
-    "dockerServiceLogs": "Docker-Dienst-Logs",
+    "dockerServiceLogs": "Dienst-Protokolle auf der Geräteseite öffnen",
     "console": {
       "open": "Konsole",
       "title": "Konsole — {name}",
@@ -1186,7 +1165,17 @@
     "storageFree": "{size} frei",
     "storageHint": "Einstellungen und Daten liegen hier und bleiben beim Entfernen der App erhalten. Der Flash-Speicher der Box wird nie angeboten.",
     "installPreview": "Vorschau",
-    "searchTitle": "Weitere Apps auf Docker Hub suchen"
+    "searchTitle": "Weitere Apps auf Docker Hub suchen",
+    "adminOnly": "Apps können nur Administratoren verwalten.",
+    "desc": {
+      "adguardhome": "Werbe- und Trackerblocker für das ganze Netzwerk über DNS, mit eigenem DNS-over-HTTPS/TLS.",
+      "pihole": "Werbe- und Trackerblocker für das ganze Netzwerk über DNS.",
+      "nextcloud": "Deine eigene Cloud für Dateien, Kalender und Kontakte, mit eigener Datenbank.",
+      "vaultwarden": "Ein Passwort-Manager-Server, der mit den Bitwarden-Apps funktioniert.",
+      "syncthing": "Laufende Dateisynchronisation zwischen Geräten, ohne Cloud-Server.",
+      "homeassistant": "Hausautomation: Lichter, Steckdosen, Sensoren und ihre Regeln an einem Ort.",
+      "qbittorrent": "Ein BitTorrent-Client mit Weboberfläche."
+    }
   },
   "timers": {
     "cleanup": {
@@ -1218,8 +1207,8 @@
     },
     "autoTimer": {
       "title": "AutoTimer",
-      "simulate": "Probelauf",
-      "simulating": "Läuft…",
+      "simulate": "Zeigen, was aufgenommen würde",
+      "simulating": "Wird geprüft…",
       "openEditor": "AutoTimer-Editor öffnen",
       "notInstalled": "Das AutoTimer-Plugin ist auf dieser Box nicht installiert. Kein Problem — es ist optional (Addon-Manager).",
       "none": "Keine AutoTimer eingerichtet.",
@@ -1227,8 +1216,9 @@
       "match": "sucht „{match}“",
       "enabled": "An",
       "disabled": "Aus",
-      "simulateEyebrow": "Probelauf · diese Timer würden angelegt, nichts wurde geändert",
-      "simulateNone": "Die AutoTimer würden gerade keine neuen Timer anlegen."
+      "simulateEyebrow": "Das würde aufgenommen – es wurde nichts geändert",
+      "simulateNone": "Die AutoTimer würden gerade keine neuen Timer anlegen.",
+      "intro": "Nimmt alles, was diesen Regeln entspricht, automatisch auf."
     },
     "enable": "Aktivieren",
     "disable": "Deaktivieren",
@@ -1246,11 +1236,12 @@
       "disable": "„{name}“ ist deaktiviert.",
       "enable": "„{name}“ ist wieder aktiv.",
       "delete": "„{name}“ gelöscht."
-    }
+    },
+    "more": "Weitere Aktionen"
   },
   "admin": {
     "tabs": {
-      "admin": "Administration",
+      "admin": "Dienste & Protokolle",
       "advanced": "Erweitert"
     },
     "logLevel": {
@@ -1356,10 +1347,10 @@
       "feedPreview": "Vorschau"
     },
     "scripts": {
-      "title": "Scripts",
-      "upload": "Script hochladen …",
-      "uploadFailed": "Das Script konnte nicht hochgeladen werden.",
-      "empty": "Noch keine Scripts hochgeladen.",
+      "title": "Skripte",
+      "upload": "Skript hochladen …",
+      "uploadFailed": "Das Skript konnte nicht hochgeladen werden.",
+      "empty": "Noch keine Skripte hochgeladen.",
       "run": "Ausführen",
       "delete": "Löschen",
       "deleteConfirm": "Wirklich löschen?",
@@ -1396,10 +1387,11 @@
     },
     "pad": {
       "title": "Fernbedienung",
-      "digits": "Ziffern",
+      "digits": "123",
       "volume": "Vol",
       "channel": "P",
-      "keyboardHint": "Tastatur: Pfeile, Enter = OK, ⌫ = Zurück, 0–9, Bild↑/↓ = Programm, +/− = Lautstärke"
+      "keyboardHint": "Tastatur: Pfeile, Enter = OK, ⌫ = Zurück, 0–9, Bild↑/↓ = Programm, +/− = Lautstärke",
+      "digitsHint": "Zifferntasten ein- oder ausblenden"
     },
     "keys": {
       "up": "Hoch",
@@ -1465,7 +1457,7 @@
     "about": {
       "title": "Über DreamHub",
       "version": "Version {version}",
-      "copyright": "© 2027 antonbier",
+      "copyright": "© 2026 antonbier",
       "repo": "Quellcode auf GitHub ↗"
     },
     "tabs": {
@@ -1494,7 +1486,37 @@
       "by": "Von",
       "everyone": "Alle",
       "system": "DreamHub selbst",
-      "deletedProfile": "gelöschtes Profil"
+      "deletedProfile": "gelöschtes Profil",
+      "text": {
+        "settings": "Einstellungen geändert: {list}",
+        "timerCreated": "Timer angelegt: {what}",
+        "timerDeleted": "Timer gelöscht: {what}",
+        "timerDisabled": "Timer ausgeschaltet: {what}",
+        "timerEnabled": "Timer eingeschaltet: {what}",
+        "timersCleaned": "{n} beendete Timer entfernt",
+        "stateRestored": "DreamHub aus einer Sicherung wiederhergestellt",
+        "terminalOn": "Terminal eingeschaltet",
+        "terminalOff": "Terminal ausgeschaltet",
+        "consoleOn": "App-Konsole eingeschaltet",
+        "consoleOff": "App-Konsole ausgeschaltet",
+        "logLevel": "Protokollstufe auf {level} gestellt",
+        "dashboardReset": "Startseite auf die Vorlage zurückgesetzt",
+        "dashboardLayout": "Startseite angepasst",
+        "dashboardTemplate": "Startseite der Zuschauer angepasst",
+        "trashed": "{n} Aufnahme(n) in den Papierkorb verschoben",
+        "untrashed": "{n} Aufnahme(n) aus dem Papierkorb zurückgeholt",
+        "emptied": "{n} Aufnahme(n) endgültig gelöscht",
+        "renamed": "{n} Aufnahme(n) umbenannt",
+        "covers": "{n} Cover neben Aufnahmen gespeichert",
+        "adsMarked": "{n} Werbeblock/blöcke markiert",
+        "adsCut": "{n} Werbeblock/blöcke herausgeschnitten",
+        "scriptUploaded": "Skript hochgeladen: {name}",
+        "scriptDeleted": "Skript gelöscht: {name}",
+        "scriptRan": "Skript ausgeführt: {name}",
+        "tokenCreated": "Zugriffsschlüssel erstellt: {name}",
+        "tokenRevoked": "Zugriffsschlüssel widerrufen: {name}",
+        "plexConnected": "Plex-Server verbunden: {name}"
+      }
     },
     "selftest": {
       "title": "Box-Selbsttest",
@@ -1549,7 +1571,7 @@
         "epg": "{withEpg} von {channels} Sendern haben gerade Programmdaten.",
         "noEpg": "Keiner der {channels} Sender hat gerade Programmdaten – lief die Box lange genug, um das EPG zu laden?",
         "current": "{name} ({kind}); Programmdaten: {epg}.",
-        "radioBouquets": "{bouquets} Radio-Bouquet(s), das erste „{first}“ – RadioHubs Abfrage funktioniert auf dieser Box.",
+        "radioBouquets": "{bouquets} Radio-Bouquet(s), das erste „{first}“ – die Radioliste lässt sich auf dieser Box lesen.",
         "noRadioBouquets": "Die Radioliste kam leer zurück – diese Box legt Radio-Bouquets womöglich anders ab. Die gespeicherte Antwort zeigt, wie.",
         "radioStations": "{stations} Sender, {withEpg} mit Programmdaten.",
         "radioOther": "{stations} Sender, {withEpg} mit Programmdaten; {other} Einträge sind keine Radiosender und werden ausgelassen.",
@@ -1568,7 +1590,7 @@
         "noEnigmaUnit": "Gefunden: {found} – aber kein enigma2.service; die Dienstnamen sind auf dieser Box anders.",
         "noSystemd": "Kein systemd hier (gibt es nur auf der Box).",
         "dmi": "Datenbank gefunden – wird zuerst für Details genutzt.",
-        "radioFavouritesEmpty": "Die Radio-Favoriten sind leer – RadioHub zeigt stattdessen alle {stations} Radiosender ({withEpg} mit Programmdaten)."
+        "radioFavouritesEmpty": "Die Radio-Favoriten sind leer – die Radio-Seite zeigt stattdessen alle {stations} Radiosender ({withEpg} mit Programmdaten)."
       }
     }
   },
@@ -1643,7 +1665,6 @@
     "channels": "Sender",
     "bouquet": "Senderliste",
     "find": "Sender suchen",
-    "sameAsTv": "Wie am Fernseher",
     "onTv": "Läuft am Fernseher",
     "tunerHint": "Ein anderer Sender braucht einen freien Tuner. Mit einem Tuner geht das nur, solange Fernseher und Aufnahmen auf derselben Frequenz sind – „Wie am Fernseher“ klappt immer.",
     "unsupported": "Dieser Browser kann den Stream nicht abspielen (ihm fehlen WebAssembly oder WebCodecs). Aktuelle Versionen von Chrome, Edge, Firefox und Safari können es.",
@@ -1661,7 +1682,9 @@
       "data": "Daten",
       "frames": "Bilder (gezeigt / übersprungen · im Puffer)",
       "sync": "Versatz · Tonaussetzer"
-    }
+    },
+    "watchTv": "Ansehen, was der Fernseher zeigt",
+    "play": "Abspielen"
   },
   "plex": {
     "server": "Plex-Server",
@@ -1741,7 +1764,7 @@
       "checking": "Wird geprüft …",
       "open": "Öffnen",
       "back": "Anderes Profil",
-      "hasPin": "Mit PIN",
+      "hasPin": "PIN nötig",
       "wrongPin": "Falsche PIN.",
       "locked": "Zu viele falsche PINs. Bitte kurz warten und noch einmal versuchen.",
       "failed": "Das hat nicht geklappt. Bitte noch einmal versuchen."
@@ -1825,8 +1848,7 @@
     "tabs": {
       "label": "Bereiche der Senderliste",
       "bouquets": "Bouquets",
-      "find": "Sender finden",
-      "check": "Check",
+      "find": "Alle Sender",
       "picons": "Logos"
     },
     "kind": {
@@ -1843,16 +1865,13 @@
       "onlyHD": "HD",
       "provider": "Anbieter",
       "anyProvider": "Alle",
-      "matches": "{n} Sender | {n} Sender",
-      "newSince": "„Neu“ = seit {date} dazugekommen",
-      "reload": "Liste von der Box aktualisieren",
       "new": "Neu",
       "gone": "nicht mehr auf der Box",
       "noProvider": "ohne Anbieter",
       "inBouquets": "in {names}",
       "inNone": "in keinem Bouquet",
       "more": "… und {n} weitere — Suche oder Filter eingrenzen",
-      "reloadHint": "Liest die Senderliste, wie sie jetzt auf der Box ist. Es wird nicht nach neuen Sendern gesucht – dafür einen Sendersuchlauf an der Box starten."
+      "summary": "{n} Sender aus der Liste der Box | {n} Sender aus der Liste der Box"
     },
     "check": {
       "allGood": "Alles in Ordnung: keine doppelten oder verschwundenen Sender, alle mit Programm und Logo.",
@@ -1869,10 +1888,13 @@
         "explain": "Für diese Sender hat die Box im Moment keine Programmdaten. Das kann normal sein (Sendepause, Datensender) oder auf einen veralteten Eintrag hinweisen."
       },
       "noPicon": {
-        "title": "Ohne Logo",
+        "title": "Sender ohne Logo",
         "explain": "Für diese Sender findet DreamHub in keinem Logo-Set ein Bild."
       },
-      "showAll": "Alle {n} anzeigen"
+      "showAll": "Alle {n} anzeigen",
+      "noneNoPicon": "Alle Sender haben ein Logo.",
+      "others": "Weitere Auffälligkeiten in der Senderliste",
+      "shown": "{n} Sender | {n} Sender"
     },
     "picons": {
       "explain": "Die Logo-Sets, die auf der Box installiert sind, und wie viele Sender deiner Bouquets sie abdecken. DreamHub zeigt Logos aus dem gewählten Set zuerst — am TV ändert das nichts.",

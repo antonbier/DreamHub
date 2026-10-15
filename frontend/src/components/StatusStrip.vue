@@ -8,9 +8,9 @@
 <template>
   <section
     :aria-label="t('statusStrip.label')"
-    class="flex h-8 shrink-0 items-center gap-4 overflow-hidden whitespace-nowrap border-b border-line bg-bg px-4 text-[12.5px] below-sm:gap-3"
+    class="flex min-h-8 shrink-0 items-center gap-x-4 overflow-hidden border-b border-line bg-bg px-4 text-[12.5px] below-sm:flex-wrap below-sm:gap-x-3 below-sm:py-1"
   >
-    <span class="flex items-center gap-1.5" :class="status.reachable.value ? 'text-muted' : 'text-warn'">
+    <span class="flex items-center gap-1.5 whitespace-nowrap" :class="status.reachable.value ? 'text-muted' : 'text-warn'">
       <span class="h-1.5 w-1.5 rounded-full" :class="status.reachable.value ? 'bg-ok' : 'bg-warn'" />
       {{ status.reachable.value ? t('statusStrip.connected') : t('statusStrip.unreachable') }}
     </span>

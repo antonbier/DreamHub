@@ -30,7 +30,13 @@
     <template v-else>
       <!-- Scrollable sideways on a phone rather than wrapping or folding
            into a menu. -->
-      <nav class="-mx-6 mb-5 flex gap-1 overflow-x-auto border-b border-line-soft px-6 below-md:-mx-4 below-md:px-4" :aria-label="t('settings.page.tabs')">
+      <nav
+        ref="tabNav"
+        class="-mx-6 mb-5 flex gap-1 overflow-x-auto border-b border-line-soft px-6 below-md:-mx-4 below-md:px-4"
+        :class="{ 'scroll-fade': tabsMore }"
+        @scroll.passive="measureTabs"
+        :aria-label="t('settings.page.tabs')"
+      >
         <RouterLink
           v-for="tab in tabs"
           :key="tab.id"
@@ -48,6 +54,7 @@
       <div class="flex flex-col gap-4">
         <p v-if="intro" class="text-[13.5px] text-muted">{{ intro }}</p>
         <template v-for="section in tabSections" :key="section.id">
+          <p v-if="section.id === 'hubs'" class="-mb-2 mt-2 text-[13.5px] text-muted">{{ t('settings.tabIntro.hubs') }}</p>
           <SettingsSectionCard
             :id="section.id"
             :section="section"
@@ -118,6 +125,7 @@ import MyPinPanel from '@/components/profiles/MyPinPanel.vue'
 import ProfilesPanel from '@/components/profiles/ProfilesPanel.vue'
 import { useAuth } from '@/composables/useAuth'
 import { api } from '@/api/client'
+import { useScrollMore } from '@/composables/useScrollMore'
 import { useSettingsForm } from '@/composables/useSettingsForm'
 import { SETTINGS_TABS, type SettingsTab } from '@/lib/settingsTabs'
 import type { ConnectorState } from '@/api/types'
@@ -131,7 +139,7 @@ const { can } = useAuth()
 // A viewer sees only the tabs with something of theirs: personal settings
 // and their PIN (the server sends them only their own fields).
 const tabs = computed(() =>
-  SETTINGS_TABS.filter((id) => id === 'profiles' || (id === 'system' ? can('system') : form.sections.value.some((s) => s.tab === id))).map(
+  SETTINGS_TABS.filter((id) => id === 'profiles' || (id === 'system' ? can('system') : form.sections.value.some((s) => tabOf(s) === id))).map(
     (id) => ({ id }),
   ),
 )
@@ -141,11 +149,13 @@ const activeTab = computed<SettingsTab>(() => {
 })
 // A section whose fields are all edited elsewhere (ChannelHub's logo set)
 // has nothing to show here.
-const tabSections = computed(() => form.sections.value.filter((s) => s.tab === activeTab.value && s.fields.some((f) => !f.hidden)))
+// "hubs" (which features are on) is part of General.
+const tabOf = (s: { tab: string }) => (s.tab === 'hubs' ? 'general' : s.tab)
+const tabSections = computed(() => form.sections.value.filter((s) => tabOf(s) === activeTab.value && s.fields.some((f) => !f.hidden)))
 const intro = computed(() => (te(`settings.tabIntro.${activeTab.value}`) ? t(`settings.tabIntro.${activeTab.value}`) : ''))
 
 function tabDirty(tab: SettingsTab): boolean {
-  return form.sections.value.some((s) => s.tab === tab && form.sectionDirty(s))
+  return form.sections.value.some((s) => tabOf(s) === tab && form.sectionDirty(s))
 }
 const anyDirty = computed(() => form.sections.value.some((s) => form.sectionDirty(s)))
 
@@ -188,7 +198,7 @@ watch(() => route.fullPath, scrollToHash)
 function redirectOldHash() {
   if (route.params.tab || !route.hash) return
   const section = form.sections.value.find((s) => s.id === route.hash.slice(1))
-  if (section) void router.replace({ path: `/settings/${section.tab}`, hash: route.hash })
+  if (section) void router.replace({ path: `/settings/${tabOf(section)}`, hash: route.hash })
 }
 
 onBeforeRouteLeave(() => {
@@ -201,9 +211,16 @@ function onBeforeUnload(e: BeforeUnloadEvent) {
 
 const version = ref('')
 
+// More tabs than fit on a phone: the bar fades out at its edge.
+const tabNav = ref<HTMLElement | null>(null)
+const { more: tabsMore, measure: measureTabs } = useScrollMore(tabNav)
+watch(tabs, () => nextTick(measureTabs))
+
 onMounted(async () => {
   window.addEventListener('beforeunload', onBeforeUnload)
   await Promise.all([form.load(), loadConnectors()])
+  await nextTick()
+  measureTabs()
   redirectOldHash()
   await scrollToHash()
   // Best-effort, System tab only: a failed lookup just leaves it blank.
@@ -215,5 +232,7 @@ onMounted(async () => {
     }
   }
 })
-onBeforeUnmount(() => window.removeEventListener('beforeunload', onBeforeUnload))
+onBeforeUnmount(() => {
+  window.removeEventListener('beforeunload', onBeforeUnload)
+})
 </script>

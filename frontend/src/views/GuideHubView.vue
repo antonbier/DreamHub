@@ -25,18 +25,7 @@
       <h1 class="text-[26px] font-bold">{{ hubTitle('guide', 'hub.guide') }}</h1>
     </div>
 
-    <div v-if="item && item.status && item.status !== 'available'" class="mt-4 rounded border border-line bg-tile p-4">
-      <div class="mb-1.5 flex items-center gap-2 text-[13.5px] font-semibold">
-        <span class="h-1.5 w-1.5 rounded-full" :class="item.status === 'degraded' ? 'bg-warn' : 'bg-faint'" />
-        {{ t(`status.${item.status}`) }}
-      </div>
-      <ul class="flex flex-col gap-1 text-[13px] text-muted">
-        <li v-for="(p, i) in item.problems ?? []" :key="i">
-          {{ describe(p) }}
-          <span v-if="describeFix(p)" class="text-faint">{{ ' — ' + describeFix(p) }}</span>
-        </li>
-      </ul>
-    </div>
+    <HubStatusBanner :item="item" />
 
     <template v-if="!item || item.status !== 'unavailable'">
       <div class="mt-5 flex flex-wrap items-center gap-3">
@@ -62,11 +51,11 @@
         >
           <option v-for="b in bouquets" :key="b.serviceReference" :value="b.serviceReference">{{ b.serviceName }}</option>
         </select>
-        <div class="flex items-center gap-1.5 text-[13px]" role="group" :aria-label="t('guide.filters.label')">
+        <div v-if="enrich.enabled" class="flex items-center gap-1.5 text-[13px]" role="group" :aria-label="t('guide.filters.label')">
           <button
             type="button"
             :aria-pressed="moviesOnly"
-            class="rounded-full border px-2.5 py-0.5"
+            class="tap rounded-full border px-2.5 py-0.5"
             :class="moviesOnly ? 'border-accent bg-accent/15 text-text' : 'border-line text-muted hover:text-text'"
             @click="moviesOnly = !moviesOnly"
           >
@@ -75,7 +64,7 @@
           <button
             type="button"
             :aria-pressed="topRated"
-            class="rounded-full border px-2.5 py-0.5"
+            class="tap rounded-full border px-2.5 py-0.5"
             :class="topRated ? 'border-accent bg-accent/15 text-text' : 'border-line text-muted hover:text-text'"
             @click="topRated = !topRated"
           >
@@ -83,7 +72,6 @@
           </button>
         </div>
       </div>
-      <p v-if="filterActive && !enrich.enabled" class="mt-2 text-[12.5px] text-faint">{{ t('guide.filters.needsEnrichment') }}</p>
 
       <p v-if="bouquetsFailed" class="mt-5 text-[14px] text-muted"><ErrorText /></p>
       <p v-else-if="!selectedBouquet && !bouquetsLoading" class="mt-5 text-[14px] text-muted">{{ t('guide.empty') }}</p>
@@ -172,6 +160,7 @@
 </template>
 
 <script setup lang="ts">
+import HubStatusBanner from '@/components/HubStatusBanner.vue'
 import { useHubLabel } from '@/composables/useHubLabel'
 import ErrorText from '@/components/ErrorText.vue'
 import { computed, onMounted, ref, watch } from 'vue'
@@ -188,7 +177,6 @@ import GuideChannel from '@/components/guide/GuideChannel.vue'
 import { useEnrichStore } from '@/stores/enrich'
 import { usePlanError } from '@/composables/usePlanError'
 import { useNavigationStore } from '@/stores/navigation'
-import { useProblem } from '@/composables/useProblem'
 import { useDisplayTimeZone } from '@/composables/useDisplayTimeZone'
 import { useGuideFilters } from '@/composables/useGuideFilters'
 import type { Bouquet, EPGEvent, Plan } from '@/api/types'
@@ -201,10 +189,12 @@ const { t, locale } = useI18n()
 const { hubTitle } = useHubLabel()
 const navigation = useNavigationStore()
 const enrich = useEnrichStore()
-const { describe, describeFix } = useProblem()
 const { timeZone } = useDisplayTimeZone()
 const { planErrorMessage } = usePlanError()
-const { moviesOnly, topRated, active: filterActive, passes } = useGuideFilters()
+const { moviesOnly, topRated, active: filterOn, passes } = useGuideFilters()
+// The filters need the film database; without it they are not offered, so
+// a choice remembered from before can't hide everything.
+const filterActive = computed(() => enrich.enabled && filterOn.value)
 const route = useRoute()
 
 const item = computed(() => navigation.navigation?.sections.flatMap((s) => s.items).find((i) => i.path === '/guide'))
@@ -248,6 +238,7 @@ const bouquetsLoading = ref(true)
 const bouquetsFailed = ref(false)
 
 onMounted(async () => {
+  void enrich.probe()
   applyAt(route.query.at)
   try {
     const res = await api.guide.bouquets()

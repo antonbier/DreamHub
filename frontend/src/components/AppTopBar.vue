@@ -108,28 +108,6 @@
           </div>
         </div>
 
-        <div class="px-3 pb-2 pt-1">
-          <div class="mb-1.5 text-[12.5px] text-faint">{{ t('userMenu.navLabels.label') }}</div>
-          <div class="flex gap-1 rounded bg-field p-1">
-            <button
-              type="button"
-              class="flex-1 rounded px-1.5 py-1 text-[12.5px]"
-              :class="preferences.navLabels === 'descriptive' ? 'bg-tile text-text' : 'text-muted hover:text-text'"
-              @click="preferences.setNavLabels('descriptive')"
-            >
-              {{ t('userMenu.navLabels.descriptive') }}
-            </button>
-            <button
-              type="button"
-              class="flex-1 rounded px-1.5 py-1 text-[12.5px]"
-              :class="preferences.navLabels === 'hub' ? 'bg-tile text-text' : 'text-muted hover:text-text'"
-              @click="preferences.setNavLabels('hub')"
-            >
-              {{ t('userMenu.navLabels.hub') }}
-            </button>
-          </div>
-        </div>
-
         <div class="my-1 border-t border-line-soft" />
         <RouterLink
           to="/settings"

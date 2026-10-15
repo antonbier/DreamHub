@@ -98,7 +98,7 @@
 
       <div class="mt-1 flex gap-3">
         <button
-          v-if="!field.isDefault && field.type !== 'password'"
+          v-if="canReset"
           type="button"
           class="text-[12.5px] text-accent hover:underline"
           @click="$emit('reset')"
@@ -144,6 +144,14 @@ const errorText = computed(() => (props.error ? fieldError(props.error) : ''))
 const resetLabel = computed(() =>
   props.field.type === 'secret' ? t('settings.page.clear') : t('settings.page.resetField'),
 )
+// Only offered when there is something to go back to: the value on screen
+// differs from the default (a secret is cleared instead).
+const canReset = computed(() => {
+  if (props.field.type === 'password') return false
+  if (props.field.type === 'secret') return !props.field.isDefault
+  const same = (v: unknown) => (v === undefined || v === null ? '' : v)
+  return same(props.modelValue) !== same(props.field.default)
+})
 const secretPlaceholder = computed(() =>
   props.field.type === 'password' ? t('settings.page.passwordPlaceholder') : t('settings.page.secretPlaceholder'),
 )

@@ -9,6 +9,7 @@
 <template>
   <div class="mx-auto max-w-content p-6 below-md:p-4">
     <div class="mb-4 flex flex-wrap items-center gap-2">
+      <Icon name="dashboard" :size="24" class="text-muted" />
       <h1 class="text-[26px] font-bold">{{ template ? t('dashboard.template.title') : t('dashboard.title') }}</h1>
       <button
         v-if="canReset"
@@ -20,7 +21,7 @@
       </button>
       <button
         type="button"
-        class="rounded px-3 py-1.5 text-[13.5px] font-semibold"
+        class="tap rounded px-3 py-1.5 text-[13.5px] font-semibold"
         :class="[dash.editing.value ? 'bg-accent text-bg' : 'text-accent hover:bg-tile-2', canReset ? '' : 'ms-auto']"
         @click="dash.editing.value = !dash.editing.value"
       >
@@ -65,7 +66,6 @@
           :removable="tile.type === 'custom'"
           :editing="dash.editing.value"
           @hide="dash.toggleHidden(tileKey(tile))"
-          @width="dash.setWidth(tileKey(tile), $event)"
           @remove="dash.removeCustom(tileKey(tile))"
         >
           <CustomTile v-if="tile.custom" :custom="tile.custom" editable @edit="openBuilder(tile)" />
@@ -105,6 +105,7 @@
 import { computed, nextTick, onMounted, reactive, ref } from 'vue'
 import { RouterLink, useRoute } from 'vue-router'
 import { useI18n } from 'vue-i18n'
+import Icon from '@/components/Icon.vue'
 import DashboardTileFrame from '@/components/dashboard/DashboardTileFrame.vue'
 import CustomTile from '@/components/dashboard/CustomTile.vue'
 import CustomTileBuilder from '@/components/dashboard/CustomTileBuilder.vue'

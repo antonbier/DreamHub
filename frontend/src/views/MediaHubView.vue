@@ -23,18 +23,7 @@
       <h1 class="text-[26px] font-bold">{{ hubTitle('media', 'hub.media') }}</h1>
     </div>
 
-    <div v-if="item && item.status && item.status !== 'available'" class="mt-4 rounded border border-line bg-tile p-4">
-      <div class="mb-1.5 flex items-center gap-2 text-[13.5px] font-semibold">
-        <span class="h-1.5 w-1.5 rounded-full" :class="item.status === 'degraded' ? 'bg-warn' : 'bg-faint'" />
-        {{ t(`status.${item.status}`) }}
-      </div>
-      <ul class="flex flex-col gap-1 text-[13px] text-muted">
-        <li v-for="(p, i) in item.problems ?? []" :key="i">
-          {{ describe(p) }}
-          <span v-if="describeFix(p)" class="text-faint">{{ ' — ' + describeFix(p) }}</span>
-        </li>
-      </ul>
-    </div>
+    <HubStatusBanner :item="item" />
 
     <template v-if="!item || item.status !== 'unavailable'">
       <section v-if="disks.length > 0" class="mt-5 flex flex-col gap-3 rounded border border-line bg-tile p-4">
@@ -307,6 +296,7 @@
 </template>
 
 <script setup lang="ts">
+import HubStatusBanner from '@/components/HubStatusBanner.vue'
 import { useHubLabel } from '@/composables/useHubLabel'
 import ErrorText from '@/components/ErrorText.vue'
 import { useAuth } from '@/composables/useAuth'
@@ -326,7 +316,6 @@ import { titleFromFileName } from '@/lib/titles'
 import { useEnrichStore } from '@/stores/enrich'
 import type { RowState, SuggestSources, TrashActionState } from '@/components/media/types'
 import { useNavigationStore } from '@/stores/navigation'
-import { useProblem } from '@/composables/useProblem'
 import { usePlanError } from '@/composables/usePlanError'
 import { useDisplayTimeZone } from '@/composables/useDisplayTimeZone'
 import { formatBytes } from '@/lib/format'
@@ -336,7 +325,6 @@ import { ACTIVE, cleanPath, useJobsStore } from '@/stores/jobs'
 const { t, locale } = useI18n()
 const { hubTitle } = useHubLabel()
 const navigation = useNavigationStore()
-const { describe, describeFix } = useProblem()
 const { planErrorMessage } = usePlanError()
 const { timeZone } = useDisplayTimeZone()
 const enrich = useEnrichStore()
@@ -740,8 +728,9 @@ watch(queryDir, (dir) => {
 
 onMounted(async () => {
   void open(queryDir())
-  api
-    .connectors()
+  // Only an admin may ask the connectors (a viewer would get a 403).
+  const asking = can('settings.global') ? api.connectors() : Promise.reject(new Error('viewer'))
+  asking
     .then((res) => {
       const ok = (id: string) => res.connectors.some((c) => c.id === id && c.state === 'ok')
       suggestSources.value = { tmdb: ok('tmdb'), ai: ok('openai') }

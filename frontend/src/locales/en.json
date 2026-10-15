@@ -10,7 +10,7 @@
     "group": {
       "media": "Media",
       "program": "Program",
-      "device": "Device"
+      "device": "Box"
     }
   },
   "hub": {
@@ -28,9 +28,7 @@
     "apps": "Apps"
   },
   "status": {
-    "available": "Available",
-    "degraded": "Degraded",
-    "unavailable": "Unavailable"
+    "noDetail": "This isn't working right now."
   },
   "problem": {
     "connector": {
@@ -45,7 +43,7 @@
       "missing": "Missing on the device: {capability}"
     },
     "hub": {
-      "dependencyUnavailable": "{hub} isn't available"
+      "dependencyUnavailable": "Needs “{hub}”, which isn't available."
     },
     "timer": {
       "conflict": "Likely conflicts with another recording (tuners: {tuners}). The box checks again when saving.",
@@ -65,16 +63,17 @@
       "alsoRemoves": "Also removes {count} package(s) you didn't pick: {names}.",
       "touchesEnigma2": "Changes a TV plugin, skin or enigma2 itself — it takes effect after enigma2 restarts, and some packages restart it themselves (the TV picture is gone for about half a minute).",
       "recordingRunning": "The box is recording right now ({names}); applying waits until that's done.",
-      "neededByHub": "Removes {names}, which {hubs} needs — that part of DreamHub stops working."
+      "neededByHub": "Removes {names}, which DreamHub needs for: {hubs}."
     },
     "feed": {
       "unsigned": "Adds {url} as a source. Its packages are installed with full rights on the box and are not signed — only add one you trust."
-    }
+    },
+    "tmdbOff": "Film details and ratings are off. Add a TMDB key in Settings to see them."
   },
   "fix": {
     "checkBoxConnection": "Check the connection to the box.",
     "configureInSettings": "Configure it in Settings → {section}.",
-    "enableHub": "Enable {hub} in Settings.",
+    "enableHub": "Turn on “{hub}” in Settings.",
     "capability": {
       "journald": "journald isn't available on this machine."
     },
@@ -83,7 +82,8 @@
   },
   "sidebar": {
     "collapse": "Collapse sidebar",
-    "expand": "Expand sidebar"
+    "expand": "Expand sidebar",
+    "notSetUp": "Not set up yet"
   },
   "topbar": {
     "searchPlaceholder": "Search recordings, timers, the guide…",
@@ -97,11 +97,6 @@
       "dark": "Dark",
       "light": "Light",
       "system": "Follow system"
-    },
-    "navLabels": {
-      "label": "Sidebar labels",
-      "descriptive": "Descriptive",
-      "hub": "Hub names"
     },
     "settings": "Settings",
     "signOut": "Sign out",
@@ -128,7 +123,7 @@
     "browserOn": "Show notifications on this device",
     "browserIsOn": "Notifications on this device are on",
     "browserOff": "Turn off",
-    "browserDenied": "The browser has blocked notifications for this site — allow them in its site settings."
+    "browserDenied": "Your browser blocks notifications for this site. Allow them in its site settings."
   },
   "notification": {
     "recording": {
@@ -160,8 +155,8 @@
     "unreachable": "Unreachable",
     "clockOk": "Clock OK",
     "clockOff": "Clock off by {minutes} min",
-    "issueSingular": "1 hub needs attention",
-    "issuePlural": "{count} hubs need attention",
+    "issueSingular": "1 thing needs attention",
+    "issuePlural": "{count} things need attention",
     "label": "Connection status"
   },
   "search": {
@@ -196,17 +191,12 @@
       "clockOff": "The box's clock is off by about {minutes} min — timers may start at the wrong time."
     },
     "hubs": {
-      "title": "Hubs",
-      "subtitle": "Choose which hubs to enable. You can change this any time in Settings."
+      "title": "Features",
+      "subtitle": "Choose which features to turn on. You can change this any time in Settings."
     },
     "ai": {
       "title": "AI recommendations",
-      "subtitle": "DiscoveryHub needs an OpenAI API key. Skip this and add one later if you don't have one yet."
-    },
-    "channels": {
-      "title": "Channels",
-      "subtitle": "Which channels DiscoveryHub should consider for recommendations.",
-      "notBuilt": "Channel selection isn't built yet (it needs ChannelHub, a later release) — DiscoveryHub considers every channel until then."
+      "subtitle": "Recommendations need an OpenAI API key. Skip this and add one later if you don't have one yet."
     },
     "done": {
       "title": "All set",
@@ -221,7 +211,7 @@
     "done": "Done",
     "empty": {
       "title": "No tiles yet",
-      "body": "The dashboard fills up as hubs are built: storage, conflicts, what's on now, upcoming timers, recommendations. Custom tiles are next."
+      "body": "Nothing on the dashboard yet. Use “Edit” to add tiles."
     },
     "allHidden": {
       "title": "Nothing to show",
@@ -240,28 +230,26 @@
       "mediaRecent": "Recent recordings"
     },
     "tileFrame": {
-      "hide": "Hide",
-      "show": "Show",
+      "hide": "Remove from dashboard",
+      "show": "Show on dashboard",
       "hidden": "Hidden",
-      "widthDecrease": "Narrower",
-      "widthIncrease": "Wider",
       "dragHandle": "Drag to reorder",
-      "remove": "Remove"
+      "remove": "Delete tile"
     },
     "timersTile": {
       "empty": "No upcoming timers.",
-      "unavailable": "TimerHub isn't available."
+      "unavailable": "Timers aren't available."
     },
     "hubsTile": {
-      "allOk": "All hubs are available."
+      "allOk": "Everything is working."
     },
     "mediaDiskTile": {
       "empty": "No storage information.",
-      "unavailable": "MediaHub isn't available."
+      "unavailable": "Recordings aren't available."
     },
     "seriesTile": {
       "empty": "No upcoming episodes.",
-      "unavailable": "SeriesHub isn't available."
+      "unavailable": "Series aren't available."
     },
     "conflictsTile": {
       "none": "No tuner conflicts ahead.",
@@ -375,10 +363,6 @@
       "empty": "No recordings yet."
     }
   },
-  "hubPlaceholder": {
-    "title": "{name} — coming soon",
-    "body": "This hub's screens haven't been built yet. The navigation, status and settings behind it are already live."
-  },
   "media": {
     "diskFree": "{free} free of {capacity}",
     "empty": "No recordings.",
@@ -441,8 +425,7 @@
         "ai": "Needs an OpenAI API key (Settings → AI). Each suggestion counts against the daily AI limit."
       }
     },
-    "changeTitle": "Also change the title in the box's list",
-    "newTitle": "New title",
+    "newTitle": "Title in the box's recording list",
     "titlePreview": "Title in the box's list:",
     "selectAll": "Select all",
     "batch": {
@@ -545,7 +528,8 @@
         "summary": "Marks {breaks} in {name}'s own cut list — nothing in the recording changes, but the box's own remote can jump past them (\"jump to next marked position\"). Any resume position or cut already there is kept.",
         "done": "Marked in the cut list. While watching on the TV, press Next (⏭) on the remote when an ad break starts — it jumps to the marked position after the break. Previous (⏮) jumps back."
       }
-    }
+    },
+    "nameHint": "This is the file name; the ending .ts stays. The title in the box's recording list is separate and only changes if you edit it below."
   },
   "guide": {
     "empty": "No channels in this bouquet.",
@@ -556,7 +540,7 @@
     "confirmRecord": "Create timer",
     "recordPreview": "A timer for “{name}” on {channel} will be created, recording {when}.",
     "timerCreated": "Timer created.",
-    "timerHubUnavailable": "Recording needs TimerHub, which isn't available.",
+    "timerHubUnavailable": "Recording isn't possible right now — timers aren't available.",
     "views": {
       "label": "View",
       "grid": "Grid",
@@ -567,8 +551,7 @@
     "filters": {
       "label": "Filters",
       "movies": "Films only",
-      "rated": "Rated 7+",
-      "needsEnrichment": "The filters need details from TMDB — turn it on in Settings under “TMDB”."
+      "rated": "Rated 7+"
     },
     "bouquet": "Bouquet",
     "day": "Day",
@@ -656,7 +639,7 @@
     "empty": "Pick a bouquet and generate recommendations from its EPG.",
     "noPicks": "Nothing stood out for this bouquet right now.",
     "createTimer": "Create timer",
-    "timerHubUnavailable": "Timers isn't available.",
+    "timerHubUnavailable": "Recording isn't possible right now — timers aren't available.",
     "confirm": "Confirm",
     "cancel": "Cancel",
     "created": "Timer created",
@@ -835,7 +818,7 @@
       "cancel": "Cancel",
       "notSet": "Not set",
       "isSet": "Set",
-      "passwordPlaceholder": "New password",
+      "passwordPlaceholder": "Password",
       "secretPlaceholder": "New key",
       "timezoneHint": "IANA time zone name, e.g. \"Europe/Rome\".",
       "allowedHostsHint": "Comma-separated host names, besides IP addresses, localhost and *.local.",
@@ -853,8 +836,7 @@
       "language": "Language",
       "timezoneMode": "Display time zone",
       "timezone": "Time zone",
-      "appearance": "Appearance",
-      "navLabels": "Sidebar labels"
+      "appearance": "Appearance"
     },
     "auth": {
       "title": "Authentication",
@@ -894,14 +876,12 @@
       "dailyLimit": "Daily request limit"
     },
     "hubs": {
-      "title": "Hubs"
+      "title": "Features"
     },
     "option": {
       "dark": "Dark",
       "light": "Light",
       "system": "Follow system",
-      "descriptive": "Descriptive",
-      "hub": "Hub names",
       "box": "Same as the box",
       "browser": "Same as this browser",
       "fixed": "Fixed",
@@ -992,13 +972,12 @@
       "recordings": "Recordings",
       "services": "Services",
       "notifications": "Notifications",
-      "hubs": "Hubs",
       "access": "Access",
       "system": "System"
     },
     "tabIntro": {
       "services": "Connections to services DreamHub uses. Only WebControl is required; everything else is optional.",
-      "hubs": "A hub that is switched off disappears from the navigation, search and the dashboard."
+      "hubs": "A feature that is switched off disappears from the menu, search and the dashboard."
     },
     "connectorState": {
       "ok": "Connected",
@@ -1010,7 +989,7 @@
     "system": {
       "diagnostics": {
         "title": "Diagnostics",
-        "body": "The status of every hub and the box self-test, whose report can be downloaded as a ZIP.",
+        "body": "The status of every feature and the box self-test, whose report can be downloaded as a ZIP.",
         "open": "Open diagnostics"
       },
       "wizard": {
@@ -1122,7 +1101,7 @@
     "logsEmpty": "No log output yet.",
     "logsError": "The logs couldn't be loaded.",
     "logsClose": "Close",
-    "dockerServiceLogs": "Docker service logs",
+    "dockerServiceLogs": "Open service logs on the Device page",
     "console": {
       "open": "Console",
       "title": "Console — {name}",
@@ -1186,7 +1165,17 @@
     "storageFree": "{size} free",
     "storageHint": "Config and data are kept here and survive removing the app. The box's own flash memory is never offered.",
     "installPreview": "Preview",
-    "searchTitle": "Look for other apps on Docker Hub"
+    "searchTitle": "Look for other apps on Docker Hub",
+    "adminOnly": "Only admins can manage apps.",
+    "desc": {
+      "adguardhome": "Network-wide ad and tracker blocking via DNS, with its own DNS-over-HTTPS/TLS.",
+      "pihole": "Network-wide ad and tracker blocking via DNS.",
+      "nextcloud": "Your own cloud for files, calendars and contacts, with its own database.",
+      "vaultwarden": "A password manager server that works with the Bitwarden apps.",
+      "syncthing": "Continuous, peer-to-peer file synchronization between devices.",
+      "homeassistant": "Home automation: lights, sockets, sensors and their rules in one place.",
+      "qbittorrent": "A BitTorrent client with a web UI."
+    }
   },
   "timers": {
     "cleanup": {
@@ -1218,8 +1207,8 @@
     },
     "autoTimer": {
       "title": "AutoTimer",
-      "simulate": "Dry run",
-      "simulating": "Running…",
+      "simulate": "Show what would be recorded",
+      "simulating": "Checking…",
       "openEditor": "Open AutoTimer editor",
       "notInstalled": "The AutoTimer plugin isn't installed on this box. That's fine — it's optional (Addon Manager).",
       "none": "No AutoTimers configured.",
@@ -1227,8 +1216,9 @@
       "match": "matches “{match}”",
       "enabled": "On",
       "disabled": "Off",
-      "simulateEyebrow": "Dry run · these timers would be created, nothing was changed",
-      "simulateNone": "The AutoTimers would create no new timers right now."
+      "simulateEyebrow": "This would be recorded — nothing was changed",
+      "simulateNone": "The AutoTimers would create no new timers right now.",
+      "intro": "Records everything that matches these rules automatically."
     },
     "enable": "Enable",
     "disable": "Disable",
@@ -1246,11 +1236,12 @@
       "disable": "“{name}” is disabled.",
       "enable": "“{name}” is enabled again.",
       "delete": "Deleted “{name}”."
-    }
+    },
+    "more": "More actions"
   },
   "admin": {
     "tabs": {
-      "admin": "Administration",
+      "admin": "Services & logs",
       "advanced": "Advanced"
     },
     "logLevel": {
@@ -1396,10 +1387,11 @@
     },
     "pad": {
       "title": "Remote",
-      "digits": "Digits",
+      "digits": "123",
       "volume": "Vol",
       "channel": "CH",
-      "keyboardHint": "Keyboard: arrows, Enter = OK, ⌫ = back, 0–9, PgUp/PgDn = channel, +/− = volume"
+      "keyboardHint": "Keyboard: arrows, Enter = OK, ⌫ = back, 0–9, PgUp/PgDn = channel, +/− = volume",
+      "digitsHint": "Show or hide the number keys"
     },
     "keys": {
       "up": "Up",
@@ -1465,7 +1457,7 @@
     "about": {
       "title": "About DreamHub",
       "version": "Version {version}",
-      "copyright": "© 2027 antonbier",
+      "copyright": "© 2026 antonbier",
       "repo": "Source on GitHub ↗"
     },
     "tabs": {
@@ -1494,7 +1486,37 @@
       "by": "By",
       "everyone": "Everyone",
       "system": "DreamHub itself",
-      "deletedProfile": "deleted profile"
+      "deletedProfile": "deleted profile",
+      "text": {
+        "settings": "Changed settings: {list}",
+        "timerCreated": "Timer created: {what}",
+        "timerDeleted": "Timer deleted: {what}",
+        "timerDisabled": "Timer switched off: {what}",
+        "timerEnabled": "Timer switched on: {what}",
+        "timersCleaned": "{n} finished timers removed",
+        "stateRestored": "DreamHub restored from a backup",
+        "terminalOn": "Terminal switched on",
+        "terminalOff": "Terminal switched off",
+        "consoleOn": "App console switched on",
+        "consoleOff": "App console switched off",
+        "logLevel": "Log level set to {level}",
+        "dashboardReset": "Dashboard reset to the template",
+        "dashboardLayout": "Dashboard changed",
+        "dashboardTemplate": "Viewers' start page changed",
+        "trashed": "{n} recording(s) moved to the trash",
+        "untrashed": "{n} recording(s) restored from the trash",
+        "emptied": "{n} recording(s) deleted for good",
+        "renamed": "{n} recording(s) renamed",
+        "covers": "{n} cover file(s) saved next to recordings",
+        "adsMarked": "{n} ad break(s) marked",
+        "adsCut": "{n} ad break(s) cut out",
+        "scriptUploaded": "Script uploaded: {name}",
+        "scriptDeleted": "Script deleted: {name}",
+        "scriptRan": "Script run: {name}",
+        "tokenCreated": "Access token created: {name}",
+        "tokenRevoked": "Access token revoked: {name}",
+        "plexConnected": "Plex server connected: {name}"
+      }
     },
     "selftest": {
       "title": "Box self-test",
@@ -1549,7 +1571,7 @@
         "epg": "{withEpg} of {channels} channels have programme information right now.",
         "noEpg": "None of {channels} channels has programme information right now — has the box been on long enough to load the EPG?",
         "current": "{name} ({kind}); programme information: {epg}.",
-        "radioBouquets": "{bouquets} radio bouquet(s), the first “{first}” — RadioHub's way of asking works on this box.",
+        "radioBouquets": "{bouquets} radio bouquet(s), the first “{first}” — the radio list can be read on this box.",
         "noRadioBouquets": "The radio list came back empty — this box may keep its radio bouquets differently. The saved answer shows how.",
         "radioStations": "{stations} stations, {withEpg} with programme information.",
         "radioOther": "{stations} stations, {withEpg} with programme information; {other} entries aren't radio services and are left out.",
@@ -1568,7 +1590,7 @@
         "noEnigmaUnit": "Found: {found} — but no enigma2.service; the unit names differ on this box.",
         "noSystemd": "No systemd here (only on the box).",
         "dmi": "Database found — used first for details.",
-        "radioFavouritesEmpty": "The radio favourites are empty — RadioHub shows all {stations} radio stations instead ({withEpg} with programme information)."
+        "radioFavouritesEmpty": "The radio favourites are empty — the Radio page shows all {stations} radio stations instead ({withEpg} with programme information)."
       }
     }
   },
@@ -1643,7 +1665,6 @@
     "channels": "Channels",
     "bouquet": "Channel list",
     "find": "Find a channel",
-    "sameAsTv": "Same as the TV",
     "onTv": "On the TV",
     "tunerHint": "Another channel needs a free tuner. With one tuner that only works while the TV and recordings are on the same frequency — \"Same as the TV\" always works.",
     "unsupported": "This browser can't play the stream (it lacks WebAssembly or WebCodecs). Current versions of Chrome, Edge, Firefox and Safari can.",
@@ -1661,7 +1682,9 @@
       "data": "Data",
       "frames": "Frames (shown / skipped · buffered)",
       "sync": "Offset · audio gaps"
-    }
+    },
+    "watchTv": "Watch what the TV shows",
+    "play": "Play"
   },
   "plex": {
     "server": "Plex server",
@@ -1741,7 +1764,7 @@
       "checking": "Checking…",
       "open": "Open",
       "back": "Other profile",
-      "hasPin": "With PIN",
+      "hasPin": "Needs a PIN",
       "wrongPin": "Wrong PIN.",
       "locked": "Too many wrong PINs. Wait a moment and try again.",
       "failed": "That didn't work. Try again."
@@ -1825,8 +1848,7 @@
     "tabs": {
       "label": "Parts of the channel list",
       "bouquets": "Bouquets",
-      "find": "Find channels",
-      "check": "Check",
+      "find": "All channels",
       "picons": "Logos"
     },
     "kind": {
@@ -1843,16 +1865,13 @@
       "onlyHD": "HD",
       "provider": "Provider",
       "anyProvider": "All",
-      "matches": "{n} channel | {n} channels",
-      "newSince": "\"New\" = added since {date}",
-      "reload": "Refresh the list from the box",
       "new": "New",
       "gone": "no longer on the box",
       "noProvider": "no provider",
       "inBouquets": "in {names}",
       "inNone": "in no bouquet",
       "more": "… and {n} more — narrow the search or filters",
-      "reloadHint": "Reads the channel list as it is on the box now. It does not search for new channels — run a channel scan on the box for that."
+      "summary": "{n} channel from the box's list | {n} channels from the box's list"
     },
     "check": {
       "allGood": "All fine: no duplicate or vanished channels, all with programme data and a logo.",
@@ -1869,10 +1888,13 @@
         "explain": "The box has no programme data for these channels at the moment. That can be normal (off air, data channels) or point to an outdated entry."
       },
       "noPicon": {
-        "title": "Without a logo",
+        "title": "Channels without a logo",
         "explain": "DreamHub finds no picture for these channels in any logo set."
       },
-      "showAll": "Show all {n}"
+      "showAll": "Show all {n}",
+      "noneNoPicon": "Every channel has a logo.",
+      "others": "Other things to check in the list",
+      "shown": "{n} channel | {n} channels"
     },
     "picons": {
       "explain": "The logo sets installed on the box, and how many channels of your bouquets each covers. DreamHub shows logos from the chosen set first — nothing changes on the TV.",

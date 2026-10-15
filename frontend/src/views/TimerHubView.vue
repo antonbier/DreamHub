@@ -23,18 +23,7 @@
       <span v-if="tuners > 0" class="ms-auto text-[13px] text-faint">{{ t('timers.tuners', { count: tuners }, tuners) }}</span>
     </div>
 
-    <div v-if="item && item.status && item.status !== 'available'" class="mt-4 rounded border border-line bg-tile p-4">
-      <div class="mb-1.5 flex items-center gap-2 text-[13.5px] font-semibold">
-        <span class="h-1.5 w-1.5 rounded-full" :class="item.status === 'degraded' ? 'bg-warn' : 'bg-faint'" />
-        {{ t(`status.${item.status}`) }}
-      </div>
-      <ul class="flex flex-col gap-1 text-[13px] text-muted">
-        <li v-for="(p, i) in item.problems ?? []" :key="i">
-          {{ describe(p) }}
-          <span v-if="describeFix(p)" class="text-faint">{{ ' — ' + describeFix(p) }}</span>
-        </li>
-      </ul>
-    </div>
+    <HubStatusBanner :item="item" />
 
     <template v-if="!item || item.status !== 'unavailable'">
       <p v-if="notice" class="mt-4 text-[13.5px] text-ok" role="status">{{ notice }}</p>
@@ -99,14 +88,15 @@
         <div class="flex flex-wrap items-center gap-3">
           <h2 class="text-[15.5px] font-semibold text-text">{{ t('timers.autoTimer.title') }}</h2>
           <template v-if="autoTimers?.installed">
-            <button type="button" class="rounded px-2 py-1 text-[13px] text-accent hover:bg-tile-2" :disabled="simulating" @click="simulate">
+            <button type="button" class="tap rounded px-2 py-1 text-[13px] text-accent hover:bg-tile-2" :disabled="simulating" @click="simulate">
               {{ simulating ? t('timers.autoTimer.simulating') : t('timers.autoTimer.simulate') }}
             </button>
-            <a :href="autoTimerEditorUrl" target="_blank" rel="noopener" class="rounded px-2 py-1 text-[13px] text-accent hover:bg-tile-2">
+            <a :href="autoTimerEditorUrl" target="_blank" rel="noopener" class="tap rounded px-2 py-1 text-[13px] text-accent hover:bg-tile-2">
               {{ t('timers.autoTimer.openEditor') }}
             </a>
           </template>
         </div>
+        <p v-if="autoTimers?.installed" class="mt-1 text-[13px] text-muted">{{ t('timers.autoTimer.intro') }}</p>
         <p v-if="autoTimers && !autoTimers.installed" class="mt-2 text-[13px] text-faint">{{ t('timers.autoTimer.notInstalled') }}</p>
         <p v-else-if="autoTimerError" class="mt-2 text-[13px] text-muted">{{ autoTimerError }}</p>
         <template v-else-if="autoTimers?.installed">
@@ -142,6 +132,7 @@
 </template>
 
 <script setup lang="ts">
+import HubStatusBanner from '@/components/HubStatusBanner.vue'
 import { useHubLabel } from '@/composables/useHubLabel'
 import ErrorText from '@/components/ErrorText.vue'
 import { computed, onMounted, ref } from 'vue'
@@ -152,7 +143,6 @@ import TimerRow from '@/components/timers/TimerRow.vue'
 import PlanPreview from '@/components/PlanPreview.vue'
 import type { DeleteState } from '@/components/timers/types'
 import { useNavigationStore } from '@/stores/navigation'
-import { useProblem } from '@/composables/useProblem'
 import { usePlanError } from '@/composables/usePlanError'
 import { useDisplayTimeZone } from '@/composables/useDisplayTimeZone'
 import { zonedUnix } from '@/lib/zonedTime'
@@ -161,7 +151,6 @@ import type { AutoTimers, Plan, SimulatedTimer, Timer } from '@/api/types'
 const { t, locale } = useI18n()
 const { hubTitle } = useHubLabel()
 const navigation = useNavigationStore()
-const { describe, describeFix } = useProblem()
 const { planErrorMessage } = usePlanError()
 const { timeZone } = useDisplayTimeZone()
 

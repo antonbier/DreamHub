@@ -104,7 +104,7 @@ async function save() {
     if (saved) {
       syncPreferences(saved)
       // Any section can affect the sidebar: a hub's own enable switch
-      // (the "hubs" section), or a connector's settings a hub requires to
+      // (the "features" section), or a connector's settings a hub requires to
       // be available (e.g. the "ai"/"tmdb" sections) — so refresh it after
       // every successful save, not just this one section's own fields.
       void navigation.load()
@@ -116,7 +116,7 @@ async function save() {
 }
 
 // The general section overlaps with what the top-bar/user-menu already
-// manage live (preferences.ts): saving language/appearance/navLabels here
+// manage live (preferences.ts): saving language/appearance here
 // must update that reactive state too, or the UI would only pick up the
 // change after a reload despite the backend already having it.
 function syncPreferences(saved: SettingSection) {
@@ -130,9 +130,6 @@ function syncPreferences(saved: SettingSection) {
   if (appearance === 'dark' || appearance === 'light' || appearance === 'system') {
     preferences.setAppearance(appearance, { persist: false })
   }
-
-  const navLabels = value('general.navLabels')
-  if (navLabels === 'descriptive' || navLabels === 'hub') preferences.navLabels = navLabels
 
   const timezoneMode = value('general.timezoneMode')
   if (timezoneMode === 'box' || timezoneMode === 'browser' || timezoneMode === 'fixed') preferences.timezoneMode = timezoneMode

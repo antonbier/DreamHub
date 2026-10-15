@@ -21,18 +21,7 @@
     </div>
     <p class="mt-1 text-[13.5px] text-muted">{{ t('stream.intro') }}</p>
 
-    <div v-if="item && item.status && item.status !== 'available'" class="mt-4 rounded border border-line bg-tile p-4">
-      <div class="mb-1.5 flex items-center gap-2 text-[13.5px] font-semibold">
-        <span class="h-1.5 w-1.5 rounded-full" :class="item.status === 'degraded' ? 'bg-warn' : 'bg-faint'" />
-        {{ t(`status.${item.status}`) }}
-      </div>
-      <ul class="flex flex-col gap-1 text-[13px] text-muted">
-        <li v-for="(p, i) in item.problems ?? []" :key="i">
-          {{ describe(p) }}
-          <span v-if="describeFix(p)" class="text-faint">{{ ' — ' + describeFix(p) }}</span>
-        </li>
-      </ul>
-    </div>
+    <HubStatusBanner :item="item" />
 
     <p v-if="!supported" class="mt-5 rounded border border-line bg-tile p-4 text-[14px] text-muted">{{ t('stream.unsupported') }}</p>
 
@@ -98,8 +87,8 @@
           <span class="w-14 shrink-0 font-mono text-[12px] tabular-nums text-faint">{{ lengthText }}</span>
         </div>
 
-        <!-- Controls -->
-        <div class="mt-3 flex flex-wrap items-center gap-2">
+        <!-- Controls: only once something plays -->
+        <div v-if="source" class="mt-3 flex flex-wrap items-center gap-2">
           <button
             type="button"
             class="flex h-9 w-9 items-center justify-center rounded border border-line text-text hover:bg-field disabled:opacity-50"
@@ -179,6 +168,17 @@
         <p v-if="bouquetsFailed" class="text-[14px] text-muted"><ErrorText /></p>
         <template v-else>
           <div class="flex flex-wrap items-center gap-2">
+            <button
+              v-if="playingChannel"
+              type="button"
+              class="flex min-h-[44px] w-full items-center justify-center gap-2 rounded border px-3 py-2 text-[13.5px] font-semibold hover:bg-tile-2"
+              :class="source?.kind === 'live' && source.ref === playingChannel.serviceReference ? 'border-accent text-text' : 'border-line text-text'"
+              :title="playingChannel.serviceName"
+              @click="watch_(playingChannel.serviceReference)"
+            >
+              <Icon name="stream" :size="16" class="shrink-0 text-muted" />
+              <span class="truncate">{{ t('stream.watchTv') }}</span>
+            </button>
             <select
               v-if="bouquets.length > 1"
               v-model="selectedBouquet"
@@ -196,19 +196,6 @@
               class="w-full rounded border border-line bg-field px-2.5 py-1.5 text-[13.5px] text-text"
             />
           </div>
-          <button
-            v-if="playingChannel"
-            type="button"
-            class="mt-3 flex w-full items-center gap-2.5 rounded border border-line bg-tile px-3 py-2 text-start hover:bg-tile-2"
-            :class="{ 'border-accent': source?.kind === 'live' && source.ref === playingChannel.serviceReference }"
-            @click="watch_(playingChannel.serviceReference)"
-          >
-            <Icon name="control" :size="16" class="shrink-0 text-muted" />
-            <span class="min-w-0 flex-1">
-              <span class="block text-[12px] text-faint">{{ t('stream.sameAsTv') }}</span>
-              <span class="block truncate text-[13.5px] font-semibold text-text">{{ playingChannel.serviceName }}</span>
-            </span>
-          </button>
           <p v-if="channelsLoading && !channels.length" class="mt-3 text-[14px] text-muted">{{ t('common.loading') }}</p>
           <p v-else-if="channelsFailed" class="mt-3 text-[14px] text-muted"><ErrorText /></p>
           <ul v-else class="mt-2 flex max-h-[70vh] flex-col overflow-y-auto below-lg:max-h-none">
@@ -226,6 +213,7 @@
                   <span v-if="ch.now" class="block truncate text-[12.5px] text-muted">{{ ch.now.title }}</span>
                 </span>
                 <span v-if="playing === ch.serviceReference" class="h-1.5 w-1.5 shrink-0 rounded-full bg-onair" :title="t('stream.onTv')" />
+                <span class="shrink-0 text-[12.5px] text-accent">{{ t('stream.play') }}</span>
               </button>
             </li>
           </ul>
@@ -236,6 +224,7 @@
 </template>
 
 <script setup lang="ts">
+import HubStatusBanner from '@/components/HubStatusBanner.vue'
 import { useHubLabel } from '@/composables/useHubLabel'
 import ErrorText from '@/components/ErrorText.vue'
 import { computed, onBeforeUnmount, onMounted, reactive, ref, watch } from 'vue'
@@ -245,7 +234,6 @@ import { api, ApiError } from '@/api/client'
 import Icon from '@/components/Icon.vue'
 import ChannelLogo from '@/components/guide/ChannelLogo.vue'
 import { useNavigationStore } from '@/stores/navigation'
-import { useProblem } from '@/composables/useProblem'
 import { useDisplayTimeZone } from '@/composables/useDisplayTimeZone'
 import { TsPlayer, type AudioTrack, type PlayerStats, type Source } from '@/streaming/tsPlayer'
 import type { Bouquet, EPGEvent, NowNext } from '@/api/types'
@@ -256,7 +244,6 @@ const VOLUME_KEY = 'dreamhub.streamVolume'
 const { t, locale } = useI18n()
 const { hubTitle } = useHubLabel()
 const navigation = useNavigationStore()
-const { describe, describeFix } = useProblem()
 const { timeZone } = useDisplayTimeZone()
 const route = useRoute()
 const router = useRouter()

@@ -22,7 +22,6 @@ import (
 	"os"
 	"path/filepath"
 	"strings"
-	"syscall"
 )
 
 // Restore limits against archive bombs (a tiny gzip can expand to
@@ -114,9 +113,7 @@ func (OS) Archive(root string) ([]byte, error) {
 		// Mode and owner travel along: a database or app running as its own
 		// user must find its files owned and readable again after a restore.
 		hdr := &tar.Header{Name: filepath.ToSlash(rel), Mode: int64(info.Mode().Perm())}
-		if st, ok := info.Sys().(*syscall.Stat_t); ok {
-			hdr.Uid, hdr.Gid = int(st.Uid), int(st.Gid)
-		}
+		hdr.Uid, hdr.Gid = fileOwner(info)
 		if d.IsDir() {
 			hdr.Typeflag, hdr.Name = tar.TypeDir, hdr.Name+"/"
 			return tw.WriteHeader(hdr)

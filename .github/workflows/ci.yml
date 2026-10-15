@@ -77,3 +77,9 @@ jobs:
         with:
           name: dreamhub-deb
           path: dist/*.deb
+      - name: Build the clickable demo packages (mock mode, PC)
+        run: sh packaging/build-mock.sh dist/demo
+      - uses: actions/upload-artifact@v7
+        with:
+          name: dreamhub-demo
+          path: dist/demo/*.zip

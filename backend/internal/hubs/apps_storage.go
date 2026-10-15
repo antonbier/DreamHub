@@ -7,7 +7,6 @@ import (
 	"os"
 	"path"
 	"strings"
-	"syscall"
 
 	"github.com/antonbier/DreamHub/backend/internal/httpx"
 )
@@ -52,10 +51,9 @@ func (h *Apps) storageChoices(ctx context.Context) []StorageChoice {
 func mountedStorage(def string) []StorageChoice {
 	var out []StorageChoice
 	free := func(dir string) int64 {
-		var st syscall.Statfs_t
 		for d := dir; d != "/" && d != "."; d = path.Dir(d) { // the root may not exist yet
-			if syscall.Statfs(d, &st) == nil {
-				return int64(st.Bavail) * int64(st.Bsize)
+			if n, ok := freeBytesAt(d); ok {
+				return n
 			}
 		}
 		return 0

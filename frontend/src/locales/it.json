@@ -82,7 +82,8 @@
   },
   "sidebar": {
     "collapse": "Comprimi barra laterale",
-    "expand": "Espandi barra laterale"
+    "expand": "Espandi barra laterale",
+    "notSetUp": "Da configurare"
   },
   "topbar": {
     "searchPlaceholder": "Cerca registrazioni, timer, la guida…",
@@ -817,7 +818,7 @@
       "cancel": "Annulla",
       "notSet": "Non impostato",
       "isSet": "Impostato",
-      "passwordPlaceholder": "Nuova password",
+      "passwordPlaceholder": "Password",
       "secretPlaceholder": "Nuova chiave",
       "timezoneHint": "Nome del fuso orario IANA, ad es. \"Europe/Rome\".",
       "allowedHostsHint": "Nomi host separati da virgola, oltre a indirizzi IP, localhost e *.local.",
@@ -1165,7 +1166,16 @@
     "storageHint": "Configurazione e dati restano qui anche se rimuovi l'app. La memoria flash del box non viene mai proposta.",
     "installPreview": "Anteprima",
     "searchTitle": "Cerca altre app su Docker Hub",
-    "adminOnly": "Solo gli amministratori possono gestire le app."
+    "adminOnly": "Solo gli amministratori possono gestire le app.",
+    "desc": {
+      "adguardhome": "Blocco di pubblicità e tracker per tutta la rete tramite DNS, con DNS-over-HTTPS/TLS integrato.",
+      "pihole": "Blocco di pubblicità e tracker per tutta la rete tramite DNS.",
+      "nextcloud": "Il tuo cloud personale per file, calendari e contatti, con database proprio.",
+      "vaultwarden": "Un server di password manager compatibile con le app Bitwarden.",
+      "syncthing": "Sincronizzazione continua dei file tra dispositivi, senza server cloud.",
+      "homeassistant": "Domotica: luci, prese, sensori e le loro regole in un unico posto.",
+      "qbittorrent": "Un client BitTorrent con interfaccia web."
+    }
   },
   "timers": {
     "cleanup": {
@@ -1476,7 +1486,37 @@
       "by": "Di",
       "everyone": "Tutti",
       "system": "DreamHub stesso",
-      "deletedProfile": "profilo eliminato"
+      "deletedProfile": "profilo eliminato",
+      "text": {
+        "settings": "Impostazioni modificate: {list}",
+        "timerCreated": "Timer creato: {what}",
+        "timerDeleted": "Timer eliminato: {what}",
+        "timerDisabled": "Timer disattivato: {what}",
+        "timerEnabled": "Timer attivato: {what}",
+        "timersCleaned": "{n} timer terminati rimossi",
+        "stateRestored": "DreamHub ripristinato da un backup",
+        "terminalOn": "Terminale attivato",
+        "terminalOff": "Terminale disattivato",
+        "consoleOn": "Console delle app attivata",
+        "consoleOff": "Console delle app disattivata",
+        "logLevel": "Livello di log impostato su {level}",
+        "dashboardReset": "Dashboard riportata al modello",
+        "dashboardLayout": "Dashboard modificata",
+        "dashboardTemplate": "Pagina iniziale degli spettatori modificata",
+        "trashed": "{n} registrazione/i spostata/e nel cestino",
+        "untrashed": "{n} registrazione/i ripristinata/e dal cestino",
+        "emptied": "{n} registrazione/i eliminata/e definitivamente",
+        "renamed": "{n} registrazione/i rinominata/e",
+        "covers": "{n} copertine salvate accanto alle registrazioni",
+        "adsMarked": "{n} stacco/i pubblicitario/i segnato/i",
+        "adsCut": "{n} stacco/i pubblicitario/i tagliato/i",
+        "scriptUploaded": "Script caricato: {name}",
+        "scriptDeleted": "Script eliminato: {name}",
+        "scriptRan": "Script eseguito: {name}",
+        "tokenCreated": "Token di accesso creato: {name}",
+        "tokenRevoked": "Token di accesso revocato: {name}",
+        "plexConnected": "Server Plex collegato: {name}"
+      }
     },
     "selftest": {
       "title": "Autotest del box",

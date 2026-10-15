@@ -119,9 +119,9 @@
             <li v-for="c in filteredChanges" :key="c.id" class="flex items-start gap-3 border-b border-line-soft py-2 last:border-none">
               <span class="w-36 shrink-0 whitespace-nowrap text-[12px] font-mono text-faint">{{ formatDate(c.at) }}</span>
               <span class="min-w-0 flex-1">
-                <span class="block truncate text-[13.5px] text-text">{{ c.summary }}</span>
-                <span class="block truncate text-[12px] text-faint">
-                  <template v-if="profiles.length > 1">{{ c.userName || (c.userId ? t('system.changes.deletedProfile') : t('system.changes.system')) }} · </template>{{ c.action }}
+                <span class="block truncate text-[13.5px] text-text">{{ changeText(c.summary, t, te) }}</span>
+                <span v-if="profiles.length > 1" class="block truncate text-[12px] text-faint">
+                  <template v-if="profiles.length > 1">{{ c.userName || (c.userId ? t('system.changes.deletedProfile') : t('system.changes.system')) }}</template>
                 </span>
               </span>
             </li>
@@ -301,6 +301,7 @@
 <script setup lang="ts">
 import HubStatusBanner from '@/components/HubStatusBanner.vue'
 import { useScrollMore } from '@/composables/useScrollMore'
+import { changeText } from '@/lib/changeText'
 import { useHubLabel } from '@/composables/useHubLabel'
 import { useFriendlyError } from '@/composables/useFriendlyError'
 import ErrorText from '@/components/ErrorText.vue'
@@ -320,7 +321,7 @@ import { useProblem } from '@/composables/useProblem'
 import { useDisplayTimeZone } from '@/composables/useDisplayTimeZone'
 import type { ChangeEntry, CrashLog, DeviceInfo, HubStatus, LogEntry, LogLevel, Profile } from '@/api/types'
 
-const { t, locale } = useI18n()
+const { t, te, locale } = useI18n()
 const { hubLabel, hubTitle } = useHubLabel()
 const { lastFriendly } = useFriendlyError()
 const route = useRoute()
@@ -381,7 +382,7 @@ const loadFailed = ref(false)
 const filteredChanges = computed(() => {
   const q = filter.value.trim().toLowerCase()
   if (!q) return changes.value
-  return changes.value.filter((c) => c.summary.toLowerCase().includes(q) || c.action.toLowerCase().includes(q))
+  return changes.value.filter((c) => changeText(c.summary, t, te).toLowerCase().includes(q) || c.summary.toLowerCase().includes(q) || c.action.toLowerCase().includes(q))
 })
 
 // Whose changes: everyone's (-1), a profile's, or the system's own (0) —

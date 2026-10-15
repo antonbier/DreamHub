@@ -82,7 +82,8 @@
   },
   "sidebar": {
     "collapse": "Seitenleiste einklappen",
-    "expand": "Seitenleiste ausklappen"
+    "expand": "Seitenleiste ausklappen",
+    "notSetUp": "Nicht eingerichtet"
   },
   "topbar": {
     "searchPlaceholder": "Aufnahmen, Timer, Programm durchsuchen…",
@@ -817,7 +818,7 @@
       "cancel": "Abbrechen",
       "notSet": "Nicht gesetzt",
       "isSet": "Gesetzt",
-      "passwordPlaceholder": "Neues Passwort",
+      "passwordPlaceholder": "Passwort",
       "secretPlaceholder": "Neuer Schlüssel",
       "timezoneHint": "IANA-Zeitzonenname, z. B. „Europe/Rome“.",
       "allowedHostsHint": "Kommagetrennte Hostnamen, zusätzlich zu IP-Adressen, localhost und *.local.",
@@ -1165,7 +1166,16 @@
     "storageHint": "Einstellungen und Daten liegen hier und bleiben beim Entfernen der App erhalten. Der Flash-Speicher der Box wird nie angeboten.",
     "installPreview": "Vorschau",
     "searchTitle": "Weitere Apps auf Docker Hub suchen",
-    "adminOnly": "Apps können nur Administratoren verwalten."
+    "adminOnly": "Apps können nur Administratoren verwalten.",
+    "desc": {
+      "adguardhome": "Werbe- und Trackerblocker für das ganze Netzwerk über DNS, mit eigenem DNS-over-HTTPS/TLS.",
+      "pihole": "Werbe- und Trackerblocker für das ganze Netzwerk über DNS.",
+      "nextcloud": "Deine eigene Cloud für Dateien, Kalender und Kontakte, mit eigener Datenbank.",
+      "vaultwarden": "Ein Passwort-Manager-Server, der mit den Bitwarden-Apps funktioniert.",
+      "syncthing": "Laufende Dateisynchronisation zwischen Geräten, ohne Cloud-Server.",
+      "homeassistant": "Hausautomation: Lichter, Steckdosen, Sensoren und ihre Regeln an einem Ort.",
+      "qbittorrent": "Ein BitTorrent-Client mit Weboberfläche."
+    }
   },
   "timers": {
     "cleanup": {
@@ -1337,10 +1347,10 @@
       "feedPreview": "Vorschau"
     },
     "scripts": {
-      "title": "Scripts",
-      "upload": "Script hochladen …",
-      "uploadFailed": "Das Script konnte nicht hochgeladen werden.",
-      "empty": "Noch keine Scripts hochgeladen.",
+      "title": "Skripte",
+      "upload": "Skript hochladen …",
+      "uploadFailed": "Das Skript konnte nicht hochgeladen werden.",
+      "empty": "Noch keine Skripte hochgeladen.",
       "run": "Ausführen",
       "delete": "Löschen",
       "deleteConfirm": "Wirklich löschen?",
@@ -1476,7 +1486,37 @@
       "by": "Von",
       "everyone": "Alle",
       "system": "DreamHub selbst",
-      "deletedProfile": "gelöschtes Profil"
+      "deletedProfile": "gelöschtes Profil",
+      "text": {
+        "settings": "Einstellungen geändert: {list}",
+        "timerCreated": "Timer angelegt: {what}",
+        "timerDeleted": "Timer gelöscht: {what}",
+        "timerDisabled": "Timer ausgeschaltet: {what}",
+        "timerEnabled": "Timer eingeschaltet: {what}",
+        "timersCleaned": "{n} beendete Timer entfernt",
+        "stateRestored": "DreamHub aus einer Sicherung wiederhergestellt",
+        "terminalOn": "Terminal eingeschaltet",
+        "terminalOff": "Terminal ausgeschaltet",
+        "consoleOn": "App-Konsole eingeschaltet",
+        "consoleOff": "App-Konsole ausgeschaltet",
+        "logLevel": "Protokollstufe auf {level} gestellt",
+        "dashboardReset": "Startseite auf die Vorlage zurückgesetzt",
+        "dashboardLayout": "Startseite angepasst",
+        "dashboardTemplate": "Startseite der Zuschauer angepasst",
+        "trashed": "{n} Aufnahme(n) in den Papierkorb verschoben",
+        "untrashed": "{n} Aufnahme(n) aus dem Papierkorb zurückgeholt",
+        "emptied": "{n} Aufnahme(n) endgültig gelöscht",
+        "renamed": "{n} Aufnahme(n) umbenannt",
+        "covers": "{n} Cover neben Aufnahmen gespeichert",
+        "adsMarked": "{n} Werbeblock/blöcke markiert",
+        "adsCut": "{n} Werbeblock/blöcke herausgeschnitten",
+        "scriptUploaded": "Skript hochgeladen: {name}",
+        "scriptDeleted": "Skript gelöscht: {name}",
+        "scriptRan": "Skript ausgeführt: {name}",
+        "tokenCreated": "Zugriffsschlüssel erstellt: {name}",
+        "tokenRevoked": "Zugriffsschlüssel widerrufen: {name}",
+        "plexConnected": "Plex-Server verbunden: {name}"
+      }
     },
     "selftest": {
       "title": "Box-Selbsttest",

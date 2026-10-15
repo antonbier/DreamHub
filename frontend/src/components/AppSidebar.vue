@@ -159,6 +159,11 @@ function isActive(current: string, itemPath: string): boolean {
   return itemPath === '/' ? current === '/' : current === itemPath || current.startsWith(itemPath + '/')
 }
 
+// A page waiting for a key or an address says so, instead of a bare dot.
+function notSetUp(item: NavItem): boolean {
+  return item.status === 'unavailable' && (item.problems ?? []).some((p) => p.code === 'connector.notConfigured')
+}
+
 // One nav row: icon, label (or a tooltip when collapsed), active state and
 // an unavailable/degraded indicator with a translated explanation.
 const NavLink = defineComponent({
@@ -197,7 +202,9 @@ const NavLink = defineComponent({
         () => [
           h(Icon, { name: props.item.icon, size: 18 }),
           !props.collapsed ? h('span', { class: 'truncate' }, hubLabel(props.item)) : null,
-          props.item.status && props.item.status !== 'available'
+          !props.collapsed && notSetUp(props.item)
+            ? h('span', { class: 'ms-auto shrink-0 text-[11.5px] text-faint' }, t('sidebar.notSetUp'))
+            : props.item.status && props.item.status !== 'available'
             ? h('span', {
                 class: [
                   'ms-auto h-1.5 w-1.5 shrink-0 rounded-full',

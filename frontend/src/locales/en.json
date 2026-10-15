@@ -82,7 +82,8 @@
   },
   "sidebar": {
     "collapse": "Collapse sidebar",
-    "expand": "Expand sidebar"
+    "expand": "Expand sidebar",
+    "notSetUp": "Not set up yet"
   },
   "topbar": {
     "searchPlaceholder": "Search recordings, timers, the guide…",
@@ -817,7 +818,7 @@
       "cancel": "Cancel",
       "notSet": "Not set",
       "isSet": "Set",
-      "passwordPlaceholder": "New password",
+      "passwordPlaceholder": "Password",
       "secretPlaceholder": "New key",
       "timezoneHint": "IANA time zone name, e.g. \"Europe/Rome\".",
       "allowedHostsHint": "Comma-separated host names, besides IP addresses, localhost and *.local.",
@@ -1165,7 +1166,16 @@
     "storageHint": "Config and data are kept here and survive removing the app. The box's own flash memory is never offered.",
     "installPreview": "Preview",
     "searchTitle": "Look for other apps on Docker Hub",
-    "adminOnly": "Only admins can manage apps."
+    "adminOnly": "Only admins can manage apps.",
+    "desc": {
+      "adguardhome": "Network-wide ad and tracker blocking via DNS, with its own DNS-over-HTTPS/TLS.",
+      "pihole": "Network-wide ad and tracker blocking via DNS.",
+      "nextcloud": "Your own cloud for files, calendars and contacts, with its own database.",
+      "vaultwarden": "A password manager server that works with the Bitwarden apps.",
+      "syncthing": "Continuous, peer-to-peer file synchronization between devices.",
+      "homeassistant": "Home automation: lights, sockets, sensors and their rules in one place.",
+      "qbittorrent": "A BitTorrent client with a web UI."
+    }
   },
   "timers": {
     "cleanup": {
@@ -1476,7 +1486,37 @@
       "by": "By",
       "everyone": "Everyone",
       "system": "DreamHub itself",
-      "deletedProfile": "deleted profile"
+      "deletedProfile": "deleted profile",
+      "text": {
+        "settings": "Changed settings: {list}",
+        "timerCreated": "Timer created: {what}",
+        "timerDeleted": "Timer deleted: {what}",
+        "timerDisabled": "Timer switched off: {what}",
+        "timerEnabled": "Timer switched on: {what}",
+        "timersCleaned": "{n} finished timers removed",
+        "stateRestored": "DreamHub restored from a backup",
+        "terminalOn": "Terminal switched on",
+        "terminalOff": "Terminal switched off",
+        "consoleOn": "App console switched on",
+        "consoleOff": "App console switched off",
+        "logLevel": "Log level set to {level}",
+        "dashboardReset": "Dashboard reset to the template",
+        "dashboardLayout": "Dashboard changed",
+        "dashboardTemplate": "Viewers' start page changed",
+        "trashed": "{n} recording(s) moved to the trash",
+        "untrashed": "{n} recording(s) restored from the trash",
+        "emptied": "{n} recording(s) deleted for good",
+        "renamed": "{n} recording(s) renamed",
+        "covers": "{n} cover file(s) saved next to recordings",
+        "adsMarked": "{n} ad break(s) marked",
+        "adsCut": "{n} ad break(s) cut out",
+        "scriptUploaded": "Script uploaded: {name}",
+        "scriptDeleted": "Script deleted: {name}",
+        "scriptRan": "Script run: {name}",
+        "tokenCreated": "Access token created: {name}",
+        "tokenRevoked": "Access token revoked: {name}",
+        "plexConnected": "Plex server connected: {name}"
+      }
     },
     "selftest": {
       "title": "Box self-test",

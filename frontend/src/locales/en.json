@@ -1807,8 +1807,7 @@
     "tabs": {
       "label": "Parts of the channel list",
       "bouquets": "Bouquets",
-      "find": "Find channels",
-      "check": "Check",
+      "find": "All channels",
       "picons": "Logos"
     },
     "kind": {
@@ -1825,16 +1824,13 @@
       "onlyHD": "HD",
       "provider": "Provider",
       "anyProvider": "All",
-      "matches": "{n} channel | {n} channels",
-      "newSince": "\"New\" = added since {date}",
-      "reload": "Refresh the list from the box",
       "new": "New",
       "gone": "no longer on the box",
       "noProvider": "no provider",
       "inBouquets": "in {names}",
       "inNone": "in no bouquet",
       "more": "… and {n} more — narrow the search or filters",
-      "reloadHint": "Reads the channel list as it is on the box now. It does not search for new channels — run a channel scan on the box for that."
+      "summary": "{n} channel from the box's list | {n} channels from the box's list"
     },
     "check": {
       "allGood": "All fine: no duplicate or vanished channels, all with programme data and a logo.",
@@ -1851,10 +1847,12 @@
         "explain": "The box has no programme data for these channels at the moment. That can be normal (off air, data channels) or point to an outdated entry."
       },
       "noPicon": {
-        "title": "Without a logo",
+        "title": "Channels without a logo",
         "explain": "DreamHub finds no picture for these channels in any logo set."
       },
-      "showAll": "Show all {n}"
+      "showAll": "Show all {n}",
+      "noneNoPicon": "Every channel has a logo.",
+      "others": "Other things to check in the list"
     },
     "picons": {
       "explain": "The logo sets installed on the box, and how many channels of your bouquets each covers. DreamHub shows logos from the chosen set first — nothing changes on the TV.",

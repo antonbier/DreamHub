@@ -1807,8 +1807,7 @@
     "tabs": {
       "label": "Bereiche der Senderliste",
       "bouquets": "Bouquets",
-      "find": "Sender finden",
-      "check": "Check",
+      "find": "Alle Sender",
       "picons": "Logos"
     },
     "kind": {
@@ -1825,16 +1824,13 @@
       "onlyHD": "HD",
       "provider": "Anbieter",
       "anyProvider": "Alle",
-      "matches": "{n} Sender | {n} Sender",
-      "newSince": "„Neu“ = seit {date} dazugekommen",
-      "reload": "Liste von der Box aktualisieren",
       "new": "Neu",
       "gone": "nicht mehr auf der Box",
       "noProvider": "ohne Anbieter",
       "inBouquets": "in {names}",
       "inNone": "in keinem Bouquet",
       "more": "… und {n} weitere — Suche oder Filter eingrenzen",
-      "reloadHint": "Liest die Senderliste, wie sie jetzt auf der Box ist. Es wird nicht nach neuen Sendern gesucht – dafür einen Sendersuchlauf an der Box starten."
+      "summary": "{n} Sender aus der Liste der Box | {n} Sender aus der Liste der Box"
     },
     "check": {
       "allGood": "Alles in Ordnung: keine doppelten oder verschwundenen Sender, alle mit Programm und Logo.",
@@ -1851,10 +1847,12 @@
         "explain": "Für diese Sender hat die Box im Moment keine Programmdaten. Das kann normal sein (Sendepause, Datensender) oder auf einen veralteten Eintrag hinweisen."
       },
       "noPicon": {
-        "title": "Ohne Logo",
+        "title": "Sender ohne Logo",
         "explain": "Für diese Sender findet DreamHub in keinem Logo-Set ein Bild."
       },
-      "showAll": "Alle {n} anzeigen"
+      "showAll": "Alle {n} anzeigen",
+      "noneNoPicon": "Alle Sender haben ein Logo.",
+      "others": "Weitere Auffälligkeiten in der Senderliste"
     },
     "picons": {
       "explain": "Die Logo-Sets, die auf der Box installiert sind, und wie viele Sender deiner Bouquets sie abdecken. DreamHub zeigt Logos aus dem gewählten Set zuerst — am TV ändert das nichts.",

@@ -210,6 +210,20 @@ async function requestBlob(path: string): Promise<Blob> {
   return res.blob()
 }
 
+// The reference to put in a display URL (a channel's logo). A plain DVB
+// service reference is sent as it is. An IPTV one carries the stream address
+// after its ten fields — possibly with rtsp://user:pass@host — and that must
+// not end up in a URL (address bar, proxies, logs): only the ten fields go,
+// the channel's name (sent alongside) tells channels apart. Choosing or
+// removing a logo still sends the full reference; the box hashes the tail.
+export function displayRef(ref: string): string {
+  const parts = ref.split(':')
+  if (parts.length <= 10) return ref
+  const tail = parts.slice(10).join(':')
+  if (!tail.includes('//') && !/%3a/i.test(tail)) return ref
+  return parts.slice(0, 10).join(':') + ':'
+}
+
 export const api = {
   health: () => request<HealthInfo>('GET', '/api/v1/health'),
   whoami: () => request<WhoAmI>('GET', '/api/v1/whoami'),
@@ -221,7 +235,7 @@ export const api = {
     check: () => request<{ issues: ChannelIssue[] }>('GET', '/api/v1/channels/check'),
     picons: () => request<{ sets: PiconSet[]; total: number; chosen: string }>('GET', '/api/v1/channels/picons'),
     choosePicons: (set: string) => request<{ chosen: string }>('PUT', '/api/v1/channels/picons', { set }),
-    picon: (ref: string, name: string) => requestBlob(`/api/v1/channels/picon?ref=${encodeURIComponent(ref)}&name=${encodeURIComponent(name)}`),
+    picon: (ref: string, name: string) => requestBlob(`/api/v1/channels/picon?ref=${encodeURIComponent(displayRef(ref))}&name=${encodeURIComponent(name)}`),
     // A logo chosen by hand for one channel (DreamHub's own choice; the TV is untouched).
     logoSets: (ref: string, name: string) =>
       request<{ sets: string[]; custom: boolean }>('GET', `/api/v1/channels/logo/sets?ref=${encodeURIComponent(ref)}&name=${encodeURIComponent(name)}`),
@@ -357,7 +371,7 @@ export const api = {
     // Now and next on every channel of a bouquet, one call to the box.
     nowNext: (bouquet: string) => request<{ channels: NowNext[] }>('GET', `/api/v1/guide/nownext?bouquet=${encodeURIComponent(bouquet)}`),
     // The channel's logo from the box (404 when it has none).
-    picon: (ref: string, name: string) => requestBlob(`/api/v1/guide/picon?ref=${encodeURIComponent(ref)}&name=${encodeURIComponent(name)}`),
+    picon: (ref: string, name: string) => requestBlob(`/api/v1/guide/picon?ref=${encodeURIComponent(displayRef(ref))}&name=${encodeURIComponent(name)}`),
   },
   radio: {
     // The radio bouquets, then all radio stations (`all`, unnamed).
@@ -368,7 +382,7 @@ export const api = {
       request<{ stations: NowNext[]; playing: string }>('GET', `/api/v1/radio/stations?bouquet=${encodeURIComponent(bouquet)}`),
     // Radio recordings that haven't ended yet, soonest first.
     timers: () => request<{ timers: Timer[] }>('GET', '/api/v1/radio/timers'),
-    picon: (ref: string, name: string) => requestBlob(`/api/v1/radio/picon?ref=${encodeURIComponent(ref)}&name=${encodeURIComponent(name)}`),
+    picon: (ref: string, name: string) => requestBlob(`/api/v1/radio/picon?ref=${encodeURIComponent(displayRef(ref))}&name=${encodeURIComponent(name)}`),
   },
   stream: {
     // The TV bouquets (no headings).
@@ -376,7 +390,7 @@ export const api = {
     // A bouquet's channels with now/next, and what the box shows.
     channels: (bouquet: string) =>
       request<{ channels: NowNext[]; playing: string }>('GET', `/api/v1/stream/channels?bouquet=${encodeURIComponent(bouquet)}`),
-    picon: (ref: string, name: string) => requestBlob(`/api/v1/stream/picon?ref=${encodeURIComponent(ref)}&name=${encodeURIComponent(name)}`),
+    picon: (ref: string, name: string) => requestBlob(`/api/v1/stream/picon?ref=${encodeURIComponent(displayRef(ref))}&name=${encodeURIComponent(name)}`),
     // The streams themselves are read by src/streaming/tsPlayer.ts.
   },
   series: {

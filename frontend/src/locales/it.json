@@ -1807,8 +1807,7 @@
     "tabs": {
       "label": "Sezioni della lista canali",
       "bouquets": "Bouquet",
-      "find": "Trova canali",
-      "check": "Controllo",
+      "find": "Tutti i canali",
       "picons": "Loghi"
     },
     "kind": {
@@ -1825,16 +1824,13 @@
       "onlyHD": "HD",
       "provider": "Fornitore",
       "anyProvider": "Tutti",
-      "matches": "{n} canale | {n} canali",
-      "newSince": "\"Nuovo\" = aggiunto dal {date}",
-      "reload": "Aggiorna l'elenco dal box",
       "new": "Nuovo",
       "gone": "non più sul box",
       "noProvider": "senza fornitore",
       "inBouquets": "in {names}",
       "inNone": "in nessun bouquet",
       "more": "… e altri {n} — restringi la ricerca o i filtri",
-      "reloadHint": "Legge l'elenco dei canali com'è ora sul box. Non cerca canali nuovi: per questo avvia una ricerca canali sul box."
+      "summary": "{n} canale dalla lista del box | {n} canali dalla lista del box"
     },
     "check": {
       "allGood": "Tutto a posto: nessun canale doppio o scomparso, tutti con programma e logo.",
@@ -1851,10 +1847,12 @@
         "explain": "Il box non ha dati di programma per questi canali al momento. Può essere normale (fuori onda, canali dati) o indicare una voce superata."
       },
       "noPicon": {
-        "title": "Senza logo",
+        "title": "Canali senza logo",
         "explain": "DreamHub non trova un'immagine per questi canali in nessun set di loghi."
       },
-      "showAll": "Mostra tutti ({n})"
+      "showAll": "Mostra tutti ({n})",
+      "noneNoPicon": "Tutti i canali hanno un logo.",
+      "others": "Altre cose da controllare nella lista"
     },
     "picons": {
       "explain": "I set di loghi installati sul box e quanti canali dei tuoi bouquet coprono. DreamHub mostra prima i loghi del set scelto — sulla TV non cambia nulla.",

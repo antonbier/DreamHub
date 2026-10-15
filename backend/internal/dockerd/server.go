@@ -95,6 +95,7 @@ func (s Server) handleStop(w http.ResponseWriter, r *http.Request) {
 type createRequest struct {
 	AppID         string            `json:"appId"`
 	Service       string            `json:"service"`
+	Name          string            `json:"name"`
 	Image         string            `json:"image"`
 	Env           map[string]string `json:"env"`
 	Cmd           []string          `json:"cmd"`
@@ -117,7 +118,7 @@ func (s Server) handleCreate(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 	spec := ContainerSpec{
-		AppID: body.AppID, Service: body.Service, Image: body.Image, Env: body.Env, Cmd: body.Cmd,
+		AppID: body.AppID, Service: body.Service, Name: body.Name, Image: body.Image, Env: body.Env, Cmd: body.Cmd,
 		HostPort: body.HostPort, ContainerPort: body.ContainerPort,
 		Mounts: body.Mounts, Elevated: body.Elevated,
 		MemoryLimitBytes: body.MemoryLimit, HostNetwork: body.HostNetwork, Root: body.Root,

@@ -1,0 +1,36 @@
+# Pi-hole — its web server defaults to 80 and 443; FTLCONF_webserver_port is
+# Pi-hole's own documented setting for that.
+x-dreamhub:
+  name: Pi-hole
+  category: network
+  description:
+    en: Network-wide ad and tracker blocking via DNS.
+    de: Werbe- und Trackerblocker für das ganze Netzwerk über DNS.
+    it: Blocco di pubblicità e tracker per tutta la rete tramite DNS.
+  note:
+    en: Its admin password is generated on first start and printed in the app's logs. The box's own DNS resolver already holds port 53, so this can only be installed once that is switched off.
+    de: Das Admin-Passwort wird beim ersten Start erzeugt und steht im Protokoll der App. Port 53 belegt bereits der DNS-Resolver der Box; die Installation ist deshalb erst möglich, wenn dieser abgeschaltet ist.
+    it: La password di amministrazione viene generata al primo avvio ed è riportata nei log dell'app. La porta 53 è già occupata dal resolver DNS della box, quindi l'installazione è possibile solo dopo averlo disattivato.
+  webui:
+    port: ${WEB_PORT:-8082}
+  fields:
+    WEB_PORT:
+      label: {en: Web port, de: Web-Port, it: Porta web}
+      description:
+        en: The port you open the app on. Change it if the box or another app already uses it.
+        de: Der Port, unter dem du die App öffnest. Ändere ihn, wenn die Box oder eine andere App ihn schon belegt.
+        it: La porta su cui apri l'app. Cambiala se la box o un'altra app la usa già.
+
+services:
+  pihole:
+    image: pihole/pihole
+    environment:
+      FTLCONF_webserver_port: "${WEB_PORT:-8082}"
+    ports:
+      - "53:53"
+      - "53:53/udp"
+    volumes:
+      - .:/etc/pihole
+    mem_limit: 128m
+    x-dreamhub:
+      arches: [amd64, arm64, arm/v7, arm/v6, "386", riscv64]

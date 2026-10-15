@@ -78,6 +78,25 @@ func ValidService(s string) bool {
 	return true
 }
 
+// NameLabel is the display name of a custom app (one an admin added from a
+// compose file or an image), shown instead of its image name. Catalog apps
+// are named by their catalog entry and carry none.
+const NameLabel = "dreamhub.name"
+
+// ValidName reports whether n is usable as ContainerSpec.Name: empty, or 1-60
+// printable characters.
+func ValidName(n string) bool {
+	if len(n) > 60 {
+		return false
+	}
+	for _, r := range n {
+		if r < 0x20 || r == 0x7f {
+			return false
+		}
+	}
+	return true
+}
+
 // Container is one container this package is willing to talk about,
 // trimmed to what AppsHub needs.
 type Container struct {
@@ -106,6 +125,9 @@ func (c Container) Service() string { return c.Labels[ServiceLabel] }
 // Root is the Labels[RootLabel] value: "" for an app installed before the
 // storage choice existed (it lives under the default root).
 func (c Container) Root() string { return c.Labels[RootLabel] }
+
+// DisplayName is the Labels[NameLabel] value: "" for a catalog app.
+func (c Container) DisplayName() string { return c.Labels[NameLabel] }
 
 // ErrNotFound means no container with that id carries AppLabel.
 var ErrNotFound = errors.New("dockerd: no such app container")
@@ -139,6 +161,8 @@ type ContainerSpec struct {
 	// "dreamhub-app-" + AppID + "-" + Service and carries ServiceLabel.
 	// One container per AppID and Service.
 	Service string
+	// Name is a custom app's display name (NameLabel); "" for a catalog app.
+	Name string
 	// Image is pulled before the container is created ("image:tag",
 	// e.g. "pihole/pihole:latest").
 	Image string

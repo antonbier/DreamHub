@@ -1,0 +1,22 @@
+x-dreamhub:
+  name: Syncthing
+  category: cloud
+  description:
+    en: Continuous, peer-to-peer file synchronization between devices.
+    de: Laufende Dateisynchronisation zwischen Geräten, ohne Cloud-Server.
+    it: Sincronizzazione continua dei file tra dispositivi, senza server cloud.
+  webui:
+    port: 8384
+
+services:
+  syncthing:
+    image: linuxserver/syncthing
+    ports:
+      - "22000:22000"
+      - "22000:22000/udp"
+      - "21027:21027/udp"
+    volumes:
+      - .:/config
+    mem_limit: 256m
+    x-dreamhub:
+      arches: [amd64, arm64]

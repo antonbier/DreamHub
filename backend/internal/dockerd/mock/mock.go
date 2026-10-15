@@ -18,6 +18,9 @@ import (
 // containers, keyed by AppID (App4's Create is one container per AppID,
 // same as the real Exec).
 type Client struct {
+	// Policy is the mount policy Create applies, like the real helper;
+	// the zero value is the helper's own (/media only).
+	Policy     dockerd.MountPolicy
 	mu         sync.Mutex
 	containers map[string]*dockerd.Container
 }
@@ -109,8 +112,10 @@ func (c *Client) Create(ctx context.Context, spec dockerd.ContainerSpec) (docker
 	// Exec's /containers/{id}/json inspect expects an id for, which is
 	// fine since AppID-as-id is unique per app the same way a real
 	// container id is unique per container.
-	if !dockerd.ValidService(spec.Service) {
-		return dockerd.Container{}, dockerd.ErrInvalidService
+	// The same checks the real helper makes, so mock mode shows the same
+	// refusals.
+	if err := dockerd.ValidateSpec(spec, c.Policy); err != nil {
+		return dockerd.Container{}, err
 	}
 	id := spec.AppID
 	labels := map[string]string{dockerd.AppLabel: spec.AppID}
@@ -120,6 +125,9 @@ func (c *Client) Create(ctx context.Context, spec dockerd.ContainerSpec) (docker
 	}
 	if spec.Root != "" {
 		labels[dockerd.RootLabel] = spec.Root
+	}
+	if spec.Name != "" {
+		labels[dockerd.NameLabel] = spec.Name
 	}
 	if _, exists := c.containers[id]; exists {
 		return dockerd.Container{}, dockerd.ErrAlreadyExists

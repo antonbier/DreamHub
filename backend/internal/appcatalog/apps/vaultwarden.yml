@@ -1,0 +1,32 @@
+# Vaultwarden listens on 80 by default; ROCKET_PORT is its own setting.
+x-dreamhub:
+  name: Vaultwarden
+  category: cloud
+  description:
+    en: A password manager server that works with the Bitwarden apps.
+    de: Ein Passwort-Manager-Server, der mit den Bitwarden-Apps funktioniert.
+    it: Un server di password manager compatibile con le app Bitwarden.
+  note:
+    en: Browsers open its web vault only over HTTPS — reach it through your reverse proxy.
+    de: Browser öffnen den Web-Tresor nur über HTTPS – erreiche ihn über deinen Reverse-Proxy.
+    it: "I browser aprono la cassaforte web solo tramite HTTPS: raggiungila attraverso il tuo reverse proxy."
+  webui:
+    port: ${WEB_PORT:-8222}
+  fields:
+    WEB_PORT:
+      label: {en: Web port, de: Web-Port, it: Porta web}
+      description:
+        en: The port you open the app on. Change it if the box or another app already uses it.
+        de: Der Port, unter dem du die App öffnest. Ändere ihn, wenn die Box oder eine andere App ihn schon belegt.
+        it: La porta su cui apri l'app. Cambiala se la box o un'altra app la usa già.
+
+services:
+  vaultwarden:
+    image: vaultwarden/server
+    environment:
+      ROCKET_PORT: "${WEB_PORT:-8222}"
+    volumes:
+      - .:/data
+    mem_limit: 128m
+    x-dreamhub:
+      arches: [amd64, arm/v6, arm/v7, arm64]

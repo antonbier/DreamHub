@@ -1,0 +1,32 @@
+# 8080 is DreamHub's; WEBUI_PORT is the image's own setting.
+x-dreamhub:
+  name: qBittorrent
+  category: downloads
+  description:
+    en: A BitTorrent client with a web UI.
+    de: Ein BitTorrent-Client mit Weboberfläche.
+    it: Un client BitTorrent con interfaccia web.
+  webui:
+    port: ${WEB_PORT:-8095}
+  fields:
+    WEB_PORT:
+      label: {en: Web port, de: Web-Port, it: Porta web}
+      description:
+        en: The port you open the app on. Change it if the box or another app already uses it.
+        de: Der Port, unter dem du die App öffnest. Ändere ihn, wenn die Box oder eine andere App ihn schon belegt.
+        it: La porta su cui apri l'app. Cambiala se la box o un'altra app la usa già.
+
+services:
+  qbittorrent:
+    image: linuxserver/qbittorrent
+    environment:
+      WEBUI_PORT: "${WEB_PORT:-8095}"
+    ports:
+      - "6881:6881"
+      - "6881:6881/udp"
+    volumes:
+      - .:/config
+      - ./data:/downloads
+    mem_limit: 256m
+    x-dreamhub:
+      arches: [amd64, arm64]

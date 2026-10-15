@@ -1,0 +1,26 @@
+# AdGuard Home — verified against Docker Hub's tags API on 2026-10-12.
+x-dreamhub:
+  name: AdGuard Home
+  category: network
+  description:
+    en: Network-wide ad and tracker blocking via DNS, with its own DNS-over-HTTPS/TLS.
+    de: Werbe- und Trackerblocker für das ganze Netzwerk über DNS, mit eigenem DNS-over-HTTPS/TLS.
+    it: Blocco di pubblicità e tracker per tutta la rete tramite DNS, con DNS-over-HTTPS/TLS integrato.
+  note:
+    en: In its setup wizard, pick a web port other than 80 — that one is the box's own web interface. The box's own DNS resolver already holds port 53, so this can only be installed once that is switched off.
+    de: Wähle im Einrichtungsassistenten einen anderen Web-Port als 80 – dieser gehört der Weboberfläche der Box. Port 53 belegt bereits der DNS-Resolver der Box; die Installation ist deshalb erst möglich, wenn dieser abgeschaltet ist.
+    it: Nella procedura guidata scegli una porta web diversa da 80, perché quella è l'interfaccia web della box. La porta 53 è già occupata dal resolver DNS della box, quindi l'installazione è possibile solo dopo averlo disattivato.
+  webui:
+    port: 3000
+
+services:
+  adguardhome:
+    image: adguard/adguardhome
+    ports:
+      - "53:53"
+      - "53:53/udp"
+    volumes:
+      - .:/opt/adguardhome/conf
+    mem_limit: 128m
+    x-dreamhub:
+      arches: [386, amd64, arm/v6, arm/v7, arm64, ppc64le]

@@ -1,0 +1,67 @@
+# Nextcloud with its MariaDB. The official image's Apache listens on 80 and
+# has no setting for it, so the command moves its two Listen/VirtualHost
+# lines before it starts ($$ is a literal $ in a compose file). Since that
+# replaces the image's own CMD, NEXTCLOUD_UPDATE=1 makes its entrypoint still
+# run the install/upgrade step. Not yet tried against the real image.
+x-dreamhub:
+  name: Nextcloud
+  category: cloud
+  largeConfig: true
+  description:
+    en: Your own cloud for files, calendars and contacts, with its own database.
+    de: Deine eigene Cloud für Dateien, Kalender und Kontakte, mit eigener Datenbank.
+    it: Il tuo cloud personale per file, calendari e contatti, con database proprio.
+  note:
+    en: Create the admin account on first open. Files go to the app's own data folder on the HDD, which backups leave out unless you pick it.
+    de: Lege beim ersten Öffnen das Admin-Konto an. Die Dateien liegen im eigenen Datenordner der App auf der Festplatte; Sicherungen lassen ihn aus, solange du ihn nicht auswählst.
+    it: Crea l'account amministratore alla prima apertura. I file vanno nella cartella dati dell'app sul disco; i backup la escludono se non la selezioni.
+  main: nextcloud
+  webui:
+    port: ${WEB_PORT:-8088}
+  fields:
+    WEB_PORT:
+      label: {en: Web port, de: Web-Port, it: Porta web}
+      description:
+        en: The port you open the app on. Change it if the box or another app already uses it.
+        de: Der Port, unter dem du die App öffnest. Ändere ihn, wenn die Box oder eine andere App ihn schon belegt.
+        it: La porta su cui apri l'app. Cambiala se la box o un'altra app la usa già.
+
+services:
+  db:
+    image: library/mariadb:lts
+    environment:
+      MARIADB_ROOT_PASSWORD: "{{secret:dbroot}}"
+      MARIADB_DATABASE: nextcloud
+      MARIADB_USER: nextcloud
+      MARIADB_PASSWORD: "{{secret:db}}"
+    # The image passes arguments starting with "-" to mariadbd: the
+    # database stays on 127.0.0.1, off the LAN.
+    command: ["--bind-address=127.0.0.1"]
+    ports:
+      - "127.0.0.1:3306:3306"
+    volumes:
+      - .:/var/lib/mysql
+    mem_limit: 256m
+    x-dreamhub:
+      arches: [amd64, arm64/v8, ppc64le, s390x]
+
+  nextcloud:
+    image: library/nextcloud
+    depends_on: [db]
+    environment:
+      MYSQL_HOST: 127.0.0.1
+      MYSQL_DATABASE: nextcloud
+      MYSQL_USER: nextcloud
+      MYSQL_PASSWORD: "{{secret:db}}"
+      NEXTCLOUD_UPDATE: "1"
+    command:
+      - sh
+      - -c
+      - |-
+        sed -i 's/^Listen 80$$/Listen ${WEB_PORT:-8088}/' /etc/apache2/ports.conf && sed -i 's/<VirtualHost \*:80>/<VirtualHost *:${WEB_PORT:-8088}>/' /etc/apache2/sites-available/000-default.conf && exec apache2-foreground
+    volumes:
+      - .:/var/www/html
+      - ./data:/var/www/html/data
+    mem_limit: 512m
+    x-dreamhub:
+      arches: ["386", amd64, arm/v5, arm/v7, arm64/v8, ppc64le, riscv64, s390x]

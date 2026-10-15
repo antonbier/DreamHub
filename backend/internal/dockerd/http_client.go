@@ -121,7 +121,7 @@ func (c HTTPClient) Logs(ctx context.Context, id string, tail int) ([]byte, erro
 
 func (c HTTPClient) Create(ctx context.Context, spec ContainerSpec) (Container, error) {
 	body, err := json.Marshal(map[string]any{
-		"appId": spec.AppID, "service": spec.Service, "image": spec.Image, "env": spec.Env, "cmd": spec.Cmd,
+		"appId": spec.AppID, "service": spec.Service, "name": spec.Name, "image": spec.Image, "env": spec.Env, "cmd": spec.Cmd,
 		"hostPort": spec.HostPort, "containerPort": spec.ContainerPort,
 		"mounts": spec.Mounts, "elevated": spec.Elevated,
 		"memoryLimitBytes": spec.MemoryLimitBytes, "hostNetwork": spec.HostNetwork, "root": spec.Root,

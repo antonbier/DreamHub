@@ -206,7 +206,10 @@ func (f *File) Resolve(values map[string]string) (*Resolved, error) {
 	}
 	if f.Ext.WebPort != "" {
 		r.svc = ""
-		res.WebPort = r.port(r.sub(f.Ext.WebPort, "webui.port"), "webui.port")
+		// "" or 0 (an optional web port left empty) means no web UI.
+		if w := strings.TrimSpace(r.sub(f.Ext.WebPort, "webui.port")); w != "" && w != "0" {
+			res.WebPort = r.port(w, "webui.port")
+		}
 	}
 	names := map[string]bool{}
 	for _, s := range f.Services {

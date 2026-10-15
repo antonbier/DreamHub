@@ -299,6 +299,9 @@ func ValidateSpec(spec ContainerSpec, policy MountPolicy) error {
 	if !ValidService(spec.Service) {
 		return ErrInvalidService
 	}
+	if !ValidName(spec.Name) {
+		return refuse("invalid", "", "the display name is not valid")
+	}
 	if !ValidRoot(spec.Root) {
 		return refuse("invalid", spec.Root, "the storage root %q is not valid", spec.Root)
 	}

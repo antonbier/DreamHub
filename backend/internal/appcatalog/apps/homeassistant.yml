@@ -1,0 +1,22 @@
+x-dreamhub:
+  name: Home Assistant
+  category: home
+  description:
+    en: "Home automation: lights, sockets, sensors and their rules in one place."
+    de: "Hausautomation: Lichter, Steckdosen, Sensoren und ihre Regeln an einem Ort."
+    it: "Domotica: luci, prese, sensori e le loro regole in un unico posto."
+  note:
+    en: A large download (about 620 MB) and one of the hungrier apps for memory.
+    de: Ein großer Download (rund 620 MB) und eine der speicherhungrigeren Apps.
+    it: Un download pesante (circa 620 MB) e una delle app più esigenti in termini di memoria.
+  webui:
+    port: 8123
+
+services:
+  homeassistant:
+    image: homeassistant/home-assistant:stable
+    volumes:
+      - .:/config
+    mem_limit: 512m
+    x-dreamhub:
+      arches: [amd64, arm64]

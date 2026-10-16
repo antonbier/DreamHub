@@ -79,6 +79,8 @@ If a box runs DreamHub itself, you can **pair** the two: on that box open Settin
 
 A box that is switched off can be **switched on from here**. Under Settings → Boxes → Edit → *Switch on when it is off* choose **Wake-on-LAN** (type the box's MAC address; Wake-on-LAN must be on in the box's network settings and DreamHub on the same network) or **an extension's action** (for example the smart plug the box hangs on). A box that does not answer then shows a **Switch on** button — in the status line when it is the selected box, in the dashboard's strip for the others. Wake-on-LAN goes out at once; an extension's action is previewed first with the extension's own words, because a socket's action usually *toggles* — check that it says "on". Afterwards DreamHub looks at the box every few seconds for up to three minutes and the box turns normal as soon as it answers. Any profile that may use the box and has the remote can do this.
 
+**Watching a recording on another box.** With two or more boxes, an open recording offers **Play on <box>** for every other box that is on and runs DreamHub (the box DreamHub is installed on, or one that is paired). The recording starts in that box's movie player, with seeking; DreamHub reads it from the box it is on, which may be a Basic box. The box you play it on must be able to reach DreamHub's address (the same address as for Plex — see *StreamBase* under Advanced in the box's settings). Needs the remote's permission.
+
 ### API and tokens
 
 For apps and scripts (a DreamDroid-style app, Home Assistant, your own tools): **Settings → Access → API tokens** creates a token — shown once, revocable on its own, acting as the profile that created it (so it sees that profile's boxes and permissions). Send it with every request:

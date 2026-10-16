@@ -474,7 +474,9 @@
       "play": "Play on the TV",
       "playing": "Playing on the TV",
       "length": "{length} min",
-      "watchInBrowser": "Watch in the browser"
+      "watchInBrowser": "Watch in the browser",
+      "playOnBox": "Play on {box}",
+      "playingOnBox": "Playing on {box}"
     },
     "ads": {
       "heading": "Ads",

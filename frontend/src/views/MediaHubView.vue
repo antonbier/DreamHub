@@ -288,7 +288,19 @@
           >
             {{ t('media.detail.watchInBrowser') }}
           </RouterLink>
+          <button
+            v-for="b in playTargets"
+            v-show="openMovie.filename.endsWith('.ts')"
+            :key="b.id"
+            type="button"
+            class="rounded-sm border border-line px-3.5 py-1.5 text-[13.5px] text-text hover:bg-field disabled:opacity-60"
+            :disabled="playing"
+            @click="playOnBox(openMovie, b.id)"
+          >
+            <span aria-hidden="true" class="mr-1.5 inline-block size-2 rounded-full align-middle" :style="{ background: `var(--dh-profile-${b.color || 'slate'})` }"></span>{{ t('media.detail.playOnBox', { box: b.name }) }}
+          </button>
         </div>
+        <p v-if="playedOnBox" class="mt-2 text-[12.5px] text-muted" role="status">{{ t('media.detail.playingOnBox', { box: playedOnBox }) }}</p>
         <p v-if="playError" class="mt-2 text-[12.5px] text-warn">{{ playError }}</p>
       </template>
     </ProgrammeDialog>
@@ -316,6 +328,7 @@ import { titleFromFileName } from '@/lib/titles'
 import { useEnrichStore } from '@/stores/enrich'
 import type { RowState, SuggestSources, TrashActionState } from '@/components/media/types'
 import { useNavigationStore } from '@/stores/navigation'
+import { useBoxesStore } from '@/stores/boxes'
 import { usePlanError } from '@/composables/usePlanError'
 import { useDisplayTimeZone } from '@/composables/useDisplayTimeZone'
 import { formatBytes } from '@/lib/format'
@@ -583,6 +596,7 @@ const playing = ref(false)
 const played = ref(false)
 const playError = ref('')
 watch(openMovie, () => {
+  playedOnBox.value = ''
   played.value = false
   playError.value = ''
 })
@@ -590,6 +604,23 @@ watch(openMovie, () => {
 function movieSubtitle(m: Movie): string {
   const when = m.time > 0 ? new Intl.DateTimeFormat(locale.value, { dateStyle: 'medium', timeStyle: 'short', timeZone: timeZone.value }).format(m.time * 1000) : ''
   return [m.serviceName, when, m.length ? t('media.detail.length', { length: m.length }) : ''].filter(Boolean).join(' · ')
+}
+// Other boxes this recording can play on (M7): a box with DreamHub on it
+// that is on. Nothing is shown with one box.
+const boxesStore = useBoxesStore()
+const playedOnBox = ref('')
+const playTargets = computed(() => boxesStore.others.filter((b) => b.online && (b.full || b.paired)))
+async function playOnBox(m: Movie, target: string) {
+  playing.value = true
+  playError.value = ''
+  try {
+    await api.stream.playOn(target, m.filename, m.title)
+    playedOnBox.value = boxesStore.boxes.find((b) => b.id === target)?.name ?? target
+  } catch (err) {
+    playError.value = planErrorMessage(err)
+  } finally {
+    playing.value = false
+  }
 }
 // Playing is a zap to the recording's own reference — a live input like
 // the remote (ControlHub), not a change to anything, so no preview.

@@ -474,7 +474,9 @@
       "play": "Auf dem TV abspielen",
       "playing": "Läuft auf dem TV",
       "length": "{length} Min.",
-      "watchInBrowser": "Im Browser ansehen"
+      "watchInBrowser": "Im Browser ansehen",
+      "playOnBox": "Auf {box} abspielen",
+      "playingOnBox": "Läuft auf {box}"
     },
     "ads": {
       "heading": "Werbung",

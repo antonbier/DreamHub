@@ -1,6 +1,6 @@
 # Multi-box — plan
 
-Status: **brainstormed and decided 2026-10-16 (six rounds with the owner). M1, M2 and M3 are built against the mock and merged to `main` (see "… as built"); nothing is released before the check of M1 on the reference box; M3a, M4, M5, M6 and M9 (pulled forward by the owner) are built too; M7 and M8 not started.** Replaces the "one box" assumption that runs through the backend (`app.Options.WebControl` is injected once into every hub, the poller and the jobs blocker).
+Status: **brainstormed and decided 2026-10-16 (six rounds with the owner). M1, M2 and M3 are built against the mock and merged to `main` (see "… as built"); nothing is released before the check of M1 on the reference box; M3a, M4, M5, M6 and M9 (pulled forward by the owner) and M7 are built too; M8 not started.** Replaces the "one box" assumption that runs through the backend (`app.Options.WebControl` is injected once into every hub, the poller and the jobs blocker).
 
 ## Goal
 
@@ -90,7 +90,7 @@ Not a goal, not broken by anything here: no new hard-wired Dreambox assumptions 
 | M4 | **Second mock box**, headless-browser pass, screenshots, docs and `de/en/it`. | Test/docs |
 | M5 | **Streams of remote boxes through the hub**; notifications per box with name and switch. | Yes |
 | M6 | **Pairing to Full:** unpaired mode with code on TV/status page, token, version handshake, local-capabilities API; `StreamBase` per box. | Yes |
-| M7 | **Watch a recording of box A on box B.** | Yes |
+| M7 | **Watch a recording of box A on box B.** Built (see "M7 as built"). | Yes |
 | M8 | **Channel list sync** (A → B as a plan), scheduled by effort. | Yes |
 | M9 | **Power-on method** (WoL, extension action — pairs with E5). Built before M7 (see "M9 as built"). | Yes |
 | later | Slim agent variant · VU+/OpenWebif probe and capability list · search across boxes · tuner-aware recording · move/copy between boxes. | — |
@@ -177,3 +177,14 @@ How the wiring was done, so M2 onwards can build on it without re-reading the di
 - **Checked** in headless Chromium against the mock with the second box forced offline in the browser (the mock cannot go offline): the strip shows the button, the plan preview shows the extension's sentence, the form offers the method, no console errors.
 - **Not done:** a "Switch off"/standby for a box (out of scope), waking on a schedule or for a recording on that box, a switch inside the box selector, ARP/MAC discovery (the MAC is typed), a subnet-directed broadcast (the limited broadcast reaches the local segment only), a woken box that comes back with a different address.
 - **Box check (reference box, needs the box on):** the box's "Wake-on-LAN" setting (Dreambox: network settings) — send the packet from the hub while the box is in deep standby; with the eWeLink plug: the plan text must say "on" before confirming (**the plug powers the Unraid server — never confirm an "off" plan without shutting that down first**).
+
+## M7 as built (2026-10-16)
+
+- **One call:** `POST /api/v1/stream/recording/play-on?box=<A>` with `{target, path, title?}` — A is the box the recording is on (the usual `box` parameter), `target` is B. Needs `perm.Control` and a target the profile may use (`box_forbidden`); the same box is `409 relay_same_box`, a target that can't play (Basic, or no known address of the hub) is `409 relay_unavailable`, a recording that is not a `.ts` below one of A's folders or does not exist is `404`.
+- **Source needs nothing:** the hub reads the recording where `Stream.recording` already did — in place when A is DreamHub's own machine, else through A's WebControl `/file` with Range. A can be Basic; the existence check asks for the first byte.
+- **Target:** B's own client (not the box router) gets `PlayMovie` with the reference of `StreamBase(B)` + `/api/v1/stream/relay/<ticket>/file.ts` (zap fallback for a plugin without the movie player, like Plex). `StreamBase` per box is M6's, so a paired box, a box's own override and the local loopback all work the same as for Plex.
+- **The ticket** (`relayTicket`: source box, target, path; 12 h, at most 20) is the credential of a public route, since B's player has no login. The route also admits only B's own address (`Registry.Admits`: loopback for the local box, else the box's resolved host; a box with an explicit stream address is admitted from anywhere, as it may sit behind a proxy). `serveRecording` is `recording` split off, so Range and headers are identical to the browser stream.
+- **UI:** `MediaHubView` — a *Play on <box>* button per other online box with DreamHub on it (`full` or `paired`), only with ≥2 boxes; a status sentence afterwards. `de/en/it`, USER_GUIDE (en/de), CHANGELOG, OpenAPI (`/stream/recording/play-on`); the public relay route is left out of the spec like the Plex one.
+- **Tests:** `api/boxes_m7_test.go` — recording of the bedroom box on the first box (ticket, bytes, unknown ticket), refusals (same box, missing file, non-ts, unknown or Basic target, empty body), paired target from the hub's address with Range and the address check (a request from elsewhere is 403), the box restriction of a profile. Checked in headless Chromium against the mock (Wohnzimmer → Dreambox): button, call, status sentence, no console errors.
+- **Not done:** resume position, playing a recording of A on B's *browser* is unchanged, a picker when many boxes (one button per box is fine for a household), the "A is on a box the hub can't reach but B can" case, a Plex-style progress report, AdScan marks of A applied while B plays.
+- **Box check (reference box):** needs a second box with DreamHub paired (or the reference box as target and a Basic box as source): start a recording of the other box and confirm the movie player opens, seeks and that DreamHub's log shows the relay requests from that box's address.

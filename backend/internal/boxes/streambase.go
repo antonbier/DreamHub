@@ -43,6 +43,53 @@ func (r *Registry) StreamBase(ctx context.Context) string {
 	if err != nil {
 		return ""
 	}
+	return r.baseOf(e)
+}
+
+// PlayBase is StreamBase for the box with this ID.
+func (r *Registry) PlayBase(id string) string {
+	e, ok := r.Get(id)
+	if !ok {
+		return ""
+	}
+	return r.baseOf(e)
+}
+
+// LookupHost resolves a box's host name; a variable so tests can replace it.
+var LookupHost = net.LookupHost
+
+// Admits reports whether a request from ip may be a box's own player
+// fetching a film: the machine itself for the local box, else the box's
+// address. A box with an explicit stream address (a proxy, a VPN) is
+// admitted from anywhere — the ticket is its credential then.
+func (r *Registry) Admits(id string, ip net.IP) bool {
+	e, ok := r.Get(id)
+	if !ok || ip == nil {
+		return false
+	}
+	switch {
+	case e.Local:
+		return ip.IsLoopback()
+	case e.StreamBase != "":
+		return true
+	}
+	u, err := url.Parse(e.URL)
+	if err != nil || u.Hostname() == "" {
+		return false
+	}
+	addrs, err := LookupHost(u.Hostname())
+	if err != nil {
+		return false
+	}
+	for _, a := range addrs {
+		if net.ParseIP(a).Equal(ip) {
+			return true
+		}
+	}
+	return false
+}
+
+func (r *Registry) baseOf(e Entry) string {
 	r.mu.RLock()
 	local, port := r.localBase, r.port
 	r.mu.RUnlock()

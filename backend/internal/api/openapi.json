@@ -6606,6 +6606,28 @@
      }
     }
    }
+  },
+  "/stream/recording/play-on": {
+   "post": {
+    "summary": "Play a recording of this box in the movie player of another box (body: target box id, path, optional title). The hub streams it from this box; the target must be Full (paired) and reach the hub",
+    "tags": [
+     "stream"
+    ],
+    "operationId": "POST_stream_recording_play-on",
+    "parameters": [
+     {
+      "$ref": "#/components/parameters/Box"
+     }
+    ],
+    "responses": {
+     "200": {
+      "description": "OK"
+     },
+     "default": {
+      "$ref": "#/components/responses/Error"
+     }
+    }
+   }
   }
  }
 }

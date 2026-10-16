@@ -423,6 +423,10 @@ export const api = {
       request<{ channels: NowNext[]; playing: string }>('GET', `/api/v1/stream/channels?bouquet=${encodeURIComponent(bouquet)}`),
     picon: (ref: string, name: string) => requestBlob(`/api/v1/stream/picon?ref=${encodeURIComponent(displayRef(ref))}&name=${encodeURIComponent(name)}`),
     // The streams themselves are read by src/streaming/tsPlayer.ts.
+    // Plays a recording of this box on another box's screen (M7); the hub
+    // streams it from here.
+    playOn: (target: string, path: string, title?: string) =>
+      request<{ playing: string; target: string }>('POST', '/api/v1/stream/recording/play-on', { target, path, title }),
   },
   series: {
     markers: () => request<{ markers: SeriesMarker[] }>('GET', '/api/v1/series/markers'),

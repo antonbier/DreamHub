@@ -474,7 +474,9 @@
       "play": "Riproduci sulla TV",
       "playing": "In riproduzione sulla TV",
       "length": "{length} min",
-      "watchInBrowser": "Guarda nel browser"
+      "watchInBrowser": "Guarda nel browser",
+      "playOnBox": "Riproduci su {box}",
+      "playingOnBox": "In riproduzione su {box}"
     },
     "ads": {
       "heading": "Pubblicità",

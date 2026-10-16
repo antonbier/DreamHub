@@ -396,7 +396,7 @@ func New(ctx context.Context, o Options) (*App, error) {
 		StreamBase: o.StreamBase, StreamBaseFor: boxReg.StreamBase, Now: now, Logger: o.Logger}
 	guideHub := &hubs_.Guide{WC: wc, Now: now, PiconDirs: o.PiconDirs, Plex: plexHub}
 	radioHub := &hubs_.Radio{WC: wc, Now: now, PiconDirs: o.PiconDirs}
-	streamHub := &hubs_.Stream{WC: wc, FS: o.RecordingsFS, PiconDirs: o.PiconDirs}
+	streamHub := &hubs_.Stream{WC: wc, FS: o.RecordingsFS, PiconDirs: o.PiconDirs, Boxes: boxReg, Now: now}
 	seriesHub := &hubs_.Series{SR: sr, WC: wc, FS: o.RecordingsFS, TVmaze: o.TVmaze, Store: st, Settings: svc, DMI: o.DMI, Now: now}
 	discoveryHub := &hubs_.Discovery{WC: wc, SR: sr, AT: at, AI: o.AI, Store: st, Settings: svc, Now: now, Plex: plexHub}
 	systemHub := &hubs_.System{Store: st, Settings: svc, Dashboard: dash, Plans: plans, Now: now,
@@ -524,7 +524,7 @@ func New(ctx context.Context, o Options) (*App, error) {
 			{HubID: hub.IDMedia, Prefixes: []string{"/api/v1/media"}, Register: mediaHub.Mount, Perms: mediaHub.Perms()},
 			{HubID: hub.IDGuide, Prefixes: []string{"/api/v1/guide"}, Register: guideHub.Mount},
 			{HubID: hub.IDRadio, Prefixes: []string{"/api/v1/radio"}, Register: radioHub.Mount},
-			{HubID: hub.IDStream, Prefixes: []string{"/api/v1/stream"}, Register: streamHub.Mount},
+			{HubID: hub.IDStream, Prefixes: []string{"/api/v1/stream"}, Register: streamHub.Mount, Perms: streamHub.Perms()},
 			{HubID: hub.IDSeries, Prefixes: []string{"/api/v1/series"}, Register: seriesHub.Mount},
 			{HubID: hub.IDDiscovery, Prefixes: []string{"/api/v1/discovery"}, Register: discoveryHub.Mount, Perms: discoveryHub.Perms()},
 			{HubID: hub.IDDevice, Prefixes: []string{"/api/v1/changes", "/api/v1/system"}, Register: systemHub.Mount, Perms: systemHub.Perms()},
@@ -541,6 +541,7 @@ func New(ctx context.Context, o Options) (*App, error) {
 		// way — loopback only, no DreamHub login of its own.
 		Public: []api.PublicRoute{
 			{HubID: hub.IDPlex, Pattern: "GET /api/v1/plex/stream/{ticket}/{name}", Handler: http.HandlerFunc(plexHub.Stream)},
+			{HubID: hub.IDStream, Pattern: "GET /api/v1/stream/relay/{ticket}/{name}", Handler: http.HandlerFunc(streamHub.Relay)},
 			{HubID: hub.IDApps, Pattern: "POST /api/v1/extensions/register", Handler: http.HandlerFunc(extensionsHub.Register)},
 		},
 		User:   user,

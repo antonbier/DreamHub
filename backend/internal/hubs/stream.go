@@ -14,6 +14,7 @@ import (
 
 	"github.com/antonbier/DreamHub/backend/internal/box"
 	"github.com/antonbier/DreamHub/backend/internal/httpx"
+	"github.com/antonbier/DreamHub/backend/internal/perm"
 	"github.com/antonbier/DreamHub/backend/internal/recfs"
 	"github.com/antonbier/DreamHub/backend/internal/webcontrol"
 )
@@ -37,6 +38,11 @@ type Stream struct {
 	FS recfs.FS
 	// PiconDirs: as Guide's; nil means DefaultPiconDirs.
 	PiconDirs []string
+	// Boxes lets a recording be played on another box (stream_relay.go);
+	// nil: not offered.
+	Boxes RelayBoxes
+	// Now is the clock for ticket lifetimes; nil means time.Now.
+	Now func() time.Time
 	// FirstData is how long a live stream may stay empty before it counts
 	// as "no tuner"; 0 means 12 s.
 	FirstData time.Duration
@@ -45,6 +51,9 @@ type Stream struct {
 	// and its own uplink.
 	slotsMu sync.Mutex
 	slots   map[string]chan struct{}
+
+	relayMu sync.Mutex
+	relays  map[string]relayTicket
 }
 
 // maxLiveStreams: each stream is 3–15 Mbit/s out of the box, and every
@@ -64,6 +73,12 @@ func (h *Stream) Mount(mux httpx.Mux) {
 	mux.HandleFunc("GET /api/v1/stream/picon", h.picon)
 	mux.HandleFunc("GET /api/v1/stream/live", h.live)
 	mux.HandleFunc("GET /api/v1/stream/recording", h.recording)
+	mux.HandleFunc("POST /api/v1/stream/recording/play-on", h.playOn)
+}
+
+// Perms: starting a film on another box's screen is the remote's job.
+func (h *Stream) Perms() map[string]perm.Perm {
+	return map[string]perm.Perm{"POST /api/v1/stream/recording/play-on": perm.Control}
 }
 
 func (h *Stream) bouquets(w http.ResponseWriter, r *http.Request) {
@@ -185,13 +200,18 @@ func (h *Stream) live(w http.ResponseWriter, r *http.Request) {
 // recording plays a recording, with Range for seeking: from disk when
 // DreamHub runs on the box, else through WebControl's /file.
 func (h *Stream) recording(w http.ResponseWriter, r *http.Request) {
-	ctx := r.Context()
+	h.serveRecording(w, r, r.Context(), r.URL.Query().Get("path"))
+}
+
+// serveRecording answers r with the recording at path on the box ctx names
+// (the relay of a recording to another box, stream_relay.go, serves the
+// same bytes under a ticket instead of a login).
+func (h *Stream) serveRecording(w http.ResponseWriter, r *http.Request, ctx context.Context, want string) {
 	roots, err := h.WC.Locations(ctx)
 	if err != nil {
 		httpx.WriteError(w, r, http.StatusBadGateway, "webcontrol_unavailable", "could not reach WebControl")
 		return
 	}
-	want := r.URL.Query().Get("path")
 	if opener, ok := h.FS.(recfs.Opener); ok && onBox(ctx, h.FS, roots) {
 		p, err := recfs.CleanIn(h.FS, want, roots)
 		if err != nil || !strings.HasSuffix(p, ".ts") {

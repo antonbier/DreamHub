@@ -65,7 +65,9 @@ type Deps struct {
 	WebControl webcontrol.Client
 	// Boxes are the boxes the `box` query parameter picks from; nil means
 	// the single box of the WebControl client above.
-	Boxes      *boxes.Registry
+	Boxes *boxes.Registry
+	// BoxManager adds, changes and removes boxes at runtime.
+	BoxManager *boxes.Manager
 	Verifier   auth.Verifier
 	Settings   *settings.Service
 	Connectors *connector.Registry
@@ -146,6 +148,11 @@ func NewRouterWithRoutes(d Deps) (http.Handler, []Route) {
 	core.HandleFunc("GET /api/v1/jobs", handleJobs(d))
 	core.HandleFunc("GET /api/v1/jobs/{id}", handleJob(d))
 	core.HandleFunc("POST /api/v1/jobs/{id}/cancel", handleCancelJob(d))
+	core.HandleFunc("GET /api/v1/boxes", handleListBoxes(d))
+	core.HandleFunc("POST /api/v1/boxes/test", handleTestBox(d))
+	core.HandleFunc("POST /api/v1/boxes", handleAddBox(d))
+	core.HandleFunc("PATCH /api/v1/boxes/{id}", handleUpdateBox(d))
+	core.HandleFunc("POST /api/v1/boxes/{id}/remove/plan", handleRemoveBoxPlan(d))
 	core.HandleFunc("POST /api/v1/profiles", handleCreateProfile(d))
 	core.HandleFunc("PATCH /api/v1/profiles/{id}", handleUpdateProfile(d))
 	core.HandleFunc("DELETE /api/v1/profiles/{id}", handleDeleteProfile(d))
@@ -197,25 +204,29 @@ func NewRouterWithRoutes(d Deps) (http.Handler, []Route) {
 // changing ones that every profile may use say so explicitly (a changing
 // route without an entry would be admin-only).
 var corePerms = map[string]perm.Perm{
-	"PATCH /api/v1/settings":          perm.Watch, // per field: global ones need perm.SettingsGlobal (internal/settings)
-	"PUT /api/v1/dashboard":           perm.Watch, // the profile's own
-	"DELETE /api/v1/dashboard":        perm.Watch, // back to the role's template
-	"GET /api/v1/dashboard/template":  perm.Profiles,
-	"PUT /api/v1/dashboard/template":  perm.Profiles,
-	"POST /api/v1/enrich/lookup":      perm.Watch, // a read with a body
-	"POST /api/v1/dashboard/view":     perm.Watch, // a read with a body
-	"POST /api/v1/plans/{id}/apply":   perm.Watch, // the plan's creator, who needed the permission to plan it
-	"POST /api/v1/notifications/read": perm.Watch,
-	"POST /api/v1/jobs/{id}/cancel":   perm.Watch, // the job's owner, or perm.System
-	"PUT /api/v1/profiles/me/pin":     perm.Watch,
-	"POST /api/v1/push/test":          perm.System,
-	"GET /api/v1/tokens":              perm.System,
-	"POST /api/v1/tokens":             perm.System,
-	"DELETE /api/v1/tokens/{id}":      perm.System,
-	"GET /api/v1/connectors":          perm.SettingsGlobal,
-	"POST /api/v1/profiles":           perm.Profiles,
-	"PATCH /api/v1/profiles/{id}":     perm.Profiles,
-	"DELETE /api/v1/profiles/{id}":    perm.Profiles,
+	"PATCH /api/v1/settings":              perm.Watch, // per field: global ones need perm.SettingsGlobal (internal/settings)
+	"PUT /api/v1/dashboard":               perm.Watch, // the profile's own
+	"DELETE /api/v1/dashboard":            perm.Watch, // back to the role's template
+	"GET /api/v1/dashboard/template":      perm.Profiles,
+	"PUT /api/v1/dashboard/template":      perm.Profiles,
+	"POST /api/v1/enrich/lookup":          perm.Watch, // a read with a body
+	"POST /api/v1/dashboard/view":         perm.Watch, // a read with a body
+	"POST /api/v1/plans/{id}/apply":       perm.Watch, // the plan's creator, who needed the permission to plan it
+	"POST /api/v1/notifications/read":     perm.Watch,
+	"POST /api/v1/jobs/{id}/cancel":       perm.Watch, // the job's owner, or perm.System
+	"PUT /api/v1/profiles/me/pin":         perm.Watch,
+	"POST /api/v1/push/test":              perm.System,
+	"GET /api/v1/tokens":                  perm.System,
+	"POST /api/v1/tokens":                 perm.System,
+	"DELETE /api/v1/tokens/{id}":          perm.System,
+	"GET /api/v1/connectors":              perm.SettingsGlobal,
+	"POST /api/v1/boxes/test":             perm.SettingsGlobal,
+	"POST /api/v1/boxes":                  perm.SettingsGlobal,
+	"PATCH /api/v1/boxes/{id}":            perm.SettingsGlobal,
+	"POST /api/v1/boxes/{id}/remove/plan": perm.SettingsGlobal,
+	"POST /api/v1/profiles":               perm.Profiles,
+	"PATCH /api/v1/profiles/{id}":         perm.Profiles,
+	"DELETE /api/v1/profiles/{id}":        perm.Profiles,
 }
 
 // hubEnabledGuard answers 404 hub_disabled for a hub switched off in

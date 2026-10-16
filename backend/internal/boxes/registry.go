@@ -41,6 +41,7 @@ type Entry struct {
 type Registry struct {
 	mu      sync.RWMutex
 	entries []Entry
+	states  map[string]State
 }
 
 // NewRegistry returns an empty registry.
@@ -68,6 +69,7 @@ func (r *Registry) Remove(id string) {
 	for i := range r.entries {
 		if r.entries[i].ID == id {
 			r.entries = append(r.entries[:i], r.entries[i+1:]...)
+			delete(r.states, id)
 			return
 		}
 	}
@@ -123,4 +125,31 @@ func (r *Registry) For(ctx context.Context) (Entry, error) {
 		return Entry{}, ErrUnknownBox
 	}
 	return e, nil
+}
+
+// State is what is known about a box's reachability.
+type State struct {
+	// Known: at least one poll has happened; before that a box counts as
+	// online (the UI must not grey a box out on a guess).
+	Known  bool
+	Online bool
+}
+
+// SetOnline records the result of the latest poll of a box.
+func (r *Registry) SetOnline(id string, online bool) {
+	r.mu.Lock()
+	defer r.mu.Unlock()
+	if r.states == nil {
+		r.states = map[string]State{}
+	}
+	r.states[id] = State{Known: true, Online: online}
+}
+
+// Online reports whether the box answered its latest poll. A box not
+// polled yet counts as online.
+func (r *Registry) Online(id string) bool {
+	r.mu.RLock()
+	defer r.mu.RUnlock()
+	s, ok := r.states[id]
+	return !ok || s.Online
 }

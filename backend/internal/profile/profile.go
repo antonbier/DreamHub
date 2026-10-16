@@ -72,6 +72,8 @@ type Profile struct {
 	HasPin      bool            `json:"hasPin"`
 	Overrides   map[string]bool `json:"overrides"`
 	Permissions []perm.Perm     `json:"permissions"`
+	// Boxes are the boxes the profile may use; empty means all.
+	Boxes []string `json:"boxes"`
 }
 
 // View turns a stored user into a Profile.
@@ -81,7 +83,7 @@ func View(u store.User) Profile {
 		o = map[string]bool{}
 	}
 	return Profile{ID: u.ID, Name: u.Name, Role: u.Role, Color: u.Color, HasPin: u.HasPin(),
-		Overrides: o, Permissions: perm.For(u).List()}
+		Overrides: o, Permissions: perm.For(u).List(), Boxes: nonNilBoxes(u.Boxes)}
 }
 
 // Service manages profiles and sessions.
@@ -228,6 +230,15 @@ type Input struct {
 	// Pin sets a new PIN; "" removes it.
 	Pin       *string         `json:"pin"`
 	Overrides map[string]bool `json:"overrides"`
+	// Boxes lists the boxes the profile may use; an empty list means all.
+	Boxes *[]string `json:"boxes"`
+}
+
+func nonNilBoxes(b []string) []string {
+	if b == nil {
+		return []string{}
+	}
+	return b
 }
 
 // Create adds a profile.
@@ -380,6 +391,22 @@ func apply(u *store.User, in Input) error {
 			o[k] = v
 		}
 		u.Overrides = o
+	}
+	if in.Boxes != nil {
+		seen := map[string]bool{}
+		list := []string{}
+		for _, id := range *in.Boxes {
+			id = strings.TrimSpace(id)
+			if id == "" {
+				errs["boxes"] = "invalid"
+				break
+			}
+			if !seen[id] {
+				seen[id] = true
+				list = append(list, id)
+			}
+		}
+		u.Boxes = list
 	}
 	if len(errs) > 0 {
 		return &ValidationError{Fields: errs}

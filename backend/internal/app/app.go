@@ -359,7 +359,8 @@ func New(ctx context.Context, o Options) (*App, error) {
 		Blockers: []jobs.Blocker{recordingBlocker(wc)}}
 	poller := &events.Fleet{IDs: boxReg.IDs, New: func(id string) *events.Poller {
 		return &events.Poller{WC: wc, Bus: eventBus, Logger: o.Logger, Now: now, BoxID: id,
-			Tag: func() bool { return len(boxReg.List()) > 1 }}
+			Tag:     func() bool { return len(boxReg.List()) > 1 },
+			OnReach: func(online bool) { boxReg.SetOnline(id, online) }}
 	}}
 
 	var enricher *enrich.Service
@@ -471,6 +472,7 @@ func New(ctx context.Context, o Options) (*App, error) {
 	handler, routes := api.NewRouterWithRoutes(api.Deps{
 		WebControl: wc,
 		Boxes:      boxReg,
+		BoxManager: &boxes.Manager{Store: st, Registry: boxReg, Factory: o.BoxFactory},
 		Verifier:   auth.NewSettingsVerifier(svc, tokens),
 		Settings:   svc,
 		Connectors: conns,

@@ -8,6 +8,7 @@ import (
 	"fmt"
 	"os"
 	"path/filepath"
+	"strings"
 	"testing"
 
 	"github.com/antonbier/DreamHub/backend/internal/box"
@@ -140,7 +141,15 @@ func TestMigration_BoxesKeepsEarlierDataOnTheFirstBox(t *testing.T) {
 	if err != nil {
 		t.Fatal(err)
 	}
-	last := len(migrations) - 1
+	last := -1 // the index of the multi-box migration
+	for i, m := range migrations {
+		if strings.Contains(m, "CREATE TABLE boxes (") {
+			last = i
+		}
+	}
+	if last < 0 {
+		t.Fatal("multi-box migration not found")
+	}
 	for i := 0; i < last; i++ {
 		if _, err := db.Exec(migrations[i]); err != nil {
 			t.Fatalf("migration %d: %v", i+1, err)

@@ -37,6 +37,22 @@ type User struct {
 	// Bouquets are the bouquet references the profile sees; empty means
 	// all (docs/CHANNELHUB_PLAN.md, C5 — prepared, nothing sets it yet).
 	Bouquets []string
+	// Boxes are the IDs of the boxes the profile may use; empty means all
+	// (docs/MULTIDEVICE_PLAN.md, M3).
+	Boxes []string
+}
+
+// MayUseBox reports whether the profile may use the box.
+func (u User) MayUseBox(id string) bool {
+	if len(u.Boxes) == 0 {
+		return true
+	}
+	for _, b := range u.Boxes {
+		if b == id {
+			return true
+		}
+	}
+	return false
 }
 
 // HasPin reports whether the profile is protected by a PIN.
@@ -82,9 +98,10 @@ func (s *Store) CreateUserLike(ctx context.Context, u User, likeID int64) (User,
 
 	overrides, _ := json.Marshal(nonNil(u.Overrides))
 	bouquets, _ := json.Marshal(nonNilList(u.Bouquets))
+	boxList, _ := json.Marshal(nonNilList(u.Boxes))
 	now := s.timestamp()
-	res, err := tx.ExecContext(ctx, `INSERT INTO users (name, role, created_at, pin_hash, color, overrides, bouquets) VALUES (?, ?, ?, ?, ?, ?, ?)`,
-		u.Name, string(u.Role), now, u.PinHash, u.Color, string(overrides), string(bouquets))
+	res, err := tx.ExecContext(ctx, `INSERT INTO users (name, role, created_at, pin_hash, color, overrides, bouquets, boxes) VALUES (?, ?, ?, ?, ?, ?, ?, ?)`,
+		u.Name, string(u.Role), now, u.PinHash, u.Color, string(overrides), string(bouquets), string(boxList))
 	if err != nil {
 		if s.nameTaken(ctx, tx, u.Name, 0) {
 			return User{}, ErrNameTaken
@@ -133,8 +150,9 @@ func (s *Store) UpdateUser(ctx context.Context, u User) error {
 	}
 	overrides, _ := json.Marshal(nonNil(u.Overrides))
 	bouquets, _ := json.Marshal(nonNilList(u.Bouquets))
-	if _, err := tx.ExecContext(ctx, `UPDATE users SET name = ?, role = ?, pin_hash = ?, color = ?, overrides = ?, bouquets = ? WHERE id = ?`,
-		u.Name, string(u.Role), u.PinHash, u.Color, string(overrides), string(bouquets), u.ID); err != nil {
+	boxList, _ := json.Marshal(nonNilList(u.Boxes))
+	if _, err := tx.ExecContext(ctx, `UPDATE users SET name = ?, role = ?, pin_hash = ?, color = ?, overrides = ?, bouquets = ?, boxes = ? WHERE id = ?`,
+		u.Name, string(u.Role), u.PinHash, u.Color, string(overrides), string(bouquets), string(boxList), u.ID); err != nil {
 		return err
 	}
 	if oldPin != u.PinHash {
@@ -189,7 +207,7 @@ func nonNilList(l []string) []string {
 	return l
 }
 
-const userCols = `id, name, role, created_at, pin_hash, color, overrides, bouquets`
+const userCols = `id, name, role, created_at, pin_hash, color, overrides, bouquets, boxes`
 
 // User returns a user by ID.
 func (s *Store) User(ctx context.Context, id int64) (User, error) {
@@ -229,8 +247,8 @@ func (s *Store) scanUser(row *sql.Row) (User, error) {
 
 func scanUserRow(row scannable) (User, error) {
 	var u User
-	var role, created, overrides, bouquets string
-	if err := row.Scan(&u.ID, &u.Name, &role, &created, &u.PinHash, &u.Color, &overrides, &bouquets); err != nil {
+	var role, created, overrides, bouquets, boxList string
+	if err := row.Scan(&u.ID, &u.Name, &role, &created, &u.PinHash, &u.Color, &overrides, &bouquets, &boxList); err != nil {
 		return User{}, err
 	}
 	u.Role = Role(role)
@@ -238,6 +256,7 @@ func scanUserRow(row scannable) (User, error) {
 	u.Overrides = map[string]bool{}
 	_ = json.Unmarshal([]byte(overrides), &u.Overrides)
 	_ = json.Unmarshal([]byte(bouquets), &u.Bouquets)
+	_ = json.Unmarshal([]byte(boxList), &u.Boxes)
 	return u, nil
 }
 

@@ -1,11 +1,17 @@
 package api
 
 import (
+	"context"
+	"errors"
 	"net/http"
 	"strings"
 
 	"github.com/antonbier/DreamHub/backend/internal/box"
+	"github.com/antonbier/DreamHub/backend/internal/boxes"
 	"github.com/antonbier/DreamHub/backend/internal/httpx"
+	"github.com/antonbier/DreamHub/backend/internal/perm"
+	"github.com/antonbier/DreamHub/backend/internal/plan"
+	"github.com/antonbier/DreamHub/backend/internal/store"
 )
 
 // BoxParam is the query parameter that names the box a request is about
@@ -29,13 +35,28 @@ func withBox(d Deps, next http.Handler) http.Handler {
 		return next
 	}
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		user, _ := httpx.User(r.Context())
 		id := r.URL.Query().Get(BoxParam)
 		if id == "" {
-			id = d.Boxes.DefaultID()
+			// No box named: the first one this profile may use.
+			for _, c := range d.Boxes.List() {
+				if user.MayUseBox(c.ID) {
+					id = c.ID
+					break
+				}
+			}
+			if id == "" {
+				httpx.WriteError(w, r, http.StatusForbidden, "box_forbidden", "this profile may not use any box")
+				return
+			}
 		}
 		e, ok := d.Boxes.Get(id)
 		if !ok {
 			httpx.WriteError(w, r, http.StatusNotFound, "box_not_found", "no such box")
+			return
+		}
+		if !user.MayUseBox(e.ID) {
+			httpx.WriteError(w, r, http.StatusForbidden, "box_forbidden", "this profile may not use that box")
 			return
 		}
 		ctx := box.With(r.Context(), e.ID)
@@ -50,4 +71,157 @@ func withBox(d Deps, next http.Handler) http.Handler {
 		}
 		next.ServeHTTP(w, r.WithContext(ctx))
 	})
+}
+
+// boxView is a box as clients see it. The address and login name are for
+// the administrator only; the password never leaves the server.
+type boxView struct {
+	ID          string `json:"id"`
+	Name        string `json:"name"`
+	Color       string `json:"color"`
+	Full        bool   `json:"full"`
+	Online      bool   `json:"online"`
+	URL         string `json:"url,omitempty"`
+	Username    string `json:"username,omitempty"`
+	HasPassword bool   `json:"hasPassword,omitempty"`
+}
+
+func viewBox(d Deps, e boxes.Entry, admin bool) boxView {
+	v := boxView{ID: e.ID, Name: e.Name, Color: e.Color, Full: e.Local, Online: d.Boxes.Online(e.ID)}
+	if admin && !e.Local {
+		v.URL, v.Username, v.HasPassword = e.URL, e.Username, e.Password != ""
+	}
+	return v
+}
+
+// handleListBoxes lists the boxes the caller may use; an administrator
+// (who manages the list) sees all of them, with the connection details.
+func handleListBoxes(d Deps) http.HandlerFunc {
+	return func(w http.ResponseWriter, r *http.Request) {
+		admin := perms(r).Has(perm.SettingsGlobal)
+		out := []boxView{}
+		for _, e := range d.Boxes.List() {
+			if admin || current(r).MayUseBox(e.ID) {
+				out = append(out, viewBox(d, e, admin))
+			}
+		}
+		httpx.WriteJSON(w, http.StatusOK, map[string]any{"boxes": out, "default": box.Key(r.Context())})
+	}
+}
+
+// writeBoxError answers a box-management error; false when err is nil.
+func writeBoxError(w http.ResponseWriter, r *http.Request, err error) bool {
+	var ve *boxes.ValidationError
+	switch {
+	case err == nil:
+		return false
+	case errors.As(err, &ve):
+		fields := map[string]httpx.FieldError{}
+		for k, c := range ve.Fields {
+			fields[k] = httpx.FieldError{Code: c}
+		}
+		httpx.WriteErrorDetails(w, r, http.StatusBadRequest, "validation_failed", "invalid box", fields)
+	case errors.Is(err, boxes.ErrUnauthorized):
+		httpx.WriteError(w, r, http.StatusUnprocessableEntity, "box_unauthorized", "the box wants a login, or this one is wrong")
+	case errors.Is(err, boxes.ErrUnreachable):
+		httpx.WriteError(w, r, http.StatusUnprocessableEntity, "box_unreachable", "the box does not answer at that address")
+	case errors.Is(err, boxes.ErrUnknownBox), errors.Is(err, store.ErrBoxNotFound):
+		httpx.WriteError(w, r, http.StatusNotFound, "box_not_found", "no such box")
+	case errors.Is(err, boxes.ErrMainBox):
+		httpx.WriteError(w, r, http.StatusConflict, "box_is_main", "the first box can't be removed")
+	default:
+		httpx.WriteError(w, r, http.StatusInternalServerError, "internal", "could not change the boxes")
+	}
+	return true
+}
+
+// handleTestBox tries an address and login without saving anything.
+func handleTestBox(d Deps) http.HandlerFunc {
+	return func(w http.ResponseWriter, r *http.Request) {
+		var in boxes.Input
+		if err := httpx.DecodeJSON(r, &in); err != nil {
+			httpx.WriteError(w, r, http.StatusBadRequest, "invalid_body", `expected {"url", "username", "password"}`)
+			return
+		}
+		b, err := d.BoxManager.Candidate(in)
+		if writeBoxError(w, r, err) {
+			return
+		}
+		res, err := d.BoxManager.Test(r.Context(), b)
+		if writeBoxError(w, r, err) {
+			return
+		}
+		httpx.WriteJSON(w, http.StatusOK, map[string]any{"deviceName": res.DeviceName, "tuners": res.Tuners})
+	}
+}
+
+func handleAddBox(d Deps) http.HandlerFunc {
+	return func(w http.ResponseWriter, r *http.Request) {
+		var in boxes.Input
+		if err := httpx.DecodeJSON(r, &in); err != nil {
+			httpx.WriteError(w, r, http.StatusBadRequest, "invalid_body", `expected {"name", "color", "url", "username", "password"}`)
+			return
+		}
+		e, err := d.BoxManager.Add(r.Context(), in)
+		if writeBoxError(w, r, err) {
+			return
+		}
+		logBoxChange(d, r, "box.add", "Added box "+e.Name)
+		httpx.WriteJSON(w, http.StatusCreated, viewBox(d, e, true))
+	}
+}
+
+func handleUpdateBox(d Deps) http.HandlerFunc {
+	return func(w http.ResponseWriter, r *http.Request) {
+		var in boxes.Input
+		if err := httpx.DecodeJSON(r, &in); err != nil {
+			httpx.WriteError(w, r, http.StatusBadRequest, "invalid_body", `expected {"name", "color", "url", "username", "password"}`)
+			return
+		}
+		e, err := d.BoxManager.Update(r.Context(), r.PathValue("id"), in)
+		if writeBoxError(w, r, err) {
+			return
+		}
+		logBoxChange(d, r, "box.update", "Changed box "+e.Name)
+		httpx.WriteJSON(w, http.StatusOK, viewBox(d, e, true))
+	}
+}
+
+// handleRemoveBoxPlan previews removing a box: what DreamHub keeps for it
+// is deleted with it, and that is said before anything happens.
+func handleRemoveBoxPlan(d Deps) http.HandlerFunc {
+	return func(w http.ResponseWriter, r *http.Request) {
+		id := r.PathValue("id")
+		e, ok := d.Boxes.Get(id)
+		if !ok {
+			writeBoxError(w, r, boxes.ErrUnknownBox)
+			return
+		}
+		if id == d.Boxes.DefaultID() {
+			writeBoxError(w, r, boxes.ErrMainBox)
+			return
+		}
+		p := d.Plans.Create(r.Context(), current(r), plan.Draft{
+			Action:      "box.remove",
+			Changes:     []plan.Change{{Type: "box.remove", Before: viewBox(d, e, true)}},
+			Summary:     "Remove box " + e.Name,
+			Detail:      map[string]string{"box": id},
+			Fingerprint: id,
+			Current: func(ctx context.Context) (string, error) {
+				if _, ok := d.Boxes.Get(id); !ok {
+					return "", nil
+				}
+				return id, nil
+			},
+			Execute: func(ctx context.Context) error { return d.BoxManager.Remove(ctx, id) },
+		})
+		httpx.WriteJSON(w, http.StatusOK, map[string]any{"plan": p})
+	}
+}
+
+func logBoxChange(d Deps, r *http.Request, action, summary string) {
+	u := current(r)
+	if err := d.Store.AppendChange(r.Context(), store.ChangeEntry{UserID: u.ID, Action: action, Summary: summary}); err != nil {
+		d.Logger.Error("recording a box change failed", "requestId", httpx.RequestID(r.Context()), "error", err)
+	}
 }

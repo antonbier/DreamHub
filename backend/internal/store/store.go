@@ -404,6 +404,11 @@ var migrations = []string{
 	-- A job runs against the box it was queued for.
 	ALTER TABLE jobs ADD COLUMN box_id TEXT NOT NULL DEFAULT 'main';
 	`,
+	`
+	-- The boxes a profile may use (docs/MULTIDEVICE_PLAN.md, M3) as a JSON
+	-- list of box IDs; empty means all boxes.
+	ALTER TABLE users ADD COLUMN boxes TEXT NOT NULL DEFAULT '[]';
+	`,
 }
 
 func (s *Store) migrate(ctx context.Context) error {

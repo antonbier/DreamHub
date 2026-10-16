@@ -3,6 +3,7 @@ package api_test
 import (
 	"context"
 	"encoding/json"
+	"errors"
 	"net/http"
 	"strings"
 	"testing"
@@ -236,4 +237,178 @@ func TestBox_NavigationOfABasicBox(t *testing.T) {
 			t.Errorf("navigation%s: AppsHub shown = %v", c.query, hasApps)
 		}
 	}
+}
+
+// brokenBox is a box whose device info fails the way a real one would.
+type brokenBox struct {
+	webcontrol.Client
+	err error
+}
+
+func (b brokenBox) DeviceInfo(context.Context) (*webcontrol.DeviceInfo, error) { return nil, b.err }
+
+// testBoxFactory connects "further boxes" to mock boxes; an address
+// containing "locked" wants a login, "dead" does not answer.
+func testBoxFactory(b store.Box) (boxes.Clients, error) {
+	c := boxes.Clients{WC: wcmock.New(), Series: srmock.New(), AutoTimer: mock.New()}
+	switch {
+	case strings.Contains(b.URL, "locked"):
+		c.WC = brokenBox{c.WC, webcontrol.ErrUnauthorized}
+	case strings.Contains(b.URL, "dead"):
+		c.WC = brokenBox{c.WC, errors.New("connection refused")}
+	}
+	return c, nil
+}
+
+type boxList struct {
+	Boxes []struct {
+		ID, Name, Color, URL string
+		Full, Online         bool
+		HasPassword          bool
+	} `json:"boxes"`
+	Default string `json:"default"`
+}
+
+func TestBoxes_AddTestEditAndRemove(t *testing.T) {
+	e := newEnv(t)
+
+	// One box: the list has the first box only, and no connection details for it.
+	var list boxList
+	e.json(t, "GET", "/api/v1/boxes", "", nil, 200, &list)
+	if len(list.Boxes) != 1 || list.Boxes[0].ID != "main" || !list.Boxes[0].Full || list.Default != "main" || list.Boxes[0].URL != "" {
+		t.Fatalf("boxes: %+v", list)
+	}
+
+	// Testing changes nothing and says what is wrong.
+	var res struct {
+		DeviceName string `json:"deviceName"`
+	}
+	e.json(t, "POST", "/api/v1/boxes/test", `{"url":"192.168.1.20"}`, nil, 200, &res)
+	if res.DeviceName == "" {
+		t.Errorf("the test should name the device: %+v", res)
+	}
+	for url, code := range map[string]string{"locked.lan": "box_unauthorized", "dead.lan": "box_unreachable"} {
+		resp, b := e.do(t, "POST", "/api/v1/boxes/test", `{"url":"`+url+`"}`, nil)
+		if got, _, _ := errCode(t, b); resp.StatusCode != http.StatusUnprocessableEntity || got != code {
+			t.Errorf("test %s: %d %s", url, resp.StatusCode, b)
+		}
+	}
+	resp, b := e.do(t, "POST", "/api/v1/boxes/test", `{"url":"ftp://x"}`, nil)
+	if resp.StatusCode != http.StatusBadRequest {
+		t.Errorf("a bad address is a validation error: %d %s", resp.StatusCode, b)
+	}
+	e.json(t, "GET", "/api/v1/boxes", "", nil, 200, &list)
+	if len(list.Boxes) != 1 {
+		t.Fatalf("testing must not add a box: %+v", list)
+	}
+
+	// An unreachable box is not added.
+	if resp, b := e.do(t, "POST", "/api/v1/boxes", `{"name":"Cellar","url":"dead.lan"}`, nil); resp.StatusCode != http.StatusUnprocessableEntity {
+		t.Fatalf("adding an unreachable box: %d %s", resp.StatusCode, b)
+	}
+
+	// Add: the ID comes from the name, the password is never shown again.
+	var added struct{ ID, Name, URL, Username string }
+	e.json(t, "POST", "/api/v1/boxes", `{"name":"Living room","color":"green","url":"192.168.1.20/","username":"root","password":"secret"}`, nil, 201, &added)
+	if added.ID != "living-room" || added.URL != "http://192.168.1.20" || added.Username != "root" {
+		t.Fatalf("added: %+v", added)
+	}
+	e.json(t, "POST", "/api/v1/boxes", `{"name":"Living room","url":"192.168.1.21"}`, nil, 201, &added)
+	if added.ID != "living-room-2" {
+		t.Errorf("a second box with the same name gets its own ID: %s", added.ID)
+	}
+	e.json(t, "GET", "/api/v1/boxes", "", nil, 200, &list)
+	if len(list.Boxes) != 3 || !list.Boxes[1].HasPassword || list.Boxes[1].Full {
+		t.Fatalf("boxes after adding: %+v", list)
+	}
+	if _, b := e.do(t, "GET", "/api/v1/boxes", "", nil); strings.Contains(string(b), "secret") {
+		t.Errorf("the password must not be returned: %s", b)
+	}
+	// The new box answers requests.
+	if names := e.timerNames(t, "?box=living-room"); len(names) == 0 {
+		t.Errorf("the new box should have its timers")
+	}
+
+	// Edit name and colour; the first box can be renamed but keeps its address.
+	e.json(t, "PATCH", "/api/v1/boxes/living-room", `{"name":"Lounge","color":"red"}`, nil, 200, nil)
+	e.json(t, "PATCH", "/api/v1/boxes/main", `{"name":"Bedroom","url":"10.0.0.1"}`, nil, 200, nil)
+	e.json(t, "GET", "/api/v1/boxes", "", nil, 200, &list)
+	if list.Boxes[0].Name != "Bedroom" || list.Boxes[1].Name != "Lounge" || list.Boxes[1].Color != "red" || list.Boxes[0].URL != "" {
+		t.Errorf("after editing: %+v", list)
+	}
+	if resp, _ := e.do(t, "PATCH", "/api/v1/boxes/nowhere", `{"name":"x"}`, nil); resp.StatusCode != http.StatusNotFound {
+		t.Errorf("editing an unknown box: %d", resp.StatusCode)
+	}
+
+	// Removing is a plan; the first box can't be removed.
+	if resp, _ := e.do(t, "POST", "/api/v1/boxes/main/remove/plan", "", nil); resp.StatusCode != http.StatusConflict {
+		t.Errorf("the first box can't be removed: %d", resp.StatusCode)
+	}
+	var p planResp
+	e.json(t, "POST", "/api/v1/boxes/living-room/remove/plan", "", nil, 200, &p)
+	e.json(t, "GET", "/api/v1/boxes", "", nil, 200, &list)
+	if len(list.Boxes) != 3 {
+		t.Fatalf("a plan removes nothing: %+v", list)
+	}
+	e.json(t, "POST", "/api/v1/plans/"+p.Plan.ID+"/apply", "", nil, 200, nil)
+	e.json(t, "GET", "/api/v1/boxes", "", nil, 200, &list)
+	if len(list.Boxes) != 2 {
+		t.Fatalf("after removing: %+v", list)
+	}
+	if resp, _ := e.do(t, "GET", "/api/v1/timers?box=living-room", "", nil); resp.StatusCode != http.StatusNotFound {
+		t.Errorf("a removed box is gone: %d", resp.StatusCode)
+	}
+}
+
+func TestBoxes_ProfileMayUseOnlyItsBoxes(t *testing.T) {
+	e := newEnv(t)
+	admin, viewer, benID := e.householdWithBoxes(t)
+
+	// Ben may use the bedroom only: without a parameter that is his box.
+	e.json(t, "PATCH", "/api/v1/profiles/"+itoa(benID), `{"boxes":["bedroom"]}`, withProfile(admin), 200, nil)
+	var list boxList
+	e.json(t, "GET", "/api/v1/boxes", "", withProfile(viewer), 200, &list)
+	if len(list.Boxes) != 1 || list.Boxes[0].ID != "bedroom" || list.Default != "bedroom" {
+		t.Fatalf("Ben's boxes: %+v", list)
+	}
+	if resp, b := e.do(t, "GET", "/api/v1/timers?box=main", "", withProfile(viewer)); resp.StatusCode != http.StatusForbidden {
+		t.Errorf("a box the profile may not use: %d %s", resp.StatusCode, b)
+	}
+	if resp, b := e.do(t, "GET", "/api/v1/timers", "", withProfile(viewer)); resp.StatusCode != http.StatusOK {
+		t.Errorf("the default is his box: %d %s", resp.StatusCode, b)
+	}
+	// Viewers can't manage boxes.
+	if resp, _ := e.do(t, "POST", "/api/v1/boxes/test", `{"url":"x.lan"}`, withProfile(viewer)); resp.StatusCode != http.StatusForbidden {
+		t.Errorf("a viewer may not test boxes: %d", resp.StatusCode)
+	}
+	// The administrator sees every box.
+	e.json(t, "GET", "/api/v1/boxes", "", withProfile(admin), 200, &list)
+	if len(list.Boxes) != 2 {
+		t.Errorf("the administrator's boxes: %+v", list)
+	}
+
+	// Removing the only box a profile may use never widens it to "all".
+	var p planResp
+	e.json(t, "POST", "/api/v1/boxes/bedroom/remove/plan", "", withProfile(admin), 200, &p)
+	e.json(t, "POST", "/api/v1/plans/"+p.Plan.ID+"/apply", "", withProfile(admin), 200, nil)
+	var profiles struct {
+		Profiles []struct {
+			ID    int64
+			Boxes []string
+		}
+	}
+	e.json(t, "GET", "/api/v1/profiles", "", withProfile(admin), 200, &profiles)
+	for _, pr := range profiles.Profiles {
+		if pr.ID == benID && (len(pr.Boxes) != 1 || pr.Boxes[0] != "main") {
+			t.Errorf("Ben falls back to the first box: %v", pr.Boxes)
+		}
+	}
+}
+
+// householdWithBoxes is household() plus a second box "bedroom".
+func (e *env) householdWithBoxes(t *testing.T) (admin, viewer string, viewerID int64) {
+	t.Helper()
+	admin, viewer, viewerID = e.household(t)
+	e.json(t, "POST", "/api/v1/boxes", `{"name":"Bedroom","url":"192.168.1.30"}`, withProfile(admin), 201, nil)
+	return
 }

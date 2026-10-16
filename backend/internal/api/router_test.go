@@ -130,6 +130,7 @@ func newEnvFull(t *testing.T, wc webcontrol.Client, at autotimer.Client, recFS r
 	docker, aptList := dockermock.New(), aptmock.New()
 	a, err := app.New(context.Background(), app.Options{
 		ReadOnlyFiles:   readOnly,
+		BoxFactory:      testBoxFactory,
 		TMDB:            tmdbmock.New(),
 		TVmaze:          tvmazemock.New(),
 		OMDb:            omdbmock.New(),

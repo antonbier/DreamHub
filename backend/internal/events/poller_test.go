@@ -323,3 +323,50 @@ func TestFleet_StartsOnePollerPerBoxIncludingLaterOnes(t *testing.T) {
 		t.Errorf("each box gets exactly one poller: %v", started)
 	}
 }
+
+func TestFleet_StopsThePollerOfARemovedBox(t *testing.T) {
+	var mu sync.Mutex
+	ids := []string{"main", "bedroom"}
+	stopped := map[string]bool{}
+	f := &Fleet{Check: 5 * time.Millisecond,
+		IDs: func() []string { mu.Lock(); defer mu.Unlock(); return append([]string(nil), ids...) },
+		// A poller is stopped through its context: the client notes the cancel.
+		New: func(id string) *Poller {
+			return &Poller{WC: ctxWatcher{deadClient{mock.New()}, func() { mu.Lock(); stopped[id] = true; mu.Unlock() }}, Interval: time.Hour, BoxID: id}
+		}}
+	ctx, cancel := context.WithCancel(context.Background())
+	defer cancel()
+	go f.Run(ctx)
+	time.Sleep(30 * time.Millisecond)
+	mu.Lock()
+	ids = []string{"main"}
+	mu.Unlock()
+	time.Sleep(40 * time.Millisecond)
+	mu.Lock()
+	defer mu.Unlock()
+	if !stopped["bedroom"] || stopped["main"] {
+		t.Errorf("only the removed box's poller stops: %v", stopped)
+	}
+}
+
+// ctxWatcher calls onDone once the context of a TimerList call ends.
+type ctxWatcher struct {
+	webcontrol.Client
+	onDone func()
+}
+
+func (w ctxWatcher) TimerList(ctx context.Context) ([]webcontrol.Timer, error) {
+	go func() { <-ctx.Done(); w.onDone() }()
+	return nil, errors.New("no route to host")
+}
+
+func TestPoller_ReportsWhetherTheBoxAnswered(t *testing.T) {
+	var got []bool
+	p := &Poller{WC: deadClient{mock.New()}, Interval: time.Hour, OnReach: func(ok bool) { got = append(got, ok) }}
+	p.tick(context.Background())
+	q := &Poller{WC: mock.New(), Interval: time.Hour, OnReach: func(ok bool) { got = append(got, ok) }}
+	q.tick(context.Background())
+	if len(got) != 2 || got[0] || !got[1] {
+		t.Errorf("reach: %v", got)
+	}
+}

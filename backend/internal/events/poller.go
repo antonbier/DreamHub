@@ -40,6 +40,9 @@ type Poller struct {
 	// by Fleet once there is more than one box to tell apart.
 	BoxID string
 	Tag   func() bool
+	// OnReach is told after every tick whether the box answered (for the
+	// box selector's offline state).
+	OnReach func(online bool)
 	// failures counts the ticks in a row the box did not answer, to back
 	// off: a box that is off is not asked every 30 seconds.
 	failures int
@@ -115,6 +118,9 @@ func (p *Poller) tick(ctx context.Context) {
 		p.failures++
 	} else {
 		p.failures = 0
+	}
+	if p.OnReach != nil {
+		p.OnReach(err == nil)
 	}
 	if err != nil {
 		if p.Logger != nil {

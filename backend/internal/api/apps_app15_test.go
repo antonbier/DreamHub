@@ -163,7 +163,9 @@ func TestSystemBackup_SaveOnTheBox(t *testing.T) {
 	}
 
 	e.do(t, "PATCH", "/api/v1/settings", `{"values":{"general.language":"en"}}`, nil)
-	var preview struct{ Plan struct{ Changes []struct{ Type string } } }
+	var preview struct {
+		Plan struct{ Changes []struct{ Type string } }
+	}
 	e.json(t, "POST", "/api/v1/system/backup/files/"+name+"/restore", "", nil, 200, &preview)
 	if len(preview.Plan.Changes) == 0 {
 		t.Fatal("the stored file changes nothing")

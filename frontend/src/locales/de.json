@@ -1013,7 +1013,8 @@
       "services": "Dienste",
       "notifications": "Benachrichtigungen",
       "access": "Zugriff",
-      "system": "System"
+      "system": "System",
+      "boxes": "Boxen"
     },
     "tabIntro": {
       "services": "Verbindungen zu Diensten, die DreamHub nutzt. Nur WebControl ist nötig, alles andere ist optional.",
@@ -2369,5 +2370,58 @@
     "rollbackFailed": "Das Update lief nicht, und die vorherige Version konnte nicht wieder gestartet werden ({reason}).",
     "updateFailed": "Die App konnte nicht aktualisiert werden ({reason}).",
     "restoredNote": "Sie läuft wie vorher."
+  },
+  "boxes": {
+    "selector": {
+      "label": "Box wählen",
+      "title": "Box",
+      "offline": "offline"
+    },
+    "strip": {
+      "label": "Weitere Boxen",
+      "standby": "Standby",
+      "recording": "nimmt auf",
+      "notAnswering": "{name} antwortet nicht"
+    },
+    "manage": {
+      "title": "Boxen",
+      "subtitle": "Die Dreamboxen, die DreamHub steuert. Jeder sieht die Boxen, die sein Profil nutzen darf; mit nur einer Box gibt es keine Auswahl.",
+      "thisMachine": "Dieses DreamHub läuft auf dieser Box",
+      "edit": "Bearbeiten",
+      "add": "Box hinzufügen",
+      "basicHint": "Eine hier hinzugefügte Box wird über ihre Weboberfläche gesteuert: Live-TV, Programm, Timer, Senderlisten, Fernbedienung und ihre Aufnahmen. Aufnahmeverwaltung, Logos und Systemwerkzeuge brauchen DreamHub auf der Box selbst.",
+      "removeConfirm": "Box entfernen",
+      "removeText": "„{name}“ entfernen? DreamHub vergisst die Box und alles, was dafür gespeichert ist – Timer-Besitzer, Senderlisten-Verlauf, Werbemarken. Die Box selbst bleibt unberührt."
+    },
+    "form": {
+      "name": "Name",
+      "color": "Farbe",
+      "url": "Adresse",
+      "urlHint": "IP-Adresse oder Name der Box wie im Browser – z. B. 192.168.1.20.",
+      "username": "Benutzername",
+      "password": "Passwort",
+      "newPassword": "Neues Passwort (leer lässt es)",
+      "loginHint": "Die Anmeldung der Weboberfläche der Box, falls sie eine verlangt – sonst beides leer lassen.",
+      "test": "Testen",
+      "testing": "Teste…",
+      "testOk": "Verbunden: {device}",
+      "save": "Speichern",
+      "addBox": "Box hinzufügen",
+      "remove": "Box entfernen"
+    },
+    "profile": {
+      "legend": "Boxen, die dieses Profil nutzen darf",
+      "hint": "Haken entfernen bei Boxen, die dieses Profil nicht sehen soll.",
+      "none": "Keine Box angehakt: Dieses Profil darf alle Boxen nutzen."
+    },
+    "error": {
+      "unauthorized": "Die Box verlangt eine Anmeldung, oder die eingegebene stimmt nicht.",
+      "unreachable": "Keine Antwort unter dieser Adresse. Ist die Box an und die Adresse richtig?",
+      "notFound": "Diese Box gibt es nicht mehr.",
+      "isMain": "Die erste Box kann nicht entfernt werden.",
+      "url": "Das sieht nicht nach einer Adresse aus.",
+      "name": "Gib der Box einen Namen (bis zu 30 Zeichen).",
+      "generic": "Das hat nicht geklappt. Versuch es noch einmal."
+    }
   }
 }

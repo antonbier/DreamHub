@@ -42,6 +42,16 @@
       </label>
     </fieldset>
 
+    <fieldset v-if="boxes.length >= 2" class="mb-3">
+      <legend class="mb-1 text-[13px] text-muted">{{ t('boxes.profile.legend') }}</legend>
+      <label v-for="b in boxes" :key="b.id" class="flex items-center gap-2 py-0.5 text-[14px]">
+        <input v-model="allowedBoxes" type="checkbox" :value="b.id" />
+        <span class="h-2.5 w-2.5 rounded-full" :style="{ background: `var(--dh-profile-${b.color || 'slate'})` }" aria-hidden="true" />
+        {{ b.name }}
+      </label>
+      <p class="mt-1 text-[12.5px] text-faint">{{ allowedBoxes.length === 0 ? t('boxes.profile.none') : t('boxes.profile.hint') }}</p>
+    </fieldset>
+
     <label class="mb-1 block">
       <span class="mb-1 block text-[13px] text-muted">{{ profile?.hasPin ? t('profiles.form.newPin') : t('profiles.form.pin') }}</span>
       <input
@@ -82,9 +92,10 @@
 </template>
 
 <script setup lang="ts">
-import { computed, reactive, ref } from 'vue'
+import { computed, onMounted, reactive, ref } from 'vue'
 import { useI18n } from 'vue-i18n'
-import type { Permission, Profile, ProfileInput, Role } from '@/api/types'
+import { api } from '@/api/client'
+import type { BoxInfo, Permission, Profile, ProfileInput, Role } from '@/api/types'
 
 const props = defineProps<{ profile?: Profile; colors: string[]; self?: boolean; busy: boolean; error: string }>()
 const emit = defineEmits<{ save: [input: ProfileInput]; remove: []; cancel: [] }>()
@@ -100,6 +111,12 @@ const color = ref(props.profile?.color || props.colors[0] || 'blue')
 const role = ref<Role>(props.profile?.role ?? 'user')
 const pin = ref('')
 const removePin = ref(false)
+// The boxes the profile may use: none ticked means all of them.
+const boxes = ref<BoxInfo[]>([])
+const allowedBoxes = ref<string[]>([...(props.profile?.boxes ?? [])])
+onMounted(() => {
+  void api.boxes.list().then((res) => (boxes.value = res.boxes)).catch(() => {})
+})
 const confirmDelete = ref(false)
 const switches = reactive<Record<(typeof SWITCHES)[number], boolean>>({
   'timers.plan': props.profile?.overrides['timers.plan'] ?? VIEWER_DEFAULTS['timers.plan'],
@@ -116,6 +133,8 @@ function submit() {
     for (const s of SWITCHES) if (switches[s] !== VIEWER_DEFAULTS[s]) overrides[s] = switches[s]
   }
   input.overrides = overrides
+  // A single-box household never sees the list, so nothing changes for it.
+  if (boxes.value.length >= 2) input.boxes = allowedBoxes.value.length === boxes.value.length ? [] : allowedBoxes.value
   if (pin.value) input.pin = pin.value
   else if (removePin.value) input.pin = ''
   emit('save', input)

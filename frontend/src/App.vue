@@ -54,6 +54,7 @@ import RemotePanel from './components/control/RemotePanel.vue'
 import { usePreferencesStore } from './stores/preferences'
 import { useNavigationStore } from './stores/navigation'
 import { useNotificationsStore } from './stores/notifications'
+import { useBoxesStore } from './stores/boxes'
 import { useAuth } from './composables/useAuth'
 import { useGlobalShortcuts } from './composables/useGlobalShortcuts'
 import type { NavSection } from './api/types'
@@ -61,6 +62,7 @@ import type { NavSection } from './api/types'
 const preferences = usePreferencesStore()
 const navigation = useNavigationStore()
 const notifications = useNotificationsStore()
+const boxes = useBoxesStore()
 const { authState, check } = useAuth()
 useGlobalShortcuts()
 const { t } = useI18n()
@@ -113,7 +115,11 @@ function loadShellData() {
   void navigation.load()
   void notifications.load()
   notifications.connect()
+  void boxes.load()
+  // Which box answers changes without anyone asking.
+  if (!boxTimer) boxTimer = setInterval(() => void boxes.refresh(), 30_000)
 }
+let boxTimer: ReturnType<typeof setInterval> | undefined
 
 onMounted(async () => {
   // The router's first guard usually checked already.

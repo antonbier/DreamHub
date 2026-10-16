@@ -15,6 +15,7 @@
 
 import { authHeaders } from '@/api/authState'
 import { ApiError } from '@/api/client'
+import { withBox } from '@/lib/box'
 
 // libav.js ships no types for a custom build.
 type LibAVInstance = any
@@ -190,9 +191,9 @@ export class TsPlayer {
     Object.assign(headers, authHeaders())
     let url: string
     if (src.kind === 'live') {
-      url = `/api/v1/stream/live?ref=${encodeURIComponent(src.ref)}`
+      url = withBox(`/api/v1/stream/live?ref=${encodeURIComponent(src.ref)}`)
     } else {
-      url = `/api/v1/stream/recording?path=${encodeURIComponent(src.path)}`
+      url = withBox(`/api/v1/stream/recording?path=${encodeURIComponent(src.path)}`)
       if (src.offset && src.offset > 0) {
         // The size first (HEAD), then a range aligned to TS packets.
         const head = await fetch(url, { method: 'HEAD', headers, signal: this.abort.signal })

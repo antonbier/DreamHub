@@ -1013,7 +1013,8 @@
       "services": "Servizi",
       "notifications": "Notifiche",
       "access": "Accesso",
-      "system": "Sistema"
+      "system": "Sistema",
+      "boxes": "Box"
     },
     "tabIntro": {
       "services": "Collegamenti ai servizi usati da DreamHub. Solo WebControl è necessario, tutto il resto è facoltativo.",
@@ -2369,5 +2370,58 @@
     "rollbackFailed": "L'aggiornamento non funzionava e non è stato possibile riavviare la versione precedente ({reason}).",
     "updateFailed": "Impossibile aggiornare l'app ({reason}).",
     "restoredNote": "Funziona come prima."
+  },
+  "boxes": {
+    "selector": {
+      "label": "Scegli il box",
+      "title": "Box",
+      "offline": "offline"
+    },
+    "strip": {
+      "label": "Altri box",
+      "standby": "standby",
+      "recording": "in registrazione",
+      "notAnswering": "{name} non risponde"
+    },
+    "manage": {
+      "title": "Box",
+      "subtitle": "I Dreambox che DreamHub controlla. Ognuno vede i box che il suo profilo può usare; con un solo box non c'è alcuna selezione.",
+      "thisMachine": "Questo DreamHub gira su questo box",
+      "edit": "Modifica",
+      "add": "Aggiungi box",
+      "basicHint": "Un box aggiunto qui viene controllato tramite la sua interfaccia web: TV in diretta, guida, timer, liste canali, telecomando e le sue registrazioni. Gestione delle registrazioni, loghi e strumenti di sistema richiedono DreamHub sul box stesso.",
+      "removeConfirm": "Rimuovi box",
+      "removeText": "Rimuovere «{name}»? DreamHub dimentica il box e tutto ciò che ha salvato per lui: proprietari dei timer, cronologia dei canali, marcatori pubblicitari. Il box stesso non viene toccato."
+    },
+    "form": {
+      "name": "Nome",
+      "color": "Colore",
+      "url": "Indirizzo",
+      "urlHint": "L'indirizzo IP o il nome del box, come nel browser, ad es. 192.168.1.20.",
+      "username": "Nome utente",
+      "password": "Password",
+      "newPassword": "Nuova password (vuoto la mantiene)",
+      "loginHint": "L'accesso dell'interfaccia web del box, se lo richiede; altrimenti lascia vuoti entrambi.",
+      "test": "Prova",
+      "testing": "Prova in corso…",
+      "testOk": "Connesso: {device}",
+      "save": "Salva",
+      "addBox": "Aggiungi box",
+      "remove": "Rimuovi box"
+    },
+    "profile": {
+      "legend": "Box che questo profilo può usare",
+      "hint": "Togli la spunta ai box che questo profilo non deve vedere.",
+      "none": "Nessun box selezionato: questo profilo può usare tutti i box."
+    },
+    "error": {
+      "unauthorized": "Il box chiede un accesso, oppure quello inserito non è corretto.",
+      "unreachable": "Nessuna risposta da questo indirizzo. Il box è acceso e l'indirizzo è giusto?",
+      "notFound": "Questo box non esiste più.",
+      "isMain": "Il primo box non può essere rimosso.",
+      "url": "Non sembra un indirizzo.",
+      "name": "Dai un nome al box (fino a 30 caratteri).",
+      "generic": "Non ha funzionato. Riprova."
+    }
   }
 }

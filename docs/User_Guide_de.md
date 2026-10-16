@@ -73,6 +73,12 @@ Beim ersten Aufruf startet ein kurzer Assistent: Sprache, Verbindung zur Box, ei
 
 Unter **Einstellungen → Profile** legt ein Admin ein Profil für jede Person im Haushalt an. Jedes Gerät fragt einmal „Wer schaut gerade?“ und merkt sich die Antwort; ein Profil kann eine PIN haben (Admins benötigen eine, sobald es mehr als ein Profil gibt). **Zuschauer** sehen Live-TV, Aufnahmen und Plex, nutzen den TV-Guide und die Fernbedienung und planen Aufnahmen – sie benennen oder löschen keine Aufnahmen, ändern keine Timer anderer Personen und sehen keine Einstellungen über ihre eigenen hinaus. Pro Zuschauer kann ein Admin „Aufnahmen planen“ sowie „Aufnahmen umbenennen und löschen“ erlauben. **Startseite gestalten** legt die Startseite fest, die jeder Zuschauer sieht, bis er seine eigene ändert.
 
+### Mehr als eine Box
+
+Unter Einstellungen → **Boxen** (Admins) fügst du eine weitere Dreambox mit ihrer Adresse und – falls ihre Weboberfläche eines verlangt – ihrem Login hinzu; **Testen** zeigt, ob sie antwortet und der Login stimmt. Ab zwei Boxen erscheint oben in der Leiste eine **Box-Auswahl**, und die Startseite zeigt einen schmalen Streifen mit dem, was die anderen Boxen gerade tun – antippen wechselt. Alles darunter (TV-Guide, Timer, Aufnahmen, Fernbedienung) bezieht sich dann auf die gewählte Box, und die Adresse sagt welche (`/b/wohnzimmer/guide`), Lesezeichen funktionieren also. DreamHub merkt sich die letzte Box pro Gerät.
+
+Eine so hinzugefügte Box wird über ihre Weboberfläche gesteuert: Live-TV, Guide, Timer, Senderlisten, Fernbedienung und das Ansehen ihrer Aufnahmen. Aufnahmen direkt verwalten, Logos, Apps und die Systemwerkzeuge brauchen DreamHub auf der Box selbst. Eine Box, die nicht antwortet, ist in der Auswahl ausgegraut und die Statuszeile sagt es – DreamHub wartet nie auf sie. In den Einstellungen eines Profils lässt sich begrenzen, welche Boxen es nutzen darf (nichts angehakt heißt alle). Eine Box zu entfernen lässt DreamHub sie und alles Gespeicherte vergessen; die Box selbst bleibt unberührt.
+
 ### Empfohlen: Netzwerkzugriff schützen
 
 * **Setze ein DreamHub-Passwort** (Einstellungen → Zugriff → Authentifizierung). Ohne Passwort kann jeder in deinem Heimnetzwerk DreamHub nutzen.

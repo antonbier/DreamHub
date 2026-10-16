@@ -1013,7 +1013,8 @@
       "services": "Services",
       "notifications": "Notifications",
       "access": "Access",
-      "system": "System"
+      "system": "System",
+      "boxes": "Boxes"
     },
     "tabIntro": {
       "services": "Connections to services DreamHub uses. Only WebControl is required; everything else is optional.",
@@ -2369,5 +2370,58 @@
     "rollbackFailed": "The update did not run, and the previous version could not be started again ({reason}).",
     "updateFailed": "The app could not be updated ({reason}).",
     "restoredNote": "It runs as before."
+  },
+  "boxes": {
+    "selector": {
+      "label": "Choose box",
+      "title": "Box",
+      "offline": "offline"
+    },
+    "strip": {
+      "label": "Other boxes",
+      "standby": "standby",
+      "recording": "recording",
+      "notAnswering": "{name} isn't answering"
+    },
+    "manage": {
+      "title": "Boxes",
+      "subtitle": "The Dreamboxes DreamHub controls. Everyone sees the boxes their profile may use; with only one box there is no selector.",
+      "thisMachine": "This DreamHub runs on this box",
+      "edit": "Edit",
+      "add": "Add box",
+      "basicHint": "A box added here is controlled through its web interface: live TV, guide, timers, channel lists, remote and its recordings. Recording management, logos and system tools need DreamHub on that box itself.",
+      "removeConfirm": "Remove box",
+      "removeText": "Remove “{name}”? DreamHub forgets the box and everything it saved for it — timer owners, channel history, ad marks. The box itself is not touched."
+    },
+    "form": {
+      "name": "Name",
+      "color": "Colour",
+      "url": "Address",
+      "urlHint": "The box's IP address or name, as in the browser — e.g. 192.168.1.20.",
+      "username": "Login name",
+      "password": "Password",
+      "newPassword": "New password (empty keeps it)",
+      "loginHint": "The login of the box's web interface, if it asks for one — leave both empty if it doesn't.",
+      "test": "Test",
+      "testing": "Testing…",
+      "testOk": "Connected: {device}",
+      "save": "Save",
+      "addBox": "Add box",
+      "remove": "Remove box"
+    },
+    "profile": {
+      "legend": "Boxes this profile may use",
+      "hint": "Untick the boxes this profile should not see.",
+      "none": "No box ticked: this profile can use every box."
+    },
+    "error": {
+      "unauthorized": "The box asks for a login, or the one given is wrong.",
+      "unreachable": "No answer from that address. Is the box on, and the address right?",
+      "notFound": "That box doesn't exist any more.",
+      "isMain": "The first box can't be removed.",
+      "url": "That doesn't look like an address.",
+      "name": "Give the box a name (up to 30 characters).",
+      "generic": "That didn't work. Try again."
+    }
   }
 }

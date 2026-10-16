@@ -15,6 +15,11 @@
       {{ status.reachable.value ? t('statusStrip.connected') : t('statusStrip.unreachable') }}
     </span>
 
+    <span v-if="boxes.multi && boxes.active && !boxes.active.online" class="flex items-center gap-1.5 text-warn" role="status">
+      <span class="h-1.5 w-1.5 rounded-full bg-warn" />
+      {{ t('boxes.strip.notAnswering', { name: boxes.active.name }) }}
+    </span>
+
     <span v-if="admin && status.clockSkew.value !== null" class="flex items-center gap-1.5" :class="status.clockOk.value ? 'text-muted' : 'text-warn'">
       <span class="h-1.5 w-1.5 rounded-full" :class="status.clockOk.value ? 'bg-ok' : 'bg-warn'" />
       {{ status.clockOk.value ? t('statusStrip.clockOk') : t('statusStrip.clockOff', { minutes: status.clockSkew.value }) }}
@@ -34,10 +39,12 @@ import { computed, onMounted } from 'vue'
 import { useI18n } from 'vue-i18n'
 import { useAuth } from '@/composables/useAuth'
 import { useDeviceStatus } from '@/composables/useDeviceStatus'
+import { useBoxesStore } from '@/stores/boxes'
 import { useDisplayTimeZone } from '@/composables/useDisplayTimeZone'
 
 const { t } = useI18n()
 const status = useDeviceStatus()
+const boxes = useBoxesStore()
 // The clock and hub problems are the admin's to fix (docs/archive/PROFILES_PLAN.md).
 const admin = computed(() => useAuth().can('settings.global'))
 const { timeZone: displayTimeZone } = useDisplayTimeZone()

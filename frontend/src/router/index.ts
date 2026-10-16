@@ -9,9 +9,11 @@ import type { Permission } from '@/api/types'
 import { useAuth } from '@/composables/useAuth'
 import { createRouter, createWebHistory } from 'vue-router'
 import { isSetupDone } from '@/lib/onboarding'
+import { routerBase } from '@/lib/box'
 
 const router = createRouter({
-  history: createWebHistory(),
+  // /b/<id> when the page is about another box than the first (lib/box.ts).
+  history: createWebHistory(routerBase),
   routes: [
     {
       path: '/',

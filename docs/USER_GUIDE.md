@@ -69,6 +69,12 @@ The first visit starts a short assistant: language, connection to the box, a pas
 
 Under **Settings → Profiles** an admin adds a profile for each person in the household. Each device asks once "Who's watching?" and remembers the answer; a profile can have a PIN (admins need one as soon as there's more than one profile). **Viewers** watch live TV, recordings and Plex, use the guide and the remote, and plan recordings — they don't rename or delete recordings, change other people's timers, or see the settings beyond their own. Per viewer, an admin can allow "plan recordings" and "rename and delete recordings". **Design the start page** sets the start page every viewer sees until they change their own.
 
+### More than one box
+
+Settings → **Boxes** (admins) adds another Dreambox by its address and, if its web interface asks for one, its login; **Test** tells you whether it answers and whether the login is right. With two or more boxes a **box selector** appears in the top bar, and the start page shows a slim strip with what the other boxes are doing — tap one to switch. Everything below (TV guide, timers, recordings, remote) is then about the selected box, and the address says which (`/b/living-room/guide`), so bookmarks work. DreamHub remembers your last box on each device.
+
+A box added this way is controlled through its web interface: live TV, guide, timers, channel lists, the remote and watching its recordings. Managing recordings in place, logos, apps and the system tools need DreamHub on that box itself. A box that doesn't answer is greyed in the selector and the status line says so — DreamHub never waits for it. In a profile's settings you can limit which boxes it may use (nothing ticked means all). Removing a box makes DreamHub forget it and what it saved for it; the box itself is not touched.
+
 ### Recommended: protect your network access
 
 - **Set a DreamHub password** (Settings → Access → Authentication). Without one, anyone on your home network can use DreamHub.

@@ -122,6 +122,8 @@ export interface Profile {
   // The admin's per-profile switches (perm.Switchable): on/off.
   overrides: Partial<Record<Permission, boolean>>
   permissions: Permission[]
+  // The boxes the profile may use; empty means all.
+  boxes: string[]
 }
 
 // GET /api/v1/profiles — the picker.
@@ -139,6 +141,40 @@ export interface ProfileInput {
   color?: string
   pin?: string
   overrides?: Partial<Record<Permission, boolean>>
+  boxes?: string[]
+}
+
+// GET /api/v1/boxes (docs/MULTIDEVICE_PLAN.md, M3). The address and login
+// name come for an administrator only; the password never.
+export interface BoxInfo {
+  id: string
+  name: string
+  color: string
+  // DreamHub runs on this box ("Full"); every other box is Basic.
+  full: boolean
+  online: boolean
+  // The caller's profile may use it (an administrator also sees the rest).
+  allowed: boolean
+  url?: string
+  username?: string
+  hasPassword?: boolean
+}
+
+export interface BoxInput {
+  name?: string
+  color?: string
+  url?: string
+  username?: string
+  password?: string
+}
+
+// GET /api/v1/boxes/overview — one line per box for the dashboard's strip.
+export interface BoxStatus {
+  id: string
+  online: boolean
+  standby?: boolean
+  service?: string
+  recording?: boolean
 }
 
 // backend/internal/webcontrol.Frontend / .DeviceInfo.

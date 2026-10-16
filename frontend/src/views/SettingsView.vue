@@ -74,6 +74,8 @@
           <ProfilesPanel v-if="can('profiles')" />
         </template>
 
+        <BoxesPanel v-if="activeTab === 'boxes' && can('settings.global')" />
+
         <template v-if="activeTab === 'system' && can('system')">
           <BackupPanel @restored="form.load()" />
           <section class="rounded-sm border border-line bg-tile p-5">
@@ -123,6 +125,7 @@ import BackupPanel from '@/components/settings/BackupPanel.vue'
 import PlexPanel from '@/components/settings/PlexPanel.vue'
 import MyPinPanel from '@/components/profiles/MyPinPanel.vue'
 import ProfilesPanel from '@/components/profiles/ProfilesPanel.vue'
+import BoxesPanel from '@/components/settings/BoxesPanel.vue'
 import { useAuth } from '@/composables/useAuth'
 import { api } from '@/api/client'
 import { useScrollMore } from '@/composables/useScrollMore'
@@ -139,7 +142,7 @@ const { can } = useAuth()
 // A viewer sees only the tabs with something of theirs: personal settings
 // and their PIN (the server sends them only their own fields).
 const tabs = computed(() =>
-  SETTINGS_TABS.filter((id) => id === 'profiles' || (id === 'system' ? can('system') : form.sections.value.some((s) => tabOf(s) === id))).map(
+  SETTINGS_TABS.filter((id) => id === 'profiles' || (id === 'boxes' ? can('settings.global') : id === 'system' ? can('system') : form.sections.value.some((s) => tabOf(s) === id))).map(
     (id) => ({ id }),
   ),
 )

@@ -5,6 +5,10 @@ import router from './router'
 import { i18n } from './i18n'
 import './style.css'
 import { registerServiceWorker } from './lib/pwa'
+import { openRememberedBox } from './lib/box'
 
-registerServiceWorker()
-createApp(App).use(createPinia()).use(router).use(i18n).mount('#app')
+// An address without a box opens the one remembered on this device.
+if (!openRememberedBox()) {
+  registerServiceWorker()
+  createApp(App).use(createPinia()).use(router).use(i18n).mount('#app')
+}

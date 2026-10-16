@@ -29,6 +29,8 @@
       </button>
     </div>
 
+    <BoxStrip v-if="!template" />
+
     <p v-if="template" class="mb-4 rounded-sm border border-accent bg-tile px-4 py-3 text-[13.5px] text-muted">
       {{ t('dashboard.template.explain') }}
       <RouterLink to="/settings/profiles" class="ms-1 text-accent hover:underline">{{ t('dashboard.template.back') }}</RouterLink>
@@ -107,6 +109,7 @@
 </template>
 
 <script setup lang="ts">
+import BoxStrip from '@/components/dashboard/BoxStrip.vue'
 import { computed, nextTick, onMounted, reactive, ref } from 'vue'
 import { RouterLink, useRoute } from 'vue-router'
 import { useI18n } from 'vue-i18n'

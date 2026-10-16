@@ -8,6 +8,7 @@
 // WebSocket. Auto-reconnects with a fixed backoff; call the returned
 // function to stop for good.
 import { authHeaders } from '@/api/authState'
+import { withBox } from '@/lib/box'
 
 export interface StreamEvent {
   event: string
@@ -36,7 +37,7 @@ export function openEventStream(path: string, onEvent: (e: StreamEvent) => void)
   async function connectOnce() {
     const headers: Record<string, string> = { Accept: 'text/event-stream' }
     Object.assign(headers, authHeaders())
-    const res = await fetch(path, { headers, signal: controller.signal })
+    const res = await fetch(withBox(path), { headers, signal: controller.signal })
     if (!res.ok || !res.body) throw new Error(`event stream ${path}: ${res.status}`)
     const reader = res.body.getReader()
     const decoder = new TextDecoder()

@@ -30,6 +30,8 @@
       <SearchPalette ref="searchPalette" />
     </div>
 
+    <BoxSelector />
+
     <button
       v-if="controlAvailable && route.path !== '/control'"
       id="remote-panel-toggle"
@@ -145,6 +147,7 @@ import DropdownMenu from './DropdownMenu.vue'
 import ProfileAvatar from './profiles/ProfileAvatar.vue'
 import SearchPalette from './SearchPalette.vue'
 import NotificationsBell from './NotificationsBell.vue'
+import BoxSelector from './BoxSelector.vue'
 import { usePreferencesStore } from '@/stores/preferences'
 import { useUiStore } from '@/stores/ui'
 import { useRemoteStore } from '@/stores/remote'

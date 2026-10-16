@@ -13,6 +13,7 @@
 //   falls back to the login screen — see App.vue.
 import { shallowRef } from 'vue'
 import { authHeaders, handleUnauthorized } from './authState'
+import { withBox } from '@/lib/box'
 import type {
   AdminFeed,
   AdminPackage,
@@ -46,6 +47,9 @@ import type {
   ChannelIssue,
   Job,
   PiconSet,
+  BoxInfo,
+  BoxInput,
+  BoxStatus,
   Profile,
   ProfileInput,
   ProfileList,
@@ -157,7 +161,7 @@ async function request<T>(method: string, path: string, body?: unknown): Promise
 
   let res: Response
   try {
-    res = await fetch(path, {
+    res = await fetch(withBox(path), {
       method,
       headers,
       body: body === undefined ? undefined : raw ? body : JSON.stringify(body),
@@ -202,7 +206,7 @@ async function requestBlob(path: string): Promise<Blob> {
   const headers = authHeaders()
   let res: Response
   try {
-    res = await fetch(path, { headers, cache: 'no-store' })
+    res = await fetch(withBox(path), { headers, cache: 'no-store' })
   } catch (err) {
     throw failed(new ApiError(0, 'network_error', err instanceof Error ? err.message : String(err)))
   }
@@ -274,6 +278,14 @@ export const api = {
     update: (id: number, input: ProfileInput) => request<Profile>('PATCH', `/api/v1/profiles/${id}`, input),
     remove: (id: number) => request<void>('DELETE', `/api/v1/profiles/${id}`),
     setMyPin: (pin: string) => request<Profile>('PUT', '/api/v1/profiles/me/pin', { pin }),
+  },
+  boxes: {
+    list: () => request<{ boxes: BoxInfo[]; default: string }>('GET', '/api/v1/boxes'),
+    overview: () => request<{ boxes: BoxStatus[] }>('GET', '/api/v1/boxes/overview'),
+    test: (input: BoxInput) => request<{ deviceName: string; tuners: number }>('POST', '/api/v1/boxes/test', input),
+    add: (input: BoxInput) => request<BoxInfo>('POST', '/api/v1/boxes', input),
+    update: (id: string, input: BoxInput) => request<BoxInfo>('PATCH', `/api/v1/boxes/${encodeURIComponent(id)}`, input),
+    planRemove: (id: string) => request<{ plan: Plan }>('POST', `/api/v1/boxes/${encodeURIComponent(id)}/remove/plan`),
   },
   deviceInfo: () => request<DeviceInfo>('GET', '/api/v1/deviceinfo'),
   navigation: () => request<Navigation>('GET', '/api/v1/navigation'),

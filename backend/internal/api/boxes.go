@@ -106,12 +106,17 @@ func handleListBoxes(d Deps) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		admin := perms(r).Has(perm.SettingsGlobal)
 		out := []boxView{}
+		def := "" // the box a request without `box` is about: the first the profile may use
 		for _, e := range d.Boxes.List() {
-			if admin || current(r).MayUseBox(e.ID) {
-				out = append(out, viewBox(d, e, admin, current(r).MayUseBox(e.ID)))
+			allowed := current(r).MayUseBox(e.ID)
+			if allowed && def == "" {
+				def = e.ID
+			}
+			if admin || allowed {
+				out = append(out, viewBox(d, e, admin, allowed))
 			}
 		}
-		httpx.WriteJSON(w, http.StatusOK, map[string]any{"boxes": out, "default": box.Key(r.Context())})
+		httpx.WriteJSON(w, http.StatusOK, map[string]any{"boxes": out, "default": def})
 	}
 }
 

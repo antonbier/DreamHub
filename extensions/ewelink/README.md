@@ -37,7 +37,7 @@ After editing: `systemctl restart dreamhub-ext-ewelink`. The file holds secrets:
 
 ## Consumption on the start page
 
-With a login stored, once a quarter of an hour the extension asks the cloud for each configured device's `hundredDaysKwh` history (the LAN protocol has none) and its live `power`/`voltage`/`current`. The card shows **Power**, **Today** and **This month** (the month so far, summed from the daily values), and flags the on/off status and this list for DreamHub's start page (schema 3, `docs/BUILDING_EXTENSIONS.md`). Reads only — switching never goes through the cloud. That is about 6 calls per device per hour against the free application's 50 000 a month. Which of these a particular plug reports is decided by the plug: what it doesn't send isn't shown.
+The S60TPF announces `power`, `voltage`, `current`, `dayKwh` and `monthKwh` on the LAN itself (confirmed on the box 2026-10-16), so the card needs no cloud for them. For plugs that don't, and with a login stored, once a quarter of an hour the extension asks the cloud for the device's `hundredDaysKwh` history and live values (the S60TPF answers that request with error 4002, "control failed" — it is then not asked again). The card shows **Power**, **Today** and **This month**, and flags the on/off status and this list for DreamHub's start page (schema 3, `docs/BUILDING_EXTENSIONS.md`). Reads only — switching never goes through the cloud. That is about 6 calls per device per hour against the free application's 50 000 a month. Which of these a particular plug reports is decided by the plug: what it doesn't send isn't shown.
 
 ## Network
 

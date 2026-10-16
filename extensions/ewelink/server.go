@@ -152,11 +152,13 @@ func (s *Server) consumptionRows(state map[string]any, e Energy) []ListRow {
 	if v, ok := liveValue(state, "power", e.PowerW); ok {
 		rows = append(rows, ListRow{Label: t.power, Value: fmt.Sprintf("%.1f W", v)})
 	}
-	if e.TodayKwh != nil {
-		rows = append(rows, ListRow{Label: t.today, Value: kwh(*e.TodayKwh)})
+	// What the plug announces on the LAN itself (dayKwh, monthKwh) comes
+	// first; the cloud's history is for plugs that don't announce it.
+	if v, ok := liveValue(state, "dayKwh", e.TodayKwh); ok {
+		rows = append(rows, ListRow{Label: t.today, Value: kwh(v)})
 	}
-	if e.MonthKwh != nil {
-		rows = append(rows, ListRow{Label: t.month, Value: kwh(*e.MonthKwh)})
+	if v, ok := liveValue(state, "monthKwh", e.MonthKwh); ok {
+		rows = append(rows, ListRow{Label: t.month, Value: kwh(v)})
 	}
 	return rows
 }

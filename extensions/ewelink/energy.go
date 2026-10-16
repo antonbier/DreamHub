@@ -2,6 +2,7 @@ package main
 
 import (
 	"context"
+	"errors"
 	"fmt"
 	"log"
 	"math"
@@ -29,9 +30,26 @@ type Energy struct {
 type EnergyStore struct {
 	mu sync.Mutex
 	m  map[string]Energy
+	// noHistory: devices whose cloud refused the history request (4002,
+	// "control failed" — the S60TPF has none); they are not asked again.
+	noHistory map[string]bool
 }
 
-func NewEnergyStore() *EnergyStore { return &EnergyStore{m: map[string]Energy{}} }
+func NewEnergyStore() *EnergyStore {
+	return &EnergyStore{m: map[string]Energy{}, noHistory: map[string]bool{}}
+}
+
+func (e *EnergyStore) skipHistory(id string) bool {
+	e.mu.Lock()
+	defer e.mu.Unlock()
+	return e.noHistory[id]
+}
+
+func (e *EnergyStore) markNoHistory(id string) {
+	e.mu.Lock()
+	e.noHistory[id] = true
+	e.mu.Unlock()
+}
 
 func (e *EnergyStore) Get(id string) (Energy, bool) {
 	e.mu.Lock()
@@ -79,9 +97,11 @@ var kwhWait = 3 * time.Second
 
 // readEnergy asks the cloud about one device. The consumption history
 // needs a request first and shows up in the state a moment later.
-func readEnergy(ctx context.Context, cl *Cloud, cfg CloudConfig, id string, now time.Time) Energy {
+func readEnergy(ctx context.Context, cl *Cloud, cfg CloudConfig, id string, now time.Time, askHistory bool) Energy {
 	out := Energy{At: now}
-	if err := cl.AskKwh(ctx, cfg, id); err != nil {
+	if !askHistory {
+		// live values only
+	} else if err := cl.AskKwh(ctx, cfg, id); err != nil {
 		out.LastError = err.Error()
 	} else {
 		select {
@@ -146,9 +166,17 @@ func energyOnce(ctx context.Context, store *ConfigStore, cl *Cloud, energy *Ener
 		}
 	}
 	for _, d := range cfg.Devices {
-		e := readEnergy(ctx, cl, fresh, d.ID, cl.Now())
+		e := readEnergy(ctx, cl, fresh, d.ID, cl.Now(), !energy.skipHistory(d.ID))
 		if e.LastError != "" {
-			log.Printf("eWeLink cloud: %s: %s", d.ID, e.LastError)
+			var ce *CloudError
+			if errors.As(parseErr(e.LastError), &ce) && ce.Code == 4002 {
+				// Not an error worth repeating: this device has no history.
+				energy.markNoHistory(d.ID)
+				e.LastError = ""
+				log.Printf("eWeLink cloud: %s keeps no consumption history; the LAN values are used", d.ID)
+			} else {
+				log.Printf("eWeLink cloud: %s: %s", d.ID, e.LastError)
+			}
 		}
 		energy.set(d.ID, e)
 	}
@@ -156,3 +184,12 @@ func energyOnce(ctx context.Context, store *ConfigStore, cl *Cloud, energy *Ener
 
 // kwh formats a consumption with two decimals.
 func kwh(f float64) string { return fmt.Sprintf("%.2f kWh", f) }
+
+// parseErr turns a stored message back into a *CloudError when it is one.
+func parseErr(msg string) error {
+	var code int
+	if _, err := fmt.Sscanf(msg, "eWeLink answered %d:", &code); err == nil {
+		return &CloudError{Code: code, Msg: msg}
+	}
+	return errors.New(msg)
+}

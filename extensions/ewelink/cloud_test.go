@@ -123,7 +123,7 @@ func TestCloud_ExchangeThingsAndEnergy(t *testing.T) {
 	if err != nil || len(things) != 2 || things[0].Key != "KEY-1" {
 		t.Fatalf("things (own devices only): %+v %v", things, err)
 	}
-	e := readEnergy(context.Background(), cl, cfg, "1002a17548", cl.Now())
+	e := readEnergy(context.Background(), cl, cfg, "1002a17548", cl.Now(), true)
 	if e.LastError != "" || e.PowerW == nil || *e.PowerW != 212.5 {
 		t.Fatalf("energy: %+v", e)
 	}
@@ -211,6 +211,7 @@ func TestWidgets_TileFlagsAndConsumption(t *testing.T) {
 	devices.list["p1"] = Device{ID: "p1", State: map[string]any{"switch": "on", "power": "12.3"}, Seen: time.Now()}
 	energy := NewEnergyStore()
 	energy.set("p1", Energy{TodayKwh: ptr(1.5), MonthKwh: ptr(20.25)})
+	devices.list["p1"] = Device{ID: "p1", State: map[string]any{"switch": "on", "power": "12.3", "monthKwh": float64(90)}, Seen: time.Now()}
 	s := &Server{cfg: store, devices: devices, cloud: NewCloud(), energy: energy}
 	rec := httptest.NewRecorder()
 	s.Handler().ServeHTTP(rec, httptest.NewRequest(http.MethodGet, "/widgets", nil))
@@ -231,7 +232,7 @@ func TestWidgets_TileFlagsAndConsumption(t *testing.T) {
 		t.Fatalf("tile widgets: %v", tile)
 	}
 	body := rec.Body.String()
-	for _, want := range []string{"12.3 W", "1.50 kWh", "20.25 kWh"} {
+	for _, want := range []string{"12.3 W", "1.50 kWh", "90.00 kWh"} {
 		if !strings.Contains(body, want) {
 			t.Errorf("missing %q in %s", want, body)
 		}

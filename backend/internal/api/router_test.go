@@ -74,6 +74,8 @@ type env struct {
 	docker *dockermock.Client
 	apt    *aptmock.Lister
 	wc     *mock.Client
+	// app is the wired application, to register further boxes on.
+	app *app.App
 }
 
 // newEnv builds the application exactly as production does (internal/app),
@@ -174,7 +176,7 @@ func newEnvFull(t *testing.T, wc webcontrol.Client, at autotimer.Client, recFS r
 		go job(jobs)
 	}
 	m, _ := wc.(*mock.Client)
-	return &env{docker: docker, apt: aptList, wc: m, srv: srv, store: a.Store, svc: a.Settings, events: a.Events, pushed: pushed, systemd: services, scripts: runner, plex: plexServer, appsConfigFS: appsConfigFS, backupDir: backupDir, routes: a.Routes}
+	return &env{app: a, docker: docker, apt: aptList, wc: m, srv: srv, store: a.Store, svc: a.Settings, events: a.Events, pushed: pushed, systemd: services, scripts: runner, plex: plexServer, appsConfigFS: appsConfigFS, backupDir: backupDir, routes: a.Routes}
 }
 
 func (e *env) do(t *testing.T, method, path, body string, configure func(*http.Request)) (*http.Response, []byte) {

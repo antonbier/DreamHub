@@ -190,7 +190,7 @@ func (h *Extensions) planAction(w http.ResponseWriter, r *http.Request) {
 		httpx.WriteError(w, r, http.StatusBadGateway, "extension_unavailable", "could not reach the extension")
 		return
 	}
-	pl := h.Plans.Create(user, plan.Draft{
+	pl := h.Plans.Create(ctx, user, plan.Draft{
 		Action:      "extension." + id + "." + action,
 		Warnings:    preview.Warnings,
 		Summary:     preview.Summary,

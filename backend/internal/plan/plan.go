@@ -16,6 +16,7 @@ import (
 	"encoding/hex"
 	"encoding/json"
 	"errors"
+	"github.com/antonbier/DreamHub/backend/internal/box"
 	"log/slog"
 	"sync"
 	"time"
@@ -102,6 +103,7 @@ type Plan struct {
 type entry struct {
 	plan   Plan
 	userID int64
+	box    string // the box the preview was made for (internal/box)
 	draft  Draft
 }
 
@@ -131,7 +133,9 @@ func newID() string {
 }
 
 // Create stores a draft as a pending plan for u and returns its preview.
-func (s *Service) Create(u store.User, d Draft) Plan {
+// The plan belongs to the box ctx is addressed to: applying it acts on
+// that box, whatever box the apply request names.
+func (s *Service) Create(ctx context.Context, u store.User, d Draft) Plan {
 	now := s.now().UTC()
 	p := Plan{ID: newID(), Action: d.Action, CreatedAt: now, ExpiresAt: now.Add(TTL), Changes: d.Changes, Warnings: d.Warnings, Summary: d.Summary}
 	if p.Changes == nil {
@@ -148,7 +152,7 @@ func (s *Service) Create(u store.User, d Draft) Plan {
 			delete(s.pending, id)
 		}
 	}
-	s.pending[p.ID] = entry{plan: p, userID: u.ID, draft: d}
+	s.pending[p.ID] = entry{plan: p, userID: u.ID, box: box.ID(ctx), draft: d}
 	return p
 }
 
@@ -180,6 +184,9 @@ func (s *Service) Apply(ctx context.Context, u store.User, id string) (Result, e
 	// halfway — or its own rollback — would leave the box half-changed.
 	// The clients underneath keep their own per-request timeouts.
 	ctx = context.WithoutCancel(ctx)
+	if e.box != "" {
+		ctx = box.With(ctx, e.box)
+	}
 	if e.draft.Current != nil {
 		fp, err := e.draft.Current(ctx)
 		if err != nil {

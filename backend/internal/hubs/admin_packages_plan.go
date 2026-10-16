@@ -112,7 +112,7 @@ func (h *Admin) planPackages(w http.ResponseWriter, r *http.Request) {
 	user, _ := httpx.User(ctx)
 	action, names := body.Action, body.Packages
 	summary := describeSteps(steps)
-	pl := h.Plans.Create(user, plan.Draft{
+	pl := h.Plans.Create(ctx, user, plan.Draft{
 		Action:   "package." + string(action),
 		Changes:  changes,
 		Warnings: warnings,

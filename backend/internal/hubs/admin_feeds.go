@@ -90,7 +90,7 @@ func (h *Admin) planFeed(w http.ResponseWriter, r *http.Request) {
 
 	user, _ := httpx.User(ctx)
 	action, name, url := body.Action, body.Name, body.URL
-	pl := h.Plans.Create(user, plan.Draft{
+	pl := h.Plans.Create(ctx, user, plan.Draft{
 		Action:      "admin.feed." + action,
 		Changes:     []plan.Change{{Type: "feed." + action, After: map[string]string{"name": name, "url": url}}},
 		Warnings:    warnings,

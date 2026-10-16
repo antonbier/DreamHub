@@ -12,7 +12,10 @@ import (
 	"sync"
 	"time"
 
+	"errors"
 	"github.com/antonbier/DreamHub/backend/internal/apt"
+	"github.com/antonbier/DreamHub/backend/internal/box"
+	"github.com/antonbier/DreamHub/backend/internal/boxes"
 	"github.com/antonbier/DreamHub/backend/internal/extension"
 	extmock "github.com/antonbier/DreamHub/backend/internal/extension/mock"
 	"github.com/antonbier/DreamHub/backend/internal/omdb"
@@ -57,8 +60,16 @@ import (
 
 // Options configure the application.
 type Options struct {
-	DataDir    string
+	DataDir string
+	// WebControl, Series and AutoTimer are the first box's connections
+	// (the box with ID box.DefaultID, the one DreamHub runs on or was
+	// pointed at by the configuration). Further boxes, saved in the
+	// store, get theirs from BoxFactory.
 	WebControl webcontrol.Client
+	// BoxFactory builds the connections of a further box from its saved
+	// row (address and login); nil means DreamHub knows only its first
+	// box and ignores saved rows of others.
+	BoxFactory func(store.Box) (boxes.Clients, error)
 	// Series is the SerienRecorder API client (internal/serienrecorder),
 	// used by SeriesHub and the SerienRecorder connector's reachability
 	// check. Required whenever Mock is false.
@@ -190,6 +201,8 @@ type App struct {
 	Dashboard  *dashboard.Service
 	Tokens     *apitoken.Service
 	Profiles   *profile.Service
+	// Boxes are the registered boxes (docs/MULTIDEVICE_PLAN.md, M1).
+	Boxes *boxes.Registry
 	// Routes are the protected API routes with their permissions.
 	Routes []api.Route
 	Level  *logging.Level
@@ -198,7 +211,8 @@ type App struct {
 	// Poller isn't started here — cmd/dreamhub runs it as long as the
 	// process does; tests just use the Bus directly, no background polling.
 	Events *events.Bus
-	Poller *events.Poller
+	// Poller runs one poller per box.
+	Poller *events.Fleet
 	// Jobs is the background queue (internal/jobs); hubs register their
 	// job kinds on it, cmd/dreamhub runs it with Background.
 	Jobs *jobs.Service
@@ -247,10 +261,40 @@ func New(ctx context.Context, o Options) (*App, error) {
 		return nil, err
 	}
 
+	// The registry of boxes: the first one from the options, the others
+	// from the store. Everything below uses the registry's clients, which
+	// forward each call to the box the request's context names.
+	boxReg := boxes.NewRegistry()
+	saved, err := st.Boxes(ctx)
+	if err != nil {
+		st.Close()
+		return nil, err
+	}
+	for _, b := range saved {
+		switch {
+		case b.ID == box.DefaultID:
+			boxReg.Add(b, boxes.Clients{WC: o.WebControl, Series: o.Series, AutoTimer: o.AutoTimer}, true)
+		case o.BoxFactory != nil:
+			c, err := o.BoxFactory(b)
+			if err != nil {
+				if o.Logger != nil {
+					o.Logger.Warn("box ignored: connecting failed", "box", b.ID, "error", err)
+				}
+				continue
+			}
+			boxReg.Add(b, c, false)
+		}
+	}
+	if boxReg.DefaultID() == "" { // the first box was removed or never seeded
+		st.Close()
+		return nil, errors.New("app: no box registered")
+	}
+	wc, sr, at := webcontrol.Client(boxReg.WebControl()), boxReg.Series(), boxReg.AutoTimer()
+
 	conns := connector.NewRegistry(o.ConnectorTTL)
-	conns.Add(connector.WebControl{Client: o.WebControl})
-	conns.Add(connector.SerienRecorder{Client: o.Series, Mock: o.Mock})
-	conns.Add(connector.AutoTimer{Client: o.AutoTimer})
+	conns.Add(connector.WebControl{Client: wc})
+	conns.Add(connector.SerienRecorder{Client: sr, Mock: o.Mock})
+	conns.Add(connector.AutoTimer{Client: at})
 	conns.Add(connector.OpenAI{})
 	conns.Add(connector.TMDB{})
 	conns.Add(connector.TVmaze{})
@@ -312,8 +356,11 @@ func New(ctx context.Context, o Options) (*App, error) {
 	// The background queue (#41) holds while the box records: the tuner,
 	// the disk and enigma2 belong to the recording.
 	jobQueue := &jobs.Service{Store: st, Logger: o.Logger, Now: now,
-		Blockers: []jobs.Blocker{recordingBlocker(o.WebControl)}}
-	poller := &events.Poller{WC: o.WebControl, Bus: eventBus, Logger: o.Logger, Now: now}
+		Blockers: []jobs.Blocker{recordingBlocker(wc)}}
+	poller := &events.Fleet{IDs: boxReg.IDs, New: func(id string) *events.Poller {
+		return &events.Poller{WC: wc, Bus: eventBus, Logger: o.Logger, Now: now, BoxID: id,
+			Tag: func() bool { return len(boxReg.List()) > 1 }}
+	}}
 
 	var enricher *enrich.Service
 	if o.TMDB != nil {
@@ -323,25 +370,26 @@ func New(ctx context.Context, o Options) (*App, error) {
 		}
 	}
 
-	channelsHub := &hubs_.Channels{WC: o.WebControl, Plans: plans, Store: st, Settings: svc, User: user, PiconDirs: o.PiconDirs, LogoDir: filepath.Join(o.DataDir, "logos"), Logos: o.LogoSearch, Now: now}
+	channelsHub := &hubs_.Channels{WC: wc, Plans: plans, Store: st, Settings: svc, User: user, PiconDirs: o.PiconDirs, LogoDir: filepath.Join(o.DataDir, "logos"), Logos: o.LogoSearch, Now: now}
+	channelsHub.Boxes = boxReg.IDs
 	channelsHub.Init(ctx)
-	timerHub := &hubs_.Timer{WC: o.WebControl, Plans: plans, Now: now, AT: o.AutoTimer, Owners: st}
-	mediaHub := &hubs_.Media{WC: o.WebControl, Plans: plans, FS: o.RecordingsFS, ReadOnly: o.ReadOnlyFiles,
+	timerHub := &hubs_.Timer{WC: wc, Plans: plans, Now: now, AT: at, Owners: st}
+	mediaHub := &hubs_.Media{WC: wc, Plans: plans, FS: o.RecordingsFS, ReadOnly: o.ReadOnlyFiles,
 		Settings: svc, Store: st, AI: o.AI, TMDB: o.TMDB, Enrich: enricher, Now: now,
 		AdScan: adScanOpener(o), Trim: trimCutter(o)}
 	mediaHub.RegisterJobs(jobQueue)
 	// Built before GuideHub/DiscoveryHub: both flag a broadcast already in
 	// the library (#32) through it.
-	plexHub := &hubs_.Plex{Client: o.Plex, Settings: svc, Store: st, Plans: plans, WC: o.WebControl, User: user,
+	plexHub := &hubs_.Plex{Client: o.Plex, Settings: svc, Store: st, Plans: plans, WC: wc, User: user,
 		Images:     &enrich.ImageCache{Dir: filepath.Join(o.DataDir, "cache", "plex"), MaxBytes: enrich.DefaultImageCacheBytes},
 		StreamBase: o.StreamBase, Now: now, Logger: o.Logger}
-	guideHub := &hubs_.Guide{WC: o.WebControl, Now: now, PiconDirs: o.PiconDirs, Plex: plexHub}
-	radioHub := &hubs_.Radio{WC: o.WebControl, Now: now, PiconDirs: o.PiconDirs}
-	streamHub := &hubs_.Stream{WC: o.WebControl, FS: o.RecordingsFS, PiconDirs: o.PiconDirs}
-	seriesHub := &hubs_.Series{SR: o.Series, WC: o.WebControl, FS: o.RecordingsFS, TVmaze: o.TVmaze, Store: st, Settings: svc, DMI: o.DMI, Now: now}
-	discoveryHub := &hubs_.Discovery{WC: o.WebControl, SR: o.Series, AT: o.AutoTimer, AI: o.AI, Store: st, Settings: svc, Now: now, Plex: plexHub}
+	guideHub := &hubs_.Guide{WC: wc, Now: now, PiconDirs: o.PiconDirs, Plex: plexHub}
+	radioHub := &hubs_.Radio{WC: wc, Now: now, PiconDirs: o.PiconDirs}
+	streamHub := &hubs_.Stream{WC: wc, FS: o.RecordingsFS, PiconDirs: o.PiconDirs}
+	seriesHub := &hubs_.Series{SR: sr, WC: wc, FS: o.RecordingsFS, TVmaze: o.TVmaze, Store: st, Settings: svc, DMI: o.DMI, Now: now}
+	discoveryHub := &hubs_.Discovery{WC: wc, SR: sr, AT: at, AI: o.AI, Store: st, Settings: svc, Now: now, Plex: plexHub}
 	systemHub := &hubs_.System{Store: st, Settings: svc, Dashboard: dash, Plans: plans, Now: now,
-		SelfTest: &hubs_.SelfTest{WC: o.WebControl, SR: o.Series, AT: o.AutoTimer, DMI: o.DMI, Systemd: o.Systemd, FS: o.RecordingsFS,
+		SelfTest: &hubs_.SelfTest{WC: wc, SR: sr, AT: at, DMI: o.DMI, Systemd: o.Systemd, FS: o.RecordingsFS,
 			PiconDirs: o.PiconDirs, Dir: filepath.Join(o.DataDir, "selftest"), Writes: !o.ReadOnlyFiles, Now: now}}
 	// Apt's own Lister value usually also implements FeedLister (Exec{},
 	// the mock) — asserted here rather than a separate Options field, since
@@ -353,8 +401,8 @@ func New(ctx context.Context, o Options) (*App, error) {
 	feedManager, _ := o.Apt.(apt.FeedManager)
 	adminHub := &hubs_.Admin{Store: st, Level: level, Logs: o.Logs, FS: o.RecordingsFS,
 		Systemd: o.Systemd, Scripts: o.Scripts, Apt: o.Apt, Feeds: feeds, Packages: pkgManager, FeedManager: feedManager, AI: o.AI, Settings: svc,
-		Auth: svc, TerminalTarget: o.TerminalTarget, Plans: plans, WC: o.WebControl, Now: now, ReadOnly: o.ReadOnlyFiles}
-	controlHub := &hubs_.Control{WC: o.WebControl}
+		Auth: svc, TerminalTarget: o.TerminalTarget, Plans: plans, WC: wc, Now: now, ReadOnly: o.ReadOnlyFiles}
+	controlHub := &hubs_.Control{WC: wc}
 
 	// Extension Hub (docs/EXTENSIONHUB_PLAN.md, E1): the registry is
 	// always created (an extension can register at any time, over the
@@ -370,7 +418,7 @@ func New(ctx context.Context, o Options) (*App, error) {
 	}
 	extensionsHub := &hubs_.Extensions{Registry: extRegistry, Plans: plans, ReadOnly: o.ReadOnlyFiles}
 	appsHub := &hubs_.Apps{
-		DockerHub: o.DockerHub, Docker: o.Docker, Mem: o.Mem, WC: o.WebControl,
+		DockerHub: o.DockerHub, Docker: o.Docker, Mem: o.Mem, WC: wc,
 		StorageRoot: o.AppsStorageRoot, DataDir: o.DataDir, Policy: o.AppsMountPolicy, Plans: plans, ReadOnly: o.ReadOnlyFiles,
 		Store: st, Auth: svc, ConfigFS: o.AppsConfigFS, Setup: o.DockerSetup, Now: now,
 		Settings: svc, User: user, Admin: adminHub, Settle: o.AppsSettle, Loc: o.AppsLocation,
@@ -421,7 +469,8 @@ func New(ctx context.Context, o Options) (*App, error) {
 	}
 
 	handler, routes := api.NewRouterWithRoutes(api.Deps{
-		WebControl: o.WebControl,
+		WebControl: wc,
+		Boxes:      boxReg,
 		Verifier:   auth.NewSettingsVerifier(svc, tokens),
 		Settings:   svc,
 		Connectors: conns,
@@ -473,7 +522,7 @@ func New(ctx context.Context, o Options) (*App, error) {
 	return &App{
 		Handler: handler, Store: st, Settings: svc, Connectors: conns, Hubs: hubs,
 		Plans: plans, Dashboard: dash, Tokens: tokens, Profiles: profiles, Routes: routes, Level: level, User: user,
-		Events: eventBus, Poller: poller, Jobs: jobQueue,
+		Events: eventBus, Poller: poller, Jobs: jobQueue, Boxes: boxReg,
 		Background: append(background(notifier, seriesHub, adminHub, appsHub, plexHub, eventBus, o.Logger),
 			func(ctx context.Context) { channelsHub.Watch(ctx, o.Logger) }, jobQueue.Run),
 	}, nil

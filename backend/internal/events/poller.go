@@ -6,6 +6,7 @@ import (
 	"strconv"
 	"time"
 
+	"github.com/antonbier/DreamHub/backend/internal/box"
 	"github.com/antonbier/DreamHub/backend/internal/tuner"
 	"github.com/antonbier/DreamHub/backend/internal/webcontrol"
 )
@@ -34,6 +35,14 @@ type Poller struct {
 	Bus      *Bus
 	Interval time.Duration
 	Logger   *slog.Logger
+	// BoxID is the box this poller watches (internal/box); "" polls the
+	// first box. Tag adds the box's ID to every event it publishes — set
+	// by Fleet once there is more than one box to tell apart.
+	BoxID string
+	Tag   func() bool
+	// failures counts the ticks in a row the box did not answer, to back
+	// off: a box that is off is not asked every 30 seconds.
+	failures int
 
 	// running holds the timers that were recording last tick, by channel
 	// and start (not end: extending a running recording isn't a new one);
@@ -62,24 +71,51 @@ func (p *Poller) Run(ctx context.Context) {
 	if p.Interval <= 0 {
 		p.Interval = DefaultInterval
 	}
-	p.tick(ctx)
-	ticker := time.NewTicker(p.Interval)
-	defer ticker.Stop()
 	for {
+		p.tick(ctx)
 		select {
 		case <-ctx.Done():
 			return
-		case <-ticker.C:
-			p.tick(ctx)
+		case <-time.After(p.wait()):
 		}
 	}
 }
 
+// maxBackoff is the longest pause between two looks at a box that does not
+// answer.
+const maxBackoff = 5 * time.Minute
+
+// wait is the pause until the next tick: the interval, doubled for each
+// failed tick in a row up to maxBackoff.
+func (p *Poller) wait() time.Duration {
+	d := p.Interval
+	for i := 0; i < p.failures && d < maxBackoff; i++ {
+		d *= 2
+	}
+	return min(d, max(maxBackoff, p.Interval))
+}
+
+// publish sends an event, tagged with the box when there are several.
+func (p *Poller) publish(ctx context.Context, key string, params map[string]any) {
+	if p.BoxID != "" && p.Tag != nil && p.Tag() {
+		params["box"] = p.BoxID
+	}
+	p.Bus.Publish(ctx, key, params)
+}
+
 func (p *Poller) tick(ctx context.Context) {
+	if p.BoxID != "" {
+		ctx = box.With(ctx, p.BoxID)
+	}
 	if p.diskAbove == nil {
 		p.diskAbove = map[string]bool{}
 	}
 	timers, err := p.WC.TimerList(ctx)
+	if err != nil {
+		p.failures++
+	} else {
+		p.failures = 0
+	}
 	if err != nil {
 		if p.Logger != nil {
 			p.Logger.Debug("events: poller could not read timers", "error", err)
@@ -116,7 +152,7 @@ func (p *Poller) checkConflicts(ctx context.Context, timers []webcontrol.Timer, 
 		k := key(t)
 		current[k] = true
 		if p.conflicting != nil && !p.conflicting[k] {
-			p.Bus.Publish(ctx, TimerConflict, map[string]any{"name": t.Name, "service": t.ServiceName, "begin": t.Begin})
+			p.publish(ctx, TimerConflict, map[string]any{"name": t.Name, "service": t.ServiceName, "begin": t.Begin})
 		}
 	}
 	p.conflicting = current
@@ -133,7 +169,7 @@ func (p *Poller) checkRecordings(ctx context.Context, timers []webcontrol.Timer)
 	if p.running != nil {
 		for k, t := range now {
 			if _, was := p.running[k]; !was {
-				p.Bus.Publish(ctx, RecordingStarted, map[string]any{"name": t.Name, "service": t.ServiceName})
+				p.publish(ctx, RecordingStarted, map[string]any{"name": t.Name, "service": t.ServiceName})
 			}
 		}
 		// Gone from "recording": finished, or deleted while recording —
@@ -141,7 +177,7 @@ func (p *Poller) checkRecordings(ctx context.Context, timers []webcontrol.Timer)
 		// the last tick, the timer may not be listed any more.
 		for k, t := range p.running {
 			if _, still := now[k]; !still {
-				p.Bus.Publish(ctx, RecordingFinished, map[string]any{"name": t.Name, "service": t.ServiceName})
+				p.publish(ctx, RecordingFinished, map[string]any{"name": t.Name, "service": t.ServiceName})
 			}
 		}
 	}
@@ -162,7 +198,7 @@ func (p *Poller) checkDisk(ctx context.Context, info *webcontrol.DeviceInfo) {
 		switch {
 		case pct >= diskThreshold && !p.diskAbove[hd.Model]:
 			p.diskAbove[hd.Model] = true
-			p.Bus.Publish(ctx, DiskAboveLimit, map[string]any{"model": hd.Model, "percent": pct})
+			p.publish(ctx, DiskAboveLimit, map[string]any{"model": hd.Model, "percent": pct})
 		case pct < diskReset:
 			p.diskAbove[hd.Model] = false
 		}

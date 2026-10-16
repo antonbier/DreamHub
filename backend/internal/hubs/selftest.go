@@ -343,7 +343,7 @@ func (r *selfTestRun) boxChecks(ctx context.Context) {
 		if err != nil {
 			return CheckFail, "error", map[string]any{"error": err.Error()}
 		}
-		fileOps := t.FS != nil && recfs.Available(t.FS, folders)
+		fileOps := t.FS != nil && onBox(ctx, t.FS, folders)
 		params := map[string]any{"folders": strings.Join(folders, ", "), "fileOps": fileOps}
 		if !fileOps {
 			return CheckWarn, "noFileOps", params

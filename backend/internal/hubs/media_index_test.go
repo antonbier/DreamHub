@@ -2,6 +2,7 @@ package hubs
 
 import (
 	"context"
+	"github.com/antonbier/DreamHub/backend/internal/box"
 	"io/fs"
 	"path"
 	"sync"
@@ -53,5 +54,21 @@ func TestRecordingIndexConcurrentFirstCallersWait(t *testing.T) {
 		if !r.ok || len(r.e) != 1 {
 			t.Fatalf("caller %d: ok=%v entries=%d", i, r.ok, len(r.e))
 		}
+	}
+}
+
+// Each box has its own index: one box's recordings never show up in
+// another's search (docs/MULTIDEVICE_PLAN.md, M1).
+func TestRecordingIndexIsPerBox(t *testing.T) {
+	h := &Media{}
+	a, b := h.index(box.With(context.Background(), "main")), h.index(box.With(context.Background(), "bedroom"))
+	if a == b {
+		t.Fatal("two boxes share one index")
+	}
+	if again := h.index(box.With(context.Background(), "main")); again != a {
+		t.Error("a box's index must be stable")
+	}
+	if h.index(context.Background()) != a {
+		t.Error("a context without a box means the first box")
 	}
 }

@@ -12,6 +12,7 @@ import (
 	"database/sql"
 	"errors"
 	"fmt"
+	"io"
 	"os"
 	"path/filepath"
 	"time"
@@ -46,6 +47,10 @@ func Open(dataDir string) (*Store, error) {
 	db.SetMaxOpenConns(1)
 
 	s := &Store{db: db, now: func() time.Time { return time.Now().UTC() }}
+	if err := s.backupBeforeMigration(context.Background(), path); err != nil {
+		db.Close()
+		return nil, err
+	}
 	if err := s.migrate(context.Background()); err != nil {
 		db.Close()
 		return nil, err
@@ -313,6 +318,92 @@ var migrations = []string{
 	);
 	CREATE INDEX admin_script_runs_script ON admin_script_runs (script_id);
 	`,
+	`
+	-- Multi-box (docs/MULTIDEVICE_PLAN.md, M1): the boxes DreamHub controls,
+	-- and everything that belongs to one box is keyed by it. All data so
+	-- far belongs to the first box, "main". The first box's address and
+	-- login stay in the configuration and the WebControl settings (empty
+	-- here); further boxes keep theirs in their row.
+	CREATE TABLE boxes (
+		id         TEXT PRIMARY KEY,
+		name       TEXT NOT NULL,
+		color      TEXT NOT NULL DEFAULT '',
+		url        TEXT NOT NULL DEFAULT '',
+		username   TEXT NOT NULL DEFAULT '',
+		password   TEXT NOT NULL DEFAULT '',
+		position   INTEGER NOT NULL,
+		created_at TEXT NOT NULL
+	);
+	INSERT INTO boxes (id, name, position, created_at) VALUES ('main', 'Dreambox', 0, strftime('%Y-%m-%dT%H:%M:%fZ', 'now'));
+
+	ALTER TABLE timer_owners RENAME TO timer_owners_old;
+	CREATE TABLE timer_owners (
+		box_id      TEXT NOT NULL DEFAULT 'main',
+		service_ref TEXT NOT NULL,
+		begin_at    INTEGER NOT NULL,
+		user_id     INTEGER NOT NULL REFERENCES users(id) ON DELETE CASCADE,
+		created_at  TEXT NOT NULL,
+		PRIMARY KEY (box_id, service_ref, begin_at)
+	);
+	INSERT INTO timer_owners (service_ref, begin_at, user_id, created_at) SELECT service_ref, begin_at, user_id, created_at FROM timer_owners_old;
+	DROP TABLE timer_owners_old;
+
+	ALTER TABLE channel_snapshot RENAME TO channel_snapshot_old;
+	CREATE TABLE channel_snapshot (
+		box_id      TEXT NOT NULL DEFAULT 'main',
+		service_ref TEXT NOT NULL,
+		name        TEXT NOT NULL,
+		provider    TEXT NOT NULL,
+		kind        TEXT NOT NULL CHECK (kind IN ('tv', 'radio')),
+		first_seen  INTEGER NOT NULL,
+		last_seen   INTEGER NOT NULL,
+		first_look  INTEGER NOT NULL,
+		last_look   INTEGER NOT NULL,
+		PRIMARY KEY (box_id, service_ref)
+	);
+	INSERT INTO channel_snapshot (service_ref, name, provider, kind, first_seen, last_seen, first_look, last_look)
+		SELECT service_ref, name, provider, kind, first_seen, last_seen, first_look, last_look FROM channel_snapshot_old;
+	DROP TABLE channel_snapshot_old;
+
+	ALTER TABLE channel_backups RENAME TO channel_backups_old;
+	CREATE TABLE channel_backups (
+		box_id     TEXT NOT NULL DEFAULT 'main',
+		filename   TEXT NOT NULL,
+		created_at TEXT NOT NULL,
+		summary    TEXT NOT NULL,
+		user_id    INTEGER,
+		PRIMARY KEY (box_id, filename)
+	);
+	INSERT INTO channel_backups (filename, created_at, summary, user_id) SELECT filename, created_at, summary, user_id FROM channel_backups_old;
+	DROP TABLE channel_backups_old;
+
+	ALTER TABLE adscan_logos RENAME TO adscan_logos_old;
+	CREATE TABLE adscan_logos (
+		box_id       TEXT NOT NULL DEFAULT 'main',
+		service_ref  TEXT NOT NULL,
+		mask         TEXT NOT NULL,
+		learned_at   TEXT NOT NULL,
+		learned_from TEXT NOT NULL DEFAULT '',
+		PRIMARY KEY (box_id, service_ref)
+	);
+	INSERT INTO adscan_logos (service_ref, mask, learned_at, learned_from) SELECT service_ref, mask, learned_at, learned_from FROM adscan_logos_old;
+	DROP TABLE adscan_logos_old;
+
+	ALTER TABLE adscan_results RENAME TO adscan_results_old;
+	CREATE TABLE adscan_results (
+		box_id      TEXT NOT NULL DEFAULT 'main',
+		path        TEXT NOT NULL,
+		service_ref TEXT NOT NULL DEFAULT '',
+		result      TEXT NOT NULL,
+		analyzed_at TEXT NOT NULL,
+		PRIMARY KEY (box_id, path)
+	);
+	INSERT INTO adscan_results (path, service_ref, result, analyzed_at) SELECT path, service_ref, result, analyzed_at FROM adscan_results_old;
+	DROP TABLE adscan_results_old;
+
+	-- A job runs against the box it was queued for.
+	ALTER TABLE jobs ADD COLUMN box_id TEXT NOT NULL DEFAULT 'main';
+	`,
 }
 
 func (s *Store) migrate(ctx context.Context) error {
@@ -338,6 +429,39 @@ func (s *Store) migrate(ctx context.Context) error {
 		}
 	}
 	return nil
+}
+
+// backupBeforeMigration copies the database next to itself when an
+// existing one is about to be migrated ("dreamhub.db.pre-migration-<from>"):
+// the multi-box migration re-keys several tables, and a user must be able
+// to go back to the version they came from. A fresh database has nothing
+// worth saving; the previous backup of the same step is replaced.
+func (s *Store) backupBeforeMigration(ctx context.Context, path string) error {
+	var version int
+	if err := s.db.QueryRowContext(ctx, "PRAGMA user_version").Scan(&version); err != nil {
+		return fmt.Errorf("store: reading schema version: %w", err)
+	}
+	if version == 0 || version >= len(migrations) {
+		return nil
+	}
+	// Fold the WAL into the main file so the copy is complete.
+	if _, err := s.db.ExecContext(ctx, "PRAGMA wal_checkpoint(TRUNCATE)"); err != nil {
+		return fmt.Errorf("store: checkpointing before migration: %w", err)
+	}
+	in, err := os.Open(path)
+	if err != nil {
+		return fmt.Errorf("store: backing up before migration: %w", err)
+	}
+	defer in.Close()
+	out, err := os.OpenFile(fmt.Sprintf("%s.pre-migration-%d", path, version), os.O_CREATE|os.O_WRONLY|os.O_TRUNC, 0o600)
+	if err != nil {
+		return fmt.Errorf("store: backing up before migration: %w", err)
+	}
+	if _, err := io.Copy(out, in); err != nil {
+		out.Close()
+		return fmt.Errorf("store: backing up before migration: %w", err)
+	}
+	return out.Close()
 }
 
 // SchemaVersion reports the applied migration count.

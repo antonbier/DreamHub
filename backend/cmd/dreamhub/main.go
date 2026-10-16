@@ -9,6 +9,7 @@ import (
 	"context"
 	"github.com/antonbier/DreamHub/backend/internal/autotimer"
 	atmock "github.com/antonbier/DreamHub/backend/internal/autotimer/mock"
+	"github.com/antonbier/DreamHub/backend/internal/boxes"
 	"github.com/antonbier/DreamHub/backend/internal/dmi"
 	"github.com/antonbier/DreamHub/backend/internal/dockerd"
 	dockermock "github.com/antonbier/DreamHub/backend/internal/dockerd/mock"
@@ -29,6 +30,7 @@ import (
 	"github.com/antonbier/DreamHub/backend/internal/push"
 	pushmock "github.com/antonbier/DreamHub/backend/internal/push/mock"
 	"github.com/antonbier/DreamHub/backend/internal/recfs"
+	"github.com/antonbier/DreamHub/backend/internal/store"
 	"github.com/antonbier/DreamHub/backend/internal/tmdb"
 	tmdbmock "github.com/antonbier/DreamHub/backend/internal/tmdb/mock"
 	"github.com/antonbier/DreamHub/backend/internal/tvmaze"
@@ -83,6 +85,9 @@ func run(logger *slog.Logger, level *logging.Level) error {
 	cfg := config.Load()
 
 	var wc webcontrol.Client
+	// boxFactory builds the connections of a further box from its saved
+	// row (docs/MULTIDEVICE_PLAN.md); set per mode below.
+	var boxFactory func(store.Box) (boxes.Clients, error)
 	var sr serienrecorder.Client
 	var aiClient ai.Client
 	var at autotimer.Client
@@ -122,6 +127,16 @@ func run(logger *slog.Logger, level *logging.Level) error {
 		// just a different path (ARCHITECTURE.md, issue #10).
 		sr = serienrecorder.NewHTTPClient(cfg.WebControlURL)
 		at = autotimer.NewHTTPClient(cfg.WebControlURL)
+		boxFactory = func(b store.Box) (boxes.Clients, error) {
+			creds := func() (string, string) { return b.Username, b.Password }
+			w := webcontrol.NewHTTPClient(b.URL)
+			w.AllowWrites, w.Credentials = cfg.EnableDeviceWrites, creds
+			s := serienrecorder.NewHTTPClient(b.URL)
+			s.Credentials = creds
+			a := autotimer.NewHTTPClient(b.URL)
+			a.Credentials = creds
+			return boxes.Clients{WC: w, Series: s, AutoTimer: a}, nil
+		}
 		// The real file system. MediaHub only offers file operations when
 		// the box's recording folders actually exist on it, i.e. when
 		// DreamHub runs on the box (recfs.Available).
@@ -213,6 +228,10 @@ func run(logger *slog.Logger, level *logging.Level) error {
 			sr = &srmock.Client{Shift: int64(dayShift.Seconds())}
 		}
 		at = atmock.New()
+		// A further box in mock mode is another, untouched mock box.
+		boxFactory = func(store.Box) (boxes.Clients, error) {
+			return boxes.Clients{WC: mock.New(), Series: &srmock.Client{}, AutoTimer: atmock.New()}, nil
+		}
 		aiClient = aimock.New()
 		tmdbClient = tmdbmock.New()
 		tvmazeClient = tvmazemock.New()
@@ -255,6 +274,7 @@ func run(logger *slog.Logger, level *logging.Level) error {
 	a, err := app.New(context.Background(), app.Options{
 		DataDir:      cfg.DataDir,
 		WebControl:   wc,
+		BoxFactory:   boxFactory,
 		Series:       sr,
 		AutoTimer:    at,
 		TMDB:         tmdbClient,

@@ -11,6 +11,7 @@ import (
 	"testing"
 	"time"
 
+	"github.com/antonbier/DreamHub/backend/internal/box"
 	"github.com/antonbier/DreamHub/backend/internal/serienrecorder"
 	srmock "github.com/antonbier/DreamHub/backend/internal/serienrecorder/mock"
 	"github.com/antonbier/DreamHub/backend/internal/settings"
@@ -189,5 +190,22 @@ func TestSerienRecorder_NotInstalled(t *testing.T) {
 	rep := (SerienRecorder{Client: serienrecorder.NewHTTPClient(srv.URL)}).Check(context.Background(), nil)
 	if rep.State != NotInstalled || rep.Problem == nil || rep.Problem.Code != status.CodeConnectorNotInstalled || rep.Problem.Fix != status.FixInstallPlugin {
 		t.Errorf("a missing SerienRecorder must report not_installed with an install hint, got %+v", rep)
+	}
+}
+
+func TestReports_AreCachedPerBox(t *testing.T) {
+	r := NewRegistry(30 * time.Second)
+	c := &counting{}
+	r.Add(c)
+	main, other := box.With(context.Background(), "main"), box.With(context.Background(), "bedroom")
+	r.Reports(main, settings.Values{}, 1)
+	r.Reports(other, settings.Values{}, 1)
+	if n := c.calls.Load(); n != 2 {
+		t.Fatalf("each box needs its own check, got %d", n)
+	}
+	r.Reports(main, settings.Values{}, 1)
+	r.Reports(other, settings.Values{}, 1)
+	if n := c.calls.Load(); n != 2 {
+		t.Fatalf("both are cached, got %d checks", n)
 	}
 }

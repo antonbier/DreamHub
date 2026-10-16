@@ -159,7 +159,7 @@ func (h *Media) planSaveCovers(w http.ResponseWriter, r *http.Request) {
 	}
 	fp := func(context.Context) (string, error) { return h.filesFingerprint(targets), nil }
 	current, _ := fp(ctx)
-	out["plan"] = h.Plans.Create(user, plan.Draft{
+	out["plan"] = h.Plans.Create(ctx, user, plan.Draft{
 		Action:      "media.saveCovers",
 		Changes:     changes,
 		Summary:     fmt.Sprintf("Saved %d cover file(s) next to recordings", len(writes)),

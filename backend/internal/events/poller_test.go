@@ -4,6 +4,7 @@ import (
 	"context"
 	"errors"
 	"strings"
+	"sync"
 	"testing"
 	"time"
 
@@ -240,5 +241,85 @@ func TestPoller_NoConflictFromAMissingTunerList(t *testing.T) {
 	p.tick(ctx)
 	if got := keys(t, st); len(got) != 0 {
 		t.Fatalf("announced %v without knowing the tuners", got)
+	}
+}
+
+func TestPoller_TagsEventsWithTheBoxOnlyWhenAsked(t *testing.T) {
+	bus, st := newTestBus(t)
+	fc := &fakeClient{Client: mock.New()}
+	tag := false
+	p := &Poller{WC: fc, Bus: bus, BoxID: "bedroom", Tag: func() bool { return tag }}
+	ctx := context.Background()
+	timer := webcontrol.Timer{ServiceReference: "1:0:1:1:1:1:1:0:0:0:", Name: "Example", Begin: 100, End: 200}
+	p.tick(ctx)
+	timer.State = webcontrol.TimerRunning
+	fc.timers = []webcontrol.Timer{timer}
+	p.tick(ctx)
+	timer.State = webcontrol.TimerEnded
+	fc.timers = []webcontrol.Timer{timer}
+	tag = true
+	p.tick(ctx)
+	entries, _ := st.Notifications(ctx, 10, false)
+	if len(entries) != 2 {
+		t.Fatalf("expected two events, got %d", len(entries))
+	}
+	for _, e := range entries { // newest first
+		hasBox := strings.Contains(string(e.Params), `"box":"bedroom"`)
+		if (e.Key == "recording.finished") != hasBox {
+			t.Errorf("%s: params %s", e.Key, e.Params)
+		}
+	}
+}
+
+type deadClient struct{ webcontrol.Client }
+
+func (deadClient) TimerList(context.Context) ([]webcontrol.Timer, error) {
+	return nil, errors.New("no route to host")
+}
+
+func TestPoller_BacksOffWhileTheBoxDoesNotAnswer(t *testing.T) {
+	bus, _ := newTestBus(t)
+	p := &Poller{WC: deadClient{mock.New()}, Bus: bus, Interval: 30 * time.Second}
+	if p.wait() != 30*time.Second {
+		t.Fatalf("a box that answered is asked on time, got %v", p.wait())
+	}
+	for i := 0; i < 3; i++ {
+		p.tick(context.Background())
+	}
+	if p.wait() != 8*30*time.Second {
+		t.Errorf("three failures double the pause three times, got %v", p.wait())
+	}
+	for i := 0; i < 10; i++ {
+		p.tick(context.Background())
+	}
+	if p.wait() != maxBackoff {
+		t.Errorf("the pause stops growing at %v, got %v", maxBackoff, p.wait())
+	}
+}
+
+func TestFleet_StartsOnePollerPerBoxIncludingLaterOnes(t *testing.T) {
+	var mu sync.Mutex
+	ids := []string{"main"}
+	started := map[string]int{}
+	f := &Fleet{Check: 5 * time.Millisecond,
+		IDs: func() []string { mu.Lock(); defer mu.Unlock(); return append([]string(nil), ids...) },
+		New: func(id string) *Poller {
+			mu.Lock()
+			started[id]++
+			mu.Unlock()
+			return &Poller{WC: deadClient{mock.New()}, Bus: nil, Interval: time.Hour}
+		}}
+	ctx, cancel := context.WithCancel(context.Background())
+	defer cancel()
+	go f.Run(ctx)
+	time.Sleep(30 * time.Millisecond)
+	mu.Lock()
+	ids = append(ids, "bedroom")
+	mu.Unlock()
+	time.Sleep(40 * time.Millisecond)
+	mu.Lock()
+	defer mu.Unlock()
+	if started["main"] != 1 || started["bedroom"] != 1 {
+		t.Errorf("each box gets exactly one poller: %v", started)
 	}
 }

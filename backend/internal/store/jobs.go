@@ -27,10 +27,12 @@ type Job struct {
 	Kind    string
 	Key     string // what it works on, e.g. a recording's path; "" for none
 	OwnerID int64
-	Params  json.RawMessage
-	State   string
-	Done    int64
-	Total   int64
+	// BoxID is the box the job runs against.
+	BoxID  string
+	Params json.RawMessage
+	State  string
+	Done   int64
+	Total  int64
 	// Message is an i18n key for what the job is doing right now (or why
 	// it waits), MessageParams its parameters.
 	Message       string
@@ -44,7 +46,7 @@ type Job struct {
 	FinishedAt time.Time // zero until it ends
 }
 
-const jobColumns = `id, kind, key, owner_id, params, state, done, total, message, msg_params, error, checkpoint, created_at, started_at, finished_at`
+const jobColumns = `id, kind, key, owner_id, box_id, params, state, done, total, message, msg_params, error, checkpoint, created_at, started_at, finished_at`
 
 func rawOr(v json.RawMessage, def string) string {
 	if len(v) == 0 {
@@ -63,9 +65,9 @@ func timeOrEmpty(t time.Time) string {
 // InsertJob stores a new job; ID and CreatedAt are filled in.
 func (s *Store) InsertJob(ctx context.Context, j Job) (Job, error) {
 	j.CreatedAt = parseTime(s.timestamp())
-	res, err := s.db.ExecContext(ctx, `INSERT INTO jobs (kind, key, owner_id, params, state, done, total, message, msg_params, error, checkpoint, created_at)
-		VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
-		j.Kind, j.Key, j.OwnerID, rawOr(j.Params, "{}"), j.State, j.Done, j.Total, j.Message, rawOr(j.MessageParams, "{}"), j.Error, rawOr(j.Checkpoint, ""), timeOrEmpty(j.CreatedAt))
+	res, err := s.db.ExecContext(ctx, `INSERT INTO jobs (kind, key, owner_id, box_id, params, state, done, total, message, msg_params, error, checkpoint, created_at)
+		VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
+		j.Kind, j.Key, j.OwnerID, j.BoxID, rawOr(j.Params, "{}"), j.State, j.Done, j.Total, j.Message, rawOr(j.MessageParams, "{}"), j.Error, rawOr(j.Checkpoint, ""), timeOrEmpty(j.CreatedAt))
 	if err != nil {
 		return Job{}, err
 	}
@@ -84,7 +86,7 @@ func (s *Store) UpdateJob(ctx context.Context, j Job) error {
 func scanJob(row interface{ Scan(...any) error }) (Job, error) {
 	var j Job
 	var params, msgParams, checkpoint, created, started, finished string
-	if err := row.Scan(&j.ID, &j.Kind, &j.Key, &j.OwnerID, &params, &j.State, &j.Done, &j.Total, &j.Message, &msgParams, &j.Error, &checkpoint, &created, &started, &finished); err != nil {
+	if err := row.Scan(&j.ID, &j.Kind, &j.Key, &j.OwnerID, &j.BoxID, &params, &j.State, &j.Done, &j.Total, &j.Message, &msgParams, &j.Error, &checkpoint, &created, &started, &finished); err != nil {
 		return Job{}, err
 	}
 	j.Params, j.MessageParams = json.RawMessage(params), json.RawMessage(msgParams)

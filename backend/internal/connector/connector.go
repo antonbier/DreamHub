@@ -6,6 +6,7 @@ package connector
 
 import (
 	"context"
+	"github.com/antonbier/DreamHub/backend/internal/box"
 	"sort"
 	"sync"
 	"time"
@@ -60,10 +61,16 @@ type Registry struct {
 	ttl  time.Duration
 	now  func() time.Time
 
-	mu      sync.Mutex
-	cache   map[string]Report
-	cachedV uint64
-	cachedT time.Time
+	mu    sync.Mutex
+	cache map[string]cached // per box (internal/box)
+}
+
+// cached is one box's reports with the settings version and time they
+// were computed at.
+type cached struct {
+	reports map[string]Report
+	version uint64
+	at      time.Time
 }
 
 // NewRegistry returns an empty registry whose reports are cached for ttl.
@@ -93,8 +100,9 @@ func (r *Registry) Reports(ctx context.Context, v settings.Values, settingsVersi
 	r.mu.Lock()
 	defer r.mu.Unlock()
 	now := r.now()
-	if r.cache != nil && r.cachedV == settingsVersion && now.Sub(r.cachedT) < r.ttl {
-		return r.cache
+	key := box.Key(ctx)
+	if c, ok := r.cache[key]; ok && c.version == settingsVersion && now.Sub(c.at) < r.ttl {
+		return c.reports
 	}
 
 	out := make(map[string]Report, len(r.list))
@@ -115,7 +123,10 @@ func (r *Registry) Reports(ctx context.Context, v settings.Values, settingsVersi
 	}
 	wg.Wait()
 
-	r.cache, r.cachedV, r.cachedT = out, settingsVersion, now
+	if r.cache == nil {
+		r.cache = map[string]cached{}
+	}
+	r.cache[key] = cached{out, settingsVersion, now}
 	return out
 }
 

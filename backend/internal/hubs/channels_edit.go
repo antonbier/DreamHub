@@ -267,7 +267,7 @@ func (h *Channels) planBouquet(w http.ResponseWriter, r *http.Request) {
 		}
 	}
 	summary := fmt.Sprintf("Changed bouquet %q: %d changes", name, len(diff.changes))
-	pl := h.Plans.Create(user, plan.Draft{
+	pl := h.Plans.Create(ctx, user, plan.Draft{
 		Action:      "channels.bouquet",
 		Changes:     diff.changes,
 		Summary:     summary,
@@ -527,7 +527,7 @@ func (h *Channels) planBouquets(w http.ResponseWriter, r *http.Request) {
 		}
 		return listFingerprint(s)
 	}
-	pl := h.Plans.Create(user, plan.Draft{
+	pl := h.Plans.Create(ctx, user, plan.Draft{
 		Action: "channels." + change.Type, Changes: []plan.Change{change}, Summary: summary, Detail: a,
 		Fingerprint: fp(list),
 		Current: func(ctx context.Context) (string, error) {
@@ -617,7 +617,7 @@ func (h *Channels) planRestore(w http.ResponseWriter, r *http.Request) {
 	}
 	user, _ := httpx.User(ctx)
 	summary := fmt.Sprintf("Restored the channel list from %s", b.Filename)
-	pl := h.Plans.Create(user, plan.Draft{
+	pl := h.Plans.Create(ctx, user, plan.Draft{
 		Action:  "channels.restore",
 		Changes: []plan.Change{{Type: "channels.restore", After: map[string]any{"filename": b.Filename, "createdAt": b.CreatedAt, "summary": b.Summary}}},
 		Summary: summary, Detail: map[string]any{"filename": b.Filename},

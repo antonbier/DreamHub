@@ -341,7 +341,7 @@ func (h *Apps) installPlan(w http.ResponseWriter, r *http.Request, body installB
 	storage := configDir(root, app.ID)
 	user, _ := httpx.User(ctx)
 	def := definitionOf(body)
-	pl := h.Plans.Create(user, plan.Draft{
+	pl := h.Plans.Create(ctx, user, plan.Draft{
 		Action: "apps.install",
 		Changes: []plan.Change{{Type: "apps.install", After: map[string]any{
 			"appId": app.ID, "name": app.Name, "custom": app.Custom, "images": images, "hostPort": app.ContainerPort,
@@ -574,7 +574,7 @@ func (h *Apps) planRemove(w http.ResponseWriter, r *http.Request) {
 	summary += " (its stored config at " + strings.Join(kept, ", ") + " is kept)"
 
 	user, _ := httpx.User(ctx)
-	pl := h.Plans.Create(user, plan.Draft{
+	pl := h.Plans.Create(ctx, user, plan.Draft{
 		Action:      "apps.remove",
 		Changes:     []plan.Change{{Type: "apps.remove", Before: map[string]any{"id": id, "name": name, "containers": ids}}},
 		Summary:     summary,

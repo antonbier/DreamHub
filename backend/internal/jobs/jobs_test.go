@@ -8,6 +8,7 @@ import (
 	"testing"
 	"time"
 
+	"github.com/antonbier/DreamHub/backend/internal/box"
 	"github.com/antonbier/DreamHub/backend/internal/store"
 )
 
@@ -309,5 +310,45 @@ func TestEnqueueSameKeyConcurrentCreatesOne(t *testing.T) {
 	wg.Wait()
 	if fresh.Load() != 1 {
 		t.Fatalf("%d jobs created for one key, want 1", fresh.Load())
+	}
+}
+
+// A recording on one box holds back that box's jobs only, and a job runs
+// with its own box in the context (docs/MULTIDEVICE_PLAN.md, M1).
+func TestBlockerIsPerBox(t *testing.T) {
+	s, st := newService(t)
+	s.Blockers = []Blocker{func(ctx context.Context) string {
+		if box.Key(ctx) == "bedroom" {
+			return "recording"
+		}
+		return ""
+	}}
+	var ranOn atomic.Value
+	s.Register(Kind{Name: "test.where", Run: func(ctx context.Context, r *Run) error {
+		ranOn.Store(box.Key(ctx))
+		return nil
+	}})
+	start(t, s)
+	held, _, err := s.Enqueue(box.With(context.Background(), "bedroom"), "test.where", "k", 1, nil)
+	if err != nil {
+		t.Fatal(err)
+	}
+	free, _, err := s.Enqueue(box.With(context.Background(), "main"), "test.where", "k", 1, nil)
+	if err != nil {
+		t.Fatal(err)
+	}
+	if held.ID == free.ID {
+		t.Fatal("the same key on two boxes is two jobs")
+	}
+	waitFor(t, st, free.ID, store.JobDone)
+	if ranOn.Load() != "main" {
+		t.Errorf("the job must run against its own box, ran on %v", ranOn.Load())
+	}
+	time.Sleep(60 * time.Millisecond)
+	if j, _ := st.JobByID(context.Background(), held.ID); j.State != store.JobQueued {
+		t.Errorf("the bedroom job must wait for its recording, state %q", j.State)
+	}
+	if s.BlockedBy() != "recording" {
+		t.Errorf("BlockedBy should say why the bedroom's queue waits, got %q", s.BlockedBy())
 	}
 }

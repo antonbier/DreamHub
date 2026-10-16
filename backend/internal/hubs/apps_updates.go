@@ -245,7 +245,7 @@ func (h *Apps) planUpdateAll(w http.ResponseWriter, r *http.Request) {
 	user, _ := httpx.User(ctx)
 	summary := describeUpdateAll(rcs, pkgSteps)
 	fp := updateFingerprint(containers, rcs, pkgSteps)
-	pl := h.Plans.Create(user, plan.Draft{
+	pl := h.Plans.Create(ctx, user, plan.Draft{
 		Action:   "apps.updateAll",
 		Changes:  changes,
 		Warnings: warnings,

@@ -6,6 +6,10 @@ Format follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/); version
 
 ## [Unreleased]
 
+### Changed
+- Multi-box groundwork, M1 (`docs/MULTIDEVICE_PLAN.md`; nothing to see, nothing new for a household with one box): DreamHub now keeps a registry of boxes, and every request is about one of them — the optional `box=<id>` query parameter, the first box when omitted, so existing clients, API tokens and extensions keep working unchanged. Per box: the web-control, SerienRecorder and AutoTimer connections, the connector and hub-status checks, the recording index, the channel snapshot and its backups, AdScan marks and logos, timer owners, the event poller (with back-off while a box does not answer) and the background jobs (a recording on one box no longer holds back another's queue). A plan is applied to the box it was made for. Files, services and packages of the machine DreamHub runs on are offered for that box only.
+- The database gets its multi-box migration; before it runs, the old database is copied to `dreamhub.db.pre-migration-<version>` next to it.
+
 ## [0.8.0] - 2026-10-16
 
 ### Added

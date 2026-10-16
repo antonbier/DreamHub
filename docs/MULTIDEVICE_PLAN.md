@@ -55,6 +55,11 @@ Browser streams from a remote box run **through the hub**: one path for LAN, pho
 3. **Keep the channel list in sync** (ChannelHub: read A's bouquets, apply as a plan to B) — only if it turns out to be a small step on top of ChannelHub's existing plans.
 Everything else (record on the box with a free tuner, move/copy recordings) is a later, larger topic.
 
+### REST API and tokens
+`/api/v1` stays; the box is an **optional `box=<id>` query parameter** on every request (a query parameter because `EventSource`, `<img>` picons and `<video src>` streams can't send headers). Omitted = the profile's default box, or the first box — so existing clients, tokens and extensions keep working unchanged. A bearer token is already bound to a profile, so it **inherits that profile's box list**; restricting a token to a single box can come later. `GET /api/v1/boxes` lists the boxes the caller may use, with capabilities.
+
+PRINCIPLES.md promises an OpenAPI spec ("generated from the Go code, not hand-written docs that drift"), but **none exists yet**. Plan: one `openapi.json` with `box` defined once as a shared parameter, served by the backend and linked from Settings → Authentication next to the tokens (with a curl example), the plan → apply two-step documented as a pattern. The router uses plain `net/http` patterns plus a permission table, so the route list is introspectable: the spec is kept in step by a **test that fails when a route is missing from it** (the same test makes M1 prove every route resolves a box). Schemas are filled in from the most useful endpoints first.
+
 ## Things that are easy to get wrong (each needs a test)
 - **Service references differ per box** (satellite, provider, flags). Sync and cross-box playback match channels by **name / ONID-TSID-SID**, never by the reference string.
 - **Caches and coalescing** (guide grid, recording index, the web-control client's request coalescing) are keyed by box. Otherwise one box's data shows up in another's view.
@@ -79,6 +84,7 @@ Not a goal, not broken by anything here: no new hard-wired Dreambox assumptions 
 | M1 | **Box registry + box-aware wiring.** Box ID, one `webcontrol.Client` per box, hubs resolve the active box per request, caches/coalescing/poller per box, owners keyed `(box, timer)`, migration with backup, old API paths = first box. | No — mock + tests + one box check |
 | M2 | **Capabilities** per box (measured), hubs and nav honour them, greyed/hidden rules. | Mostly no |
 | M3 | **Selector, URL, profiles' box list, offline handling, dashboard strip.** Settings → Boxes: add (manual + Test), edit, remove-as-plan. | Yes |
+| M3a | **OpenAPI spec + route/spec parity test**, API section in Settings → Authentication, `GET /api/v1/boxes`. | Yes (docs/settings) |
 | M4 | **Second mock box**, headless-browser pass, screenshots, docs and `de/en/it`. | Test/docs |
 | M5 | **Streams of remote boxes through the hub**; notifications per box with name and switch. | Yes |
 | M6 | **Pairing to Full:** unpaired mode with code on TV/status page, token, version handshake, local-capabilities API; `StreamBase` per box. | Yes |

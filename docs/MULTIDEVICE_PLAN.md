@@ -1,6 +1,6 @@
 # Multi-box — plan
 
-Status: **brainstormed and decided 2026-10-16 (six rounds with the owner). M1, M2 and M3 are built against the mock and merged to `main` (see "… as built"); nothing is released before the check of M1 on the reference box; M3a is built too; M4 onwards not started.** Replaces the "one box" assumption that runs through the backend (`app.Options.WebControl` is injected once into every hub, the poller and the jobs blocker).
+Status: **brainstormed and decided 2026-10-16 (six rounds with the owner). M1, M2 and M3 are built against the mock and merged to `main` (see "… as built"); nothing is released before the check of M1 on the reference box; M3a and M4 are built too; M5 onwards not started.** Replaces the "one box" assumption that runs through the backend (`app.Options.WebControl` is injected once into every hub, the poller and the jobs blocker).
 
 ## Goal
 
@@ -137,3 +137,10 @@ How the wiring was done, so M2 onwards can build on it without re-reading the di
 - **`GET /api/v1/boxes`** gained `capabilities` (measured for allowed, online boxes; empty for an offline one so the list never waits).
 - **UI:** a "For developers" block under the token list (curl example with this page's address, link to the spec); strings in de/en/it. USER_GUIDE "API and tokens".
 - **Not done:** a rendered API viewer inside DreamHub (the spec is the artefact; Swagger UI etc. load it), per-box tokens, schemas for the long tail of endpoints.
+
+## M4 as built (2026-10-16)
+
+- **The second mock box** is `mock.NewSecond()` (`webcontrol/mock/second.go`): a `fixture` (device info with two tuners and a 1 TB disk, recordings, providers, favourites, evening programme, live channel) that the existing mock consults when set; the reference fixture is untouched. In mock mode `BoxFactory` returns it for every added box, so screenshots and the demo show different content per box. The channels (ProSieben, SAT.1, VOX) and recordings (Terra X, Tagesthemen) exist on that box only — a view that mixes boxes up shows foreign names.
+- **Checked** in headless Chromium against the mock (main + "Wohnzimmer"): dashboard with strip ("Wohnzimmer · ZDF HD"), timers ("2 tuners", own timers, no conflict), guide, recordings (own disk and list), Device overview and change log. Found and fixed: the Device view called the administration endpoints on a Basic box (409 in the console).
+- **Tests:** `mock` (second box differs everywhere), `api` (`TestBox_SecondMockBoxHasItsOwnContent`).
+- **Seen, not changed (later):** the change log is global, not per box (the plan wants it per box); mock recording sizes are 9 bytes (fixture file contents) on both boxes; the AutoTimer fixture is the same on both.

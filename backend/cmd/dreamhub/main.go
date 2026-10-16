@@ -228,9 +228,9 @@ func run(logger *slog.Logger, level *logging.Level) error {
 			sr = &srmock.Client{Shift: int64(dayShift.Seconds())}
 		}
 		at = atmock.New()
-		// A further box in mock mode is another, untouched mock box.
+		// A further box in mock mode is the second mock box (other fixtures).
 		boxFactory = func(store.Box) (boxes.Clients, error) {
-			return boxes.Clients{WC: mock.New(), Series: &srmock.Client{}, AutoTimer: atmock.New()}, nil
+			return boxes.Clients{WC: mock.NewSecond(), Series: &srmock.Client{}, AutoTimer: atmock.New()}, nil
 		}
 		aiClient = aimock.New()
 		tmdbClient = tmdbmock.New()

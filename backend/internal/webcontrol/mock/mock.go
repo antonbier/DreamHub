@@ -69,6 +69,8 @@ type Client struct {
 	LastPlayStartMs int64
 	// Chaos, when set, makes calls slow and sometimes fail (chaos.go).
 	Chaos *Chaos
+	// fx replaces the reference box's fixtures (second.go); nil: reference.
+	fx *fixture
 	// screen is the simulated on-screen state Screenshot renders (screen.go).
 	screen screen
 }
@@ -173,6 +175,10 @@ func (c *Client) DeviceInfo(ctx context.Context) (*webcontrol.DeviceInfo, error)
 	if err := c.disturb(ctx); err != nil {
 		return nil, err
 	}
+	if c.fx != nil {
+		d := c.fx.device
+		return &d, nil
+	}
 	return &webcontrol.DeviceInfo{
 		EnigmaVersion: "5.0.0r117-gutemine-2024-08-12",
 		ImageVersion:  "Experimental 2023-04-24",
@@ -189,6 +195,9 @@ func (c *Client) DeviceInfo(ctx context.Context) (*webcontrol.DeviceInfo, error)
 func (c *Client) MovieList(ctx context.Context) ([]webcontrol.Movie, error) {
 	if err := c.disturb(ctx); err != nil {
 		return nil, err
+	}
+	if c.fx != nil {
+		return append([]webcontrol.Movie(nil), c.fx.movies...), nil
 	}
 	return []webcontrol.Movie{
 		{
@@ -267,10 +276,7 @@ var (
 )
 
 // tvProviders are the mock's TV providers and their channels.
-var tvProviders = []struct {
-	name     string
-	channels []webcontrol.Service
-}{
+var tvProviders = []provider{
 	{"ARD", []webcontrol.Service{TVDasErste, TVArte}},
 	{"ProSiebenSat.1", []webcontrol.Service{TVKabel1}},
 	{"RTL World", []webcontrol.Service{TVRTL}},
@@ -293,6 +299,14 @@ func (c *Client) ScanChannel(s webcontrol.Service) {
 // reference box has the plugin; NoBouquetEditor plays a box without it.
 func (c *Client) BouquetEditorAvailable(ctx context.Context) bool { return !c.NoBouquetEditor }
 
+// providers are this box's TV providers.
+func (c *Client) providers() []provider {
+	if c.fx != nil {
+		return c.fx.providers
+	}
+	return tvProviders
+}
+
 func (c *Client) baseServices(ctx context.Context, bouquetRef string) ([]webcontrol.Service, error) {
 	if err := c.disturb(ctx); err != nil {
 		return nil, err
@@ -303,7 +317,7 @@ func (c *Client) baseServices(ctx context.Context, bouquetRef string) ([]webcont
 	switch bouquetRef {
 	case webcontrol.TVAll:
 		var all []webcontrol.Service
-		for _, p := range tvProviders {
+		for _, p := range c.providers() {
 			all = append(all, p.channels...)
 		}
 		all = append(all, scanned...)
@@ -311,7 +325,7 @@ func (c *Client) baseServices(ctx context.Context, bouquetRef string) ([]webcont
 		return all, nil
 	case webcontrol.TVProviders:
 		var out []webcontrol.Service
-		for _, p := range tvProviders {
+		for _, p := range c.providers() {
 			out = append(out, webcontrol.Service{ServiceReference: providerRef(p.name), ServiceName: p.name})
 		}
 		if len(scanned) > 0 {
@@ -325,7 +339,7 @@ func (c *Client) baseServices(ctx context.Context, bouquetRef string) ([]webcont
 	case providerRef("New"):
 		return scanned, nil
 	}
-	for _, p := range tvProviders {
+	for _, p := range c.providers() {
 		if bouquetRef == providerRef(p.name) {
 			return p.channels, nil
 		}
@@ -344,6 +358,9 @@ func (c *Client) baseServices(ctx context.Context, bouquetRef string) ([]webcont
 			{ServiceReference: "1:0:2:6F37:3F3:1:C00000:0:0:0:", ServiceName: "BAYERN 3"},
 			RadioDLF, RadioKlassik, RadioSWR3,
 		}, nil
+	}
+	if c.fx != nil {
+		return append([]webcontrol.Service(nil), c.fx.favourites...), nil
 	}
 	return []webcontrol.Service{
 		{ServiceReference: "1:0:19:2EE3:441:1:C00000:0:0:0:", ServiceName: "RTL Television"},
@@ -399,6 +416,9 @@ func radioSchedule() []webcontrol.EPGEvent {
 func (c *Client) schedule(bouquetRef string) []webcontrol.EPGEvent {
 	if bouquetRef == FavouritesRadio.ServiceReference || bouquetRef == webcontrol.RadioAll {
 		return radioSchedule()
+	}
+	if c.fx != nil {
+		return c.fx.schedule
 	}
 	return epgSchedule()
 }
@@ -460,7 +480,7 @@ func (c *Client) EPGSearch(ctx context.Context, query string) ([]webcontrol.EPGE
 	}
 	q := strings.ToLower(query)
 	var out []webcontrol.EPGEvent
-	for _, e := range epgSchedule() {
+	for _, e := range c.schedule("") {
 		if strings.Contains(strings.ToLower(e.Title), q) {
 			out = append(out, e)
 		}
@@ -531,6 +551,9 @@ func (c *Client) CurrentServiceReference(ctx context.Context) (string, error) {
 	defer c.mu.Unlock()
 	if c.Playing != "" {
 		return c.Playing, nil
+	}
+	if c.fx != nil {
+		return c.fx.live, nil
 	}
 	return "1:0:19:2EE3:441:1:C00000:0:0:0:", nil // RTL, live TV
 }
@@ -678,7 +701,7 @@ func (c *Client) Current(ctx context.Context) (*webcontrol.CurrentService, error
 	if c.Now != nil {
 		now = c.Now().Unix()
 	}
-	for _, e := range append(epgSchedule(), radioSchedule()...) {
+	for _, e := range append(c.schedule(""), radioSchedule()...) {
 		if e.ServiceReference != ref {
 			continue
 		}

@@ -557,9 +557,15 @@ onMounted(async () => {
   } finally {
     loading.value = false
   }
-  const [levelRes, crashRes] = await Promise.all([api.admin.logLevel.get(), api.admin.crashLogs()])
-  level.value = levelRes
-  crashLogs.value = crashRes.logs
+  // Administration needs DreamHub on the box itself; a Basic box answers
+  // 409 and the tab is hidden, so there is nothing to load.
+  try {
+    const [levelRes, crashRes] = await Promise.all([api.admin.logLevel.get(), api.admin.crashLogs()])
+    level.value = levelRes
+    crashLogs.value = crashRes.logs
+  } catch {
+    return
+  }
   await loadLogs()
 })
 </script>

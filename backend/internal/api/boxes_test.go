@@ -443,3 +443,31 @@ func TestBoxes_OverviewShowsEachBoxAndSkipsOfflineOnes(t *testing.T) {
 		t.Errorf("the list knows it is offline: %+v", list.Boxes[1])
 	}
 }
+
+// The second mock box has its own programme: nothing of one box's timers,
+// recordings or conflicts shows in the other's views (M4).
+func TestBox_SecondMockBoxHasItsOwnContent(t *testing.T) {
+	e := newEnv(t)
+	e.app.Boxes.Add(store.Box{ID: "living", Name: "living"}, boxes.Clients{WC: wcmock.NewSecond(), Series: srmock.New(), AutoTimer: mock.New()}, false)
+
+	first, other := e.timerNames(t, ""), e.timerNames(t, "?box=living")
+	for _, n := range other {
+		for _, m := range first {
+			if n == m {
+				t.Fatalf("timer %q shows on both boxes", n)
+			}
+		}
+	}
+	if len(other) != 3 {
+		t.Fatalf("second box timers = %v", other)
+	}
+	// Two tuners: its overlapping timers are no conflict.
+	resp, b := e.do(t, "GET", "/api/v1/timers?box=living", "", nil)
+	if resp.StatusCode != http.StatusOK || strings.Contains(string(b), `"conflict":true`) {
+		t.Fatalf("second box timers: %d %s", resp.StatusCode, b)
+	}
+	resp, b = e.do(t, "GET", "/api/v1/deviceinfo?box=living", "", nil)
+	if resp.StatusCode != http.StatusOK || !strings.Contains(string(b), "wohnzimmer") {
+		t.Fatalf("second box device info: %d %s", resp.StatusCode, b)
+	}
+}

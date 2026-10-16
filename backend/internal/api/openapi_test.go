@@ -50,6 +50,7 @@ var (
 	publicSpecRoutes = []string{
 		"GET /api/v1/health", "GET /api/v1/qr.png", "GET /api/v1/profiles",
 		"POST /api/v1/profiles/{id}/session", "DELETE /api/v1/profiles/session",
+		"GET /api/v1/peer/info", "POST /api/v1/peer/pair",
 	}
 	// A WebSocket proxy, not an API call.
 	notInSpec = []string{"/api/v1/admin/terminal/proxy/"}

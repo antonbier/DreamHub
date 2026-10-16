@@ -50,6 +50,7 @@ import (
 	"github.com/antonbier/DreamHub/backend/internal/logging"
 	"github.com/antonbier/DreamHub/backend/internal/logosearch"
 	"github.com/antonbier/DreamHub/backend/internal/meminfo"
+	"github.com/antonbier/DreamHub/backend/internal/peer"
 	"github.com/antonbier/DreamHub/backend/internal/plan"
 	"github.com/antonbier/DreamHub/backend/internal/scripts"
 	"github.com/antonbier/DreamHub/backend/internal/serienrecorder"
@@ -96,6 +97,11 @@ type Options struct {
 	// 8080"), set only when DreamHub runs on the box; PlexHub plays films
 	// there through it.
 	StreamBase string
+	// StreamPort is the port the other boxes reach this DreamHub on.
+	StreamPort string
+	// Peer pairs with the DreamHub on other boxes (internal/peer); nil
+	// turns pairing off.
+	Peer peer.Client
 	// PiconDirs are where channel logos are looked for (GuideHub); nil
 	// means the box's usual places.
 	PiconDirs []string
@@ -290,6 +296,7 @@ func New(ctx context.Context, o Options) (*App, error) {
 		st.Close()
 		return nil, errors.New("app: no box registered")
 	}
+	boxReg.SetStreamBase(o.StreamBase, o.StreamPort)
 	wc, sr, at := webcontrol.Client(boxReg.WebControl()), boxReg.Series(), boxReg.AutoTimer()
 
 	conns := connector.NewRegistry(o.ConnectorTTL)
@@ -384,7 +391,7 @@ func New(ctx context.Context, o Options) (*App, error) {
 	// the library (#32) through it.
 	plexHub := &hubs_.Plex{Client: o.Plex, Settings: svc, Store: st, Plans: plans, WC: wc, User: user,
 		Images:     &enrich.ImageCache{Dir: filepath.Join(o.DataDir, "cache", "plex"), MaxBytes: enrich.DefaultImageCacheBytes},
-		StreamBase: o.StreamBase, Now: now, Logger: o.Logger}
+		StreamBase: o.StreamBase, StreamBaseFor: boxReg.StreamBase, Now: now, Logger: o.Logger}
 	guideHub := &hubs_.Guide{WC: wc, Now: now, PiconDirs: o.PiconDirs, Plex: plexHub}
 	radioHub := &hubs_.Radio{WC: wc, Now: now, PiconDirs: o.PiconDirs}
 	streamHub := &hubs_.Stream{WC: wc, FS: o.RecordingsFS, PiconDirs: o.PiconDirs}
@@ -480,10 +487,16 @@ func New(ctx context.Context, o Options) (*App, error) {
 		}
 	}
 
+	// The pairing code is also put on this box's TV (the first box is the
+	// one DreamHub runs on); a box with writes off just shows it in the UI.
+	peerSvc := &peer.Service{Tokens: tokens, Now: now, Announce: func(ctx context.Context, code string) error {
+		return wc.Message(box.With(ctx, boxReg.DefaultID()), "DreamHub pairing code: "+code, webcontrol.MessageInfo, 600)
+	}}
 	handler, routes := api.NewRouterWithRoutes(api.Deps{
 		WebControl: wc,
 		Boxes:      boxReg,
-		BoxManager: &boxes.Manager{Store: st, Registry: boxReg, Factory: o.BoxFactory},
+		BoxManager: &boxes.Manager{Store: st, Registry: boxReg, Factory: o.BoxFactory, Peer: o.Peer},
+		Peer:       peerSvc,
 		Verifier:   auth.NewSettingsVerifier(svc, tokens),
 		Settings:   svc,
 		Connectors: conns,

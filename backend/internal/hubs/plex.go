@@ -50,7 +50,10 @@ type Plex struct {
 	// "http://127.0.0.1:8080" — set only when DreamHub runs on the box;
 	// empty means films can't be played there.
 	StreamBase string
-	Now        func() time.Time
+	// StreamBaseFor, when set, gives it per box (internal/boxes.StreamBase)
+	// and replaces StreamBase.
+	StreamBaseFor func(context.Context) string
+	Now           func() time.Time
 	Logger     *slog.Logger
 
 	mu       sync.Mutex
@@ -469,7 +472,7 @@ func (h *Plex) status(w http.ResponseWriter, r *http.Request) {
 		httpx.WriteError(w, r, http.StatusInternalServerError, "internal", "could not read settings")
 		return
 	}
-	out := map[string]any{"configured": c.configured(), "canPlay": c.playOnBox && h.StreamBase != "" && !box.Remote(r.Context())}
+	out := map[string]any{"configured": c.configured(), "canPlay": c.playOnBox && h.streamBase(r.Context()) != ""}
 	if c.configured() {
 		// A cheap live check when it's worth one, so the page opens with
 		// the server's real state.
@@ -815,4 +818,16 @@ func randomHex(n int) string {
 	b := make([]byte, n)
 	rand.Read(b)
 	return hex.EncodeToString(b)
+}
+
+// streamBase is how the box the request is about reaches this DreamHub;
+// "" when films can't be played there.
+func (h *Plex) streamBase(ctx context.Context) string {
+	if h.StreamBaseFor != nil {
+		return h.StreamBaseFor(ctx)
+	}
+	if box.Remote(ctx) {
+		return ""
+	}
+	return h.StreamBase
 }

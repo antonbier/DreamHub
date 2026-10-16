@@ -2395,7 +2395,8 @@
       "add": "Box hinzufügen",
       "basicHint": "Eine hier hinzugefügte Box wird über ihre Weboberfläche gesteuert: Live-TV, Programm, Timer, Senderlisten, Fernbedienung und ihre Aufnahmen. Aufnahmeverwaltung, Logos und Systemwerkzeuge brauchen DreamHub auf der Box selbst.",
       "removeConfirm": "Box entfernen",
-      "removeText": "„{name}“ entfernen? DreamHub vergisst die Box und alles, was dafür gespeichert ist – Timer-Besitzer, Senderlisten-Verlauf, Werbemarken. Die Box selbst bleibt unberührt."
+      "removeText": "„{name}“ entfernen? DreamHub vergisst die Box und alles, was dafür gespeichert ist – Timer-Besitzer, Senderlisten-Verlauf, Werbemarken. Die Box selbst bleibt unberührt.",
+      "paired": "mit DreamHub gekoppelt"
     },
     "form": {
       "name": "Name",
@@ -2425,7 +2426,45 @@
       "isMain": "Die erste Box kann nicht entfernt werden.",
       "url": "Das sieht nicht nach einer Adresse aus.",
       "name": "Gib der Box einen Namen (bis zu 30 Zeichen).",
-      "generic": "Das hat nicht geklappt. Versuch es noch einmal."
+      "generic": "Das hat nicht geklappt. Versuch es noch einmal.",
+      "isLocal": "DreamHub läuft auf dieser Box selbst – es gibt nichts zu koppeln.",
+      "peerUnreachable": "Keine Antwort von DreamHub auf dieser Box. Läuft es?",
+      "peerNotFound": "Dort antwortet kein DreamHub, das sich koppeln lässt. Ist es aktuell?",
+      "peerNotPairing": "Diese Box zeigt gerade keinen Code. Lass dort zuerst einen anzeigen.",
+      "peerBadCode": "Falscher oder abgelaufener Code.",
+      "codeRequired": "Gib den Code ein, der auf der Box steht.",
+      "boxTooOld": "DreamHub auf dieser Box ist zu alt. Aktualisiere es zuerst.",
+      "hubTooOld": "Dieses DreamHub ist zu alt für das auf der Box. Aktualisiere zuerst dieses."
+    },
+    "pair": {
+      "title": "DreamHub auf dieser Box",
+      "hint": "Mit DreamHub auf dieser Box lassen sich ihre Aufnahmen und mehr von hier verwalten. Öffne dort Einstellungen → Boxen → „Diese Box mit einem anderen DreamHub koppeln“, lass den Code anzeigen und gib ihn hier ein. Ohne Kopplung bleibt die Box über ihr Webinterface gesteuert.",
+      "code": "Code von der Box",
+      "pair": "Koppeln",
+      "pairing": "Koppeln …",
+      "otherAddress": "DreamHub ist unter dieser Adresse nicht auf Port 8080",
+      "otherAddressPlaceholder": "192.168.1.20:8080",
+      "state": {
+        "ok": "Gekoppelt · DreamHub {version}",
+        "paired": "Gekoppelt",
+        "unreachable": "Gekoppelt, aber DreamHub auf der Box antwortet nicht.",
+        "revoked": "Die Box akzeptiert diese Kopplung nicht mehr."
+      },
+      "revokedHint": "Die Kopplung wurde auf der Box widerrufen. Hier trennen und mit einem neuen Code erneut koppeln.",
+      "boxTooOld": "DreamHub auf dieser Box ist zu alt für dieses. Aktualisiere es, dann funktioniert alles.",
+      "hubTooOld": "Dieses DreamHub ist zu alt für das auf der Box. Aktualisiere dieses.",
+      "advanced": "Erweitert",
+      "streamBase": "Adresse dieses DreamHub, von der Box aus gesehen",
+      "streamBaseHint": "Wird verwendet, wenn die Box einen Film von hier abruft. Leer: wird automatisch gefunden.",
+      "unpair": "Trennen",
+      "unpairHint": "Das vergisst die Kopplung hier. Um sie auch auf der Box zu beenden, lösche dort unter Einstellungen → Anmeldung das Token „Hub: …“."
+    },
+    "pairThis": {
+      "title": "Diese Box mit einem anderen DreamHub koppeln",
+      "hint": "Zeigt hier und auf dem Fernseher dieser Box einen Einmalcode. Gib ihn im anderen DreamHub unter Einstellungen → Boxen ein. Er gilt einmal und zehn Minuten lang.",
+      "show": "Code anzeigen",
+      "valid": "Gültig bis {time}",
+      "onTv": "auch auf dem Fernseher"
     }
   }
 }

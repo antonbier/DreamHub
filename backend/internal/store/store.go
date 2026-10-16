@@ -409,6 +409,13 @@ var migrations = []string{
 	-- list of box IDs; empty means all boxes.
 	ALTER TABLE users ADD COLUMN boxes TEXT NOT NULL DEFAULT '[]';
 	`,
+	`
+	-- Pairing to the DreamHub on a box and how that box reaches this hub
+	-- (docs/MULTIDEVICE_PLAN.md, M6).
+	ALTER TABLE boxes ADD COLUMN peer_url TEXT NOT NULL DEFAULT '';
+	ALTER TABLE boxes ADD COLUMN peer_token TEXT NOT NULL DEFAULT '';
+	ALTER TABLE boxes ADD COLUMN stream_base TEXT NOT NULL DEFAULT '';
+	`,
 }
 
 func (s *Store) migrate(ctx context.Context) error {

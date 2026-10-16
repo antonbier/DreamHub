@@ -2395,7 +2395,8 @@
       "add": "Aggiungi box",
       "basicHint": "Un box aggiunto qui viene controllato tramite la sua interfaccia web: TV in diretta, guida, timer, liste canali, telecomando e le sue registrazioni. Gestione delle registrazioni, loghi e strumenti di sistema richiedono DreamHub sul box stesso.",
       "removeConfirm": "Rimuovi box",
-      "removeText": "Rimuovere «{name}»? DreamHub dimentica il box e tutto ciò che ha salvato per lui: proprietari dei timer, cronologia dei canali, marcatori pubblicitari. Il box stesso non viene toccato."
+      "removeText": "Rimuovere «{name}»? DreamHub dimentica il box e tutto ciò che ha salvato per lui: proprietari dei timer, cronologia dei canali, marcatori pubblicitari. Il box stesso non viene toccato.",
+      "paired": "abbinato a DreamHub"
     },
     "form": {
       "name": "Nome",
@@ -2425,7 +2426,45 @@
       "isMain": "Il primo box non può essere rimosso.",
       "url": "Non sembra un indirizzo.",
       "name": "Dai un nome al box (fino a 30 caratteri).",
-      "generic": "Non ha funzionato. Riprova."
+      "generic": "Non ha funzionato. Riprova.",
+      "isLocal": "DreamHub gira su quel box stesso: non c’è nulla da abbinare.",
+      "peerUnreachable": "Nessuna risposta da DreamHub su quel box. È in esecuzione?",
+      "peerNotFound": "Lì non risponde nessun DreamHub abbinabile. È aggiornato?",
+      "peerNotPairing": "Quel box non mostra alcun codice ora. Mostrane prima uno lì.",
+      "peerBadCode": "Codice errato o scaduto.",
+      "codeRequired": "Inserisci il codice mostrato sul box.",
+      "boxTooOld": "DreamHub su quel box è troppo vecchio. Aggiornalo prima.",
+      "hubTooOld": "Questo DreamHub è troppo vecchio per quello su quel box. Aggiorna prima questo."
+    },
+    "pair": {
+      "title": "DreamHub su questo box",
+      "hint": "Con DreamHub su questo box puoi gestirne le registrazioni e altro da qui. Sul box apri Impostazioni → Box → «Abbina questo box a un altro DreamHub», mostra il codice e inseriscilo qui. Senza abbinamento il box resta controllato tramite la sua interfaccia web.",
+      "code": "Codice dal box",
+      "pair": "Abbina",
+      "pairing": "Abbinamento…",
+      "otherAddress": "DreamHub non è a questo indirizzo sulla porta 8080",
+      "otherAddressPlaceholder": "192.168.1.20:8080",
+      "state": {
+        "ok": "Abbinato · DreamHub {version}",
+        "paired": "Abbinato",
+        "unreachable": "Abbinato, ma DreamHub sul box non risponde.",
+        "revoked": "Il box non accetta più questo abbinamento."
+      },
+      "revokedHint": "L’abbinamento è stato revocato sul box. Scollega qui e abbina di nuovo con un nuovo codice.",
+      "boxTooOld": "DreamHub su questo box è troppo vecchio per questo. Aggiornalo e tutto funzionerà.",
+      "hubTooOld": "Questo DreamHub è troppo vecchio per quello sul box. Aggiorna questo.",
+      "advanced": "Avanzate",
+      "streamBase": "Indirizzo di questo DreamHub visto dal box",
+      "streamBaseHint": "Usato quando il box scarica un film da qui. Vuoto: trovato automaticamente.",
+      "unpair": "Scollega",
+      "unpairHint": "Questo dimentica l’abbinamento qui. Per terminarlo anche sul box, elimina lì il token «Hub: …» in Impostazioni → Accesso."
+    },
+    "pairThis": {
+      "title": "Abbina questo box a un altro DreamHub",
+      "hint": "Mostra qui e sulla TV di questo box un codice monouso. Inseriscilo nell’altro DreamHub in Impostazioni → Box. Vale una volta e per dieci minuti.",
+      "show": "Mostra codice",
+      "valid": "Valido fino alle {time}",
+      "onTv": "anche sulla TV"
     }
   }
 }

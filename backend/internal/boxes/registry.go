@@ -36,12 +36,18 @@ type Entry struct {
 	Local bool
 }
 
+// Paired: the DreamHub on that box has given this one a token.
+func (e Entry) Paired() bool { return e.PeerToken != "" }
+
 // Registry holds the boxes in their order. The first one is the default
 // for everything that names no box.
 type Registry struct {
 	mu      sync.RWMutex
 	entries []Entry
 	states  map[string]State
+	// localBase and port: how the machine DreamHub runs on reaches it, and
+	// the port the others use (StreamBase).
+	localBase, port string
 }
 
 // NewRegistry returns an empty registry.

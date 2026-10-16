@@ -11,6 +11,7 @@ import (
 	"github.com/antonbier/DreamHub/backend/internal/box"
 	"github.com/antonbier/DreamHub/backend/internal/boxes"
 	"github.com/antonbier/DreamHub/backend/internal/httpx"
+	"github.com/antonbier/DreamHub/backend/internal/peer"
 	"github.com/antonbier/DreamHub/backend/internal/perm"
 	"github.com/antonbier/DreamHub/backend/internal/plan"
 	"github.com/antonbier/DreamHub/backend/internal/store"
@@ -93,12 +94,30 @@ type boxView struct {
 	URL          string   `json:"url,omitempty"`
 	Username     string   `json:"username,omitempty"`
 	HasPassword  bool     `json:"hasPassword,omitempty"`
+	// Paired: the DreamHub on that box has given this one a token (M6).
+	Paired bool `json:"paired"`
+	// Peer is what the paired DreamHub said (administrators only).
+	Peer *peerView `json:"peer,omitempty"`
+	// PeerURL and StreamBase are settings of the connection (administrators).
+	PeerURL    string `json:"peerUrl,omitempty"`
+	StreamBase string `json:"streamBase,omitempty"`
+}
+
+// peerView is the state of the pairing with the DreamHub on a box.
+type peerView struct {
+	// State is boxes.PeerOK, PeerUnreachable or PeerRevoked.
+	State      string `json:"state"`
+	Version    string `json:"version,omitempty"`
+	DeviceName string `json:"deviceName,omitempty"`
+	// Compat is peer.CompatOK, CompatBoxOld or CompatHubOld.
+	Compat string `json:"compat,omitempty"`
 }
 
 func viewBox(d Deps, e boxes.Entry, admin bool, allowed bool) boxView {
-	v := boxView{ID: e.ID, Name: e.Name, Color: e.Color, Full: e.Local, Online: d.Boxes.Online(e.ID), Allowed: allowed}
+	v := boxView{ID: e.ID, Name: e.Name, Color: e.Color, Full: e.Local, Online: d.Boxes.Online(e.ID), Allowed: allowed, Paired: e.Paired()}
 	if admin && !e.Local {
 		v.URL, v.Username, v.HasPassword = e.URL, e.Username, e.Password != ""
+		v.PeerURL, v.StreamBase = e.PeerURL, e.StreamBase
 	}
 	return v
 }
@@ -122,6 +141,19 @@ func handleListBoxes(d Deps) http.HandlerFunc {
 					ctx := box.With(r.Context(), e.ID)
 					bv.Capabilities = d.Boxes.Capabilities(ctx, d.Connectors.Reports(ctx, v, d.Settings.Version()))
 				}
+				if e.Paired() && bv.Online && d.BoxManager != nil {
+					ctx, cancel := context.WithTimeout(r.Context(), overviewTimeout)
+					ps := d.BoxManager.PeerStatus(ctx, e)
+					cancel()
+					if admin {
+						bv.Peer = &peerView{State: ps.State, Version: ps.Info.Version, DeviceName: ps.Info.DeviceName, Compat: ps.Compat}
+					}
+					for _, c := range ps.Capabilities {
+						if !containsStr(bv.Capabilities, c) {
+							bv.Capabilities = append(bv.Capabilities, c)
+						}
+					}
+				}
 				if bv.Capabilities == nil {
 					bv.Capabilities = []string{}
 				}
@@ -135,6 +167,7 @@ func handleListBoxes(d Deps) http.HandlerFunc {
 // writeBoxError answers a box-management error; false when err is nil.
 func writeBoxError(w http.ResponseWriter, r *http.Request, err error) bool {
 	var ve *boxes.ValidationError
+	var ce *boxes.CompatError
 	switch {
 	case err == nil:
 		return false
@@ -150,6 +183,21 @@ func writeBoxError(w http.ResponseWriter, r *http.Request, err error) bool {
 		httpx.WriteError(w, r, http.StatusUnprocessableEntity, "box_unreachable", "the box does not answer at that address")
 	case errors.Is(err, boxes.ErrUnknownBox), errors.Is(err, store.ErrBoxNotFound):
 		httpx.WriteError(w, r, http.StatusNotFound, "box_not_found", "no such box")
+	case errors.Is(err, boxes.ErrIsLocal):
+		httpx.WriteError(w, r, http.StatusConflict, "box_is_local", "DreamHub runs on that box itself, there is nothing to pair")
+	case errors.Is(err, boxes.ErrNoPairing):
+		httpx.WriteError(w, r, http.StatusConflict, "pairing_off", "pairing with other boxes is not available")
+	case errors.Is(err, peer.ErrUnreachable):
+		httpx.WriteError(w, r, http.StatusUnprocessableEntity, "peer_unreachable", "no answer from DreamHub at that address")
+	case errors.Is(err, peer.ErrNoPeer):
+		httpx.WriteError(w, r, http.StatusUnprocessableEntity, "peer_not_found", "no DreamHub that can be paired answers at that address")
+	case errors.Is(err, peer.ErrNotPairing):
+		httpx.WriteError(w, r, http.StatusUnprocessableEntity, "peer_not_pairing", "that box shows no pairing code right now")
+	case errors.Is(err, peer.ErrBadCode):
+		httpx.WriteError(w, r, http.StatusUnprocessableEntity, "peer_bad_code", "wrong or expired code")
+	case errors.As(err, &ce):
+		httpx.WriteErrorDetails(w, r, http.StatusUnprocessableEntity, "peer_version_mismatch", "the DreamHub versions do not fit",
+			map[string]httpx.FieldError{"compat": {Code: ce.Status}})
 	case errors.Is(err, boxes.ErrMainBox):
 		httpx.WriteError(w, r, http.StatusConflict, "box_is_main", "the first box can't be removed")
 	default:
@@ -309,4 +357,13 @@ func handleBoxesOverview(d Deps) http.HandlerFunc {
 		wg.Wait()
 		httpx.WriteJSON(w, http.StatusOK, map[string]any{"boxes": out})
 	}
+}
+
+func containsStr(l []string, s string) bool {
+	for _, x := range l {
+		if x == s {
+			return true
+		}
+	}
+	return false
 }

@@ -158,6 +158,29 @@ export interface BoxInfo {
   url?: string
   username?: string
   hasPassword?: boolean
+  // The DreamHub on that box has paired with this one (M6); the rest is
+  // for administrators.
+  paired?: boolean
+  peer?: BoxPeer
+  peerUrl?: string
+  streamBase?: string
+  capabilities?: string[]
+}
+
+// What the paired DreamHub answered: ok, unreachable or revoked, and the
+// version handshake (ok, box_too_old, hub_too_old).
+export interface BoxPeer {
+  state: 'ok' | 'unreachable' | 'revoked'
+  version?: string
+  deviceName?: string
+  compat?: 'ok' | 'box_too_old' | 'hub_too_old'
+}
+
+// POST /api/v1/peer/code — the pairing code this box shows.
+export interface PairingCode {
+  code: string
+  expiresAt: string
+  onTv: boolean
 }
 
 export interface BoxInput {
@@ -166,6 +189,7 @@ export interface BoxInput {
   url?: string
   username?: string
   password?: string
+  streamBase?: string
 }
 
 // GET /api/v1/boxes/overview — one line per box for the dashboard's strip.

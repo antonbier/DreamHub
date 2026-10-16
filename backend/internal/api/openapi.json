@@ -112,6 +112,47 @@
      "username": {
       "type": "string",
       "description": "Administrators only"
+     },
+     "paired": {
+      "type": "boolean",
+      "description": "The DreamHub on that box has paired with this one (pairing)"
+     },
+     "peer": {
+      "type": "object",
+      "description": "Administrators only: what the paired DreamHub answered",
+      "properties": {
+       "state": {
+        "type": "string",
+        "enum": [
+         "ok",
+         "unreachable",
+         "revoked"
+        ]
+       },
+       "version": {
+        "type": "string"
+       },
+       "deviceName": {
+        "type": "string"
+       },
+       "compat": {
+        "type": "string",
+        "enum": [
+         "ok",
+         "box_too_old",
+         "hub_too_old"
+        ],
+        "description": "Version handshake"
+       }
+      }
+     },
+     "peerUrl": {
+      "type": "string",
+      "description": "Administrators only: address of the DreamHub on that box"
+     },
+     "streamBase": {
+      "type": "string",
+      "description": "Administrators only: how that box reaches this DreamHub; empty = detected"
      }
     }
    },
@@ -486,6 +527,28 @@
      "token": {
       "type": "string",
       "description": "Shown once"
+     }
+    }
+   },
+   "PeerInfo": {
+    "type": "object",
+    "properties": {
+     "version": {
+      "type": "string"
+     },
+     "api": {
+      "type": "integer",
+      "description": "Peer API level it speaks"
+     },
+     "minHubApi": {
+      "type": "integer"
+     },
+     "deviceName": {
+      "type": "string"
+     },
+     "pairing": {
+      "type": "boolean",
+      "description": "A pairing code is shown on that box right now"
      }
     }
    }
@@ -6316,6 +6379,178 @@
         }
        }
       }
+     },
+     "default": {
+      "$ref": "#/components/responses/Error"
+     }
+    }
+   }
+  },
+  "/peer/info": {
+   "get": {
+    "summary": "Version handshake of this DreamHub for the DreamHub of another box; needs no login",
+    "tags": [
+     "pairing"
+    ],
+    "operationId": "GET_peer_info",
+    "x-box": "global",
+    "security": [],
+    "responses": {
+     "200": {
+      "description": "OK",
+      "content": {
+       "application/json": {
+        "schema": {
+         "$ref": "#/components/schemas/PeerInfo"
+        }
+       }
+      }
+     },
+     "default": {
+      "$ref": "#/components/responses/Error"
+     }
+    }
+   }
+  },
+  "/peer/pair": {
+   "post": {
+    "summary": "Pair with this DreamHub using the one-time code shown on the box; returns a bearer token once",
+    "tags": [
+     "pairing"
+    ],
+    "operationId": "POST_peer_pair",
+    "x-box": "global",
+    "security": [],
+    "responses": {
+     "200": {
+      "description": "OK"
+     },
+     "default": {
+      "$ref": "#/components/responses/Error"
+     }
+    },
+    "requestBody": {
+     "required": true,
+     "content": {
+      "application/json": {
+       "schema": {
+        "type": "object",
+        "properties": {
+         "code": {
+          "type": "string"
+         },
+         "hubName": {
+          "type": "string"
+         }
+        }
+       }
+      }
+     }
+    }
+   }
+  },
+  "/peer/capabilities": {
+   "get": {
+    "summary": "What this machine can do on its own, with the version handshake (paired hubs)",
+    "tags": [
+     "pairing"
+    ],
+    "operationId": "GET_peer_capabilities",
+    "x-box": "global",
+    "responses": {
+     "200": {
+      "description": "OK"
+     },
+     "default": {
+      "$ref": "#/components/responses/Error"
+     }
+    }
+   }
+  },
+  "/peer/code": {
+   "post": {
+    "summary": "Show a pairing code on this box's status page and TV (administrators)",
+    "tags": [
+     "pairing"
+    ],
+    "operationId": "POST_peer_code",
+    "x-box": "global",
+    "responses": {
+     "200": {
+      "description": "OK"
+     },
+     "default": {
+      "$ref": "#/components/responses/Error"
+     }
+    }
+   }
+  },
+  "/boxes/{id}/pair": {
+   "post": {
+    "summary": "Pair a box with the DreamHub running on it, using the code that box shows (administrators)",
+    "tags": [
+     "pairing"
+    ],
+    "operationId": "POST_boxes_id_pair",
+    "x-box": "global",
+    "parameters": [
+     {
+      "name": "id",
+      "in": "path",
+      "required": true,
+      "schema": {
+       "type": "string"
+      }
+     }
+    ],
+    "responses": {
+     "200": {
+      "description": "OK"
+     },
+     "default": {
+      "$ref": "#/components/responses/Error"
+     }
+    },
+    "requestBody": {
+     "required": true,
+     "content": {
+      "application/json": {
+       "schema": {
+        "type": "object",
+        "properties": {
+         "code": {
+          "type": "string"
+         },
+         "url": {
+          "type": "string",
+          "description": "Address of the DreamHub, if not the box's address on port 8080"
+         }
+        }
+       }
+      }
+     }
+    }
+   },
+   "delete": {
+    "summary": "Forget the pairing token of a box (administrators); revoke it on the box too",
+    "tags": [
+     "pairing"
+    ],
+    "operationId": "DELETE_boxes_id_pair",
+    "x-box": "global",
+    "parameters": [
+     {
+      "name": "id",
+      "in": "path",
+      "required": true,
+      "schema": {
+       "type": "string"
+      }
+     }
+    ],
+    "responses": {
+     "200": {
+      "description": "OK"
      },
      "default": {
       "$ref": "#/components/responses/Error"

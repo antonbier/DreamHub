@@ -2395,7 +2395,8 @@
       "add": "Add box",
       "basicHint": "A box added here is controlled through its web interface: live TV, guide, timers, channel lists, remote and its recordings. Recording management, logos and system tools need DreamHub on that box itself.",
       "removeConfirm": "Remove box",
-      "removeText": "Remove “{name}”? DreamHub forgets the box and everything it saved for it — timer owners, channel history, ad marks. The box itself is not touched."
+      "removeText": "Remove “{name}”? DreamHub forgets the box and everything it saved for it — timer owners, channel history, ad marks. The box itself is not touched.",
+      "paired": "paired with DreamHub"
     },
     "form": {
       "name": "Name",
@@ -2425,7 +2426,45 @@
       "isMain": "The first box can't be removed.",
       "url": "That doesn't look like an address.",
       "name": "Give the box a name (up to 30 characters).",
-      "generic": "That didn't work. Try again."
+      "generic": "That didn't work. Try again.",
+      "isLocal": "DreamHub runs on that box itself — there is nothing to pair.",
+      "peerUnreachable": "No answer from DreamHub on that box. Is it running?",
+      "peerNotFound": "No DreamHub that can be paired answers there. Is it up to date?",
+      "peerNotPairing": "That box shows no code right now. Show one there first.",
+      "peerBadCode": "Wrong or expired code.",
+      "codeRequired": "Type the code shown on the box.",
+      "boxTooOld": "DreamHub on that box is too old. Update it first.",
+      "hubTooOld": "This DreamHub is too old for the one on that box. Update this one first."
+    },
+    "pair": {
+      "title": "DreamHub on this box",
+      "hint": "Install DreamHub on this box to manage its recordings and more from here. On that box open Settings → Boxes → “Pair this box with another DreamHub”, show the code and type it here. Without it the box stays controlled through its web interface.",
+      "code": "Code from the box",
+      "pair": "Pair",
+      "pairing": "Pairing…",
+      "otherAddress": "DreamHub is not at this address on port 8080",
+      "otherAddressPlaceholder": "192.168.1.20:8080",
+      "state": {
+        "ok": "Paired · DreamHub {version}",
+        "paired": "Paired",
+        "unreachable": "Paired, but DreamHub on the box doesn’t answer.",
+        "revoked": "The box no longer accepts this pairing."
+      },
+      "revokedHint": "The pairing was revoked on the box. Unpair here and pair again with a new code.",
+      "boxTooOld": "DreamHub on this box is too old for this one. Update it, then everything works.",
+      "hubTooOld": "This DreamHub is too old for the one on the box. Update this one.",
+      "advanced": "Advanced",
+      "streamBase": "Address of this DreamHub as seen from the box",
+      "streamBaseHint": "Used when the box fetches a film from here. Empty: found automatically.",
+      "unpair": "Unpair",
+      "unpairHint": "This forgets the pairing here. To end it on the box too, delete the “Hub: …” token there under Settings → Authentication."
+    },
+    "pairThis": {
+      "title": "Pair this box with another DreamHub",
+      "hint": "Shows a one-time code here and on this box’s TV. Type it into the other DreamHub under Settings → Boxes. It works once and for ten minutes.",
+      "show": "Show code",
+      "valid": "Valid until {time}",
+      "onTv": "also on the TV"
     }
   }
 }

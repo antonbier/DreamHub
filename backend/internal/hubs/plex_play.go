@@ -3,7 +3,6 @@ package hubs
 import (
 	"context"
 	"errors"
-	"github.com/antonbier/DreamHub/backend/internal/box"
 	"io"
 	"net"
 	"net/http"
@@ -72,7 +71,8 @@ func (h *Plex) play(w http.ResponseWriter, r *http.Request) {
 	if !ok {
 		return
 	}
-	if !c.playOnBox || h.StreamBase == "" || box.Remote(r.Context()) {
+	base := h.streamBase(r.Context())
+	if !c.playOnBox || base == "" {
 		httpx.WriteError(w, r, http.StatusConflict, CodePlexPlayUnavailable, "playing on the box needs DreamHub on the box and Settings → Plex → play on the box")
 		return
 	}
@@ -117,7 +117,7 @@ func (h *Plex) play(w http.ResponseWriter, r *http.Request) {
 	if ext == "" {
 		ext = "mkv"
 	}
-	streamURL := h.StreamBase + "/api/v1/plex/stream/" + id + "/file." + ext
+	streamURL := base + "/api/v1/plex/stream/" + id + "/file." + ext
 	// The movie player (seeking, pause), through DreamHub's TV plugin; a
 	// plugin from before 0.1.7 doesn't have it, then a plain zap still
 	// plays the film, just without the movie player's controls (and without

@@ -25,6 +25,7 @@ import (
 	"github.com/antonbier/DreamHub/backend/internal/httpx"
 	"github.com/antonbier/DreamHub/backend/internal/hub"
 	"github.com/antonbier/DreamHub/backend/internal/jobs"
+	"github.com/antonbier/DreamHub/backend/internal/peer"
 	"github.com/antonbier/DreamHub/backend/internal/perm"
 	"github.com/antonbier/DreamHub/backend/internal/plan"
 	"github.com/antonbier/DreamHub/backend/internal/profile"
@@ -68,6 +69,9 @@ type Deps struct {
 	Boxes *boxes.Registry
 	// BoxManager adds, changes and removes boxes at runtime.
 	BoxManager *boxes.Manager
+	// Peer answers the DreamHub of another box that wants to pair with
+	// this one (internal/peer).
+	Peer       *peer.Service
 	Verifier   auth.Verifier
 	Settings   *settings.Service
 	Connectors *connector.Registry
@@ -155,6 +159,10 @@ func NewRouterWithRoutes(d Deps) (http.Handler, []Route) {
 	core.HandleFunc("POST /api/v1/boxes", handleAddBox(d))
 	core.HandleFunc("PATCH /api/v1/boxes/{id}", handleUpdateBox(d))
 	core.HandleFunc("POST /api/v1/boxes/{id}/remove/plan", handleRemoveBoxPlan(d))
+	core.HandleFunc("POST /api/v1/boxes/{id}/pair", handlePairBox(d))
+	core.HandleFunc("DELETE /api/v1/boxes/{id}/pair", handleUnpairBox(d))
+	core.HandleFunc("GET /api/v1/peer/capabilities", handlePeerCapabilities(d))
+	core.HandleFunc("POST /api/v1/peer/code", handlePeerCode(d))
 	core.HandleFunc("POST /api/v1/profiles", handleCreateProfile(d))
 	core.HandleFunc("PATCH /api/v1/profiles/{id}", handleUpdateProfile(d))
 	core.HandleFunc("DELETE /api/v1/profiles/{id}", handleDeleteProfile(d))
@@ -181,6 +189,10 @@ func NewRouterWithRoutes(d Deps) (http.Handler, []Route) {
 	// (docs/archive/V1_PLAN.md, WP8) shows this before any credentials exist, and
 	// it encodes nothing secret — just the URL to open on a phone.
 	mux.HandleFunc("GET /api/v1/qr.png", handleQR(d))
+	// The DreamHub of another box pairs with this one (internal/peer): the
+	// info is the version handshake, the code is the credential of the pairing.
+	mux.HandleFunc("GET /api/v1/peer/info", handlePeerInfo(d))
+	mux.HandleFunc("POST /api/v1/peer/pair", handlePeerPair(d))
 	for _, p := range d.Public {
 		mux.Handle(p.Pattern, hubEnabledGuard(d, p.HubID, p.Handler))
 	}
@@ -226,6 +238,9 @@ var corePerms = map[string]perm.Perm{
 	"POST /api/v1/boxes":                  perm.SettingsGlobal,
 	"PATCH /api/v1/boxes/{id}":            perm.SettingsGlobal,
 	"POST /api/v1/boxes/{id}/remove/plan": perm.SettingsGlobal,
+	"POST /api/v1/boxes/{id}/pair":        perm.SettingsGlobal,
+	"DELETE /api/v1/boxes/{id}/pair":      perm.SettingsGlobal,
+	"POST /api/v1/peer/code":              perm.SettingsGlobal,
 	"POST /api/v1/profiles":               perm.Profiles,
 	"PATCH /api/v1/profiles/{id}":         perm.Profiles,
 	"DELETE /api/v1/profiles/{id}":        perm.Profiles,

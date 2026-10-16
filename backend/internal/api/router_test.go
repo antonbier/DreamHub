@@ -25,6 +25,8 @@ import (
 	logosearchmock "github.com/antonbier/DreamHub/backend/internal/logosearch/mock"
 	meminfomock "github.com/antonbier/DreamHub/backend/internal/meminfo/mock"
 	omdbmock "github.com/antonbier/DreamHub/backend/internal/omdb/mock"
+	"github.com/antonbier/DreamHub/backend/internal/peer"
+	peermock "github.com/antonbier/DreamHub/backend/internal/peer/mock"
 	plexmock "github.com/antonbier/DreamHub/backend/internal/plex/mock"
 	pushmock "github.com/antonbier/DreamHub/backend/internal/push/mock"
 	"github.com/antonbier/DreamHub/backend/internal/recfs"
@@ -76,10 +78,16 @@ type env struct {
 	wc     *mock.Client
 	// app is the wired application, to register further boxes on.
 	app *app.App
+	// peer is the mock of the DreamHub on another box (boxes' pairing).
+	peer *peermock.Client
 }
 
 // newEnv builds the application exactly as production does (internal/app),
 // against the mock WebControl client and a real SQLite store in a temp dir.
+// realPeer makes the next environments pair over HTTP instead of with the
+// mock peer (set by tests that run two DreamHubs against each other).
+var realPeer bool
+
 func newEnv(t *testing.T) *env { return newEnvWith(t, mock.New()) }
 
 func newEnvWith(t *testing.T, wc webcontrol.Client) *env {
@@ -128,6 +136,11 @@ func newEnvFull(t *testing.T, wc webcontrol.Client, at autotimer.Client, recFS r
 	appsConfigFS := configfsmock.New()
 	backupDir := t.TempDir()
 	docker, aptList := dockermock.New(), aptmock.New()
+	peerMock := peermock.New()
+	var peerClient peer.Client = peerMock
+	if realPeer {
+		peerClient = peer.NewHTTPClient()
+	}
 	a, err := app.New(context.Background(), app.Options{
 		ReadOnlyFiles:   readOnly,
 		BoxFactory:      testBoxFactory,
@@ -138,6 +151,8 @@ func newEnvFull(t *testing.T, wc webcontrol.Client, at autotimer.Client, recFS r
 		Push:            pushed,
 		Plex:            plexServer,
 		StreamBase:      "http://127.0.0.1:8080",
+		StreamPort:      "8080",
+		Peer:            peerClient,
 		DataDir:         t.TempDir(),
 		WebControl:      wc,
 		AutoTimer:       at,
@@ -177,7 +192,7 @@ func newEnvFull(t *testing.T, wc webcontrol.Client, at autotimer.Client, recFS r
 		go job(jobs)
 	}
 	m, _ := wc.(*mock.Client)
-	return &env{app: a, docker: docker, apt: aptList, wc: m, srv: srv, store: a.Store, svc: a.Settings, events: a.Events, pushed: pushed, systemd: services, scripts: runner, plex: plexServer, appsConfigFS: appsConfigFS, backupDir: backupDir, routes: a.Routes}
+	return &env{app: a, docker: docker, apt: aptList, wc: m, srv: srv, store: a.Store, svc: a.Settings, events: a.Events, pushed: pushed, systemd: services, scripts: runner, plex: plexServer, appsConfigFS: appsConfigFS, backupDir: backupDir, routes: a.Routes, peer: peerMock}
 }
 
 func (e *env) do(t *testing.T, method, path, body string, configure func(*http.Request)) (*http.Response, []byte) {

@@ -10,6 +10,7 @@ import (
 	"unicode/utf8"
 
 	"github.com/antonbier/DreamHub/backend/internal/box"
+	"github.com/antonbier/DreamHub/backend/internal/peer"
 	"github.com/antonbier/DreamHub/backend/internal/store"
 	"github.com/antonbier/DreamHub/backend/internal/webcontrol"
 )
@@ -44,6 +45,8 @@ type Input struct {
 	URL      *string `json:"url"`
 	Username *string `json:"username"`
 	Password *string `json:"password"`
+	// StreamBase: how that box reaches this DreamHub; "" = detect.
+	StreamBase *string `json:"streamBase"`
 }
 
 // Manager adds, changes and removes boxes while DreamHub runs
@@ -53,6 +56,8 @@ type Manager struct {
 	Registry *Registry
 	// Factory builds the connections to a box from its row.
 	Factory func(store.Box) (Clients, error)
+	// Peer pairs with the DreamHub on a box (M6); nil turns pairing off.
+	Peer peer.Client
 	// Timeout bounds a connection test; 8 s when zero.
 	Timeout time.Duration
 }
@@ -173,6 +178,15 @@ func apply(b *store.Box, in Input, main bool) error {
 		}
 		if in.Password != nil {
 			b.Password = *in.Password
+		}
+		if in.StreamBase != nil {
+			if sb := strings.TrimSpace(*in.StreamBase); sb == "" {
+				b.StreamBase = ""
+			} else if u := normalizeURL(sb); u != "" {
+				b.StreamBase = u
+			} else {
+				errs["streamBase"] = "invalid"
+			}
 		}
 	}
 	if len(errs) > 0 {

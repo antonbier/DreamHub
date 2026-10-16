@@ -50,6 +50,7 @@ import type {
   BoxInfo,
   BoxInput,
   BoxStatus,
+  PairingCode,
   Profile,
   ProfileInput,
   ProfileList,
@@ -286,6 +287,13 @@ export const api = {
     add: (input: BoxInput) => request<BoxInfo>('POST', '/api/v1/boxes', input),
     update: (id: string, input: BoxInput) => request<BoxInfo>('PATCH', `/api/v1/boxes/${encodeURIComponent(id)}`, input),
     planRemove: (id: string) => request<{ plan: Plan }>('POST', `/api/v1/boxes/${encodeURIComponent(id)}/remove/plan`),
+    pair: (id: string, input: { code: string; url?: string }) =>
+      request<BoxInfo>('POST', `/api/v1/boxes/${encodeURIComponent(id)}/pair`, input),
+    unpair: (id: string) => request<BoxInfo>('DELETE', `/api/v1/boxes/${encodeURIComponent(id)}/pair`),
+  },
+  // This box shows a code that the DreamHub of another box pairs with.
+  peer: {
+    code: () => request<PairingCode>('POST', '/api/v1/peer/code'),
   },
   deviceInfo: () => request<DeviceInfo>('GET', '/api/v1/deviceinfo'),
   navigation: () => request<Navigation>('GET', '/api/v1/navigation'),

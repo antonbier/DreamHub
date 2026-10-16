@@ -25,6 +25,8 @@ import (
 	meminfomock "github.com/antonbier/DreamHub/backend/internal/meminfo/mock"
 	"github.com/antonbier/DreamHub/backend/internal/omdb"
 	omdbmock "github.com/antonbier/DreamHub/backend/internal/omdb/mock"
+	"github.com/antonbier/DreamHub/backend/internal/peer"
+	peermock "github.com/antonbier/DreamHub/backend/internal/peer/mock"
 	"github.com/antonbier/DreamHub/backend/internal/plex"
 	plexmock "github.com/antonbier/DreamHub/backend/internal/plex/mock"
 	"github.com/antonbier/DreamHub/backend/internal/push"
@@ -99,6 +101,7 @@ func run(logger *slog.Logger, level *logging.Level) error {
 	var pushClient push.Client
 	var plexClient plex.Client
 	var streamBase string
+	var peerClient peer.Client
 	var dmiReader *dmi.Reader
 	var logs journald.Reader
 	var services systemd.Manager
@@ -153,6 +156,7 @@ func run(logger *slog.Logger, level *logging.Level) error {
 		omdbClient = omdb.NewHTTPClient()
 		fanartClient = fanart.NewHTTPClient()
 		pushClient = push.NewHTTPClient()
+		peerClient = peer.NewHTTPClient()
 		plexClient = plex.NewHTTPClient(api.Version)
 		// The box's media player reaches DreamHub on the same machine —
 		// only when DreamHub runs on the box (its enigma2 config is here).
@@ -238,6 +242,8 @@ func run(logger *slog.Logger, level *logging.Level) error {
 		omdbClient = omdbmock.New()
 		fanartClient = fanartmock.New()
 		pushClient = pushmock.New()
+		// The pairing code of the mock "other box" is peermock.Code.
+		peerClient = peermock.New()
 		plexClient = plexmock.New()
 		// The mock box "plays" whatever it's given.
 		streamBase = "http://127.0.0.1:" + listenPort(cfg.ListenAddr)
@@ -284,6 +290,8 @@ func run(logger *slog.Logger, level *logging.Level) error {
 		Push:         pushClient,
 		Plex:         plexClient,
 		StreamBase:   streamBase,
+		StreamPort:   listenPort(cfg.ListenAddr),
+		Peer:         peerClient,
 		DMI:          dmiReader,
 		RecordingsFS: recFS,
 		// Same switch as WebControl writes; mock mode always writes.

@@ -18,6 +18,7 @@
             <span class="block truncate text-[14px] font-semibold text-text">{{ b.name }}</span>
             <span class="block truncate text-[12.5px] text-faint">
               {{ b.full ? t('boxes.manage.thisMachine') : b.url }}
+              <template v-if="b.paired"> · {{ t('boxes.manage.paired') }}</template>
               <template v-if="!b.online"> · {{ t('boxes.selector.offline') }}</template>
             </span>
           </span>
@@ -35,6 +36,7 @@
             @remove="startRemove(b)"
             @cancel="editing = ''"
           />
+          <BoxPairing v-if="!b.full" class="mt-3" :box="b" @changed="load" />
           <PlanPreview
             v-if="removal && removal.id === b.id"
             class="mt-3"
@@ -57,6 +59,7 @@
       {{ t('boxes.manage.add') }}
     </button>
     <p v-if="!adding" class="mt-2 text-[12.5px] text-faint">{{ t('boxes.manage.basicHint') }}</p>
+    <PairThisBox />
   </section>
 </template>
 
@@ -64,6 +67,8 @@
 import { onMounted, ref } from 'vue'
 import { useI18n } from 'vue-i18n'
 import BoxForm from './BoxForm.vue'
+import BoxPairing from './BoxPairing.vue'
+import PairThisBox from './PairThisBox.vue'
 import PlanPreview from '@/components/PlanPreview.vue'
 import { api } from '@/api/client'
 import { useBoxesStore } from '@/stores/boxes'

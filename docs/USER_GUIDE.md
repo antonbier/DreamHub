@@ -75,6 +75,8 @@ Settings → **Boxes** (admins) adds another Dreambox by its address and, if its
 
 A box added this way is controlled through its web interface: live TV, guide, timers, channel lists, the remote and watching its recordings. Managing recordings in place, logos, apps and the system tools need DreamHub on that box itself. A box that doesn't answer is greyed in the selector and the status line says so — DreamHub never waits for it. In a profile's settings you can limit which boxes it may use (nothing ticked means all). Removing a box makes DreamHub forget it and what it saved for it; the box itself is not touched.
 
+If a box runs DreamHub itself, you can **pair** the two: on that box open Settings → Boxes → *Pair this box with another DreamHub* and show the code (it also appears on that box's TV); in this DreamHub open the box under Settings → Boxes → Edit and type the code under *DreamHub on this box*. The code works once and for ten minutes. DreamHub then knows the other one, shows its version and tells you if one of the two needs an update. To end a pairing, choose **Unpair** and delete the token named "Hub: …" on the box under Settings → Access. A paired box can also play Plex films; the box fetches them from this DreamHub's address, which is found automatically (Advanced lets you set it).
+
 ### API and tokens
 
 For apps and scripts (a DreamDroid-style app, Home Assistant, your own tools): **Settings → Access → API tokens** creates a token — shown once, revocable on its own, acting as the profile that created it (so it sees that profile's boxes and permissions). Send it with every request:

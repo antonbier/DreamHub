@@ -17,6 +17,13 @@ type Box struct {
 	Username string
 	Password string
 	Position int
+	// PeerURL and PeerToken: the DreamHub on that box, once paired
+	// (docs/MULTIDEVICE_PLAN.md, M6). The token is a bearer API token that
+	// DreamHub's own pairing issued there.
+	PeerURL   string
+	PeerToken string
+	// StreamBase is how that box reaches this DreamHub; empty = detected.
+	StreamBase string
 }
 
 // ErrBoxNotFound is returned for an unknown box ID.
@@ -24,7 +31,7 @@ var ErrBoxNotFound = errors.New("box not found")
 
 // Boxes lists the boxes in their order.
 func (s *Store) Boxes(ctx context.Context) ([]Box, error) {
-	rows, err := s.db.QueryContext(ctx, `SELECT id, name, color, url, username, password, position FROM boxes ORDER BY position, id`)
+	rows, err := s.db.QueryContext(ctx, `SELECT id, name, color, url, username, password, position, peer_url, peer_token, stream_base FROM boxes ORDER BY position, id`)
 	if err != nil {
 		return nil, err
 	}
@@ -32,7 +39,7 @@ func (s *Store) Boxes(ctx context.Context) ([]Box, error) {
 	var out []Box
 	for rows.Next() {
 		var b Box
-		if err := rows.Scan(&b.ID, &b.Name, &b.Color, &b.URL, &b.Username, &b.Password, &b.Position); err != nil {
+		if err := rows.Scan(&b.ID, &b.Name, &b.Color, &b.URL, &b.Username, &b.Password, &b.Position, &b.PeerURL, &b.PeerToken, &b.StreamBase); err != nil {
 			return nil, err
 		}
 		out = append(out, b)
@@ -42,11 +49,12 @@ func (s *Store) Boxes(ctx context.Context) ([]Box, error) {
 
 // SaveBox adds a box or replaces the one with this ID; a new box goes last.
 func (s *Store) SaveBox(ctx context.Context, b Box) error {
-	_, err := s.db.ExecContext(ctx, `INSERT INTO boxes (id, name, color, url, username, password, position, created_at)
-		VALUES (?, ?, ?, ?, ?, ?, (SELECT COALESCE(MAX(position), -1) + 1 FROM boxes), ?)
+	_, err := s.db.ExecContext(ctx, `INSERT INTO boxes (id, name, color, url, username, password, position, created_at, peer_url, peer_token, stream_base)
+		VALUES (?, ?, ?, ?, ?, ?, (SELECT COALESCE(MAX(position), -1) + 1 FROM boxes), ?, ?, ?, ?)
 		ON CONFLICT (id) DO UPDATE SET name = excluded.name, color = excluded.color, url = excluded.url,
-			username = excluded.username, password = excluded.password`,
-		b.ID, b.Name, b.Color, b.URL, b.Username, b.Password, s.timestamp())
+			username = excluded.username, password = excluded.password,
+			peer_url = excluded.peer_url, peer_token = excluded.peer_token, stream_base = excluded.stream_base`,
+		b.ID, b.Name, b.Color, b.URL, b.Username, b.Password, s.timestamp(), b.PeerURL, b.PeerToken, b.StreamBase)
 	return err
 }
 

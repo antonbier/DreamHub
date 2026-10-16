@@ -75,6 +75,19 @@ Settings → **Boxes** (admins) adds another Dreambox by its address and, if its
 
 A box added this way is controlled through its web interface: live TV, guide, timers, channel lists, the remote and watching its recordings. Managing recordings in place, logos, apps and the system tools need DreamHub on that box itself. A box that doesn't answer is greyed in the selector and the status line says so — DreamHub never waits for it. In a profile's settings you can limit which boxes it may use (nothing ticked means all). Removing a box makes DreamHub forget it and what it saved for it; the box itself is not touched.
 
+### API and tokens
+
+For apps and scripts (a DreamDroid-style app, Home Assistant, your own tools): **Settings → Access → API tokens** creates a token — shown once, revocable on its own, acting as the profile that created it (so it sees that profile's boxes and permissions). Send it with every request:
+
+```
+curl -H "Authorization: Bearer <token>" "http://dreambox.local:8080/api/v1/boxes"
+curl -H "Authorization: Bearer <token>" "http://dreambox.local:8080/api/v1/timers?box=bedroom"
+```
+
+- **`box=<id>`** says which box a request is about; `GET /api/v1/boxes` lists the IDs you may use, with what each box can do (`capabilities`). Without it the first box you may use is meant, so a script written for one box keeps working when a second one is added.
+- **Changes take two steps.** A call ending in `/plan` changes nothing and returns a preview with an `id`; `POST /api/v1/plans/<id>/apply` makes the change on the box the plan was made for. A plan is valid for ten minutes and once. Requests that change something also need the header `X-DreamHub-Request: 1`.
+- **The full description** of every call is `/api/v1/openapi.json` (linked under the token list); load it into a tool such as Swagger UI or a code generator. Request and response shapes are filled in for the most useful calls first (status, boxes, timers, recordings, zap); the rest is listed with what it does.
+
 ### Recommended: protect your network access
 
 - **Set a DreamHub password** (Settings → Access → Authentication). Without one, anyone on your home network can use DreamHub.

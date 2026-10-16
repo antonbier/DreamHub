@@ -895,7 +895,10 @@
       "revoke": "Revoke",
       "confirmRevoke": "Confirm?",
       "namePlaceholder": "What's this for? (e.g. “My Phone”)",
-      "create": "Create"
+      "create": "Create",
+      "devTitle": "For developers",
+      "devBody": "Call the API with the token as a bearer token. Add box=<id> to say which box a request is about (the box IDs are listed by GET /api/v1/boxes); without it the first box is used. Changes are two steps: a …/plan call returns a preview, POST /api/v1/plans/{id}/apply applies it.",
+      "devSpec": "OpenAPI description (openapi.json)"
     },
     "network": {
       "title": "Network",

@@ -86,10 +86,13 @@ type boxView struct {
 	Online bool   `json:"online"`
 	// Allowed: the caller's profile may use the box (an administrator also
 	// sees the boxes they can't use, to manage them).
-	Allowed     bool   `json:"allowed"`
-	URL         string `json:"url,omitempty"`
-	Username    string `json:"username,omitempty"`
-	HasPassword bool   `json:"hasPassword,omitempty"`
+	Allowed bool `json:"allowed"`
+	// Capabilities are measured for the boxes the caller may use and are
+	// empty for one that doesn't answer (the list never waits for it).
+	Capabilities []string `json:"capabilities"`
+	URL          string   `json:"url,omitempty"`
+	Username     string   `json:"username,omitempty"`
+	HasPassword  bool     `json:"hasPassword,omitempty"`
 }
 
 func viewBox(d Deps, e boxes.Entry, admin bool, allowed bool) boxView {
@@ -107,13 +110,22 @@ func handleListBoxes(d Deps) http.HandlerFunc {
 		admin := perms(r).Has(perm.SettingsGlobal)
 		out := []boxView{}
 		def := "" // the box a request without `box` is about: the first the profile may use
+		v, _ := d.Settings.Values(r.Context(), current(r))
 		for _, e := range d.Boxes.List() {
 			allowed := current(r).MayUseBox(e.ID)
 			if allowed && def == "" {
 				def = e.ID
 			}
 			if admin || allowed {
-				out = append(out, viewBox(d, e, admin, allowed))
+				bv := viewBox(d, e, admin, allowed)
+				if allowed && bv.Online && v != nil {
+					ctx := box.With(r.Context(), e.ID)
+					bv.Capabilities = d.Boxes.Capabilities(ctx, d.Connectors.Reports(ctx, v, d.Settings.Version()))
+				}
+				if bv.Capabilities == nil {
+					bv.Capabilities = []string{}
+				}
+				out = append(out, bv)
 			}
 		}
 		httpx.WriteJSON(w, http.StatusOK, map[string]any{"boxes": out, "default": def})

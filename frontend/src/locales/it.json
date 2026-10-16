@@ -895,7 +895,10 @@
       "revoke": "Revoca",
       "confirmRevoke": "Confermi?",
       "namePlaceholder": "A cosa serve? (es. “Il mio telefono”)",
-      "create": "Crea"
+      "create": "Crea",
+      "devTitle": "Per sviluppatori",
+      "devBody": "Usa il token come bearer token. Con box=<id> indichi a quale box si riferisce una richiesta (gli ID sono elencati da GET /api/v1/boxes); senza, vale il primo box. Le modifiche sono in due passi: una chiamata …/plan restituisce un’anteprima, POST /api/v1/plans/{id}/apply la applica.",
+      "devSpec": "Descrizione OpenAPI (openapi.json)"
     },
     "network": {
       "title": "Rete",

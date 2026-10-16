@@ -1,6 +1,6 @@
 # Multi-box — plan
 
-Status: **brainstormed and decided 2026-10-16 (six rounds with the owner). M1, M2 and M3 are built against the mock and merged to `main` (see "… as built"); nothing is released before the check of M1 on the reference box; M3a onwards not started.** Replaces the "one box" assumption that runs through the backend (`app.Options.WebControl` is injected once into every hub, the poller and the jobs blocker).
+Status: **brainstormed and decided 2026-10-16 (six rounds with the owner). M1, M2 and M3 are built against the mock and merged to `main` (see "… as built"); nothing is released before the check of M1 on the reference box; M3a is built too; M4 onwards not started.** Replaces the "one box" assumption that runs through the backend (`app.Options.WebControl` is injected once into every hub, the poller and the jobs blocker).
 
 ## Goal
 
@@ -128,3 +128,12 @@ How the wiring was done, so M2 onwards can build on it without re-reading the di
 - **The UI:** the box is the router's *base* (`/b/<id>`, `lib/box.ts`), chosen from the address when the page loads; `client.ts`, the event stream and the TS player append `box=<id>` to every API call (except whoami/health/profiles). **Switching reloads the page** — simpler and safer than flushing every store (the plan's "drop every store"), and the service worker never caches `/api/`. An address without a box opens the remembered one (localStorage, per device). Selector in the top bar and strip on the dashboard only with ≥2 allowed boxes (`useBoxesStore().multi`); the status line names an unreachable selected box. Settings → Boxes (admins) with Test; profile editor lists boxes with ≥2.
 - **Not in M3:** per-box settings screens (rec dirs, AdScan, logos still global/first-box), per-box notification wording and the "only this box" switch (M5), a default box per profile (the last choice per device is remembered instead), reordering boxes, the OpenAPI spec (M3a), a second mock box with a different fixture (M4: the added mock boxes are identical copies, so screenshots show the same programme).
 - **Tests:** `api` (add/test/edit/remove incl. wrong login and unreachable, profile restriction incl. the removal fallback, overview and offline), `events` (reach report, poller of a removed box stops), `store` (migration test finds the multi-box step by content).
+
+## M3a as built (2026-10-16)
+
+- **The spec** is `internal/api/openapi.json` (OpenAPI 3.0, embedded, served at `GET /api/v1/openapi.json` behind login). Written by hand, not generated from handler code — the Go handlers have no typed response structs to generate from; the parity test is what keeps it honest. `servers` is `/api/v1`, so paths are short. `box` is a shared component parameter; an operation that does not depend on the box (settings, tokens, profiles, box management, dashboard, plans/apply, Plex, backup, …) says `x-box: global` instead. Plan routes are described as "changes nothing, returns a plan"; `POST /plans/{id}/apply` documents that it acts on the plan's own box.
+- **Schemas** exist for status (`whoami`, `deviceinfo`), boxes, timers (list, create/delete plan), recordings (`media/movies`), now/next, current service, zap, plans and tokens; everything else lists summary, parameters and a generic body. More are filled in as needed.
+- **Tests** (`api/openapi_test.go`): parity both ways against `env.routes` (plus the few public routes; the terminal WebSocket proxy is left out on purpose); every operation has a summary and either the `Box` parameter or `x-box: global`; every box-taking operation, called with `?box=no-such-box`, answers `404 box_not_found` — the proof that every route resolves a box.
+- **`GET /api/v1/boxes`** gained `capabilities` (measured for allowed, online boxes; empty for an offline one so the list never waits).
+- **UI:** a "For developers" block under the token list (curl example with this page's address, link to the spec); strings in de/en/it. USER_GUIDE "API and tokens".
+- **Not done:** a rendered API viewer inside DreamHub (the spec is the artefact; Swagger UI etc. load it), per-box tokens, schemas for the long tail of endpoints.

@@ -1,0 +1,6327 @@
+{
+ "openapi": "3.0.3",
+ "info": {
+  "title": "DreamHub API",
+  "version": "0.8.0",
+  "description": "DreamHub's REST API (`/api/v1`). Every request names the box it is about with the optional `box` query parameter; without it the profile's first allowed box is used, so clients written before multi-box support keep working. Changes to a box are always two steps: `POST …/plan` returns a preview, `POST /plans/{id}/apply` applies it. Authenticate with `Authorization: Bearer <token>` (Settings → Authentication → API tokens); a token acts as the profile that created it. Mutating requests need the header `X-DreamHub-Request: 1`. Operations marked `x-box: global` do not depend on the box. The set of operations is kept in step with the router by a test; schemas are filled in for the most useful endpoints first."
+ },
+ "servers": [
+  {
+   "url": "/api/v1"
+  }
+ ],
+ "security": [
+  {
+   "bearer": []
+  }
+ ],
+ "components": {
+  "securitySchemes": {
+   "bearer": {
+    "type": "http",
+    "scheme": "bearer"
+   }
+  },
+  "parameters": {
+   "Box": {
+    "name": "box",
+    "in": "query",
+    "required": false,
+    "description": "ID of the box (see `GET /boxes`). Omitted: the profile's default box, else the first one. `404 box_not_found` for an unknown ID, `403 box_forbidden` for one the profile may not use.",
+    "schema": {
+     "type": "string"
+    }
+   }
+  },
+  "responses": {
+   "Error": {
+    "description": "Error",
+    "content": {
+     "application/json": {
+      "schema": {
+       "$ref": "#/components/schemas/Error"
+      }
+     }
+    }
+   }
+  },
+  "schemas": {
+   "Error": {
+    "type": "object",
+    "properties": {
+     "error": {
+      "type": "object",
+      "properties": {
+       "code": {
+        "type": "string"
+       },
+       "message": {
+        "type": "string"
+       },
+       "requestId": {
+        "type": "string"
+       },
+       "fields": {
+        "type": "object",
+        "additionalProperties": {
+         "type": "object",
+         "properties": {
+          "code": {
+           "type": "string"
+          }
+         }
+        }
+       }
+      }
+     }
+    }
+   },
+   "Box": {
+    "type": "object",
+    "properties": {
+     "id": {
+      "type": "string"
+     },
+     "name": {
+      "type": "string"
+     },
+     "color": {
+      "type": "string"
+     },
+     "full": {
+      "type": "boolean",
+      "description": "DreamHub runs on that box"
+     },
+     "online": {
+      "type": "boolean"
+     },
+     "allowed": {
+      "type": "boolean"
+     },
+     "capabilities": {
+      "type": "array",
+      "items": {
+       "type": "string"
+      },
+      "description": "Measured, e.g. webcontrol, serienrecorder, autotimer, recordings.local, packages, docker"
+     },
+     "url": {
+      "type": "string",
+      "description": "Administrators only"
+     },
+     "username": {
+      "type": "string",
+      "description": "Administrators only"
+     }
+    }
+   },
+   "Whoami": {
+    "type": "object",
+    "properties": {
+     "id": {
+      "type": "integer"
+     },
+     "username": {
+      "type": "string"
+     },
+     "role": {
+      "type": "string"
+     },
+     "color": {
+      "type": "string"
+     },
+     "hasPin": {
+      "type": "boolean"
+     },
+     "profiles": {
+      "type": "boolean"
+     },
+     "permissions": {
+      "type": "array",
+      "items": {
+       "type": "string"
+      }
+     }
+    }
+   },
+   "DeviceInfo": {
+    "type": "object",
+    "properties": {
+     "enigmaVersion": {
+      "type": "string"
+     },
+     "imageVersion": {
+      "type": "string"
+     },
+     "webifVersion": {
+      "type": "string"
+     },
+     "deviceName": {
+      "type": "string"
+     },
+     "frontends": {
+      "type": "array",
+      "items": {
+       "type": "object",
+       "properties": {
+        "name": {
+         "type": "string"
+        },
+        "model": {
+         "type": "string"
+        }
+       }
+      }
+     },
+     "hdds": {
+      "type": "array",
+      "items": {
+       "type": "object",
+       "properties": {
+        "model": {
+         "type": "string"
+        },
+        "capacity": {
+         "type": "string"
+        },
+        "free": {
+         "type": "string"
+        }
+       }
+      }
+     }
+    }
+   },
+   "TimerRef": {
+    "type": "object",
+    "required": [
+     "serviceReference",
+     "begin",
+     "end"
+    ],
+    "properties": {
+     "serviceReference": {
+      "type": "string"
+     },
+     "begin": {
+      "type": "integer",
+      "description": "Unix seconds (UTC)"
+     },
+     "end": {
+      "type": "integer"
+     }
+    }
+   },
+   "Timer": {
+    "type": "object",
+    "properties": {
+     "serviceReference": {
+      "type": "string"
+     },
+     "serviceName": {
+      "type": "string"
+     },
+     "name": {
+      "type": "string"
+     },
+     "description": {
+      "type": "string"
+     },
+     "begin": {
+      "type": "integer"
+     },
+     "end": {
+      "type": "integer"
+     },
+     "disabled": {
+      "type": "boolean"
+     },
+     "justPlay": {
+      "type": "boolean"
+     },
+     "repeated": {
+      "type": "integer"
+     },
+     "filename": {
+      "type": "string"
+     },
+     "state": {
+      "type": "integer"
+     },
+     "conflict": {
+      "type": "boolean"
+     },
+     "mayChange": {
+      "type": "boolean"
+     }
+    }
+   },
+   "TimerCreate": {
+    "type": "object",
+    "required": [
+     "serviceReference",
+     "name",
+     "begin",
+     "end"
+    ],
+    "properties": {
+     "serviceReference": {
+      "type": "string"
+     },
+     "serviceName": {
+      "type": "string"
+     },
+     "name": {
+      "type": "string"
+     },
+     "description": {
+      "type": "string"
+     },
+     "begin": {
+      "type": "integer"
+     },
+     "end": {
+      "type": "integer"
+     },
+     "marginBefore": {
+      "type": "integer",
+      "description": "Minutes; default from settings"
+     },
+     "marginAfter": {
+      "type": "integer"
+     },
+     "eventId": {
+      "type": "integer"
+     }
+    }
+   },
+   "Plan": {
+    "type": "object",
+    "properties": {
+     "id": {
+      "type": "string"
+     },
+     "action": {
+      "type": "string"
+     },
+     "createdAt": {
+      "type": "string",
+      "format": "date-time"
+     },
+     "expiresAt": {
+      "type": "string",
+      "format": "date-time"
+     },
+     "changes": {
+      "type": "array",
+      "items": {
+       "type": "object",
+       "properties": {
+        "type": {
+         "type": "string"
+        },
+        "before": {},
+        "after": {}
+       }
+      }
+     },
+     "warnings": {
+      "type": "array",
+      "items": {
+       "type": "object"
+      }
+     },
+     "summary": {
+      "type": "string"
+     }
+    }
+   },
+   "PlanResponse": {
+    "type": "object",
+    "properties": {
+     "plan": {
+      "$ref": "#/components/schemas/Plan"
+     }
+    }
+   },
+   "Movie": {
+    "type": "object",
+    "properties": {
+     "serviceReference": {
+      "type": "string"
+     },
+     "title": {
+      "type": "string"
+     },
+     "description": {
+      "type": "string"
+     },
+     "descriptionExtended": {
+      "type": "string"
+     },
+     "time": {
+      "type": "integer"
+     },
+     "length": {
+      "type": "string"
+     },
+     "filename": {
+      "type": "string"
+     },
+     "fileSize": {
+      "type": "integer"
+     },
+     "isRecording": {
+      "type": "boolean"
+     }
+    }
+   },
+   "EpgEvent": {
+    "type": "object",
+    "properties": {
+     "id": {
+      "type": "integer"
+     },
+     "start": {
+      "type": "integer"
+     },
+     "duration": {
+      "type": "integer"
+     },
+     "title": {
+      "type": "string"
+     },
+     "description": {
+      "type": "string"
+     },
+     "serviceReference": {
+      "type": "string"
+     },
+     "serviceName": {
+      "type": "string"
+     }
+    }
+   },
+   "NowNext": {
+    "type": "object",
+    "properties": {
+     "serviceReference": {
+      "type": "string"
+     },
+     "serviceName": {
+      "type": "string"
+     },
+     "now": {
+      "$ref": "#/components/schemas/EpgEvent"
+     },
+     "next": {
+      "$ref": "#/components/schemas/EpgEvent"
+     }
+    }
+   },
+   "CurrentService": {
+    "type": "object",
+    "properties": {
+     "serviceReference": {
+      "type": "string"
+     },
+     "serviceName": {
+      "type": "string"
+     },
+     "providerName": {
+      "type": "string"
+     },
+     "now": {
+      "$ref": "#/components/schemas/EpgEvent"
+     },
+     "next": {
+      "$ref": "#/components/schemas/EpgEvent"
+     },
+     "volume": {
+      "type": "integer"
+     },
+     "muted": {
+      "type": "boolean"
+     },
+     "kind": {
+      "type": "string",
+      "enum": [
+       "tv",
+       "radio"
+      ]
+     },
+     "inStandby": {
+      "type": "boolean"
+     }
+    }
+   },
+   "ApiToken": {
+    "type": "object",
+    "properties": {
+     "id": {
+      "type": "integer"
+     },
+     "name": {
+      "type": "string"
+     },
+     "createdAt": {
+      "type": "string",
+      "format": "date-time"
+     }
+    }
+   },
+   "CreatedApiToken": {
+    "type": "object",
+    "properties": {
+     "id": {
+      "type": "integer"
+     },
+     "name": {
+      "type": "string"
+     },
+     "createdAt": {
+      "type": "string",
+      "format": "date-time"
+     },
+     "token": {
+      "type": "string",
+      "description": "Shown once"
+     }
+    }
+   }
+  }
+ },
+ "paths": {
+  "/admin/crashlogs": {
+   "get": {
+    "summary": "Read admin crashlogs",
+    "tags": [
+     "admin"
+    ],
+    "operationId": "GET_admin_crashlogs",
+    "parameters": [
+     {
+      "$ref": "#/components/parameters/Box"
+     }
+    ],
+    "responses": {
+     "200": {
+      "description": "OK"
+     },
+     "default": {
+      "$ref": "#/components/responses/Error"
+     }
+    }
+   }
+  },
+  "/admin/crashlogs/{name}": {
+   "get": {
+    "summary": "Read admin crashlogs",
+    "tags": [
+     "admin"
+    ],
+    "operationId": "GET_admin_crashlogs_name",
+    "parameters": [
+     {
+      "$ref": "#/components/parameters/Box"
+     },
+     {
+      "name": "name",
+      "in": "path",
+      "required": true,
+      "schema": {
+       "type": "string"
+      }
+     }
+    ],
+    "responses": {
+     "200": {
+      "description": "OK"
+     },
+     "default": {
+      "$ref": "#/components/responses/Error"
+     }
+    }
+   }
+  },
+  "/admin/feeds": {
+   "get": {
+    "summary": "Read admin feeds",
+    "tags": [
+     "admin"
+    ],
+    "operationId": "GET_admin_feeds",
+    "parameters": [
+     {
+      "$ref": "#/components/parameters/Box"
+     }
+    ],
+    "responses": {
+     "200": {
+      "description": "OK"
+     },
+     "default": {
+      "$ref": "#/components/responses/Error"
+     }
+    }
+   }
+  },
+  "/admin/feeds/plan": {
+   "post": {
+    "summary": "Preview: admin feeds",
+    "tags": [
+     "admin"
+    ],
+    "operationId": "POST_admin_feeds_plan",
+    "parameters": [
+     {
+      "$ref": "#/components/parameters/Box"
+     }
+    ],
+    "description": "Changes nothing. Returns a plan to show to the user; apply it with `POST /plans/{id}/apply`.",
+    "responses": {
+     "200": {
+      "description": "The plan",
+      "content": {
+       "application/json": {
+        "schema": {
+         "$ref": "#/components/schemas/PlanResponse"
+        }
+       }
+      }
+     },
+     "default": {
+      "$ref": "#/components/responses/Error"
+     }
+    },
+    "requestBody": {
+     "required": true,
+     "content": {
+      "application/json": {
+       "schema": {
+        "type": "object"
+       }
+      }
+     }
+    },
+    "x-csrf": true
+   }
+  },
+  "/admin/log-level": {
+   "get": {
+    "summary": "Read admin log level",
+    "tags": [
+     "admin"
+    ],
+    "operationId": "GET_admin_log_level",
+    "parameters": [
+     {
+      "$ref": "#/components/parameters/Box"
+     }
+    ],
+    "responses": {
+     "200": {
+      "description": "OK"
+     },
+     "default": {
+      "$ref": "#/components/responses/Error"
+     }
+    }
+   },
+   "put": {
+    "summary": "Replace admin log level",
+    "tags": [
+     "admin"
+    ],
+    "operationId": "PUT_admin_log_level",
+    "parameters": [
+     {
+      "$ref": "#/components/parameters/Box"
+     }
+    ],
+    "responses": {
+     "200": {
+      "description": "OK"
+     },
+     "default": {
+      "$ref": "#/components/responses/Error"
+     }
+    },
+    "requestBody": {
+     "required": false,
+     "content": {
+      "application/json": {
+       "schema": {
+        "type": "object"
+       }
+      }
+     }
+    },
+    "x-csrf": true
+   }
+  },
+  "/admin/logs": {
+   "get": {
+    "summary": "Read admin logs",
+    "tags": [
+     "admin"
+    ],
+    "operationId": "GET_admin_logs",
+    "parameters": [
+     {
+      "$ref": "#/components/parameters/Box"
+     }
+    ],
+    "responses": {
+     "200": {
+      "description": "OK"
+     },
+     "default": {
+      "$ref": "#/components/responses/Error"
+     }
+    }
+   }
+  },
+  "/admin/logs/stream": {
+   "get": {
+    "summary": "Read admin logs stream",
+    "tags": [
+     "admin"
+    ],
+    "operationId": "GET_admin_logs_stream",
+    "parameters": [
+     {
+      "$ref": "#/components/parameters/Box"
+     }
+    ],
+    "responses": {
+     "200": {
+      "description": "OK"
+     },
+     "default": {
+      "$ref": "#/components/responses/Error"
+     }
+    }
+   }
+  },
+  "/admin/packages": {
+   "get": {
+    "summary": "Read admin packages",
+    "tags": [
+     "admin"
+    ],
+    "operationId": "GET_admin_packages",
+    "parameters": [
+     {
+      "$ref": "#/components/parameters/Box"
+     }
+    ],
+    "responses": {
+     "200": {
+      "description": "OK"
+     },
+     "default": {
+      "$ref": "#/components/responses/Error"
+     }
+    }
+   }
+  },
+  "/admin/packages/downgrade/plan": {
+   "post": {
+    "summary": "Preview: admin packages downgrade",
+    "tags": [
+     "admin"
+    ],
+    "operationId": "POST_admin_packages_downgrade_plan",
+    "parameters": [
+     {
+      "$ref": "#/components/parameters/Box"
+     }
+    ],
+    "description": "Changes nothing. Returns a plan to show to the user; apply it with `POST /plans/{id}/apply`.",
+    "responses": {
+     "200": {
+      "description": "The plan",
+      "content": {
+       "application/json": {
+        "schema": {
+         "$ref": "#/components/schemas/PlanResponse"
+        }
+       }
+      }
+     },
+     "default": {
+      "$ref": "#/components/responses/Error"
+     }
+    },
+    "requestBody": {
+     "required": true,
+     "content": {
+      "application/json": {
+       "schema": {
+        "type": "object"
+       }
+      }
+     }
+    },
+    "x-csrf": true
+   }
+  },
+  "/admin/packages/explain": {
+   "post": {
+    "summary": "Run admin packages explain",
+    "tags": [
+     "admin"
+    ],
+    "operationId": "POST_admin_packages_explain",
+    "parameters": [
+     {
+      "$ref": "#/components/parameters/Box"
+     }
+    ],
+    "responses": {
+     "200": {
+      "description": "OK"
+     },
+     "default": {
+      "$ref": "#/components/responses/Error"
+     }
+    },
+    "requestBody": {
+     "required": false,
+     "content": {
+      "application/json": {
+       "schema": {
+        "type": "object"
+       }
+      }
+     }
+    },
+    "x-csrf": true
+   }
+  },
+  "/admin/packages/last-run": {
+   "get": {
+    "summary": "Read admin packages last run",
+    "tags": [
+     "admin"
+    ],
+    "operationId": "GET_admin_packages_last_run",
+    "parameters": [
+     {
+      "$ref": "#/components/parameters/Box"
+     }
+    ],
+    "responses": {
+     "200": {
+      "description": "OK"
+     },
+     "default": {
+      "$ref": "#/components/responses/Error"
+     }
+    }
+   }
+  },
+  "/admin/packages/plan": {
+   "post": {
+    "summary": "Preview: admin packages",
+    "tags": [
+     "admin"
+    ],
+    "operationId": "POST_admin_packages_plan",
+    "parameters": [
+     {
+      "$ref": "#/components/parameters/Box"
+     }
+    ],
+    "description": "Changes nothing. Returns a plan to show to the user; apply it with `POST /plans/{id}/apply`.",
+    "responses": {
+     "200": {
+      "description": "The plan",
+      "content": {
+       "application/json": {
+        "schema": {
+         "$ref": "#/components/schemas/PlanResponse"
+        }
+       }
+      }
+     },
+     "default": {
+      "$ref": "#/components/responses/Error"
+     }
+    },
+    "requestBody": {
+     "required": true,
+     "content": {
+      "application/json": {
+       "schema": {
+        "type": "object"
+       }
+      }
+     }
+    },
+    "x-csrf": true
+   }
+  },
+  "/admin/packages/{name}/versions": {
+   "get": {
+    "summary": "Read admin packages versions",
+    "tags": [
+     "admin"
+    ],
+    "operationId": "GET_admin_packages_name_versions",
+    "parameters": [
+     {
+      "$ref": "#/components/parameters/Box"
+     },
+     {
+      "name": "name",
+      "in": "path",
+      "required": true,
+      "schema": {
+       "type": "string"
+      }
+     }
+    ],
+    "responses": {
+     "200": {
+      "description": "OK"
+     },
+     "default": {
+      "$ref": "#/components/responses/Error"
+     }
+    }
+   }
+  },
+  "/admin/scripts": {
+   "get": {
+    "summary": "Read admin scripts",
+    "tags": [
+     "admin"
+    ],
+    "operationId": "GET_admin_scripts",
+    "parameters": [
+     {
+      "$ref": "#/components/parameters/Box"
+     }
+    ],
+    "responses": {
+     "200": {
+      "description": "OK"
+     },
+     "default": {
+      "$ref": "#/components/responses/Error"
+     }
+    }
+   },
+   "post": {
+    "summary": "Run admin scripts",
+    "tags": [
+     "admin"
+    ],
+    "operationId": "POST_admin_scripts",
+    "parameters": [
+     {
+      "$ref": "#/components/parameters/Box"
+     }
+    ],
+    "responses": {
+     "200": {
+      "description": "OK"
+     },
+     "default": {
+      "$ref": "#/components/responses/Error"
+     }
+    },
+    "requestBody": {
+     "required": false,
+     "content": {
+      "application/json": {
+       "schema": {
+        "type": "object"
+       }
+      }
+     }
+    },
+    "x-csrf": true
+   }
+  },
+  "/admin/scripts/{id}": {
+   "delete": {
+    "summary": "Delete admin scripts",
+    "tags": [
+     "admin"
+    ],
+    "operationId": "DELETE_admin_scripts_id",
+    "parameters": [
+     {
+      "$ref": "#/components/parameters/Box"
+     },
+     {
+      "name": "id",
+      "in": "path",
+      "required": true,
+      "schema": {
+       "type": "string"
+      }
+     }
+    ],
+    "responses": {
+     "200": {
+      "description": "OK"
+     },
+     "default": {
+      "$ref": "#/components/responses/Error"
+     }
+    },
+    "x-csrf": true
+   }
+  },
+  "/admin/scripts/{id}/run/plan": {
+   "post": {
+    "summary": "Preview: admin scripts run",
+    "tags": [
+     "admin"
+    ],
+    "operationId": "POST_admin_scripts_id_run_plan",
+    "parameters": [
+     {
+      "$ref": "#/components/parameters/Box"
+     },
+     {
+      "name": "id",
+      "in": "path",
+      "required": true,
+      "schema": {
+       "type": "string"
+      }
+     }
+    ],
+    "description": "Changes nothing. Returns a plan to show to the user; apply it with `POST /plans/{id}/apply`.",
+    "responses": {
+     "200": {
+      "description": "The plan",
+      "content": {
+       "application/json": {
+        "schema": {
+         "$ref": "#/components/schemas/PlanResponse"
+        }
+       }
+      }
+     },
+     "default": {
+      "$ref": "#/components/responses/Error"
+     }
+    },
+    "requestBody": {
+     "required": true,
+     "content": {
+      "application/json": {
+       "schema": {
+        "type": "object"
+       }
+      }
+     }
+    },
+    "x-csrf": true
+   }
+  },
+  "/admin/scripts/{id}/runs": {
+   "get": {
+    "summary": "Read admin scripts runs",
+    "tags": [
+     "admin"
+    ],
+    "operationId": "GET_admin_scripts_id_runs",
+    "parameters": [
+     {
+      "$ref": "#/components/parameters/Box"
+     },
+     {
+      "name": "id",
+      "in": "path",
+      "required": true,
+      "schema": {
+       "type": "string"
+      }
+     }
+    ],
+    "responses": {
+     "200": {
+      "description": "OK"
+     },
+     "default": {
+      "$ref": "#/components/responses/Error"
+     }
+    }
+   }
+  },
+  "/admin/services": {
+   "get": {
+    "summary": "Read admin services",
+    "tags": [
+     "admin"
+    ],
+    "operationId": "GET_admin_services",
+    "parameters": [
+     {
+      "$ref": "#/components/parameters/Box"
+     }
+    ],
+    "responses": {
+     "200": {
+      "description": "OK"
+     },
+     "default": {
+      "$ref": "#/components/responses/Error"
+     }
+    }
+   }
+  },
+  "/admin/services/plan": {
+   "post": {
+    "summary": "Preview: admin services",
+    "tags": [
+     "admin"
+    ],
+    "operationId": "POST_admin_services_plan",
+    "parameters": [
+     {
+      "$ref": "#/components/parameters/Box"
+     }
+    ],
+    "description": "Changes nothing. Returns a plan to show to the user; apply it with `POST /plans/{id}/apply`.",
+    "responses": {
+     "200": {
+      "description": "The plan",
+      "content": {
+       "application/json": {
+        "schema": {
+         "$ref": "#/components/schemas/PlanResponse"
+        }
+       }
+      }
+     },
+     "default": {
+      "$ref": "#/components/responses/Error"
+     }
+    },
+    "requestBody": {
+     "required": true,
+     "content": {
+      "application/json": {
+       "schema": {
+        "type": "object"
+       }
+      }
+     }
+    },
+    "x-csrf": true
+   }
+  },
+  "/admin/terminal/disable": {
+   "post": {
+    "summary": "Run admin terminal disable",
+    "tags": [
+     "admin"
+    ],
+    "operationId": "POST_admin_terminal_disable",
+    "parameters": [
+     {
+      "$ref": "#/components/parameters/Box"
+     }
+    ],
+    "responses": {
+     "200": {
+      "description": "OK"
+     },
+     "default": {
+      "$ref": "#/components/responses/Error"
+     }
+    },
+    "requestBody": {
+     "required": false,
+     "content": {
+      "application/json": {
+       "schema": {
+        "type": "object"
+       }
+      }
+     }
+    },
+    "x-csrf": true
+   }
+  },
+  "/admin/terminal/enable": {
+   "post": {
+    "summary": "Run admin terminal enable",
+    "tags": [
+     "admin"
+    ],
+    "operationId": "POST_admin_terminal_enable",
+    "parameters": [
+     {
+      "$ref": "#/components/parameters/Box"
+     }
+    ],
+    "responses": {
+     "200": {
+      "description": "OK"
+     },
+     "default": {
+      "$ref": "#/components/responses/Error"
+     }
+    },
+    "requestBody": {
+     "required": false,
+     "content": {
+      "application/json": {
+       "schema": {
+        "type": "object"
+       }
+      }
+     }
+    },
+    "x-csrf": true
+   }
+  },
+  "/admin/terminal/status": {
+   "get": {
+    "summary": "Read admin terminal status",
+    "tags": [
+     "admin"
+    ],
+    "operationId": "GET_admin_terminal_status",
+    "parameters": [
+     {
+      "$ref": "#/components/parameters/Box"
+     }
+    ],
+    "responses": {
+     "200": {
+      "description": "OK"
+     },
+     "default": {
+      "$ref": "#/components/responses/Error"
+     }
+    }
+   }
+  },
+  "/apps/catalog": {
+   "get": {
+    "summary": "Read apps catalog",
+    "tags": [
+     "apps"
+    ],
+    "operationId": "GET_apps_catalog",
+    "parameters": [
+     {
+      "$ref": "#/components/parameters/Box"
+     }
+    ],
+    "responses": {
+     "200": {
+      "description": "OK"
+     },
+     "default": {
+      "$ref": "#/components/responses/Error"
+     }
+    }
+   }
+  },
+  "/apps/console/disable": {
+   "post": {
+    "summary": "Run apps console disable",
+    "tags": [
+     "apps"
+    ],
+    "operationId": "POST_apps_console_disable",
+    "parameters": [
+     {
+      "$ref": "#/components/parameters/Box"
+     }
+    ],
+    "responses": {
+     "200": {
+      "description": "OK"
+     },
+     "default": {
+      "$ref": "#/components/responses/Error"
+     }
+    },
+    "requestBody": {
+     "required": false,
+     "content": {
+      "application/json": {
+       "schema": {
+        "type": "object"
+       }
+      }
+     }
+    },
+    "x-csrf": true
+   }
+  },
+  "/apps/console/enable": {
+   "post": {
+    "summary": "Run apps console enable",
+    "tags": [
+     "apps"
+    ],
+    "operationId": "POST_apps_console_enable",
+    "parameters": [
+     {
+      "$ref": "#/components/parameters/Box"
+     }
+    ],
+    "responses": {
+     "200": {
+      "description": "OK"
+     },
+     "default": {
+      "$ref": "#/components/responses/Error"
+     }
+    },
+    "requestBody": {
+     "required": false,
+     "content": {
+      "application/json": {
+       "schema": {
+        "type": "object"
+       }
+      }
+     }
+    },
+    "x-csrf": true
+   }
+  },
+  "/apps/console/status": {
+   "get": {
+    "summary": "Read apps console status",
+    "tags": [
+     "apps"
+    ],
+    "operationId": "GET_apps_console_status",
+    "parameters": [
+     {
+      "$ref": "#/components/parameters/Box"
+     }
+    ],
+    "responses": {
+     "200": {
+      "description": "OK"
+     },
+     "default": {
+      "$ref": "#/components/responses/Error"
+     }
+    }
+   }
+  },
+  "/apps/custom/parse": {
+   "post": {
+    "summary": "Run apps custom parse",
+    "tags": [
+     "apps"
+    ],
+    "operationId": "POST_apps_custom_parse",
+    "parameters": [
+     {
+      "$ref": "#/components/parameters/Box"
+     }
+    ],
+    "responses": {
+     "200": {
+      "description": "OK"
+     },
+     "default": {
+      "$ref": "#/components/responses/Error"
+     }
+    },
+    "requestBody": {
+     "required": false,
+     "content": {
+      "application/json": {
+       "schema": {
+        "type": "object"
+       }
+      }
+     }
+    },
+    "x-csrf": true
+   }
+  },
+  "/apps/docker": {
+   "get": {
+    "summary": "Read apps docker",
+    "tags": [
+     "apps"
+    ],
+    "operationId": "GET_apps_docker",
+    "parameters": [
+     {
+      "$ref": "#/components/parameters/Box"
+     }
+    ],
+    "responses": {
+     "200": {
+      "description": "OK"
+     },
+     "default": {
+      "$ref": "#/components/responses/Error"
+     }
+    }
+   }
+  },
+  "/apps/docker/images": {
+   "get": {
+    "summary": "Read apps docker images",
+    "tags": [
+     "apps"
+    ],
+    "operationId": "GET_apps_docker_images",
+    "parameters": [
+     {
+      "$ref": "#/components/parameters/Box"
+     }
+    ],
+    "responses": {
+     "200": {
+      "description": "OK"
+     },
+     "default": {
+      "$ref": "#/components/responses/Error"
+     }
+    }
+   }
+  },
+  "/apps/docker/images/kept/plan": {
+   "post": {
+    "summary": "Preview: apps docker images kept",
+    "tags": [
+     "apps"
+    ],
+    "operationId": "POST_apps_docker_images_kept_plan",
+    "parameters": [
+     {
+      "$ref": "#/components/parameters/Box"
+     }
+    ],
+    "description": "Changes nothing. Returns a plan to show to the user; apply it with `POST /plans/{id}/apply`.",
+    "responses": {
+     "200": {
+      "description": "The plan",
+      "content": {
+       "application/json": {
+        "schema": {
+         "$ref": "#/components/schemas/PlanResponse"
+        }
+       }
+      }
+     },
+     "default": {
+      "$ref": "#/components/responses/Error"
+     }
+    },
+    "requestBody": {
+     "required": true,
+     "content": {
+      "application/json": {
+       "schema": {
+        "type": "object"
+       }
+      }
+     }
+    },
+    "x-csrf": true
+   }
+  },
+  "/apps/docker/images/prune/plan": {
+   "post": {
+    "summary": "Preview: apps docker images prune",
+    "tags": [
+     "apps"
+    ],
+    "operationId": "POST_apps_docker_images_prune_plan",
+    "parameters": [
+     {
+      "$ref": "#/components/parameters/Box"
+     }
+    ],
+    "description": "Changes nothing. Returns a plan to show to the user; apply it with `POST /plans/{id}/apply`.",
+    "responses": {
+     "200": {
+      "description": "The plan",
+      "content": {
+       "application/json": {
+        "schema": {
+         "$ref": "#/components/schemas/PlanResponse"
+        }
+       }
+      }
+     },
+     "default": {
+      "$ref": "#/components/responses/Error"
+     }
+    },
+    "requestBody": {
+     "required": true,
+     "content": {
+      "application/json": {
+       "schema": {
+        "type": "object"
+       }
+      }
+     }
+    },
+    "x-csrf": true
+   }
+  },
+  "/apps/docker/setup/plan": {
+   "post": {
+    "summary": "Preview: apps docker setup",
+    "tags": [
+     "apps"
+    ],
+    "operationId": "POST_apps_docker_setup_plan",
+    "parameters": [
+     {
+      "$ref": "#/components/parameters/Box"
+     }
+    ],
+    "description": "Changes nothing. Returns a plan to show to the user; apply it with `POST /plans/{id}/apply`.",
+    "responses": {
+     "200": {
+      "description": "The plan",
+      "content": {
+       "application/json": {
+        "schema": {
+         "$ref": "#/components/schemas/PlanResponse"
+        }
+       }
+      }
+     },
+     "default": {
+      "$ref": "#/components/responses/Error"
+     }
+    },
+    "requestBody": {
+     "required": true,
+     "content": {
+      "application/json": {
+       "schema": {
+        "type": "object"
+       }
+      }
+     }
+    },
+    "x-csrf": true
+   }
+  },
+  "/apps/docker/uninstall/plan": {
+   "post": {
+    "summary": "Preview: apps docker uninstall",
+    "tags": [
+     "apps"
+    ],
+    "operationId": "POST_apps_docker_uninstall_plan",
+    "parameters": [
+     {
+      "$ref": "#/components/parameters/Box"
+     }
+    ],
+    "description": "Changes nothing. Returns a plan to show to the user; apply it with `POST /plans/{id}/apply`.",
+    "responses": {
+     "200": {
+      "description": "The plan",
+      "content": {
+       "application/json": {
+        "schema": {
+         "$ref": "#/components/schemas/PlanResponse"
+        }
+       }
+      }
+     },
+     "default": {
+      "$ref": "#/components/responses/Error"
+     }
+    },
+    "requestBody": {
+     "required": true,
+     "content": {
+      "application/json": {
+       "schema": {
+        "type": "object"
+       }
+      }
+     }
+    },
+    "x-csrf": true
+   }
+  },
+  "/apps/install/plan": {
+   "post": {
+    "summary": "Preview: apps install",
+    "tags": [
+     "apps"
+    ],
+    "operationId": "POST_apps_install_plan",
+    "parameters": [
+     {
+      "$ref": "#/components/parameters/Box"
+     }
+    ],
+    "description": "Changes nothing. Returns a plan to show to the user; apply it with `POST /plans/{id}/apply`.",
+    "responses": {
+     "200": {
+      "description": "The plan",
+      "content": {
+       "application/json": {
+        "schema": {
+         "$ref": "#/components/schemas/PlanResponse"
+        }
+       }
+      }
+     },
+     "default": {
+      "$ref": "#/components/responses/Error"
+     }
+    },
+    "requestBody": {
+     "required": true,
+     "content": {
+      "application/json": {
+       "schema": {
+        "type": "object"
+       }
+      }
+     }
+    },
+    "x-csrf": true
+   }
+  },
+  "/apps/installed": {
+   "get": {
+    "summary": "Read apps installed",
+    "tags": [
+     "apps"
+    ],
+    "operationId": "GET_apps_installed",
+    "parameters": [
+     {
+      "$ref": "#/components/parameters/Box"
+     }
+    ],
+    "responses": {
+     "200": {
+      "description": "OK"
+     },
+     "default": {
+      "$ref": "#/components/responses/Error"
+     }
+    }
+   }
+  },
+  "/apps/installed/{id}/autostart": {
+   "put": {
+    "summary": "Replace apps installed autostart",
+    "tags": [
+     "apps"
+    ],
+    "operationId": "PUT_apps_installed_id_autostart",
+    "parameters": [
+     {
+      "$ref": "#/components/parameters/Box"
+     },
+     {
+      "name": "id",
+      "in": "path",
+      "required": true,
+      "schema": {
+       "type": "string"
+      }
+     }
+    ],
+    "responses": {
+     "200": {
+      "description": "OK"
+     },
+     "default": {
+      "$ref": "#/components/responses/Error"
+     }
+    },
+    "requestBody": {
+     "required": false,
+     "content": {
+      "application/json": {
+       "schema": {
+        "type": "object"
+       }
+      }
+     }
+    },
+    "x-csrf": true
+   }
+  },
+  "/apps/installed/{id}/console": {
+   "get": {
+    "summary": "Read apps installed console",
+    "tags": [
+     "apps"
+    ],
+    "operationId": "GET_apps_installed_id_console",
+    "parameters": [
+     {
+      "$ref": "#/components/parameters/Box"
+     },
+     {
+      "name": "id",
+      "in": "path",
+      "required": true,
+      "schema": {
+       "type": "string"
+      }
+     }
+    ],
+    "responses": {
+     "200": {
+      "description": "OK"
+     },
+     "default": {
+      "$ref": "#/components/responses/Error"
+     }
+    }
+   }
+  },
+  "/apps/installed/{id}/edit": {
+   "get": {
+    "summary": "Read apps installed edit",
+    "tags": [
+     "apps"
+    ],
+    "operationId": "GET_apps_installed_id_edit",
+    "parameters": [
+     {
+      "$ref": "#/components/parameters/Box"
+     },
+     {
+      "name": "id",
+      "in": "path",
+      "required": true,
+      "schema": {
+       "type": "string"
+      }
+     }
+    ],
+    "responses": {
+     "200": {
+      "description": "OK"
+     },
+     "default": {
+      "$ref": "#/components/responses/Error"
+     }
+    }
+   }
+  },
+  "/apps/installed/{id}/edit/plan": {
+   "post": {
+    "summary": "Preview: apps installed edit",
+    "tags": [
+     "apps"
+    ],
+    "operationId": "POST_apps_installed_id_edit_plan",
+    "parameters": [
+     {
+      "$ref": "#/components/parameters/Box"
+     },
+     {
+      "name": "id",
+      "in": "path",
+      "required": true,
+      "schema": {
+       "type": "string"
+      }
+     }
+    ],
+    "description": "Changes nothing. Returns a plan to show to the user; apply it with `POST /plans/{id}/apply`.",
+    "responses": {
+     "200": {
+      "description": "The plan",
+      "content": {
+       "application/json": {
+        "schema": {
+         "$ref": "#/components/schemas/PlanResponse"
+        }
+       }
+      }
+     },
+     "default": {
+      "$ref": "#/components/responses/Error"
+     }
+    },
+    "requestBody": {
+     "required": true,
+     "content": {
+      "application/json": {
+       "schema": {
+        "type": "object"
+       }
+      }
+     }
+    },
+    "x-csrf": true
+   }
+  },
+  "/apps/installed/{id}/logs": {
+   "get": {
+    "summary": "Read apps installed logs",
+    "tags": [
+     "apps"
+    ],
+    "operationId": "GET_apps_installed_id_logs",
+    "parameters": [
+     {
+      "$ref": "#/components/parameters/Box"
+     },
+     {
+      "name": "id",
+      "in": "path",
+      "required": true,
+      "schema": {
+       "type": "string"
+      }
+     }
+    ],
+    "responses": {
+     "200": {
+      "description": "OK"
+     },
+     "default": {
+      "$ref": "#/components/responses/Error"
+     }
+    }
+   }
+  },
+  "/apps/installed/{id}/remove/plan": {
+   "post": {
+    "summary": "Preview: apps installed remove",
+    "tags": [
+     "apps"
+    ],
+    "operationId": "POST_apps_installed_id_remove_plan",
+    "parameters": [
+     {
+      "$ref": "#/components/parameters/Box"
+     },
+     {
+      "name": "id",
+      "in": "path",
+      "required": true,
+      "schema": {
+       "type": "string"
+      }
+     }
+    ],
+    "description": "Changes nothing. Returns a plan to show to the user; apply it with `POST /plans/{id}/apply`.",
+    "responses": {
+     "200": {
+      "description": "The plan",
+      "content": {
+       "application/json": {
+        "schema": {
+         "$ref": "#/components/schemas/PlanResponse"
+        }
+       }
+      }
+     },
+     "default": {
+      "$ref": "#/components/responses/Error"
+     }
+    },
+    "requestBody": {
+     "required": true,
+     "content": {
+      "application/json": {
+       "schema": {
+        "type": "object"
+       }
+      }
+     }
+    },
+    "x-csrf": true
+   }
+  },
+  "/apps/installed/{id}/rollback/plan": {
+   "post": {
+    "summary": "Preview: apps installed rollback",
+    "tags": [
+     "apps"
+    ],
+    "operationId": "POST_apps_installed_id_rollback_plan",
+    "parameters": [
+     {
+      "$ref": "#/components/parameters/Box"
+     },
+     {
+      "name": "id",
+      "in": "path",
+      "required": true,
+      "schema": {
+       "type": "string"
+      }
+     }
+    ],
+    "description": "Changes nothing. Returns a plan to show to the user; apply it with `POST /plans/{id}/apply`.",
+    "responses": {
+     "200": {
+      "description": "The plan",
+      "content": {
+       "application/json": {
+        "schema": {
+         "$ref": "#/components/schemas/PlanResponse"
+        }
+       }
+      }
+     },
+     "default": {
+      "$ref": "#/components/responses/Error"
+     }
+    },
+    "requestBody": {
+     "required": true,
+     "content": {
+      "application/json": {
+       "schema": {
+        "type": "object"
+       }
+      }
+     }
+    },
+    "x-csrf": true
+   }
+  },
+  "/apps/installed/{id}/start": {
+   "post": {
+    "summary": "Run apps installed start",
+    "tags": [
+     "apps"
+    ],
+    "operationId": "POST_apps_installed_id_start",
+    "parameters": [
+     {
+      "$ref": "#/components/parameters/Box"
+     },
+     {
+      "name": "id",
+      "in": "path",
+      "required": true,
+      "schema": {
+       "type": "string"
+      }
+     }
+    ],
+    "responses": {
+     "200": {
+      "description": "OK"
+     },
+     "default": {
+      "$ref": "#/components/responses/Error"
+     }
+    },
+    "requestBody": {
+     "required": false,
+     "content": {
+      "application/json": {
+       "schema": {
+        "type": "object"
+       }
+      }
+     }
+    },
+    "x-csrf": true
+   }
+  },
+  "/apps/installed/{id}/stop": {
+   "post": {
+    "summary": "Run apps installed stop",
+    "tags": [
+     "apps"
+    ],
+    "operationId": "POST_apps_installed_id_stop",
+    "parameters": [
+     {
+      "$ref": "#/components/parameters/Box"
+     },
+     {
+      "name": "id",
+      "in": "path",
+      "required": true,
+      "schema": {
+       "type": "string"
+      }
+     }
+    ],
+    "responses": {
+     "200": {
+      "description": "OK"
+     },
+     "default": {
+      "$ref": "#/components/responses/Error"
+     }
+    },
+    "requestBody": {
+     "required": false,
+     "content": {
+      "application/json": {
+       "schema": {
+        "type": "object"
+       }
+      }
+     }
+    },
+    "x-csrf": true
+   }
+  },
+  "/apps/installed/{id}/update/plan": {
+   "post": {
+    "summary": "Preview: apps installed update",
+    "tags": [
+     "apps"
+    ],
+    "operationId": "POST_apps_installed_id_update_plan",
+    "parameters": [
+     {
+      "$ref": "#/components/parameters/Box"
+     },
+     {
+      "name": "id",
+      "in": "path",
+      "required": true,
+      "schema": {
+       "type": "string"
+      }
+     }
+    ],
+    "description": "Changes nothing. Returns a plan to show to the user; apply it with `POST /plans/{id}/apply`.",
+    "responses": {
+     "200": {
+      "description": "The plan",
+      "content": {
+       "application/json": {
+        "schema": {
+         "$ref": "#/components/schemas/PlanResponse"
+        }
+       }
+      }
+     },
+     "default": {
+      "$ref": "#/components/responses/Error"
+     }
+    },
+    "requestBody": {
+     "required": true,
+     "content": {
+      "application/json": {
+       "schema": {
+        "type": "object"
+       }
+      }
+     }
+    },
+    "x-csrf": true
+   }
+  },
+  "/apps/manifest": {
+   "get": {
+    "summary": "Read apps manifest",
+    "tags": [
+     "apps"
+    ],
+    "operationId": "GET_apps_manifest",
+    "parameters": [
+     {
+      "$ref": "#/components/parameters/Box"
+     }
+    ],
+    "responses": {
+     "200": {
+      "description": "OK"
+     },
+     "default": {
+      "$ref": "#/components/responses/Error"
+     }
+    }
+   }
+  },
+  "/apps/restorable": {
+   "get": {
+    "summary": "Read apps restorable",
+    "tags": [
+     "apps"
+    ],
+    "operationId": "GET_apps_restorable",
+    "parameters": [
+     {
+      "$ref": "#/components/parameters/Box"
+     }
+    ],
+    "responses": {
+     "200": {
+      "description": "OK"
+     },
+     "default": {
+      "$ref": "#/components/responses/Error"
+     }
+    }
+   }
+  },
+  "/apps/restorable/{id}/plan": {
+   "post": {
+    "summary": "Preview: apps restorable",
+    "tags": [
+     "apps"
+    ],
+    "operationId": "POST_apps_restorable_id_plan",
+    "parameters": [
+     {
+      "$ref": "#/components/parameters/Box"
+     },
+     {
+      "name": "id",
+      "in": "path",
+      "required": true,
+      "schema": {
+       "type": "string"
+      }
+     }
+    ],
+    "description": "Changes nothing. Returns a plan to show to the user; apply it with `POST /plans/{id}/apply`.",
+    "responses": {
+     "200": {
+      "description": "The plan",
+      "content": {
+       "application/json": {
+        "schema": {
+         "$ref": "#/components/schemas/PlanResponse"
+        }
+       }
+      }
+     },
+     "default": {
+      "$ref": "#/components/responses/Error"
+     }
+    },
+    "requestBody": {
+     "required": true,
+     "content": {
+      "application/json": {
+       "schema": {
+        "type": "object"
+       }
+      }
+     }
+    },
+    "x-csrf": true
+   }
+  },
+  "/apps/search": {
+   "get": {
+    "summary": "Read apps search",
+    "tags": [
+     "apps"
+    ],
+    "operationId": "GET_apps_search",
+    "parameters": [
+     {
+      "$ref": "#/components/parameters/Box"
+     }
+    ],
+    "responses": {
+     "200": {
+      "description": "OK"
+     },
+     "default": {
+      "$ref": "#/components/responses/Error"
+     }
+    }
+   }
+  },
+  "/apps/storage": {
+   "get": {
+    "summary": "Read apps storage",
+    "tags": [
+     "apps"
+    ],
+    "operationId": "GET_apps_storage",
+    "parameters": [
+     {
+      "$ref": "#/components/parameters/Box"
+     }
+    ],
+    "responses": {
+     "200": {
+      "description": "OK"
+     },
+     "default": {
+      "$ref": "#/components/responses/Error"
+     }
+    }
+   }
+  },
+  "/apps/updates": {
+   "get": {
+    "summary": "Read apps updates",
+    "tags": [
+     "apps"
+    ],
+    "operationId": "GET_apps_updates",
+    "parameters": [
+     {
+      "$ref": "#/components/parameters/Box"
+     }
+    ],
+    "responses": {
+     "200": {
+      "description": "OK"
+     },
+     "default": {
+      "$ref": "#/components/responses/Error"
+     }
+    }
+   }
+  },
+  "/apps/updates/plan": {
+   "post": {
+    "summary": "Preview: apps updates",
+    "tags": [
+     "apps"
+    ],
+    "operationId": "POST_apps_updates_plan",
+    "parameters": [
+     {
+      "$ref": "#/components/parameters/Box"
+     }
+    ],
+    "description": "Changes nothing. Returns a plan to show to the user; apply it with `POST /plans/{id}/apply`.",
+    "responses": {
+     "200": {
+      "description": "The plan",
+      "content": {
+       "application/json": {
+        "schema": {
+         "$ref": "#/components/schemas/PlanResponse"
+        }
+       }
+      }
+     },
+     "default": {
+      "$ref": "#/components/responses/Error"
+     }
+    },
+    "requestBody": {
+     "required": true,
+     "content": {
+      "application/json": {
+       "schema": {
+        "type": "object"
+       }
+      }
+     }
+    },
+    "x-csrf": true
+   }
+  },
+  "/boxes": {
+   "get": {
+    "summary": "The boxes this caller may use, with capabilities and the default box",
+    "tags": [
+     "boxes"
+    ],
+    "operationId": "GET_boxes",
+    "x-box": "global",
+    "responses": {
+     "200": {
+      "description": "OK",
+      "content": {
+       "application/json": {
+        "schema": {
+         "type": "object",
+         "properties": {
+          "boxes": {
+           "type": "array",
+           "items": {
+            "$ref": "#/components/schemas/Box"
+           }
+          },
+          "default": {
+           "type": "string",
+           "description": "The box a request without `box` is about"
+          }
+         }
+        }
+       }
+      }
+     },
+     "default": {
+      "$ref": "#/components/responses/Error"
+     }
+    }
+   },
+   "post": {
+    "summary": "Add a box; refused unless it answers (administrators)",
+    "tags": [
+     "boxes"
+    ],
+    "operationId": "POST_boxes",
+    "x-box": "global",
+    "responses": {
+     "200": {
+      "description": "OK"
+     },
+     "default": {
+      "$ref": "#/components/responses/Error"
+     }
+    },
+    "requestBody": {
+     "required": false,
+     "content": {
+      "application/json": {
+       "schema": {
+        "type": "object"
+       }
+      }
+     }
+    },
+    "x-csrf": true
+   }
+  },
+  "/boxes/overview": {
+   "get": {
+    "summary": "One line per box (channel, standby, recording) for the dashboard strip",
+    "tags": [
+     "boxes"
+    ],
+    "operationId": "GET_boxes_overview",
+    "x-box": "global",
+    "responses": {
+     "200": {
+      "description": "OK"
+     },
+     "default": {
+      "$ref": "#/components/responses/Error"
+     }
+    }
+   }
+  },
+  "/boxes/test": {
+   "post": {
+    "summary": "Check an address and login without saving anything (administrators)",
+    "tags": [
+     "boxes"
+    ],
+    "operationId": "POST_boxes_test",
+    "x-box": "global",
+    "responses": {
+     "200": {
+      "description": "OK"
+     },
+     "default": {
+      "$ref": "#/components/responses/Error"
+     }
+    },
+    "requestBody": {
+     "required": false,
+     "content": {
+      "application/json": {
+       "schema": {
+        "type": "object"
+       }
+      }
+     }
+    },
+    "x-csrf": true
+   }
+  },
+  "/boxes/{id}": {
+   "patch": {
+    "summary": "Rename, recolour or change the connection of a box (administrators)",
+    "tags": [
+     "boxes"
+    ],
+    "operationId": "PATCH_boxes_id",
+    "x-box": "global",
+    "parameters": [
+     {
+      "name": "id",
+      "in": "path",
+      "required": true,
+      "schema": {
+       "type": "string"
+      }
+     }
+    ],
+    "responses": {
+     "200": {
+      "description": "OK"
+     },
+     "default": {
+      "$ref": "#/components/responses/Error"
+     }
+    },
+    "requestBody": {
+     "required": false,
+     "content": {
+      "application/json": {
+       "schema": {
+        "type": "object"
+       }
+      }
+     }
+    },
+    "x-csrf": true
+   }
+  },
+  "/boxes/{id}/remove/plan": {
+   "post": {
+    "summary": "Preview removing a box and its data (administrators)",
+    "tags": [
+     "boxes"
+    ],
+    "operationId": "POST_boxes_id_remove_plan",
+    "x-box": "global",
+    "parameters": [
+     {
+      "name": "id",
+      "in": "path",
+      "required": true,
+      "schema": {
+       "type": "string"
+      }
+     }
+    ],
+    "description": "Changes nothing. Returns a plan to show to the user; apply it with `POST /plans/{id}/apply`.",
+    "responses": {
+     "200": {
+      "description": "The plan",
+      "content": {
+       "application/json": {
+        "schema": {
+         "$ref": "#/components/schemas/PlanResponse"
+        }
+       }
+      }
+     },
+     "default": {
+      "$ref": "#/components/responses/Error"
+     }
+    },
+    "requestBody": {
+     "required": true,
+     "content": {
+      "application/json": {
+       "schema": {
+        "type": "object"
+       }
+      }
+     }
+    },
+    "x-csrf": true
+   }
+  },
+  "/changes": {
+   "get": {
+    "summary": "Read changes",
+    "tags": [
+     "changes"
+    ],
+    "operationId": "GET_changes",
+    "x-box": "global",
+    "responses": {
+     "200": {
+      "description": "OK"
+     },
+     "default": {
+      "$ref": "#/components/responses/Error"
+     }
+    }
+   }
+  },
+  "/channels/all": {
+   "get": {
+    "summary": "Read channels all",
+    "tags": [
+     "channels"
+    ],
+    "operationId": "GET_channels_all",
+    "parameters": [
+     {
+      "$ref": "#/components/parameters/Box"
+     }
+    ],
+    "responses": {
+     "200": {
+      "description": "OK"
+     },
+     "default": {
+      "$ref": "#/components/responses/Error"
+     }
+    }
+   }
+  },
+  "/channels/backups": {
+   "get": {
+    "summary": "Read channels backups",
+    "tags": [
+     "channels"
+    ],
+    "operationId": "GET_channels_backups",
+    "parameters": [
+     {
+      "$ref": "#/components/parameters/Box"
+     }
+    ],
+    "responses": {
+     "200": {
+      "description": "OK"
+     },
+     "default": {
+      "$ref": "#/components/responses/Error"
+     }
+    }
+   }
+  },
+  "/channels/backups/restore/plan": {
+   "post": {
+    "summary": "Preview: channels backups restore",
+    "tags": [
+     "channels"
+    ],
+    "operationId": "POST_channels_backups_restore_plan",
+    "parameters": [
+     {
+      "$ref": "#/components/parameters/Box"
+     }
+    ],
+    "description": "Changes nothing. Returns a plan to show to the user; apply it with `POST /plans/{id}/apply`.",
+    "responses": {
+     "200": {
+      "description": "The plan",
+      "content": {
+       "application/json": {
+        "schema": {
+         "$ref": "#/components/schemas/PlanResponse"
+        }
+       }
+      }
+     },
+     "default": {
+      "$ref": "#/components/responses/Error"
+     }
+    },
+    "requestBody": {
+     "required": true,
+     "content": {
+      "application/json": {
+       "schema": {
+        "type": "object"
+       }
+      }
+     }
+    },
+    "x-csrf": true
+   }
+  },
+  "/channels/bouquet": {
+   "get": {
+    "summary": "Read channels bouquet",
+    "tags": [
+     "channels"
+    ],
+    "operationId": "GET_channels_bouquet",
+    "parameters": [
+     {
+      "$ref": "#/components/parameters/Box"
+     }
+    ],
+    "responses": {
+     "200": {
+      "description": "OK"
+     },
+     "default": {
+      "$ref": "#/components/responses/Error"
+     }
+    }
+   }
+  },
+  "/channels/bouquet/plan": {
+   "post": {
+    "summary": "Preview: channels bouquet",
+    "tags": [
+     "channels"
+    ],
+    "operationId": "POST_channels_bouquet_plan",
+    "parameters": [
+     {
+      "$ref": "#/components/parameters/Box"
+     }
+    ],
+    "description": "Changes nothing. Returns a plan to show to the user; apply it with `POST /plans/{id}/apply`.",
+    "responses": {
+     "200": {
+      "description": "The plan",
+      "content": {
+       "application/json": {
+        "schema": {
+         "$ref": "#/components/schemas/PlanResponse"
+        }
+       }
+      }
+     },
+     "default": {
+      "$ref": "#/components/responses/Error"
+     }
+    },
+    "requestBody": {
+     "required": true,
+     "content": {
+      "application/json": {
+       "schema": {
+        "type": "object"
+       }
+      }
+     }
+    },
+    "x-csrf": true
+   }
+  },
+  "/channels/bouquets": {
+   "get": {
+    "summary": "Read channels bouquets",
+    "tags": [
+     "channels"
+    ],
+    "operationId": "GET_channels_bouquets",
+    "parameters": [
+     {
+      "$ref": "#/components/parameters/Box"
+     }
+    ],
+    "responses": {
+     "200": {
+      "description": "OK"
+     },
+     "default": {
+      "$ref": "#/components/responses/Error"
+     }
+    }
+   }
+  },
+  "/channels/bouquets/plan": {
+   "post": {
+    "summary": "Preview: channels bouquets",
+    "tags": [
+     "channels"
+    ],
+    "operationId": "POST_channels_bouquets_plan",
+    "parameters": [
+     {
+      "$ref": "#/components/parameters/Box"
+     }
+    ],
+    "description": "Changes nothing. Returns a plan to show to the user; apply it with `POST /plans/{id}/apply`.",
+    "responses": {
+     "200": {
+      "description": "The plan",
+      "content": {
+       "application/json": {
+        "schema": {
+         "$ref": "#/components/schemas/PlanResponse"
+        }
+       }
+      }
+     },
+     "default": {
+      "$ref": "#/components/responses/Error"
+     }
+    },
+    "requestBody": {
+     "required": true,
+     "content": {
+      "application/json": {
+       "schema": {
+        "type": "object"
+       }
+      }
+     }
+    },
+    "x-csrf": true
+   }
+  },
+  "/channels/check": {
+   "get": {
+    "summary": "Read channels check",
+    "tags": [
+     "channels"
+    ],
+    "operationId": "GET_channels_check",
+    "parameters": [
+     {
+      "$ref": "#/components/parameters/Box"
+     }
+    ],
+    "responses": {
+     "200": {
+      "description": "OK"
+     },
+     "default": {
+      "$ref": "#/components/responses/Error"
+     }
+    }
+   }
+  },
+  "/channels/logo": {
+   "delete": {
+    "summary": "Delete channels logo",
+    "tags": [
+     "channels"
+    ],
+    "operationId": "DELETE_channels_logo",
+    "parameters": [
+     {
+      "$ref": "#/components/parameters/Box"
+     }
+    ],
+    "responses": {
+     "200": {
+      "description": "OK"
+     },
+     "default": {
+      "$ref": "#/components/responses/Error"
+     }
+    },
+    "x-csrf": true
+   },
+   "put": {
+    "summary": "Replace channels logo",
+    "tags": [
+     "channels"
+    ],
+    "operationId": "PUT_channels_logo",
+    "parameters": [
+     {
+      "$ref": "#/components/parameters/Box"
+     }
+    ],
+    "responses": {
+     "200": {
+      "description": "OK"
+     },
+     "default": {
+      "$ref": "#/components/responses/Error"
+     }
+    },
+    "requestBody": {
+     "required": false,
+     "content": {
+      "application/json": {
+       "schema": {
+        "type": "object"
+       }
+      }
+     }
+    },
+    "x-csrf": true
+   }
+  },
+  "/channels/logo/custom": {
+   "get": {
+    "summary": "Read channels logo custom",
+    "tags": [
+     "channels"
+    ],
+    "operationId": "GET_channels_logo_custom",
+    "parameters": [
+     {
+      "$ref": "#/components/parameters/Box"
+     }
+    ],
+    "responses": {
+     "200": {
+      "description": "OK"
+     },
+     "default": {
+      "$ref": "#/components/responses/Error"
+     }
+    }
+   }
+  },
+  "/channels/logo/online": {
+   "post": {
+    "summary": "Run channels logo online",
+    "tags": [
+     "channels"
+    ],
+    "operationId": "POST_channels_logo_online",
+    "parameters": [
+     {
+      "$ref": "#/components/parameters/Box"
+     }
+    ],
+    "responses": {
+     "200": {
+      "description": "OK"
+     },
+     "default": {
+      "$ref": "#/components/responses/Error"
+     }
+    },
+    "requestBody": {
+     "required": false,
+     "content": {
+      "application/json": {
+       "schema": {
+        "type": "object"
+       }
+      }
+     }
+    },
+    "x-csrf": true
+   }
+  },
+  "/channels/logo/preview": {
+   "get": {
+    "summary": "Read channels logo preview",
+    "tags": [
+     "channels"
+    ],
+    "operationId": "GET_channels_logo_preview",
+    "parameters": [
+     {
+      "$ref": "#/components/parameters/Box"
+     }
+    ],
+    "responses": {
+     "200": {
+      "description": "OK"
+     },
+     "default": {
+      "$ref": "#/components/responses/Error"
+     }
+    }
+   }
+  },
+  "/channels/logo/search": {
+   "get": {
+    "summary": "Read channels logo search",
+    "tags": [
+     "channels"
+    ],
+    "operationId": "GET_channels_logo_search",
+    "parameters": [
+     {
+      "$ref": "#/components/parameters/Box"
+     }
+    ],
+    "responses": {
+     "200": {
+      "description": "OK"
+     },
+     "default": {
+      "$ref": "#/components/responses/Error"
+     }
+    }
+   }
+  },
+  "/channels/logo/sets": {
+   "get": {
+    "summary": "Read channels logo sets",
+    "tags": [
+     "channels"
+    ],
+    "operationId": "GET_channels_logo_sets",
+    "parameters": [
+     {
+      "$ref": "#/components/parameters/Box"
+     }
+    ],
+    "responses": {
+     "200": {
+      "description": "OK"
+     },
+     "default": {
+      "$ref": "#/components/responses/Error"
+     }
+    }
+   }
+  },
+  "/channels/logo/upload": {
+   "post": {
+    "summary": "Run channels logo upload",
+    "tags": [
+     "channels"
+    ],
+    "operationId": "POST_channels_logo_upload",
+    "parameters": [
+     {
+      "$ref": "#/components/parameters/Box"
+     }
+    ],
+    "responses": {
+     "200": {
+      "description": "OK"
+     },
+     "default": {
+      "$ref": "#/components/responses/Error"
+     }
+    },
+    "requestBody": {
+     "required": false,
+     "content": {
+      "application/json": {
+       "schema": {
+        "type": "object"
+       }
+      }
+     }
+    },
+    "x-csrf": true
+   }
+  },
+  "/channels/picon": {
+   "get": {
+    "summary": "Read channels picon",
+    "tags": [
+     "channels"
+    ],
+    "operationId": "GET_channels_picon",
+    "parameters": [
+     {
+      "$ref": "#/components/parameters/Box"
+     }
+    ],
+    "responses": {
+     "200": {
+      "description": "OK"
+     },
+     "default": {
+      "$ref": "#/components/responses/Error"
+     }
+    }
+   }
+  },
+  "/channels/picons": {
+   "get": {
+    "summary": "Read channels picons",
+    "tags": [
+     "channels"
+    ],
+    "operationId": "GET_channels_picons",
+    "parameters": [
+     {
+      "$ref": "#/components/parameters/Box"
+     }
+    ],
+    "responses": {
+     "200": {
+      "description": "OK"
+     },
+     "default": {
+      "$ref": "#/components/responses/Error"
+     }
+    }
+   },
+   "put": {
+    "summary": "Replace channels picons",
+    "tags": [
+     "channels"
+    ],
+    "operationId": "PUT_channels_picons",
+    "parameters": [
+     {
+      "$ref": "#/components/parameters/Box"
+     }
+    ],
+    "responses": {
+     "200": {
+      "description": "OK"
+     },
+     "default": {
+      "$ref": "#/components/responses/Error"
+     }
+    },
+    "requestBody": {
+     "required": false,
+     "content": {
+      "application/json": {
+       "schema": {
+        "type": "object"
+       }
+      }
+     }
+    },
+    "x-csrf": true
+   }
+  },
+  "/connectors": {
+   "get": {
+    "summary": "Connector reports (WebControl, Plex, TMDB, …) for this box",
+    "tags": [
+     "connectors"
+    ],
+    "operationId": "GET_connectors",
+    "parameters": [
+     {
+      "$ref": "#/components/parameters/Box"
+     }
+    ],
+    "responses": {
+     "200": {
+      "description": "OK"
+     },
+     "default": {
+      "$ref": "#/components/responses/Error"
+     }
+    }
+   }
+  },
+  "/control/current": {
+   "get": {
+    "summary": "What the box is showing right now, volume and standby state",
+    "tags": [
+     "control"
+    ],
+    "operationId": "GET_control_current",
+    "parameters": [
+     {
+      "$ref": "#/components/parameters/Box"
+     }
+    ],
+    "responses": {
+     "200": {
+      "description": "OK",
+      "content": {
+       "application/json": {
+        "schema": {
+         "$ref": "#/components/schemas/CurrentService"
+        }
+       }
+      }
+     },
+     "default": {
+      "$ref": "#/components/responses/Error"
+     }
+    }
+   }
+  },
+  "/control/key": {
+   "post": {
+    "summary": "Send a remote-control key",
+    "tags": [
+     "control"
+    ],
+    "operationId": "POST_control_key",
+    "parameters": [
+     {
+      "$ref": "#/components/parameters/Box"
+     }
+    ],
+    "responses": {
+     "200": {
+      "description": "OK"
+     },
+     "default": {
+      "$ref": "#/components/responses/Error"
+     }
+    },
+    "requestBody": {
+     "required": false,
+     "content": {
+      "application/json": {
+       "schema": {
+        "type": "object"
+       }
+      }
+     }
+    },
+    "x-csrf": true
+   }
+  },
+  "/control/message": {
+   "post": {
+    "summary": "Show a message on the box's TV",
+    "tags": [
+     "control"
+    ],
+    "operationId": "POST_control_message",
+    "parameters": [
+     {
+      "$ref": "#/components/parameters/Box"
+     }
+    ],
+    "responses": {
+     "200": {
+      "description": "OK"
+     },
+     "default": {
+      "$ref": "#/components/responses/Error"
+     }
+    },
+    "requestBody": {
+     "required": false,
+     "content": {
+      "application/json": {
+       "schema": {
+        "type": "object"
+       }
+      }
+     }
+    },
+    "x-csrf": true
+   }
+  },
+  "/control/power": {
+   "get": {
+    "summary": "Power state of the box",
+    "tags": [
+     "control"
+    ],
+    "operationId": "GET_control_power",
+    "parameters": [
+     {
+      "$ref": "#/components/parameters/Box"
+     }
+    ],
+    "responses": {
+     "200": {
+      "description": "OK"
+     },
+     "default": {
+      "$ref": "#/components/responses/Error"
+     }
+    }
+   }
+  },
+  "/control/screenshot": {
+   "get": {
+    "summary": "A screenshot of the box's output (image)",
+    "tags": [
+     "control"
+    ],
+    "operationId": "GET_control_screenshot",
+    "parameters": [
+     {
+      "$ref": "#/components/parameters/Box"
+     }
+    ],
+    "responses": {
+     "200": {
+      "description": "OK"
+     },
+     "default": {
+      "$ref": "#/components/responses/Error"
+     }
+    }
+   }
+  },
+  "/control/zap": {
+   "post": {
+    "summary": "Switch the box to a channel",
+    "tags": [
+     "control"
+    ],
+    "operationId": "POST_control_zap",
+    "parameters": [
+     {
+      "$ref": "#/components/parameters/Box"
+     }
+    ],
+    "responses": {
+     "200": {
+      "description": "OK",
+      "content": {
+       "application/json": {
+        "schema": {
+         "type": "object",
+         "properties": {
+          "zapped": {
+           "type": "string"
+          }
+         }
+        }
+       }
+      }
+     },
+     "default": {
+      "$ref": "#/components/responses/Error"
+     }
+    },
+    "requestBody": {
+     "required": true,
+     "content": {
+      "application/json": {
+       "schema": {
+        "type": "object",
+        "required": [
+         "serviceReference"
+        ],
+        "properties": {
+         "serviceReference": {
+          "type": "string",
+          "description": "Take it from the guide or the channel list; references differ per box"
+         }
+        }
+       }
+      }
+     }
+    },
+    "x-csrf": true
+   }
+  },
+  "/dashboard": {
+   "delete": {
+    "summary": "Delete dashboard",
+    "tags": [
+     "dashboard"
+    ],
+    "operationId": "DELETE_dashboard",
+    "x-box": "global",
+    "responses": {
+     "200": {
+      "description": "OK"
+     },
+     "default": {
+      "$ref": "#/components/responses/Error"
+     }
+    },
+    "x-csrf": true
+   },
+   "get": {
+    "summary": "Read dashboard",
+    "tags": [
+     "dashboard"
+    ],
+    "operationId": "GET_dashboard",
+    "x-box": "global",
+    "responses": {
+     "200": {
+      "description": "OK"
+     },
+     "default": {
+      "$ref": "#/components/responses/Error"
+     }
+    }
+   },
+   "put": {
+    "summary": "Replace dashboard",
+    "tags": [
+     "dashboard"
+    ],
+    "operationId": "PUT_dashboard",
+    "x-box": "global",
+    "responses": {
+     "200": {
+      "description": "OK"
+     },
+     "default": {
+      "$ref": "#/components/responses/Error"
+     }
+    },
+    "requestBody": {
+     "required": false,
+     "content": {
+      "application/json": {
+       "schema": {
+        "type": "object"
+       }
+      }
+     }
+    },
+    "x-csrf": true
+   }
+  },
+  "/dashboard/sources": {
+   "get": {
+    "summary": "Read dashboard sources",
+    "tags": [
+     "dashboard"
+    ],
+    "operationId": "GET_dashboard_sources",
+    "parameters": [
+     {
+      "$ref": "#/components/parameters/Box"
+     }
+    ],
+    "responses": {
+     "200": {
+      "description": "OK"
+     },
+     "default": {
+      "$ref": "#/components/responses/Error"
+     }
+    }
+   }
+  },
+  "/dashboard/template": {
+   "get": {
+    "summary": "Read dashboard template",
+    "tags": [
+     "dashboard"
+    ],
+    "operationId": "GET_dashboard_template",
+    "x-box": "global",
+    "responses": {
+     "200": {
+      "description": "OK"
+     },
+     "default": {
+      "$ref": "#/components/responses/Error"
+     }
+    }
+   },
+   "put": {
+    "summary": "Replace dashboard template",
+    "tags": [
+     "dashboard"
+    ],
+    "operationId": "PUT_dashboard_template",
+    "x-box": "global",
+    "responses": {
+     "200": {
+      "description": "OK"
+     },
+     "default": {
+      "$ref": "#/components/responses/Error"
+     }
+    },
+    "requestBody": {
+     "required": false,
+     "content": {
+      "application/json": {
+       "schema": {
+        "type": "object"
+       }
+      }
+     }
+    },
+    "x-csrf": true
+   }
+  },
+  "/dashboard/view": {
+   "post": {
+    "summary": "Run dashboard view",
+    "tags": [
+     "dashboard"
+    ],
+    "operationId": "POST_dashboard_view",
+    "parameters": [
+     {
+      "$ref": "#/components/parameters/Box"
+     }
+    ],
+    "responses": {
+     "200": {
+      "description": "OK"
+     },
+     "default": {
+      "$ref": "#/components/responses/Error"
+     }
+    },
+    "requestBody": {
+     "required": false,
+     "content": {
+      "application/json": {
+       "schema": {
+        "type": "object"
+       }
+      }
+     }
+    },
+    "x-csrf": true
+   }
+  },
+  "/deviceinfo": {
+   "get": {
+    "summary": "Versions, tuners and disks of the box",
+    "tags": [
+     "deviceinfo"
+    ],
+    "operationId": "GET_deviceinfo",
+    "parameters": [
+     {
+      "$ref": "#/components/parameters/Box"
+     }
+    ],
+    "responses": {
+     "200": {
+      "description": "OK",
+      "content": {
+       "application/json": {
+        "schema": {
+         "$ref": "#/components/schemas/DeviceInfo"
+        }
+       }
+      }
+     },
+     "default": {
+      "$ref": "#/components/responses/Error"
+     }
+    }
+   }
+  },
+  "/discovery/recommendations": {
+   "get": {
+    "summary": "Read discovery recommendations",
+    "tags": [
+     "discovery"
+    ],
+    "operationId": "GET_discovery_recommendations",
+    "parameters": [
+     {
+      "$ref": "#/components/parameters/Box"
+     }
+    ],
+    "responses": {
+     "200": {
+      "description": "OK"
+     },
+     "default": {
+      "$ref": "#/components/responses/Error"
+     }
+    }
+   },
+   "post": {
+    "summary": "Run discovery recommendations",
+    "tags": [
+     "discovery"
+    ],
+    "operationId": "POST_discovery_recommendations",
+    "parameters": [
+     {
+      "$ref": "#/components/parameters/Box"
+     }
+    ],
+    "responses": {
+     "200": {
+      "description": "OK"
+     },
+     "default": {
+      "$ref": "#/components/responses/Error"
+     }
+    },
+    "requestBody": {
+     "required": false,
+     "content": {
+      "application/json": {
+       "schema": {
+        "type": "object"
+       }
+      }
+     }
+    },
+    "x-csrf": true
+   }
+  },
+  "/discovery/status": {
+   "get": {
+    "summary": "Read discovery status",
+    "tags": [
+     "discovery"
+    ],
+    "operationId": "GET_discovery_status",
+    "parameters": [
+     {
+      "$ref": "#/components/parameters/Box"
+     }
+    ],
+    "responses": {
+     "200": {
+      "description": "OK"
+     },
+     "default": {
+      "$ref": "#/components/responses/Error"
+     }
+    }
+   }
+  },
+  "/discovery/taste": {
+   "get": {
+    "summary": "Read discovery taste",
+    "tags": [
+     "discovery"
+    ],
+    "operationId": "GET_discovery_taste",
+    "x-box": "global",
+    "responses": {
+     "200": {
+      "description": "OK"
+     },
+     "default": {
+      "$ref": "#/components/responses/Error"
+     }
+    }
+   }
+  },
+  "/enrich/extras": {
+   "get": {
+    "summary": "Read enrich extras",
+    "tags": [
+     "enrich"
+    ],
+    "operationId": "GET_enrich_extras",
+    "x-box": "global",
+    "responses": {
+     "200": {
+      "description": "OK"
+     },
+     "default": {
+      "$ref": "#/components/responses/Error"
+     }
+    }
+   }
+  },
+  "/enrich/image/{size}/{file}": {
+   "get": {
+    "summary": "Read enrich image",
+    "tags": [
+     "enrich"
+    ],
+    "operationId": "GET_enrich_image_size_file",
+    "x-box": "global",
+    "parameters": [
+     {
+      "name": "size",
+      "in": "path",
+      "required": true,
+      "schema": {
+       "type": "string"
+      }
+     },
+     {
+      "name": "file",
+      "in": "path",
+      "required": true,
+      "schema": {
+       "type": "string"
+      }
+     }
+    ],
+    "responses": {
+     "200": {
+      "description": "OK"
+     },
+     "default": {
+      "$ref": "#/components/responses/Error"
+     }
+    }
+   }
+  },
+  "/enrich/logo": {
+   "get": {
+    "summary": "Read enrich logo",
+    "tags": [
+     "enrich"
+    ],
+    "operationId": "GET_enrich_logo",
+    "x-box": "global",
+    "responses": {
+     "200": {
+      "description": "OK"
+     },
+     "default": {
+      "$ref": "#/components/responses/Error"
+     }
+    }
+   }
+  },
+  "/enrich/lookup": {
+   "post": {
+    "summary": "Run enrich lookup",
+    "tags": [
+     "enrich"
+    ],
+    "operationId": "POST_enrich_lookup",
+    "x-box": "global",
+    "responses": {
+     "200": {
+      "description": "OK"
+     },
+     "default": {
+      "$ref": "#/components/responses/Error"
+     }
+    },
+    "requestBody": {
+     "required": false,
+     "content": {
+      "application/json": {
+       "schema": {
+        "type": "object"
+       }
+      }
+     }
+    },
+    "x-csrf": true
+   }
+  },
+  "/events/stream": {
+   "get": {
+    "summary": "Server-sent events: notifications, recording state, box reachability",
+    "tags": [
+     "events"
+    ],
+    "operationId": "GET_events_stream",
+    "parameters": [
+     {
+      "$ref": "#/components/parameters/Box"
+     }
+    ],
+    "responses": {
+     "200": {
+      "description": "OK"
+     },
+     "default": {
+      "$ref": "#/components/responses/Error"
+     }
+    }
+   }
+  },
+  "/extensions": {
+   "get": {
+    "summary": "Read extensions",
+    "tags": [
+     "extensions"
+    ],
+    "operationId": "GET_extensions",
+    "x-box": "global",
+    "responses": {
+     "200": {
+      "description": "OK"
+     },
+     "default": {
+      "$ref": "#/components/responses/Error"
+     }
+    }
+   }
+  },
+  "/extensions/{id}/actions/{action}/plan": {
+   "post": {
+    "summary": "Preview: extensions actions",
+    "tags": [
+     "extensions"
+    ],
+    "operationId": "POST_extensions_id_actions_action_plan",
+    "parameters": [
+     {
+      "$ref": "#/components/parameters/Box"
+     },
+     {
+      "name": "id",
+      "in": "path",
+      "required": true,
+      "schema": {
+       "type": "string"
+      }
+     },
+     {
+      "name": "action",
+      "in": "path",
+      "required": true,
+      "schema": {
+       "type": "string"
+      }
+     }
+    ],
+    "description": "Changes nothing. Returns a plan to show to the user; apply it with `POST /plans/{id}/apply`.",
+    "responses": {
+     "200": {
+      "description": "The plan",
+      "content": {
+       "application/json": {
+        "schema": {
+         "$ref": "#/components/schemas/PlanResponse"
+        }
+       }
+      }
+     },
+     "default": {
+      "$ref": "#/components/responses/Error"
+     }
+    },
+    "requestBody": {
+     "required": true,
+     "content": {
+      "application/json": {
+       "schema": {
+        "type": "object"
+       }
+      }
+     }
+    },
+    "x-csrf": true
+   }
+  },
+  "/extensions/{id}/settings": {
+   "get": {
+    "summary": "Read extensions settings",
+    "tags": [
+     "extensions"
+    ],
+    "operationId": "GET_extensions_id_settings",
+    "x-box": "global",
+    "parameters": [
+     {
+      "name": "id",
+      "in": "path",
+      "required": true,
+      "schema": {
+       "type": "string"
+      }
+     }
+    ],
+    "responses": {
+     "200": {
+      "description": "OK"
+     },
+     "default": {
+      "$ref": "#/components/responses/Error"
+     }
+    }
+   },
+   "put": {
+    "summary": "Replace extensions settings",
+    "tags": [
+     "extensions"
+    ],
+    "operationId": "PUT_extensions_id_settings",
+    "x-box": "global",
+    "parameters": [
+     {
+      "name": "id",
+      "in": "path",
+      "required": true,
+      "schema": {
+       "type": "string"
+      }
+     }
+    ],
+    "responses": {
+     "200": {
+      "description": "OK"
+     },
+     "default": {
+      "$ref": "#/components/responses/Error"
+     }
+    },
+    "requestBody": {
+     "required": false,
+     "content": {
+      "application/json": {
+       "schema": {
+        "type": "object"
+       }
+      }
+     }
+    },
+    "x-csrf": true
+   }
+  },
+  "/guide/bouquets": {
+   "get": {
+    "summary": "Bouquets for the guide",
+    "tags": [
+     "guide"
+    ],
+    "operationId": "GET_guide_bouquets",
+    "parameters": [
+     {
+      "$ref": "#/components/parameters/Box"
+     }
+    ],
+    "responses": {
+     "200": {
+      "description": "OK"
+     },
+     "default": {
+      "$ref": "#/components/responses/Error"
+     }
+    }
+   }
+  },
+  "/guide/grid": {
+   "get": {
+    "summary": "Programme grid of a bouquet for a time window",
+    "tags": [
+     "guide"
+    ],
+    "operationId": "GET_guide_grid",
+    "parameters": [
+     {
+      "$ref": "#/components/parameters/Box"
+     }
+    ],
+    "responses": {
+     "200": {
+      "description": "OK"
+     },
+     "default": {
+      "$ref": "#/components/responses/Error"
+     }
+    }
+   }
+  },
+  "/guide/nownext": {
+   "get": {
+    "summary": "Now and next of a bouquet's channels",
+    "tags": [
+     "guide"
+    ],
+    "operationId": "GET_guide_nownext",
+    "parameters": [
+     {
+      "$ref": "#/components/parameters/Box"
+     }
+    ],
+    "responses": {
+     "200": {
+      "description": "OK",
+      "content": {
+       "application/json": {
+        "schema": {
+         "type": "object",
+         "properties": {
+          "channels": {
+           "type": "array",
+           "items": {
+            "$ref": "#/components/schemas/NowNext"
+           }
+          }
+         }
+        }
+       }
+      }
+     },
+     "default": {
+      "$ref": "#/components/responses/Error"
+     }
+    }
+   }
+  },
+  "/guide/picon": {
+   "get": {
+    "summary": "Read guide picon",
+    "tags": [
+     "guide"
+    ],
+    "operationId": "GET_guide_picon",
+    "parameters": [
+     {
+      "$ref": "#/components/parameters/Box"
+     }
+    ],
+    "responses": {
+     "200": {
+      "description": "OK"
+     },
+     "default": {
+      "$ref": "#/components/responses/Error"
+     }
+    }
+   }
+  },
+  "/health": {
+   "get": {
+    "summary": "Version and liveness; needs no login",
+    "tags": [
+     "health"
+    ],
+    "operationId": "GET_health",
+    "x-box": "global",
+    "security": [],
+    "responses": {
+     "200": {
+      "description": "OK"
+     },
+     "default": {
+      "$ref": "#/components/responses/Error"
+     }
+    }
+   }
+  },
+  "/hubs": {
+   "get": {
+    "summary": "Every hub with its status on this box",
+    "tags": [
+     "hubs"
+    ],
+    "operationId": "GET_hubs",
+    "parameters": [
+     {
+      "$ref": "#/components/parameters/Box"
+     }
+    ],
+    "responses": {
+     "200": {
+      "description": "OK"
+     },
+     "default": {
+      "$ref": "#/components/responses/Error"
+     }
+    }
+   }
+  },
+  "/jobs": {
+   "get": {
+    "summary": "Background jobs",
+    "tags": [
+     "jobs"
+    ],
+    "operationId": "GET_jobs",
+    "parameters": [
+     {
+      "$ref": "#/components/parameters/Box"
+     }
+    ],
+    "responses": {
+     "200": {
+      "description": "OK"
+     },
+     "default": {
+      "$ref": "#/components/responses/Error"
+     }
+    }
+   }
+  },
+  "/jobs/{id}": {
+   "get": {
+    "summary": "Read jobs",
+    "tags": [
+     "jobs"
+    ],
+    "operationId": "GET_jobs_id",
+    "parameters": [
+     {
+      "$ref": "#/components/parameters/Box"
+     },
+     {
+      "name": "id",
+      "in": "path",
+      "required": true,
+      "schema": {
+       "type": "string"
+      }
+     }
+    ],
+    "responses": {
+     "200": {
+      "description": "OK"
+     },
+     "default": {
+      "$ref": "#/components/responses/Error"
+     }
+    }
+   }
+  },
+  "/jobs/{id}/cancel": {
+   "post": {
+    "summary": "Run jobs cancel",
+    "tags": [
+     "jobs"
+    ],
+    "operationId": "POST_jobs_id_cancel",
+    "parameters": [
+     {
+      "$ref": "#/components/parameters/Box"
+     },
+     {
+      "name": "id",
+      "in": "path",
+      "required": true,
+      "schema": {
+       "type": "string"
+      }
+     }
+    ],
+    "responses": {
+     "200": {
+      "description": "OK"
+     },
+     "default": {
+      "$ref": "#/components/responses/Error"
+     }
+    },
+    "requestBody": {
+     "required": false,
+     "content": {
+      "application/json": {
+       "schema": {
+        "type": "object"
+       }
+      }
+     }
+    },
+    "x-csrf": true
+   }
+  },
+  "/media/adscan": {
+   "get": {
+    "summary": "Read media adscan",
+    "tags": [
+     "media"
+    ],
+    "operationId": "GET_media_adscan",
+    "parameters": [
+     {
+      "$ref": "#/components/parameters/Box"
+     }
+    ],
+    "responses": {
+     "200": {
+      "description": "OK"
+     },
+     "default": {
+      "$ref": "#/components/responses/Error"
+     }
+    }
+   },
+   "post": {
+    "summary": "Run media adscan",
+    "tags": [
+     "media"
+    ],
+    "operationId": "POST_media_adscan",
+    "parameters": [
+     {
+      "$ref": "#/components/parameters/Box"
+     }
+    ],
+    "responses": {
+     "200": {
+      "description": "OK"
+     },
+     "default": {
+      "$ref": "#/components/responses/Error"
+     }
+    },
+    "requestBody": {
+     "required": false,
+     "content": {
+      "application/json": {
+       "schema": {
+        "type": "object"
+       }
+      }
+     }
+    },
+    "x-csrf": true
+   }
+  },
+  "/media/adscan/mark/plan": {
+   "post": {
+    "summary": "Preview: media adscan mark",
+    "tags": [
+     "media"
+    ],
+    "operationId": "POST_media_adscan_mark_plan",
+    "parameters": [
+     {
+      "$ref": "#/components/parameters/Box"
+     }
+    ],
+    "description": "Changes nothing. Returns a plan to show to the user; apply it with `POST /plans/{id}/apply`.",
+    "responses": {
+     "200": {
+      "description": "The plan",
+      "content": {
+       "application/json": {
+        "schema": {
+         "$ref": "#/components/schemas/PlanResponse"
+        }
+       }
+      }
+     },
+     "default": {
+      "$ref": "#/components/responses/Error"
+     }
+    },
+    "requestBody": {
+     "required": true,
+     "content": {
+      "application/json": {
+       "schema": {
+        "type": "object"
+       }
+      }
+     }
+    },
+    "x-csrf": true
+   }
+  },
+  "/media/cover": {
+   "get": {
+    "summary": "Read media cover",
+    "tags": [
+     "media"
+    ],
+    "operationId": "GET_media_cover",
+    "parameters": [
+     {
+      "$ref": "#/components/parameters/Box"
+     }
+    ],
+    "responses": {
+     "200": {
+      "description": "OK"
+     },
+     "default": {
+      "$ref": "#/components/responses/Error"
+     }
+    }
+   }
+  },
+  "/media/covers/plan": {
+   "post": {
+    "summary": "Preview: media covers",
+    "tags": [
+     "media"
+    ],
+    "operationId": "POST_media_covers_plan",
+    "parameters": [
+     {
+      "$ref": "#/components/parameters/Box"
+     }
+    ],
+    "description": "Changes nothing. Returns a plan to show to the user; apply it with `POST /plans/{id}/apply`.",
+    "responses": {
+     "200": {
+      "description": "The plan",
+      "content": {
+       "application/json": {
+        "schema": {
+         "$ref": "#/components/schemas/PlanResponse"
+        }
+       }
+      }
+     },
+     "default": {
+      "$ref": "#/components/responses/Error"
+     }
+    },
+    "requestBody": {
+     "required": true,
+     "content": {
+      "application/json": {
+       "schema": {
+        "type": "object"
+       }
+      }
+     }
+    },
+    "x-csrf": true
+   }
+  },
+  "/media/disk": {
+   "get": {
+    "summary": "Disk usage of the recording storage",
+    "tags": [
+     "media"
+    ],
+    "operationId": "GET_media_disk",
+    "parameters": [
+     {
+      "$ref": "#/components/parameters/Box"
+     }
+    ],
+    "responses": {
+     "200": {
+      "description": "OK"
+     },
+     "default": {
+      "$ref": "#/components/responses/Error"
+     }
+    }
+   }
+  },
+  "/media/movies": {
+   "get": {
+    "summary": "Recordings of a folder with their sizes and flags",
+    "tags": [
+     "media"
+    ],
+    "operationId": "GET_media_movies",
+    "parameters": [
+     {
+      "$ref": "#/components/parameters/Box"
+     }
+    ],
+    "responses": {
+     "200": {
+      "description": "OK",
+      "content": {
+       "application/json": {
+        "schema": {
+         "type": "object",
+         "properties": {
+          "dir": {
+           "type": "string"
+          },
+          "root": {
+           "type": "string"
+          },
+          "movies": {
+           "type": "array",
+           "items": {
+            "$ref": "#/components/schemas/Movie"
+           }
+          },
+          "subfolders": {
+           "type": "array",
+           "items": {
+            "type": "object",
+            "properties": {
+             "path": {
+              "type": "string"
+             },
+             "name": {
+              "type": "string"
+             }
+            }
+           }
+          }
+         }
+        }
+       }
+      }
+     },
+     "default": {
+      "$ref": "#/components/responses/Error"
+     }
+    }
+   }
+  },
+  "/media/rename/batch/plan": {
+   "post": {
+    "summary": "Preview: media rename batch",
+    "tags": [
+     "media"
+    ],
+    "operationId": "POST_media_rename_batch_plan",
+    "parameters": [
+     {
+      "$ref": "#/components/parameters/Box"
+     }
+    ],
+    "description": "Changes nothing. Returns a plan to show to the user; apply it with `POST /plans/{id}/apply`.",
+    "responses": {
+     "200": {
+      "description": "The plan",
+      "content": {
+       "application/json": {
+        "schema": {
+         "$ref": "#/components/schemas/PlanResponse"
+        }
+       }
+      }
+     },
+     "default": {
+      "$ref": "#/components/responses/Error"
+     }
+    },
+    "requestBody": {
+     "required": true,
+     "content": {
+      "application/json": {
+       "schema": {
+        "type": "object"
+       }
+      }
+     }
+    },
+    "x-csrf": true
+   }
+  },
+  "/media/rename/plan": {
+   "post": {
+    "summary": "Preview: media rename",
+    "tags": [
+     "media"
+    ],
+    "operationId": "POST_media_rename_plan",
+    "parameters": [
+     {
+      "$ref": "#/components/parameters/Box"
+     }
+    ],
+    "description": "Changes nothing. Returns a plan to show to the user; apply it with `POST /plans/{id}/apply`.",
+    "responses": {
+     "200": {
+      "description": "The plan",
+      "content": {
+       "application/json": {
+        "schema": {
+         "$ref": "#/components/schemas/PlanResponse"
+        }
+       }
+      }
+     },
+     "default": {
+      "$ref": "#/components/responses/Error"
+     }
+    },
+    "requestBody": {
+     "required": true,
+     "content": {
+      "application/json": {
+       "schema": {
+        "type": "object"
+       }
+      }
+     }
+    },
+    "x-csrf": true
+   }
+  },
+  "/media/rename/suggest": {
+   "post": {
+    "summary": "Run media rename suggest",
+    "tags": [
+     "media"
+    ],
+    "operationId": "POST_media_rename_suggest",
+    "parameters": [
+     {
+      "$ref": "#/components/parameters/Box"
+     }
+    ],
+    "responses": {
+     "200": {
+      "description": "OK"
+     },
+     "default": {
+      "$ref": "#/components/responses/Error"
+     }
+    },
+    "requestBody": {
+     "required": false,
+     "content": {
+      "application/json": {
+       "schema": {
+        "type": "object"
+       }
+      }
+     }
+    },
+    "x-csrf": true
+   }
+  },
+  "/media/trash": {
+   "get": {
+    "summary": "Recordings in the trash",
+    "tags": [
+     "media"
+    ],
+    "operationId": "GET_media_trash",
+    "parameters": [
+     {
+      "$ref": "#/components/parameters/Box"
+     }
+    ],
+    "responses": {
+     "200": {
+      "description": "OK"
+     },
+     "default": {
+      "$ref": "#/components/responses/Error"
+     }
+    }
+   }
+  },
+  "/media/trash/empty/plan": {
+   "post": {
+    "summary": "Preview: media trash empty",
+    "tags": [
+     "media"
+    ],
+    "operationId": "POST_media_trash_empty_plan",
+    "parameters": [
+     {
+      "$ref": "#/components/parameters/Box"
+     }
+    ],
+    "description": "Changes nothing. Returns a plan to show to the user; apply it with `POST /plans/{id}/apply`.",
+    "responses": {
+     "200": {
+      "description": "The plan",
+      "content": {
+       "application/json": {
+        "schema": {
+         "$ref": "#/components/schemas/PlanResponse"
+        }
+       }
+      }
+     },
+     "default": {
+      "$ref": "#/components/responses/Error"
+     }
+    },
+    "requestBody": {
+     "required": true,
+     "content": {
+      "application/json": {
+       "schema": {
+        "type": "object"
+       }
+      }
+     }
+    },
+    "x-csrf": true
+   }
+  },
+  "/media/trash/plan": {
+   "post": {
+    "summary": "Preview: media trash",
+    "tags": [
+     "media"
+    ],
+    "operationId": "POST_media_trash_plan",
+    "parameters": [
+     {
+      "$ref": "#/components/parameters/Box"
+     }
+    ],
+    "description": "Changes nothing. Returns a plan to show to the user; apply it with `POST /plans/{id}/apply`.",
+    "responses": {
+     "200": {
+      "description": "The plan",
+      "content": {
+       "application/json": {
+        "schema": {
+         "$ref": "#/components/schemas/PlanResponse"
+        }
+       }
+      }
+     },
+     "default": {
+      "$ref": "#/components/responses/Error"
+     }
+    },
+    "requestBody": {
+     "required": true,
+     "content": {
+      "application/json": {
+       "schema": {
+        "type": "object"
+       }
+      }
+     }
+    },
+    "x-csrf": true
+   }
+  },
+  "/media/trash/restore/plan": {
+   "post": {
+    "summary": "Preview: media trash restore",
+    "tags": [
+     "media"
+    ],
+    "operationId": "POST_media_trash_restore_plan",
+    "parameters": [
+     {
+      "$ref": "#/components/parameters/Box"
+     }
+    ],
+    "description": "Changes nothing. Returns a plan to show to the user; apply it with `POST /plans/{id}/apply`.",
+    "responses": {
+     "200": {
+      "description": "The plan",
+      "content": {
+       "application/json": {
+        "schema": {
+         "$ref": "#/components/schemas/PlanResponse"
+        }
+       }
+      }
+     },
+     "default": {
+      "$ref": "#/components/responses/Error"
+     }
+    },
+    "requestBody": {
+     "required": true,
+     "content": {
+      "application/json": {
+       "schema": {
+        "type": "object"
+       }
+      }
+     }
+    },
+    "x-csrf": true
+   }
+  },
+  "/media/trim/plan": {
+   "post": {
+    "summary": "Preview: media trim",
+    "tags": [
+     "media"
+    ],
+    "operationId": "POST_media_trim_plan",
+    "parameters": [
+     {
+      "$ref": "#/components/parameters/Box"
+     }
+    ],
+    "description": "Changes nothing. Returns a plan to show to the user; apply it with `POST /plans/{id}/apply`.",
+    "responses": {
+     "200": {
+      "description": "The plan",
+      "content": {
+       "application/json": {
+        "schema": {
+         "$ref": "#/components/schemas/PlanResponse"
+        }
+       }
+      }
+     },
+     "default": {
+      "$ref": "#/components/responses/Error"
+     }
+    },
+    "requestBody": {
+     "required": true,
+     "content": {
+      "application/json": {
+       "schema": {
+        "type": "object"
+       }
+      }
+     }
+    },
+    "x-csrf": true
+   }
+  },
+  "/navigation": {
+   "get": {
+    "summary": "The menu for this profile and box, with the box's tier and capabilities",
+    "tags": [
+     "navigation"
+    ],
+    "operationId": "GET_navigation",
+    "parameters": [
+     {
+      "$ref": "#/components/parameters/Box"
+     }
+    ],
+    "responses": {
+     "200": {
+      "description": "OK"
+     },
+     "default": {
+      "$ref": "#/components/responses/Error"
+     }
+    }
+   }
+  },
+  "/notifications": {
+   "get": {
+    "summary": "The notification feed",
+    "tags": [
+     "notifications"
+    ],
+    "operationId": "GET_notifications",
+    "x-box": "global",
+    "responses": {
+     "200": {
+      "description": "OK",
+      "content": {
+       "application/json": {
+        "schema": {
+         "type": "object",
+         "properties": {
+          "unread": {
+           "type": "integer"
+          },
+          "notifications": {
+           "type": "array",
+           "items": {
+            "type": "object"
+           }
+          }
+         }
+        }
+       }
+      }
+     },
+     "default": {
+      "$ref": "#/components/responses/Error"
+     }
+    }
+   }
+  },
+  "/notifications/read": {
+   "post": {
+    "summary": "Run notifications read",
+    "tags": [
+     "notifications"
+    ],
+    "operationId": "POST_notifications_read",
+    "x-box": "global",
+    "responses": {
+     "200": {
+      "description": "OK"
+     },
+     "default": {
+      "$ref": "#/components/responses/Error"
+     }
+    },
+    "requestBody": {
+     "required": false,
+     "content": {
+      "application/json": {
+       "schema": {
+        "type": "object"
+       }
+      }
+     }
+    },
+    "x-csrf": true
+   }
+  },
+  "/openapi.json": {
+   "get": {
+    "summary": "This document",
+    "tags": [
+     "openapi.json"
+    ],
+    "operationId": "GET_openapi_json",
+    "x-box": "global",
+    "responses": {
+     "200": {
+      "description": "The OpenAPI document",
+      "content": {
+       "application/json": {
+        "schema": {
+         "type": "object"
+        }
+       }
+      }
+     },
+     "default": {
+      "$ref": "#/components/responses/Error"
+     }
+    }
+   }
+  },
+  "/plans/{id}/apply": {
+   "post": {
+    "summary": "Apply a previously created plan; acts on the box the plan was made for",
+    "tags": [
+     "plans"
+    ],
+    "operationId": "POST_plans_id_apply",
+    "x-box": "global",
+    "parameters": [
+     {
+      "name": "id",
+      "in": "path",
+      "required": true,
+      "schema": {
+       "type": "string"
+      }
+     }
+    ],
+    "responses": {
+     "200": {
+      "description": "Applied",
+      "content": {
+       "application/json": {
+        "schema": {
+         "type": "object",
+         "properties": {
+          "planId": {
+           "type": "string"
+          },
+          "action": {
+           "type": "string"
+          }
+         }
+        }
+       }
+      }
+     },
+     "default": {
+      "$ref": "#/components/responses/Error"
+     }
+    },
+    "x-csrf": true,
+    "description": "Acts on the box the plan was created for, whatever `box` this request carries. A plan expires after 10 minutes and works once; `409 plan_stale` means the state changed since the preview."
+   }
+  },
+  "/plex/image": {
+   "get": {
+    "summary": "Read plex image",
+    "tags": [
+     "plex"
+    ],
+    "operationId": "GET_plex_image",
+    "x-box": "global",
+    "responses": {
+     "200": {
+      "description": "OK"
+     },
+     "default": {
+      "$ref": "#/components/responses/Error"
+     }
+    }
+   }
+  },
+  "/plex/items/{key}": {
+   "get": {
+    "summary": "Read plex items",
+    "tags": [
+     "plex"
+    ],
+    "operationId": "GET_plex_items_key",
+    "x-box": "global",
+    "parameters": [
+     {
+      "name": "key",
+      "in": "path",
+      "required": true,
+      "schema": {
+       "type": "string"
+      }
+     }
+    ],
+    "responses": {
+     "200": {
+      "description": "OK"
+     },
+     "default": {
+      "$ref": "#/components/responses/Error"
+     }
+    }
+   }
+  },
+  "/plex/items/{key}/play": {
+   "post": {
+    "summary": "Run plex items play",
+    "tags": [
+     "plex"
+    ],
+    "operationId": "POST_plex_items_key_play",
+    "parameters": [
+     {
+      "$ref": "#/components/parameters/Box"
+     },
+     {
+      "name": "key",
+      "in": "path",
+      "required": true,
+      "schema": {
+       "type": "string"
+      }
+     }
+    ],
+    "responses": {
+     "200": {
+      "description": "OK"
+     },
+     "default": {
+      "$ref": "#/components/responses/Error"
+     }
+    },
+    "requestBody": {
+     "required": false,
+     "content": {
+      "application/json": {
+       "schema": {
+        "type": "object"
+       }
+      }
+     }
+    },
+    "x-csrf": true
+   }
+  },
+  "/plex/items/{key}/watched": {
+   "post": {
+    "summary": "Run plex items watched",
+    "tags": [
+     "plex"
+    ],
+    "operationId": "POST_plex_items_key_watched",
+    "x-box": "global",
+    "parameters": [
+     {
+      "name": "key",
+      "in": "path",
+      "required": true,
+      "schema": {
+       "type": "string"
+      }
+     }
+    ],
+    "responses": {
+     "200": {
+      "description": "OK"
+     },
+     "default": {
+      "$ref": "#/components/responses/Error"
+     }
+    },
+    "requestBody": {
+     "required": false,
+     "content": {
+      "application/json": {
+       "schema": {
+        "type": "object"
+       }
+      }
+     }
+    },
+    "x-csrf": true
+   }
+  },
+  "/plex/items/{key}/watched/plan": {
+   "post": {
+    "summary": "Preview: plex items watched",
+    "tags": [
+     "plex"
+    ],
+    "operationId": "POST_plex_items_key_watched_plan",
+    "x-box": "global",
+    "parameters": [
+     {
+      "name": "key",
+      "in": "path",
+      "required": true,
+      "schema": {
+       "type": "string"
+      }
+     }
+    ],
+    "description": "Changes nothing. Returns a plan to show to the user; apply it with `POST /plans/{id}/apply`.",
+    "responses": {
+     "200": {
+      "description": "The plan",
+      "content": {
+       "application/json": {
+        "schema": {
+         "$ref": "#/components/schemas/PlanResponse"
+        }
+       }
+      }
+     },
+     "default": {
+      "$ref": "#/components/responses/Error"
+     }
+    },
+    "requestBody": {
+     "required": true,
+     "content": {
+      "application/json": {
+       "schema": {
+        "type": "object"
+       }
+      }
+     }
+    },
+    "x-csrf": true
+   }
+  },
+  "/plex/libraries": {
+   "get": {
+    "summary": "Read plex libraries",
+    "tags": [
+     "plex"
+    ],
+    "operationId": "GET_plex_libraries",
+    "x-box": "global",
+    "responses": {
+     "200": {
+      "description": "OK"
+     },
+     "default": {
+      "$ref": "#/components/responses/Error"
+     }
+    }
+   },
+   "put": {
+    "summary": "Replace plex libraries",
+    "tags": [
+     "plex"
+    ],
+    "operationId": "PUT_plex_libraries",
+    "x-box": "global",
+    "responses": {
+     "200": {
+      "description": "OK"
+     },
+     "default": {
+      "$ref": "#/components/responses/Error"
+     }
+    },
+    "requestBody": {
+     "required": false,
+     "content": {
+      "application/json": {
+       "schema": {
+        "type": "object"
+       }
+      }
+     }
+    },
+    "x-csrf": true
+   }
+  },
+  "/plex/libraries/{id}/items": {
+   "get": {
+    "summary": "Read plex libraries items",
+    "tags": [
+     "plex"
+    ],
+    "operationId": "GET_plex_libraries_id_items",
+    "x-box": "global",
+    "parameters": [
+     {
+      "name": "id",
+      "in": "path",
+      "required": true,
+      "schema": {
+       "type": "string"
+      }
+     }
+    ],
+    "responses": {
+     "200": {
+      "description": "OK"
+     },
+     "default": {
+      "$ref": "#/components/responses/Error"
+     }
+    }
+   }
+  },
+  "/plex/login": {
+   "post": {
+    "summary": "Run plex login",
+    "tags": [
+     "plex"
+    ],
+    "operationId": "POST_plex_login",
+    "x-box": "global",
+    "responses": {
+     "200": {
+      "description": "OK"
+     },
+     "default": {
+      "$ref": "#/components/responses/Error"
+     }
+    },
+    "requestBody": {
+     "required": false,
+     "content": {
+      "application/json": {
+       "schema": {
+        "type": "object"
+       }
+      }
+     }
+    },
+    "x-csrf": true
+   }
+  },
+  "/plex/login/{id}": {
+   "get": {
+    "summary": "Read plex login",
+    "tags": [
+     "plex"
+    ],
+    "operationId": "GET_plex_login_id",
+    "x-box": "global",
+    "parameters": [
+     {
+      "name": "id",
+      "in": "path",
+      "required": true,
+      "schema": {
+       "type": "string"
+      }
+     }
+    ],
+    "responses": {
+     "200": {
+      "description": "OK"
+     },
+     "default": {
+      "$ref": "#/components/responses/Error"
+     }
+    }
+   }
+  },
+  "/plex/login/{id}/use": {
+   "post": {
+    "summary": "Run plex login use",
+    "tags": [
+     "plex"
+    ],
+    "operationId": "POST_plex_login_id_use",
+    "x-box": "global",
+    "parameters": [
+     {
+      "name": "id",
+      "in": "path",
+      "required": true,
+      "schema": {
+       "type": "string"
+      }
+     }
+    ],
+    "responses": {
+     "200": {
+      "description": "OK"
+     },
+     "default": {
+      "$ref": "#/components/responses/Error"
+     }
+    },
+    "requestBody": {
+     "required": false,
+     "content": {
+      "application/json": {
+       "schema": {
+        "type": "object"
+       }
+      }
+     }
+    },
+    "x-csrf": true
+   }
+  },
+  "/plex/ondeck": {
+   "get": {
+    "summary": "Read plex ondeck",
+    "tags": [
+     "plex"
+    ],
+    "operationId": "GET_plex_ondeck",
+    "x-box": "global",
+    "responses": {
+     "200": {
+      "description": "OK"
+     },
+     "default": {
+      "$ref": "#/components/responses/Error"
+     }
+    }
+   }
+  },
+  "/plex/status": {
+   "get": {
+    "summary": "Read plex status",
+    "tags": [
+     "plex"
+    ],
+    "operationId": "GET_plex_status",
+    "x-box": "global",
+    "responses": {
+     "200": {
+      "description": "OK"
+     },
+     "default": {
+      "$ref": "#/components/responses/Error"
+     }
+    }
+   }
+  },
+  "/plex/sync": {
+   "post": {
+    "summary": "Run plex sync",
+    "tags": [
+     "plex"
+    ],
+    "operationId": "POST_plex_sync",
+    "x-box": "global",
+    "responses": {
+     "200": {
+      "description": "OK"
+     },
+     "default": {
+      "$ref": "#/components/responses/Error"
+     }
+    },
+    "requestBody": {
+     "required": false,
+     "content": {
+      "application/json": {
+       "schema": {
+        "type": "object"
+       }
+      }
+     }
+    },
+    "x-csrf": true
+   }
+  },
+  "/profiles": {
+   "post": {
+    "summary": "Run profiles",
+    "tags": [
+     "profiles"
+    ],
+    "operationId": "POST_profiles",
+    "x-box": "global",
+    "responses": {
+     "200": {
+      "description": "OK"
+     },
+     "default": {
+      "$ref": "#/components/responses/Error"
+     }
+    },
+    "requestBody": {
+     "required": false,
+     "content": {
+      "application/json": {
+       "schema": {
+        "type": "object"
+       }
+      }
+     }
+    },
+    "x-csrf": true
+   },
+   "get": {
+    "summary": "The profiles to pick from (no PIN hashes)",
+    "tags": [
+     "profiles"
+    ],
+    "operationId": "GET_profiles",
+    "x-box": "global",
+    "security": [],
+    "responses": {
+     "200": {
+      "description": "OK"
+     },
+     "default": {
+      "$ref": "#/components/responses/Error"
+     }
+    }
+   }
+  },
+  "/profiles/me/pin": {
+   "put": {
+    "summary": "Replace profiles me pin",
+    "tags": [
+     "profiles"
+    ],
+    "operationId": "PUT_profiles_me_pin",
+    "x-box": "global",
+    "responses": {
+     "200": {
+      "description": "OK"
+     },
+     "default": {
+      "$ref": "#/components/responses/Error"
+     }
+    },
+    "requestBody": {
+     "required": false,
+     "content": {
+      "application/json": {
+       "schema": {
+        "type": "object"
+       }
+      }
+     }
+    },
+    "x-csrf": true
+   }
+  },
+  "/profiles/session": {
+   "delete": {
+    "summary": "End the profile session",
+    "tags": [
+     "profiles"
+    ],
+    "operationId": "DELETE_profiles_session",
+    "x-box": "global",
+    "security": [],
+    "responses": {
+     "200": {
+      "description": "OK"
+     },
+     "default": {
+      "$ref": "#/components/responses/Error"
+     }
+    }
+   }
+  },
+  "/profiles/{id}": {
+   "delete": {
+    "summary": "Delete profiles",
+    "tags": [
+     "profiles"
+    ],
+    "operationId": "DELETE_profiles_id",
+    "x-box": "global",
+    "parameters": [
+     {
+      "name": "id",
+      "in": "path",
+      "required": true,
+      "schema": {
+       "type": "string"
+      }
+     }
+    ],
+    "responses": {
+     "200": {
+      "description": "OK"
+     },
+     "default": {
+      "$ref": "#/components/responses/Error"
+     }
+    },
+    "x-csrf": true
+   },
+   "patch": {
+    "summary": "Change profiles",
+    "tags": [
+     "profiles"
+    ],
+    "operationId": "PATCH_profiles_id",
+    "x-box": "global",
+    "parameters": [
+     {
+      "name": "id",
+      "in": "path",
+      "required": true,
+      "schema": {
+       "type": "string"
+      }
+     }
+    ],
+    "responses": {
+     "200": {
+      "description": "OK"
+     },
+     "default": {
+      "$ref": "#/components/responses/Error"
+     }
+    },
+    "requestBody": {
+     "required": false,
+     "content": {
+      "application/json": {
+       "schema": {
+        "type": "object"
+       }
+      }
+     }
+    },
+    "x-csrf": true
+   }
+  },
+  "/profiles/{id}/session": {
+   "post": {
+    "summary": "Start a session as a profile (PIN if it has one)",
+    "tags": [
+     "profiles"
+    ],
+    "operationId": "POST_profiles_id_session",
+    "x-box": "global",
+    "parameters": [
+     {
+      "name": "id",
+      "in": "path",
+      "required": true,
+      "schema": {
+       "type": "string"
+      }
+     }
+    ],
+    "security": [],
+    "responses": {
+     "200": {
+      "description": "OK"
+     },
+     "default": {
+      "$ref": "#/components/responses/Error"
+     }
+    },
+    "requestBody": {
+     "required": false,
+     "content": {
+      "application/json": {
+       "schema": {
+        "type": "object"
+       }
+      }
+     }
+    }
+   }
+  },
+  "/push/test": {
+   "post": {
+    "summary": "Run push test",
+    "tags": [
+     "push"
+    ],
+    "operationId": "POST_push_test",
+    "x-box": "global",
+    "responses": {
+     "200": {
+      "description": "OK"
+     },
+     "default": {
+      "$ref": "#/components/responses/Error"
+     }
+    },
+    "requestBody": {
+     "required": false,
+     "content": {
+      "application/json": {
+       "schema": {
+        "type": "object"
+       }
+      }
+     }
+    },
+    "x-csrf": true
+   }
+  },
+  "/qr.png": {
+   "get": {
+    "summary": "QR code for the address the request used; needs no login",
+    "tags": [
+     "qr.png"
+    ],
+    "operationId": "GET_qr_png",
+    "x-box": "global",
+    "security": [],
+    "responses": {
+     "200": {
+      "description": "OK"
+     },
+     "default": {
+      "$ref": "#/components/responses/Error"
+     }
+    }
+   }
+  },
+  "/radio/bouquets": {
+   "get": {
+    "summary": "Read radio bouquets",
+    "tags": [
+     "radio"
+    ],
+    "operationId": "GET_radio_bouquets",
+    "parameters": [
+     {
+      "$ref": "#/components/parameters/Box"
+     }
+    ],
+    "responses": {
+     "200": {
+      "description": "OK"
+     },
+     "default": {
+      "$ref": "#/components/responses/Error"
+     }
+    }
+   }
+  },
+  "/radio/picon": {
+   "get": {
+    "summary": "Read radio picon",
+    "tags": [
+     "radio"
+    ],
+    "operationId": "GET_radio_picon",
+    "parameters": [
+     {
+      "$ref": "#/components/parameters/Box"
+     }
+    ],
+    "responses": {
+     "200": {
+      "description": "OK"
+     },
+     "default": {
+      "$ref": "#/components/responses/Error"
+     }
+    }
+   }
+  },
+  "/radio/stations": {
+   "get": {
+    "summary": "Read radio stations",
+    "tags": [
+     "radio"
+    ],
+    "operationId": "GET_radio_stations",
+    "parameters": [
+     {
+      "$ref": "#/components/parameters/Box"
+     }
+    ],
+    "responses": {
+     "200": {
+      "description": "OK"
+     },
+     "default": {
+      "$ref": "#/components/responses/Error"
+     }
+    }
+   }
+  },
+  "/radio/timers": {
+   "get": {
+    "summary": "Read radio timers",
+    "tags": [
+     "radio"
+    ],
+    "operationId": "GET_radio_timers",
+    "parameters": [
+     {
+      "$ref": "#/components/parameters/Box"
+     }
+    ],
+    "responses": {
+     "200": {
+      "description": "OK"
+     },
+     "default": {
+      "$ref": "#/components/responses/Error"
+     }
+    }
+   }
+  },
+  "/search": {
+   "get": {
+    "summary": "Search across the hubs",
+    "tags": [
+     "search"
+    ],
+    "operationId": "GET_search",
+    "parameters": [
+     {
+      "$ref": "#/components/parameters/Box"
+     }
+    ],
+    "responses": {
+     "200": {
+      "description": "OK"
+     },
+     "default": {
+      "$ref": "#/components/responses/Error"
+     }
+    }
+   }
+  },
+  "/series/markers": {
+   "get": {
+    "summary": "Read series markers",
+    "tags": [
+     "series"
+    ],
+    "operationId": "GET_series_markers",
+    "parameters": [
+     {
+      "$ref": "#/components/parameters/Box"
+     }
+    ],
+    "responses": {
+     "200": {
+      "description": "OK"
+     },
+     "default": {
+      "$ref": "#/components/responses/Error"
+     }
+    }
+   }
+  },
+  "/series/markers/{id}": {
+   "get": {
+    "summary": "Read series markers",
+    "tags": [
+     "series"
+    ],
+    "operationId": "GET_series_markers_id",
+    "parameters": [
+     {
+      "$ref": "#/components/parameters/Box"
+     },
+     {
+      "name": "id",
+      "in": "path",
+      "required": true,
+      "schema": {
+       "type": "string"
+      }
+     }
+    ],
+    "responses": {
+     "200": {
+      "description": "OK"
+     },
+     "default": {
+      "$ref": "#/components/responses/Error"
+     }
+    }
+   }
+  },
+  "/series/markers/{id}/cover": {
+   "get": {
+    "summary": "Read series markers cover",
+    "tags": [
+     "series"
+    ],
+    "operationId": "GET_series_markers_id_cover",
+    "parameters": [
+     {
+      "$ref": "#/components/parameters/Box"
+     },
+     {
+      "name": "id",
+      "in": "path",
+      "required": true,
+      "schema": {
+       "type": "string"
+      }
+     }
+    ],
+    "responses": {
+     "200": {
+      "description": "OK"
+     },
+     "default": {
+      "$ref": "#/components/responses/Error"
+     }
+    }
+   }
+  },
+  "/series/upcoming": {
+   "get": {
+    "summary": "Read series upcoming",
+    "tags": [
+     "series"
+    ],
+    "operationId": "GET_series_upcoming",
+    "parameters": [
+     {
+      "$ref": "#/components/parameters/Box"
+     }
+    ],
+    "responses": {
+     "200": {
+      "description": "OK"
+     },
+     "default": {
+      "$ref": "#/components/responses/Error"
+     }
+    }
+   }
+  },
+  "/settings": {
+   "get": {
+    "summary": "Settings visible to this profile",
+    "tags": [
+     "settings"
+    ],
+    "operationId": "GET_settings",
+    "x-box": "global",
+    "responses": {
+     "200": {
+      "description": "OK"
+     },
+     "default": {
+      "$ref": "#/components/responses/Error"
+     }
+    }
+   },
+   "patch": {
+    "summary": "Change settings (global ones need the settings permission)",
+    "tags": [
+     "settings"
+    ],
+    "operationId": "PATCH_settings",
+    "x-box": "global",
+    "responses": {
+     "200": {
+      "description": "OK"
+     },
+     "default": {
+      "$ref": "#/components/responses/Error"
+     }
+    },
+    "requestBody": {
+     "required": false,
+     "content": {
+      "application/json": {
+       "schema": {
+        "type": "object"
+       }
+      }
+     }
+    },
+    "x-csrf": true
+   }
+  },
+  "/stream/bouquets": {
+   "get": {
+    "summary": "Read stream bouquets",
+    "tags": [
+     "stream"
+    ],
+    "operationId": "GET_stream_bouquets",
+    "parameters": [
+     {
+      "$ref": "#/components/parameters/Box"
+     }
+    ],
+    "responses": {
+     "200": {
+      "description": "OK"
+     },
+     "default": {
+      "$ref": "#/components/responses/Error"
+     }
+    }
+   }
+  },
+  "/stream/channels": {
+   "get": {
+    "summary": "Read stream channels",
+    "tags": [
+     "stream"
+    ],
+    "operationId": "GET_stream_channels",
+    "parameters": [
+     {
+      "$ref": "#/components/parameters/Box"
+     }
+    ],
+    "responses": {
+     "200": {
+      "description": "OK"
+     },
+     "default": {
+      "$ref": "#/components/responses/Error"
+     }
+    }
+   }
+  },
+  "/stream/live": {
+   "get": {
+    "summary": "Read stream live",
+    "tags": [
+     "stream"
+    ],
+    "operationId": "GET_stream_live",
+    "parameters": [
+     {
+      "$ref": "#/components/parameters/Box"
+     }
+    ],
+    "responses": {
+     "200": {
+      "description": "OK"
+     },
+     "default": {
+      "$ref": "#/components/responses/Error"
+     }
+    }
+   }
+  },
+  "/stream/picon": {
+   "get": {
+    "summary": "Read stream picon",
+    "tags": [
+     "stream"
+    ],
+    "operationId": "GET_stream_picon",
+    "parameters": [
+     {
+      "$ref": "#/components/parameters/Box"
+     }
+    ],
+    "responses": {
+     "200": {
+      "description": "OK"
+     },
+     "default": {
+      "$ref": "#/components/responses/Error"
+     }
+    }
+   }
+  },
+  "/stream/recording": {
+   "get": {
+    "summary": "Read stream recording",
+    "tags": [
+     "stream"
+    ],
+    "operationId": "GET_stream_recording",
+    "parameters": [
+     {
+      "$ref": "#/components/parameters/Box"
+     }
+    ],
+    "responses": {
+     "200": {
+      "description": "OK"
+     },
+     "default": {
+      "$ref": "#/components/responses/Error"
+     }
+    }
+   }
+  },
+  "/system/backup": {
+   "get": {
+    "summary": "Read system backup",
+    "tags": [
+     "system"
+    ],
+    "operationId": "GET_system_backup",
+    "x-box": "global",
+    "responses": {
+     "200": {
+      "description": "OK"
+     },
+     "default": {
+      "$ref": "#/components/responses/Error"
+     }
+    }
+   }
+  },
+  "/system/backup/files": {
+   "get": {
+    "summary": "Read system backup files",
+    "tags": [
+     "system"
+    ],
+    "operationId": "GET_system_backup_files",
+    "x-box": "global",
+    "responses": {
+     "200": {
+      "description": "OK"
+     },
+     "default": {
+      "$ref": "#/components/responses/Error"
+     }
+    }
+   }
+  },
+  "/system/backup/files/{name}": {
+   "delete": {
+    "summary": "Delete system backup files",
+    "tags": [
+     "system"
+    ],
+    "operationId": "DELETE_system_backup_files_name",
+    "x-box": "global",
+    "parameters": [
+     {
+      "name": "name",
+      "in": "path",
+      "required": true,
+      "schema": {
+       "type": "string"
+      }
+     }
+    ],
+    "responses": {
+     "200": {
+      "description": "OK"
+     },
+     "default": {
+      "$ref": "#/components/responses/Error"
+     }
+    },
+    "x-csrf": true
+   },
+   "get": {
+    "summary": "Read system backup files",
+    "tags": [
+     "system"
+    ],
+    "operationId": "GET_system_backup_files_name",
+    "x-box": "global",
+    "parameters": [
+     {
+      "name": "name",
+      "in": "path",
+      "required": true,
+      "schema": {
+       "type": "string"
+      }
+     }
+    ],
+    "responses": {
+     "200": {
+      "description": "OK"
+     },
+     "default": {
+      "$ref": "#/components/responses/Error"
+     }
+    }
+   }
+  },
+  "/system/backup/files/{name}/restore": {
+   "post": {
+    "summary": "Run system backup files restore",
+    "tags": [
+     "system"
+    ],
+    "operationId": "POST_system_backup_files_name_restore",
+    "x-box": "global",
+    "parameters": [
+     {
+      "name": "name",
+      "in": "path",
+      "required": true,
+      "schema": {
+       "type": "string"
+      }
+     }
+    ],
+    "responses": {
+     "200": {
+      "description": "OK"
+     },
+     "default": {
+      "$ref": "#/components/responses/Error"
+     }
+    },
+    "requestBody": {
+     "required": false,
+     "content": {
+      "application/json": {
+       "schema": {
+        "type": "object"
+       }
+      }
+     }
+    },
+    "x-csrf": true
+   }
+  },
+  "/system/backup/restore": {
+   "post": {
+    "summary": "Run system backup restore",
+    "tags": [
+     "system"
+    ],
+    "operationId": "POST_system_backup_restore",
+    "x-box": "global",
+    "responses": {
+     "200": {
+      "description": "OK"
+     },
+     "default": {
+      "$ref": "#/components/responses/Error"
+     }
+    },
+    "requestBody": {
+     "required": false,
+     "content": {
+      "application/json": {
+       "schema": {
+        "type": "object"
+       }
+      }
+     }
+    },
+    "x-csrf": true
+   }
+  },
+  "/system/backup/save": {
+   "post": {
+    "summary": "Run system backup save",
+    "tags": [
+     "system"
+    ],
+    "operationId": "POST_system_backup_save",
+    "x-box": "global",
+    "responses": {
+     "200": {
+      "description": "OK"
+     },
+     "default": {
+      "$ref": "#/components/responses/Error"
+     }
+    },
+    "requestBody": {
+     "required": false,
+     "content": {
+      "application/json": {
+       "schema": {
+        "type": "object"
+       }
+      }
+     }
+    },
+    "x-csrf": true
+   }
+  },
+  "/system/backup/sections": {
+   "get": {
+    "summary": "Read system backup sections",
+    "tags": [
+     "system"
+    ],
+    "operationId": "GET_system_backup_sections",
+    "x-box": "global",
+    "responses": {
+     "200": {
+      "description": "OK"
+     },
+     "default": {
+      "$ref": "#/components/responses/Error"
+     }
+    }
+   }
+  },
+  "/system/selftest": {
+   "get": {
+    "summary": "Read system selftest",
+    "tags": [
+     "system"
+    ],
+    "operationId": "GET_system_selftest",
+    "x-box": "global",
+    "responses": {
+     "200": {
+      "description": "OK"
+     },
+     "default": {
+      "$ref": "#/components/responses/Error"
+     }
+    }
+   },
+   "post": {
+    "summary": "Run system selftest",
+    "tags": [
+     "system"
+    ],
+    "operationId": "POST_system_selftest",
+    "x-box": "global",
+    "responses": {
+     "200": {
+      "description": "OK"
+     },
+     "default": {
+      "$ref": "#/components/responses/Error"
+     }
+    },
+    "requestBody": {
+     "required": false,
+     "content": {
+      "application/json": {
+       "schema": {
+        "type": "object"
+       }
+      }
+     }
+    },
+    "x-csrf": true
+   }
+  },
+  "/system/selftest/download": {
+   "get": {
+    "summary": "Read system selftest download",
+    "tags": [
+     "system"
+    ],
+    "operationId": "GET_system_selftest_download",
+    "x-box": "global",
+    "responses": {
+     "200": {
+      "description": "OK"
+     },
+     "default": {
+      "$ref": "#/components/responses/Error"
+     }
+    }
+   }
+  },
+  "/timers": {
+   "get": {
+    "summary": "The box's timers, with conflicts and the tuner count",
+    "tags": [
+     "timers"
+    ],
+    "operationId": "GET_timers",
+    "parameters": [
+     {
+      "$ref": "#/components/parameters/Box"
+     }
+    ],
+    "responses": {
+     "200": {
+      "description": "OK",
+      "content": {
+       "application/json": {
+        "schema": {
+         "type": "object",
+         "properties": {
+          "timers": {
+           "type": "array",
+           "items": {
+            "$ref": "#/components/schemas/Timer"
+           }
+          },
+          "tuners": {
+           "type": "integer"
+          }
+         }
+        }
+       }
+      }
+     },
+     "default": {
+      "$ref": "#/components/responses/Error"
+     }
+    }
+   }
+  },
+  "/timers/autotimers": {
+   "get": {
+    "summary": "Read timers autotimers",
+    "tags": [
+     "timers"
+    ],
+    "operationId": "GET_timers_autotimers",
+    "parameters": [
+     {
+      "$ref": "#/components/parameters/Box"
+     }
+    ],
+    "responses": {
+     "200": {
+      "description": "OK"
+     },
+     "default": {
+      "$ref": "#/components/responses/Error"
+     }
+    }
+   }
+  },
+  "/timers/autotimers/simulate": {
+   "get": {
+    "summary": "Read timers autotimers simulate",
+    "tags": [
+     "timers"
+    ],
+    "operationId": "GET_timers_autotimers_simulate",
+    "parameters": [
+     {
+      "$ref": "#/components/parameters/Box"
+     }
+    ],
+    "responses": {
+     "200": {
+      "description": "OK"
+     },
+     "default": {
+      "$ref": "#/components/responses/Error"
+     }
+    }
+   }
+  },
+  "/timers/cleanup/plan": {
+   "post": {
+    "summary": "Preview removing finished timers",
+    "tags": [
+     "timers"
+    ],
+    "operationId": "POST_timers_cleanup_plan",
+    "parameters": [
+     {
+      "$ref": "#/components/parameters/Box"
+     }
+    ],
+    "description": "Changes nothing. Returns a plan to show to the user; apply it with `POST /plans/{id}/apply`.",
+    "responses": {
+     "200": {
+      "description": "The plan",
+      "content": {
+       "application/json": {
+        "schema": {
+         "$ref": "#/components/schemas/PlanResponse"
+        }
+       }
+      }
+     },
+     "default": {
+      "$ref": "#/components/responses/Error"
+     }
+    },
+    "requestBody": {
+     "required": true,
+     "content": {
+      "application/json": {
+       "schema": {
+        "type": "object"
+       }
+      }
+     }
+    },
+    "x-csrf": true
+   }
+  },
+  "/timers/delete/plan": {
+   "post": {
+    "summary": "Preview deleting a timer",
+    "tags": [
+     "timers"
+    ],
+    "operationId": "POST_timers_delete_plan",
+    "parameters": [
+     {
+      "$ref": "#/components/parameters/Box"
+     }
+    ],
+    "description": "Changes nothing. Returns a plan to show to the user; apply it with `POST /plans/{id}/apply`.",
+    "responses": {
+     "200": {
+      "description": "OK",
+      "content": {
+       "application/json": {
+        "schema": {
+         "$ref": "#/components/schemas/PlanResponse"
+        }
+       }
+      }
+     },
+     "default": {
+      "$ref": "#/components/responses/Error"
+     }
+    },
+    "requestBody": {
+     "required": true,
+     "content": {
+      "application/json": {
+       "schema": {
+        "$ref": "#/components/schemas/TimerRef"
+       }
+      }
+     }
+    },
+    "x-csrf": true
+   }
+  },
+  "/timers/plan": {
+   "post": {
+    "summary": "Preview a new timer",
+    "tags": [
+     "timers"
+    ],
+    "operationId": "POST_timers_plan",
+    "parameters": [
+     {
+      "$ref": "#/components/parameters/Box"
+     }
+    ],
+    "description": "Changes nothing. Returns a plan to show to the user; apply it with `POST /plans/{id}/apply`.",
+    "responses": {
+     "200": {
+      "description": "OK",
+      "content": {
+       "application/json": {
+        "schema": {
+         "$ref": "#/components/schemas/PlanResponse"
+        }
+       }
+      }
+     },
+     "default": {
+      "$ref": "#/components/responses/Error"
+     }
+    },
+    "requestBody": {
+     "required": true,
+     "content": {
+      "application/json": {
+       "schema": {
+        "$ref": "#/components/schemas/TimerCreate"
+       }
+      }
+     }
+    },
+    "x-csrf": true
+   }
+  },
+  "/timers/toggle/plan": {
+   "post": {
+    "summary": "Preview enabling or disabling a timer",
+    "tags": [
+     "timers"
+    ],
+    "operationId": "POST_timers_toggle_plan",
+    "parameters": [
+     {
+      "$ref": "#/components/parameters/Box"
+     }
+    ],
+    "description": "Changes nothing. Returns a plan to show to the user; apply it with `POST /plans/{id}/apply`.",
+    "responses": {
+     "200": {
+      "description": "The plan",
+      "content": {
+       "application/json": {
+        "schema": {
+         "$ref": "#/components/schemas/PlanResponse"
+        }
+       }
+      }
+     },
+     "default": {
+      "$ref": "#/components/responses/Error"
+     }
+    },
+    "requestBody": {
+     "required": true,
+     "content": {
+      "application/json": {
+       "schema": {
+        "type": "object"
+       }
+      }
+     }
+    },
+    "x-csrf": true
+   }
+  },
+  "/tokens": {
+   "get": {
+    "summary": "List API tokens (administrators)",
+    "tags": [
+     "tokens"
+    ],
+    "operationId": "GET_tokens",
+    "x-box": "global",
+    "responses": {
+     "200": {
+      "description": "OK",
+      "content": {
+       "application/json": {
+        "schema": {
+         "type": "object",
+         "properties": {
+          "tokens": {
+           "type": "array",
+           "items": {
+            "$ref": "#/components/schemas/ApiToken"
+           }
+          }
+         }
+        }
+       }
+      }
+     },
+     "default": {
+      "$ref": "#/components/responses/Error"
+     }
+    }
+   },
+   "post": {
+    "summary": "Create an API token; the secret is shown once",
+    "tags": [
+     "tokens"
+    ],
+    "operationId": "POST_tokens",
+    "x-box": "global",
+    "responses": {
+     "200": {
+      "description": "OK",
+      "content": {
+       "application/json": {
+        "schema": {
+         "$ref": "#/components/schemas/CreatedApiToken"
+        }
+       }
+      }
+     },
+     "default": {
+      "$ref": "#/components/responses/Error"
+     }
+    },
+    "requestBody": {
+     "required": true,
+     "content": {
+      "application/json": {
+       "schema": {
+        "type": "object",
+        "required": [
+         "name"
+        ],
+        "properties": {
+         "name": {
+          "type": "string"
+         }
+        }
+       }
+      }
+     }
+    },
+    "x-csrf": true
+   }
+  },
+  "/tokens/{id}": {
+   "delete": {
+    "summary": "Revoke an API token",
+    "tags": [
+     "tokens"
+    ],
+    "operationId": "DELETE_tokens_id",
+    "x-box": "global",
+    "parameters": [
+     {
+      "name": "id",
+      "in": "path",
+      "required": true,
+      "schema": {
+       "type": "string"
+      }
+     }
+    ],
+    "responses": {
+     "200": {
+      "description": "OK"
+     },
+     "default": {
+      "$ref": "#/components/responses/Error"
+     }
+    },
+    "x-csrf": true
+   }
+  },
+  "/whoami": {
+   "get": {
+    "summary": "The profile behind this request, with its role and permissions",
+    "tags": [
+     "whoami"
+    ],
+    "operationId": "GET_whoami",
+    "x-box": "global",
+    "responses": {
+     "200": {
+      "description": "OK",
+      "content": {
+       "application/json": {
+        "schema": {
+         "$ref": "#/components/schemas/Whoami"
+        }
+       }
+      }
+     },
+     "default": {
+      "$ref": "#/components/responses/Error"
+     }
+    }
+   }
+  }
+ }
+}

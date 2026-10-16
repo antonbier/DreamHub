@@ -148,6 +148,7 @@ func NewRouterWithRoutes(d Deps) (http.Handler, []Route) {
 	core.HandleFunc("GET /api/v1/jobs", handleJobs(d))
 	core.HandleFunc("GET /api/v1/jobs/{id}", handleJob(d))
 	core.HandleFunc("POST /api/v1/jobs/{id}/cancel", handleCancelJob(d))
+	core.HandleFunc("GET /api/v1/openapi.json", handleOpenAPI)
 	core.HandleFunc("GET /api/v1/boxes", handleListBoxes(d))
 	core.HandleFunc("GET /api/v1/boxes/overview", handleBoxesOverview(d))
 	core.HandleFunc("POST /api/v1/boxes/test", handleTestBox(d))

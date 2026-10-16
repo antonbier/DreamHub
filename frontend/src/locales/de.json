@@ -895,7 +895,10 @@
       "revoke": "Widerrufen",
       "confirmRevoke": "Bestätigen?",
       "namePlaceholder": "Wofür? (z. B. „Mein Handy“)",
-      "create": "Erstellen"
+      "create": "Erstellen",
+      "devTitle": "Für Entwickler",
+      "devBody": "Der Token wird als Bearer-Token mitgeschickt. Mit box=<id> legst du fest, welche Box ein Aufruf betrifft (die IDs liefert GET /api/v1/boxes); ohne Angabe gilt die erste Box. Änderungen laufen in zwei Schritten: Ein …/plan-Aufruf liefert eine Vorschau, POST /api/v1/plans/{id}/apply führt sie aus.",
+      "devSpec": "OpenAPI-Beschreibung (openapi.json)"
     },
     "network": {
       "title": "Netzwerk",

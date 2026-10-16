@@ -6,6 +6,7 @@ import (
 	"encoding/hex"
 	"encoding/json"
 	"errors"
+	"github.com/antonbier/DreamHub/backend/internal/box"
 	"log/slog"
 	"net/http"
 	"regexp"
@@ -468,7 +469,7 @@ func (h *Plex) status(w http.ResponseWriter, r *http.Request) {
 		httpx.WriteError(w, r, http.StatusInternalServerError, "internal", "could not read settings")
 		return
 	}
-	out := map[string]any{"configured": c.configured(), "canPlay": c.playOnBox && h.StreamBase != ""}
+	out := map[string]any{"configured": c.configured(), "canPlay": c.playOnBox && h.StreamBase != "" && !box.Remote(r.Context())}
 	if c.configured() {
 		// A cheap live check when it's worth one, so the page opens with
 		// the server's real state.

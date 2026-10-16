@@ -90,7 +90,7 @@ func (h *Apps) planDockerSetup(w http.ResponseWriter, r *http.Request) {
 	}
 	user, _ := httpx.User(ctx)
 	summary := "Set up Docker " + dockersetup.Version + " (" + strings.Join(kinds, ", ") + ")"
-	pl := h.Plans.Create(user, plan.Draft{
+	pl := h.Plans.Create(ctx, user, plan.Draft{
 		Action:      "apps.docker.setup",
 		Changes:     changes,
 		Summary:     summary,
@@ -186,7 +186,7 @@ func (h *Apps) planDockerUninstall(w http.ResponseWriter, r *http.Request) {
 	} else {
 		summary += ", keeping the app data"
 	}
-	pl := h.Plans.Create(user, plan.Draft{
+	pl := h.Plans.Create(ctx, user, plan.Draft{
 		Action:      "apps.docker.uninstall",
 		Changes:     changes,
 		Summary:     summary,

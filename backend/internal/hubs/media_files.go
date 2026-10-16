@@ -40,8 +40,8 @@ type fileOpsState struct {
 	Reason    string `json:"reason,omitempty"` // i18n key under "media.fileOps"
 }
 
-func (h *Media) fileOps(roots []string) fileOpsState {
-	if recfs.Available(h.FS, roots) {
+func (h *Media) fileOps(ctx context.Context, roots []string) fileOpsState {
+	if onBox(ctx, h.FS, roots) {
 		return fileOpsState{Available: true}
 	}
 	return fileOpsState{Reason: "notOnBox"}
@@ -60,7 +60,7 @@ func (h *Media) requireFileOps(w http.ResponseWriter, r *http.Request) ([]string
 		httpx.WriteError(w, r, http.StatusBadGateway, "webcontrol_unavailable", "could not reach WebControl")
 		return nil, false
 	}
-	if !recfs.Available(h.FS, roots) {
+	if !onBox(r.Context(), h.FS, roots) {
 		httpx.WriteError(w, r, http.StatusConflict, CodeFileOpsUnavailable, "file operations need DreamHub to run on the box itself")
 		return nil, false
 	}
@@ -260,7 +260,7 @@ func (h *Media) planRename(w http.ResponseWriter, r *http.Request) {
 	} else if title != "" {
 		summary += fmt.Sprintf(", title %s → %s", oldTitle, title)
 	}
-	pl := h.Plans.Create(user, plan.Draft{
+	pl := h.Plans.Create(r.Context(), user, plan.Draft{
 		Action:      "media.rename",
 		Changes:     changes,
 		Summary:     summary,
@@ -353,7 +353,7 @@ func (h *Media) planTrash(w http.ResponseWriter, r *http.Request) {
 	}
 	fp := h.movesFingerprint(moves)
 	current, _ := fp(r.Context())
-	pl := h.Plans.Create(user, plan.Draft{
+	pl := h.Plans.Create(r.Context(), user, plan.Draft{
 		Action:      "media.trash",
 		Changes:     changes,
 		Summary:     fmt.Sprintf("Moved %d recording(s) to the trash", len(moves)),
@@ -417,7 +417,7 @@ func (h *Media) planRestore(w http.ResponseWriter, r *http.Request) {
 	}
 	fp := h.movesFingerprint(moves)
 	current, _ := fp(r.Context())
-	pl := h.Plans.Create(user, plan.Draft{
+	pl := h.Plans.Create(r.Context(), user, plan.Draft{
 		Action:      "media.restore",
 		Changes:     changes,
 		Summary:     fmt.Sprintf("Restored %d recording(s) from the trash", len(moves)),
@@ -469,7 +469,7 @@ func (h *Media) planEmpty(w http.ResponseWriter, r *http.Request) {
 		files = append(files, del...)
 	}
 	current := h.filesFingerprint(files)
-	pl := h.Plans.Create(user, plan.Draft{
+	pl := h.Plans.Create(r.Context(), user, plan.Draft{
 		Action:      "media.emptyTrash",
 		Changes:     changes,
 		Summary:     fmt.Sprintf("Deleted %d recording(s) from the trash for good (%d files, %d bytes)", len(paths), len(files), size),

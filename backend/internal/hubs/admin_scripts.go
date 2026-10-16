@@ -123,7 +123,7 @@ func (h *Admin) planRunScript(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 	user, _ := httpx.User(r.Context())
-	pl := h.Plans.Create(user, plan.Draft{
+	pl := h.Plans.Create(r.Context(), user, plan.Draft{
 		Action:      "script.run",
 		Changes:     []plan.Change{{Type: "script.run", After: map[string]any{"name": s.Name}}},
 		Summary:     "Run script " + s.Name,

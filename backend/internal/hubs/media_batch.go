@@ -199,7 +199,7 @@ func (h *Media) planBatchRename(w http.ResponseWriter, r *http.Request) {
 	out["folders"] = dirs
 	fp := h.movesFingerprint(moves)
 	current, _ := fp(ctx)
-	out["plan"] = h.Plans.Create(user, plan.Draft{
+	out["plan"] = h.Plans.Create(ctx, user, plan.Draft{
 		Action:      "media.batchRename",
 		Changes:     changes,
 		Summary:     fmt.Sprintf("Renamed %d recording(s) by the naming scheme (%d files, %d new folders)", len(renamed), len(moves), len(dirs)),

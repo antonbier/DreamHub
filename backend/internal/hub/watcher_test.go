@@ -50,3 +50,16 @@ func TestStatusWatcher_TracksEachHubIndependently(t *testing.T) {
 		t.Fatalf("only the changed hub must be reported, got %+v", got)
 	}
 }
+
+// A hub missing on one box (its plugin isn't there) says nothing about the
+// same hub on another (docs/MULTIDEVICE_PLAN.md, M1).
+func TestStatusWatcher_DiffBoxKeepsBoxesApart(t *testing.T) {
+	w := NewStatusWatcher()
+	w.DiffBox("main", []Status{{ID: "series", Name: "SeriesHub", Level: status.Available}})
+	if got := w.DiffBox("bedroom", []Status{{ID: "series", Name: "SeriesHub", Level: status.Unavailable}}); len(got) != 0 {
+		t.Errorf("the first look at another box reports nothing, got %+v", got)
+	}
+	if got := w.DiffBox("main", []Status{{ID: "series", Name: "SeriesHub", Level: status.Available}}); len(got) != 0 {
+		t.Errorf("the first box did not change, got %+v", got)
+	}
+}

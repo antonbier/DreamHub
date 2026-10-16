@@ -239,7 +239,7 @@ func (h *Series) seriesDirs(ctx context.Context, m serienrecorder.Marker) (serie
 		}
 		return false
 	}
-	r := seriesDirsResult{onBox: h.FS != nil && recfs.Available(h.FS, locs), scopes: locs}
+	r := seriesDirsResult{onBox: h.FS != nil && onBox(ctx, h.FS, locs), scopes: locs}
 	if m.RecordFolder != "" {
 		rf := path.Clean(m.RecordFolder)
 		switch {

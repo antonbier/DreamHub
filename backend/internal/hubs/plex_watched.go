@@ -139,7 +139,7 @@ func (h *Plex) planWatched(w http.ResponseWriter, r *http.Request) {
 	}
 	fp, _ := fingerprint(r.Context())
 	user, _ := httpx.User(r.Context())
-	p := h.Plans.Create(user, plan.Draft{
+	p := h.Plans.Create(r.Context(), user, plan.Draft{
 		Action:      "plex.watched",
 		Changes:     changes,
 		Summary:     fmt.Sprintf("%s (%d episodes)", watchedSummary(it, body.Watched), len(changes)),

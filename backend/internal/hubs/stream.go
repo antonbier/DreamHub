@@ -178,7 +178,7 @@ func (h *Stream) recording(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 	want := r.URL.Query().Get("path")
-	if opener, ok := h.FS.(recfs.Opener); ok && recfs.Available(h.FS, roots) {
+	if opener, ok := h.FS.(recfs.Opener); ok && onBox(ctx, h.FS, roots) {
 		p, err := recfs.CleanIn(h.FS, want, roots)
 		if err != nil || !strings.HasSuffix(p, ".ts") {
 			httpx.WriteError(w, r, http.StatusNotFound, "not_found", "no such recording")

@@ -44,16 +44,24 @@ func (t Transition) Summary() string {
 // level actually changed. The very first call for a given registry never
 // reports anything — there's no "before" to compare against yet.
 func (w *StatusWatcher) Diff(statuses []Status) []Transition {
+	return w.DiffBox("", statuses)
+}
+
+// DiffBox is Diff for one box: each box's hubs are compared with that
+// box's own last call (a hub is unavailable on a box without its plugin,
+// which says nothing about the other boxes).
+func (w *StatusWatcher) DiffBox(boxID string, statuses []Status) []Transition {
 	w.mu.Lock()
 	defer w.mu.Unlock()
 
 	var out []Transition
 	for _, s := range statuses {
-		prev, known := w.last[s.ID]
+		key := boxID + "\x00" + s.ID
+		prev, known := w.last[key]
 		if known && prev != s.Level {
 			out = append(out, Transition{HubID: s.ID, HubName: s.Name, From: prev, To: s.Level})
 		}
-		w.last[s.ID] = s.Level
+		w.last[key] = s.Level
 	}
 	return out
 }

@@ -3,6 +3,7 @@ package hubs
 import (
 	"context"
 	"encoding/json"
+	"github.com/antonbier/DreamHub/backend/internal/box"
 	"github.com/antonbier/DreamHub/backend/internal/logosearch"
 	"log/slog"
 	"net/http"
@@ -41,8 +42,12 @@ type Channels struct {
 	Logos   logosearch.Source
 	Now     func() time.Time
 
+	// Boxes lists the box IDs the daily refresh visits; nil means just the
+	// first box.
+	Boxes func() []string
+
 	mu          sync.Mutex
-	refreshedAt time.Time
+	refreshedAt map[string]time.Time // per box
 }
 
 // KeyPiconSet is the picon set an admin chose for DreamHub's logos (a
@@ -121,8 +126,18 @@ func (h *Channels) Watch(ctx context.Context, logger *slog.Logger) {
 		case <-ctx.Done():
 			return
 		case <-timer.C:
-			if err := h.refresh(ctx); err != nil && logger != nil {
-				logger.Warn("channel snapshot refresh failed", "error", err)
+			ids := []string{""}
+			if h.Boxes != nil {
+				ids = h.Boxes()
+			}
+			for _, id := range ids {
+				bctx := ctx
+				if id != "" {
+					bctx = box.With(ctx, id)
+				}
+				if err := h.refresh(bctx); err != nil && logger != nil {
+					logger.Warn("channel snapshot refresh failed", "box", id, "error", err)
+				}
 			}
 			timer.Reset(24 * time.Hour)
 		}
@@ -295,14 +310,17 @@ func (h *Channels) refresh(ctx context.Context) error {
 		return err
 	}
 	h.mu.Lock()
-	h.refreshedAt = now
+	if h.refreshedAt == nil {
+		h.refreshedAt = map[string]time.Time{}
+	}
+	h.refreshedAt[box.Key(ctx)] = now
 	h.mu.Unlock()
 	return nil
 }
 
 func (h *Channels) refreshIfStale(ctx context.Context, force bool) error {
 	h.mu.Lock()
-	stale := force || h.now().Sub(h.refreshedAt) > channelsRefreshEvery
+	stale := force || h.now().Sub(h.refreshedAt[box.Key(ctx)]) > channelsRefreshEvery
 	h.mu.Unlock()
 	if !stale {
 		return nil

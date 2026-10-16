@@ -88,7 +88,7 @@ func (h *Apps) planPruneImages(w http.ResponseWriter, r *http.Request) {
 	}
 	size := totalBytes(images)
 	user, _ := httpx.User(ctx)
-	pl := h.Plans.Create(user, plan.Draft{
+	pl := h.Plans.Create(ctx, user, plan.Draft{
 		Action:  "apps.images.prune",
 		Changes: []plan.Change{{Type: "apps.images.prune", Before: map[string]any{"images": images, "reclaimableBytes": size}}},
 		Summary: fmt.Sprintf("Remove %d unused Docker image(s), about %d MB", len(images), size>>20),
@@ -154,7 +154,7 @@ func (h *Apps) planDropKept(w http.ResponseWriter, r *http.Request) {
 		size += k.SizeBytes
 	}
 	user, _ := httpx.User(ctx)
-	pl := h.Plans.Create(user, plan.Draft{
+	pl := h.Plans.Create(ctx, user, plan.Draft{
 		Action:      "apps.images.dropKept",
 		Changes:     []plan.Change{{Type: "apps.images.dropKept", Before: map[string]any{"kept": kept, "keptBytes": size}}},
 		Summary:     fmt.Sprintf("Remove the %d kept previous version(s) of apps, about %d MB; they can no longer be rolled back", len(kept), size>>20),

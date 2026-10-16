@@ -129,7 +129,7 @@ func (h *Admin) planDowngrade(w http.ResponseWriter, r *http.Request) {
 	user, _ := httpx.User(ctx)
 	name, version := body.Name, body.Version
 	summary := describeSteps(steps)
-	pl := h.Plans.Create(user, plan.Draft{
+	pl := h.Plans.Create(ctx, user, plan.Draft{
 		Action:      "package.downgrade",
 		Changes:     changes,
 		Warnings:    warnings,

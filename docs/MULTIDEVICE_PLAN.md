@@ -1,6 +1,6 @@
 # Multi-box — plan
 
-Status: **brainstormed and decided 2026-10-16 (six rounds with the owner); nothing built yet; M1 is the first thing to build, against the mock, shipping only after a check on the reference box.** Replaces the "one box" assumption that runs through the backend (`app.Options.WebControl` is injected once into every hub, the poller and the jobs blocker).
+Status: **brainstormed and decided 2026-10-16 (six rounds with the owner). M1 is built against the mock (branch `m1-box-registry`, see "M1 as built" below) and ships only after a check on the reference box; M2 onwards not started.** Replaces the "one box" assumption that runs through the backend (`app.Options.WebControl` is injected once into every hub, the poller and the jobs blocker).
 
 ## Goal
 
@@ -96,3 +96,18 @@ Not a goal, not broken by anything here: no new hard-wired Dreambox assumptions 
 | later | Slim agent variant · VU+/OpenWebif probe and capability list · search across boxes · tuner-aware recording · move/copy between boxes. | — |
 
 M1 is the risky one (it touches nearly every hub) and has nothing to look at, so it ships on its own and is checked on the reference box before anything is built on top.
+
+## M1 as built (2026-10-16)
+
+How the wiring was done, so M2 onwards can build on it without re-reading the diff.
+
+- **The box travels in the context** (`internal/box`): `box.With/ID/Key` and `box.WithRemote/Remote`. The API layer (`api/boxes.go`, `withBox`) reads `?box=`, answers `404 box_not_found` for an unknown one, and puts the ID in the request context. Nothing is passed as an argument.
+- **Hubs did not change their dependency.** They still hold one `webcontrol.Client`; it is now `boxes.Registry.WebControl()`, a client that forwards each call to the box the context names (the first box without one). The same goes for SerienRecorder and AutoTimer (`boxes/series.go`); a box without a client for them answers "plugin not installed". The router also implements `BouquetEditor` and the raw GET of the self-test, and says "not available" for a box whose client lacks them.
+- **Registry** (`internal/boxes`): the first box ("main") comes from the options (configuration and the WebControl settings, as before); further boxes are rows of the new `boxes` table, built with `Options.BoxFactory` (HTTP clients with that row's address and login in live mode, another mock in mock mode). `Entry.Local` says DreamHub runs on that machine; only the first box is local.
+- **Local resources belong to the local box only.** For a non-local box `box.Remote(ctx)` is true: file operations, in-place recording reads, the recording index, ad detection and Plex "play on the box" (the `StreamBase` is the hub's own loopback) are off (`hubs.onBox` replaces `recfs.Available` at every decision point), and `/api/v1/admin/*` and `/api/v1/apps/*` answer `409 box_not_full`. M2 turns this into capabilities.
+- **Per box:** connector reports (`connector.Registry` cache), hub status transitions (`StatusWatcher.DiffBox`), `Media` recording index, `Channels` refresh time and its daily refresh, the poller (`events.Fleet`: one `Poller` per box, back-off up to 5 minutes, events tagged with `box` once there is more than one box), jobs (`jobs.box_id`: a job runs against its box; the recording blocker is asked per box).
+- **Tables keyed by box** (migration 14, existing rows → "main"): `timer_owners`, `channel_snapshot`, `channel_backups`, `adscan_logos`, `adscan_results`, `jobs`. The store reads the box from the context (`box.Key`), so its API did not change. Before the migration runs on an existing database it is copied to `dreamhub.db.pre-migration-13`.
+- **Plans** remember their box (`plan.Service.Create` now takes the request context): applying a plan acts on the box it was made for, whatever `box=` the apply request carries.
+- **Not done in M1 (by design):** no way to add a box from the UI or API (M3), no `GET /api/v1/boxes` (M3a), no profile box list, no capability list (M2), SeriesHub's missing-episode watch and the admin watches still look at the first box only, notifications are tagged but not yet worded per box (M5), picons are still searched on DreamHub's own disk, `StreamBase` is not yet per box (M6).
+- **Checked:** `go test ./...` (new: two mock boxes through the API, plan-to-box, owners, remote box without local file operations/administration, a hub with no file system at all, job queue per box, poller back-off/fleet/tagging, migration from a real schema-13 database incl. the backup); the new binary on a data directory written by the previous release (responses of timers, guide, media, navigation, hubs, connectors, deviceinfo, channels identical to the old binary's in mock mode).
+- **Box check before release** (reference box, read-only unless noted): install a dev build next to the running one (README, "Trying a build on the box") on a copy of the data directory; open every hub once and compare with 0.8.0; confirm `dreamhub.db.pre-migration-13` exists and the dashboard, profiles, timer owners, channel "new since", AdScan marks and notifications are as before; leave it running for a few minutes and confirm no extra load on enigma2 (one poller, 30 s); do not apply plans while a recording runs.

@@ -3,6 +3,8 @@ package store
 import (
 	"context"
 	"time"
+
+	"github.com/antonbier/DreamHub/backend/internal/box"
 )
 
 // SeenChannel is one channel of ChannelHub's snapshot.
@@ -29,20 +31,21 @@ func (s *Store) RecordChannels(ctx context.Context, channels []SeenChannel, at i
 		return err
 	}
 	defer tx.Rollback()
+	boxID := box.Key(ctx)
 	var look int64
-	if err := tx.QueryRowContext(ctx, `SELECT COALESCE(MAX(last_look), 0) + 1 FROM channel_snapshot`).Scan(&look); err != nil {
+	if err := tx.QueryRowContext(ctx, `SELECT COALESCE(MAX(last_look), 0) + 1 FROM channel_snapshot WHERE box_id = ?`, boxID).Scan(&look); err != nil {
 		return err
 	}
-	stmt, err := tx.PrepareContext(ctx, `INSERT INTO channel_snapshot (service_ref, name, provider, kind, first_seen, last_seen, first_look, last_look)
-		VALUES (?, ?, ?, ?, ?, ?, ?, ?)
-		ON CONFLICT (service_ref) DO UPDATE SET name = excluded.name, provider = excluded.provider, kind = excluded.kind,
+	stmt, err := tx.PrepareContext(ctx, `INSERT INTO channel_snapshot (box_id, service_ref, name, provider, kind, first_seen, last_seen, first_look, last_look)
+		VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)
+		ON CONFLICT (box_id, service_ref) DO UPDATE SET name = excluded.name, provider = excluded.provider, kind = excluded.kind,
 			last_seen = excluded.last_seen, last_look = excluded.last_look`)
 	if err != nil {
 		return err
 	}
 	defer stmt.Close()
 	for _, c := range channels {
-		if _, err := stmt.ExecContext(ctx, c.ServiceRef, c.Name, c.Provider, c.Kind, at, at, look, look); err != nil {
+		if _, err := stmt.ExecContext(ctx, boxID, c.ServiceRef, c.Name, c.Provider, c.Kind, at, at, look, look); err != nil {
 			return err
 		}
 	}
@@ -52,7 +55,7 @@ func (s *Store) RecordChannels(ctx context.Context, channels []SeenChannel, at i
 // SeenChannels returns the whole snapshot, including channels the box no
 // longer lists, and the newest look's number (0 before the first).
 func (s *Store) SeenChannels(ctx context.Context) ([]SeenChannel, int64, error) {
-	rows, err := s.db.QueryContext(ctx, `SELECT service_ref, name, provider, kind, first_seen, last_seen, first_look, last_look FROM channel_snapshot ORDER BY name`)
+	rows, err := s.db.QueryContext(ctx, `SELECT service_ref, name, provider, kind, first_seen, last_seen, first_look, last_look FROM channel_snapshot WHERE box_id = ? ORDER BY name`, box.Key(ctx))
 	if err != nil {
 		return nil, 0, err
 	}
@@ -86,18 +89,18 @@ const keepChannelBackups = 20
 // AddChannelBackup records a backup and forgets all but the newest
 // keepChannelBackups.
 func (s *Store) AddChannelBackup(ctx context.Context, filename, summary string, userID int64) error {
-	if _, err := s.db.ExecContext(ctx, `INSERT OR REPLACE INTO channel_backups (filename, created_at, summary, user_id) VALUES (?, ?, ?, ?)`,
-		filename, s.timestamp(), summary, userID); err != nil {
+	if _, err := s.db.ExecContext(ctx, `INSERT OR REPLACE INTO channel_backups (box_id, filename, created_at, summary, user_id) VALUES (?, ?, ?, ?, ?)`,
+		box.Key(ctx), filename, s.timestamp(), summary, userID); err != nil {
 		return err
 	}
-	_, err := s.db.ExecContext(ctx, `DELETE FROM channel_backups WHERE filename NOT IN
-		(SELECT filename FROM channel_backups ORDER BY created_at DESC LIMIT ?)`, keepChannelBackups)
+	_, err := s.db.ExecContext(ctx, `DELETE FROM channel_backups WHERE box_id = ? AND filename NOT IN
+		(SELECT filename FROM channel_backups WHERE box_id = ? ORDER BY created_at DESC LIMIT ?)`, box.Key(ctx), box.Key(ctx), keepChannelBackups)
 	return err
 }
 
 // ChannelBackups lists the backups, newest first.
 func (s *Store) ChannelBackups(ctx context.Context) ([]ChannelBackup, error) {
-	rows, err := s.db.QueryContext(ctx, `SELECT filename, created_at, summary FROM channel_backups ORDER BY created_at DESC`)
+	rows, err := s.db.QueryContext(ctx, `SELECT filename, created_at, summary FROM channel_backups WHERE box_id = ? ORDER BY created_at DESC`, box.Key(ctx))
 	if err != nil {
 		return nil, err
 	}

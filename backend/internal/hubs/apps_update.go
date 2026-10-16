@@ -36,7 +36,7 @@ func (h *Apps) recreatePlan(ctx context.Context, rc *recreate, containers []dock
 	}
 	g := rc.group
 	user, _ := httpx.User(ctx)
-	return h.Plans.Create(user, plan.Draft{
+	return h.Plans.Create(ctx, user, plan.Draft{
 		Action: action,
 		Changes: []plan.Change{{Type: action, Before: map[string]any{"id": g.all()[0].ID, "containers": rc.ids}, After: map[string]any{
 			"appId": app.ID, "name": name, "custom": app.Custom, "images": images, "hostPort": app.ContainerPort,

@@ -407,7 +407,7 @@ func (h *Timer) planCreate(w http.ResponseWriter, r *http.Request) {
 		warnings = append(warnings, status.Problem{Code: CodeTimerConflict, Params: map[string]any{"with": with, "tuners": info.Tuners(), "estimate": true}})
 	}
 
-	pl := h.Plans.Create(user, plan.Draft{
+	pl := h.Plans.Create(ctx, user, plan.Draft{
 		Action:      "timer.create",
 		Changes:     []plan.Change{{Type: "timer.create", After: p}},
 		Warnings:    warnings,
@@ -487,7 +487,7 @@ func (h *Timer) planDelete(w http.ResponseWriter, r *http.Request) {
 	if t.Active() {
 		warnings = append(warnings, status.Problem{Code: CodeTimerDeleteRunning, Params: map[string]any{"name": t.Name}})
 	}
-	pl := h.Plans.Create(user, plan.Draft{
+	pl := h.Plans.Create(ctx, user, plan.Draft{
 		Action:      "timer.delete",
 		Changes:     []plan.Change{{Type: "timer.delete", Before: t}},
 		Warnings:    warnings,
@@ -544,7 +544,7 @@ func (h *Timer) planCleanup(w http.ResponseWriter, r *http.Request) {
 		httpx.WriteJSON(w, http.StatusOK, map[string]any{"count": 0})
 		return
 	}
-	pl := h.Plans.Create(user, plan.Draft{
+	pl := h.Plans.Create(ctx, user, plan.Draft{
 		Action:      "timer.cleanup",
 		Changes:     changes,
 		Summary:     fmt.Sprintf("Removed %d finished timer(s)", len(done)),

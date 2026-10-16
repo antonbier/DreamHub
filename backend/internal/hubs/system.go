@@ -350,7 +350,7 @@ func (h *System) restorePlan(w http.ResponseWriter, r *http.Request, in backupFi
 		changes = append(changes, plan.Change{Type: "backup.section." + id, After: id})
 	}
 
-	pl := h.Plans.Create(u, plan.Draft{
+	pl := h.Plans.Create(ctx, u, plan.Draft{
 		Action:  "system.restore",
 		Changes: changes,
 		Summary: "Restored DreamHub state from a backup file",

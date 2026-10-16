@@ -14,6 +14,7 @@ import (
 	"context"
 	"encoding/json"
 	"errors"
+	"github.com/antonbier/DreamHub/backend/internal/box"
 	"log/slog"
 	"sync"
 	"time"
@@ -144,12 +145,12 @@ func (s *Service) Enqueue(ctx context.Context, kind, key string, ownerID int64, 
 			return store.Job{}, false, err
 		}
 		for _, j := range active {
-			if j.Kind == kind && j.Key == key {
+			if j.Kind == kind && j.Key == key && j.BoxID == box.Key(ctx) {
 				return j, true, nil
 			}
 		}
 	}
-	job, err = s.Store.InsertJob(ctx, store.Job{Kind: kind, Key: key, OwnerID: ownerID, Params: raw, State: store.JobQueued})
+	job, err = s.Store.InsertJob(ctx, store.Job{Kind: kind, Key: key, OwnerID: ownerID, BoxID: box.Key(ctx), Params: raw, State: store.JobQueued})
 	if err != nil {
 		return store.Job{}, false, err
 	}
@@ -228,14 +229,25 @@ func (s *Service) poke() {
 	}
 }
 
-// blocked asks the blockers and remembers the answer for BlockedBy.
+// blocked asks the blockers about the box ctx is addressed to and
+// remembers the answer for BlockedBy.
 func (s *Service) blocked(ctx context.Context) string {
-	reason := ""
+	reason := s.blockReason(ctx)
+	s.setBlocked(reason)
+	return reason
+}
+
+func (s *Service) blockReason(ctx context.Context) string {
 	for _, b := range s.Blockers {
-		if reason = b(ctx); reason != "" {
-			break
+		if reason := b(ctx); reason != "" {
+			return reason
 		}
 	}
+	return ""
+}
+
+// setBlocked records why the queue is held, "" when it is not.
+func (s *Service) setBlocked(reason string) {
 	s.mu.Lock()
 	changed := s.blockedBy != reason
 	s.blockedBy = reason
@@ -247,7 +259,6 @@ func (s *Service) blocked(ctx context.Context) string {
 			s.Logger.Info("job queue free again")
 		}
 	}
-	return reason
 }
 
 // Run recovers jobs a restart interrupted and then runs the queue until
@@ -331,12 +342,25 @@ func (s *Service) dispatch(ctx context.Context) {
 	if len(queued) == 0 {
 		return
 	}
-	if s.blocked(ctx) != "" {
-		return
+	// A recording holds back the jobs of its own box only.
+	held := map[string]bool{}
+	why := ""
+	for _, j := range queued {
+		if _, asked := held[j.BoxID]; !asked {
+			reason := s.blockReason(box.With(ctx, j.BoxID))
+			held[j.BoxID] = reason != ""
+			if why == "" {
+				why = reason
+			}
+		}
 	}
+	s.setBlocked(why)
 	for _, j := range queued {
 		if free == 0 {
 			break
+		}
+		if held[j.BoxID] {
+			continue
 		}
 		s.mu.Lock()
 		k, ok := s.kinds[j.Kind]
@@ -353,7 +377,7 @@ func (s *Service) dispatch(ctx context.Context) {
 }
 
 func (s *Service) start(parent context.Context, k Kind, j store.Job) {
-	ctx, cancel := context.WithCancel(parent)
+	ctx, cancel := context.WithCancel(box.With(parent, j.BoxID))
 	r := &Run{svc: s, job: j, stop: cancel}
 	r.job.State = store.JobRunning
 	if r.job.StartedAt.IsZero() {

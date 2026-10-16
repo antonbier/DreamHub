@@ -16,6 +16,8 @@ import (
 
 	"github.com/antonbier/DreamHub/backend/internal/apitoken"
 	"github.com/antonbier/DreamHub/backend/internal/auth"
+	"github.com/antonbier/DreamHub/backend/internal/box"
+	"github.com/antonbier/DreamHub/backend/internal/boxes"
 	"github.com/antonbier/DreamHub/backend/internal/connector"
 	"github.com/antonbier/DreamHub/backend/internal/dashboard"
 	"github.com/antonbier/DreamHub/backend/internal/enrich"
@@ -61,6 +63,9 @@ type PublicRoute struct {
 type Deps struct {
 	Public     []PublicRoute
 	WebControl webcontrol.Client
+	// Boxes are the boxes the `box` query parameter picks from; nil means
+	// the single box of the WebControl client above.
+	Boxes      *boxes.Registry
 	Verifier   auth.Verifier
 	Settings   *settings.Service
 	Connectors *connector.Registry
@@ -174,7 +179,7 @@ func NewRouterWithRoutes(d Deps) (http.Handler, []Route) {
 	mux.Handle("GET /api/v1/profiles", auth.Middleware(d.Verifier, handleListProfiles(d)))
 	mux.Handle("POST /api/v1/profiles/{id}/session", auth.Middleware(d.Verifier, handleStartSession(d)))
 	mux.Handle("DELETE /api/v1/profiles/session", auth.Middleware(d.Verifier, handleEndSession(d)))
-	mux.Handle("/api/v1/", auth.Middleware(d.Verifier, identify(d, protected)))
+	mux.Handle("/api/v1/", auth.Middleware(d.Verifier, identify(d, withBox(d, protected))))
 
 	allowedHosts := func(r *http.Request) []string {
 		v, err := d.Settings.Values(r.Context(), d.User)
@@ -387,7 +392,7 @@ func recordStatusTransitions(d Deps, r *http.Request, statuses []hub.Status) {
 	if d.Watcher == nil || d.Store == nil {
 		return
 	}
-	for _, t := range d.Watcher.Diff(statuses) {
+	for _, t := range d.Watcher.DiffBox(box.Key(r.Context()), statuses) {
 		detail, _ := json.Marshal(map[string]any{"hub": t.HubID, "from": t.From, "to": t.To})
 		if err := d.Store.AppendChange(r.Context(), store.ChangeEntry{
 			Action: "hub.statusChanged", Summary: t.Summary(), Detail: detail,

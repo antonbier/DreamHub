@@ -44,8 +44,8 @@ func (h *Media) RegisterJobs(q *jobs.Service) {
 
 // adScanAvailable: an Opener (FFmpeg found, or mock mode), the queue, and
 // the recordings on this file system.
-func (h *Media) adScanAvailable(roots []string) bool {
-	return h.AdScan != nil && h.Jobs != nil && recfs.Available(h.FS, roots)
+func (h *Media) adScanAvailable(ctx context.Context, roots []string) bool {
+	return h.AdScan != nil && h.Jobs != nil && onBox(ctx, h.FS, roots)
 }
 
 // startAdScan queues one analysis per recording: POST {paths: [...]}.
@@ -64,7 +64,7 @@ func (h *Media) startAdScan(w http.ResponseWriter, r *http.Request) {
 		httpx.WriteError(w, r, http.StatusBadGateway, "webcontrol_unavailable", "could not reach WebControl")
 		return
 	}
-	if !h.adScanAvailable(roots) {
+	if !h.adScanAvailable(r.Context(), roots) {
 		httpx.WriteError(w, r, http.StatusConflict, CodeAdScanUnavailable, "ad detection needs FFmpeg and DreamHub running on the box")
 		return
 	}

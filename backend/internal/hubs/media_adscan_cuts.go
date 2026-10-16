@@ -84,7 +84,7 @@ func (h *Media) markPlan(w http.ResponseWriter, r *http.Request) {
 	changes := []plan.Change{
 		{Type: "recording.mark", After: map[string]any{"path": p, "blocks": len(req.Blocks), "seconds": total}},
 	}
-	pl := h.Plans.Create(user, plan.Draft{
+	pl := h.Plans.Create(r.Context(), user, plan.Draft{
 		Action:      "media.adscan.mark",
 		Changes:     changes,
 		Summary:     fmt.Sprintf("Marked %d ad break(s), %.0f s, in %s's cut list", len(req.Blocks), total, base),

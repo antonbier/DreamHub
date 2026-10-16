@@ -3,6 +3,7 @@ package hubs
 import (
 	"context"
 	"errors"
+	"github.com/antonbier/DreamHub/backend/internal/box"
 	"io"
 	"net"
 	"net/http"
@@ -71,7 +72,7 @@ func (h *Plex) play(w http.ResponseWriter, r *http.Request) {
 	if !ok {
 		return
 	}
-	if !c.playOnBox || h.StreamBase == "" {
+	if !c.playOnBox || h.StreamBase == "" || box.Remote(r.Context()) {
 		httpx.WriteError(w, r, http.StatusConflict, CodePlexPlayUnavailable, "playing on the box needs DreamHub on the box and Settings → Plex → play on the box")
 		return
 	}

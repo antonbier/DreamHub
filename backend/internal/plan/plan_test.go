@@ -34,7 +34,7 @@ func TestApply_OnceAndLogged(t *testing.T) {
 	s, st, u, _ := setup(t)
 	ctx := context.Background()
 	n, cur := 0, "v1"
-	p := s.Create(u, draft(&n, "v1", &cur))
+	p := s.Create(context.Background(), u, draft(&n, "v1", &cur))
 
 	if _, err := s.Apply(ctx, u, p.ID); err != nil || n != 1 {
 		t.Fatalf("expected one execution, got %d (%v)", n, err)
@@ -51,7 +51,7 @@ func TestApply_OnceAndLogged(t *testing.T) {
 func TestApply_Expired(t *testing.T) {
 	s, _, u, now := setup(t)
 	n, cur := 0, "v1"
-	p := s.Create(u, draft(&n, "v1", &cur))
+	p := s.Create(context.Background(), u, draft(&n, "v1", &cur))
 	*now = now.Add(TTL)
 	if _, err := s.Apply(context.Background(), u, p.ID); !errors.Is(err, ErrNotFound) || n != 0 {
 		t.Fatalf("expired plan must not execute, got %v", err)
@@ -61,7 +61,7 @@ func TestApply_Expired(t *testing.T) {
 func TestApply_OtherUser(t *testing.T) {
 	s, _, u, _ := setup(t)
 	n, cur := 0, "v1"
-	p := s.Create(u, draft(&n, "v1", &cur))
+	p := s.Create(context.Background(), u, draft(&n, "v1", &cur))
 	other := store.User{ID: u.ID + 1, Role: store.RoleAdmin}
 	if _, err := s.Apply(context.Background(), other, p.ID); !errors.Is(err, ErrNotOwner) || n != 0 {
 		t.Fatalf("another user must not apply the plan, got %v", err)
@@ -74,7 +74,7 @@ func TestApply_OtherUser(t *testing.T) {
 func TestApply_Stale(t *testing.T) {
 	s, st, u, _ := setup(t)
 	n, cur := 0, "v1"
-	p := s.Create(u, draft(&n, "v1", &cur))
+	p := s.Create(context.Background(), u, draft(&n, "v1", &cur))
 	cur = "v2"
 	if _, err := s.Apply(context.Background(), u, p.ID); !errors.Is(err, ErrStale) || n != 0 {
 		t.Fatalf("stale plan must not execute, got %v", err)
@@ -87,7 +87,7 @@ func TestApply_Stale(t *testing.T) {
 func TestApply_ExecuteErrorNotLogged(t *testing.T) {
 	s, st, u, _ := setup(t)
 	d := Draft{Action: "x", Execute: func(context.Context) error { return errors.New("box said no") }}
-	p := s.Create(u, d)
+	p := s.Create(context.Background(), u, d)
 	if _, err := s.Apply(context.Background(), u, p.ID); err == nil {
 		t.Fatal("expected the execution error")
 	}
@@ -100,7 +100,7 @@ func TestApply_RunsToTheEndWhenTheClientLeaves(t *testing.T) {
 	s, _, u, _ := setup(t)
 	ctx, cancel := context.WithCancel(context.Background())
 	var sawCancel bool
-	p := s.Create(u, Draft{Action: "test.change", Execute: func(ctx context.Context) error {
+	p := s.Create(context.Background(), u, Draft{Action: "test.change", Execute: func(ctx context.Context) error {
 		cancel() // the phone locks its screen mid-change
 		sawCancel = ctx.Err() != nil
 		return nil

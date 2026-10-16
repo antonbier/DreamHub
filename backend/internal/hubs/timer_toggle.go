@@ -97,7 +97,7 @@ func (h *Timer) planToggle(w http.ResponseWriter, r *http.Request) {
 	}
 	after := t
 	after.Disabled = !req.Enabled
-	pl := h.Plans.Create(user, plan.Draft{
+	pl := h.Plans.Create(ctx, user, plan.Draft{
 		Action:      action,
 		Changes:     []plan.Change{{Type: action, Before: t, After: after}},
 		Warnings:    warnings,

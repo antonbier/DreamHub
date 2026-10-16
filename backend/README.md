@@ -27,6 +27,8 @@ curl -X PATCH http://127.0.0.1:8080/api/v1/settings -H 'X-DreamHub-Request: 1' \
 
 **Every mutating request (POST, PUT, PATCH, DELETE) needs the header `X-DreamHub-Request: 1`** and must not come from a foreign `Origin` — CSRF protection, since browsers send Basic Auth credentials automatically. DreamHub sends no CORS headers, so other web pages can't add it.
 
+**Boxes**: every request is about one box. The optional query parameter `box=<id>` names it; without it the request is about the first box (ID `main`), so clients written before multi-box support are unaffected. An unknown ID is `404 box_not_found`. A plan is applied to the box it was previewed for. See [`docs/MULTIDEVICE_PLAN.md`](../docs/MULTIDEVICE_PLAN.md).
+
 **Host names**: requests addressed by IP, `localhost` or `*.local` are accepted; any other host name (DNS-rebinding protection) only if listed in the setting `network.allowedHosts` (comma-separated). Otherwise: `421 host_not_allowed`.
 
 **Writes to a real box are on by default** since the timer write endpoints (`/web/timeradd`, `/web/timerdelete`) were verified live on the reference device (`ARCHITECTURE.md`, "Timer write endpoints"). Set `DREAMHUB_ENABLE_DEVICE_WRITES=0` for a read-only run; applying a plan then answers `409 writes_disabled`. Every write still goes through preview-and-confirm, is sent as a form-encoded `POST` with every parameter, and is **verified against `/web/timerlist` afterwards**, because the box reports success for a timer it silently dropped as a duplicate.

@@ -2,6 +2,7 @@ package hubs
 
 import (
 	"context"
+	"github.com/antonbier/DreamHub/backend/internal/box"
 	"sync"
 	"time"
 
@@ -52,18 +53,34 @@ type recIndex struct {
 // synchronously — reading local directories and small .meta files is fast
 // — later calls return the current entries and rebuild in the background
 // once they're older than indexMaxAge.
+// index returns the box's own recording index.
+func (h *Media) index(ctx context.Context) *recIndex {
+	h.indexMu.Lock()
+	defer h.indexMu.Unlock()
+	if h.indexes == nil {
+		h.indexes = map[string]*recIndex{}
+	}
+	id := box.Key(ctx)
+	x := h.indexes[id]
+	if x == nil {
+		x = &recIndex{}
+		h.indexes[id] = x
+	}
+	return x
+}
+
 func (h *Media) recordingIndex(ctx context.Context) ([]indexEntry, bool) {
 	roots, err := h.roots(ctx)
-	if err != nil || !recfs.Available(h.FS, roots) {
+	if err != nil || !onBox(ctx, h.FS, roots) {
 		return nil, false
 	}
-	x := &h.index
+	x := h.index(ctx)
 	x.mu.Lock()
 	if x.entries == nil && !x.building {
 		x.building = true
 		x.first = make(chan struct{})
 		x.mu.Unlock()
-		return h.buildIndex(roots), true
+		return h.buildIndex(x, roots), true
 	}
 	if x.entries == nil && x.first != nil {
 		first := x.first
@@ -78,14 +95,13 @@ func (h *Media) recordingIndex(ctx context.Context) ([]indexEntry, bool) {
 	entries := x.entries
 	if time.Since(x.built) >= indexMaxAge && !x.building {
 		x.building = true
-		go h.buildIndex(roots)
+		go h.buildIndex(x, roots)
 	}
 	x.mu.Unlock()
 	return entries, entries != nil
 }
 
-func (h *Media) buildIndex(roots []string) []indexEntry {
-	x := &h.index
+func (h *Media) buildIndex(x *recIndex, roots []string) []indexEntry {
 	for {
 		built := walkRecordings(h.FS, roots)
 		x.mu.Lock()
@@ -108,7 +124,7 @@ func (h *Media) buildIndex(roots []string) []indexEntry {
 // operation, so search and views show the change right away. Nothing to do
 // before the first use built one.
 func (h *Media) refreshIndex(ctx context.Context) {
-	x := &h.index
+	x := h.index(ctx)
 	x.mu.Lock()
 	if x.building {
 		x.again = true
@@ -128,7 +144,7 @@ func (h *Media) refreshIndex(ctx context.Context) {
 		x.mu.Unlock()
 		return
 	}
-	go h.buildIndex(roots)
+	go h.buildIndex(x, roots)
 }
 
 // readRegular reads a file only if it's a regular file, not a link to

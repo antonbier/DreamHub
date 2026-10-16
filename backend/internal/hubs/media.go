@@ -7,6 +7,7 @@ import (
 	"path"
 	"sort"
 	"strings"
+	"sync"
 	"time"
 
 	"github.com/antonbier/DreamHub/backend/internal/adscan"
@@ -62,9 +63,11 @@ type Media struct {
 	// Jobs is the background queue analyses and cuts run in (RegisterJobs).
 	Jobs *jobs.Service
 
-	// index is every recording below the recording folders, read from the
-	// file system on the box (media_index.go).
-	index recIndex
+	// indexes are every recording below the recording folders, read from
+	// the file system on the box (media_index.go); one per box, so that
+	// one box's recordings never turn up in another's search.
+	indexMu sync.Mutex
+	indexes map[string]*recIndex
 }
 
 // Perms are MediaHub's route permissions beyond the hub's own (internal/perm).
@@ -204,7 +207,7 @@ func (h *Media) list(w http.ResponseWriter, r *http.Request) {
 		httpx.WriteError(w, r, http.StatusBadGateway, "webcontrol_unavailable", "could not reach WebControl")
 		return
 	}
-	onBox := recfs.Available(h.FS, roots)
+	onBox := onBox(ctx, h.FS, roots)
 	busy, _ := h.inUseSet(ctx)
 	views := make([]MovieView, len(folder.Movies))
 	for i, m := range folder.Movies {
@@ -235,9 +238,9 @@ func (h *Media) list(w http.ResponseWriter, r *http.Request) {
 		"root":       root + "/",
 		"subfolders": subfolders,
 		"movies":     views,
-		"fileOps":    h.fileOps(roots),
+		"fileOps":    h.fileOps(ctx, roots),
 		// Whether "Detect ads" can run here (FFmpeg, on the box or mock).
-		"adScan": h.adScanAvailable(roots),
+		"adScan": h.adScanAvailable(ctx, roots),
 	}
 	if dir != root {
 		out["parent"] = path.Dir(dir) + "/"

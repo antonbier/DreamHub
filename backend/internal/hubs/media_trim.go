@@ -130,7 +130,7 @@ func (h *Media) trimPlan(w http.ResponseWriter, r *http.Request) {
 			After: map[string]any{"path": p, "duration": trim.Length(keep), "size": newSize, "removed": cut, "blocks": len(req.Blocks)}},
 		{Type: "recording.trash", Before: p, After: path.Join(path.Dir(p), origBase+".ts"+recfs.TrashSuffix)},
 	}
-	pl := h.Plans.Create(user, plan.Draft{
+	pl := h.Plans.Create(r.Context(), user, plan.Draft{
 		Action:      "media.trim",
 		Changes:     changes,
 		Summary:     fmt.Sprintf("Cut %d ad break(s), %.0f s, out of %s; the original went to the trash", len(req.Blocks), cut, base),

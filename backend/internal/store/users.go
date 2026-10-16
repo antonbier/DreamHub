@@ -6,6 +6,7 @@ import (
 	"encoding/json"
 	"errors"
 	"fmt"
+	"github.com/antonbier/DreamHub/backend/internal/box"
 	"time"
 )
 
@@ -287,9 +288,9 @@ func (s *Store) DeleteProfileSessionsBefore(ctx context.Context, t time.Time) er
 // start time.
 func (s *Store) SetTimerOwner(ctx context.Context, serviceRef string, begin, userID int64) error {
 	_, err := s.db.ExecContext(ctx,
-		`INSERT INTO timer_owners (service_ref, begin_at, user_id, created_at) VALUES (?, ?, ?, ?)
-		 ON CONFLICT (service_ref, begin_at) DO UPDATE SET user_id = excluded.user_id`,
-		serviceRef, begin, userID, s.timestamp())
+		`INSERT INTO timer_owners (box_id, service_ref, begin_at, user_id, created_at) VALUES (?, ?, ?, ?, ?)
+		 ON CONFLICT (box_id, service_ref, begin_at) DO UPDATE SET user_id = excluded.user_id`,
+		box.Key(ctx), serviceRef, begin, userID, s.timestamp())
 	return err
 }
 
@@ -297,7 +298,7 @@ func (s *Store) SetTimerOwner(ctx context.Context, serviceRef string, begin, use
 // nobody did (made on the TV, by AutoTimer or SerienRecorder).
 func (s *Store) TimerOwner(ctx context.Context, serviceRef string, begin int64) (int64, error) {
 	var id int64
-	err := s.db.QueryRowContext(ctx, `SELECT user_id FROM timer_owners WHERE service_ref = ? AND begin_at = ?`, serviceRef, begin).Scan(&id)
+	err := s.db.QueryRowContext(ctx, `SELECT user_id FROM timer_owners WHERE box_id = ? AND service_ref = ? AND begin_at = ?`, box.Key(ctx), serviceRef, begin).Scan(&id)
 	if errors.Is(err, sql.ErrNoRows) {
 		return 0, ErrNotFound
 	}
@@ -308,7 +309,7 @@ func (s *Store) TimerOwner(ctx context.Context, serviceRef string, begin int64) 
 // timer on the same channel and start, made by someone else, must not
 // count as theirs.
 func (s *Store) DeleteTimerOwner(ctx context.Context, serviceRef string, begin int64) error {
-	_, err := s.db.ExecContext(ctx, `DELETE FROM timer_owners WHERE service_ref = ? AND begin_at = ?`, serviceRef, begin)
+	_, err := s.db.ExecContext(ctx, `DELETE FROM timer_owners WHERE box_id = ? AND service_ref = ? AND begin_at = ?`, box.Key(ctx), serviceRef, begin)
 	return err
 }
 

@@ -142,7 +142,7 @@ func (h *Admin) planRestart(w http.ResponseWriter, r *http.Request) {
 	}
 	user, _ := httpx.User(ctx)
 	name := body.Name
-	pl := h.Plans.Create(user, plan.Draft{
+	pl := h.Plans.Create(ctx, user, plan.Draft{
 		Action:      action,
 		Changes:     []plan.Change{{Type: action, Before: u}},
 		Warnings:    warnings,

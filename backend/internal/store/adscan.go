@@ -6,6 +6,8 @@ import (
 	"encoding/json"
 	"errors"
 	"time"
+
+	"github.com/antonbier/DreamHub/backend/internal/box"
 )
 
 // AdScanLogo is a channel's learned logo mask (internal/adscan.Mask as
@@ -21,7 +23,7 @@ type AdScanLogo struct {
 func (s *Store) AdScanLogo(ctx context.Context, serviceRef string) (AdScanLogo, bool, error) {
 	var l AdScanLogo
 	var mask, at string
-	err := s.db.QueryRowContext(ctx, `SELECT service_ref, mask, learned_at, learned_from FROM adscan_logos WHERE service_ref = ?`, serviceRef).
+	err := s.db.QueryRowContext(ctx, `SELECT service_ref, mask, learned_at, learned_from FROM adscan_logos WHERE box_id = ? AND service_ref = ?`, box.Key(ctx), serviceRef).
 		Scan(&l.ServiceRef, &mask, &at, &l.LearnedFrom)
 	if errors.Is(err, sql.ErrNoRows) {
 		return AdScanLogo{}, false, nil
@@ -35,9 +37,9 @@ func (s *Store) AdScanLogo(ctx context.Context, serviceRef string) (AdScanLogo, 
 
 // SaveAdScanLogo stores (or replaces) a channel's mask.
 func (s *Store) SaveAdScanLogo(ctx context.Context, serviceRef string, mask json.RawMessage, from string) error {
-	_, err := s.db.ExecContext(ctx, `INSERT INTO adscan_logos (service_ref, mask, learned_at, learned_from) VALUES (?, ?, ?, ?)
-		ON CONFLICT (service_ref) DO UPDATE SET mask = excluded.mask, learned_at = excluded.learned_at, learned_from = excluded.learned_from`,
-		serviceRef, string(mask), s.timestamp(), from)
+	_, err := s.db.ExecContext(ctx, `INSERT INTO adscan_logos (box_id, service_ref, mask, learned_at, learned_from) VALUES (?, ?, ?, ?, ?)
+		ON CONFLICT (box_id, service_ref) DO UPDATE SET mask = excluded.mask, learned_at = excluded.learned_at, learned_from = excluded.learned_from`,
+		box.Key(ctx), serviceRef, string(mask), s.timestamp(), from)
 	return err
 }
 
@@ -54,7 +56,7 @@ type AdScanResult struct {
 func (s *Store) AdScanResult(ctx context.Context, path string) (AdScanResult, bool, error) {
 	var r AdScanResult
 	var res, at string
-	err := s.db.QueryRowContext(ctx, `SELECT path, service_ref, result, analyzed_at FROM adscan_results WHERE path = ?`, path).
+	err := s.db.QueryRowContext(ctx, `SELECT path, service_ref, result, analyzed_at FROM adscan_results WHERE box_id = ? AND path = ?`, box.Key(ctx), path).
 		Scan(&r.Path, &r.ServiceRef, &res, &at)
 	if errors.Is(err, sql.ErrNoRows) {
 		return AdScanResult{}, false, nil
@@ -68,21 +70,21 @@ func (s *Store) AdScanResult(ctx context.Context, path string) (AdScanResult, bo
 
 // SaveAdScanResult stores (or replaces) a recording's analysis.
 func (s *Store) SaveAdScanResult(ctx context.Context, path, serviceRef string, result json.RawMessage) error {
-	_, err := s.db.ExecContext(ctx, `INSERT INTO adscan_results (path, service_ref, result, analyzed_at) VALUES (?, ?, ?, ?)
-		ON CONFLICT (path) DO UPDATE SET service_ref = excluded.service_ref, result = excluded.result, analyzed_at = excluded.analyzed_at`,
-		path, serviceRef, string(result), s.timestamp())
+	_, err := s.db.ExecContext(ctx, `INSERT INTO adscan_results (box_id, path, service_ref, result, analyzed_at) VALUES (?, ?, ?, ?, ?)
+		ON CONFLICT (box_id, path) DO UPDATE SET service_ref = excluded.service_ref, result = excluded.result, analyzed_at = excluded.analyzed_at`,
+		box.Key(ctx), path, serviceRef, string(result), s.timestamp())
 	return err
 }
 
 // MoveAdScanResult re-keys a recording's analysis after a rename; nothing
 // happens when it has none.
 func (s *Store) MoveAdScanResult(ctx context.Context, from, to string) error {
-	_, err := s.db.ExecContext(ctx, `UPDATE OR REPLACE adscan_results SET path = ? WHERE path = ?`, to, from)
+	_, err := s.db.ExecContext(ctx, `UPDATE OR REPLACE adscan_results SET path = ? WHERE box_id = ? AND path = ?`, to, box.Key(ctx), from)
 	return err
 }
 
 // DeleteAdScanResult forgets a recording's analysis.
 func (s *Store) DeleteAdScanResult(ctx context.Context, path string) error {
-	_, err := s.db.ExecContext(ctx, `DELETE FROM adscan_results WHERE path = ?`, path)
+	_, err := s.db.ExecContext(ctx, `DELETE FROM adscan_results WHERE box_id = ? AND path = ?`, box.Key(ctx), path)
 	return err
 }

@@ -22,7 +22,7 @@ const maxCoverBytes = 8 << 20
 // cover serves ?path=<recording .ts>&kind=poster|backdrop.
 func (h *Media) cover(w http.ResponseWriter, r *http.Request) {
 	roots, err := h.roots(r.Context())
-	if err != nil || !recfs.Available(h.FS, roots) {
+	if err != nil || !onBox(r.Context(), h.FS, roots) {
 		httpx.WriteError(w, r, http.StatusNotFound, "not_found", "no cover art here")
 		return
 	}

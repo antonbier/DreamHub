@@ -6,6 +6,8 @@ Format follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/); version
 
 ## [Unreleased]
 
+## [0.8.0] - 2026-10-16
+
 ### Added
 - Logs for extensions: the Services list in Device → Administration now includes the Docker services and extensions (eWeLink), each with its Logs button; an extension's refusal text is part of DreamHub's own log line when an apply fails (it only said "unexpected status 502" before).
 - Extensions can show things on the start page: a widget flagged `tile` appears in a new **Extensions** tile, under the extension's name — each extension decides what (or nothing); with nothing flagged the tile is not shown (schema 3, `docs/BUILDING_EXTENSIONS.md`). Settings forms can show a sentence (`info`) and an address to open (`link`).

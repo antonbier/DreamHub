@@ -940,7 +940,9 @@ func TestDashboard_PutRoundTripsAndIsLogged(t *testing.T) {
 		t.Fatalf("order/width/hidden not preserved: %+v", body.Tiles)
 	}
 
-	_, b = e.do(t, "GET", "/api/v1/changes?limit=1", "", nil)
+	// Not limit=1: the Docker auto-start pass can log its own setting
+	// change just before or after (seen under -race).
+	_, b = e.do(t, "GET", "/api/v1/changes?limit=5", "", nil)
 	if !strings.Contains(string(b), "dashboard.update") {
 		t.Errorf("expected the dashboard change to be logged, got %s", b)
 	}

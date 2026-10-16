@@ -6,6 +6,11 @@ Format follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/); version
 
 ## [Unreleased]
 
+### Fixed
+- Settings → Boxes: a second box at an address another box already has is refused (it would be polled twice and split its data), and so is a port beyond 65535; addresses are compared without the default port and in lower case.
+- The guide's single-channel day view asked for exactly 24 hours, so on the day the clocks change one hour of programmes was missing; it now runs until the next morning's start.
+- `POST /api/v1/boxes` answered `capabilities: null` where the list answers `[]`.
+
 ## [0.9.0] - 2026-10-16
 
 Multi-box: DreamHub can steer several Dreamboxes. With one box nothing changes — the selector, the dashboard strip and the other new buttons only show with two or more. Box-checked on the reference box (plan "Box check", `ARCHITECTURE.md`); not tried because only one box exists: a second real box, and starting a recording's playback on another box's TV.

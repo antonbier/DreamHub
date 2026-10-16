@@ -32,6 +32,8 @@ const (
 	CodeConnectorNotInstalled    = "connector.notInstalled"
 	CodeCapabilityMissing        = "capability.missing"
 	CodeHubDependencyUnavailable = "hub.dependencyUnavailable"
+	// CodeBoxNotFull: the hub needs DreamHub running on the box itself.
+	CodeBoxNotFull = "box.notFull"
 
 	FixCheckBoxConnection  = "fix.checkBoxConnection"
 	FixConfigureInSettings = "fix.configureInSettings"

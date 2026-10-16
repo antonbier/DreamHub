@@ -28,9 +28,17 @@ export interface NavSection {
   items: NavItem[]
 }
 
+export interface NavBox {
+  id: string
+  // DreamHub runs on that box; otherwise only its web interface is used.
+  full: boolean
+  capabilities: string[]
+}
+
 export interface Navigation {
   labels: 'descriptive' | 'hub'
   sections: NavSection[]
+  box?: NavBox
 }
 
 export type SettingType = 'string' | 'bool' | 'int' | 'enum' | 'timezone' | 'secret' | 'password'

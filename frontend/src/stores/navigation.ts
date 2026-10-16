@@ -12,6 +12,11 @@ export const useNavigationStore = defineStore('navigation', {
     loading: false,
     reachable: true,
   }),
+  getters: {
+    // Whether the active box runs DreamHub itself. A backend that doesn't say
+    // (no box information) is the single-box case, which is always Full.
+    isFull: (state): boolean => state.navigation?.box?.full ?? true,
+  },
   actions: {
     async load() {
       this.loading = true

@@ -38,7 +38,7 @@ func (r *Registry) AddSearchProvider(hubID string, p SearchProvider) {
 // than failing the whole search (CONCEPT.md: hubs degrade gracefully).
 // Results are grouped by hub, in the hub's own navigation order.
 func (r *Registry) Search(ctx context.Context, v settings.Values, reports map[string]connector.Report, perms perm.Set, query string) []SearchResult {
-	statuses := r.Statuses(v, reports)
+	statuses := r.StatusesFor(ctx, v, reports)
 	order := map[string]int{}
 	for _, d := range r.hubs {
 		order[d.ID] = d.Order

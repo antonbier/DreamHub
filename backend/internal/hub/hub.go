@@ -8,9 +8,11 @@
 package hub
 
 import (
+	"context"
 	"fmt"
 	"sort"
 
+	"github.com/antonbier/DreamHub/backend/internal/box"
 	"github.com/antonbier/DreamHub/backend/internal/connector"
 	"github.com/antonbier/DreamHub/backend/internal/perm"
 	"github.com/antonbier/DreamHub/backend/internal/settings"
@@ -57,6 +59,11 @@ type Descriptor struct {
 	// (internal/perm); perm.Watch when empty.
 	Perm     perm.Perm
 	Requires []Requirement
+	// NeedsFull: the hub administers the machine DreamHub runs on (Docker,
+	// extensions), so on any other box it is not merely unavailable but
+	// gone from the navigation — that box will never offer it
+	// (docs/MULTIDEVICE_PLAN.md, "Capabilities").
+	NeedsFull bool
 	// Emits are the event keys (internal/events, the notification inbox
 	// and push) that come from this hub's area — the hub contract's
 	// "events it emits" (CONCEPT.md). Recording and conflict events are
@@ -145,14 +152,17 @@ func (r *Registry) SettingsSection() settings.Section {
 
 // Status is a hub's availability as seen by the core.
 type Status struct {
-	ID       string           `json:"id"`
-	Name     string           `json:"name"`
-	Label    string           `json:"label"`
-	Icon     string           `json:"icon"`
-	Path     string           `json:"path"`
-	Group    Group            `json:"group"`
-	Perm     perm.Perm        `json:"permission"`
-	Enabled  bool             `json:"enabled"`
+	ID      string    `json:"id"`
+	Name    string    `json:"name"`
+	Label   string    `json:"label"`
+	Icon    string    `json:"icon"`
+	Path    string    `json:"path"`
+	Group   Group     `json:"group"`
+	Perm    perm.Perm `json:"permission"`
+	Enabled bool      `json:"enabled"`
+	// Hidden: the hub can't exist on the box the request is about
+	// (Descriptor.NeedsFull); the navigation leaves it out.
+	Hidden   bool             `json:"hidden,omitempty"`
 	Level    status.Level     `json:"status"`
 	Problems []status.Problem `json:"problems"`
 	Requires []Requirement    `json:"requires"`
@@ -179,6 +189,18 @@ func failLevel(req Requirement) status.Level {
 // every hub's own status is known (one level deep, which is all the v1 hubs
 // need).
 func (r *Registry) Statuses(v settings.Values, reports map[string]connector.Report) []Status {
+	return r.statuses(false, v, reports)
+}
+
+// StatusesFor is Statuses for the box ctx is addressed to. Device
+// capabilities (journalctl, ...) measure the machine DreamHub runs on, so
+// they are not evaluated for a box that is another machine; a hub that
+// needs DreamHub on its own box is hidden there.
+func (r *Registry) StatusesFor(ctx context.Context, v settings.Values, reports map[string]connector.Report) []Status {
+	return r.statuses(box.Remote(ctx), v, reports)
+}
+
+func (r *Registry) statuses(remote bool, v settings.Values, reports map[string]connector.Report) []Status {
 	out := make([]Status, 0, len(r.hubs))
 	idx := map[string]int{}
 	for _, d := range r.hubs {
@@ -189,7 +211,17 @@ func (r *Registry) Statuses(v settings.Values, reports map[string]connector.Repo
 		if st.Requires == nil {
 			st.Requires = []Requirement{}
 		}
+		if remote && d.NeedsFull {
+			st.Hidden, st.Level = true, status.Unavailable
+			st.Problems = append(st.Problems, status.Problem{Code: status.CodeBoxNotFull})
+			idx[d.ID] = len(out)
+			out = append(out, st)
+			continue
+		}
 		for _, req := range d.Requires {
+			if remote && req.Capability != "" {
+				continue
+			}
 			switch {
 			case req.Connector != "":
 				rep, ok := reports[req.Connector]
@@ -285,6 +317,17 @@ type Navigation struct {
 	// Labels is the user's choice of "descriptive" or "hub" names.
 	Labels   string       `json:"labels"`
 	Sections []NavSection `json:"sections"`
+	// Box says what the box the request is about can do, so the UI hides
+	// what that box will never offer and explains what it lacks.
+	Box *BoxInfo `json:"box,omitempty"`
+}
+
+// BoxInfo is the part of a box the UI needs to decide what to offer.
+type BoxInfo struct {
+	ID string `json:"id"`
+	// Full: DreamHub runs on that box (otherwise only its web interface is used).
+	Full         bool     `json:"full"`
+	Capabilities []string `json:"capabilities"`
 }
 
 // Navigation builds the sidebar: Dashboard first, then the hub groups in
@@ -294,7 +337,7 @@ type Navigation struct {
 func (r *Registry) Navigation(statuses []Status, perms perm.Set, labels string) Navigation {
 	byGroup := map[Group][]Status{}
 	for _, s := range statuses {
-		if !s.Enabled || !Visible(s.Perm, perms) {
+		if !s.Enabled || s.Hidden || !Visible(s.Perm, perms) {
 			continue
 		}
 		byGroup[s.Group] = append(byGroup[s.Group], s)

@@ -48,6 +48,7 @@
         {{ t('diagnostics.title') }}
       </button>
       <button
+        v-if="navigation.isFull"
         type="button"
         role="tab"
         :aria-selected="tab === 'admin'"
@@ -58,6 +59,7 @@
         {{ t('admin.tabs.admin') }}
       </button>
       <button
+        v-if="navigation.isFull"
         type="button"
         role="tab"
         :aria-selected="tab === 'advanced'"
@@ -349,6 +351,14 @@ const tab = ref<Tab>(
         : 'overview',
 )
 watch(tab, (t) => router.replace({ query: { ...route.query, tab: t === 'overview' ? undefined : t } }))
+// A Basic box has no administration (it needs DreamHub on that box).
+watch(
+  () => navigation.isFull,
+  (full) => {
+    if (!full && (tab.value === 'admin' || tab.value === 'advanced')) tab.value = 'overview'
+  },
+  { immediate: true },
+)
 
 // --- overview (ex-SystemHubView) ---------------------------------------------
 

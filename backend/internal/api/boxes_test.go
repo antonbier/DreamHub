@@ -195,3 +195,45 @@ func TestBox_HubWithoutAnyLocalFileSystem(t *testing.T) {
 		}
 	}
 }
+
+// The navigation of a Basic box: no AppsHub, and the box's capabilities
+// ride along so the UI can hide what that box will never have.
+func TestBox_NavigationOfABasicBox(t *testing.T) {
+	e := newEnv(t)
+	e.addBox(t, "bedroom")
+	if _, ok := navItems(t, e)["apps"]; !ok {
+		t.Fatal("AppsHub belongs to the box DreamHub runs on")
+	}
+	for _, c := range []struct {
+		query string
+		full  bool
+	}{{"", true}, {"?box=bedroom", false}} {
+		resp, b := e.do(t, "GET", "/api/v1/navigation"+c.query, "", nil)
+		if resp.StatusCode != http.StatusOK {
+			t.Fatalf("navigation%s: %d %s", c.query, resp.StatusCode, b)
+		}
+		var nav struct {
+			Box struct {
+				ID           string
+				Full         bool
+				Capabilities []string
+			}
+			Sections []struct{ Items []struct{ ID string } }
+		}
+		if err := json.Unmarshal(b, &nav); err != nil {
+			t.Fatal(err)
+		}
+		if nav.Box.Full != c.full || strings.Contains(strings.Join(nav.Box.Capabilities, ","), "docker") != c.full {
+			t.Errorf("navigation%s: box %+v", c.query, nav.Box)
+		}
+		hasApps := false
+		for _, s := range nav.Sections {
+			for _, it := range s.Items {
+				hasApps = hasApps || it.ID == "apps"
+			}
+		}
+		if hasApps != c.full {
+			t.Errorf("navigation%s: AppsHub shown = %v", c.query, hasApps)
+		}
+	}
+}

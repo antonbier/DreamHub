@@ -42,6 +42,9 @@
     "capability": {
       "missing": "Fehlt auf dem Gerät: {capability}"
     },
+    "box": {
+      "notFull": "Das geht nur, wenn DreamHub auf dieser Box läuft."
+    },
     "hub": {
       "dependencyUnavailable": "Braucht „{hub}“, das nicht verfügbar ist."
     },

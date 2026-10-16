@@ -6,6 +6,7 @@ import (
 	"testing"
 
 	"github.com/antonbier/DreamHub/backend/internal/box"
+	"github.com/antonbier/DreamHub/backend/internal/connector"
 	"github.com/antonbier/DreamHub/backend/internal/serienrecorder"
 	"github.com/antonbier/DreamHub/backend/internal/store"
 	"github.com/antonbier/DreamHub/backend/internal/webcontrol"
@@ -71,5 +72,39 @@ func TestSeriesAndAutoTimer_AbsentPluginIsNotInstalled(t *testing.T) {
 	}
 	if _, err := r.AutoTimer().List(ctx); err == nil {
 		t.Error("autotimer: expected an error for a box without the plugin")
+	}
+}
+
+func TestCapabilities_MeasuredPerBox(t *testing.T) {
+	r, _, _ := twoBoxes(t)
+	reports := map[string]connector.Report{
+		connector.IDWebControl:     {State: connector.OK},
+		connector.IDSerienRecorder: {State: connector.NotInstalled},
+		connector.IDAutoTimer:      {State: connector.OK},
+	}
+	has := func(caps []string, c string) bool {
+		for _, x := range caps {
+			if x == c {
+				return true
+			}
+		}
+		return false
+	}
+	local := r.Capabilities(box.With(context.Background(), "main"), reports)
+	remote := r.Capabilities(box.With(context.Background(), "bedroom"), reports)
+	if !has(local, CapAutoTimer) || has(local, CapSerienRecorder) {
+		t.Errorf("plugins follow the connector reports: %v", local)
+	}
+	if !has(local, CapDocker) || !has(local, CapRecordingsLocal) || !r.Full(box.With(context.Background(), "main")) {
+		t.Errorf("the box DreamHub runs on is Full: %v", local)
+	}
+	if has(remote, CapDocker) || has(remote, CapPackages) || has(remote, CapRecordingsLocal) || r.Full(box.With(context.Background(), "bedroom")) {
+		t.Errorf("another box is Basic and has no machine-level features: %v", remote)
+	}
+	if !has(remote, CapWebControl) {
+		t.Errorf("a Basic box still has its web interface: %v", remote)
+	}
+	if got := r.Capabilities(box.With(context.Background(), "nowhere"), reports); len(got) != 0 {
+		t.Errorf("an unknown box has no capabilities: %v", got)
 	}
 }

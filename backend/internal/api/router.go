@@ -378,7 +378,7 @@ func hubStatuses(d Deps, r *http.Request) ([]hub.Status, settings.Values, error)
 		return nil, nil, err
 	}
 	reports := d.Connectors.Reports(r.Context(), v, d.Settings.Version())
-	statuses := d.Hubs.Statuses(v, reports)
+	statuses := d.Hubs.StatusesFor(r.Context(), v, reports)
 	recordStatusTransitions(d, r, statuses)
 	return statuses, v, nil
 }
@@ -404,13 +404,18 @@ func recordStatusTransitions(d Deps, r *http.Request, statuses []hub.Status) {
 
 func handleNavigation(d Deps) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
-		statuses, _, err := hubStatuses(d, r)
+		statuses, v, err := hubStatuses(d, r)
 		if err != nil {
 			d.Logger.Error("navigation failed", "requestId", httpx.RequestID(r.Context()), "error", err)
 			httpx.WriteError(w, r, http.StatusInternalServerError, "internal", "could not build navigation")
 			return
 		}
-		httpx.WriteJSON(w, http.StatusOK, d.Hubs.Navigation(statuses, perms(r), ""))
+		nav := d.Hubs.Navigation(statuses, perms(r), "")
+		if d.Boxes != nil {
+			reports := d.Connectors.Reports(r.Context(), v, d.Settings.Version())
+			nav.Box = &hub.BoxInfo{ID: box.Key(r.Context()), Full: d.Boxes.Full(r.Context()), Capabilities: d.Boxes.Capabilities(r.Context(), reports)}
+		}
+		httpx.WriteJSON(w, http.StatusOK, nav)
 	}
 }
 

@@ -42,6 +42,9 @@
     "capability": {
       "missing": "Missing on the device: {capability}"
     },
+    "box": {
+      "notFull": "This only works with DreamHub running on that box."
+    },
     "hub": {
       "dependencyUnavailable": "Needs “{hub}”, which isn't available."
     },

@@ -1,9 +1,11 @@
 package hub
 
 import (
+	"context"
 	"errors"
 	"testing"
 
+	"github.com/antonbier/DreamHub/backend/internal/box"
 	"github.com/antonbier/DreamHub/backend/internal/connector"
 	"github.com/antonbier/DreamHub/backend/internal/perm"
 	"github.com/antonbier/DreamHub/backend/internal/settings"
@@ -198,5 +200,33 @@ func TestAdd_RejectsDuplicatesAndUnknownGroups(t *testing.T) {
 	}
 	if err := r.Add(Descriptor{ID: "y", Group: "nowhere"}); err == nil {
 		t.Error("unknown group must be rejected")
+	}
+}
+
+// A box that is another machine: device capabilities (journalctl) say
+// nothing about it, and a hub that administers DreamHub's own machine is
+// hidden rather than greyed (docs/MULTIDEVICE_PLAN.md, M2).
+func TestStatusesFor_RemoteBox(t *testing.T) {
+	r := v1Registry(t, false)
+	v := allEnabled(r)
+	ctx := box.WithRemote(context.Background())
+	got := byID(r.StatusesFor(ctx, v, allOK()))
+
+	if d := got[IDDevice]; d.Level != status.Available || len(d.Problems) != 0 {
+		t.Errorf("journalctl is a fact about DreamHub's machine, not about another box: %+v", d)
+	}
+	a := got[IDApps]
+	if !a.Hidden || a.Level != status.Unavailable || a.Problems[0].Code != status.CodeBoxNotFull {
+		t.Errorf("AppsHub must be hidden on a box DreamHub doesn't run on, got %+v", a)
+	}
+	for _, s := range r.Navigation(r.StatusesFor(ctx, v, allOK()), perm.ForRole(store.RoleAdmin), "").Sections {
+		for _, it := range s.Items {
+			if it.ID == IDApps {
+				t.Error("AppsHub must not appear in the navigation of a remote box")
+			}
+		}
+	}
+	if local := byID(r.StatusesFor(context.Background(), v, allOK())); local[IDApps].Hidden {
+		t.Error("AppsHub stays on the local box")
 	}
 }

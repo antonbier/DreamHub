@@ -2412,7 +2412,19 @@
       "testOk": "Verbunden: {device}",
       "save": "Speichern",
       "addBox": "Box hinzufügen",
-      "remove": "Box entfernen"
+      "remove": "Box entfernen",
+      "wake": {
+        "legend": "Einschalten, wenn die Box aus ist",
+        "none": "Nicht eingerichtet",
+        "wol": "Wake-on-LAN (Netzwerk)",
+        "extension": "Über eine Erweiterung (z. B. Steckdose)",
+        "mac": "MAC-Adresse der Box",
+        "macHint": "Wake-on-LAN muss in den Netzwerkeinstellungen der Box eingeschaltet sein. DreamHub und die Box müssen im selben Netz sein.",
+        "action": "Aktion der Erweiterung",
+        "pick": "Aktion wählen …",
+        "noExtension": "Es läuft keine Erweiterung mit einer Aktion.",
+        "extensionHint": "Die Aktion wird vor dem Ausführen mit ihrem eigenen Wortlaut gezeigt – bei einer Steckdose schaltet sie meist um, prüfe also, dass „ein“ dasteht."
+      }
     },
     "profile": {
       "legend": "Boxen, die dieses Profil nutzen darf",
@@ -2434,7 +2446,12 @@
       "peerBadCode": "Falscher oder abgelaufener Code.",
       "codeRequired": "Gib den Code ein, der auf der Box steht.",
       "boxTooOld": "DreamHub auf dieser Box ist zu alt. Aktualisiere es zuerst.",
-      "hubTooOld": "Dieses DreamHub ist zu alt für das auf der Box. Aktualisiere zuerst dieses."
+      "hubTooOld": "Dieses DreamHub ist zu alt für das auf der Box. Aktualisiere zuerst dieses.",
+      "wakeNotSet": "Für diese Box ist kein Einschalten eingerichtet.",
+      "wakeFailed": "Das Weck-Signal konnte nicht gesendet werden.",
+      "wakeExtensionMissing": "Die Erweiterung, die diese Box einschaltet, läuft nicht.",
+      "wakeMac": "Das sieht nicht nach einer MAC-Adresse aus (aa:bb:cc:dd:ee:ff).",
+      "wakeAction": "Wähle die Aktion der Erweiterung."
     },
     "pair": {
       "title": "DreamHub auf dieser Box",
@@ -2465,6 +2482,12 @@
       "show": "Code anzeigen",
       "valid": "Gültig bis {time}",
       "onTv": "auch auf dem Fernseher"
+    },
+    "wake": {
+      "button": "Einschalten",
+      "starting": "Startet …",
+      "confirm": "Einschalten",
+      "sent": "Signal gesendet"
     }
   }
 }

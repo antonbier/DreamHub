@@ -11,6 +11,8 @@ export const useBoxesStore = defineStore('boxes', {
     boxes: [] as BoxInfo[],
     defaultId: '',
     loaded: false,
+    // Boxes that were just switched on and are being watched until they answer.
+    waking: [] as string[],
   }),
   getters: {
     // The boxes the profile may use: what the selector offers.
@@ -53,6 +55,23 @@ export const useBoxesStore = defineStore('boxes', {
       } catch {
         // Keep what is shown.
       }
+    },
+    // The box was just switched on: look again every ten seconds, for up to
+    // three minutes or until it answers (it takes a minute or two to boot).
+    watchWake(id: string) {
+      if (!this.waking.includes(id)) this.waking.push(id)
+      let tries = 0
+      const tick = async () => {
+        tries++
+        await this.refresh()
+        const online = this.boxes.find((b) => b.id === id)?.online
+        if (online || tries >= 18) {
+          this.waking = this.waking.filter((w) => w !== id)
+          return
+        }
+        setTimeout(() => void tick(), 10_000)
+      }
+      setTimeout(() => void tick(), 5_000)
     },
     select(id: string) {
       if (id === this.activeId) return

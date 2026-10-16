@@ -59,6 +59,35 @@
       </div>
     </template>
 
+    <fieldset class="mb-3">
+      <legend class="mb-1 text-[13px] text-muted">{{ t('boxes.form.wake.legend') }}</legend>
+      <select v-model="wakeMethod" class="rounded-sm border border-line bg-tile px-2.5 py-1.5 text-[14px] text-text" :aria-label="t('boxes.form.wake.legend')">
+        <option value="">{{ t('boxes.form.wake.none') }}</option>
+        <option value="wol">{{ t('boxes.form.wake.wol') }}</option>
+        <option value="extension">{{ t('boxes.form.wake.extension') }}</option>
+      </select>
+      <label v-if="wakeMethod === 'wol'" class="mt-2 block">
+        <span class="mb-1 block text-[13px] text-muted">{{ t('boxes.form.wake.mac') }}</span>
+        <input
+          v-model="wakeMac"
+          type="text"
+          autocapitalize="off"
+          spellcheck="false"
+          placeholder="aa:bb:cc:dd:ee:ff"
+          class="w-full max-w-[220px] rounded-sm border border-line bg-tile px-2.5 py-1.5 font-mono text-[14px] text-text"
+        />
+        <span class="mt-1 block text-[12.5px] text-faint">{{ t('boxes.form.wake.macHint') }}</span>
+      </label>
+      <template v-else-if="wakeMethod === 'extension'">
+        <select v-if="wakeActions.length > 0" v-model="wakeTarget" class="mt-2 block max-w-full rounded-sm border border-line bg-tile px-2.5 py-1.5 text-[14px] text-text" :aria-label="t('boxes.form.wake.action')">
+          <option value="" disabled>{{ t('boxes.form.wake.pick') }}</option>
+          <option v-for="a in wakeActions" :key="a.value" :value="a.value">{{ a.label }}</option>
+        </select>
+        <p v-else class="mt-2 text-[12.5px] text-faint">{{ t('boxes.form.wake.noExtension') }}</p>
+        <span class="mt-1 block text-[12.5px] text-faint">{{ t('boxes.form.wake.extensionHint') }}</span>
+      </template>
+    </fieldset>
+
     <p v-if="error" class="mb-3 text-[13px] text-warn" role="alert">{{ error }}</p>
     <div class="flex flex-wrap items-center gap-2">
       <button type="submit" class="rounded-sm bg-accent px-3 py-1.5 text-[13px] font-semibold text-bg disabled:opacity-60" :disabled="busy || !valid">
@@ -75,7 +104,7 @@
 </template>
 
 <script setup lang="ts">
-import { computed, ref } from 'vue'
+import { computed, onMounted, ref } from 'vue'
 import { useI18n } from 'vue-i18n'
 import { api } from '@/api/client'
 import { boxErrorKey } from './boxErrors'
@@ -96,7 +125,36 @@ const password = ref('')
 const testing = ref(false)
 const testResult = ref<{ ok: boolean; text: string } | null>(null)
 
-const valid = computed(() => name.value.trim() !== '' && (props.box?.full || url.value.trim() !== ''))
+const wakeMethod = ref<'' | 'wol' | 'extension'>(props.box?.wakeMethod ?? '')
+const wakeMac = ref(props.box?.wakeMac ?? '')
+// "extension id|action id" of the chosen action.
+const wakeTarget = ref(props.box?.wakeExt ? `${props.box.wakeExt}|${props.box.wakeAction ?? ''}` : '')
+const wakeActions = ref<{ value: string; label: string }[]>([])
+
+// The actions extensions offer (a smart plug's switch): any of them can be
+// the box's power button.
+onMounted(async () => {
+  try {
+    const res = await api.extensions.list()
+    wakeActions.value = res.extensions.flatMap((c) =>
+      c.widgets.filter((w) => w.type === 'action' && w.actionId).map((w) => ({ value: `${c.id}|${w.actionId}`, label: `${c.name} · ${w.label}` })),
+    )
+    // Keep a saved choice visible even if its extension is not running now.
+    if (wakeTarget.value && !wakeActions.value.some((a) => a.value === wakeTarget.value)) {
+      wakeActions.value.push({ value: wakeTarget.value, label: wakeTarget.value.replace('|', ' · ') })
+    }
+  } catch {
+    // The form works without the list; the choice just stays empty.
+  }
+})
+
+const valid = computed(
+  () =>
+    name.value.trim() !== '' &&
+    (props.box?.full || url.value.trim() !== '') &&
+    (wakeMethod.value !== 'wol' || wakeMac.value.trim() !== '') &&
+    (wakeMethod.value !== 'extension' || wakeTarget.value !== ''),
+)
 
 function connection(): BoxInput {
   const input: BoxInput = { url: url.value.trim(), username: username.value.trim() }
@@ -118,7 +176,13 @@ async function runTest() {
 }
 
 function submit() {
-  const input: BoxInput = { name: name.value.trim(), color: color.value }
+  const input: BoxInput = { name: name.value.trim(), color: color.value, wakeMethod: wakeMethod.value }
+  if (wakeMethod.value === 'wol') input.wakeMac = wakeMac.value.trim()
+  if (wakeMethod.value === 'extension') {
+    const [ext, action] = wakeTarget.value.split('|')
+    input.wakeExt = ext
+    input.wakeAction = action
+  }
   if (!props.box?.full) Object.assign(input, connection())
   emit('save', input)
 }

@@ -11,6 +11,10 @@ const known: Record<string, string> = {
   peer_not_found: 'boxes.error.peerNotFound',
   peer_not_pairing: 'boxes.error.peerNotPairing',
   peer_bad_code: 'boxes.error.peerBadCode',
+  wake_not_set: 'boxes.error.wakeNotSet',
+  wake_failed: 'boxes.error.wakeFailed',
+  wake_extension_missing: 'boxes.error.wakeExtensionMissing',
+  extension_unavailable: 'boxes.error.wakeExtensionMissing',
 }
 
 export function boxErrorKey(err: unknown): string {
@@ -24,6 +28,8 @@ export function boxErrorKey(err: unknown): string {
       const fields = err.details ?? {}
       if (fields.url) return 'boxes.error.url'
       if (fields.name) return 'boxes.error.name'
+      if (fields.wakeMac) return 'boxes.error.wakeMac'
+      if (fields.wakeAction || fields.wakeMethod) return 'boxes.error.wakeAction'
     }
   }
   return 'boxes.error.generic'

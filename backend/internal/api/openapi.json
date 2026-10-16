@@ -153,6 +153,27 @@
      "streamBase": {
       "type": "string",
       "description": "Administrators only: how that box reaches this DreamHub; empty = detected"
+     },
+     "wake": {
+      "type": "boolean",
+      "description": "A way to switch this box on is set up (the details are for administrators)"
+     },
+     "wakeMethod": {
+      "type": "string",
+      "enum": [
+       "",
+       "wol",
+       "extension"
+      ]
+     },
+     "wakeMac": {
+      "type": "string"
+     },
+     "wakeExt": {
+      "type": "string"
+     },
+     "wakeAction": {
+      "type": "string"
      }
     }
    },
@@ -6537,6 +6558,34 @@
      "pairing"
     ],
     "operationId": "DELETE_boxes_id_pair",
+    "x-box": "global",
+    "parameters": [
+     {
+      "name": "id",
+      "in": "path",
+      "required": true,
+      "schema": {
+       "type": "string"
+      }
+     }
+    ],
+    "responses": {
+     "200": {
+      "description": "OK"
+     },
+     "default": {
+      "$ref": "#/components/responses/Error"
+     }
+    }
+   }
+  },
+  "/boxes/{id}/wake": {
+   "post": {
+    "summary": "Switch a box that is off on. Wake-on-LAN sends the packet at once ({\"sent\": true}); with an extension the answer is a plan (changes nothing until applied) carrying the extension's own sentence",
+    "tags": [
+     "boxes"
+    ],
+    "operationId": "POST_boxes_id_wake",
     "x-box": "global",
     "parameters": [
      {

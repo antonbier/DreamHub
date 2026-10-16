@@ -22,6 +22,7 @@ import (
 	"github.com/antonbier/DreamHub/backend/internal/dashboard"
 	"github.com/antonbier/DreamHub/backend/internal/enrich"
 	"github.com/antonbier/DreamHub/backend/internal/events"
+	"github.com/antonbier/DreamHub/backend/internal/extension"
 	"github.com/antonbier/DreamHub/backend/internal/httpx"
 	"github.com/antonbier/DreamHub/backend/internal/hub"
 	"github.com/antonbier/DreamHub/backend/internal/jobs"
@@ -69,6 +70,9 @@ type Deps struct {
 	Boxes *boxes.Registry
 	// BoxManager adds, changes and removes boxes at runtime.
 	BoxManager *boxes.Manager
+	// Extensions are the registered extensions; a box can be switched on
+	// through one of their actions (M9).
+	Extensions *extension.Registry
 	// Peer answers the DreamHub of another box that wants to pair with
 	// this one (internal/peer).
 	Peer       *peer.Service
@@ -161,6 +165,7 @@ func NewRouterWithRoutes(d Deps) (http.Handler, []Route) {
 	core.HandleFunc("POST /api/v1/boxes/{id}/remove/plan", handleRemoveBoxPlan(d))
 	core.HandleFunc("POST /api/v1/boxes/{id}/pair", handlePairBox(d))
 	core.HandleFunc("DELETE /api/v1/boxes/{id}/pair", handleUnpairBox(d))
+	core.HandleFunc("POST /api/v1/boxes/{id}/wake", handleWakeBox(d))
 	core.HandleFunc("GET /api/v1/peer/capabilities", handlePeerCapabilities(d))
 	core.HandleFunc("POST /api/v1/peer/code", handlePeerCode(d))
 	core.HandleFunc("POST /api/v1/profiles", handleCreateProfile(d))
@@ -240,6 +245,7 @@ var corePerms = map[string]perm.Perm{
 	"POST /api/v1/boxes/{id}/remove/plan": perm.SettingsGlobal,
 	"POST /api/v1/boxes/{id}/pair":        perm.SettingsGlobal,
 	"DELETE /api/v1/boxes/{id}/pair":      perm.SettingsGlobal,
+	"POST /api/v1/boxes/{id}/wake":        perm.Control, // like the remote's power key
 	"POST /api/v1/peer/code":              perm.SettingsGlobal,
 	"POST /api/v1/profiles":               perm.Profiles,
 	"PATCH /api/v1/profiles/{id}":         perm.Profiles,

@@ -370,3 +370,28 @@ func TestPoller_ReportsWhetherTheBoxAnswered(t *testing.T) {
 		t.Errorf("reach: %v", got)
 	}
 }
+
+func TestPoller_BoostIgnoresTheBackOffForAWhile(t *testing.T) {
+	bus, _ := newTestBus(t)
+	now := time.Date(2026, 10, 16, 12, 0, 0, 0, time.UTC)
+	p := &Poller{WC: deadClient{mock.New()}, Bus: bus, Interval: 30 * time.Second, Now: func() time.Time { return now }}
+	for i := 0; i < 5; i++ {
+		p.tick(context.Background())
+	}
+	if p.wait() != 5*time.Minute {
+		t.Fatalf("backed off, got %v", p.wait())
+	}
+	p.Boost()
+	if p.wait() != BoostEvery {
+		t.Errorf("switched on: asked every %v, got %v", BoostEvery, p.wait())
+	}
+	select {
+	case <-p.nudgeCh():
+	default:
+		t.Error("a boost looks at the box now")
+	}
+	now = now.Add(BoostFor + time.Second)
+	if p.wait() != 5*time.Minute {
+		t.Errorf("the boost ends, got %v", p.wait())
+	}
+}

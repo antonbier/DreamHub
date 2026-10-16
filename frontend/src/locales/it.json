@@ -2412,7 +2412,19 @@
       "testOk": "Connesso: {device}",
       "save": "Salva",
       "addBox": "Aggiungi box",
-      "remove": "Rimuovi box"
+      "remove": "Rimuovi box",
+      "wake": {
+        "legend": "Accendere quando è spento",
+        "none": "Non configurato",
+        "wol": "Wake-on-LAN (rete)",
+        "extension": "Tramite un'estensione (es. presa smart)",
+        "mac": "Indirizzo MAC del box",
+        "macHint": "Wake-on-LAN deve essere attivo nelle impostazioni di rete del box. DreamHub e il box devono essere nella stessa rete.",
+        "action": "Azione dell'estensione",
+        "pick": "Scegli un'azione…",
+        "noExtension": "Nessuna estensione con un'azione è in esecuzione.",
+        "extensionHint": "L'azione viene mostrata con le sue parole prima di eseguirla — quella di una presa di solito commuta, controlla che dica «accendi»."
+      }
     },
     "profile": {
       "legend": "Box che questo profilo può usare",
@@ -2434,7 +2446,12 @@
       "peerBadCode": "Codice errato o scaduto.",
       "codeRequired": "Inserisci il codice mostrato sul box.",
       "boxTooOld": "DreamHub su quel box è troppo vecchio. Aggiornalo prima.",
-      "hubTooOld": "Questo DreamHub è troppo vecchio per quello su quel box. Aggiorna prima questo."
+      "hubTooOld": "Questo DreamHub è troppo vecchio per quello su quel box. Aggiorna prima questo.",
+      "wakeNotSet": "Per questo box non è configurato come accenderlo.",
+      "wakeFailed": "Non è stato possibile inviare il pacchetto di risveglio.",
+      "wakeExtensionMissing": "L'estensione che accende questo box non è in esecuzione.",
+      "wakeMac": "Non sembra un indirizzo MAC (aa:bb:cc:dd:ee:ff).",
+      "wakeAction": "Scegli l'azione dell'estensione."
     },
     "pair": {
       "title": "DreamHub su questo box",
@@ -2465,6 +2482,12 @@
       "show": "Mostra codice",
       "valid": "Valido fino alle {time}",
       "onTv": "anche sulla TV"
+    },
+    "wake": {
+      "button": "Accendi",
+      "starting": "Si avvia…",
+      "confirm": "Accendi",
+      "sent": "Segnale inviato"
     }
   }
 }

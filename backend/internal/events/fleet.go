@@ -19,6 +19,18 @@ type Fleet struct {
 
 	mu      sync.Mutex
 	started map[string]context.CancelFunc
+	pollers map[string]*Poller
+}
+
+// Boost makes the poller of a box look at it often for a while (it was just
+// switched on).
+func (f *Fleet) Boost(id string) {
+	f.mu.Lock()
+	p := f.pollers[id]
+	f.mu.Unlock()
+	if p != nil {
+		p.Boost()
+	}
 }
 
 func containsID(l []string, s string) bool {
@@ -40,13 +52,16 @@ func (f *Fleet) Run(ctx context.Context) {
 		f.mu.Lock()
 		if f.started == nil {
 			f.started = map[string]context.CancelFunc{}
+			f.pollers = map[string]*Poller{}
 		}
 		ids := f.IDs()
 		for _, id := range ids {
 			if f.started[id] == nil {
 				pctx, cancel := context.WithCancel(ctx)
 				f.started[id] = cancel
-				go f.New(id).Run(pctx)
+				p := f.New(id)
+				f.pollers[id] = p
+				go p.Run(pctx)
 			}
 		}
 		// A removed box is not polled any more.
@@ -54,6 +69,7 @@ func (f *Fleet) Run(ctx context.Context) {
 			if !containsID(ids, id) {
 				cancel()
 				delete(f.started, id)
+				delete(f.pollers, id)
 			}
 		}
 		f.mu.Unlock()

@@ -48,6 +48,7 @@ import type {
   Job,
   PiconSet,
   BoxInfo,
+  BoxWakeResult,
   BoxInput,
   BoxStatus,
   PairingCode,
@@ -290,6 +291,7 @@ export const api = {
     pair: (id: string, input: { code: string; url?: string }) =>
       request<BoxInfo>('POST', `/api/v1/boxes/${encodeURIComponent(id)}/pair`, input),
     unpair: (id: string) => request<BoxInfo>('DELETE', `/api/v1/boxes/${encodeURIComponent(id)}/pair`),
+    wake: (id: string) => request<BoxWakeResult>('POST', `/api/v1/boxes/${encodeURIComponent(id)}/wake`),
   },
   // This box shows a code that the DreamHub of another box pairs with.
   peer: {

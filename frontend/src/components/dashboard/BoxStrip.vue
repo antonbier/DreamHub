@@ -6,11 +6,10 @@
 -->
 <template>
   <nav v-if="boxes.multi && others.length > 0" :aria-label="t('boxes.strip.label')" class="mb-4 flex flex-wrap gap-2">
+    <div v-for="o in others" :key="o.id" class="flex min-w-0 max-w-full items-center gap-2 rounded-sm border border-line bg-tile pe-2 hover:bg-tile-2">
     <button
-      v-for="o in others"
-      :key="o.id"
       type="button"
-      class="flex min-w-0 max-w-full items-center gap-2 rounded-sm border border-line bg-tile px-3 py-1.5 text-start text-[13px] hover:bg-tile-2"
+      class="flex min-w-0 flex-1 items-center gap-2 px-3 py-1.5 text-start text-[13px]"
       :class="o.online ? 'text-muted' : 'text-faint'"
       @click="boxes.select(o.id)"
     >
@@ -21,6 +20,8 @@
         <span aria-hidden="true">●</span><span class="sr-only">{{ t('boxes.strip.recording') }}</span>
       </span>
     </button>
+    <BoxWake :box-id="o.id" />
+    </div>
   </nav>
 </template>
 
@@ -28,6 +29,7 @@
 import { computed, onBeforeUnmount, onMounted, ref } from 'vue'
 import { useI18n } from 'vue-i18n'
 import { api } from '@/api/client'
+import BoxWake from '@/components/BoxWake.vue'
 import { useBoxesStore } from '@/stores/boxes'
 import type { BoxInfo, BoxStatus } from '@/api/types'
 

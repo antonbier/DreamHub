@@ -165,6 +165,13 @@ export interface BoxInfo {
   peerUrl?: string
   streamBase?: string
   capabilities?: string[]
+  // A way to switch this box on is set up (M9); the details are for
+  // administrators.
+  wake?: boolean
+  wakeMethod?: '' | 'wol' | 'extension'
+  wakeMac?: string
+  wakeExt?: string
+  wakeAction?: string
 }
 
 // What the paired DreamHub answered: ok, unreachable or revoked, and the
@@ -190,6 +197,17 @@ export interface BoxInput {
   username?: string
   password?: string
   streamBase?: string
+  wakeMethod?: '' | 'wol' | 'extension'
+  wakeMac?: string
+  wakeExt?: string
+  wakeAction?: string
+}
+
+// POST /api/v1/boxes/{id}/wake — Wake-on-LAN is sent at once; an extension's
+// action comes back as a plan to confirm.
+export interface BoxWakeResult {
+  sent?: boolean
+  plan?: Plan
 }
 
 // GET /api/v1/boxes/overview — one line per box for the dashboard's strip.

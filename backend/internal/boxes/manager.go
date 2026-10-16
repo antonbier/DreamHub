@@ -47,6 +47,11 @@ type Input struct {
 	Password *string `json:"password"`
 	// StreamBase: how that box reaches this DreamHub; "" = detect.
 	StreamBase *string `json:"streamBase"`
+	// Power-on method (M9): WakeMethod is "", "wol" or "extension".
+	WakeMethod *string `json:"wakeMethod"`
+	WakeMAC    *string `json:"wakeMac"`
+	WakeExt    *string `json:"wakeExt"`
+	WakeAction *string `json:"wakeAction"`
 }
 
 // Manager adds, changes and removes boxes while DreamHub runs
@@ -60,6 +65,12 @@ type Manager struct {
 	Peer peer.Client
 	// Timeout bounds a connection test; 8 s when zero.
 	Timeout time.Duration
+	// SendWOL sends the Wake-on-LAN packet; SendMagicPacket when nil (tests
+	// and mock mode replace it, nothing should hit the network there).
+	SendWOL func(mac string) error
+	// OnWake is told when a box was just switched on, so it is looked at
+	// more often for a while (the poller's back-off).
+	OnWake func(id string)
 }
 
 // Test connects to the box described by b and reads its device info —
@@ -189,10 +200,51 @@ func apply(b *store.Box, in Input, main bool) error {
 			}
 		}
 	}
+	applyWake(b, in, errs)
 	if len(errs) > 0 {
 		return &ValidationError{Fields: errs}
 	}
 	return nil
+}
+
+// applyWake validates the power-on fields: a method needs what it works
+// with, and switching to "none" forgets the rest.
+func applyWake(b *store.Box, in Input, errs map[string]string) {
+	if in.WakeMethod == nil && in.WakeMAC == nil && in.WakeExt == nil && in.WakeAction == nil {
+		return
+	}
+	w := *b
+	if in.WakeMethod != nil {
+		w.WakeMethod = strings.TrimSpace(*in.WakeMethod)
+	}
+	if in.WakeMAC != nil {
+		w.WakeMAC = strings.TrimSpace(*in.WakeMAC)
+	}
+	if in.WakeExt != nil {
+		w.WakeExt = strings.TrimSpace(*in.WakeExt)
+	}
+	if in.WakeAction != nil {
+		w.WakeAction = strings.TrimSpace(*in.WakeAction)
+	}
+	switch w.WakeMethod {
+	case WakeNone:
+		w.WakeMAC, w.WakeExt, w.WakeAction = "", "", ""
+	case WakeWOL:
+		w.WakeExt, w.WakeAction = "", ""
+		if w.WakeMAC = ParseMAC(w.WakeMAC); w.WakeMAC == "" {
+			errs["wakeMac"] = "invalid"
+		}
+	case WakeExtension:
+		w.WakeMAC = ""
+		if w.WakeExt == "" || w.WakeAction == "" {
+			errs["wakeAction"] = "required"
+		}
+	default:
+		errs["wakeMethod"] = "invalid"
+	}
+	if len(errs) == 0 || (errs["wakeMac"] == "" && errs["wakeAction"] == "" && errs["wakeMethod"] == "") {
+		b.WakeMethod, b.WakeMAC, b.WakeExt, b.WakeAction = w.WakeMethod, w.WakeMAC, w.WakeExt, w.WakeAction
+	}
 }
 
 // Candidate returns the box a form describes — without saving it — for

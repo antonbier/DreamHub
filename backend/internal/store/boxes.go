@@ -24,6 +24,13 @@ type Box struct {
 	PeerToken string
 	// StreamBase is how that box reaches this DreamHub; empty = detected.
 	StreamBase string
+	// Power-on method (docs/MULTIDEVICE_PLAN.md, M9): "" none, "wol"
+	// (WakeMAC) or "extension" (WakeExt + WakeAction, an action widget of a
+	// registered extension, e.g. the smart plug the box hangs on).
+	WakeMethod string
+	WakeMAC    string
+	WakeExt    string
+	WakeAction string
 }
 
 // ErrBoxNotFound is returned for an unknown box ID.
@@ -31,7 +38,7 @@ var ErrBoxNotFound = errors.New("box not found")
 
 // Boxes lists the boxes in their order.
 func (s *Store) Boxes(ctx context.Context) ([]Box, error) {
-	rows, err := s.db.QueryContext(ctx, `SELECT id, name, color, url, username, password, position, peer_url, peer_token, stream_base FROM boxes ORDER BY position, id`)
+	rows, err := s.db.QueryContext(ctx, `SELECT id, name, color, url, username, password, position, peer_url, peer_token, stream_base, wake_method, wake_mac, wake_ext, wake_action FROM boxes ORDER BY position, id`)
 	if err != nil {
 		return nil, err
 	}
@@ -39,7 +46,7 @@ func (s *Store) Boxes(ctx context.Context) ([]Box, error) {
 	var out []Box
 	for rows.Next() {
 		var b Box
-		if err := rows.Scan(&b.ID, &b.Name, &b.Color, &b.URL, &b.Username, &b.Password, &b.Position, &b.PeerURL, &b.PeerToken, &b.StreamBase); err != nil {
+		if err := rows.Scan(&b.ID, &b.Name, &b.Color, &b.URL, &b.Username, &b.Password, &b.Position, &b.PeerURL, &b.PeerToken, &b.StreamBase, &b.WakeMethod, &b.WakeMAC, &b.WakeExt, &b.WakeAction); err != nil {
 			return nil, err
 		}
 		out = append(out, b)
@@ -49,12 +56,13 @@ func (s *Store) Boxes(ctx context.Context) ([]Box, error) {
 
 // SaveBox adds a box or replaces the one with this ID; a new box goes last.
 func (s *Store) SaveBox(ctx context.Context, b Box) error {
-	_, err := s.db.ExecContext(ctx, `INSERT INTO boxes (id, name, color, url, username, password, position, created_at, peer_url, peer_token, stream_base)
-		VALUES (?, ?, ?, ?, ?, ?, (SELECT COALESCE(MAX(position), -1) + 1 FROM boxes), ?, ?, ?, ?)
+	_, err := s.db.ExecContext(ctx, `INSERT INTO boxes (id, name, color, url, username, password, position, created_at, peer_url, peer_token, stream_base, wake_method, wake_mac, wake_ext, wake_action)
+		VALUES (?, ?, ?, ?, ?, ?, (SELECT COALESCE(MAX(position), -1) + 1 FROM boxes), ?, ?, ?, ?, ?, ?, ?, ?)
 		ON CONFLICT (id) DO UPDATE SET name = excluded.name, color = excluded.color, url = excluded.url,
 			username = excluded.username, password = excluded.password,
-			peer_url = excluded.peer_url, peer_token = excluded.peer_token, stream_base = excluded.stream_base`,
-		b.ID, b.Name, b.Color, b.URL, b.Username, b.Password, s.timestamp(), b.PeerURL, b.PeerToken, b.StreamBase)
+			peer_url = excluded.peer_url, peer_token = excluded.peer_token, stream_base = excluded.stream_base,
+			wake_method = excluded.wake_method, wake_mac = excluded.wake_mac, wake_ext = excluded.wake_ext, wake_action = excluded.wake_action`,
+		b.ID, b.Name, b.Color, b.URL, b.Username, b.Password, s.timestamp(), b.PeerURL, b.PeerToken, b.StreamBase, b.WakeMethod, b.WakeMAC, b.WakeExt, b.WakeAction)
 	return err
 }
 

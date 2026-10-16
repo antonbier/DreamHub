@@ -1,6 +1,6 @@
 # Multi-box — plan
 
-Status: **brainstormed and decided 2026-10-16 (six rounds with the owner). M1, M2 and M3 are built against the mock and merged to `main` (see "… as built"); nothing is released before the check of M1 on the reference box; M3a, M4, M5 and M6 are built too; M7 onwards not started.** Replaces the "one box" assumption that runs through the backend (`app.Options.WebControl` is injected once into every hub, the poller and the jobs blocker).
+Status: **brainstormed and decided 2026-10-16 (six rounds with the owner). M1, M2 and M3 are built against the mock and merged to `main` (see "… as built"); nothing is released before the check of M1 on the reference box; M3a, M4, M5, M6 and M9 (pulled forward by the owner) are built too; M7 and M8 not started.** Replaces the "one box" assumption that runs through the backend (`app.Options.WebControl` is injected once into every hub, the poller and the jobs blocker).
 
 ## Goal
 
@@ -92,7 +92,7 @@ Not a goal, not broken by anything here: no new hard-wired Dreambox assumptions 
 | M6 | **Pairing to Full:** unpaired mode with code on TV/status page, token, version handshake, local-capabilities API; `StreamBase` per box. | Yes |
 | M7 | **Watch a recording of box A on box B.** | Yes |
 | M8 | **Channel list sync** (A → B as a plan), scheduled by effort. | Yes |
-| M9 | **Power-on method** (WoL, extension action — pairs with E5). | Yes |
+| M9 | **Power-on method** (WoL, extension action — pairs with E5). Built before M7 (see "M9 as built"). | Yes |
 | later | Slim agent variant · VU+/OpenWebif probe and capability list · search across boxes · tuner-aware recording · move/copy between boxes. | — |
 
 M1 is the risky one (it touches nearly every hub) and has nothing to look at, so it ships on its own and is checked on the reference box before anything is built on top.
@@ -164,3 +164,16 @@ How the wiring was done, so M2 onwards can build on it without re-reading the di
 - **Deviations from the plan, on purpose:** the code is shown **on request** (button), not automatically while unpaired — otherwise every single-box household would get a code on its TV; the TV text is English only (the backend has no per-viewer language there); the "a different box answers at this address" identity check is not built — the box reports no serial or MAC to compare, the token binds the pairing instead.
 - **Tests:** `api/peer_test.go` — two real DreamHubs over HTTP (code, wrong code, one-time use, token on the box, revoked token seen by the hub, unpair), five guesses end the code, handshake both ways incl. unreachable and the local box, Plex on a paired box from the hub's address (detected and overridden). Checked in headless Chromium against the mock (pairing form, wrong code message, paired state, code display); no new console errors.
 - **Not done:** a hub-side "revoke on the box" call (unpair only forgets the token), translated TV text, the Full-tier features through the token (M7 onwards).
+
+## M9 as built (2026-10-16, pulled forward before M7)
+
+- **Per box a power-on method** (`boxes.wake_method/_mac/_ext/_action`, migration 17): none, **`wol`** (MAC, normalised to `aa:bb:cc:dd:ee:ff`; accepts `-`, `.` and bare hex) or **`extension`** (extension id + action id, chosen from the action widgets of the running extensions). Switching the method forgets the other method's fields; "wol" needs a valid MAC, "extension" both ids (`validation_failed` with `wakeMac`/`wakeAction`). The first box can be set up too.
+- **Wake-on-LAN** is `boxes.SendMagicPacket`: the 102-byte magic packet as UDP broadcast to `255.255.255.255:9`. Nothing answers, so "sent" is all that is known. In mock mode nothing leaves the machine (`Manager.SendWOL` is replaced); tests inject their own.
+- **Extension action = plan first.** The extension contract has no on/off semantic and the eWeLink action *toggles* (`toggle-<id>`), so a direct call could switch the plug off. `POST /api/v1/boxes/{id}/wake` therefore answers `{"plan": …}` with the extension's own summary ("Steckdose wird ausgeschaltet." in the mock when the socket is on) and the person confirms; WoL answers `{"sent": true}` directly. Missing extension → `409 wake_extension_missing`, no method → `409 wake_not_set`.
+- **Who:** `perm.Control` (like the remote's power key) **and** the profile must be allowed to use that box (`403 box_forbidden`). Setting it up is `settings.global`. `GET /api/v1/boxes` carries `wake` for everyone who may see the box, the method details for administrators only.
+- **After switching on** `Manager.OnWake` → `Fleet.Boost(box)`: that box's poller looks right away and then every 10 s for 3 min, ignoring its back-off (otherwise a box that came back could look offline for up to five minutes). In the UI `boxes.watchWake` refreshes the box list every 10 s for up to 3 min and `BoxWake.vue` shows "Starting…" meanwhile.
+- **UI:** `BoxWake.vue` — *Switch on* in the status line for the selected, unreachable box and next to each unreachable box in the dashboard strip (both only with ≥2 boxes, so a one-box household still sees nothing new); the extension's plan opens as a preview panel. Settings → Boxes → Edit has the "Switch on when it is off" section. `de/en/it` strings, USER_GUIDE (en/de), CHANGELOG, OpenAPI (`/boxes/{id}/wake`, wake fields in the `Box` schema).
+- **Tests:** `boxes` (MAC parsing, magic packet layout, validation, `Manager.Wake` incl. "a failed send does not boost"), `events` (boost ends and ignores the back-off), `api` (WoL end to end with box restriction, extension plan → apply changes the demo socket, missing extension, first box).
+- **Checked** in headless Chromium against the mock with the second box forced offline in the browser (the mock cannot go offline): the strip shows the button, the plan preview shows the extension's sentence, the form offers the method, no console errors.
+- **Not done:** a "Switch off"/standby for a box (out of scope), waking on a schedule or for a recording on that box, a switch inside the box selector, ARP/MAC discovery (the MAC is typed), a subnet-directed broadcast (the limited broadcast reaches the local segment only), a woken box that comes back with a different address.
+- **Box check (reference box, needs the box on):** the box's "Wake-on-LAN" setting (Dreambox: network settings) — send the packet from the hub while the box is in deep standby; with the eWeLink plug: the plan text must say "on" before confirming (**the plug powers the Unraid server — never confirm an "off" plan without shutting that down first**).

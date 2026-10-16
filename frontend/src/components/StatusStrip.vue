@@ -18,6 +18,7 @@
     <span v-if="boxes.multi && boxes.active && !boxes.active.online" class="flex items-center gap-1.5 text-warn" role="status">
       <span class="h-1.5 w-1.5 rounded-full bg-warn" />
       {{ t('boxes.strip.notAnswering', { name: boxes.active.name }) }}
+      <BoxWake :box-id="boxes.active.id" />
     </span>
 
     <span v-if="admin && status.clockSkew.value !== null" class="flex items-center gap-1.5" :class="status.clockOk.value ? 'text-muted' : 'text-warn'">
@@ -39,6 +40,7 @@ import { computed, onMounted } from 'vue'
 import { useI18n } from 'vue-i18n'
 import { useAuth } from '@/composables/useAuth'
 import { useDeviceStatus } from '@/composables/useDeviceStatus'
+import BoxWake from '@/components/BoxWake.vue'
 import { useBoxesStore } from '@/stores/boxes'
 import { useDisplayTimeZone } from '@/composables/useDisplayTimeZone'
 

@@ -101,6 +101,13 @@ type boxView struct {
 	// PeerURL and StreamBase are settings of the connection (administrators).
 	PeerURL    string `json:"peerUrl,omitempty"`
 	StreamBase string `json:"streamBase,omitempty"`
+	// Wake: the box can be switched on from here (a method is set up);
+	// the details are for administrators.
+	Wake       bool   `json:"wake"`
+	WakeMethod string `json:"wakeMethod,omitempty"`
+	WakeMAC    string `json:"wakeMac,omitempty"`
+	WakeExt    string `json:"wakeExt,omitempty"`
+	WakeAction string `json:"wakeAction,omitempty"`
 }
 
 // peerView is the state of the pairing with the DreamHub on a box.
@@ -114,10 +121,13 @@ type peerView struct {
 }
 
 func viewBox(d Deps, e boxes.Entry, admin bool, allowed bool) boxView {
-	v := boxView{ID: e.ID, Name: e.Name, Color: e.Color, Full: e.Local, Online: d.Boxes.Online(e.ID), Allowed: allowed, Paired: e.Paired()}
+	v := boxView{ID: e.ID, Name: e.Name, Color: e.Color, Full: e.Local, Online: d.Boxes.Online(e.ID), Allowed: allowed, Paired: e.Paired(), Wake: e.WakeMethod != ""}
 	if admin && !e.Local {
 		v.URL, v.Username, v.HasPassword = e.URL, e.Username, e.Password != ""
 		v.PeerURL, v.StreamBase = e.PeerURL, e.StreamBase
+	}
+	if admin {
+		v.WakeMethod, v.WakeMAC, v.WakeExt, v.WakeAction = e.WakeMethod, e.WakeMAC, e.WakeExt, e.WakeAction
 	}
 	return v
 }
@@ -198,6 +208,10 @@ func writeBoxError(w http.ResponseWriter, r *http.Request, err error) bool {
 	case errors.As(err, &ce):
 		httpx.WriteErrorDetails(w, r, http.StatusUnprocessableEntity, "peer_version_mismatch", "the DreamHub versions do not fit",
 			map[string]httpx.FieldError{"compat": {Code: ce.Status}})
+	case errors.Is(err, boxes.ErrNoWake):
+		httpx.WriteError(w, r, http.StatusConflict, "wake_not_set", "no way to switch this box on is set up")
+	case errors.Is(err, boxes.ErrWakeSend):
+		httpx.WriteError(w, r, http.StatusBadGateway, "wake_failed", "the wake-up packet could not be sent")
 	case errors.Is(err, boxes.ErrMainBox):
 		httpx.WriteError(w, r, http.StatusConflict, "box_is_main", "the first box can't be removed")
 	default:

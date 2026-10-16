@@ -210,6 +210,8 @@ type App struct {
 	Profiles   *profile.Service
 	// Boxes are the registered boxes (docs/MULTIDEVICE_PLAN.md, M1).
 	Boxes *boxes.Registry
+	// BoxManager adds, changes and removes boxes (tests reach its hooks).
+	BoxManager *boxes.Manager
 	// Routes are the protected API routes with their permissions.
 	Routes []api.Route
 	Level  *logging.Level
@@ -492,10 +494,16 @@ func New(ctx context.Context, o Options) (*App, error) {
 	peerSvc := &peer.Service{Tokens: tokens, Now: now, Announce: func(ctx context.Context, code string) error {
 		return wc.Message(box.With(ctx, boxReg.DefaultID()), "DreamHub pairing code: "+code, webcontrol.MessageInfo, 600)
 	}}
+	boxManager := &boxes.Manager{Store: st, Registry: boxReg, Factory: o.BoxFactory, Peer: o.Peer, OnWake: poller.Boost}
+	if o.Mock {
+		// Nothing leaves the machine in mock mode.
+		boxManager.SendWOL = func(string) error { return nil }
+	}
 	handler, routes := api.NewRouterWithRoutes(api.Deps{
 		WebControl: wc,
 		Boxes:      boxReg,
-		BoxManager: &boxes.Manager{Store: st, Registry: boxReg, Factory: o.BoxFactory, Peer: o.Peer},
+		BoxManager: boxManager,
+		Extensions: extRegistry,
 		Peer:       peerSvc,
 		Verifier:   auth.NewSettingsVerifier(svc, tokens),
 		Settings:   svc,
@@ -548,7 +556,7 @@ func New(ctx context.Context, o Options) (*App, error) {
 	return &App{
 		Handler: handler, Store: st, Settings: svc, Connectors: conns, Hubs: hubs,
 		Plans: plans, Dashboard: dash, Tokens: tokens, Profiles: profiles, Routes: routes, Level: level, User: user,
-		Events: eventBus, Poller: poller, Jobs: jobQueue, Boxes: boxReg,
+		Events: eventBus, Poller: poller, Jobs: jobQueue, Boxes: boxReg, BoxManager: boxManager,
 		Background: append(background(notifier, seriesHub, adminHub, appsHub, plexHub, eventBus, o.Logger),
 			func(ctx context.Context) { channelsHub.Watch(ctx, o.Logger) }, jobQueue.Run),
 	}, nil

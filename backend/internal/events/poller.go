@@ -4,6 +4,8 @@ import (
 	"context"
 	"log/slog"
 	"strconv"
+	"sync"
+	"sync/atomic"
 	"time"
 
 	"github.com/antonbier/DreamHub/backend/internal/box"
@@ -47,6 +49,12 @@ type Poller struct {
 	// off: a box that is off is not asked every 30 seconds.
 	failures int
 
+	// boostUntil (unix nanoseconds): until then the box is looked at
+	// every BoostEvery, whatever the back-off — it was just switched on.
+	boostUntil atomic.Int64
+	nudge      chan struct{}
+	nudgeOnce  sync.Once
+
 	// running holds the timers that were recording last tick, by channel
 	// and start (not end: extending a running recording isn't a new one);
 	// nil until the first tick, which only takes the baseline — a restart
@@ -80,7 +88,37 @@ func (p *Poller) Run(ctx context.Context) {
 		case <-ctx.Done():
 			return
 		case <-time.After(p.wait()):
+		case <-p.nudgeCh():
 		}
+	}
+}
+
+// BoostEvery and BoostFor: a box that was just switched on boots for a
+// minute or two; it is asked this often for this long.
+const (
+	BoostEvery = 10 * time.Second
+	BoostFor   = 3 * time.Minute
+)
+
+func (p *Poller) nudgeCh() chan struct{} {
+	p.nudgeOnce.Do(func() { p.nudge = make(chan struct{}, 1) })
+	return p.nudge
+}
+
+func (p *Poller) clock() time.Time {
+	if p.Now != nil {
+		return p.Now()
+	}
+	return time.Now()
+}
+
+// Boost looks at the box now and then every BoostEvery for BoostFor,
+// ignoring the back-off: the person has just switched it on.
+func (p *Poller) Boost() {
+	p.boostUntil.Store(p.clock().Add(BoostFor).UnixNano())
+	select {
+	case p.nudgeCh() <- struct{}{}:
+	default:
 	}
 }
 
@@ -91,6 +129,9 @@ const maxBackoff = 5 * time.Minute
 // wait is the pause until the next tick: the interval, doubled for each
 // failed tick in a row up to maxBackoff.
 func (p *Poller) wait() time.Duration {
+	if p.clock().UnixNano() < p.boostUntil.Load() {
+		return min(BoostEvery, p.Interval)
+	}
 	d := p.Interval
 	for i := 0; i < p.failures && d < maxBackoff; i++ {
 		d *= 2

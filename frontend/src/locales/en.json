@@ -2412,7 +2412,19 @@
       "testOk": "Connected: {device}",
       "save": "Save",
       "addBox": "Add box",
-      "remove": "Remove box"
+      "remove": "Remove box",
+      "wake": {
+        "legend": "Switch on when it is off",
+        "none": "Not set up",
+        "wol": "Wake-on-LAN (network)",
+        "extension": "Through an extension (e.g. a smart plug)",
+        "mac": "MAC address of the box",
+        "macHint": "Wake-on-LAN must be switched on in the box's network settings. DreamHub and the box must be on the same network.",
+        "action": "Extension action",
+        "pick": "Choose an action…",
+        "noExtension": "No extension with an action is running.",
+        "extensionHint": "The action is shown with its own wording before it runs — a socket's action usually toggles, so check that it says “on”."
+      }
     },
     "profile": {
       "legend": "Boxes this profile may use",
@@ -2434,7 +2446,12 @@
       "peerBadCode": "Wrong or expired code.",
       "codeRequired": "Type the code shown on the box.",
       "boxTooOld": "DreamHub on that box is too old. Update it first.",
-      "hubTooOld": "This DreamHub is too old for the one on that box. Update this one first."
+      "hubTooOld": "This DreamHub is too old for the one on that box. Update this one first.",
+      "wakeNotSet": "No way to switch this box on is set up.",
+      "wakeFailed": "The wake-up packet could not be sent.",
+      "wakeExtensionMissing": "The extension that switches this box on is not running.",
+      "wakeMac": "That doesn't look like a MAC address (aa:bb:cc:dd:ee:ff).",
+      "wakeAction": "Choose the extension's action."
     },
     "pair": {
       "title": "DreamHub on this box",
@@ -2465,6 +2482,12 @@
       "show": "Show code",
       "valid": "Valid until {time}",
       "onTv": "also on the TV"
+    },
+    "wake": {
+      "button": "Switch on",
+      "starting": "Starting…",
+      "confirm": "Switch on",
+      "sent": "Signal sent"
     }
   }
 }

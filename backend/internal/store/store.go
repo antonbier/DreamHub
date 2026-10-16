@@ -416,6 +416,13 @@ var migrations = []string{
 	ALTER TABLE boxes ADD COLUMN peer_token TEXT NOT NULL DEFAULT '';
 	ALTER TABLE boxes ADD COLUMN stream_base TEXT NOT NULL DEFAULT '';
 	`,
+	`
+	-- How a box that is off is switched on (docs/MULTIDEVICE_PLAN.md, M9).
+	ALTER TABLE boxes ADD COLUMN wake_method TEXT NOT NULL DEFAULT '';
+	ALTER TABLE boxes ADD COLUMN wake_mac TEXT NOT NULL DEFAULT '';
+	ALTER TABLE boxes ADD COLUMN wake_ext TEXT NOT NULL DEFAULT '';
+	ALTER TABLE boxes ADD COLUMN wake_action TEXT NOT NULL DEFAULT '';
+	`,
 }
 
 func (s *Store) migrate(ctx context.Context) error {

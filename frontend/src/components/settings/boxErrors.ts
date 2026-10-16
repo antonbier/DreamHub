@@ -26,6 +26,7 @@ export function boxErrorKey(err: unknown): string {
     if (err.code === 'validation_failed') {
       if (err.details?.code) return 'boxes.error.codeRequired'
       const fields = err.details ?? {}
+      if (fields.url?.code === 'taken') return 'boxes.error.urlTaken'
       if (fields.url) return 'boxes.error.url'
       if (fields.name) return 'boxes.error.name'
       if (fields.wakeMac) return 'boxes.error.wakeMac'

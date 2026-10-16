@@ -5,6 +5,7 @@ import (
 	"errors"
 	"net/url"
 	"regexp"
+	"strconv"
 	"strings"
 	"time"
 	"unicode/utf8"
@@ -139,10 +140,35 @@ func normalizeURL(raw string) string {
 		raw = "http://" + raw
 	}
 	u, err := url.Parse(raw)
-	if err != nil || u.Host == "" || (u.Scheme != "http" && u.Scheme != "https") {
+	if err != nil || u.Hostname() == "" || (u.Scheme != "http" && u.Scheme != "https") {
 		return ""
 	}
-	return u.Scheme + "://" + u.Host
+	host := strings.ToLower(u.Hostname())
+	if strings.Contains(host, ":") {
+		host = "[" + host + "]"
+	}
+	if p := u.Port(); p != "" {
+		n, err := strconv.Atoi(p)
+		if err != nil || n < 1 || n > 65535 {
+			return ""
+		}
+		if (u.Scheme == "http" && n == 80) || (u.Scheme == "https" && n == 443) {
+			return u.Scheme + "://" + host
+		}
+		return u.Scheme + "://" + host + ":" + p
+	}
+	return u.Scheme + "://" + host
+}
+
+// addressTaken reports whether another box already has this address: two
+// entries for one box would poll it twice and split its data.
+func (m *Manager) addressTaken(b store.Box) bool {
+	for _, e := range m.Registry.List() {
+		if e.ID != b.ID && !e.Local && e.URL != "" && e.URL == b.URL {
+			return true
+		}
+	}
+	return false
 }
 
 func contains(l []string, s string) bool {
@@ -275,6 +301,9 @@ func (m *Manager) Add(ctx context.Context, in Input) (Entry, error) {
 		return Entry{}, &ValidationError{Fields: map[string]string{"url": "required"}}
 	}
 	b.ID = m.slug(b.Name)
+	if m.addressTaken(b) {
+		return Entry{}, &ValidationError{Fields: map[string]string{"url": "taken"}}
+	}
 	if _, err := m.Test(ctx, b); err != nil {
 		return Entry{}, err
 	}
@@ -300,6 +329,9 @@ func (m *Manager) Update(ctx context.Context, id string, in Input) (Entry, error
 	main := id == m.Registry.DefaultID()
 	if err := apply(&b, in, main); err != nil {
 		return Entry{}, err
+	}
+	if !main && b.URL != e.URL && m.addressTaken(b) {
+		return Entry{}, &ValidationError{Fields: map[string]string{"url": "taken"}}
 	}
 	clients := e.Clients
 	if !main && (b.URL != e.URL || b.Username != e.Username || b.Password != e.Password) {

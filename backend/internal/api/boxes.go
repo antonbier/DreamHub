@@ -121,7 +121,7 @@ type peerView struct {
 }
 
 func viewBox(d Deps, e boxes.Entry, admin bool, allowed bool) boxView {
-	v := boxView{ID: e.ID, Name: e.Name, Color: e.Color, Full: e.Local, Online: d.Boxes.Online(e.ID), Allowed: allowed, Paired: e.Paired(), Wake: e.WakeMethod != ""}
+	v := boxView{ID: e.ID, Name: e.Name, Color: e.Color, Full: e.Local, Online: d.Boxes.Online(e.ID), Allowed: allowed, Capabilities: []string{}, Paired: e.Paired(), Wake: e.WakeMethod != ""}
 	if admin && !e.Local {
 		v.URL, v.Username, v.HasPassword = e.URL, e.Username, e.Password != ""
 		v.PeerURL, v.StreamBase = e.PeerURL, e.StreamBase

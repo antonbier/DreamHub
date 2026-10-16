@@ -317,6 +317,16 @@ func TestBoxes_AddTestEditAndRemove(t *testing.T) {
 	if added.ID != "living-room-2" {
 		t.Errorf("a second box with the same name gets its own ID: %s", added.ID)
 	}
+	// The same box twice would be polled twice: refused, however it is spelled.
+	for _, url := range []string{"192.168.1.20", "http://192.168.1.20:80/", "HTTP://192.168.1.20"} {
+		resp, b := e.do(t, "POST", "/api/v1/boxes", `{"name":"Again","url":"`+url+`"}`, nil)
+		if resp.StatusCode != http.StatusBadRequest || !strings.Contains(string(b), `"taken"`) {
+			t.Errorf("adding %s twice: %d %s", url, resp.StatusCode, b)
+		}
+	}
+	if resp, _ := e.do(t, "POST", "/api/v1/boxes", `{"name":"Port","url":"192.168.1.30:99999"}`, nil); resp.StatusCode != http.StatusBadRequest {
+		t.Errorf("a port beyond 65535 is not an address: %d", resp.StatusCode)
+	}
 	e.json(t, "GET", "/api/v1/boxes", "", nil, 200, &list)
 	if len(list.Boxes) != 3 || !list.Boxes[1].HasPassword || list.Boxes[1].Full {
 		t.Fatalf("boxes after adding: %+v", list)

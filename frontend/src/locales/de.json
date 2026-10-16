@@ -2439,6 +2439,7 @@
       "notFound": "Diese Box gibt es nicht mehr.",
       "isMain": "Die erste Box kann nicht entfernt werden.",
       "url": "Das sieht nicht nach einer Adresse aus.",
+      "urlTaken": "Unter dieser Adresse gibt es schon eine Box.",
       "name": "Gib der Box einen Namen (bis zu 30 Zeichen).",
       "generic": "Das hat nicht geklappt. Versuch es noch einmal.",
       "isLocal": "DreamHub läuft auf dieser Box selbst – es gibt nichts zu koppeln.",

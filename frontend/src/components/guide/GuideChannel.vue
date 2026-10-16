@@ -125,9 +125,12 @@ async function load() {
   nowSec.value = Date.now() / 1000
   // Today's TV day started yesterday when it's before 05:00 now.
   const before5 = Number(new Intl.DateTimeFormat('en-GB', { hour: '2-digit', hourCycle: 'h23', timeZone: timeZone.value }).format(Date.now())) < DAY_START_HOUR
-  const from = zonedUnix(timeZone.value, day.value - (before5 ? 1 : 0), DAY_START_HOUR, 0)
+  const dayOffset = day.value - (before5 ? 1 : 0)
+  const from = zonedUnix(timeZone.value, dayOffset, DAY_START_HOUR, 0)
+  // Next morning's start, not from + 24 h: the day the clocks change has 23 or 25.
+  const to = zonedUnix(timeZone.value, dayOffset + 1, DAY_START_HOUR, 0)
   try {
-    const res = await api.guide.grid(props.bouquet, from, from + 24 * 3600, channel.value)
+    const res = await api.guide.grid(props.bouquet, from, to, channel.value)
     if (mine !== token) return
     events.value = res.channels[0]?.events ?? []
     loadFailed.value = false

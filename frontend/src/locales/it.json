@@ -123,6 +123,7 @@
     "allOk": "Nessuna attenzione richiesta.",
     "clockSkew": "L'orologio del box è sfasato di circa {minutes} min.",
     "recent": "Attività recente",
+    "onlyThisBox": "Solo questo box",
     "browserOn": "Mostra le notifiche su questo dispositivo",
     "browserIsOn": "Le notifiche su questo dispositivo sono attive",
     "browserOff": "Disattiva",

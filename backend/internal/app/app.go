@@ -5,6 +5,7 @@ package app
 
 import (
 	"context"
+	"encoding/json"
 	"github.com/antonbier/DreamHub/backend/internal/dockersetup"
 	"log/slog"
 	"net/http"
@@ -467,6 +468,16 @@ func New(ctx context.Context, o Options) (*App, error) {
 	var notifier *push.Notifier
 	if o.Push != nil {
 		notifier = &push.Notifier{Bus: eventBus, Settings: svc, User: user, Client: o.Push, Logger: o.Logger}
+		notifier.BoxName = func(params json.RawMessage) string {
+			if len(boxReg.List()) < 2 {
+				return ""
+			}
+			b, ok := boxReg.EventBox(params)
+			if !ok {
+				return ""
+			}
+			return b.Name
+		}
 	}
 
 	handler, routes := api.NewRouterWithRoutes(api.Deps{

@@ -9,16 +9,47 @@ import { api } from '@/api/client'
 import { openEventStream } from '@/composables/useEventStream'
 import type { Job, Notification } from '@/api/types'
 import { useJobsStore } from '@/stores/jobs'
+import { useBoxesStore } from '@/stores/boxes'
 
 let stopStream: (() => void) | null = null
+
+// "Only this box" is a per-device choice (like the remembered box).
+const ONLY_KEY = 'dreamhub.notifications.onlyThisBox'
+function readOnly(): boolean {
+  try {
+    return localStorage.getItem(ONLY_KEY) === '1'
+  } catch {
+    return false
+  }
+}
 
 export const useNotificationsStore = defineStore('notifications', {
   state: () => ({
     items: [] as Notification[],
     unread: 0,
     loaded: false,
+    onlyThisBox: readOnly(),
   }),
+  getters: {
+    // What the bell lists: with the switch on, only the selected box's events.
+    visible(state): Notification[] {
+      if (!state.onlyThisBox) return state.items
+      const active = useBoxesStore().activeId
+      return state.items.filter((n) => !n.box || n.box.id === active)
+    },
+    hasUnread(): boolean {
+      return this.onlyThisBox ? this.visible.some((n) => !n.read) : this.unread > 0
+    },
+  },
   actions: {
+    setOnlyThisBox(on: boolean) {
+      this.onlyThisBox = on
+      try {
+        localStorage.setItem(ONLY_KEY, on ? '1' : '0')
+      } catch {
+        // Not remembered; it still applies until the page is closed.
+      }
+    },
     async load() {
       try {
         const res = await api.notifications.list(20)

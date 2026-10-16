@@ -1,6 +1,6 @@
 # Multi-box — plan
 
-Status: **brainstormed and decided 2026-10-16 (six rounds with the owner). M1, M2 and M3 are built against the mock and merged to `main` (see "… as built"); nothing is released before the check of M1 on the reference box; M3a and M4 are built too; M5 onwards not started.** Replaces the "one box" assumption that runs through the backend (`app.Options.WebControl` is injected once into every hub, the poller and the jobs blocker).
+Status: **brainstormed and decided 2026-10-16 (six rounds with the owner). M1, M2 and M3 are built against the mock and merged to `main` (see "… as built"); nothing is released before the check of M1 on the reference box; M3a, M4 and M5 are built too; M6 onwards not started.** Replaces the "one box" assumption that runs through the backend (`app.Options.WebControl` is injected once into every hub, the poller and the jobs blocker).
 
 ## Goal
 
@@ -144,3 +144,12 @@ How the wiring was done, so M2 onwards can build on it without re-reading the di
 - **Checked** in headless Chromium against the mock (main + "Wohnzimmer"): dashboard with strip ("Wohnzimmer · ZDF HD"), timers ("2 tuners", own timers, no conflict), guide, recordings (own disk and list), Device overview and change log. Found and fixed: the Device view called the administration endpoints on a Basic box (409 in the console).
 - **Tests:** `mock` (second box differs everywhere), `api` (`TestBox_SecondMockBoxHasItsOwnContent`).
 - **Seen, not changed (later):** the change log is global, not per box (the plan wants it per box); mock recording sizes are 9 bytes (fixture file contents) on both boxes; the AutoTimer fixture is the same on both.
+
+## M5 as built (2026-10-16)
+
+- **Streams** needed almost nothing: since M1 `Stream` talks to the box-routing `WebControl`, so `stream/live` and `stream/recording` of a remote box already run hub → box, with the box's login only in the hub's request. What was missing: `maxLiveStreams` (2) was one counter for the whole hub; it is now **per box** (`Stream.acquire(ctx)`), because each box has its own tuners and uplink. Tests: `api` (`TestBox_StreamsOfARemoteBoxPassThroughTheHub`: live and a recording that exists on the second box only, Range-less), `hubs` (`TestStream_LiveLimitIsPerBox`).
+- **Notifications** carry the box: the poller already tags events with `box` once there are several; an untagged one (a hub's watch) is about the first box (`boxes.Registry.EventBox`). The notification view gets `box {id,name,color}` — only with ≥2 boxes. A restricted profile sees only events of its boxes, in the list, the unread count and the live feed (`viewFor`). Push appends the box name to the body (`Notifier.BoxName`, again only with ≥2 boxes).
+- **"Only this box"** is a checkbox in the bell (≥2 boxes), stored per device in localStorage and applied in the browser — not a setting. Push has no "active box", so the switch does not touch it (push always names the box).
+- **Fixed on the way:** the bell's update summary called `/apps/updates` on a Basic box (409).
+- **Not done:** the stream hub's picons for a remote box still come from DreamHub's own disk (shared by channel name); push for a *single* box restriction per profile (push is global); the "direct" stream switch.
+- Checked in headless Chromium against the mock (main + Wohnzimmer): bell with box names, switch, no new console errors.

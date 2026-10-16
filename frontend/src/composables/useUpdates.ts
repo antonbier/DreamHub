@@ -6,6 +6,7 @@
 import { ref } from 'vue'
 import { api } from '@/api/client'
 import type { UpdatesView } from '@/api/types'
+import { useNavigationStore } from '@/stores/navigation'
 
 const summary = ref<UpdatesView | null>(null)
 const loading = ref(false)
@@ -16,6 +17,12 @@ export function useUpdates() {
   // reload asks again; without force a recent answer is kept.
   async function reload(force = false) {
     if (loading.value) return
+    // Packages and containers are the machine DreamHub runs on: a box
+    // without DreamHub has none to update (the API answers 409).
+    if (!useNavigationStore().isFull) {
+      summary.value = null
+      return
+    }
     if (!force && summary.value && Date.now() - fetchedAt < FRESH_MS) return
     loading.value = true
     try {

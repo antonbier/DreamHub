@@ -1116,6 +1116,8 @@ export interface Notification {
   key: string
   params: Record<string, unknown>
   read: boolean
+  // The box the event is about; only with more than one box.
+  box?: { id: string; name: string; color?: string }
 }
 
 // backend/internal/ai.Taste, from GET /api/v1/discovery/taste: exactly what

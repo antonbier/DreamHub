@@ -123,6 +123,7 @@
     "allOk": "Nothing needs attention.",
     "clockSkew": "The box's clock is off by about {minutes} min.",
     "recent": "Recent activity",
+    "onlyThisBox": "Only this box",
     "browserOn": "Show notifications on this device",
     "browserIsOn": "Notifications on this device are on",
     "browserOff": "Turn off",

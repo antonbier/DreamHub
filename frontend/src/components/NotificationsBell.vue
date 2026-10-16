@@ -18,7 +18,7 @@
         @click="onOpen"
       >
         <Icon name="bell" :size="18" />
-        <span v-if="issues.length > 0 || notifications.unread > 0" class="absolute inset-e-1 top-1 h-1.5 w-1.5 rounded-full bg-warn" />
+        <span v-if="issues.length > 0 || notifications.hasUnread" class="absolute inset-e-1 top-1 h-1.5 w-1.5 rounded-full bg-warn" />
       </button>
     </template>
     <template #panel="{ close }">
@@ -46,9 +46,15 @@
         </div>
 
         <template v-if="notifications.items.length > 0">
-          <div class="mb-1.5 mt-3 text-[12.5px] text-faint">{{ t('notifications.recent') }}</div>
+          <div class="mb-1.5 mt-3 flex items-baseline justify-between gap-2 text-[12.5px] text-faint">
+            <span>{{ t('notifications.recent') }}</span>
+            <label v-if="boxes.multi" class="flex cursor-pointer items-center gap-1.5">
+              <input type="checkbox" :checked="notifications.onlyThisBox" @change="notifications.setOnlyThisBox(($event.target as HTMLInputElement).checked)" />
+              {{ t('notifications.onlyThisBox') }}
+            </label>
+          </div>
           <ul class="flex flex-col">
-            <li v-for="n in notifications.items" :key="n.id" class="border-b border-line-soft py-1.5 text-[12.5px] text-muted last:border-none">
+            <li v-for="n in notifications.visible" :key="n.id" class="border-b border-line-soft py-1.5 text-[12.5px] text-muted last:border-none">
               <RouterLink v-if="notificationLink(n)" :to="notificationLink(n)!" class="text-accent hover:underline" @click="close()">{{ describeNotification(n) }}</RouterLink>
               <template v-else>{{ describeNotification(n) }}</template>
             </li>
@@ -71,6 +77,7 @@ import type { RouteLocationRaw } from 'vue-router'
 import { useUpdates } from '@/composables/useUpdates'
 import { useNavigationStore } from '@/stores/navigation'
 import { useNotificationsStore } from '@/stores/notifications'
+import { useBoxesStore } from '@/stores/boxes'
 import { useProblem } from '@/composables/useProblem'
 import { useDeviceStatus, CLOCK_SKEW_WARN_MINUTES } from '@/composables/useDeviceStatus'
 import { useDisplayTimeZone } from '@/composables/useDisplayTimeZone'
@@ -83,6 +90,7 @@ const { hubLabel } = useHubLabel()
 const { timeZone } = useDisplayTimeZone()
 const navigation = useNavigationStore()
 const notifications = useNotificationsStore()
+const boxes = useBoxesStore()
 const { describe } = useProblem()
 const { clockSkew, checkClock } = useDeviceStatus()
 const { summary: updates, reload: reloadUpdates } = useUpdates()
@@ -93,7 +101,7 @@ watch(
   () => notifications.items[0]?.id,
   (id, before) => {
     const n = notifications.items[0]
-    if (id !== undefined && before !== undefined && id !== before && !n.read) browserNotes.show('DreamHub', describeNotification(n))
+    if (id !== undefined && before !== undefined && id !== before && !n.read && notifications.visible.includes(n)) browserNotes.show('DreamHub', describeNotification(n))
   },
 )
 
@@ -142,7 +150,9 @@ function describeNotification(n: Notification): string {
     params.time = new Intl.DateTimeFormat(locale.value, { weekday: 'short', hour: '2-digit', minute: '2-digit', timeZone: timeZone.value }).format(at * 1000)
   }
   const translated = t(`notification.${n.key}`, params)
-  return translated === `notification.${n.key}` ? n.key : translated
+  const text = translated === `notification.${n.key}` ? n.key : translated
+  // With several boxes the text says which one it is about.
+  return n.box ? `${text} · ${n.box.name}` : text
 }
 
 // An entry that has a page to go to: the crash notice opens the app's logs,

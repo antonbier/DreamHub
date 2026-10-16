@@ -12,6 +12,7 @@ import (
 	"sync"
 	"time"
 
+	"github.com/antonbier/DreamHub/backend/internal/box"
 	"github.com/antonbier/DreamHub/backend/internal/httpx"
 	"github.com/antonbier/DreamHub/backend/internal/recfs"
 	"github.com/antonbier/DreamHub/backend/internal/webcontrol"
@@ -40,8 +41,10 @@ type Stream struct {
 	// as "no tuner"; 0 means 12 s.
 	FirstData time.Duration
 
-	slotsOnce sync.Once
-	slots     chan struct{}
+	// slots limits the live streams per box: each box has its own tuners
+	// and its own uplink.
+	slotsMu sync.Mutex
+	slots   map[string]chan struct{}
 }
 
 // maxLiveStreams: each stream is 3–15 Mbit/s out of the box, and every
@@ -109,17 +112,27 @@ var dvbRef = regexp.MustCompile(`^1:0:[0-9A-Fa-f]{1,8}(:[0-9A-Fa-f]{1,8}){7}:(0:
 // ValidLiveRef reports whether ref may be streamed live.
 func ValidLiveRef(ref string) bool { return dvbRef.MatchString(ref) }
 
-func (h *Stream) acquire() bool {
-	h.slotsOnce.Do(func() { h.slots = make(chan struct{}, maxLiveStreams) })
+// acquire takes a live-stream slot of the box in ctx; the returned func
+// gives it back. ok is false when the box already streams maxLiveStreams.
+func (h *Stream) acquire(ctx context.Context) (release func(), ok bool) {
+	key := box.Key(ctx)
+	h.slotsMu.Lock()
+	if h.slots == nil {
+		h.slots = map[string]chan struct{}{}
+	}
+	ch := h.slots[key]
+	if ch == nil {
+		ch = make(chan struct{}, maxLiveStreams)
+		h.slots[key] = ch
+	}
+	h.slotsMu.Unlock()
 	select {
-	case h.slots <- struct{}{}:
-		return true
+	case ch <- struct{}{}:
+		return func() { <-ch }, true
 	default:
-		return false
+		return nil, false
 	}
 }
-
-func (h *Stream) release() { <-h.slots }
 
 // live passes the box's stream of a channel through. The first bytes are
 // awaited before answering, so "no tuner free" is an error the screen can
@@ -130,11 +143,12 @@ func (h *Stream) live(w http.ResponseWriter, r *http.Request) {
 		httpx.WriteError(w, r, http.StatusBadRequest, "invalid_query", "ref must be a broadcast service reference")
 		return
 	}
-	if !h.acquire() {
+	release, ok := h.acquire(r.Context())
+	if !ok {
 		httpx.WriteError(w, r, http.StatusTooManyRequests, CodeStreamBusy, "too many live streams at once")
 		return
 	}
-	defer h.release()
+	defer release()
 
 	ctx, cancel := context.WithCancel(r.Context())
 	defer cancel()

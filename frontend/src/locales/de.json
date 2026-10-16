@@ -123,6 +123,7 @@
     "allOk": "Nichts braucht Aufmerksamkeit.",
     "clockSkew": "Die Uhr der Box geht etwa {minutes} Min. falsch.",
     "recent": "Letzte Aktivität",
+    "onlyThisBox": "Nur diese Box",
     "browserOn": "Benachrichtigungen auf diesem Gerät anzeigen",
     "browserIsOn": "Benachrichtigungen auf diesem Gerät sind an",
     "browserOff": "Ausschalten",

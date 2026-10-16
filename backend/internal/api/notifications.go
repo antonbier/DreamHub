@@ -22,10 +22,37 @@ type notificationView struct {
 	Key    string `json:"key"`
 	Params any    `json:"params"`
 	Read   bool   `json:"read"`
+	// Box names the box the event is about; only with more than one box,
+	// so a household with one never sees it.
+	Box *notificationBox `json:"box,omitempty"`
+}
+
+type notificationBox struct {
+	ID    string `json:"id"`
+	Name  string `json:"name"`
+	Color string `json:"color,omitempty"`
 }
 
 func toNotificationView(n store.Notification) notificationView {
 	return notificationView{ID: n.ID, At: n.At.UTC().Format(time.RFC3339), Key: n.Key, Params: json.RawMessage(n.Params), Read: n.ReadAt != nil}
+}
+
+// viewFor builds what a profile sees of an event: nothing (false) for a box
+// the profile may not use, the box's name once there are several boxes.
+func viewFor(d Deps, user store.User, n store.Notification) (notificationView, bool) {
+	v := toNotificationView(n)
+	known := false
+	var b store.Box
+	if d.Boxes != nil {
+		b, known = d.Boxes.EventBox(n.Params)
+	}
+	if known && !user.MayUseBox(b.ID) {
+		return v, false
+	}
+	if known && len(d.Boxes.List()) > 1 {
+		v.Box = &notificationBox{ID: b.ID, Name: b.Name, Color: b.Color}
+	}
+	return v, true
 }
 
 // handleNotifications answers the bell's inbox (docs/archive/V1_PLAN.md, WP7:
@@ -42,7 +69,15 @@ func handleNotifications(d Deps) http.HandlerFunc {
 			limit = n
 		}
 		unreadOnly := r.URL.Query().Get("unreadOnly") == "1"
-		entries, err := d.Store.Notifications(r.Context(), limit, unreadOnly)
+		user := current(r)
+		// A profile restricted to some boxes sees only their events, so the
+		// list is cut after the filter, not before.
+		fetch := limit
+		restricted := len(user.Boxes) > 0
+		if restricted {
+			fetch = 500
+		}
+		entries, err := d.Store.Notifications(r.Context(), fetch, unreadOnly)
 		if err != nil {
 			httpx.WriteError(w, r, http.StatusInternalServerError, "internal", "could not load notifications")
 			return
@@ -53,8 +88,21 @@ func handleNotifications(d Deps) http.HandlerFunc {
 			return
 		}
 		out := make([]notificationView, 0, len(entries))
+		visibleUnread := 0
 		for _, e := range entries {
-			out = append(out, toNotificationView(e))
+			v, ok := viewFor(d, user, e)
+			if !ok {
+				continue
+			}
+			if !v.Read {
+				visibleUnread++
+			}
+			if len(out) < limit {
+				out = append(out, v)
+			}
+		}
+		if restricted {
+			unread = visibleUnread
 		}
 		httpx.WriteJSON(w, http.StatusOK, map[string]any{"notifications": out, "unread": unread})
 	}
@@ -115,7 +163,11 @@ func handleEventsStream(d Deps) http.HandlerFunc {
 			case <-ctx.Done():
 				return
 			case n := <-ch:
-				data, err := json.Marshal(toNotificationView(n))
+				view, ok := viewFor(d, me, n)
+				if !ok {
+					continue
+				}
+				data, err := json.Marshal(view)
 				if err != nil {
 					continue
 				}

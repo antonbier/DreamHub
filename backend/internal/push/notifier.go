@@ -4,6 +4,7 @@ import (
 	"context"
 	"encoding/json"
 	"log/slog"
+	"strings"
 	"time"
 
 	"github.com/antonbier/DreamHub/backend/internal/connector"
@@ -25,6 +26,9 @@ type Notifier struct {
 	User   store.User
 	Client Client
 	Logger *slog.Logger
+	// BoxName names the box an event is about, "" while there is only one
+	// box — so the text says which box when it has to.
+	BoxName func(params json.RawMessage) string
 }
 
 // eventSwitch is the setting that turns each event kind's push on.
@@ -75,6 +79,11 @@ func (n *Notifier) send(ctx context.Context, v settings.Values, key string, para
 	m, ok := Compose(key, params, v.String(settings.KeyLanguage), time.Local)
 	if !ok {
 		return nil
+	}
+	if n.BoxName != nil {
+		if name := n.BoxName(params); name != "" {
+			m.Body = strings.TrimSpace(m.Body + " · " + name)
+		}
 	}
 	ctx, cancel := context.WithTimeout(ctx, 15*time.Second)
 	defer cancel()

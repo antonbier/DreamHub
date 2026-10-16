@@ -4,6 +4,7 @@ import (
 	"context"
 	"encoding/json"
 	"fmt"
+	"log"
 	"net/http"
 	"strings"
 	"time"
@@ -135,8 +136,18 @@ func (s *Server) energyOf(id string) (Energy, bool) {
 
 // liveValue prefers what the device announced on the LAN, then the cloud's.
 func liveValue(state map[string]any, key string, cloud *float64) (float64, bool) {
-	if v, ok := number(state[key]); ok {
-		return v, true
+	switch v := state[key].(type) {
+	case float64:
+		// The plug's own LAN announcement sends these as whole numbers in
+		// hundredths (voltage 23442 is 234.42 V, power 901 is 9.01 W,
+		// monthKwh 90 is 0.90 kWh) — confirmed on the box 2026-10-16 against
+		// the plug's behaviour and SonoffLAN's UIID 190 scaling. A string
+		// ("212.50", as the cloud and older plugs send) is already in units.
+		return v * 0.01, true
+	case string:
+		if f, ok := number(v); ok {
+			return f, true
+		}
 	}
 	if cloud != nil {
 		return *cloud, true
@@ -236,9 +247,17 @@ func (s *Server) apply(w http.ResponseWriter, r *http.Request) {
 	ctx, cancel := context.WithTimeout(r.Context(), 15*time.Second)
 	defer cancel()
 	if err := s.devices.Switch(ctx, d.ID, !on); err != nil {
-		http.Error(w, err.Error(), http.StatusBadGateway)
+		log.Printf("switching %s to %t over the LAN failed: %v", d.ID, !on, err)
+		if err := s.switchViaCloud(ctx, d, !on); err != nil {
+			log.Printf("switching %s to %t through the cloud failed: %v", d.ID, !on, err)
+			http.Error(w, err.Error(), http.StatusBadGateway)
+			return
+		}
+		log.Printf("switched %s %s through the cloud", d.ID, map[bool]string{true: "on", false: "off"}[!on])
+		writeJSON(w, http.StatusOK, map[string]any{"ok": true})
 		return
 	}
+	log.Printf("switched %s %s", d.ID, map[bool]string{true: "on", false: "off"}[!on])
 	writeJSON(w, http.StatusOK, map[string]any{"ok": true})
 }
 
@@ -510,4 +529,40 @@ func (s *Server) logIn(ctx context.Context, pasted string) error {
 	go energyOnce(context.WithoutCancel(ctx), s.cfg, s.cloud, s.energy)
 	_ = s.devices.Refresh(ctx)
 	return nil
+}
+
+// switchViaCloud is the fallback when the device refuses the LAN command
+// (the S60TPF answers every encrypted LAN request with error 400, whatever
+// the key — box check 2026-10-16): the same switch through eWeLink's cloud,
+// when a login is stored. It waits until the device announces the new state.
+func (s *Server) switchViaCloud(ctx context.Context, d Device, on bool) error {
+	cfg := s.cfg.Get()
+	if !cfg.Cloud.LoggedIn() {
+		return fmt.Errorf("the device refused the LAN command and no eWeLink login is stored for the cloud")
+	}
+	fresh, changed, err := s.cloud.Fresh(ctx, cfg.Cloud)
+	if err != nil {
+		return err
+	}
+	if changed {
+		_ = s.cfg.Update(func(c *Config) error { c.Cloud = fresh; return nil })
+	}
+	_, multi := d.State["switches"]
+	if err := s.cloud.SetSwitch(ctx, fresh, d.ID, on, multi); err != nil {
+		return err
+	}
+	for i := 0; i < 12; i++ {
+		_ = s.devices.Refresh(ctx)
+		if now, ok := s.devices.Get(d.ID); ok {
+			if isOn, known := now.On(); known && isOn == on {
+				return nil
+			}
+		}
+		select {
+		case <-ctx.Done():
+			return ctx.Err()
+		case <-time.After(time.Second):
+		}
+	}
+	return fmt.Errorf("the cloud accepted the command but the device didn't report the new state")
 }

@@ -32,6 +32,11 @@ import (
 var DefaultServices = []string{
 	"enigma2.service",
 	"dreamhub.service",
+	// DreamHub's optional parts: their logs are where an extension's
+	// "something went wrong" is explained.
+	"dreamhub-docker.service",
+	"dreamhub-dockerd-helper.service",
+	"dreamhub-ext-ewelink.service",
 	"smb.service",
 	"nmb.service",
 	"smbd.service",

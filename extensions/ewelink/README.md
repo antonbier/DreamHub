@@ -39,6 +39,12 @@ After editing: `systemctl restart dreamhub-ext-ewelink`. The file holds secrets:
 
 The S60TPF announces `power`, `voltage`, `current`, `dayKwh` and `monthKwh` on the LAN itself (confirmed on the box 2026-10-16), so the card needs no cloud for them. For plugs that don't, and with a login stored, once a quarter of an hour the extension asks the cloud for the device's `hundredDaysKwh` history and live values (the S60TPF answers that request with error 4002, "control failed" — it is then not asked again). The card shows **Power**, **Today** and **This month**, and flags the on/off status and this list for DreamHub's start page (schema 3, `docs/BUILDING_EXTENSIONS.md`). Reads only — switching never goes through the cloud. That is about 6 calls per device per hour against the free application's 50 000 a month. Which of these a particular plug reports is decided by the plug: what it doesn't send isn't shown.
 
+## Switching, and what is logged
+
+The extension tries the LAN first (`/zeroconf/switches` for a plug that reports `switches`, `/zeroconf/switch` otherwise). **The S60TPF (firmware 1.2.0) answers every encrypted LAN command with error 400** — also with a wrong key, a different request order and `Connection: close`, so no variant tried on the box works (2026-10-16; reading its announcements works). When that happens and an eWeLink login is stored, the same switch goes through the cloud (`POST /v2/device/thing/status`, allowed for a standard-role application) and the extension waits until the plug announces the new state. Without a login the preview works but applying fails with the reason. The numbers the plug announces on the LAN are whole numbers in hundredths (voltage 23442 = 234.42 V).
+
+Logs: the unit's own journal (`journalctl -u dreamhub-ext-ewelink`, also Device → Administration → Services → Logs): every switch (LAN failure, cloud fallback, result), cloud problems, registration. DreamHub's own log (`dreamhub`) names the extension's refusal text when an apply fails.
+
 ## Network
 
 Unlike the template's default, this extension needs the LAN (mDNS multicast, each device's port 8081), so its unit allows private address ranges and `224.0.0.251` besides loopback. On systemd 232 (the reference box) that allowance isn't enforced at all — see `packaging/extension-template/README.md`.

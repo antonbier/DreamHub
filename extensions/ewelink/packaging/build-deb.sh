@@ -9,7 +9,7 @@ EXT=$(cd "$HERE/.." && pwd)
 ROOT=$(cd "$EXT/../.." && pwd)
 TPL="$ROOT/packaging/extension-template"
 ARCH=${ARCH:-arm64}
-VERSION=${VERSION:-0.3.1}
+VERSION=${VERSION:-0.3.4}
 ID=dreamhub-ext-ewelink
 case "$ARCH" in
     arm64) GOARCH=arm64; GOARM= ;;

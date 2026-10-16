@@ -125,8 +125,13 @@ func (ds *Devices) Switch(ctx context.Context, id string, on bool) error {
 	if on {
 		want = "on"
 	}
+	// A single-channel device takes /zeroconf/switch; one that reports
+	// "switches" (the S60TPF does) takes /zeroconf/switches with the channel
+	// listed — the single-channel call is refused with error 400.
+	path := "/zeroconf/switch"
 	var payload any = map[string]string{"switch": want}
 	if _, multi := d.State["switches"]; multi {
+		path = "/zeroconf/switches"
 		payload = map[string]any{"switches": []map[string]any{{"switch": want, "outlet": 0}}}
 	}
 	plain, _ := json.Marshal(payload)
@@ -138,7 +143,7 @@ func (ds *Devices) Switch(ctx context.Context, id string, on bool) error {
 		"sequence": strconv.FormatInt(time.Now().UnixMilli(), 10), "deviceid": id, "selfApikey": "123",
 		"iv": iv, "encrypt": true, "data": data,
 	})
-	req, err := http.NewRequestWithContext(ctx, http.MethodPost, "http://"+d.Addr+"/zeroconf/switch", bytes.NewReader(body))
+	req, err := http.NewRequestWithContext(ctx, http.MethodPost, "http://"+d.Addr+path, bytes.NewReader(body))
 	if err != nil {
 		return err
 	}

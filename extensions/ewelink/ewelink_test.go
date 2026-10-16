@@ -9,6 +9,7 @@ import (
 	"net/http/httptest"
 	"os"
 	"path/filepath"
+	"strconv"
 	"strings"
 	"testing"
 	"time"
@@ -174,5 +175,41 @@ func TestSettings_SaveKeyKeepsSecretAndPersists(t *testing.T) {
 	}
 	if rec := put(`{"values":{"lang":"fr"}}`); rec.Code != 400 {
 		t.Fatalf("bad language: %d", rec.Code)
+	}
+}
+
+// A device that announces "switches" (the S60TPF) takes /zeroconf/switches
+// with the channel listed; the single-channel call is refused with 400.
+func TestSwitchMultiChannelUsesSwitchesEndpoint(t *testing.T) {
+	const key = "devkey"
+	state := "off"
+	var path string
+	dev := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		var body struct{ Deviceid, Iv, Data string }
+		json.NewDecoder(r.Body).Decode(&body)
+		path = r.URL.Path
+		got, err := DecryptTXT(map[string]string{"encrypt": "true", "iv": body.Iv, "data1": body.Data}, key)
+		list, _ := got["switches"].([]any)
+		if r.URL.Path != "/zeroconf/switches" || err != nil || len(list) != 1 {
+			w.Write([]byte(`{"error":400}`))
+			return
+		}
+		state = list[0].(map[string]any)["switch"].(string)
+		w.Write([]byte(`{"error":0}`))
+	}))
+	defer dev.Close()
+	host, port, _ := net.SplitHostPort(strings.TrimPrefix(dev.URL, "http://"))
+	p, _ := strconv.Atoi(port)
+	ds := NewDevices(NewConfigStore("", Config{Devices: []DeviceConfig{{ID: "abc", Key: key}}}))
+	ds.browse = func(context.Context, time.Duration) ([]Announcement, error) {
+		iv, data, _ := Encrypt(key, []byte(`{"switches":[{"switch":"`+state+`","outlet":0}]}`))
+		return []Announcement{{IP: net.ParseIP(host), Port: uint16(p), TXT: map[string]string{
+			"id": "abc", "type": "plug", "encrypt": "true", "iv": iv, "data1": data, "seq": "1"}}}, nil
+	}
+	if err := ds.Refresh(context.Background()); err != nil {
+		t.Fatal(err)
+	}
+	if err := ds.Switch(context.Background(), "abc", true); err != nil || state != "on" || path != "/zeroconf/switches" {
+		t.Fatalf("switch: %v, state %s, path %s", err, state, path)
 	}
 }

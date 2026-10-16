@@ -8,6 +8,7 @@ import (
 	"fmt"
 	"io"
 	"net/http"
+	"strings"
 	"time"
 )
 
@@ -88,7 +89,7 @@ func (c HTTPClient) Apply(ctx context.Context, actionID, fingerprint string) err
 		return ErrStale
 	}
 	if resp.StatusCode != http.StatusOK {
-		return fmt.Errorf("extension: apply: unexpected status %d", resp.StatusCode)
+		return fmt.Errorf("extension: apply: unexpected status %d%s", resp.StatusCode, reason(resp.Body))
 	}
 	return nil
 }
@@ -100,7 +101,7 @@ func (c HTTPClient) doJSON(req *http.Request, dst any) error {
 	}
 	defer resp.Body.Close()
 	if resp.StatusCode != http.StatusOK {
-		return fmt.Errorf("extension: unexpected status %d", resp.StatusCode)
+		return fmt.Errorf("extension: unexpected status %d%s", resp.StatusCode, reason(resp.Body))
 	}
 	return json.NewDecoder(resp.Body).Decode(dst)
 }
@@ -146,5 +147,22 @@ func (c HTTPClient) SaveSettings(ctx context.Context, values map[string]string) 
 		_ = json.NewDecoder(io.LimitReader(resp.Body, 4096)).Decode(&e)
 		return &SettingsError{Message: e.Error}
 	}
-	return fmt.Errorf("extension: save settings: unexpected status %d", resp.StatusCode)
+	return fmt.Errorf("extension: save settings: unexpected status %d%s", resp.StatusCode, reason(resp.Body))
+}
+
+// reason is what an extension said with a refusal (its own words, a short
+// plain text or {"error": "..."}), for the log: ": <text>", or nothing.
+func reason(r io.Reader) string {
+	b, _ := io.ReadAll(io.LimitReader(r, 300))
+	text := strings.TrimSpace(string(b))
+	var e struct {
+		Error string `json:"error"`
+	}
+	if json.Unmarshal(b, &e) == nil && e.Error != "" {
+		text = e.Error
+	}
+	if text == "" {
+		return ""
+	}
+	return ": " + text
 }

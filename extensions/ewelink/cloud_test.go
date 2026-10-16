@@ -211,7 +211,7 @@ func TestWidgets_TileFlagsAndConsumption(t *testing.T) {
 	devices.list["p1"] = Device{ID: "p1", State: map[string]any{"switch": "on", "power": "12.3"}, Seen: time.Now()}
 	energy := NewEnergyStore()
 	energy.set("p1", Energy{TodayKwh: ptr(1.5), MonthKwh: ptr(20.25)})
-	devices.list["p1"] = Device{ID: "p1", State: map[string]any{"switch": "on", "power": "12.3", "monthKwh": float64(90)}, Seen: time.Now()}
+	devices.list["p1"] = Device{ID: "p1", State: map[string]any{"switch": "on", "power": "12.3", "monthKwh": float64(90), "voltage": float64(23442)}, Seen: time.Now()}
 	s := &Server{cfg: store, devices: devices, cloud: NewCloud(), energy: energy}
 	rec := httptest.NewRecorder()
 	s.Handler().ServeHTTP(rec, httptest.NewRequest(http.MethodGet, "/widgets", nil))
@@ -232,9 +232,31 @@ func TestWidgets_TileFlagsAndConsumption(t *testing.T) {
 		t.Fatalf("tile widgets: %v", tile)
 	}
 	body := rec.Body.String()
-	for _, want := range []string{"12.3 W", "1.50 kWh", "90.00 kWh"} {
+	for _, want := range []string{"12.3 W", "1.50 kWh", "0.90 kWh", "234.4 V"} {
 		if !strings.Contains(body, want) {
 			t.Errorf("missing %q in %s", want, body)
 		}
+	}
+}
+
+func TestSetSwitch_BodyForSingleAndMultiChannel(t *testing.T) {
+	var got []string
+	srv := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		raw, _ := io.ReadAll(r.Body)
+		got = append(got, r.Header.Get("Authorization")+" "+string(raw))
+		_ = json.NewEncoder(w).Encode(map[string]any{"error": 0, "data": map[string]any{}})
+	}))
+	defer srv.Close()
+	cl := &Cloud{Base: srv.URL, Client: srv.Client(), Now: time.Now}
+	cfg := CloudConfig{AppID: "APP", AccessToken: "AT"}
+	if err := cl.SetSwitch(context.Background(), cfg, "d1", true, true); err != nil {
+		t.Fatal(err)
+	}
+	if err := cl.SetSwitch(context.Background(), cfg, "d2", false, false); err != nil {
+		t.Fatal(err)
+	}
+	if got[0] != `Bearer AT {"id":"d1","params":{"switches":[{"outlet":0,"switch":"on"}]},"type":1}` ||
+		got[1] != `Bearer AT {"id":"d2","params":{"switch":"off"},"type":1}` {
+		t.Fatalf("bodies: %v", got)
 	}
 }

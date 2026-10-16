@@ -7,8 +7,9 @@ Format follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/); version
 ## [Unreleased]
 
 ### Added
+- Logs for extensions: the Services list in Device → Administration now includes the Docker services and extensions (eWeLink), each with its Logs button; an extension's refusal text is part of DreamHub's own log line when an apply fails (it only said "unexpected status 502" before).
 - Extensions can show things on the start page: a widget flagged `tile` appears in a new **Extensions** tile, under the extension's name — each extension decides what (or nothing); with nothing flagged the tile is not shown (schema 3, `docs/BUILDING_EXTENSIONS.md`). Settings forms can show a sentence (`info`) and an address to open (`link`).
-- eWeLink extension 0.3.0: gets the device keys from the owner's own eWeLink developer application (log in once, paste the address you land on — no key hunting), and with that login shows the plug's **power, today's and this month's consumption** (the plug announces them on the LAN; the cloud history is only a fallback), on its card and on the start page. Needs DreamHub 0.8.0.
+- eWeLink extension 0.3.0: gets the device keys from the owner's own eWeLink developer application (log in once, paste the address you land on — no key hunting), and with that login shows the plug's **power, today's and this month's consumption** (the plug announces them on the LAN; the cloud history is only a fallback), on its card and on the start page. Needs DreamHub 0.8.0. Switching goes through the cloud when the plug refuses the LAN command (the S60TPF does, always); the plug's LAN values are scaled (hundredths).
 
 ## [0.7.0] - 2026-10-16
 

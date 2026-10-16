@@ -324,3 +324,20 @@ func ParseKwh(s string) []float64 {
 	}
 	return days
 }
+
+// SetSwitch switches a device through the cloud (POST /v2/device/thing/status),
+// the fallback when the device refuses the LAN command. multi is a device
+// that reports "switches" (one entry per channel).
+func (c *Cloud) SetSwitch(ctx context.Context, cfg CloudConfig, id string, on, multi bool) error {
+	want := "off"
+	if on {
+		want = "on"
+	}
+	var params any = map[string]string{"switch": want}
+	if multi {
+		params = map[string]any{"switches": []map[string]any{{"switch": want, "outlet": 0}}}
+	}
+	body, _ := json.Marshal(map[string]any{"type": 1, "id": id, "params": params})
+	_, err := c.call(ctx, cfg, http.MethodPost, "/v2/device/thing/status", nil, body, "Bearer "+cfg.AccessToken)
+	return err
+}

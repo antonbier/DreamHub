@@ -112,7 +112,8 @@ func (h *Media) markPlan(w http.ResponseWriter, r *http.Request) {
 }
 
 // writeAdCuts reads the recording's access points and any existing cut
-// list, turns blocks (seconds) into stream PTS, unites them with whatever
+// list, turns blocks (seconds) into cut-list positions (90 kHz ticks from
+// the first access point), unites them with whatever
 // was already cut (hand-made cuts, the resume position, markers all kept),
 // and writes the result back. Confirmed live 2026-10-09
 // (spikes/adscan/phase0.sh): a boundary snaps to the keyframe at or before
@@ -137,7 +138,12 @@ func (h *Media) writeAdCuts(ctx context.Context, p string, blocks []adscan.Span)
 		if !ok {
 			continue
 		}
-		spans = append(spans, adscan.PTSSpan{Start: uint64(start.PTS), End: uint64(end.PTS)})
+		// The player's cut list counts from the start of the recording, not
+		// from the stream's own clock (which starts anywhere): box check
+		// 2026-10-16 — marks and resume positions the player wrote are all
+		// within the recording's length, while .ap carries raw PTS in the
+		// tens of thousands of seconds. A raw PTS here would never be reached.
+		spans = append(spans, adscan.PTSSpan{Start: uint64(start.PTS - aps[0].PTS), End: uint64(end.PTS - aps[0].PTS)})
 	}
 	var existing []adscan.Cut
 	hadFile := true

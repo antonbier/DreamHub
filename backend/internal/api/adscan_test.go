@@ -222,11 +222,16 @@ func TestTrim_CutsTheBreaksAndKeepsTheOriginalInTheTrash(t *testing.T) {
 
 // syntheticAP builds a .ts.ap with one access point per second, covering
 // seconds; offsets are arbitrary, only the PTS (90 kHz) matters here.
-func syntheticAP(seconds int) []byte {
+func syntheticAP(seconds int) []byte { return syntheticAPFrom(seconds, 0) }
+
+// syntheticAPFrom starts the stream clock at base seconds, as a real
+// recording does (the box's files start at 40000-90000 s); the player's cut
+// list counts from the start of the recording whatever the base is.
+func syntheticAPFrom(seconds, base int) []byte {
 	out := make([]byte, 16*seconds)
 	for i := 0; i < seconds; i++ {
 		binary.BigEndian.PutUint64(out[16*i:], uint64(i*188000))
-		binary.BigEndian.PutUint64(out[16*i+8:], uint64(i)*90000)
+		binary.BigEndian.PutUint64(out[16*i+8:], uint64(base+i)*90000)
 	}
 	return out
 }
@@ -238,7 +243,7 @@ func TestMark_WritesBreaksIntoTheCutList(t *testing.T) {
 	// sidecars (recordingFixtures) — a real recording always has a real
 	// .ts.ap, so this stands in for one; an empty .ts.cuts for "no cuts
 	// yet", which is the common case (ROADMAP.md, phase 0's box check).
-	if err := m.FS.WriteFile(bauer+".ap", syntheticAP(3600)); err != nil {
+	if err := m.FS.WriteFile(bauer+".ap", syntheticAPFrom(3600, 73480)); err != nil {
 		t.Fatal(err)
 	}
 	if err := m.FS.WriteFile(bauer+".cuts", nil); err != nil {
@@ -318,7 +323,7 @@ func TestMark_WritesBreaksIntoTheCutList(t *testing.T) {
 func TestMark_KeepsExistingCutsAndUnitesOverlaps(t *testing.T) {
 	m := mock.New()
 	e := newEnvWith(t, m)
-	if err := m.FS.WriteFile(bauer+".ap", syntheticAP(3600)); err != nil {
+	if err := m.FS.WriteFile(bauer+".ap", syntheticAPFrom(3600, 73480)); err != nil {
 		t.Fatal(err)
 	}
 	got := e.analyse(t, bauer)

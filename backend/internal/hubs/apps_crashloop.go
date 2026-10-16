@@ -49,6 +49,11 @@ func (t *crashTracker) step(now time.Time, containers []dockerd.Container) []str
 	for _, c := range containers {
 		seen[c.ID] = true
 		list := t.samples[c.ID]
+		// A container that crashes at once uses up its restarts within
+		// seconds, before the second look can see the count grow. One that
+		// is first seen already stopped after that many restarts is a loop
+		// that has ended in a stop; a running one with an old count is not.
+		stoppedAfterLoop := len(list) == 0 && c.State != "running" && c.RestartCount >= crashThreshold
 		// A count that went down: the container was started by hand (the
 		// daemon resets it) — a new beginning.
 		if n := len(list); n > 0 && c.RestartCount < list[n-1].count {
@@ -73,7 +78,7 @@ func (t *crashTracker) step(now time.Time, containers []dockerd.Container) []str
 		}
 		base := inside[0] // the oldest look inside the window
 		switch {
-		case c.RestartCount-base.count >= crashThreshold:
+		case stoppedAfterLoop, c.RestartCount-base.count >= crashThreshold:
 			loops[c.AppID()] = true
 		case covered && c.RestartCount == list[0].count:
 			quiet[c.AppID()] = true

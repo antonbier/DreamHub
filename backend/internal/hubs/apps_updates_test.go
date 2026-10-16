@@ -358,6 +358,12 @@ func cont(id, app string, restarts int) dockerd.Container {
 	return dockerd.Container{ID: id, Name: "dreamhub-app-" + app, State: "running", RestartCount: restarts, Labels: map[string]string{dockerd.AppLabel: app}}
 }
 
+func stopped(id, app string, restarts int) dockerd.Container {
+	c := cont(id, app, restarts)
+	c.State = "exited"
+	return c
+}
+
 func TestCrashTracker(t *testing.T) {
 	t0 := time.Date(2026, 10, 14, 12, 0, 0, 0, time.UTC)
 	type look struct {
@@ -391,6 +397,10 @@ func TestCrashTracker(t *testing.T) {
 		{"a count that was already high at the first look is not news", []look{
 			{0, []dockerd.Container{cont("a", "pihole", 5)}, nil},
 			{1 * time.Minute, []dockerd.Container{cont("a", "pihole", 5)}, nil},
+		}},
+		{"first seen stopped after its restarts ran out is announced once", []look{
+			{0, []dockerd.Container{stopped("a", "pihole", 5)}, []string{"pihole"}},
+			{1 * time.Minute, []dockerd.Container{stopped("a", "pihole", 5)}, nil},
 		}},
 		{"a new episode after a quiet window is announced again", []look{
 			{0, []dockerd.Container{cont("a", "pihole", 0)}, nil},

@@ -9,13 +9,13 @@
     <template #trigger="{ open }">
       <button
         type="button"
-        class="flex h-8 max-w-[180px] items-center gap-2 rounded-sm px-2 text-[13px] text-text hover:bg-tile-2"
+        class="flex h-8 max-w-[180px] shrink-0 items-center gap-1.5 rounded-sm px-1.5 text-[13px] text-text hover:bg-tile-2"
         :class="{ 'bg-tile-2': open }"
         :aria-label="t('boxes.selector.label')"
         aria-haspopup="menu"
       >
         <span class="h-2.5 w-2.5 shrink-0 rounded-full" :style="{ background: dot(boxes.active?.color) }" aria-hidden="true" />
-        <span class="truncate font-semibold">{{ boxes.active?.name }}</span>
+        <span class="truncate font-semibold below-sm:max-w-[5rem]">{{ boxes.active?.name }}</span>
         <Icon name="chevron-down" :size="14" class="shrink-0 text-faint" />
       </button>
     </template>

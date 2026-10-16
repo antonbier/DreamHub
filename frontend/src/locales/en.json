@@ -437,8 +437,8 @@
         "tv": "series"
       },
       "needsKey": {
-        "tmdb": "Needs a TMDB API key (Settings → TMDB).",
-        "ai": "Needs an OpenAI API key (Settings → AI). Each suggestion counts against the daily AI limit."
+        "tmdb": "Needs a TMDB API key (Settings → Services).",
+        "ai": "Needs an OpenAI API key (Settings → Services). Each suggestion counts against the daily AI limit."
       }
     },
     "newTitle": "Title in the box's recording list",
@@ -900,7 +900,7 @@
       "namePlaceholder": "What's this for? (e.g. “My Phone”)",
       "create": "Create",
       "devTitle": "For developers",
-      "devBody": "Call the API with the token as a bearer token. Add box=<id> to say which box a request is about (the box IDs are listed by GET /api/v1/boxes); without it the first box is used. Changes are two steps: a …/plan call returns a preview, POST /api/v1/plans/{id}/apply applies it.",
+      "devBody": "Call the API with the token as a bearer token. Add box=<id> to say which box a request is about (the box IDs are listed by GET /api/v1/boxes); without it the first box is used. Changes are two steps: a …/plan call returns a preview, POST /api/v1/plans/{'{'}id{'}'}/apply applies it.",
       "devSpec": "OpenAPI description (openapi.json)"
     },
     "network": {
@@ -2402,7 +2402,7 @@
     },
     "form": {
       "name": "Name",
-      "color": "Colour",
+      "color": "Color",
       "url": "Address",
       "urlHint": "The box's IP address or name, as in the browser — e.g. 192.168.1.20.",
       "username": "Login name",
@@ -2477,7 +2477,7 @@
       "streamBase": "Address of this DreamHub as seen from the box",
       "streamBaseHint": "Used when the box fetches a film from here. Empty: found automatically.",
       "unpair": "Unpair",
-      "unpairHint": "This forgets the pairing here. To end it on the box too, delete the “Hub: …” token there under Settings → Authentication."
+      "unpairHint": "This forgets the pairing here. To end it on the box too, delete the “Hub: …” token there under Settings → Access."
     },
     "pairThis": {
       "title": "Pair this box with another DreamHub",

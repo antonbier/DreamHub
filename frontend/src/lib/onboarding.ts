@@ -44,7 +44,7 @@ async function ask(): Promise<boolean> {
     const fields = view.sections.flatMap((s) => s.fields)
     const done = fields.some((f) => f.key === SETUP_DONE && f.value === true)
     // Anything the household set on the box itself means it is set up.
-    const configured = fields.some((f) => f.scope === 'global' && f.key !== SETUP_DONE && f.hasValue)
+    const configured = fields.some((f) => f.scope === 'global' && !f.hidden && f.key !== SETUP_DONE && f.hasValue)
     if (done || configured) {
       setLocalFlag()
       return true

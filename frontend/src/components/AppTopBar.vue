@@ -5,7 +5,7 @@
   open. Language and appearance are fully wired to GET/PATCH /api/v1/settings.
 -->
 <template>
-  <header class="flex h-14 shrink-0 items-center gap-3 border-b border-line bg-bg px-4">
+  <header class="flex h-14 shrink-0 items-center gap-3 border-b border-line bg-bg px-4 below-sm:gap-1.5 below-sm:px-3">
     <button
       type="button"
       class="hidden h-8 w-8 shrink-0 items-center justify-center rounded-sm text-muted hover:bg-tile-2 hover:text-text below-md:flex"

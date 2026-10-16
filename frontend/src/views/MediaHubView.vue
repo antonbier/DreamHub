@@ -297,7 +297,7 @@
             :disabled="playing"
             @click="playOnBox(openMovie, b.id)"
           >
-            <span aria-hidden="true" class="mr-1.5 inline-block size-2 rounded-full align-middle" :style="{ background: `var(--dh-profile-${b.color || 'slate'})` }"></span>{{ t('media.detail.playOnBox', { box: b.name }) }}
+            <span aria-hidden="true" class="me-1.5 inline-block size-2 rounded-full align-middle" :style="{ background: `var(--dh-profile-${b.color || 'slate'})` }"></span>{{ t('media.detail.playOnBox', { box: b.name }) }}
           </button>
         </div>
         <p v-if="playedOnBox" class="mt-2 text-[12.5px] text-muted" role="status">{{ t('media.detail.playingOnBox', { box: playedOnBox }) }}</p>

@@ -76,8 +76,11 @@ func (s *Store) WriteSettings(ctx context.Context, writes []SettingWrite, entry 
 			return err
 		}
 	}
-	if err := s.appendChange(ctx, tx, entry); err != nil {
-		return err
+	// No action: nothing worth a change-log line (hidden bookkeeping keys only).
+	if entry.Action != "" {
+		if err := s.appendChange(ctx, tx, entry); err != nil {
+			return err
+		}
 	}
 	return tx.Commit()
 }

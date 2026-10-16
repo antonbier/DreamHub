@@ -264,6 +264,7 @@ func (s *Service) Update(ctx context.Context, u store.User, raw map[string]json.
 	}
 	var writes []store.SettingWrite
 	var changes []change
+	var logged []string
 	for _, key := range keys {
 		f, _ := s.reg.Field(key)
 		v := parsed[key]
@@ -287,6 +288,12 @@ func (s *Service) Update(ctx context.Context, u store.User, raw map[string]json.
 		}
 		writes = append(writes, w)
 
+		// Hidden keys are bookkeeping (setup done, boot id), not something a
+		// person changed: they stay out of the change log.
+		if f.Hidden {
+			continue
+		}
+		logged = append(logged, key)
 		// The change log never contains secret values.
 		c := change{Key: key}
 		if f.Type == TypeSecret || f.Type == TypePassword {
@@ -310,15 +317,18 @@ func (s *Service) Update(ctx context.Context, u store.User, raw map[string]json.
 		return nil
 	}
 
-	detail, err := json.Marshal(map[string]any{"changes": changes})
-	if err != nil {
-		return err
-	}
-	entry := store.ChangeEntry{
-		UserID:  u.ID,
-		Action:  "settings.update",
-		Summary: "Updated settings: " + strings.Join(keys, ", "),
-		Detail:  detail,
+	var entry store.ChangeEntry
+	if len(changes) > 0 {
+		detail, err := json.Marshal(map[string]any{"changes": changes})
+		if err != nil {
+			return err
+		}
+		entry = store.ChangeEntry{
+			UserID:  u.ID,
+			Action:  "settings.update",
+			Summary: "Updated settings: " + strings.Join(logged, ", "),
+			Detail:  detail,
+		}
 	}
 	if err := s.store.WriteSettings(ctx, writes, entry); err != nil {
 		return err

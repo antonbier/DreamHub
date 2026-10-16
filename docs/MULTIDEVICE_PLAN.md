@@ -1,6 +1,6 @@
 # Multi-box — plan
 
-Status: **brainstormed and decided 2026-10-16 (five rounds with the owner); nothing built yet.** Replaces the "one box" assumption that runs through the backend (`app.Options.WebControl` is injected once into every hub, the poller and the jobs blocker).
+Status: **brainstormed and decided 2026-10-16 (six rounds with the owner); nothing built yet; M1 is the first thing to build, against the mock, shipping only after a check on the reference box.** Replaces the "one box" assumption that runs through the backend (`app.Options.WebControl` is injected once into every hub, the poller and the jobs blocker).
 
 ## Goal
 
@@ -45,7 +45,7 @@ Browser streams from a remote box run **through the hub**: one path for LAN, pho
 
 ### Data scope
 - **Global:** profiles, PINs, roles, language, Plex, TMDB, AI, push keys.
-- **Per box:** name/colour, address/credentials, logos and picons, channel change log, AdScan marks, recording folders, timer owners (key becomes `(box, timer)`), AppsHub.
+- **Per box:** name/colour, address/credentials, picons (channel **logos are shared by channel name** across boxes, a box can override one), channel change log, AdScan marks, recording folders, timer owners (key becomes `(box, timer)`), AppsHub.
 - Existing data is assigned to the first box in a one-time migration, **after an automatic backup**.
 - Notifications (recording started/failed, …) come for **all allowed boxes** with the box name in the text, with a switch to restrict them to the active box.
 
@@ -58,7 +58,7 @@ Everything else (record on the box with a free tuner, move/copy recordings) is a
 ### REST API and tokens
 `/api/v1` stays; the box is an **optional `box=<id>` query parameter** on every request (a query parameter because `EventSource`, `<img>` picons and `<video src>` streams can't send headers). Omitted = the profile's default box, or the first box — so existing clients, tokens and extensions keep working unchanged. A bearer token is already bound to a profile, so it **inherits that profile's box list**; restricting a token to a single box can come later. `GET /api/v1/boxes` lists the boxes the caller may use, with capabilities.
 
-PRINCIPLES.md promises an OpenAPI spec ("generated from the Go code, not hand-written docs that drift"), but **none exists yet**. Plan: one `openapi.json` with `box` defined once as a shared parameter, served by the backend and linked from Settings → Authentication next to the tokens (with a curl example), the plan → apply two-step documented as a pattern. The router uses plain `net/http` patterns plus a permission table, so the route list is introspectable: the spec is kept in step by a **test that fails when a route is missing from it** (the same test makes M1 prove every route resolves a box). Schemas are filled in from the most useful endpoints first.
+PRINCIPLES.md promises an OpenAPI spec ("generated from the Go code, not hand-written docs that drift"), but **none exists yet**. Plan: one `openapi.json` with `box` defined once as a shared parameter, served by the backend and linked from Settings → Authentication next to the tokens (with a curl example), the plan → apply two-step documented as a pattern. The router uses plain `net/http` patterns plus a permission table, so the route list is introspectable: the spec is kept in step by a **test that fails when a route is missing from it** (the same test makes M1 prove every route resolves a box). Audience: **external developers** (DreamDroid-style apps, Home Assistant) and perhaps a DreamHub app of our own one day — so the spec and a short **USER_GUIDE section "API and tokens"** (create a token, call with `Authorization: Bearer`, the `box` parameter, plan → apply) are part of the package. Schemas are filled in from the most useful endpoints first (status, boxes, timers, recordings, zap).
 
 ## Things that are easy to get wrong (each needs a test)
 - **Service references differ per box** (satellite, provider, flags). Sync and cross-box playback match channels by **name / ONID-TSID-SID**, never by the reference string.
@@ -68,6 +68,8 @@ PRINCIPLES.md promises an OpenAPI spec ("generated from the Go code, not hand-wr
 - `StreamBase` ("how the box reaches this DreamHub", `127.0.0.1:8080`) is wrong for any box other than the hub's own host → per box setting / detection.
 - Hub ↔ Full-box version skew: a version handshake says what doesn't work instead of failing oddly.
 - Removing a box is a **plan with confirmation** and asks whether to keep or delete its data.
+- **The same programme recorded on two boxes** is spotted across boxes by SeriesHub and the recommendations (a hint, nothing more).
+- **A hub without a box of its own** (Unraid) is tested from M1 on, not added afterwards.
 - Per-box plugin presence (SerienRecorder, AutoTimer, DMI) goes through capabilities.
 - The jobs blocker ("don't trim/scan while recording") is per box.
 - Terminal and package management on a remote box need the Full tier; not offered in Basic.

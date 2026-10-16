@@ -6,6 +6,14 @@ Format follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/); version
 
 ## [Unreleased]
 
+## [0.9.0] - 2026-10-16
+
+Multi-box: DreamHub can steer several Dreamboxes. With one box nothing changes — the selector, the dashboard strip and the other new buttons only show with two or more. Box-checked on the reference box (plan "Box check", `ARCHITECTURE.md`); not tried because only one box exists: a second real box, and starting a recording's playback on another box's TV.
+
+### Fixed
+- Updating DreamHub stopped the extensions (they are bound to its service) and left them stopped — the eWeLink plug went missing until a manual start. The package now starts the enabled extensions again after restarting DreamHub.
+- Device on a box without DreamHub on it (Basic) asked for the administration (log level, crash logs) on a fresh page load before it knew the box's tier, and logged two 409s.
+
 ### Changed
 - Multi-box groundwork, M1 (`docs/MULTIDEVICE_PLAN.md`; nothing to see, nothing new for a household with one box): DreamHub now keeps a registry of boxes, and every request is about one of them — the optional `box=<id>` query parameter, the first box when omitted, so existing clients, API tokens and extensions keep working unchanged. Per box: the web-control, SerienRecorder and AutoTimer connections, the connector and hub-status checks, the recording index, the channel snapshot and its backups, AdScan marks and logos, timer owners, the event poller (with back-off while a box does not answer) and the background jobs (a recording on one box no longer holds back another's queue). A plan is applied to the box it was made for. Files, services and packages of the machine DreamHub runs on are offered for that box only.
 - Multi-box groundwork, M2 (capabilities per box; still nothing to see with one box): what a box can do is now measured per box — plugins from that box's own checks, machine-level features (recordings in place, packages, services, logs, terminal, Docker, extensions) only for the box DreamHub runs on. The navigation answer carries that list (`box`: id, `full`, `capabilities`); AppsHub is left out of the navigation of any other box, device checks such as `journalctl` no longer count against a box that is another machine, and Device → Administration/Advanced tabs are hidden there.

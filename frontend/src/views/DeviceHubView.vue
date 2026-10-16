@@ -558,7 +558,10 @@ onMounted(async () => {
     loading.value = false
   }
   // Administration needs DreamHub on the box itself; a Basic box answers
-  // 409 and the tab is hidden, so there is nothing to load.
+  // 409 and the tab is hidden, so there is nothing to load. A fresh page load
+  // may get here before the navigation (and with it the box tier) is known.
+  if (!navigation.navigation) await navigation.load()
+  if (!navigation.isFull) return
   try {
     const [levelRes, crashRes] = await Promise.all([api.admin.logLevel.get(), api.admin.crashLogs()])
     level.value = levelRes

@@ -29,7 +29,7 @@ type Client struct {
 // New returns a mock whose DreamHub speaks the current API level.
 func New() *Client {
 	return &Client{
-		Info_: peer.Info{Version: "0.8.0", API: peer.APILevel, MinHubAPI: 1, DeviceName: "Dreambox ONE (mock)", Pairing: true},
+		Info_: peer.Info{Version: "0.9.0", API: peer.APILevel, MinHubAPI: 1, DeviceName: "Dreambox ONE (mock)", Pairing: true},
 		Caps:  []string{"webcontrol", "recordings.local", "packages", "services", "logs", "terminal", "docker", "extensions"},
 	}
 }

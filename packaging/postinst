@@ -21,6 +21,14 @@ if [ -d /run/systemd/system ]; then
     if systemctl is-enabled --quiet dreamhub-dockerd-helper.service 2>/dev/null; then
         systemctl restart dreamhub-dockerd-helper.service || true
     fi
+    # Extensions are BoundTo dreamhub.service: restarting it above stopped
+    # them (found on the box on 2026-10-16, eWeLink stayed dead after an
+    # update). Start the enabled ones again; they register with DreamHub.
+    for unit in $(systemctl list-unit-files 'dreamhub-ext-*.service' --no-legend 2>/dev/null | awk '{print $1}'); do
+        if systemctl is-enabled --quiet "$unit" 2>/dev/null; then
+            systemctl start "$unit" || true
+        fi
+    done
 fi
 
 if command -v systemctl >/dev/null 2>&1 && systemctl is-active --quiet avahi-daemon 2>/dev/null; then

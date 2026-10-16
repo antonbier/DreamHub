@@ -33,6 +33,9 @@ type System struct {
 	// installed app configs is the first and so far only one. Nil or
 	// empty: backups behave exactly as before App6.
 	Sections []BackupSection
+	// BackupDir is where "Save on the box" puts backup files (App15); empty
+	// leaves that out and keeps the download.
+	BackupDir string
 }
 
 // BackupSection is one extra, opt-in part of a backup file — a hub that
@@ -91,6 +94,13 @@ func (h *System) Mount(mux httpx.Mux) {
 	mux.HandleFunc("GET /api/v1/system/backup", h.backup)
 	mux.HandleFunc("GET /api/v1/system/backup/sections", h.backupSections)
 	mux.HandleFunc("POST /api/v1/system/backup/restore", h.planRestore)
+	if h.BackupDir != "" {
+		mux.HandleFunc("POST /api/v1/system/backup/save", h.saveBackup)
+		mux.HandleFunc("GET /api/v1/system/backup/files", h.listBackups)
+		mux.HandleFunc("GET /api/v1/system/backup/files/{name}", h.downloadBackup)
+		mux.HandleFunc("DELETE /api/v1/system/backup/files/{name}", h.deleteBackup)
+		mux.HandleFunc("POST /api/v1/system/backup/files/{name}/restore", h.planRestoreStored)
+	}
 	if h.SelfTest != nil {
 		mux.HandleFunc("GET /api/v1/system/selftest", adminOnly(h.SelfTest.handleLast))
 		mux.HandleFunc("POST /api/v1/system/selftest", adminOnly(h.SelfTest.handleRun))
@@ -191,12 +201,23 @@ func (h *System) backupSections(w http.ResponseWriter, r *http.Request) {
 }
 
 func (h *System) backup(w http.ResponseWriter, r *http.Request) {
+	out, ok := h.build(w, r)
+	if !ok {
+		return
+	}
+	w.Header().Set("Content-Disposition", `attachment; filename="dreamhub-backup.json"`)
+	httpx.WriteJSON(w, http.StatusOK, out)
+}
+
+// build assembles the backup the request describes (settings, dashboard and
+// the ?sections= asked for); on a failure it has answered already.
+func (h *System) build(w http.ResponseWriter, r *http.Request) (backupFile, bool) {
 	ctx := r.Context()
 	u, _ := httpx.User(ctx)
 	sections, err := h.Settings.View(ctx, u)
 	if err != nil {
 		httpx.WriteError(w, r, http.StatusInternalServerError, "internal", "could not read settings")
-		return
+		return backupFile{}, false
 	}
 	out := backupFile{Version: backupVersion, ExportedAt: h.now().UTC().Format(time.RFC3339), Settings: map[string]any{}}
 	for _, sec := range sections {
@@ -210,7 +231,7 @@ func (h *System) backup(w http.ResponseWriter, r *http.Request) {
 	layout, err := h.Dashboard.Get(ctx, u)
 	if err != nil {
 		httpx.WriteError(w, r, http.StatusInternalServerError, "internal", "could not read the dashboard")
-		return
+		return backupFile{}, false
 	}
 	out.Dashboard = layout
 
@@ -238,14 +259,13 @@ func (h *System) backup(w http.ResponseWriter, r *http.Request) {
 			data, err := sec.Export(ctx, itemIDs)
 			if err != nil {
 				httpx.WriteError(w, r, http.StatusInternalServerError, "internal", "could not export "+sec.ID())
-				return
+				return backupFile{}, false
 			}
 			out.Sections[sec.ID()] = data
 		}
 	}
 
-	w.Header().Set("Content-Disposition", `attachment; filename="dreamhub-backup.json"`)
-	httpx.WriteJSON(w, http.StatusOK, out)
+	return out, true
 }
 
 // sameJSON compares two decoded values by their JSON encoding, so a stored
@@ -261,13 +281,18 @@ func sameJSON(a, b any) bool {
 // dashboard layout it would actually change, following PRINCIPLES.md's
 // preview-and-confirm — applying is the normal POST /api/v1/plans/{id}/apply.
 func (h *System) planRestore(w http.ResponseWriter, r *http.Request) {
-	ctx := r.Context()
-	u, _ := httpx.User(ctx)
 	var in backupFile
 	if err := httpx.DecodeJSON(r, &in); err != nil || in.Version != backupVersion {
 		httpx.WriteError(w, r, http.StatusBadRequest, "invalid_backup", "not a DreamHub backup file, or from an incompatible version")
 		return
 	}
+	h.restorePlan(w, r, in)
+}
+
+// restorePlan previews restoring in (uploaded, or read from BackupDir).
+func (h *System) restorePlan(w http.ResponseWriter, r *http.Request, in backupFile) {
+	ctx := r.Context()
+	u, _ := httpx.User(ctx)
 
 	sections, err := h.Settings.View(ctx, u)
 	if err != nil {

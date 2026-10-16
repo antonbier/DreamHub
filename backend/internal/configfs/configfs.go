@@ -56,6 +56,9 @@ type FS interface {
 	// (StorageRoot/<id>.secrets.json, AppsHub).
 	ReadFile(path string) ([]byte, error)
 	WriteFile(path string, data []byte) error
+	// List returns the names of the regular files directly in dir (nil if
+	// it does not exist) — AppsHub finds stored app definitions with it.
+	List(dir string) ([]string, error)
 }
 
 // OS is the real file system.
@@ -227,4 +230,21 @@ func (OS) WriteFile(path string, data []byte) error {
 		return err
 	}
 	return os.WriteFile(path, data, 0o600)
+}
+
+func (OS) List(dir string) ([]string, error) {
+	entries, err := os.ReadDir(dir)
+	if err != nil {
+		if os.IsNotExist(err) {
+			return nil, nil
+		}
+		return nil, err
+	}
+	var out []string
+	for _, e := range entries {
+		if e.Type().IsRegular() {
+			out = append(out, e.Name())
+		}
+	}
+	return out, nil
 }

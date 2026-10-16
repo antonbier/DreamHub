@@ -109,6 +109,7 @@ Like Extension Hub itself, AppsHub stays a power-user feature you find by naviga
 | App8 | Curated list rework, multi-container apps | **built 2026-10-13** against the mock (the owner's list; Nextcloud with its database as the first two-container app; per-folder backup — see below) |
 | App9 | UX: understandable tabs, port and storage choice | **built 2026-10-13** against the mock (see below) |
 | App10 | Tabs Packages / Extensions / Docker, Docker settings with uninstall | **built 2026-10-15, mock only** (see "App10" below) |
+| App15 | Backup and restore of the app list, backups kept on the box | **built 2026-10-16, mock only** (see "App15" below) |
 | later | Viewer dashboard tile, free-search install | a read-only "open app" tile for non-admin profiles; installing an image from free search |
 
 ### App1, built 2026-10-12
@@ -245,7 +246,7 @@ Owner feedback after trying 0.5.0 (#48, #49): nobody could tell what an extensio
 - Memory: 2 GB total, about 1.1 GB available with Docker running and nothing installed — Nextcloud with its database (768 MB limit) fits, Home Assistant (512 MB) next to it does not comfortably.
 
 
-## App10–App15: the next shape of AppsHub (planned 2026-10-15; App10–App14 built, mock only)
+## App10–App15: the next shape of AppsHub (planned 2026-10-15; App10–App15 built, mock only)
 
 Brainstormed with the owner after the first full UX review, with Unraid (Apps + Docker + Plugins) as the ideal picture. Rule for all of it stays **keep it simple, keep it clean**.
 
@@ -357,6 +358,18 @@ Rename the three tabs (Packages / Extensions / Docker), reorder, remember the la
 - **Granular stays** (the owner likes picking what to back up): sections and per-folder items as today (App6/App8).
 - One place, "Backup and restore", covering DreamHub settings, app data and Enigma2 configuration; target HDD or download.
 - **Restore on a new box**: from one backup, bring back settings, the app list (compose + x-dreamhub + chosen values) and the chosen data; apps are reinstalled through the normal plan.
+
+**As built (2026-10-16, mock only; nothing tried on the box):**
+
+- **One place**: Settings → System → Backup & restore (the Docker tab's "Back up" menu entry links there). Apps show up as one checkbox with the folders under it (as since App8); behind it two backup sections travel together: `apps` (the folders, as before) and the new `appList` (`appListSection` in `hubs/apps_restorable.go`). The UI always asks for both with the same apps (`?sections=apps,appList&items.appList=<app ids>`).
+- **The app list** carries, per installed app, `<root>/<id>.app.json` (App13's stored definition: compose of a custom app, form values, extra rows, memory limit) and `<id>.secrets.json` (the passwords DreamHub generated — a database restored from its folder needs the very same ones). A curated app installed before App13 has no definition file and is listed with the catalog defaults; a custom app without one is left out (it cannot be rebuilt). **The file therefore contains secrets**, unlike the settings part (which never does): one sentence under the checkbox says so.
+- **Restore**: a plan like before. The `appList` part writes the two files for every app that is *not installed now* (an installed app keeps what it has), into the storage root it had if that is a place apps live on this box, else into the default root. Ids come from an uploaded file: only `[a-z0-9]+` is accepted.
+- **Bringing an app back**: `GET /apps/restorable` lists the apps whose `.app.json` is on the box (every known root, `configfs.FS.List`) without a container; `POST /apps/restorable/{id}/plan` is the ordinary install plan (`installPlan`, shared with `/apps/install/plan`) built from the stored definition — so the same checks, preview and confirmation apply, nothing installs by itself. Shown under "My containers" as "Apps you can bring back" with *Install again*. Since *Remove* keeps files, an app removed on purpose is offered the same way (the stored password also stays, as before).
+- **Backups on the box**: `POST /system/backup/save` (same query as the download) writes `dreamhub-backup-YYYYMMDD-HHMMSS.json` to `BackupDir` (`DREAMHUB_BACKUP_DIR`, default `/media/hdd/dreamhub-backups`; mode 0600, written under a temp name then renamed); `GET /system/backup/files`, `GET`/`DELETE /system/backup/files/{name}`, `POST …/{name}/restore` (the same restore plan). File names must match the one pattern the box itself writes, so no request can name a path. Reason: an app's data can be too big to carry through a phone's browser. No automatic schedule, no pruning (the owner deletes in the list).
+- **Permissions**: the backup reads (`GET /system/backup`, `/sections`, `/files…`) are now admin-only (`System.Perms`): a backup carries app folders and passwords. Before, any profile with the Device hub could download one.
+- **Not done, on purpose**: Enigma2's own configuration is not part of this backup — ChannelHub already keeps its own box-side backups of the channel list, and writing other `/etc/enigma2` files while enigma2 runs would be overwritten when it exits. Restoring still reads the whole file into memory (JSON with base64 archives); a streamed format is only worth it if a real backup gets too large for the box. The backup is not encrypted.
+- **Tests**: `internal/api/apps_app15_test.go` (a fresh box: install, back up, remove, wipe, restore, bring back through the plan; an installed app untouched; admin-only; save/list/restore/delete and rejected names). Checked in a headless browser against the mock (both screens, install again, save on the box).
+- **Box checks still to do**: a restore of a Nextcloud+MariaDB backup on a clean box (database folder restored with the saved passwords, container ownership), the size and time of a real backup, free space handling on `/media/hdd`.
 
 ### Extensions grow fields (planned, later)
 

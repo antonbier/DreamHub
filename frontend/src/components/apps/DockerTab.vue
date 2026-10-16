@@ -151,6 +151,43 @@
         </div>
       </section>
 
+      <!-- App15: an app's choices and folders are on the box, its containers
+           are not (restored from a backup, or removed). -->
+      <section v-if="view === 'mine' && restorable.length > 0" class="mt-5">
+        <h2 class="text-[13px] font-semibold text-muted">{{ t('apps.mine.restorable.title') }}</h2>
+        <p class="mt-1 text-[12.5px] text-muted">{{ t('apps.mine.restorable.hint') }}</p>
+        <div class="mt-2 flex flex-col gap-2">
+          <div v-for="r in restorable" :key="r.id" class="rounded-sm border border-line bg-tile p-3">
+            <div class="flex items-center gap-3">
+              <span class="min-w-0 flex-1 truncate text-[13.5px] font-semibold text-text">{{ r.name }}</span>
+              <button
+                type="button"
+                class="shrink-0 rounded-sm border border-line px-3 py-1 text-[12.5px] text-text hover:bg-field disabled:opacity-60"
+                :disabled="!!bringing && bringing.id !== r.id"
+                @click="previewBringBack(r)"
+              >
+                {{ t('apps.mine.restorable.install') }}
+              </button>
+            </div>
+            <div v-if="bringing?.id === r.id" class="mt-2">
+              <PlanPreview
+                v-if="bringing.plan"
+                :plan="bringing.plan"
+                :confirm-label="t('apps.mine.restorable.confirm')"
+                :busy="bringing.applying"
+                :error="bringing.error"
+                @confirm="confirmBringBack"
+                @cancel="bringing = null"
+              >
+                {{ bringing.plan.summary }}
+                <InstallPlanDetails :plan="bringing.plan" />
+              </PlanPreview>
+              <p v-else-if="bringing.error" class="text-[12.5px] text-warn">{{ bringing.error }}</p>
+            </div>
+          </div>
+        </div>
+      </section>
+
       <section v-if="view === 'catalog'" class="mt-4">
         <div class="flex items-center justify-between gap-3">
           <h2 class="text-[13px] font-semibold text-muted">{{ t('apps.catalogTitle') }}</h2>
@@ -328,7 +365,7 @@ import { useFriendlyError } from '@/composables/useFriendlyError'
 import { usePlanError } from '@/composables/usePlanError'
 import { useUpdateError } from '@/composables/useUpdateError'
 import { useUpdates } from '@/composables/useUpdates'
-import type { AppConsoleStatus, AppEditView, AppSearchResult, CatalogApp, InstalledApp, ParsedApp, Plan } from '@/api/types'
+import type { AppConsoleStatus, AppEditView, AppSearchResult, CatalogApp, InstalledApp, ParsedApp, Plan, RestorableApp } from '@/api/types'
 
 const { t, te, locale } = useI18n()
 const { friendly } = useFriendlyError()
@@ -343,6 +380,7 @@ const catalog = ref<CatalogApp[]>([])
 const installed = ref<InstalledApp[]>([])
 const loading = ref(true)
 const loadError = ref('')
+const restorable = ref<RestorableApp[]>([])
 
 // Docker itself may be missing on a box (not installed, or the helper
 // not running) — the catalog and search still work then, only the
@@ -351,7 +389,8 @@ const dockerMissing = ref(false)
 const installedError = ref('')
 
 async function load() {
-  const [c, i] = await Promise.allSettled([api.apps.catalog(locale.value), api.apps.installed()])
+  const [c, i, r] = await Promise.allSettled([api.apps.catalog(locale.value), api.apps.installed(), api.apps.restorable()])
+  restorable.value = r.status === 'fulfilled' ? r.value.apps : []
   if (c.status === 'fulfilled') {
     catalog.value = c.value.apps
     loadError.value = ''
@@ -453,6 +492,34 @@ async function confirmRemove() {
     // list shows it.
     removing.value = { id: p.id, kind: p.kind, error: updateErrorMessage(err) }
     if (p.kind) await load()
+  }
+}
+
+// --- bring back an app whose choices are still on the box (App15) ---------------
+
+const bringing = ref<{ id: string; plan?: Plan; applying?: boolean; error?: string } | null>(null)
+
+async function previewBringBack(r: RestorableApp) {
+  bringing.value = { id: r.id }
+  try {
+    const res = await api.apps.restorablePlan(r.id)
+    if (bringing.value?.id === r.id) bringing.value = { id: r.id, plan: res.plan }
+  } catch (err) {
+    if (bringing.value?.id === r.id) bringing.value = { id: r.id, error: planErrorMessage(err) }
+  }
+}
+
+async function confirmBringBack() {
+  const p = bringing.value
+  if (!p?.plan) return
+  bringing.value = { ...p, applying: true, error: undefined }
+  try {
+    await api.plans.apply(p.plan.id)
+    bringing.value = null
+    showToast(t('apps.mine.restorable.done'))
+    await load()
+  } catch (err) {
+    bringing.value = { id: p.id, plan: p.plan, error: planErrorMessage(err) }
   }
 }
 

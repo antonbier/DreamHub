@@ -664,6 +664,22 @@ export interface BackupSectionsList {
   }[]
 }
 
+// GET /api/v1/system/backup/files (App15): backups kept on the box.
+export interface StoredBackup {
+  name: string
+  sizeBytes: number
+  createdAt: string // RFC3339, UTC
+}
+
+// GET /api/v1/apps/restorable (App15): apps whose choices are stored on the
+// box but which are not installed.
+export interface RestorableApp {
+  id: string
+  name: string
+  root: string
+  custom?: boolean
+}
+
 // backend/internal/hubs's logEntryView, from GET /api/v1/admin/logs.
 export interface LogEntry {
   time: string // RFC3339, UTC

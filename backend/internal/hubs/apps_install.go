@@ -299,6 +299,11 @@ func (h *Apps) planInstall(w http.ResponseWriter, r *http.Request) {
 		httpx.WriteError(w, r, http.StatusBadRequest, "invalid_body", `expected {"appId": "..."} or {"custom": {...}}`)
 		return
 	}
+	h.installPlan(w, r, body)
+}
+
+// installPlan previews installing what body describes.
+func (h *Apps) installPlan(w http.ResponseWriter, r *http.Request, body installBody) {
 	if h.Docker == nil {
 		httpx.WriteError(w, r, http.StatusServiceUnavailable, "docker_unavailable", "the Docker helper isn't available")
 		return

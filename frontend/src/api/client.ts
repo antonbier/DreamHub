@@ -60,6 +60,8 @@ import type {
   CoverItem,
   BackupFile,
   BackupSectionsList,
+  StoredBackup,
+  RestorableApp,
   ConnectorState,
   MediaFolder,
   NameSuggestion,
@@ -468,6 +470,18 @@ export const api = {
     },
     backupSections: () => request<BackupSectionsList>('GET', '/api/v1/system/backup/sections'),
     restorePlan: (file: BackupFile) => request<{ plan: Plan }>('POST', '/api/v1/system/backup/restore', file),
+    // App15: backups kept on the box. save takes the same sections as backup.
+    saveBackup: (sections?: string[], items?: Record<string, string[]>) => {
+      const params = new URLSearchParams()
+      if (sections?.length) params.set('sections', sections.join(','))
+      for (const [section, ids] of Object.entries(items ?? {})) params.set('items.' + section, ids.join(','))
+      const q = params.toString()
+      return request<{ file: StoredBackup }>('POST', `/api/v1/system/backup/save${q ? `?${q}` : ''}`)
+    },
+    storedBackups: () => request<{ dir: string; files: StoredBackup[] }>('GET', '/api/v1/system/backup/files'),
+    storedBackup: (name: string) => request<BackupFile>('GET', `/api/v1/system/backup/files/${encodeURIComponent(name)}`),
+    restoreStoredPlan: (name: string) => request<{ plan: Plan }>('POST', `/api/v1/system/backup/files/${encodeURIComponent(name)}/restore`),
+    deleteStoredBackup: (name: string) => request<void>('DELETE', `/api/v1/system/backup/files/${encodeURIComponent(name)}`),
     // The box self-test (admin only): the last report, a new run, and the
     // run's captured answers as a zip.
     selfTest: () => request<{ report: SelfTestReport | null }>('GET', '/api/v1/system/selftest'),
@@ -573,6 +587,10 @@ export const api = {
     dockerUninstallPlan: (deleteData: boolean) =>
       request<{ plan: Plan; steps: DockerSetupStep[] }>('POST', '/api/v1/apps/docker/uninstall/plan', { deleteData }),
     installPlan: (req: InstallRequest) => request<{ plan: Plan }>('POST', '/api/v1/apps/install/plan', req),
+    // App15: apps whose choices are on the box without containers, and the
+    // install plan that brings one back with them.
+    restorable: () => request<{ apps: RestorableApp[] }>('GET', '/api/v1/apps/restorable'),
+    restorablePlan: (id: string) => request<{ plan: Plan }>('POST', `/api/v1/apps/restorable/${encodeURIComponent(id)}/plan`),
     // An admin's own container (App12): turn a pasted compose file, an image
     // name or an Unraid template into the install form.
     parseCustom: (kind: 'compose' | 'image' | 'unraid', text: string, lang: string, name = '') =>

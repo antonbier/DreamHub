@@ -9,6 +9,7 @@ import (
 	"io"
 	"io/fs"
 	"path/filepath"
+	"sort"
 	"strings"
 
 	"github.com/antonbier/DreamHub/backend/internal/configfs"
@@ -100,4 +101,15 @@ func (f *FS) WriteFile(path string, data []byte) error {
 	}
 	f.Files[dir][filepath.Base(path)] = append([]byte(nil), data...)
 	return nil
+}
+
+func (f *FS) List(dir string) ([]string, error) {
+	var out []string
+	for name := range f.Files[dir] {
+		if !strings.Contains(name, "/") {
+			out = append(out, name)
+		}
+	}
+	sort.Strings(out)
+	return out, nil
 }

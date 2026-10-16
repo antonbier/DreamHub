@@ -787,7 +787,9 @@
       "extra_env_invalid": "An extra variable can't be used.",
       "extra_path_invalid": "An extra folder can't be used.",
       "too_many_rows": "There are too many extra rows.",
-      "invalid_body": "The request couldn't be understood."
+      "invalid_body": "The request couldn't be understood.",
+      "backup_dir_unavailable": "The place for backups on the box isn't available.",
+      "backup_write_failed": "The backup couldn't be written. Is the disk full?"
     },
     "media": {
       "not_a_recording": "This recording doesn't exist (anymore).",
@@ -1379,7 +1381,14 @@
     },
     "mine": {
       "empty": "Nothing installed yet.",
-      "emptyAction": "Browse the app catalog"
+      "emptyAction": "Browse the app catalog",
+      "restorable": {
+        "title": "Apps you can bring back",
+        "hint": "Their settings and folders are still on the box, from a backup or from an app you removed. Installing brings them back as they were.",
+        "install": "Install again",
+        "confirm": "Install",
+        "done": "Installed."
+      }
     },
     "state": {
       "running": "running",
@@ -1792,7 +1801,20 @@
       "restoreIncludesApps": "This file also includes installed apps' configs.",
       "restored": "Restored from the backup.",
       "movedHint": "Backup and restore are in the settings now.",
-      "openSettings": "Settings → System"
+      "openSettings": "Settings → System",
+      "appsPasswords": "The apps part also holds the passwords DreamHub made for the apps. Keep the file somewhere safe.",
+      "saveOnBox": "Save on the box",
+      "saving": "Saving…",
+      "saved": "Saved as {name}.",
+      "storedTitle": "Backups on the box",
+      "storedEmpty": "No backups saved on the box yet.",
+      "storedWhere": "Kept in {dir}.",
+      "storedRestore": "Restore",
+      "storedDownload": "Download",
+      "storedDelete": "Delete",
+      "storedDeleteSure": "Delete for good?",
+      "storedDeleted": "Deleted.",
+      "restoreIncludesAppList": "This file also remembers which apps were installed. They show up under Apps → Docker, ready to install again."
     },
     "changes": {
       "title": "Change log",

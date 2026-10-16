@@ -65,6 +65,8 @@ type env struct {
 	plex *plexmock.Client
 	// appsConfigFS is AppsHub's backup-section file system (App6, in-memory).
 	appsConfigFS *configfsmock.FS
+	// backupDir is where "Save on the box" keeps backup files (App15).
+	backupDir string
 	// routes are the protected routes with their permissions.
 	routes []api.Route
 	// docker, apt and wc are the in-memory Docker helper, package manager and
@@ -122,6 +124,7 @@ func newEnvFull(t *testing.T, wc webcontrol.Client, at autotimer.Client, recFS r
 	runner := &scriptsmock.Runner{}
 	plexServer := plexmock.New()
 	appsConfigFS := configfsmock.New()
+	backupDir := t.TempDir()
 	docker, aptList := dockermock.New(), aptmock.New()
 	a, err := app.New(context.Background(), app.Options{
 		ReadOnlyFiles:   readOnly,
@@ -150,6 +153,7 @@ func newEnvFull(t *testing.T, wc webcontrol.Client, at autotimer.Client, recFS r
 		Mem:             meminfomock.New(),
 		AppsStorageRoot: "/media/hdd/dreamhub-apps",
 		AppsConfigFS:    appsConfigFS,
+		BackupDir:       backupDir,
 		TerminalTarget:  terminalTarget,
 		Mock:            true,
 		LookPath:        func(string) (string, error) { return "/usr/bin/journalctl", nil },
@@ -170,7 +174,7 @@ func newEnvFull(t *testing.T, wc webcontrol.Client, at autotimer.Client, recFS r
 		go job(jobs)
 	}
 	m, _ := wc.(*mock.Client)
-	return &env{docker: docker, apt: aptList, wc: m, srv: srv, store: a.Store, svc: a.Settings, events: a.Events, pushed: pushed, systemd: services, scripts: runner, plex: plexServer, appsConfigFS: appsConfigFS, routes: a.Routes}
+	return &env{docker: docker, apt: aptList, wc: m, srv: srv, store: a.Store, svc: a.Settings, events: a.Events, pushed: pushed, systemd: services, scripts: runner, plex: plexServer, appsConfigFS: appsConfigFS, backupDir: backupDir, routes: a.Routes}
 }
 
 func (e *env) do(t *testing.T, method, path, body string, configure func(*http.Request)) (*http.Response, []byte) {

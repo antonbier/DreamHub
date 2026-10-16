@@ -787,7 +787,9 @@
       "extra_env_invalid": "Una variabile aggiuntiva non può essere usata.",
       "extra_path_invalid": "Una cartella aggiuntiva non può essere usata.",
       "too_many_rows": "Ci sono troppe righe aggiuntive.",
-      "invalid_body": "La richiesta non è stata compresa."
+      "invalid_body": "La richiesta non è stata compresa.",
+      "backup_dir_unavailable": "Il posto per i backup sul box non è disponibile.",
+      "backup_write_failed": "Impossibile scrivere il backup. Il disco è pieno?"
     },
     "media": {
       "not_a_recording": "Questa registrazione non esiste (più).",
@@ -1379,7 +1381,14 @@
     },
     "mine": {
       "empty": "Ancora nulla di installato.",
-      "emptyAction": "Vai al catalogo app"
+      "emptyAction": "Vai al catalogo app",
+      "restorable": {
+        "title": "App che puoi recuperare",
+        "hint": "Le loro impostazioni e cartelle sono ancora sul box, da un backup o da un'app rimossa. Installandole tornano come erano.",
+        "install": "Installa di nuovo",
+        "confirm": "Installa",
+        "done": "Installata."
+      }
     },
     "state": {
       "running": "in esecuzione",
@@ -1792,7 +1801,20 @@
       "restoreIncludesApps": "Questo file include anche le configurazioni delle app installate.",
       "restored": "Ripristinato dal backup.",
       "movedHint": "Backup e ripristino ora si trovano nelle impostazioni.",
-      "openSettings": "Impostazioni → Sistema"
+      "openSettings": "Impostazioni → Sistema",
+      "appsPasswords": "La parte delle app contiene anche le password create da DreamHub per le app. Conserva il file in un posto sicuro.",
+      "saveOnBox": "Salva sul box",
+      "saving": "Salvataggio…",
+      "saved": "Salvato come {name}.",
+      "storedTitle": "Backup sul box",
+      "storedEmpty": "Nessun backup salvato sul box.",
+      "storedWhere": "Conservati in {dir}.",
+      "storedRestore": "Ripristina",
+      "storedDownload": "Scarica",
+      "storedDelete": "Elimina",
+      "storedDeleteSure": "Eliminare definitivamente?",
+      "storedDeleted": "Eliminato.",
+      "restoreIncludesAppList": "Questo file ricorda anche quali app erano installate. Compaiono in App → Docker, pronte per essere installate di nuovo."
     },
     "changes": {
       "title": "Registro modifiche",

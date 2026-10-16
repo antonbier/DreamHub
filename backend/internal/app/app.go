@@ -147,6 +147,9 @@ type Options struct {
 	// reads/writes (App6, internal/configfs); nil means configfs.OS, the
 	// real file system — tests inject configfs/mock instead.
 	AppsConfigFS configfs.FS
+	// BackupDir is where "Save on the box" keeps backup files (App15); ""
+	// leaves it out.
+	BackupDir string
 	// AppsSettle is how long an updated container must keep running before
 	// the update counts as good (App14); zero is one minute, two seconds in
 	// mock mode.
@@ -389,7 +392,8 @@ func New(ctx context.Context, o Options) (*App, error) {
 	// Backup & Restore screen as an opt-in section (system.go's
 	// BackupSection) — wired here rather than inside hubs_.System since
 	// System has no reason to import AppsHub's package.
-	systemHub.Sections = []hubs_.BackupSection{appsHub}
+	systemHub.Sections = []hubs_.BackupSection{appsHub, appsHub.AppList()}
+	systemHub.BackupDir = o.BackupDir
 
 	// Search providers (internal/hub/search.go): every hub with content of
 	// its own; ControlHub has none (its results would be actions).
@@ -440,7 +444,7 @@ func New(ctx context.Context, o Options) (*App, error) {
 			{HubID: hub.IDStream, Prefixes: []string{"/api/v1/stream"}, Register: streamHub.Mount},
 			{HubID: hub.IDSeries, Prefixes: []string{"/api/v1/series"}, Register: seriesHub.Mount},
 			{HubID: hub.IDDiscovery, Prefixes: []string{"/api/v1/discovery"}, Register: discoveryHub.Mount, Perms: discoveryHub.Perms()},
-			{HubID: hub.IDDevice, Prefixes: []string{"/api/v1/changes", "/api/v1/system"}, Register: systemHub.Mount},
+			{HubID: hub.IDDevice, Prefixes: []string{"/api/v1/changes", "/api/v1/system"}, Register: systemHub.Mount, Perms: systemHub.Perms()},
 			{HubID: hub.IDDevice, Prefixes: []string{"/api/v1/admin"}, Register: adminHub.Mount},
 			{HubID: hub.IDControl, Prefixes: []string{"/api/v1/control"}, Register: controlHub.Mount, Perms: controlHub.Perms()},
 			{HubID: hub.IDChannels, Prefixes: []string{"/api/v1/channels"}, Register: channelsHub.Mount, Perms: channelsHub.Perms()},

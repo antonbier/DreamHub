@@ -131,6 +131,8 @@ func (h *Apps) Perms() map[string]perm.Perm {
 		"GET /api/v1/apps/manifest":                      perm.System,
 		"GET /api/v1/apps/installed":                     perm.System,
 		"POST /api/v1/apps/install/plan":                 perm.System,
+		"GET /api/v1/apps/restorable":                    perm.System,
+		"POST /api/v1/apps/restorable/{id}/plan":         perm.System,
 		"POST /api/v1/apps/custom/parse":                 perm.System,
 		"POST /api/v1/apps/installed/{id}/remove/plan":   perm.System,
 		"POST /api/v1/apps/installed/{id}/start":         perm.System,
@@ -163,6 +165,8 @@ func (h *Apps) Mount(mux httpx.Mux) {
 	mux.HandleFunc("GET /api/v1/apps/manifest", h.manifest)
 	mux.HandleFunc("GET /api/v1/apps/installed", h.listInstalled)
 	mux.HandleFunc("POST /api/v1/apps/install/plan", h.planInstall)
+	mux.HandleFunc("GET /api/v1/apps/restorable", h.restorable)
+	mux.HandleFunc("POST /api/v1/apps/restorable/{id}/plan", h.planRestoreApp)
 	mux.HandleFunc("POST /api/v1/apps/custom/parse", h.parseCustom)
 	mux.HandleFunc("POST /api/v1/apps/installed/{id}/remove/plan", h.planRemove)
 	mux.HandleFunc("POST /api/v1/apps/installed/{id}/start", h.startInstalled)

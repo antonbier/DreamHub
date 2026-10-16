@@ -787,7 +787,9 @@
       "extra_env_invalid": "Eine zusätzliche Variable kann nicht verwendet werden.",
       "extra_path_invalid": "Ein zusätzlicher Ordner kann nicht verwendet werden.",
       "too_many_rows": "Es gibt zu viele zusätzliche Zeilen.",
-      "invalid_body": "Die Anfrage konnte nicht verstanden werden."
+      "invalid_body": "Die Anfrage konnte nicht verstanden werden.",
+      "backup_dir_unavailable": "Der Ort für Sicherungen auf der Box ist nicht verfügbar.",
+      "backup_write_failed": "Die Sicherung konnte nicht geschrieben werden. Ist die Platte voll?"
     },
     "media": {
       "not_a_recording": "Diese Aufnahme gibt es nicht (mehr).",
@@ -1379,7 +1381,14 @@
     },
     "mine": {
       "empty": "Noch nichts installiert.",
-      "emptyAction": "App-Katalog ansehen"
+      "emptyAction": "App-Katalog ansehen",
+      "restorable": {
+        "title": "Apps, die du zurückholen kannst",
+        "hint": "Ihre Einstellungen und Ordner sind noch auf der Box, aus einer Sicherung oder von einer entfernten App. Beim Installieren kommen sie so zurück, wie sie waren.",
+        "install": "Erneut installieren",
+        "confirm": "Installieren",
+        "done": "Installiert."
+      }
     },
     "state": {
       "running": "läuft",
@@ -1792,7 +1801,20 @@
       "restoreIncludesApps": "Diese Datei enthält auch Konfigurationen installierter Apps.",
       "restored": "Aus der Sicherung wiederhergestellt.",
       "movedHint": "Backup und Wiederherstellen findest du jetzt in den Einstellungen.",
-      "openSettings": "Einstellungen → System"
+      "openSettings": "Einstellungen → System",
+      "appsPasswords": "Der App-Teil enthält auch die Passwörter, die DreamHub für die Apps erzeugt hat. Bewahre die Datei sicher auf.",
+      "saveOnBox": "Auf der Box speichern",
+      "saving": "Wird gespeichert…",
+      "saved": "Gespeichert als {name}.",
+      "storedTitle": "Sicherungen auf der Box",
+      "storedEmpty": "Auf der Box ist noch keine Sicherung gespeichert.",
+      "storedWhere": "Abgelegt in {dir}.",
+      "storedRestore": "Wiederherstellen",
+      "storedDownload": "Herunterladen",
+      "storedDelete": "Löschen",
+      "storedDeleteSure": "Endgültig löschen?",
+      "storedDeleted": "Gelöscht.",
+      "restoreIncludesAppList": "Diese Datei merkt sich auch, welche Apps installiert waren. Sie erscheinen unter Apps → Docker und lassen sich dort wieder installieren."
     },
     "changes": {
       "title": "Änderungsprotokoll",

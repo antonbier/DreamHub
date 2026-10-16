@@ -102,7 +102,7 @@ func run(logger *slog.Logger, level *logging.Level) error {
 	var dockerHub dockerhub.Client
 	var logoSearch logosearch.Source
 	var dockerClient dockerd.Client
-	var appsStorageRoot string
+	var appsStorageRoot, backupDir string
 	// Which host paths a container may mount (internal/dockerd): /media,
 	// and never DreamHub's own data directory. The helper enforces the same
 	// rules with its own copy of this setting.
@@ -159,6 +159,7 @@ func run(logger *slog.Logger, level *logging.Level) error {
 		dockerClient = dockerd.HTTPClient{BaseURL: envOr("DREAMHUB_DOCKERD_HELPER_ADDR", "http://127.0.0.1:8090")}
 		dockerSetup = dockersetup.Exec{}
 		appsStorageRoot = envOr("DREAMHUB_APPS_STORAGE_ROOT", "/media/hdd/dreamhub-apps")
+		backupDir = envOr("DREAMHUB_BACKUP_DIR", "/media/hdd/dreamhub-backups")
 		memReader = meminfo.Exec{}
 		logger.Info("webcontrol client mode", "mode", "live", "url", cfg.WebControlURL, "deviceWrites", cfg.EnableDeviceWrites)
 	default:
@@ -246,6 +247,7 @@ func run(logger *slog.Logger, level *logging.Level) error {
 			dockerClient = dockersetupmock.Gate(rawDocker, s)
 		}
 		appsStorageRoot = "/tmp/dreamhub-mock-apps"
+		backupDir = "/tmp/dreamhub-mock-backups"
 		memReader = meminfomock.New()
 		logger.Info("webcontrol client mode", "mode", "mock")
 	}
@@ -276,6 +278,7 @@ func run(logger *slog.Logger, level *logging.Level) error {
 		Docker:          dockerClient,
 		Mem:             memReader,
 		AppsStorageRoot: appsStorageRoot,
+		BackupDir:       backupDir,
 		AppsMountPolicy: &mountPolicy,
 		DockerSetup:     dockerSetup,
 		Mock:            cfg.Mode == config.ModeMock,

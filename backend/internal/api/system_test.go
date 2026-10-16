@@ -111,8 +111,8 @@ func TestSystemBackupSections_ListsAppsWithSizes(t *testing.T) {
 	if err := json.Unmarshal(b, &out); err != nil {
 		t.Fatal(err)
 	}
-	if len(out.Sections) != 1 || out.Sections[0].ID != "apps" {
-		t.Fatalf("got %+v, want exactly one 'apps' section", out.Sections)
+	if len(out.Sections) != 2 || out.Sections[0].ID != "apps" || out.Sections[1].ID != "appList" {
+		t.Fatalf("got %+v, want the 'apps' and 'appList' sections", out.Sections)
 	}
 	var pihole *struct {
 		ID              string `json:"id"`

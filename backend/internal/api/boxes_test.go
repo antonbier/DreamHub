@@ -412,3 +412,34 @@ func (e *env) householdWithBoxes(t *testing.T) (admin, viewer string, viewerID i
 	e.json(t, "POST", "/api/v1/boxes", `{"name":"Bedroom","url":"192.168.1.30"}`, withProfile(admin), 201, nil)
 	return
 }
+
+func TestBoxes_OverviewShowsEachBoxAndSkipsOfflineOnes(t *testing.T) {
+	e := newEnv(t)
+	e.addBox(t, "bedroom")
+	type overview struct {
+		Boxes []struct {
+			ID                         string
+			Online, Standby, Recording bool
+			Service                    string
+		}
+	}
+	var ov overview
+	e.json(t, "GET", "/api/v1/boxes/overview", "", nil, 200, &ov)
+	if len(ov.Boxes) != 2 || ov.Boxes[0].ID != "main" || ov.Boxes[1].ID != "bedroom" || !ov.Boxes[1].Online {
+		t.Fatalf("overview: %+v", ov)
+	}
+	if !ov.Boxes[1].Standby && ov.Boxes[1].Service == "" {
+		t.Errorf("a box that is on shows what it plays: %+v", ov.Boxes[1])
+	}
+	e.app.Boxes.SetOnline("bedroom", false)
+	ov = overview{}
+	e.json(t, "GET", "/api/v1/boxes/overview", "", nil, 200, &ov)
+	if ov.Boxes[1].Online || ov.Boxes[1].Service != "" {
+		t.Errorf("an offline box is reported as such: %+v", ov.Boxes[1])
+	}
+	var list boxList
+	e.json(t, "GET", "/api/v1/boxes", "", nil, 200, &list)
+	if list.Boxes[1].Online {
+		t.Errorf("the list knows it is offline: %+v", list.Boxes[1])
+	}
+}

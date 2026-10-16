@@ -5,6 +5,8 @@ import (
 	"errors"
 	"net/http"
 	"strings"
+	"sync"
+	"time"
 
 	"github.com/antonbier/DreamHub/backend/internal/box"
 	"github.com/antonbier/DreamHub/backend/internal/boxes"
@@ -12,6 +14,7 @@ import (
 	"github.com/antonbier/DreamHub/backend/internal/perm"
 	"github.com/antonbier/DreamHub/backend/internal/plan"
 	"github.com/antonbier/DreamHub/backend/internal/store"
+	"github.com/antonbier/DreamHub/backend/internal/webcontrol"
 )
 
 // BoxParam is the query parameter that names the box a request is about
@@ -76,18 +79,21 @@ func withBox(d Deps, next http.Handler) http.Handler {
 // boxView is a box as clients see it. The address and login name are for
 // the administrator only; the password never leaves the server.
 type boxView struct {
-	ID          string `json:"id"`
-	Name        string `json:"name"`
-	Color       string `json:"color"`
-	Full        bool   `json:"full"`
-	Online      bool   `json:"online"`
+	ID     string `json:"id"`
+	Name   string `json:"name"`
+	Color  string `json:"color"`
+	Full   bool   `json:"full"`
+	Online bool   `json:"online"`
+	// Allowed: the caller's profile may use the box (an administrator also
+	// sees the boxes they can't use, to manage them).
+	Allowed     bool   `json:"allowed"`
 	URL         string `json:"url,omitempty"`
 	Username    string `json:"username,omitempty"`
 	HasPassword bool   `json:"hasPassword,omitempty"`
 }
 
-func viewBox(d Deps, e boxes.Entry, admin bool) boxView {
-	v := boxView{ID: e.ID, Name: e.Name, Color: e.Color, Full: e.Local, Online: d.Boxes.Online(e.ID)}
+func viewBox(d Deps, e boxes.Entry, admin bool, allowed bool) boxView {
+	v := boxView{ID: e.ID, Name: e.Name, Color: e.Color, Full: e.Local, Online: d.Boxes.Online(e.ID), Allowed: allowed}
 	if admin && !e.Local {
 		v.URL, v.Username, v.HasPassword = e.URL, e.Username, e.Password != ""
 	}
@@ -102,7 +108,7 @@ func handleListBoxes(d Deps) http.HandlerFunc {
 		out := []boxView{}
 		for _, e := range d.Boxes.List() {
 			if admin || current(r).MayUseBox(e.ID) {
-				out = append(out, viewBox(d, e, admin))
+				out = append(out, viewBox(d, e, admin, current(r).MayUseBox(e.ID)))
 			}
 		}
 		httpx.WriteJSON(w, http.StatusOK, map[string]any{"boxes": out, "default": box.Key(r.Context())})
@@ -167,7 +173,7 @@ func handleAddBox(d Deps) http.HandlerFunc {
 			return
 		}
 		logBoxChange(d, r, "box.add", "Added box "+e.Name)
-		httpx.WriteJSON(w, http.StatusCreated, viewBox(d, e, true))
+		httpx.WriteJSON(w, http.StatusCreated, viewBox(d, e, true, true))
 	}
 }
 
@@ -183,7 +189,7 @@ func handleUpdateBox(d Deps) http.HandlerFunc {
 			return
 		}
 		logBoxChange(d, r, "box.update", "Changed box "+e.Name)
-		httpx.WriteJSON(w, http.StatusOK, viewBox(d, e, true))
+		httpx.WriteJSON(w, http.StatusOK, viewBox(d, e, true, true))
 	}
 }
 
@@ -203,7 +209,7 @@ func handleRemoveBoxPlan(d Deps) http.HandlerFunc {
 		}
 		p := d.Plans.Create(r.Context(), current(r), plan.Draft{
 			Action:      "box.remove",
-			Changes:     []plan.Change{{Type: "box.remove", Before: viewBox(d, e, true)}},
+			Changes:     []plan.Change{{Type: "box.remove", Before: viewBox(d, e, true, true)}},
 			Summary:     "Remove box " + e.Name,
 			Detail:      map[string]string{"box": id},
 			Fingerprint: id,
@@ -223,5 +229,67 @@ func logBoxChange(d Deps, r *http.Request, action, summary string) {
 	u := current(r)
 	if err := d.Store.AppendChange(r.Context(), store.ChangeEntry{UserID: u.ID, Action: action, Summary: summary}); err != nil {
 		d.Logger.Error("recording a box change failed", "requestId", httpx.RequestID(r.Context()), "error", err)
+	}
+}
+
+// boxStatus is one line of the dashboard's strip of other boxes.
+type boxStatus struct {
+	ID        string `json:"id"`
+	Online    bool   `json:"online"`
+	Standby   bool   `json:"standby,omitempty"`
+	Service   string `json:"service,omitempty"`
+	Recording bool   `json:"recording,omitempty"`
+}
+
+// overviewTimeout bounds how long the strip waits for a box.
+const overviewTimeout = 3 * time.Second
+
+// handleBoxesOverview says, for each box the caller may use, whether it
+// answers, is in standby, what it shows and whether it records — what the
+// dashboard's strip of the other boxes needs. A box that does not answer
+// is reported offline at once and never waited for.
+func handleBoxesOverview(d Deps) http.HandlerFunc {
+	return func(w http.ResponseWriter, r *http.Request) {
+		var list []boxes.Entry
+		for _, e := range d.Boxes.List() {
+			if current(r).MayUseBox(e.ID) {
+				list = append(list, e)
+			}
+		}
+		out := make([]boxStatus, len(list))
+		var wg sync.WaitGroup
+		for i, e := range list {
+			out[i] = boxStatus{ID: e.ID, Online: d.Boxes.Online(e.ID)}
+			if !out[i].Online {
+				continue
+			}
+			wg.Add(1)
+			go func() {
+				defer wg.Done()
+				ctx, cancel := context.WithTimeout(box.With(r.Context(), e.ID), overviewTimeout)
+				defer cancel()
+				st := &out[i]
+				standby, err := e.WC.InStandby(ctx)
+				if err != nil {
+					st.Online = false
+					return
+				}
+				st.Standby = standby
+				if !standby {
+					if cur, err := e.WC.Current(ctx); err == nil {
+						st.Service = cur.ServiceName
+					}
+				}
+				if timers, err := e.WC.TimerList(ctx); err == nil {
+					for _, t := range timers {
+						if t.State == webcontrol.TimerRunning && !t.Disabled {
+							st.Recording = true
+						}
+					}
+				}
+			}()
+		}
+		wg.Wait()
+		httpx.WriteJSON(w, http.StatusOK, map[string]any{"boxes": out})
 	}
 }

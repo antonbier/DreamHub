@@ -21,6 +21,10 @@ type Config struct {
 	// extension owns no DreamHub locale file, so it brings its own.
 	Lang    string         `json:"lang"`
 	Devices []DeviceConfig `json:"devices"`
+	// Cloud is the owner's eWeLink developer application and its login:
+	// used to fetch the device keys once and to read the consumption
+	// history, never to switch (cloud.go).
+	Cloud CloudConfig `json:"cloud"`
 }
 
 // DeviceConfig is one known device.

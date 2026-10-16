@@ -106,6 +106,11 @@ var catalog = []tileType{
 	// Backed by StreamHub's GET /api/v1/stream/channels: channels to start
 	// in the browser; hidden until switched on.
 	{ID: "stream.channels", Label: "dashboard.tile.liveTv", DefaultWidth: 2, Hidden: true},
+	// What the installed extensions chose to show (the widgets they flag
+	// with "tile", e.g. a smart plug's power and consumption). Backed by
+	// GET /api/v1/extensions; the tile has nothing to show — and says so
+	// in edit mode only — until an extension offers something.
+	{ID: "extensions.tiles", Label: "dashboard.tile.extensions", DefaultWidth: 2},
 }
 
 func catalogIndex() map[string]tileType {

@@ -29,11 +29,15 @@ Install the `.deb` (it depends on DreamHub ≥ 0.5.0). It runs as its own user `
 ```
 
 - `id` — the device id; a device that's found but not configured shows up on the card with it.
-- `key` — the devicekey. It's only in the owner's eWeLink account, never on the network: it has to be fetched once from eWeLink's API with a developer account (dev.ewelink.cc). A helper for that one-time fetch comes once a developer account exists to build it against.
+- `key` — the devicekey. It's only in the owner's eWeLink account, never on the network: it is fetched once from eWeLink's cloud through the owner's own developer application (dev.ewelink.cc → Platform → App Management, type OAuth 2.0 with a redirect address). In the card's **Settings**: enter the app ID, the app secret, the region and the redirect address, save; a **Log in to eWeLink** link appears — open it, log in, copy the whole address of the page you land on (`<redirect>?code=…&region=…`) into *Address after logging in* and save within 30 seconds. The extension trades the code for a token, reads the account's device list and stores the key of every device it finds on the network. The login is kept (token refreshed by itself) only to read the consumption history.
 - `offWarning` — added to the preview before switching **off**. Use it for anything that mustn't lose power unannounced.
 - `lang` — `de` or `en` for the card's texts (an extension owns no DreamHub locale file).
 
 After editing: `systemctl restart dreamhub-ext-ewelink`. The file holds secrets: owned by the extension's user, mode 600.
+
+## Consumption on the start page
+
+With a login stored, once a quarter of an hour the extension asks the cloud for each configured device's `hundredDaysKwh` history (the LAN protocol has none) and its live `power`/`voltage`/`current`. The card shows **Power**, **Today** and **This month** (the month so far, summed from the daily values), and flags the on/off status and this list for DreamHub's start page (schema 3, `docs/BUILDING_EXTENSIONS.md`). Reads only — switching never goes through the cloud. That is about 6 calls per device per hour against the free application's 50 000 a month. Which of these a particular plug reports is decided by the plug: what it doesn't send isn't shown.
 
 ## Network
 

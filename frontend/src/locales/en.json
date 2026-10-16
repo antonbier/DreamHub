@@ -223,9 +223,13 @@
       "title": "Nothing to show",
       "body": "Every tile is hidden. Turn editing on to bring one back."
     },
+    "extensionsTile": {
+      "empty": "No extension shows anything here."
+    },
     "loadFailed": "Couldn't load the dashboard.",
     "tile": {
       "timersUpcoming": "Upcoming timers",
+      "extensions": "Extensions",
       "hubsStatus": "Needs attention",
       "mediaDiskSpace": "Disk space",
       "seriesUpcoming": "Upcoming episodes",
@@ -1088,6 +1092,7 @@
       "open": "Settings",
       "save": "Save",
       "done": "Saved.",
+      "openLink": "Open",
       "saved": "saved — type to replace",
       "none": "This extension has nothing to set up yet."
     },

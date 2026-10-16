@@ -45,7 +45,9 @@ func (c *Client) Widgets(ctx context.Context) ([]extension.Widget, error) {
 		value, tone, label = "An", extension.ToneGood, "Ausschalten"
 	}
 	return []extension.Widget{
-		{Type: extension.WidgetStatus, Label: c.name, Value: value, Tone: tone},
+		{Type: extension.WidgetStatus, Label: c.name, Value: value, Tone: tone, Tile: true},
+		{Type: extension.WidgetList, Label: c.name + " · Verbrauch", Tile: true, Rows: []extension.ListRow{
+			{Label: "Leistung", Value: "212.5 W"}, {Label: "Heute", Value: "1.42 kWh"}, {Label: "Dieser Monat", Value: "18.30 kWh"}}},
 		{Type: extension.WidgetAction, Label: c.name, ActionID: actionToggle, ButtonLabel: label},
 	}, nil
 }

@@ -796,6 +796,8 @@ export interface ExtensionWidget {
   rows?: ExtensionListRow[]
   actionId?: string
   buttonLabel?: string
+  // Schema 3: also shown on the start page.
+  tile?: boolean
 }
 
 // hubs.cardView — one registered extension's card.
@@ -814,7 +816,7 @@ export interface ExtensionCard {
 export interface ExtensionSetting {
   key: string
   label: string
-  type: 'text' | 'secret' | 'bool' | 'select'
+  type: 'text' | 'secret' | 'bool' | 'select' | 'info' | 'link'
   help?: string
   value?: string
   set?: boolean

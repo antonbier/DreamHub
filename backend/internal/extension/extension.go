@@ -24,7 +24,7 @@ import (
 
 // SchemaVersion is the widget schema this core understands. Bump only when
 // adding a new, optional widget type or field — see the package doc.
-const SchemaVersion = 2
+const SchemaVersion = 3
 
 // WidgetType names one of the fixed shapes an extension can ask for
 // (docs/EXTENSIONHUB_PLAN.md, "Extensions never ship frontend code").
@@ -71,6 +71,12 @@ type Widget struct {
 	// (PlanPreview.vue). ActionID is passed back to PlanAction/Apply.
 	ActionID    string `json:"actionId,omitempty"`
 	ButtonLabel string `json:"buttonLabel,omitempty"`
+
+	// Tile (schema 3) also shows this widget on the start page, in the
+	// "Extensions" tile. The extension chooses what is worth a glance;
+	// an extension that flags nothing has nothing there. Action widgets
+	// are never shown on the start page.
+	Tile bool `json:"tile,omitempty"`
 }
 
 // ListRow is one row of a "list" widget.
@@ -143,6 +149,12 @@ const (
 	SettingSecret SettingType = "secret" // never sent back to the browser
 	SettingBool   SettingType = "bool"
 	SettingSelect SettingType = "select"
+	// SettingInfo (schema 3) is a sentence shown in the form, nothing to
+	// enter: its Value is the text.
+	SettingInfo SettingType = "info"
+	// SettingLink (schema 3) is an address to open in a new tab (a login
+	// page), shown with its Label; its Value is the URL. Never sent back.
+	SettingLink SettingType = "link"
 )
 
 // SettingField is one input of an extension's settings form (schema 2).

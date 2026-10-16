@@ -223,9 +223,13 @@
       "title": "Niente da mostrare",
       "body": "Tutte le schede sono nascoste. Attiva la modifica per farne tornare visibile una."
     },
+    "extensionsTile": {
+      "empty": "Nessuna estensione mostra qui qualcosa."
+    },
     "loadFailed": "Impossibile caricare la dashboard.",
     "tile": {
       "timersUpcoming": "Prossimi timer",
+      "extensions": "Estensioni",
       "hubsStatus": "Richiede attenzione",
       "mediaDiskSpace": "Spazio su disco",
       "seriesUpcoming": "Prossimi episodi",
@@ -1088,6 +1092,7 @@
       "open": "Impostazioni",
       "save": "Salva",
       "done": "Salvato.",
+      "openLink": "Apri",
       "saved": "salvato — digita per sostituire",
       "none": "Questa estensione non ha ancora nulla da impostare."
     },

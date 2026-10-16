@@ -6,6 +6,10 @@ Format follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/); version
 
 ## [Unreleased]
 
+### Added
+- Extensions can show things on the start page: a widget flagged `tile` appears in a new **Extensions** tile, under the extension's name — each extension decides what (or nothing); with nothing flagged the tile is not shown (schema 3, `docs/BUILDING_EXTENSIONS.md`). Settings forms can show a sentence (`info`) and an address to open (`link`).
+- eWeLink extension 0.3.0: gets the device keys from the owner's own eWeLink developer application (log in once, paste the address you land on — no key hunting), and with that login reads the plug's **power, today's and this month's consumption**, shown on its card and on the start page. Needs DreamHub 0.8.0.
+
 ## [0.7.0] - 2026-10-16
 
 - Clickable demo for a PC (mock data, no Dreambox): `packaging/build-mock.sh` builds zips for Windows, macOS and Linux; CI uploads them as the `dreamhub-demo` artifact. The backend now also compiles for Windows and macOS.

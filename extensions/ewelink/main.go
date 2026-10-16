@@ -22,7 +22,7 @@ import (
 	"time"
 )
 
-const schemaVersion = 2
+const schemaVersion = 3
 
 func main() {
 	path := os.Getenv("DREAMHUB_EWELINK_CONFIG")
@@ -38,10 +38,12 @@ func main() {
 
 	store := NewConfigStore(path, cfg)
 	devices := NewDevices(store)
+	cloud, energy := NewCloud(), NewEnergyStore()
 	go refreshLoop(ctx, devices)
+	go energyLoop(ctx, store, cloud, energy)
 	go registerLoop(ctx, cfg)
 
-	srv := &http.Server{Addr: cfg.Listen, Handler: (&Server{cfg: store, devices: devices}).Handler(), ReadHeaderTimeout: 5 * time.Second}
+	srv := &http.Server{Addr: cfg.Listen, Handler: (&Server{cfg: store, devices: devices, cloud: cloud, energy: energy}).Handler(), ReadHeaderTimeout: 5 * time.Second}
 	go func() {
 		<-ctx.Done()
 		shut, cancel := context.WithTimeout(context.Background(), 3*time.Second)

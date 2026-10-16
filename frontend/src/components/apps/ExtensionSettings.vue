@@ -9,7 +9,14 @@
   <form class="mt-3 flex flex-col gap-3 rounded-sm border border-line-soft bg-bg p-3" @submit.prevent="save">
     <p v-if="loading" class="text-[13px] text-faint">{{ t('common.loading') }}</p>
     <p v-else-if="fields.length === 0 && !error" class="text-[13px] text-faint">{{ t('extensions.settings.none') }}</p>
-    <label v-for="f in fields" :key="f.key" class="flex flex-col gap-1 text-[13px]">
+    <template v-for="f in fields" :key="f.key">
+    <p v-if="f.type === 'info'" class="text-[13px]"><span class="text-muted">{{ f.label }}: </span><span class="text-text">{{ f.value }}</span></p>
+    <div v-else-if="f.type === 'link'" class="flex flex-col gap-1 text-[13px]">
+      <span class="text-muted">{{ f.label }}</span>
+      <a :href="f.value" target="_blank" rel="noopener noreferrer" class="self-start rounded-sm border border-line px-2.5 py-1.5 text-accent hover:bg-field">{{ t('extensions.settings.openLink') }}</a>
+      <span v-if="f.help" class="text-[12px] text-faint">{{ f.help }}</span>
+    </div>
+    <label v-else class="flex flex-col gap-1 text-[13px]">
       <span class="text-muted">{{ f.label }}</span>
       <select v-if="f.type === 'select'" v-model="draft[f.key]" class="rounded-sm border border-line bg-field px-2 py-1.5 text-text">
         <option v-for="o in f.options ?? []" :key="o.value" :value="o.value">{{ o.label }}</option>
@@ -25,6 +32,7 @@
       />
       <span v-if="f.help" class="text-[12px] text-faint">{{ f.help }}</span>
     </label>
+    </template>
     <p v-if="error" class="text-[12.5px] text-warn" role="alert">{{ error }}</p>
     <p v-if="saved" class="text-[12.5px] text-ok" role="status">{{ t('extensions.settings.done') }}</p>
     <div v-if="fields.length > 0" class="flex justify-end gap-2">
@@ -67,6 +75,7 @@ function adopt(list: ExtensionSetting[]) {
 // What differs from what the extension sent; an empty secret is "keep".
 const changed = computed(() =>
   fields.value.filter((f) => {
+    if (f.type === 'info' || f.type === 'link') return false
     if (f.type === 'bool') return flags[f.key] !== (f.value === 'true')
     if (f.type === 'secret') return (draft[f.key] ?? '') !== ''
     return (draft[f.key] ?? '') !== (f.value ?? '')

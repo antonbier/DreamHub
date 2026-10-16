@@ -223,9 +223,13 @@
       "title": "Nichts anzuzeigen",
       "body": "Alle Kacheln sind ausgeblendet. Im Bearbeiten-Modus lässt sich eine wieder einblenden."
     },
+    "extensionsTile": {
+      "empty": "Keine Erweiterung zeigt hier etwas an."
+    },
     "loadFailed": "Dashboard konnte nicht geladen werden.",
     "tile": {
       "timersUpcoming": "Anstehende Timer",
+      "extensions": "Erweiterungen",
       "hubsStatus": "Braucht Aufmerksamkeit",
       "mediaDiskSpace": "Speicherplatz",
       "seriesUpcoming": "Anstehende Folgen",
@@ -1088,6 +1092,7 @@
       "open": "Einstellungen",
       "save": "Speichern",
       "done": "Gespeichert.",
+      "openLink": "Öffnen",
       "saved": "gespeichert — zum Ersetzen eintippen",
       "none": "Diese Erweiterung hat noch nichts einzustellen."
     },

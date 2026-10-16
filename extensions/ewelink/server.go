@@ -22,6 +22,9 @@ type Widget struct {
 	Rows        []ListRow `json:"rows,omitempty"`
 	ActionID    string    `json:"actionId,omitempty"`
 	ButtonLabel string    `json:"buttonLabel,omitempty"`
+	// Tile (schema 3) puts this widget on DreamHub's start page too. The
+	// extension decides what goes there; none flagged, no tile.
+	Tile bool `json:"tile,omitempty"`
 }
 
 type ListRow struct {
@@ -31,28 +34,27 @@ type ListRow struct {
 
 type texts struct {
 	on, off, turnOn, turnOff, noKey, badKey, notFound, found, readings, previewOn, previewOff string
+	consumption, power, today, month, voltage, current                                        string
 }
 
 var lang = map[string]texts{
 	"de": {on: "An", off: "Aus", turnOn: "Einschalten", turnOff: "Ausschalten",
 		noKey: "Geräteschlüssel fehlt", badKey: "Status nicht lesbar — Geräteschlüssel prüfen", notFound: "Nicht im Netzwerk gefunden",
 		found: "Gefunden — noch nicht eingerichtet", readings: "Messwerte",
-		previewOn: "%s wird eingeschaltet.", previewOff: "%s wird ausgeschaltet."},
+		previewOn: "%s wird eingeschaltet.", previewOff: "%s wird ausgeschaltet.",
+		consumption: "Verbrauch", power: "Leistung", today: "Heute", month: "Dieser Monat", voltage: "Spannung", current: "Strom"},
 	"en": {on: "On", off: "Off", turnOn: "Turn on", turnOff: "Turn off",
 		noKey: "Device key missing", badKey: "State unreadable — check the device key", notFound: "Not found on the network",
 		found: "Found — not set up yet", readings: "Readings",
-		previewOn: "%s will be switched on.", previewOff: "%s will be switched off."},
-}
-
-// readings are the measurement fields a power-metering plug may report,
-// shown as received.
-var readings = []struct{ key, unit string }{
-	{"power", "W"}, {"voltage", "V"}, {"current", "A"}, {"dayKwh", "kWh"},
+		previewOn: "%s will be switched on.", previewOff: "%s will be switched off.",
+		consumption: "Consumption", power: "Power", today: "Today", month: "This month", voltage: "Voltage", current: "Current"},
 }
 
 type Server struct {
 	cfg     *ConfigStore
 	devices *Devices
+	cloud   *Cloud
+	energy  *EnergyStore
 }
 
 func (s *Server) t() texts { return lang[s.cfg.Get().Lang] }
@@ -101,8 +103,12 @@ func (s *Server) widgets(w http.ResponseWriter, r *http.Request) {
 			if on {
 				value, tone, button = t.on, "good", t.turnOff
 			}
-			out = append(out, Widget{Type: "status", Label: name, Value: value, Tone: tone})
-			if rows := readingRows(d.State); len(rows) > 0 {
+			out = append(out, Widget{Type: "status", Label: name, Value: value, Tone: tone, Tile: true})
+			e, _ := s.energyOf(d.ID)
+			if rows := s.consumptionRows(d.State, e); len(rows) > 0 {
+				out = append(out, Widget{Type: "list", Label: name + " · " + t.consumption, Rows: rows, Tile: true})
+			}
+			if rows := s.readingRows(d.State, e); len(rows) > 0 {
 				out = append(out, Widget{Type: "list", Label: name + " · " + t.readings, Rows: rows})
 			}
 			out = append(out, Widget{Type: "action", Label: name, ActionID: actionID(d.ID), ButtonLabel: button})
@@ -119,12 +125,51 @@ func (s *Server) widgets(w http.ResponseWriter, r *http.Request) {
 	writeJSON(w, http.StatusOK, out)
 }
 
-func readingRows(state map[string]any) []ListRow {
+// energyOf is the cloud's last look at a device, if there was one.
+func (s *Server) energyOf(id string) (Energy, bool) {
+	if s.energy == nil {
+		return Energy{}, false
+	}
+	return s.energy.Get(id)
+}
+
+// liveValue prefers what the device announced on the LAN, then the cloud's.
+func liveValue(state map[string]any, key string, cloud *float64) (float64, bool) {
+	if v, ok := number(state[key]); ok {
+		return v, true
+	}
+	if cloud != nil {
+		return *cloud, true
+	}
+	return 0, false
+}
+
+// consumptionRows is the part worth a glance: what the plug draws now,
+// what it used today and this month. Rows with no data are left out.
+func (s *Server) consumptionRows(state map[string]any, e Energy) []ListRow {
+	t := s.t()
 	var rows []ListRow
-	for _, r := range readings {
-		if v, ok := state[r.key]; ok {
-			rows = append(rows, ListRow{Label: r.key, Value: fmt.Sprint(v) + " " + r.unit})
-		}
+	if v, ok := liveValue(state, "power", e.PowerW); ok {
+		rows = append(rows, ListRow{Label: t.power, Value: fmt.Sprintf("%.1f W", v)})
+	}
+	if e.TodayKwh != nil {
+		rows = append(rows, ListRow{Label: t.today, Value: kwh(*e.TodayKwh)})
+	}
+	if e.MonthKwh != nil {
+		rows = append(rows, ListRow{Label: t.month, Value: kwh(*e.MonthKwh)})
+	}
+	return rows
+}
+
+// readingRows are the remaining measurements, as received.
+func (s *Server) readingRows(state map[string]any, e Energy) []ListRow {
+	t := s.t()
+	var rows []ListRow
+	if v, ok := liveValue(state, "voltage", e.VoltageV); ok {
+		rows = append(rows, ListRow{Label: t.voltage, Value: fmt.Sprintf("%.1f V", v)})
+	}
+	if v, ok := liveValue(state, "current", e.CurrentA); ok {
+		rows = append(rows, ListRow{Label: t.current, Value: fmt.Sprintf("%.3f A", v)})
 	}
 	return rows
 }
@@ -235,6 +280,7 @@ func (s *Server) settings(w http.ResponseWriter, r *http.Request) {
 	language, name, key, keyHelp, warn, warnHelp := settingsText(cfg.Lang)
 	fields := []settingField{{Key: "lang", Label: language, Type: "select", Value: cfg.Lang,
 		Options: []settingOption{{"de", "Deutsch"}, {"en", "English"}}}}
+	fields = append(fields, s.cloudFields(cfg)...)
 	ids := []string{}
 	seen := map[string]bool{}
 	for _, c := range cfg.Devices {
@@ -264,9 +310,19 @@ func (s *Server) saveSettings(w http.ResponseWriter, r *http.Request) {
 		writeJSON(w, http.StatusBadRequest, map[string]string{"error": "expected {\"values\": {...}}"})
 		return
 	}
+	code := strings.TrimSpace(body.Values["cloud:code"])
+	delete(body.Values, "cloud:code")
+	delete(body.Values, "cloud:loginUrl")
+	delete(body.Values, "cloud:loginLink")
 	err := s.cfg.Update(func(c *Config) error {
 		for k, v := range body.Values {
 			field, id, _ := strings.Cut(k, ":")
+			if field == "cloud" {
+				if err := s.setCloudField(c, id, v); err != nil {
+					return err
+				}
+				continue
+			}
 			if field == "lang" {
 				if v != "de" && v != "en" {
 					return fmt.Errorf("language must be de or en")
@@ -305,9 +361,151 @@ func (s *Server) saveSettings(w http.ResponseWriter, r *http.Request) {
 		}
 		return nil
 	})
+	if err == nil && code != "" {
+		err = s.logIn(r.Context(), code)
+	}
 	if err != nil {
 		writeJSON(w, http.StatusBadRequest, map[string]string{"error": err.Error()})
 		return
 	}
 	s.settings(w, r)
+}
+
+// --- eWeLink account: the one-time key fetch and the consumption login -----
+
+type cloudTexts struct {
+	appID, appIDHelp, secret, secretHelp, region, redirect, redirectHelp, login, loginHelp, code, codeHelp string
+	needApp, loggedIn, noDevices, keysSet                                                                  string
+}
+
+func cloudText(l string) cloudTexts {
+	if l == "en" {
+		return cloudTexts{
+			appID: "eWeLink app ID", appIDHelp: "From your own application at dev.ewelink.cc (Platform → App Management). Used to fetch the device keys once and to read the consumption.",
+			secret: "eWeLink app secret", secretHelp: "From the same page. Stays on the box.",
+			region: "eWeLink region", redirect: "Redirect address", redirectHelp: "Exactly as entered in the application at dev.ewelink.cc. The page behind it does not need to exist — you only copy its address.",
+			login: "Log in to eWeLink", loginHelp: "Open this link, log in with your eWeLink account, then copy the whole address of the page you land on.",
+			code: "Address after logging in", codeHelp: "Paste it here and save within 30 seconds — eWeLink's code expires quickly. The device keys are fetched and stored; the login is kept to read the consumption.",
+			needApp: "Fill in the app ID, secret and redirect address, save, and the login link appears here.", loggedIn: "Logged in to eWeLink.",
+			noDevices: "No device of this account is on the network yet.", keysSet: "Device keys stored for: %s.",
+		}
+	}
+	return cloudTexts{
+		appID: "eWeLink App-ID", appIDHelp: "Aus deiner eigenen Anwendung auf dev.ewelink.cc (Platform → App Management). Damit werden die Geräteschlüssel einmal geholt und der Verbrauch gelesen.",
+		secret: "eWeLink App-Secret", secretHelp: "Von derselben Seite. Bleibt auf der Box.",
+		region: "eWeLink-Region", redirect: "Weiterleitungsadresse", redirectHelp: "Genau so, wie sie in der Anwendung auf dev.ewelink.cc steht. Die Seite dahinter muss nicht existieren — du kopierst nur ihre Adresse.",
+		login: "Bei eWeLink anmelden", loginHelp: "Diesen Link öffnen, mit dem eWeLink-Konto anmelden und dann die ganze Adresse der Seite kopieren, auf der du landest.",
+		code: "Adresse nach der Anmeldung", codeHelp: "Hier einfügen und innerhalb von 30 Sekunden speichern — der Code von eWeLink läuft schnell ab. Die Geräteschlüssel werden geholt und gespeichert; die Anmeldung bleibt für den Verbrauch erhalten.",
+		needApp: "App-ID, Secret und Weiterleitungsadresse eintragen, speichern — dann erscheint hier der Anmelde-Link.", loggedIn: "Bei eWeLink angemeldet.",
+		noDevices: "Noch kein Gerät dieses Kontos im Netzwerk gefunden.", keysSet: "Geräteschlüssel gespeichert für: %s.",
+	}
+}
+
+// cloudFields is the account part of the form, above the devices.
+func (s *Server) cloudFields(cfg Config) []settingField {
+	t := cloudText(cfg.Lang)
+	cc := cfg.Cloud
+	region := cc.region()
+	fields := []settingField{
+		{Key: "cloud:appId", Label: t.appID, Type: "text", Value: cc.AppID, Help: t.appIDHelp},
+		{Key: "cloud:secret", Label: t.secret, Type: "secret", Set: cc.Secret != "", Help: t.secretHelp},
+		{Key: "cloud:region", Label: t.region, Type: "select", Value: region, Options: []settingOption{
+			{"eu", "Europe"}, {"us", "Americas"}, {"as", "Asia"}, {"cn", "China"}}},
+		{Key: "cloud:redirectUrl", Label: t.redirect, Type: "text", Value: cc.RedirectURL, Help: t.redirectHelp},
+	}
+	if !cc.Ready() {
+		return append(fields, settingField{Key: "cloud:loginUrl", Label: t.login, Type: "info", Value: t.needApp})
+	}
+	if cc.LoggedIn() {
+		fields = append(fields, settingField{Key: "cloud:loginUrl", Label: t.login, Type: "info", Value: t.loggedIn})
+	}
+	return append(fields,
+		settingField{Key: "cloud:loginLink", Label: t.login, Type: "link", Value: s.cloud.LoginURL(cc), Help: t.loginHelp},
+		settingField{Key: "cloud:code", Label: t.code, Type: "text", Help: t.codeHelp},
+	)
+}
+
+func (s *Server) setCloudField(c *Config, field, v string) error {
+	v = strings.TrimSpace(v)
+	switch field {
+	case "appId":
+		c.Cloud.AppID = v
+	case "secret":
+		if v != "" { // empty means "keep"
+			c.Cloud.Secret = v
+		}
+	case "region":
+		if v != "eu" && v != "us" && v != "as" && v != "cn" {
+			return fmt.Errorf("region must be eu, us, as or cn")
+		}
+		c.Cloud.Region = v
+	case "redirectUrl":
+		if v != "" && !strings.HasPrefix(v, "https://") && !strings.HasPrefix(v, "http://") {
+			return fmt.Errorf("the redirect address must start with https://")
+		}
+		c.Cloud.RedirectURL = v
+	default:
+		return fmt.Errorf("unknown setting %q", "cloud:"+field)
+	}
+	return nil
+}
+
+// logIn trades the pasted login address for tokens, stores the keys of the
+// devices that are on the network (or already configured) and keeps the
+// login for the consumption.
+func (s *Server) logIn(ctx context.Context, pasted string) error {
+	cfg := s.cfg.Get()
+	if !cfg.Cloud.Ready() {
+		return fmt.Errorf("fill in the app ID, secret and redirect address first")
+	}
+	code, region, err := ParseLoginRedirect(pasted)
+	if err != nil {
+		return err
+	}
+	ctx, cancel := context.WithTimeout(ctx, 30*time.Second)
+	defer cancel()
+	cc, err := s.cloud.Exchange(ctx, cfg.Cloud, code, region)
+	if err != nil {
+		return err
+	}
+	things, err := s.cloud.Things(ctx, cc)
+	if err != nil {
+		return err
+	}
+	onLAN := map[string]bool{}
+	for _, d := range s.devices.Snapshot() {
+		onLAN[d.ID] = true
+	}
+	err = s.cfg.Update(func(c *Config) error {
+		c.Cloud = cc
+		for _, th := range things {
+			_, known := c.device(th.ID)
+			if !known && !onLAN[th.ID] {
+				continue
+			}
+			i := -1
+			for j := range c.Devices {
+				if c.Devices[j].ID == th.ID {
+					i = j
+				}
+			}
+			if i < 0 {
+				c.Devices = append(c.Devices, DeviceConfig{ID: th.ID})
+				i = len(c.Devices) - 1
+			}
+			if th.Key != "" {
+				c.Devices[i].Key = th.Key
+			}
+			if c.Devices[i].Name == "" {
+				c.Devices[i].Name = th.Name
+			}
+		}
+		return nil
+	})
+	if err != nil {
+		return err
+	}
+	go energyOnce(context.WithoutCancel(ctx), s.cfg, s.cloud, s.energy)
+	_ = s.devices.Refresh(ctx)
+	return nil
 }

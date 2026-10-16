@@ -50,7 +50,7 @@ Content-Type: application/json
 - `name` — shown next to your widgets, literal text (an extension owns no DreamHub locale file, unlike a built-in hub's label — there's no i18n key to localize this into).
 - `icon` — one of the names `frontend/src/components/Icon.vue` recognizes; anything else falls back to a generic extension icon.
 - `admin` — `true` if only admins should see your card (the same binary on/off choice a built-in hub's own permission makes — there's no finer-grained permission an extension can ask for).
-- `schemaVersion` — the widget schema version you're writing against; `1` or `2` (settings) today (see "Versioning" below).
+- `schemaVersion` — the widget schema version you're writing against; `1`, `2` (settings) or `3` (start-page tiles, `info`/`link` settings) today (see "Versioning" below).
 - `baseUrl` — where DreamHub should reach *you*, e.g. `http://127.0.0.1:9100`. Must itself be a loopback address — DreamHub checks this and the request's own origin, and refuses anything else, the same loopback-only check `PlexHub`'s own box-side media handoff uses.
 
 The call answers `200 {"registered": true, "coreSchemaVersion": 1}` on success. There's no DreamHub login involved — the handshake is public but gated entirely by the fact that only a process already running on this device can reach `127.0.0.1`.
@@ -106,6 +106,15 @@ func applyToggle(fingerprint string) (status int) {
 }
 ```
 
+## Start-page tiles (schema version 3, optional)
+
+An extension decides for itself whether anything of it is worth a glance on DreamHub's start page. Any `status`, `meter` or `list` widget it flags with `"tile": true` is shown in the start page's **Extensions** tile, under the extension's name; an extension that flags nothing has no block there, and with no extension flagging anything the tile does not appear at all. `action` widgets are never shown on the start page (switching keeps its preview on the Apps page). Register with `"schemaVersion": 3` to use it; an older DreamHub (schema 2) shows the unknown field's extension as unsupported, so the package should depend on the DreamHub version that brought it (0.8.0).
+
+```json
+{"type": "list", "label": "Plug · Consumption", "tile": true,
+ "rows": [{"label": "Power", "value": "212.5 W"}, {"label": "Today", "value": "1.42 kWh"}, {"label": "This month", "value": "18.30 kWh"}]}
+```
+
 ## Settings (schema version 2, optional)
 
 An extension that needs something typed in — a device key, a name, a language — says so by registering with `"settings": true` and `"schemaVersion": 2`. Its card then gets a **Settings** button (admins only) that opens one generic form; the extension ships no frontend code for it. DreamHub stores nothing: **the extension keeps its own values** (it already owns a config file), and the form is just a view onto them.
@@ -119,7 +128,7 @@ An extension that needs something typed in — a device key, a name, a language 
 ]}
 ```
 
-- `type` is `"text"`, `"secret"` (a password input; **never send its value** — `"set": true` only says one is stored), `"bool"` (`"true"`/`"false"`) or `"select"` (with `options`).
+- `type` is `"text"`, `"secret"` (a password input; **never send its value** — `"set": true` only says one is stored), `"bool"` (`"true"`/`"false"`) or `"select"` (with `options`). Schema 3 adds `"info"` (a sentence, its `value`, nothing to enter) and `"link"` (an address opened in a new tab, its `value`, e.g. a login page — useful when a value has to be fetched from a service by logging in there; the person pastes the result into a text field). Neither is ever sent back.
 - `help` is one plain sentence under the input: where the value comes from.
 - The list may differ from call to call — eWeLink lists one group of fields per device it has seen.
 

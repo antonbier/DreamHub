@@ -82,6 +82,7 @@
           <PlexContinueTile v-else-if="tile.type === 'plex.continue'" />
           <LiveTvTile v-else-if="tile.type === 'stream.channels'" />
           <RecentRecordingsTile v-else-if="tile.type === 'media.recent'" />
+          <ExtensionsTile v-else-if="tile.type === 'extensions.tiles'" :cards="extensionCards" />
         </DashboardTileFrame>
       </div>
 
@@ -122,9 +123,11 @@ import SeriesUpcomingTile from '@/components/dashboard/SeriesUpcomingTile.vue'
 import TimersConflictsTile from '@/components/dashboard/TimersConflictsTile.vue'
 import PlexContinueTile from '@/components/dashboard/PlexContinueTile.vue'
 import RecentRecordingsTile from '@/components/dashboard/RecentRecordingsTile.vue'
+import ExtensionsTile from '@/components/dashboard/ExtensionsTile.vue'
+import { api } from '@/api/client'
 import { useAuth } from '@/composables/useAuth'
 import { tileKey, useDashboard } from '@/composables/useDashboard'
-import type { CustomTileView, DashboardTile } from '@/api/types'
+import type { CustomTileView, DashboardTile, ExtensionCard } from '@/api/types'
 
 // DESIGN.md, "Dashboard grid": spans 3-4 collapse to 2 columns below 1180px,
 // everything is 1 column below 640px. Tailwind needs the full class names
@@ -143,7 +146,23 @@ const { me, can } = useAuth()
 const route = useRoute()
 const template = route.query.template === '1' && can('profiles')
 const dash = useDashboard(template)
+// What the extensions chose to show on the start page: only their widgets
+// flagged "tile", and only the extensions that flagged any. Without any,
+// the tile is left out (except in edit mode, where it can be moved).
+const extensionCards = ref<ExtensionCard[]>([])
+async function loadExtensionTiles() {
+  try {
+    const { extensions } = await api.extensions.list()
+    extensionCards.value = extensions
+      .map((c) => ({ ...c, widgets: c.widgets.filter((w) => w.tile && w.type !== 'action') }))
+      .filter((c) => c.widgets.length > 0)
+  } catch {
+    extensionCards.value = []
+  }
+}
+
 onMounted(async () => {
+  void loadExtensionTiles()
   await dash.load()
   if (template) dash.editing.value = true
 })
@@ -162,7 +181,9 @@ async function resetToTemplate() {
   }
 }
 
-const visibleTiles = computed(() => dash.layout.value.tiles.filter((t) => !t.hidden))
+const visibleTiles = computed(() =>
+  dash.layout.value.tiles.filter((t) => !t.hidden && !(t.type === 'extensions.tiles' && extensionCards.value.length === 0)),
+)
 // In edit mode, hidden tiles stay visible (dimmed) so they can be brought
 // back; otherwise only visible ones render.
 const shownTiles = computed(() => (dash.editing.value ? dash.layout.value.tiles : visibleTiles.value))

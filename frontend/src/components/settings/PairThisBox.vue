@@ -5,9 +5,13 @@
   a household with one box never needs it.
 -->
 <template>
-  <details class="mt-5 text-[13px]" @toggle="onToggle">
+  <details class="mt-5 text-[13px]" :open="route.query.pair === '1'" @toggle="onToggle">
     <summary class="cursor-pointer text-muted">{{ t('boxes.pairThis.title') }}</summary>
     <p class="mt-2 text-muted">{{ t('boxes.pairThis.hint') }}</p>
+    <ol class="mt-1 list-decimal ps-5 text-muted">
+      <li>{{ t('boxes.pairThis.step1') }}</li>
+      <li>{{ t('boxes.pairThis.step2') }}</li>
+    </ol>
     <button type="button" class="mt-2 rounded-sm border border-line px-3 py-1.5 text-[13px] text-text hover:bg-tile disabled:opacity-60" :disabled="busy" @click="show">
       {{ t('boxes.pairThis.show') }}
     </button>
@@ -25,10 +29,12 @@
 <script setup lang="ts">
 import { computed, ref } from 'vue'
 import { useI18n } from 'vue-i18n'
+import { useRoute } from 'vue-router'
 import { api } from '@/api/client'
 import type { PairingCode } from '@/api/types'
 
 const { t, locale } = useI18n()
+const route = useRoute()
 const shown = ref<PairingCode | null>(null)
 const busy = ref(false)
 const error = ref('')

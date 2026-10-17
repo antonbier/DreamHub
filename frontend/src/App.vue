@@ -33,6 +33,7 @@
       <AppTopBar />
       <StatusStrip />
       <main id="main" ref="mainEl" tabindex="-1" class="flex-1 overflow-y-auto focus:outline-hidden">
+        <PageBoxMark />
         <RouterView />
       </main>
     </div>
@@ -47,6 +48,7 @@ import { useI18n } from 'vue-i18n'
 import AppSidebar from './components/AppSidebar.vue'
 import AppTopBar from './components/AppTopBar.vue'
 import StatusStrip from './components/StatusStrip.vue'
+import PageBoxMark from './components/PageBoxMark.vue'
 import LoginScreen from './components/LoginScreen.vue'
 import ProfilePicker from './components/profiles/ProfilePicker.vue'
 import UnreachableScreen from './components/UnreachableScreen.vue'

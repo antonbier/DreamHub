@@ -10,6 +10,9 @@ Format follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/); version
 - UX review before testers: with one box there is no Settings → Boxes tab any more — General ends with an "Another box" card that leads to it, and the tab stays once a second box exists. The developer block under Access (token API, `box=<id>`) is collapsed and, with one box, leaves out `box=`.
 - A Basic box's deep link (`/b/<id>/apps`) says "needs DreamHub on the box itself" with a link to Settings → Boxes instead of "That didn't work"; its Device page no longer shows DreamHub's own change log as if it were the box's.
 - "Needs attention" only counts real trouble: an integration that was never set up (TMDB, Plex, AI) and pages a Basic box doesn't have are not counted and not repeated per page. The film-database hint appears once, on the dashboard, with a link to the setting; a page that cannot work without a connector that isn't set up still says why.
+- With two or more boxes every page says which box it is about (a small coloured line above the page), and the dashboard's strip of other boxes is labelled.
+- Connecting a box to the DreamHub on it is worded for two machines: "this DreamHub" and "DreamHub on <box>", numbered steps, **Get a code** / **Connect** / **Disconnect** instead of "DreamHub" three times. On a box with one box only, the way to get a code is the "Another box" card in General.
+- Names: **Device** is now **Box admin** (the page that administers the box), "this device" means the browser or "your phone or computer"; the Apps tabs are **System software / Extensions / Apps**, and the Extensions tab says where an extension is installed.
 - Settings → Docker: **Address for the Open links** — an app's Open link goes to `http://<address>:<port>`; the address is the one DreamHub was opened with unless set (behind an HTTPS reverse proxy the proxy's address is wrong, the apps' ports are on the box).
 
 ### Fixed

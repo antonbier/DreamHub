@@ -16,6 +16,11 @@
 <template>
   <div>
     <TabIntro :text="t('apps.intro.extensions')" />
+    <!-- Where they come from: an extension is a package like any other. -->
+    <p class="mt-2 text-[13px] text-muted">
+      {{ t('extensions.howToInstall') }}
+      <button type="button" class="text-accent hover:underline" @click="emit('packages')">{{ t('extensions.howToInstallLink') }}</button>
+    </p>
     <p v-if="loading" class="mt-4 text-[13px] text-faint">{{ t('common.loading') }}</p>
     <p v-else-if="error" class="mt-4 text-[13px] text-faint">{{ error }}</p>
     <p v-else-if="cards.length === 0" class="mt-4 text-[13px] text-faint">{{ t('extensions.empty') }}</p>
@@ -122,6 +127,7 @@ import { useProblem } from '@/composables/useProblem'
 import { usePlanError } from '@/composables/usePlanError'
 import type { ExtensionCard, ExtensionWidget, Plan } from '@/api/types'
 
+const emit = defineEmits<{ packages: [] }>()
 const { t } = useI18n()
 const { describe, describeFix } = useProblem()
 const { friendly } = useFriendlyError()

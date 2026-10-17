@@ -19,7 +19,7 @@
     "guide": "Guida TV",
     "timer": "Timer",
     "discovery": "Consigliati",
-    "device": "Dispositivo",
+    "device": "Gestione box",
     "control": "Telecomando",
     "radio": "Radio",
     "stream": "TV in diretta",
@@ -40,7 +40,7 @@
       "notInstalled": "{connector} non è installato sul box"
     },
     "capability": {
-      "missing": "Manca sul dispositivo: {capability}"
+      "missing": "Manca sul box: {capability}"
     },
     "box": {
       "notFull": "Funziona solo con DreamHub installato su quel box."
@@ -124,8 +124,8 @@
     "clockSkew": "L'orologio del box è sfasato di circa {minutes} min.",
     "recent": "Attività recente",
     "onlyThisBox": "Solo questo box",
-    "browserOn": "Mostra le notifiche su questo dispositivo",
-    "browserIsOn": "Le notifiche su questo dispositivo sono attive",
+    "browserOn": "Mostra le notifiche in questo browser",
+    "browserIsOn": "Le notifiche in questo browser sono attive",
     "browserOff": "Disattiva",
     "browserDenied": "Il browser blocca le notifiche per questo sito. Consentile nelle impostazioni del sito."
   },
@@ -192,7 +192,7 @@
       "title": "Il tuo Dreambox",
       "subtitle": "Una verifica rapida che DreamHub raggiunga il box e che il suo orologio sia corretto.",
       "unreachable": "Impossibile raggiungere il box. Puoi continuare la configurazione e sistemare la connessione più tardi nelle impostazioni.",
-      "name": "Dispositivo",
+      "name": "Modello",
       "image": "Image",
       "enigma": "Enigma2",
       "tuners": "Tuner",
@@ -834,7 +834,7 @@
       "mark_no_access_points": "Questa registrazione non ha un file indice su cui segnare le posizioni."
     },
     "friendly": {
-      "dreamhub": "DreamHub non risponde. Questo dispositivo è nella rete di casa?",
+      "dreamhub": "DreamHub non risponde. Il tuo telefono o computer è nella rete di casa?",
       "box": "Il box non risponde in questo momento. È acceso?",
       "boxLogin": "Il box ha rifiutato l'accesso di DreamHub.",
       "forbidden": "Il tuo profilo non può farlo.",
@@ -1111,13 +1111,15 @@
     },
     "empty": "Ancora nessuna estensione installata.",
     "confirm": "Applica",
-    "done": "Fatto."
+    "done": "Fatto.",
+    "howToInstall": "Un'estensione è un pacchetto: la trovi in Software di sistema (il nome inizia con «dreamhub-ext-») e la installi lì.",
+    "howToInstallLink": "Apri Software di sistema"
   },
   "apps": {
     "tabs": {
-      "packages": "Pacchetti",
+      "packages": "Software di sistema",
       "extensions": "Estensioni",
-      "docker": "Docker"
+      "docker": "App"
     },
     "comingSoon": "Le app Docker non sono ancora disponibili.",
     "category": {
@@ -1152,7 +1154,7 @@
     "logsEmpty": "Ancora nessun log.",
     "logsError": "I log non sono stati caricati.",
     "logsClose": "Chiudi",
-    "dockerServiceLogs": "Apri i log del servizio nella pagina Dispositivo",
+    "dockerServiceLogs": "Apri i log del servizio nella Gestione box",
     "console": {
       "open": "Console",
       "title": "Console — {name}",
@@ -1792,7 +1794,7 @@
   },
   "system": {
     "device": {
-      "title": "Dispositivo",
+      "title": "Questo box",
       "enigma": "Enigma2 {version}",
       "image": "Image {version}",
       "webif": "WebControl {version}",
@@ -1965,7 +1967,7 @@
   },
   "unreachable": {
     "title": "DreamHub non è raggiungibile",
-    "body": "Il Dreambox non risponde. È acceso (non in standby profondo) e questo dispositivo è nella stessa rete?",
+    "body": "Il Dreambox non risponde. È acceso (non in standby profondo) e il tuo telefono o computer è nella stessa rete?",
     "retry": "Riprova",
     "retrying": "Tentativo…"
   },
@@ -2395,6 +2397,7 @@
       "recording": "in registrazione",
       "notAnswering": "{name} non risponde"
     },
+    "pageMark": "Box: {box}",
     "needsDreamHub": "{box} è controllato tramite la sua interfaccia web. Questa pagina richiede DreamHub sul box stesso.",
     "needsDreamHubPart": "Il registro delle modifiche e l'amministrazione di {box} richiedono DreamHub sul box stesso.",
     "needsDreamHubLink": "Impostazioni dei box",
@@ -2412,7 +2415,7 @@
       "basicHint": "Un box aggiunto qui viene controllato tramite la sua interfaccia web: TV in diretta, guida, timer, liste canali, telecomando e le sue registrazioni. Gestione delle registrazioni, loghi e strumenti di sistema richiedono DreamHub sul box stesso.",
       "removeConfirm": "Rimuovi box",
       "removeText": "Rimuovere «{name}»? DreamHub dimentica il box e tutto ciò che ha salvato per lui: proprietari dei timer, cronologia dei canali, marcatori pubblicitari. Il box stesso non viene toccato.",
-      "paired": "abbinato a DreamHub"
+      "paired": "DreamHub collegato"
     },
     "form": {
       "name": "Nome",
@@ -2471,34 +2474,38 @@
       "wakeAction": "Scegli l'azione dell'estensione."
     },
     "pair": {
-      "title": "DreamHub su questo box",
-      "hint": "Con DreamHub su questo box puoi gestirne le registrazioni e altro da qui. Sul box apri Impostazioni → Box → «Abbina questo box a un altro DreamHub», mostra il codice e inseriscilo qui. Senza abbinamento il box resta controllato tramite la sua interfaccia web.",
-      "code": "Codice dal box",
-      "pair": "Abbina",
-      "pairing": "Abbinamento…",
-      "otherAddress": "DreamHub non è a questo indirizzo sulla porta 8080",
+      "title": "DreamHub su {box}",
+      "hint": "{box} è controllato tramite la sua interfaccia web. Se su {box} gira anche DreamHub, collega i due: potrai gestire le registrazioni e altro da qui.",
+      "code": "Codice da {box}",
+      "pair": "Collega",
+      "pairing": "Collegamento…",
+      "otherAddress": "DreamHub su quel box non si trova a questo indirizzo sulla porta 8080",
       "otherAddressPlaceholder": "192.168.1.20:8080",
       "state": {
-        "ok": "Abbinato · DreamHub {version}",
-        "paired": "Abbinato",
-        "unreachable": "Abbinato, ma DreamHub sul box non risponde.",
-        "revoked": "Il box non accetta più questo abbinamento."
+        "ok": "Collegato · DreamHub {version}",
+        "paired": "Collegato",
+        "unreachable": "Collegato, ma DreamHub sul box non risponde.",
+        "revoked": "Il box non accetta più questo collegamento."
       },
-      "revokedHint": "L’abbinamento è stato revocato sul box. Scollega qui e abbina di nuovo con un nuovo codice.",
-      "boxTooOld": "DreamHub su questo box è troppo vecchio per questo. Aggiornalo e tutto funzionerà.",
-      "hubTooOld": "Questo DreamHub è troppo vecchio per quello sul box. Aggiorna questo.",
+      "revokedHint": "Il box ha terminato il collegamento. Scollega qui e collega di nuovo con un nuovo codice.",
+      "boxTooOld": "DreamHub sul box è troppo vecchio per questo DreamHub. Aggiornalo e tutto funziona.",
+      "hubTooOld": "Questo DreamHub è troppo vecchio per il DreamHub sul box. Aggiorna questo.",
       "advanced": "Avanzate",
       "streamBase": "Indirizzo di questo DreamHub visto dal box",
       "streamBaseHint": "Usato quando il box scarica un film da qui. Vuoto: trovato automaticamente.",
       "unpair": "Scollega",
-      "unpairHint": "Questo dimentica l’abbinamento qui. Per terminarlo anche sul box, elimina lì il token «Hub: …» in Impostazioni → Accesso."
+      "unpairHint": "Termina il collegamento qui. Per terminarlo anche sul box, elimina lì il token «Hub: …» in Impostazioni → Accesso.",
+      "step1": "Su {box} apri DreamHub → Impostazioni → Generale, scegli «Lascia che un altro DreamHub si colleghi a questo box» e poi «Ottieni un codice».",
+      "step2": "Inserisci qui il codice."
     },
     "pairThis": {
-      "title": "Abbina questo box a un altro DreamHub",
-      "hint": "Mostra qui e sulla TV di questo box un codice monouso. Inseriscilo nell’altro DreamHub in Impostazioni → Box. Vale una volta e per dieci minuti.",
-      "show": "Mostra codice",
+      "title": "Lascia che un altro DreamHub si colleghi a questo box",
+      "hint": "Usalo quando un altro DreamHub (su un altro box o su un server) deve gestire questo box.",
+      "show": "Ottieni un codice",
       "valid": "Valido fino alle {time}",
-      "onTv": "anche sulla TV"
+      "onTv": "anche sulla TV",
+      "step1": "Scegli «Ottieni un codice». Appare qui e sulla TV di questo box.",
+      "step2": "Nell'altro DreamHub apri Impostazioni → Box, modifica questo box e inserisci il codice. Vale una volta, dieci minuti."
     },
     "wake": {
       "button": "Accendi",

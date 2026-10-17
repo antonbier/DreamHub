@@ -19,7 +19,7 @@
     "guide": "TV Guide",
     "timer": "Timers",
     "discovery": "Recommendations",
-    "device": "Device",
+    "device": "Box admin",
     "control": "Remote",
     "radio": "Radio",
     "stream": "Live TV",
@@ -40,7 +40,7 @@
       "notInstalled": "{connector} isn't installed on the box"
     },
     "capability": {
-      "missing": "Missing on the device: {capability}"
+      "missing": "Missing on the box: {capability}"
     },
     "box": {
       "notFull": "This only works with DreamHub running on that box."
@@ -124,8 +124,8 @@
     "clockSkew": "The box's clock is off by about {minutes} min.",
     "recent": "Recent activity",
     "onlyThisBox": "Only this box",
-    "browserOn": "Show notifications on this device",
-    "browserIsOn": "Notifications on this device are on",
+    "browserOn": "Show notifications in this browser",
+    "browserIsOn": "Notifications in this browser are on",
     "browserOff": "Turn off",
     "browserDenied": "Your browser blocks notifications for this site. Allow them in its site settings."
   },
@@ -192,7 +192,7 @@
       "title": "Your Dreambox",
       "subtitle": "A quick check that DreamHub can reach the box and that its clock is right.",
       "unreachable": "Could not reach the box. You can continue setup and fix the connection later in Settings.",
-      "name": "Device",
+      "name": "Model",
       "image": "Image",
       "enigma": "Enigma2",
       "tuners": "Tuners",
@@ -834,7 +834,7 @@
       "mark_no_access_points": "This recording has no index file to mark positions against."
     },
     "friendly": {
-      "dreamhub": "DreamHub doesn't answer. Is this device in your home network?",
+      "dreamhub": "DreamHub doesn't answer. Is your phone or computer in your home network?",
       "box": "The box doesn't answer right now. Is it switched on?",
       "boxLogin": "The box refused DreamHub's sign-in.",
       "forbidden": "Your profile may not do this.",
@@ -1111,13 +1111,15 @@
     },
     "empty": "No extensions installed yet.",
     "confirm": "Apply",
-    "done": "Done."
+    "done": "Done.",
+    "howToInstall": "An extension is a package: find it under System software (its name starts with “dreamhub-ext-”) and install it there.",
+    "howToInstallLink": "Open System software"
   },
   "apps": {
     "tabs": {
-      "packages": "Packages",
+      "packages": "System software",
       "extensions": "Extensions",
-      "docker": "Docker"
+      "docker": "Apps"
     },
     "comingSoon": "Docker apps aren't available yet.",
     "category": {
@@ -1152,7 +1154,7 @@
     "logsEmpty": "No log output yet.",
     "logsError": "The logs couldn't be loaded.",
     "logsClose": "Close",
-    "dockerServiceLogs": "Open service logs on the Device page",
+    "dockerServiceLogs": "Open service logs on the Box admin page",
     "console": {
       "open": "Console",
       "title": "Console — {name}",
@@ -1792,7 +1794,7 @@
   },
   "system": {
     "device": {
-      "title": "Device",
+      "title": "This box",
       "enigma": "Enigma2 {version}",
       "image": "Image {version}",
       "webif": "WebControl {version}",
@@ -1965,7 +1967,7 @@
   },
   "unreachable": {
     "title": "Can't reach DreamHub",
-    "body": "The Dreambox isn't answering. Is it switched on (not in deep standby), and is this device on the same network?",
+    "body": "The Dreambox isn't answering. Is it switched on (not in deep standby), and is your phone or computer on the same network?",
     "retry": "Try again",
     "retrying": "Trying…"
   },
@@ -2395,6 +2397,7 @@
       "recording": "recording",
       "notAnswering": "{name} isn't answering"
     },
+    "pageMark": "Box: {box}",
     "needsDreamHub": "{box} is controlled through its web interface. This page needs DreamHub on the box itself.",
     "needsDreamHubPart": "The change log and the administration of {box} need DreamHub on the box itself.",
     "needsDreamHubLink": "Boxes settings",
@@ -2412,7 +2415,7 @@
       "basicHint": "A box added here is controlled through its web interface: live TV, guide, timers, channel lists, remote and its recordings. Recording management, logos and system tools need DreamHub on that box itself.",
       "removeConfirm": "Remove box",
       "removeText": "Remove “{name}”? DreamHub forgets the box and everything it saved for it — timer owners, channel history, ad marks. The box itself is not touched.",
-      "paired": "paired with DreamHub"
+      "paired": "DreamHub connected"
     },
     "form": {
       "name": "Name",
@@ -2471,34 +2474,38 @@
       "wakeAction": "Choose the extension's action."
     },
     "pair": {
-      "title": "DreamHub on this box",
-      "hint": "Install DreamHub on this box to manage its recordings and more from here. On that box open Settings → Boxes → “Pair this box with another DreamHub”, show the code and type it here. Without it the box stays controlled through its web interface.",
-      "code": "Code from the box",
-      "pair": "Pair",
-      "pairing": "Pairing…",
-      "otherAddress": "DreamHub is not at this address on port 8080",
+      "title": "DreamHub on {box}",
+      "hint": "{box} is controlled through its web interface. If DreamHub runs on {box} too, connect the two: then you can manage its recordings and more from here.",
+      "code": "Code from {box}",
+      "pair": "Connect",
+      "pairing": "Connecting…",
+      "otherAddress": "DreamHub on that box is not at this address on port 8080",
       "otherAddressPlaceholder": "192.168.1.20:8080",
       "state": {
-        "ok": "Paired · DreamHub {version}",
-        "paired": "Paired",
-        "unreachable": "Paired, but DreamHub on the box doesn’t answer.",
-        "revoked": "The box no longer accepts this pairing."
+        "ok": "Connected · DreamHub {version}",
+        "paired": "Connected",
+        "unreachable": "Connected, but DreamHub on the box doesn’t answer.",
+        "revoked": "The box no longer accepts this connection."
       },
-      "revokedHint": "The pairing was revoked on the box. Unpair here and pair again with a new code.",
-      "boxTooOld": "DreamHub on this box is too old for this one. Update it, then everything works.",
-      "hubTooOld": "This DreamHub is too old for the one on the box. Update this one.",
+      "revokedHint": "The box ended the connection. Disconnect here and connect again with a new code.",
+      "boxTooOld": "DreamHub on the box is too old for this DreamHub. Update it, then everything works.",
+      "hubTooOld": "This DreamHub is too old for the DreamHub on the box. Update this one.",
       "advanced": "Advanced",
       "streamBase": "Address of this DreamHub as seen from the box",
       "streamBaseHint": "Used when the box fetches a film from here. Empty: found automatically.",
-      "unpair": "Unpair",
-      "unpairHint": "This forgets the pairing here. To end it on the box too, delete the “Hub: …” token there under Settings → Access."
+      "unpair": "Disconnect",
+      "unpairHint": "This ends the connection here. To end it on the box too, delete the “Hub: …” token there under Settings → Access.",
+      "step1": "On {box}, open DreamHub → Settings → General and choose “Let another DreamHub connect to this box”, then “Get a code”.",
+      "step2": "Type the code here."
     },
     "pairThis": {
-      "title": "Pair this box with another DreamHub",
-      "hint": "Shows a one-time code here and on this box’s TV. Type it into the other DreamHub under Settings → Boxes. It works once and for ten minutes.",
-      "show": "Show code",
+      "title": "Let another DreamHub connect to this box",
+      "hint": "Use this when another DreamHub (on another box or on a server) should manage this box.",
+      "show": "Get a code",
       "valid": "Valid until {time}",
-      "onTv": "also on the TV"
+      "onTv": "also on the TV",
+      "step1": "Choose “Get a code”. It appears here and on this box’s TV.",
+      "step2": "In the other DreamHub open Settings → Boxes, edit this box and type the code. It works once, for ten minutes."
     },
     "wake": {
       "button": "Switch on",

@@ -6,7 +6,7 @@
 -->
 <template>
   <div class="rounded-sm border border-line bg-field p-4">
-    <h3 class="mb-1 text-[14px] font-semibold">{{ t('boxes.pair.title') }}</h3>
+    <h3 class="mb-1 text-[14px] font-semibold">{{ t('boxes.pair.title', { box: box.name }) }}</h3>
 
     <template v-if="box.paired">
       <p class="mb-2 text-[13px]" :class="ok ? 'text-ok' : 'text-warn'" role="status">{{ statusText }}</p>
@@ -32,9 +32,13 @@
     </template>
 
     <form v-else @submit.prevent="pair">
-      <p class="mb-3 text-[13px] text-muted">{{ t('boxes.pair.hint') }}</p>
+      <p class="mb-2 text-[13px] text-muted">{{ t('boxes.pair.hint', { box: box.name }) }}</p>
+      <ol class="mb-3 list-decimal ps-5 text-[13px] text-muted">
+        <li>{{ t('boxes.pair.step1', { box: box.name }) }}</li>
+        <li>{{ t('boxes.pair.step2') }}</li>
+      </ol>
       <label class="mb-3 block">
-        <span class="mb-1 block text-[13px] text-muted">{{ t('boxes.pair.code') }}</span>
+        <span class="mb-1 block text-[13px] text-muted">{{ t('boxes.pair.code', { box: box.name }) }}</span>
         <input v-model="code" type="text" inputmode="numeric" autocomplete="off" placeholder="1234 5678" class="w-[160px] rounded-sm border border-line bg-tile px-2.5 py-1.5 font-mono text-[16px] tracking-wider text-text" />
       </label>
       <details class="mb-3 text-[13px]">

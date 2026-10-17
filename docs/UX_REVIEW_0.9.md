@@ -15,15 +15,13 @@ Not seen live (the mock can't): pairing, "Play on <box>", a box going offline (g
 - C1 one box: no Boxes tab (an "Another box" card in General leads there), developer block collapsed.
 - D1/D2 a Basic box's deep link and Device page say what needs DreamHub on the box; B4's "Apps" row no longer counts under Needs attention.
 - E1 Needs attention counts only real trouble, the TMDB sentence is said once on the dashboard (with a link).
+- B2/B3 the box strip is labelled and every page carries the box; C2 pairing wording (numbered steps, "Get a code"); F1/F2 Extensions says where to install, tabs renamed; H1 Device → Box admin, "this device" → browser.
 - Bug-run notes below: all four fixed (Docker "Open" link has an address setting, poller back-off 1 min, job events filtered by box list, `user:pw@` kept).
 
 ## Open — decide before the testers get it
-- **B2/B3** The "other boxes" strip is an unlabelled chip; nothing on a page says which box is shown except the header pill. Label the strip, show the box in the page title/colour.
 - **B4** Second box's dashboard still shows the first box's "Upcoming episodes" and the extension card.
-- **C2/C3** Pairing wording ("DreamHub" ×3 for two machines), Edit card of a Basic box holds two forms, a disclosure labelled with an error-like sentence. "Get a code" + numbered steps.
 - **E2** "Settings" in a page banner's fix text ("Configure it in Settings → Plex") is not a link.
-- **F1/F2** Extensions tab has no install path; "Packages / Extensions / Docker" — rename to System software / Extensions / Apps.
-- **H1** "Device/Gerät" = the box's admin page, "this device" = the browser. Ambiguous with two boxes.
+- **C3** The Edit card of a Basic box still holds two forms (box details and "DreamHub on <box>"); the disclosure "DreamHub is not at this address on port 8080" reads like an error.
 - **E3** Timers: no hint how to create one; destructive "Clean up" next to an empty state.
 - **A3** Wizard switches have no accessible name (`OnboardingHubsStep`, `OnboardingAuthStep`).
 

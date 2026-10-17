@@ -42,7 +42,7 @@
     <!-- Each tab opens with one plain sentence (TabIntro), so the three
          kinds of "add-on" can't be mistaken for each other. -->
     <PackagesTab v-if="tab === 'packages'" :key="reloadKey" />
-    <ExtensionsTab v-else-if="tab === 'extensions'" />
+    <ExtensionsTab v-else-if="tab === 'extensions'" @packages="tab = 'packages'" />
     <DockerTab v-else :key="reloadKey" />
     </template>
   </div>

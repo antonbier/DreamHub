@@ -5,7 +5,8 @@
   There is no second dashboard: the tiles are always the selected box's.
 -->
 <template>
-  <nav v-if="boxes.multi && others.length > 0" :aria-label="t('boxes.strip.label')" class="mb-4 flex flex-wrap gap-2">
+  <nav v-if="boxes.multi && others.length > 0" :aria-label="t('boxes.strip.label')" class="mb-4 flex flex-wrap items-center gap-2">
+    <span class="basis-full text-[12px] text-faint" aria-hidden="true">{{ t('boxes.strip.label') }}</span>
     <div v-for="o in others" :key="o.id" class="flex min-w-0 max-w-full items-center gap-2 rounded-sm border border-line bg-tile pe-2 hover:bg-tile-2">
     <button
       type="button"

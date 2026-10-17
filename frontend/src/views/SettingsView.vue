@@ -78,9 +78,10 @@
         <section v-if="activeTab === 'general' && oneBox" class="rounded-sm border border-line bg-tile p-5">
           <h2 class="text-[15.5px] font-semibold">{{ t('boxes.addAnother.title') }}</h2>
           <p class="mt-1 text-[13px] text-muted">{{ t('boxes.addAnother.body') }}</p>
-          <RouterLink to="/settings/boxes?add=1" class="mt-3 inline-block text-[13.5px] text-accent hover:underline">
-            {{ t('boxes.addAnother.link') }}
-          </RouterLink>
+          <div class="mt-3 flex flex-wrap gap-x-5 gap-y-1 text-[13.5px]">
+            <RouterLink to="/settings/boxes?add=1" class="text-accent hover:underline">{{ t('boxes.addAnother.link') }}</RouterLink>
+            <RouterLink to="/settings/boxes?pair=1" class="text-accent hover:underline">{{ t('boxes.pairThis.title') }}</RouterLink>
+          </div>
         </section>
 
         <BoxesPanel v-if="activeTab === 'boxes' && can('settings.global')" />

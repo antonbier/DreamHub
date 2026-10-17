@@ -11,13 +11,17 @@ Not seen live (the mock can't): pairing, "Play on <box>", a box going offline (g
 - G1 the API text showed `POST /api/v1/plans//apply` (vue-i18n swallowed `{id}`).
 - C7 "Colour"/"Color"; C9 wrong tab names in hints (Authentication→Access, AI/TMDB→Services); D4 `mr-1.5`→`me-1.5`; F6 "Sie/Ihre" in German → du.
 
+## Fixed after the review
+- C1 one box: no Boxes tab (an "Another box" card in General leads there), developer block collapsed.
+- D1/D2 a Basic box's deep link and Device page say what needs DreamHub on the box; B4's "Apps" row no longer counts under Needs attention.
+- E1 Needs attention counts only real trouble, the TMDB sentence is said once on the dashboard (with a link).
+- Bug-run notes below: all four fixed (Docker "Open" link has an address setting, poller back-off 1 min, job events filtered by box list, `user:pw@` kept).
+
 ## Open — decide before the testers get it
-- **C1** A one-box household sees new things: a permanent Settings → Boxes tab (Basic/Full text, "Pair this box with another DreamHub") and the developer block (`box=<id>`, curl) under Settings → Access. With one box: one line "Add another box", API text collapsed. (Acceptance criterion of the plan.)
 - **B2/B3** The "other boxes" strip is an unlabelled chip; nothing on a page says which box is shown except the header pill. Label the strip, show the box in the page title/colour.
-- **D1/D2** On a Basic box a deep link such as `/b/<id>/apps` shows "That didn't work"; Device shows DreamHub's global change log as the box's. One sentence "needs DreamHub on this box" + link to Boxes.
-- **B4** Second box's dashboard still shows the first box's "Upcoming episodes", the extension card, and an "Apps — only works with DreamHub on that box" row under Needs attention.
+- **B4** Second box's dashboard still shows the first box's "Upcoming episodes" and the extension card.
 - **C2/C3** Pairing wording ("DreamHub" ×3 for two machines), Edit card of a Basic box holds two forms, a disclosure labelled with an error-like sentence. "Get a code" + numbered steps.
-- **E1/E2** "Needs attention" repeats the TMDB sentence per page, counts optional Plex/AI as attention, "Settings" in the banner isn't a link.
+- **E2** "Settings" in a page banner's fix text ("Configure it in Settings → Plex") is not a link.
 - **F1/F2** Extensions tab has no install path; "Packages / Extensions / Docker" — rename to System software / Extensions / Apps.
 - **H1** "Device/Gerät" = the box's admin page, "this device" = the browser. Ambiguous with two boxes.
 - **E3** Timers: no hint how to create one; destructive "Clean up" next to an empty state.
@@ -35,7 +39,4 @@ Not seen live (the mock can't): pairing, "Play on <box>", a box going offline (g
 - Tap targets under 44 px in many places (tabs 39, inputs 35, dialog Close 28, remote buttons 28); check contrast of `--dh-faint` on `--dh-tile`.
 
 ## Bug-run notes (not UX)
-- AppsHub "Open" link uses `location.hostname` — wrong when DreamHub is reached through an HTTPS reverse proxy.
-- After enigma2 restarts a box can show offline for up to ~2 min (poller back-off).
-- An admin whose box list is restricted still receives job events of other boxes.
-- A box URL with `user:pw@` silently drops the credentials.
+All four found in the bug run are fixed — see "Fixed after the review".

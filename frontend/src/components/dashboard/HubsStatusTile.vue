@@ -14,11 +14,17 @@
       <span class="min-w-0 flex-1">
         <span class="block truncate text-[14px] text-text">{{ hubLabel(hub) }}</span>
         <span class="block text-[12.5px] text-muted">
-          {{ hub.problems.map(describe).join(' · ') }}
+          {{ realProblems(hub.problems).map(describe).join(' · ') || t('status.noDetail') }}
         </span>
       </span>
     </li>
   </ul>
+  <!-- The film database is the one optional extra worth a hint: said once
+       here, not on every page that could use it. -->
+  <p v-if="!loading && !failed && tmdbOff" class="mt-2 text-[12.5px] text-faint">
+    {{ t('dashboard.hubsTile.tmdbOff') }}
+    <RouterLink to="/settings/services#tmdb" class="text-accent hover:underline">{{ t('dashboard.hubsTile.tmdbOffLink') }}</RouterLink>
+  </p>
 </template>
 
 <script setup lang="ts">
@@ -28,6 +34,8 @@ import { computed, onMounted, ref } from 'vue'
 import { useI18n } from 'vue-i18n'
 import { api } from '@/api/client'
 import { useProblem } from '@/composables/useProblem'
+import { needsAttention, realProblems } from '@/lib/attention'
+import { RouterLink } from 'vue-router'
 import type { HubStatus } from '@/api/types'
 
 const { t } = useI18n()
@@ -37,7 +45,8 @@ const hubs = ref<HubStatus[]>([])
 const loading = ref(true)
 const failed = ref(false)
 
-const attention = computed(() => hubs.value.filter((h) => h.enabled && h.status !== 'available'))
+const attention = computed(() => hubs.value.filter((h) => h.enabled && needsAttention(h.status, h.problems)))
+const tmdbOff = computed(() => hubs.value.some((h) => h.enabled && h.problems.some((p) => p.code === 'connector.notConfigured' && p.params?.connector === 'TMDB')))
 
 onMounted(async () => {
   try {

@@ -177,6 +177,10 @@ func handleEventsStream(d Deps) http.HandlerFunc {
 				if !seeAll && j.OwnerID != me.ID {
 					continue
 				}
+				// A profile restricted to some boxes hears nothing of the others.
+				if j.BoxID != "" && !me.MayUseBox(j.BoxID) {
+					continue
+				}
 				data, err := json.Marshal(toJobView(j))
 				if err != nil {
 					continue

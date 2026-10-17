@@ -344,7 +344,7 @@
       <span class="h-1.5 w-1.5 rounded-full bg-ok" />{{ toast }}
     </p>
     <CustomContainerDialog v-if="customOpen" :initial="customOpen" @close="customOpen = null" @done="load" />
-    <DockerSettingsDialog v-if="settingsOpen" @close="settingsOpen = false" @changed="load" />
+    <DockerSettingsDialog v-if="settingsOpen" @close="((settingsOpen = false), loadOpenHost())" @changed="load" />
   </div>
 </template>
 
@@ -415,8 +415,21 @@ function serviceLabel(name: string): string {
   return te(key) ? t(key) : name
 }
 
+// An app listens on its own port, plain http. The host is the one set in
+// Docker settings, else the address DreamHub was opened with (which behind a
+// reverse proxy is the proxy's, so the setting exists).
+const openHost = ref('')
 function openUrl(port: number): string {
-  return `${location.protocol}//${location.hostname}:${port}/`
+  return `http://${openHost.value || location.hostname}:${port}/`
+}
+async function loadOpenHost() {
+  try {
+    const view = await api.settings.get()
+    const f = view.sections.find((s) => s.id === 'apps')?.fields.find((x) => x.key === 'apps.openHost')
+    openHost.value = String(f?.value ?? '')
+  } catch {
+    // not allowed to read settings: the browser's own address it is
+  }
 }
 
 // --- install: the form (AppInstallForm), then preview and confirm ----------
@@ -671,6 +684,7 @@ async function openLinkedLogs() {
 }
 
 onMounted(async () => {
+  void loadOpenHost()
   await load()
   await openLinkedLogs()
 })

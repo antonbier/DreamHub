@@ -108,3 +108,30 @@ func TestCapabilities_MeasuredPerBox(t *testing.T) {
 		t.Errorf("an unknown box has no capabilities: %v", got)
 	}
 }
+
+func TestApply_LoginInTheAddressBecomesTheBoxsLogin(t *testing.T) {
+	str := func(s string) *string { return &s }
+	var b store.Box
+	if err := apply(&b, Input{URL: str("http://root:s3cret@192.168.1.30:8080")}, false); err != nil {
+		t.Fatal(err)
+	}
+	if b.URL != "http://192.168.1.30:8080" || b.Username != "root" || b.Password != "s3cret" {
+		t.Errorf("the login moves out of the address: %+v", b)
+	}
+	// What the login fields say wins over the address.
+	b = store.Box{}
+	if err := apply(&b, Input{URL: str("root:old@192.168.1.30"), Username: str("admin"), Password: str("new")}, false); err != nil {
+		t.Fatal(err)
+	}
+	if b.Username != "admin" || b.Password != "new" {
+		t.Errorf("explicit fields win: %+v", b)
+	}
+	// An address without a login leaves the login alone.
+	b = store.Box{Username: "root", Password: "pw"}
+	if err := apply(&b, Input{URL: str("192.168.1.31")}, false); err != nil {
+		t.Fatal(err)
+	}
+	if b.Username != "root" || b.Password != "pw" {
+		t.Errorf("no login in the address: %+v", b)
+	}
+}

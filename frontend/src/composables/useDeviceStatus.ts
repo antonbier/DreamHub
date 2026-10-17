@@ -3,6 +3,7 @@
 // check runs once (module-level state) and both components read it.
 import { computed, ref } from 'vue'
 import { api } from '@/api/client'
+import { needsAttention } from '@/lib/attention'
 import { useNavigationStore } from '@/stores/navigation'
 import { usePreferencesStore } from '@/stores/preferences'
 
@@ -42,7 +43,7 @@ export function useDeviceStatus() {
   const reachable = computed(() => preferences.reachable && navigation.reachable)
 
   const issueCount = computed(
-    () => navigation.navigation?.sections.flatMap((s) => s.items).filter((i) => i.status && i.status !== 'available').length ?? 0,
+    () => navigation.navigation?.sections.flatMap((s) => s.items).filter((i) => needsAttention(i.status, i.problems)).length ?? 0,
   )
 
   const clockOk = computed(() => clockSkew.value === null || clockSkew.value < CLOCK_SKEW_WARN_MINUTES)

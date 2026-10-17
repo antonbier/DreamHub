@@ -22,6 +22,16 @@
         <span class="text-[12px] text-faint">{{ t('apps.prefs.storageHint') }}</span>
       </div>
 
+      <!-- Address of the Open links -->
+      <div class="flex flex-col gap-1 text-[13px]">
+        <div class="flex items-center gap-2">
+          <label for="docker-open-host" class="text-muted">{{ t('apps.prefs.openHost') }}</label>
+          <button v-if="!isDefault('apps.openHost')" type="button" class="ms-auto text-[12px] text-accent hover:underline" @click="reset('apps.openHost')">{{ t('apps.prefs.reset') }}</button>
+        </div>
+        <input id="docker-open-host" type="text" :value="str('apps.openHost')" :placeholder="t('apps.prefs.openHostPlaceholder')" class="rounded-sm border border-line bg-field px-2 py-1.5 text-text" autocapitalize="off" spellcheck="false" @change="save('apps.openHost', ($event.target as HTMLInputElement).value.trim())" />
+        <span class="text-[12px] text-faint">{{ t('apps.prefs.openHostHint') }}</span>
+      </div>
+
       <!-- Auto-start for new apps -->
       <div class="flex flex-col gap-1 text-[13px]">
         <div class="flex items-center gap-2">
@@ -105,6 +115,7 @@ const hours = computed(() => Number(fields.value['apps.updateCheckHours']?.value
 
 const isDefault = (key: string) => fields.value[key]?.isDefault !== false
 const bool = (key: string) => fields.value[key]?.value === true
+const str = (key: string) => String(fields.value[key]?.value ?? '')
 // The place new apps go: the one the storage list marks.
 const storage = computed(() => (choices.value.find((c) => c.default) ?? choices.value[0])?.path ?? '')
 

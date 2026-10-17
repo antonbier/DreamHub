@@ -58,12 +58,12 @@
     </form>
     <p v-if="error" class="mt-2 text-[12.5px] text-warn">{{ error }}</p>
 
-    <div class="mt-5 border-t border-line-soft pt-4">
-      <h3 class="mb-1 text-[13.5px] font-semibold">{{ t('settings.tokens.devTitle') }}</h3>
-      <p class="mb-2 text-[13px] text-muted">{{ t('settings.tokens.devBody') }}</p>
+    <details class="mt-5 border-t border-line-soft pt-4">
+      <summary class="cursor-pointer text-[13.5px] font-semibold">{{ t('settings.tokens.devTitle') }}</summary>
+      <p class="mb-2 mt-2 text-[13px] text-muted">{{ multi ? t('settings.tokens.devBody') : t('settings.tokens.devBodyOne') }}</p>
       <pre class="mb-2 overflow-x-auto rounded-sm bg-field px-2.5 py-2 font-mono text-[12.5px] text-text" dir="ltr">{{ curlExample }}</pre>
       <a href="/api/v1/openapi.json" target="_blank" rel="noopener" class="text-[13px] text-accent hover:underline">{{ t('settings.tokens.devSpec') }}</a>
-    </div>
+    </details>
   </section>
 </template>
 
@@ -72,6 +72,7 @@ import { useFriendlyError } from '@/composables/useFriendlyError'
 import { computed, onMounted, ref } from 'vue'
 import { useI18n } from 'vue-i18n'
 import { api } from '@/api/client'
+import { useBoxesStore } from '@/stores/boxes'
 import { useDisplayTimeZone } from '@/composables/useDisplayTimeZone'
 import type { ApiToken, CreatedApiToken } from '@/api/types'
 
@@ -86,8 +87,9 @@ const error = ref('')
 const created = ref<CreatedApiToken | null>(null)
 const copied = ref(false)
 const confirmingId = ref<number | null>(null)
+const multi = computed(() => useBoxesStore().boxes.length > 1)
 const curlExample = computed(
-  () => `curl -H "Authorization: Bearer <token>" \\\n  "${window.location.origin}/api/v1/timers?box=<box-id>"`,
+  () => `curl -H "Authorization: Bearer <token>" \\\n  "${window.location.origin}/api/v1/timers${multi.value ? '?box=<box-id>' : ''}"`,
 )
 
 function formatDate(iso: string): string {

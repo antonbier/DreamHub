@@ -72,3 +72,30 @@ func TestJobs_OwnersSeeAndCancelTheirOwn(t *testing.T) {
 	// An admin may cancel anyone's.
 	e.json(t, "POST", "/api/v1/jobs/"+itoa(theirs.ID)+"/cancel", "", withProfile(admin), 200, nil)
 }
+
+// A profile limited to some boxes hears nothing of the jobs on the others,
+// whatever its role.
+func TestJobs_NotThoseOfABoxTheProfileMayNotUse(t *testing.T) {
+	e := newEnv(t)
+	admin, viewer, viewerID := e.household(t)
+	e.addBox(t, "bedroom")
+	ctx := context.Background()
+	here, err := e.store.InsertJob(ctx, store.Job{Kind: "media.adscan", OwnerID: viewerID, BoxID: "main", State: store.JobQueued})
+	if err != nil {
+		t.Fatal(err)
+	}
+	away, err := e.store.InsertJob(ctx, store.Job{Kind: "media.adscan", OwnerID: viewerID, BoxID: "bedroom", State: store.JobQueued})
+	if err != nil {
+		t.Fatal(err)
+	}
+	e.json(t, "PATCH", "/api/v1/profiles/"+itoa(viewerID), `{"boxes":["main"]}`, withProfile(admin), 200, nil)
+	var list jobsList
+	e.json(t, "GET", "/api/v1/jobs", "", withProfile(viewer), 200, &list)
+	if len(list.Jobs) != 1 || list.Jobs[0].ID != here.ID {
+		t.Fatalf("only the job on the allowed box is listed, got %+v", list.Jobs)
+	}
+	resp, _ := e.do(t, "GET", "/api/v1/jobs/"+itoa(away.ID), "", withProfile(viewer))
+	if resp.StatusCode != http.StatusNotFound {
+		t.Fatalf("a job on a forbidden box looks like no job: %d", resp.StatusCode)
+	}
+}

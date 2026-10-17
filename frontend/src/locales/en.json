@@ -257,6 +257,8 @@
       "unavailable": "Timers aren't available."
     },
     "hubsTile": {
+      "tmdbOff": "Film details and ratings are off.",
+      "tmdbOffLink": "Add a TMDB key",
       "allOk": "Everything is working."
     },
     "mediaDiskTile": {
@@ -901,6 +903,7 @@
       "create": "Create",
       "devTitle": "For developers",
       "devBody": "Call the API with the token as a bearer token. Add box=<id> to say which box a request is about (the box IDs are listed by GET /api/v1/boxes); without it the first box is used. Changes are two steps: a …/plan call returns a preview, POST /api/v1/plans/{'{'}id{'}'}/apply applies it.",
+      "devBodyOne": "Call the API with the token as a bearer token. Changes are two steps: a …/plan call returns a preview, POST /api/v1/plans/{'{'}id{'}'}/apply applies it.",
       "devSpec": "OpenAPI description (openapi.json)"
     },
     "network": {
@@ -1446,6 +1449,9 @@
       "title": "For new apps",
       "storage": "Store app data on",
       "storageHint": "Applies to apps you install from now on. Apps that are already installed stay where they are.",
+      "openHost": "Address for the Open links",
+      "openHostHint": "Leave empty to use the address you opened DreamHub with. Enter the box's own address (e.g. 192.168.1.20) if you reach DreamHub through a reverse proxy: apps are opened on their own port, plain http.",
+      "openHostPlaceholder": "e.g. 192.168.1.20",
       "reset": "Reset",
       "autostart": "Start new apps when the box starts",
       "autostartHint": "Each app has its own switch in My containers.",
@@ -2388,6 +2394,14 @@
       "standby": "standby",
       "recording": "recording",
       "notAnswering": "{name} isn't answering"
+    },
+    "needsDreamHub": "{box} is controlled through its web interface. This page needs DreamHub on the box itself.",
+    "needsDreamHubPart": "The change log and the administration of {box} need DreamHub on the box itself.",
+    "needsDreamHubLink": "Boxes settings",
+    "addAnother": {
+      "title": "Another box",
+      "body": "DreamHub can control more than one box, for example one in the bedroom. They share the same recordings overview, timers and settings pages; you pick the box at the top.",
+      "link": "Add another box"
     },
     "manage": {
       "title": "Boxes",

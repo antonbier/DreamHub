@@ -90,13 +90,15 @@
         <!-- Backup & restore, and About, moved to Settings → System: both
              are app-level, administrative information, not live device
              status. -->
-        <p class="mt-4 text-[13px] text-muted">
+        <p v-if="navigation.isFull" class="mt-4 text-[13px] text-muted">
           {{ t('system.backup.movedHint') }}
           <RouterLink to="/settings/system" class="text-accent hover:underline">{{ t('system.backup.openSettings') }}</RouterLink>
         </p>
 
-        <!-- Change log -->
-        <section class="mt-4">
+        <!-- Change log: DreamHub's own, so it belongs to a box that runs
+             DreamHub — on a Basic box it would read as that box's. -->
+        <BoxNeedsDreamHub v-if="!navigation.isFull" part class="mt-4" />
+        <section v-else class="mt-4">
           <div class="flex flex-wrap items-center justify-between gap-3">
             <h2 class="text-[15px] font-semibold text-text">{{ t('system.changes.title') }}</h2>
             <div class="flex flex-wrap items-center gap-2">
@@ -311,6 +313,7 @@ import { computed, onMounted, onUnmounted, ref, watch } from 'vue'
 import { useI18n } from 'vue-i18n'
 import { RouterLink, useRoute, useRouter } from 'vue-router'
 import { api, ApiError } from '@/api/client'
+import BoxNeedsDreamHub from '@/components/BoxNeedsDreamHub.vue'
 import Icon from '@/components/Icon.vue'
 import ServicesPanel from '@/components/admin/ServicesPanel.vue'
 import ScriptsPanel from '@/components/admin/ScriptsPanel.vue'

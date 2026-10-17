@@ -46,9 +46,14 @@ func toJobView(j store.Job) jobView {
 	return v
 }
 
-// mayTouchJob: a profile sees and cancels its own jobs; perm.System all.
+// mayTouchJob: a profile sees and cancels its own jobs; perm.System all —
+// but never those of a box the profile may not use.
 func mayTouchJob(r *http.Request, j store.Job) bool {
-	return j.OwnerID == current(r).ID || perms(r).Has(perm.System)
+	me := current(r)
+	if j.BoxID != "" && !me.MayUseBox(j.BoxID) {
+		return false
+	}
+	return j.OwnerID == me.ID || perms(r).Has(perm.System)
 }
 
 // jobFromPath loads {id}, answering 404 for unknown jobs and for other
@@ -84,6 +89,9 @@ func handleJobs(d Deps) http.HandlerFunc {
 		}
 		out := make([]jobView, 0, len(list))
 		for _, j := range list {
+			if !mayTouchJob(r, j) {
+				continue
+			}
 			out = append(out, toJobView(j))
 		}
 		blocked := ""

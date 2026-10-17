@@ -257,6 +257,8 @@
       "unavailable": "Timer sind nicht verfügbar."
     },
     "hubsTile": {
+      "tmdbOff": "Filmdetails und Bewertungen sind aus.",
+      "tmdbOffLink": "TMDB-Schlüssel eintragen",
       "allOk": "Alles läuft."
     },
     "mediaDiskTile": {
@@ -901,6 +903,7 @@
       "create": "Erstellen",
       "devTitle": "Für Entwickler",
       "devBody": "Der Token wird als Bearer-Token mitgeschickt. Mit box=<id> legst du fest, welche Box ein Aufruf betrifft (die IDs liefert GET /api/v1/boxes); ohne Angabe gilt die erste Box. Änderungen laufen in zwei Schritten: Ein …/plan-Aufruf liefert eine Vorschau, POST /api/v1/plans/{'{'}id{'}'}/apply führt sie aus.",
+      "devBodyOne": "Rufe die API mit dem Token als Bearer-Token auf. Änderungen laufen in zwei Schritten: ein …/plan-Aufruf liefert eine Vorschau, POST /api/v1/plans/{'{'}id{'}'}/apply wendet sie an.",
       "devSpec": "OpenAPI-Beschreibung (openapi.json)"
     },
     "network": {
@@ -1446,6 +1449,9 @@
       "title": "Für neue Apps",
       "storage": "App-Daten speichern auf",
       "storageHint": "Gilt für Apps, die du ab jetzt installierst. Bereits installierte Apps bleiben, wo sie sind.",
+      "openHost": "Adresse für die Öffnen-Links",
+      "openHostHint": "Leer lassen, dann gilt die Adresse, mit der du DreamHub geöffnet hast. Trag die eigene Adresse der Box ein (z. B. 192.168.1.20), wenn du DreamHub über einen Reverse-Proxy erreichst: Apps öffnen sich auf ihrem eigenen Port, per http.",
+      "openHostPlaceholder": "z. B. 192.168.1.20",
       "reset": "Zurücksetzen",
       "autostart": "Neue Apps beim Start der Box starten",
       "autostartHint": "Jede App hat in „Meine Container“ ihren eigenen Schalter.",
@@ -2388,6 +2394,14 @@
       "standby": "Standby",
       "recording": "nimmt auf",
       "notAnswering": "{name} antwortet nicht"
+    },
+    "needsDreamHub": "{box} wird über seine Weboberfläche gesteuert. Diese Seite braucht DreamHub auf der Box selbst.",
+    "needsDreamHubPart": "Änderungsprotokoll und Verwaltung von {box} brauchen DreamHub auf der Box selbst.",
+    "needsDreamHubLink": "Boxen-Einstellungen",
+    "addAnother": {
+      "title": "Weitere Box",
+      "body": "DreamHub kann mehrere Boxen steuern, zum Beispiel eine im Schlafzimmer. Du wählst die Box oben aus, die Seiten bleiben dieselben.",
+      "link": "Weitere Box hinzufügen"
     },
     "manage": {
       "title": "Boxen",

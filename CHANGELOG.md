@@ -6,7 +6,16 @@ Format follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/); version
 
 ## [Unreleased]
 
+### Changed
+- UX review before testers: with one box there is no Settings → Boxes tab any more — General ends with an "Another box" card that leads to it, and the tab stays once a second box exists. The developer block under Access (token API, `box=<id>`) is collapsed and, with one box, leaves out `box=`.
+- A Basic box's deep link (`/b/<id>/apps`) says "needs DreamHub on the box itself" with a link to Settings → Boxes instead of "That didn't work"; its Device page no longer shows DreamHub's own change log as if it were the box's.
+- "Needs attention" only counts real trouble: an integration that was never set up (TMDB, Plex, AI) and pages a Basic box doesn't have are not counted and not repeated per page. The film-database hint appears once, on the dashboard, with a link to the setting; a page that cannot work without a connector that isn't set up still says why.
+- Settings → Docker: **Address for the Open links** — an app's Open link goes to `http://<address>:<port>`; the address is the one DreamHub was opened with unless set (behind an HTTPS reverse proxy the proxy's address is wrong, the apps' ports are on the box).
+
 ### Fixed
+- A profile restricted to some boxes no longer receives, lists or opens the background jobs of the other boxes (not even as an admin).
+- A box that restarted enigma2 could show as offline for up to two minutes: the poller's back-off now stops at one minute (was five).
+- A box address with a login (`http://user:pw@host`) keeps it: the login moves to the login fields instead of being dropped; fields filled in at the same time win.
 - Settings → Boxes: a second box at an address another box already has is refused (it would be polled twice and split its data), and so is a port beyond 65535; addresses are compared without the default port and in lower case.
 - The guide's single-channel day view asked for exactly 24 hours, so on the day the clocks change one hour of programmes was missing; it now runs until the next morning's start.
 - `POST /api/v1/boxes` answered `capabilities: null` where the list answers `[]`.

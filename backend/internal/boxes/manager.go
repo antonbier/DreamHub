@@ -160,6 +160,22 @@ func normalizeURL(raw string) string {
 	return u.Scheme + "://" + host
 }
 
+// urlLogin returns the login written into an address ("http://user:pw@host");
+// has is false when there is none. normalizeURL drops it from the address, so
+// the caller must keep it or it would vanish without a word.
+func urlLogin(raw string) (user, pass string, has bool) {
+	raw = strings.TrimSpace(raw)
+	if !strings.Contains(raw, "://") {
+		raw = "http://" + raw
+	}
+	u, err := url.Parse(raw)
+	if err != nil || u.User == nil {
+		return "", "", false
+	}
+	pass, _ = u.User.Password()
+	return u.User.Username(), pass, true
+}
+
 // addressTaken reports whether another box already has this address: two
 // entries for one box would poll it twice and split its data.
 func (m *Manager) addressTaken(b store.Box) bool {
@@ -206,6 +222,16 @@ func apply(b *store.Box, in Input, main bool) error {
 		if in.URL != nil {
 			if u := normalizeURL(*in.URL); u != "" {
 				b.URL = u
+				// A login typed into the address is the box's login, unless
+				// the login fields say otherwise in the same request.
+				if user, pass, ok := urlLogin(*in.URL); ok {
+					if in.Username == nil {
+						b.Username = user
+					}
+					if in.Password == nil {
+						b.Password = pass
+					}
+				}
 			} else {
 				errs["url"] = "invalid"
 			}

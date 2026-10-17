@@ -66,6 +66,7 @@
 <script setup lang="ts">
 import { onMounted, ref } from 'vue'
 import { useI18n } from 'vue-i18n'
+import { useRoute } from 'vue-router'
 import BoxForm from './BoxForm.vue'
 import BoxPairing from './BoxPairing.vue'
 import PairThisBox from './PairThisBox.vue'
@@ -90,7 +91,12 @@ async function load() {
   // The selector and the rest of the app follow the change.
   await store.refresh()
 }
-onMounted(() => void load().catch(() => {}))
+const route = useRoute()
+onMounted(() => {
+  void load().catch(() => {})
+  // "Add another box" in General lands here with the form open.
+  if (route.query.add === '1') adding.value = true
+})
 
 function edit(id: string) {
   adding.value = false

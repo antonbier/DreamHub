@@ -123,8 +123,10 @@ func (p *Poller) Boost() {
 }
 
 // maxBackoff is the longest pause between two looks at a box that does not
-// answer.
-const maxBackoff = 5 * time.Minute
+// answer. Kept short on purpose: enigma2 restarts in under a minute and the
+// box should not read as offline for long afterwards; one small request
+// a minute to a box that is really off costs nothing.
+const maxBackoff = time.Minute
 
 // wait is the pause until the next tick: the interval, doubled for each
 // failed tick in a row up to maxBackoff.

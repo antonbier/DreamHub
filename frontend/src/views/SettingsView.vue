@@ -74,6 +74,15 @@
           <ProfilesPanel v-if="can('profiles')" />
         </template>
 
+        <!-- One box: the Boxes tab stays out of the way; this card is the way in. -->
+        <section v-if="activeTab === 'general' && oneBox" class="rounded-sm border border-line bg-tile p-5">
+          <h2 class="text-[15.5px] font-semibold">{{ t('boxes.addAnother.title') }}</h2>
+          <p class="mt-1 text-[13px] text-muted">{{ t('boxes.addAnother.body') }}</p>
+          <RouterLink to="/settings/boxes?add=1" class="mt-3 inline-block text-[13.5px] text-accent hover:underline">
+            {{ t('boxes.addAnother.link') }}
+          </RouterLink>
+        </section>
+
         <BoxesPanel v-if="activeTab === 'boxes' && can('settings.global')" />
 
         <template v-if="activeTab === 'system' && can('system')">
@@ -127,6 +136,7 @@ import MyPinPanel from '@/components/profiles/MyPinPanel.vue'
 import ProfilesPanel from '@/components/profiles/ProfilesPanel.vue'
 import BoxesPanel from '@/components/settings/BoxesPanel.vue'
 import { useAuth } from '@/composables/useAuth'
+import { useBoxesStore } from '@/stores/boxes'
 import { api } from '@/api/client'
 import { useScrollMore } from '@/composables/useScrollMore'
 import { useSettingsForm } from '@/composables/useSettingsForm'
@@ -139,10 +149,13 @@ const route = useRoute()
 const router = useRouter()
 
 const { can } = useAuth()
+const boxStore = useBoxesStore()
+// A household with one box sees no Boxes tab (nothing new for them).
+const oneBox = computed(() => can('settings.global') && boxStore.loaded && boxStore.boxes.length <= 1)
 // A viewer sees only the tabs with something of theirs: personal settings
 // and their PIN (the server sends them only their own fields).
 const tabs = computed(() =>
-  SETTINGS_TABS.filter((id) => id === 'profiles' || (id === 'boxes' ? can('settings.global') : id === 'system' ? can('system') : form.sections.value.some((s) => tabOf(s) === id))).map(
+  SETTINGS_TABS.filter((id) => id === 'profiles' || (id === 'boxes' ? can('settings.global') && (!oneBox.value || route.params.tab === 'boxes') : id === 'system' ? can('system') : form.sections.value.some((s) => tabOf(s) === id))).map(
     (id) => ({ id }),
   ),
 )

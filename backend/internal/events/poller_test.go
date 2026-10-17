@@ -283,11 +283,13 @@ func TestPoller_BacksOffWhileTheBoxDoesNotAnswer(t *testing.T) {
 	if p.wait() != 30*time.Second {
 		t.Fatalf("a box that answered is asked on time, got %v", p.wait())
 	}
-	for i := 0; i < 3; i++ {
-		p.tick(context.Background())
+	p.tick(context.Background())
+	if p.wait() != 60*time.Second {
+		t.Errorf("one failure doubles the pause, got %v", p.wait())
 	}
-	if p.wait() != 8*30*time.Second {
-		t.Errorf("three failures double the pause three times, got %v", p.wait())
+	p.tick(context.Background())
+	if p.wait() != maxBackoff {
+		t.Errorf("a restarting enigma2 is looked at again within %v, got %v", maxBackoff, p.wait())
 	}
 	for i := 0; i < 10; i++ {
 		p.tick(context.Background())
@@ -378,7 +380,7 @@ func TestPoller_BoostIgnoresTheBackOffForAWhile(t *testing.T) {
 	for i := 0; i < 5; i++ {
 		p.tick(context.Background())
 	}
-	if p.wait() != 5*time.Minute {
+	if p.wait() != maxBackoff {
 		t.Fatalf("backed off, got %v", p.wait())
 	}
 	p.Boost()
@@ -391,7 +393,7 @@ func TestPoller_BoostIgnoresTheBackOffForAWhile(t *testing.T) {
 		t.Error("a boost looks at the box now")
 	}
 	now = now.Add(BoostFor + time.Second)
-	if p.wait() != 5*time.Minute {
+	if p.wait() != maxBackoff {
 		t.Errorf("the boost ends, got %v", p.wait())
 	}
 }

@@ -15,6 +15,7 @@
     </div>
 
     <p v-if="!admin" class="mt-4 text-[14px] text-muted">{{ t('apps.adminOnly') }}</p>
+    <BoxNeedsDreamHub v-else-if="navigation.navigation && !navigation.isFull" class="mt-4" />
     <template v-else>
     <!-- One update notion for packages and containers (App14). -->
     <UpdatesSummary @changed="reloadKey++" />
@@ -52,11 +53,13 @@ import { useScrollMore } from '@/composables/useScrollMore'
 import { ref, watch } from 'vue'
 import { useI18n } from 'vue-i18n'
 import { useRoute, useRouter } from 'vue-router'
+import BoxNeedsDreamHub from '@/components/BoxNeedsDreamHub.vue'
 import Icon from '@/components/Icon.vue'
 import DockerTab from '@/components/apps/DockerTab.vue'
 import ExtensionsTab from '@/components/apps/ExtensionsTab.vue'
 import PackagesTab from '@/components/apps/PackagesTab.vue'
 import UpdatesSummary from '@/components/apps/UpdatesSummary.vue'
+import { useNavigationStore } from '@/stores/navigation'
 import { useHubLabel } from '@/composables/useHubLabel'
 import { useAuth } from '@/composables/useAuth'
 
@@ -67,6 +70,7 @@ const reloadKey = ref(0)
 const { more: tabsMore, measure: measureTabs } = useScrollMore(tabBar)
 const { hubTitle } = useHubLabel()
 const admin = useAuth().can('system')
+const navigation = useNavigationStore()
 const route = useRoute()
 const router = useRouter()
 

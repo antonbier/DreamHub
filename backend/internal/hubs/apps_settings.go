@@ -49,6 +49,10 @@ const (
 	// KeyAppsBootID: the boot the autostart pass last ran for, so a restart of
 	// DreamHub alone doesn't start what somebody stopped.
 	KeyAppsBootID = "apps.autostartBoot"
+	// KeyAppsOpenHost: the host name or address the "Open" link of an app
+	// uses. Empty: the address DreamHub itself was opened with, which is wrong
+	// behind a reverse proxy (the apps' ports are not on the proxy).
+	KeyAppsOpenHost = "apps.openHost"
 )
 
 // Defaults, also used when no settings service is wired (tests).
@@ -84,12 +88,16 @@ func AppsSettingsSection() settings.Section {
 			{Key: KeyAppsNightEnd, Type: settings.TypeString, Scope: settings.ScopeGlobal, Label: "settings.apps.updateNightEnd", Default: defaultNightEnd, Hidden: true},
 			{Key: KeyAppsGuardMinutes, Type: settings.TypeInt, Scope: settings.ScopeGlobal, Label: "settings.apps.updateGuardMinutes", Default: int64(defaultGuardMinutes), Min: &zero, Max: &maxGuard, Hidden: true},
 			{Key: KeyAppsAutostart, Type: settings.TypeString, Scope: settings.ScopeGlobal, Label: "settings.apps.autostartIds", Default: "", Hidden: true},
+			{Key: KeyAppsOpenHost, Type: settings.TypeString, Scope: settings.ScopeGlobal, Label: "settings.apps.openHost", Default: "", Hidden: true},
 			{Key: KeyAppsBootID, Type: settings.TypeString, Scope: settings.ScopeGlobal, Label: "settings.apps.autostartBoot", Default: "", Hidden: true},
 		},
 		Check: func(v settings.Values) map[string]settings.FieldError {
 			errs := map[string]settings.FieldError{}
 			if r := v.String(KeyAppsStorageRoot); r != "" && (!path.IsAbs(r) || path.Clean(r) != r || strings.ContainsAny(r, ":\n\r\x00")) {
 				errs[KeyAppsStorageRoot] = settings.FieldError{Code: settings.ErrInvalidOption}
+			}
+			if h := v.String(KeyAppsOpenHost); h != "" && !validOpenHost(h) {
+				errs[KeyAppsOpenHost] = settings.FieldError{Code: settings.ErrInvalidOption}
 			}
 			if mb := v.Int(KeyAppsMemoryMB); mb != 0 && mb < minCustomMemoryLimit {
 				errs[KeyAppsMemoryMB] = settings.FieldError{Code: settings.ErrOutOfRange, Params: map[string]any{"min": minCustomMemoryLimit}}
@@ -102,6 +110,12 @@ func AppsSettingsSection() settings.Section {
 			return errs
 		},
 	}
+}
+
+// validOpenHost: a bare host name or IP address — no scheme, port or path
+// (the app's own port is added to it).
+func validOpenHost(h string) bool {
+	return len(h) <= 253 && !strings.ContainsAny(h, " /:@?#\\\n\r\x00")
 }
 
 // appsConfig is the Docker settings as the hub uses them.

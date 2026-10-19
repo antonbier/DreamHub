@@ -18,6 +18,7 @@ func TestHostAllowed(t *testing.T) {
 		"[fdb2:f390::1]:8080":     true,
 		"localhost:8080":          true,
 		"dreambox.local":          true,
+		"dm920:8765":              true, // single-label LAN name
 		"DreamBox.Local.":         true,
 		"dreamhub.home.arpa:8080": true,
 		"evil.example.com":        false,

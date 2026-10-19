@@ -11,7 +11,7 @@
 -->
 <template>
   <div v-if="!authState.checked" class="h-screen w-screen bg-bg" />
-  <UnreachableScreen v-else-if="authState.unreachable" :check="check" @retry="onRetried" />
+  <UnreachableScreen v-else-if="authState.unreachable" :check="check" :detail="authState.unreachableDetail" @retry="onRetried" />
   <LoginScreen v-else-if="!authState.authenticated" @success="onAuthenticated" />
   <ProfilePicker v-else-if="authState.profileRequired" @chosen="onProfileChosen" />
   <!-- The setup wizard has the whole screen to itself: no menu, no search,

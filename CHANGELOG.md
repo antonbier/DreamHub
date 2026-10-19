@@ -6,6 +6,14 @@ Format follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/); version
 
 ## [Unreleased]
 
+### Fixed
+- **"DreamHub is not reachable" when opening the box by a plain host name** (`http://dm920:8765`): the Host check refused every name without a dot except `*.local`. Names without a dot are accepted now (a foreign domain can never be one, so DNS-rebinding protection is unchanged).
+- **The TV plugin's QR code pointed to `127.0.0.1`**: it now encodes the box's LAN address with the same port.
+
+### Changed
+- The "not reachable" screen shows the technical reason (address, HTTP status and error code) in small type.
+- Log lines: refused requests (421, 403) log at WARN with host, remote address, user agent and origin; every request line carries `host` and `remote`; the start-up line lists the host name and the box's addresses; the duplicate `time` field is gone (journald stamps every line).
+
 ## [0.9.1] - 2026-10-19
 
 ### Breaking

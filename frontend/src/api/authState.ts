@@ -57,6 +57,9 @@ export const authState = reactive({
   // (or the box it runs on) didn't answer. App.vue shows "can't reach"
   // with a retry instead of a login form that couldn't work either.
   unreachable: false,
+  // Why: "HTTP 421 host_not_allowed" or the network error text, shown small
+  // on that screen so a tester's screenshot says what failed.
+  unreachableDetail: '',
   // The door is open but no profile is chosen on this device (a 401
   // profile_required / profile_session_invalid) — App.vue shows the picker.
   profileRequired: false,

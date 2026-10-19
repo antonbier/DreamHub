@@ -75,9 +75,21 @@ func RequestIDAndLogging(logger *slog.Logger, now func() time.Time, next http.Ha
 		if rec.status == http.StatusNotFound && strings.HasSuffix(r.URL.Path, "/picon") {
 			level = slog.LevelDebug
 		}
-		logger.Log(r.Context(), level, "request",
+		attrs := []any{
 			"requestId", id, "method", r.Method, "path", r.URL.Path,
-			"status", rec.status, "durationMs", now().Sub(start).Milliseconds())
+			"status", rec.status, "durationMs", now().Sub(start).Milliseconds(),
+			"host", r.Host, "remote", r.RemoteAddr,
+		}
+		// A refused request is where "it doesn't work" gets diagnosed: say who
+		// asked, from where and with what.
+		if rec.status == http.StatusMisdirectedRequest || rec.status == http.StatusForbidden {
+			level = slog.LevelWarn
+		}
+		if rec.status >= 400 {
+			attrs = append(attrs, "userAgent", r.UserAgent(), "origin", r.Header.Get("Origin"),
+				"forwardedFor", r.Header.Get("X-Forwarded-For"))
+		}
+		logger.Log(r.Context(), level, "request", attrs...)
 	})
 }
 
@@ -120,8 +132,10 @@ func CSRF(next http.Handler) http.Handler {
 // HostAllowed decides whether a Host header is acceptable. DNS rebinding
 // works by pointing a foreign domain name at a LAN address, so requests
 // addressed by name are only accepted for known names: localhost, mDNS
-// ".local" names, and an explicit allowlist. Requests addressed by IP (how
-// the box is normally reached, including over ZeroTier) are always fine.
+// ".local" names, single-label LAN names ("dm920": a foreign domain can't be
+// a single label, so it can't be a rebinding name) and an explicit allowlist.
+// Requests addressed by IP (how the box is normally reached, including over
+// ZeroTier) are always fine.
 func HostAllowed(host string, allowed []string) bool {
 	h := host
 	if hh, _, err := net.SplitHostPort(host); err == nil {
@@ -131,7 +145,7 @@ func HostAllowed(host string, allowed []string) bool {
 	if h == "" {
 		return false
 	}
-	if net.ParseIP(h) != nil || h == "localhost" || strings.HasSuffix(h, ".local") {
+	if net.ParseIP(h) != nil || h == "localhost" || !strings.Contains(h, ".") || strings.HasSuffix(h, ".local") {
 		return true
 	}
 	for _, a := range allowed {

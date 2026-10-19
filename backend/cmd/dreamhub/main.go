@@ -69,7 +69,16 @@ import (
 
 func main() {
 	level := logging.NewLevel(nil)
-	logger := slog.New(slog.NewJSONHandler(os.Stdout, &slog.HandlerOptions{Level: level.Leveler()}))
+	logger := slog.New(slog.NewJSONHandler(os.Stdout, &slog.HandlerOptions{
+		Level: level.Leveler(),
+		// journald already stamps every line; a second timestamp only makes it long.
+		ReplaceAttr: func(groups []string, a slog.Attr) slog.Attr {
+			if len(groups) == 0 && a.Key == slog.TimeKey {
+				return slog.Attr{}
+			}
+			return a
+		},
+	}))
 	if err := run(logger, level); err != nil {
 		logger.Error("dreamhub stopped", "error", err)
 		os.Exit(1)
@@ -349,7 +358,9 @@ func run(logger *slog.Logger, level *logging.Level) error {
 		go job(context.Background())
 	}
 
-	logger.Info("dreamhub starting", "version", api.Version, "addr", cfg.ListenAddr, "dataDir", cfg.DataDir)
+	hostname, _ := os.Hostname()
+	logger.Info("dreamhub starting", "version", api.Version, "addr", cfg.ListenAddr, "dataDir", cfg.DataDir,
+		"hostname", hostname, "lanAddrs", lanAddrs())
 	return http.Serve(ln, a.Handler)
 }
 
@@ -359,4 +370,17 @@ func listenPort(addr string) string {
 		return port
 	}
 	return "8765"
+}
+
+// lanAddrs lists the box's non-loopback IPv4/IPv6 addresses for the start-up
+// line, so "which address should I open?" is answered in the log.
+func lanAddrs() []string {
+	var out []string
+	addrs, _ := net.InterfaceAddrs()
+	for _, a := range addrs {
+		if n, ok := a.(*net.IPNet); ok && !n.IP.IsLoopback() && !n.IP.IsLinkLocalUnicast() {
+			out = append(out, n.IP.String())
+		}
+	}
+	return out
 }

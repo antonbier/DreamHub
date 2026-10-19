@@ -31,11 +31,15 @@ export function useAuth() {
       authState.authenticated = true
       authState.profileRequired = false
       authState.unreachable = false
+      authState.unreachableDetail = ''
     } catch (err) {
       // The door opened, but this device has no profile yet.
       authState.authenticated = isProfileError(err)
       authState.profileRequired = isProfileError(err)
       authState.unreachable = !(err instanceof ApiError && err.status === 401)
+      authState.unreachableDetail = authState.unreachable
+        ? `${window.location.host} · ${err instanceof ApiError ? `HTTP ${err.status} ${err.code}` : String(err)}`
+        : ''
     } finally {
       authState.checked = true
     }

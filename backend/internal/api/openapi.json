@@ -2,7 +2,7 @@
  "openapi": "3.0.3",
  "info": {
   "title": "DreamHub API",
-  "version": "0.9.1",
+  "version": "0.9.2",
   "description": "DreamHub's REST API (`/api/v1`). Every request names the box it is about with the optional `box` query parameter; without it the profile's first allowed box is used, so clients written before multi-box support keep working. Changes to a box are always two steps: `POST …/plan` returns a preview, `POST /plans/{id}/apply` applies it. Authenticate with `Authorization: Bearer <token>` (Settings → Authentication → API tokens); a token acts as the profile that created it. Mutating requests need the header `X-DreamHub-Request: 1`. Operations marked `x-box: global` do not depend on the box. The set of operations is kept in step with the router by a test; schemas are filled in for the most useful endpoints first."
  },
  "servers": [

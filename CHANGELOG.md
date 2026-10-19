@@ -6,10 +6,17 @@ Format follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/); version
 
 ## [Unreleased]
 
+## [0.9.2] - 2026-10-19
+
+### Security
+- **Wrong passwords and tokens are throttled**: after 10 failed attempts within 5 minutes an address gets no further credential checks for 5 minutes (a login that is already open keeps working).
+
 ### Fixed
 - **Package file modes**: the 0.9.0 and 0.9.1 `.deb` files were built on a machine with umask 0000 and carried 0777 directories and 0666 files, including `/usr/bin/dreamhub` (runs as root), the systemd unit and the TV plugin's Python files — writable by every local user. `build-deb.sh` now sets 0755/0644 itself and refuses a tree with group- or world-writable entries. To repair a box that has the old package: `chmod 755 /usr/bin/dreamhub /usr/bin/dreamhub-dockerd-helper; chmod 644 /lib/systemd/system/dreamhub*.service /etc/avahi/services/dreamhub.service; chmod -R go-w /usr/lib/enigma2/python/Plugins/Extensions/DreamHub` (or just install the next version).
 - **"DreamHub is not reachable" when opening the box by a plain host name** (`http://dm920:8765`): the Host check refused every name without a dot except `*.local`. Names without a dot are accepted now (a foreign domain can never be one, so DNS-rebinding protection is unchanged).
 - **The TV plugin's QR code pointed to `127.0.0.1`**: it now encodes the box's LAN address with the same port.
+- The toggle in the feed list now follows the reading direction (right-to-left languages).
+- The mDNS advertisement goes back to port 8765 when the port override in `/etc/default/dreamhub` is removed.
 
 ### Changed
 - The "not reachable" screen shows the technical reason (address, HTTP status and error code) in small type.

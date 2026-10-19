@@ -107,6 +107,19 @@ for script in postinst prerm postrm; do
     chmod 755 "$PKG/DEBIAN/$script"
 done
 
+# --- modes ---
+# The modes in the package must not depend on the build machine's umask: a
+# build on a share with umask 0000 once produced 0777 directories and 0666
+# files, including /usr/bin/dreamhub (runs as root) and the systemd unit.
+find "$PKG" -type d -exec chmod 755 {} +
+find "$PKG" -type f -exec chmod 644 {} +
+chmod 755 "$PKG/usr/bin/dreamhub" "$PKG/usr/bin/dreamhub-dockerd-helper" \
+    "$PKG/DEBIAN/postinst" "$PKG/DEBIAN/prerm" "$PKG/DEBIAN/postrm"
+if [ -n "$(find "$PKG" -perm /022 ! -type l)" ]; then
+    echo "build-deb.sh: group- or world-writable entries in the package tree" >&2
+    exit 1
+fi
+
 # --- build ---
 mkdir -p "$OUT"
 DEB="$OUT/dreamhub_${VERSION}_${ARCH}.deb"

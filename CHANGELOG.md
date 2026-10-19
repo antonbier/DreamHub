@@ -6,6 +6,8 @@ Format follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/); version
 
 ## [Unreleased]
 
+## [0.9.1] - 2026-10-19
+
 ### Breaking
 - **DreamHub's port is now 8765 (was 8080).** On a DM900/DM920 port 8080 is held by DreamOS's stream server (HLS output; systemd owns the socket), so DreamHub could not start there. Open `http://<box>:8765` (the `<box>.local` name follows by itself); update bookmarks, the home-screen app, an HTTPS reverse proxy's target and any API client. Change it with `DREAMHUB_LISTEN_ADDR=:<port>` in `/etc/default/dreamhub` or in the TV plugin's settings.
 

@@ -33,7 +33,7 @@ DreamHub itself must support multiple languages at runtime:
 
 - **Preview and confirm, always.** No change to recordings, timers, bouquets or the system without showing exactly what will change and getting explicit confirmation. Mutating API operations are two-step (`plan` → `apply`). Nothing automatic in v1. See `PRINCIPLES.md`.
 - **Respect the core / hubs / connectors boundaries** (`CONCEPT.md`). Hubs reach data only through connectors, talk to other hubs only through the core API or events, and never import another hub's code.
-- **Never modify the native WebControl** on port 80. It's Dreambox's own closed-source interface. DreamHub runs alongside it (port 8080).
+- **Never modify the native WebControl** on port 80. It's Dreambox's own closed-source interface. DreamHub runs alongside it (port 8765).
 - **No live dependency on servers that aren't always on** (e.g. the Unraid server hosting Plex). Such connectors are optional, cache their last known state, and degrade gracefully.
 - **No software transcoding of live TV.** The Amlogic S922X has a hardware H.264 encoder, but nothing in this image can use it (`ARCHITECTURE.md`, "Hardware encoder"), and the CPU is too weak for video. See `ROADMAP.md`, StreamHub.
 - **Don't re-implement what Enigma2/WebControl already exposes.** Its `/web/*` API is confirmed OpenWebif-compatible (see `ARCHITECTURE.md` for endpoints and schemas); BouquetEditor and SerienRecorder have their own web APIs. Call these instead of re-parsing internal files or binary caches.

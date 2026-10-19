@@ -2479,8 +2479,8 @@
       "code": "Codice da {box}",
       "pair": "Collega",
       "pairing": "Collegamento…",
-      "otherAddress": "DreamHub su quel box non si trova a questo indirizzo sulla porta 8080",
-      "otherAddressPlaceholder": "192.168.1.20:8080",
+      "otherAddress": "DreamHub su quel box non si trova a questo indirizzo sulla porta 8765",
+      "otherAddressPlaceholder": "192.168.1.20:8765",
       "state": {
         "ok": "Collegato · DreamHub {version}",
         "paired": "Collegato",

@@ -47,3 +47,9 @@ msgstr "Annuleren"
 
 msgid "Save"
 msgstr "Opslaan"
+
+msgid "Change the DreamHub port to %d?\n\nDreamHub restarts for a few seconds. Browsers and bookmarks need the new address (http://<box>:%d)."
+msgstr "De DreamHub-poort wijzigen naar %d?\n\nDreamHub herstart enkele seconden. Browsers en bladwijzers hebben het nieuwe adres nodig (http://<box>:%d)."
+
+msgid "The port could not be saved: %s"
+msgstr "De poort kon niet worden opgeslagen: %s"

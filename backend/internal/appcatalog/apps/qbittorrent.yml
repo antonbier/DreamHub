@@ -1,4 +1,4 @@
-# 8080 is DreamHub's; WEBUI_PORT is the image's own setting.
+# 8080 is the DreamOS stream server's on a DM900/DM920; WEBUI_PORT is the image's own setting.
 x-dreamhub:
   name: qBittorrent
   category: downloads

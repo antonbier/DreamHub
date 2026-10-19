@@ -47,3 +47,9 @@ msgstr "İptal"
 
 msgid "Save"
 msgstr "Kaydet"
+
+msgid "Change the DreamHub port to %d?\n\nDreamHub restarts for a few seconds. Browsers and bookmarks need the new address (http://<box>:%d)."
+msgstr "DreamHub bağlantı noktası %d olarak değiştirilsin mi?\n\nDreamHub birkaç saniyeliğine yeniden başlar. Tarayıcılar ve yer imleri yeni adresi kullanmalıdır (http://<box>:%d)."
+
+msgid "The port could not be saved: %s"
+msgstr "Bağlantı noktası kaydedilemedi: %s"

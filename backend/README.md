@@ -1,6 +1,6 @@
 # backend/
 
-Go server (ARM64, statically compiled). REST API on port 8080, plus the web frontend embedded via `go:embed` (see [`internal/webui`](internal/webui) below).
+Go server (ARM64, statically compiled). REST API on port 8765, plus the web frontend embedded via `go:embed` (see [`internal/webui`](internal/webui) below).
 
 ## Running locally
 
@@ -8,8 +8,8 @@ No device needed — defaults to the mock WebControl client (see [`internal/webc
 
 ```sh
 go run ./cmd/dreamhub
-curl http://127.0.0.1:8080/api/v1/health
-curl http://127.0.0.1:8080/api/v1/settings
+curl http://127.0.0.1:8765/api/v1/health
+curl http://127.0.0.1:8765/api/v1/settings
 ```
 
 Against a real device instead (data goes to `/data/dreamhub` by default):
@@ -18,10 +18,10 @@ Against a real device instead (data goes to `/data/dreamhub` by default):
 DREAMHUB_MODE=live DREAMHUB_WEBCONTROL_URL=http://192.168.1.x go run ./cmd/dreamhub
 ```
 
-Environment variables: `DREAMHUB_MODE` (`mock`/`live`), `DREAMHUB_LISTEN_ADDR` (default `:8080`), `DREAMHUB_WEBCONTROL_URL`, `DREAMHUB_DATA_DIR`, `DREAMHUB_ENABLE_DEVICE_WRITES` (see below). Auth is **not** configured via environment — it's a setting:
+Environment variables: `DREAMHUB_MODE` (`mock`/`live`), `DREAMHUB_LISTEN_ADDR` (default `:8765`; on a box the systemd unit also reads `/etc/default/dreamhub`), `DREAMHUB_WEBCONTROL_URL`, `DREAMHUB_DATA_DIR`, `DREAMHUB_ENABLE_DEVICE_WRITES` (see below). Auth is **not** configured via environment — it's a setting:
 
 ```sh
-curl -X PATCH http://127.0.0.1:8080/api/v1/settings -H 'X-DreamHub-Request: 1' \
+curl -X PATCH http://127.0.0.1:8765/api/v1/settings -H 'X-DreamHub-Request: 1' \
   -d '{"values":{"auth.enabled":true,"auth.username":"admin","auth.password":"at-least-8-chars"}}'
 ```
 
@@ -160,7 +160,7 @@ Errors always use `{"error": {"code": ..., "message": ..., "details": ...}}`. Co
 
 `npm run build` in [`../frontend`](../frontend) builds straight into `internal/webui/dist` (see `frontend/vite.config.ts`). A minimal placeholder `index.html` is tracked there so `go build`/`go run`/`go test` all work without Node installed; building the real frontend overwrites that file locally (don't commit the overwrite — see `.gitignore`). `go run ./cmd/dreamhub` then serves it at `/` with an SPA fallback (`internal/webui/spa.go`): any path that isn't a real static file and doesn't look like an asset request (no dot in the last path segment) gets `index.html` instead, so vue-router's client-side routes work on a direct load or a refresh; a genuinely missing asset still 404s.
 
-For frontend development against a running backend, run `go run ./cmd/dreamhub` (port 8080) and `npm run dev` in `frontend/` (port 5173) separately — the dev server proxies `/api` to 8080 (see `frontend/vite.config.ts`) and gives you hot reload.
+For frontend development against a running backend, run `go run ./cmd/dreamhub` (port 8765) and `npm run dev` in `frontend/` (port 5173) separately — the dev server proxies `/api` to 8765 (see `frontend/vite.config.ts`) and gives you hot reload.
 
 ## Testing
 

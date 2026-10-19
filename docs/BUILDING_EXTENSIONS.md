@@ -33,7 +33,7 @@ At a high level:
 ## 1. Register
 
 ```
-POST http://127.0.0.1:8080/api/v1/extensions/register
+POST http://127.0.0.1:8765/api/v1/extensions/register
 Content-Type: application/json
 
 {
@@ -158,7 +158,7 @@ Extensions are meant to eventually live on their own apt feed (`dreamhub-extensi
 
 ## 4. Try it against a mock DreamHub
 
-You don't need a real Dreambox to develop against — run DreamHub itself in mock mode (`DREAMHUB_MODE=mock`, see `backend/README.md`) and point your extension's registration call at it, the same `127.0.0.1:8080` it would use on a real box. The core doesn't distinguish a mock-mode session from a real one for anything extension-related.
+You don't need a real Dreambox to develop against — run DreamHub itself in mock mode (`DREAMHUB_MODE=mock`, see `backend/README.md`) and point your extension's registration call at it, the same `127.0.0.1:8765` it would use on a real box. The core doesn't distinguish a mock-mode session from a real one for anything extension-related.
 
 ## What this doesn't cover yet
 

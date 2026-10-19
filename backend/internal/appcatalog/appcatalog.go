@@ -22,7 +22,7 @@
 //
 // Every app runs on the box's own network (App7), so each one's ports are
 // the box's ports — an app whose port can't be moved off one the box
-// already uses (80 for WebControl, 8080 for DreamHub) is moved through the
+// already uses (80 for WebControl, 8765 for DreamHub) is moved through the
 // image's own documented setting (an environment variable bound to the web
 // port field), or left out. Left out on purpose: Sonarr/Radarr/Prowlarr/
 // Bazarr (the owner doesn't want *arr apps), Heimdall (always binds 80 and

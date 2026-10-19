@@ -2479,8 +2479,8 @@
       "code": "Code von {box}",
       "pair": "Verbinden",
       "pairing": "Verbinde …",
-      "otherAddress": "DreamHub auf dieser Box ist nicht unter dieser Adresse auf Port 8080",
-      "otherAddressPlaceholder": "192.168.1.20:8080",
+      "otherAddress": "DreamHub auf dieser Box ist nicht unter dieser Adresse auf Port 8765",
+      "otherAddressPlaceholder": "192.168.1.20:8765",
       "state": {
         "ok": "Verbunden · DreamHub {version}",
         "paired": "Verbunden",

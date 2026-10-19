@@ -5,7 +5,7 @@
       "name": "dreamhub-backend",
       "runtimeExecutable": "go",
       "runtimeArgs": ["-C", "backend", "run", "./cmd/dreamhub"],
-      "port": 8080
+      "port": 8765
     },
     {
       "name": "dreamhub-frontend",

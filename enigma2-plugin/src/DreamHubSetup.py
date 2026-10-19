@@ -4,12 +4,15 @@
 # beyond this — recordings, timers, everything else — is the web UI's job,
 # not this screen's (PRINCIPLES.md, "Settings: one central menu").
 from Components.ActionMap import ActionMap
-from Components.config import config, getConfigListEntry
+from Components.config import ConfigInteger, config, getConfigListEntry
 from Components.ConfigList import ConfigListScreen
 from Components.Label import Label
+from enigma import eConsoleAppContainer
+from Screens.MessageBox import MessageBox
 from Screens.Screen import Screen
 
 from . import _
+from .portcfg import RESTART_CMD, readPort, writePort
 
 
 class DreamHubSetup(Screen, ConfigListScreen):
@@ -24,8 +27,12 @@ class DreamHubSetup(Screen, ConfigListScreen):
     def __init__(self, session):
         Screen.__init__(self, session)
         self.setTitle(_("DreamHub Settings"))
+        self.oldPort = readPort()
+        # Not an enigma2 setting: the port is read from and written to
+        # /etc/default/dreamhub (portcfg.py), where the backend reads it too.
+        self.port = ConfigInteger(default=self.oldPort, limits=(1024, 65535))
         self.list = [
-            getConfigListEntry(_("Backend port"), config.plugins.dreamhub.port),
+            getConfigListEntry(_("Backend port"), self.port),
             getConfigListEntry(_("Backend requires a password"), config.plugins.dreamhub.authEnabled),
         ]
         ConfigListScreen.__init__(self, self.list, session=session)
@@ -42,11 +49,31 @@ class DreamHubSetup(Screen, ConfigListScreen):
         )
 
     def keySave(self):
-        for entry in self.list:
-            entry[1].save()
+        config.plugins.dreamhub.authEnabled.save()
+        if self.port.value == self.oldPort:
+            self.close()
+            return
+        # Preview and confirm: a new port restarts DreamHub and changes the
+        # address everyone uses, so say so and wait for a yes.
+        self.session.openWithCallback(
+            self.portConfirmed,
+            MessageBox,
+            _("Change the DreamHub port to %d?\n\nDreamHub restarts for a few seconds. Browsers and bookmarks need the new address (http://<box>:%d).") % (self.port.value, self.port.value),
+            MessageBox.TYPE_YESNO,
+        )
+
+    def portConfirmed(self, yes):
+        if not yes:
+            return
+        try:
+            writePort(self.port.value)
+        except (IOError, OSError) as e:
+            self.session.open(MessageBox, _("The port could not be saved: %s") % e, MessageBox.TYPE_ERROR)
+            return
+        self.console = eConsoleAppContainer()
+        self.console.execute(RESTART_CMD)
         self.close()
 
     def keyCancel(self):
-        for entry in self.list:
-            entry[1].cancel()
+        config.plugins.dreamhub.authEnabled.cancel()
         self.close()

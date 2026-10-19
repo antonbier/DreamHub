@@ -6,7 +6,14 @@ Format follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/); version
 
 ## [Unreleased]
 
+### Breaking
+- **DreamHub's port is now 8765 (was 8080).** On a DM900/DM920 port 8080 is held by DreamOS's stream server (HLS output; systemd owns the socket), so DreamHub could not start there. Open `http://<box>:8765` (the `<box>.local` name follows by itself); update bookmarks, the home-screen app, an HTTPS reverse proxy's target and any API client. Change it with `DREAMHUB_LISTEN_ADDR=:<port>` in `/etc/default/dreamhub` or in the TV plugin's settings.
+
 ### Changed
+- Installing the package **never restarts enigma2** any more: when the TV plugin changed, the installation says it loads at the next enigma2 restart. (It used to restart enigma2 when nothing was recording — it cannot know whether someone is watching.)
+- The TV plugin's **Backend port** setting really changes the port: after a confirmation it writes `/etc/default/dreamhub` and the mDNS advertisement and restarts DreamHub. The port is no longer a second, separate setting inside enigma2.
+- The service reads the optional `/etc/default/dreamhub`. The installation says so when the service did not start.
+- Started by hand on a box (where `/etc/enigma2` exists), DreamHub uses the real box (`live`), not the demo data (`mock`) — unless `DREAMHUB_MODE` says otherwise.
 - UX review before testers: with one box there is no Settings → Boxes tab any more — General ends with an "Another box" card that leads to it, and the tab stays once a second box exists. The developer block under Access (token API, `box=<id>`) is collapsed and, with one box, leaves out `box=`.
 - A Basic box's deep link (`/b/<id>/apps`) says "needs DreamHub on the box itself" with a link to Settings → Boxes instead of "That didn't work"; its Device page no longer shows DreamHub's own change log as if it were the box's.
 - "Needs attention" only counts real trouble: an integration that was never set up (TMDB, Plex, AI) and pages a Basic box doesn't have are not counted and not repeated per page. The film-database hint appears once, on the dashboard, with a link to the setting; a page that cannot work without a connector that isn't set up still says why.
@@ -16,6 +23,8 @@ Format follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/); version
 - Settings → Docker: **Address for the Open links** — an app's Open link goes to `http://<address>:<port>`; the address is the one DreamHub was opened with unless set (behind an HTTPS reverse proxy the proxy's address is wrong, the apps' ports are on the box).
 
 ### Fixed
+- A taken port stops DreamHub before anything else starts, with a message saying what to do. It used to start the database and the background jobs first and log `sql: database is closed` as they were torn down.
+- The apps' port check names port 8080 as the stream server's and keeps it reserved, next to 8765.
 - A profile restricted to some boxes no longer receives, lists or opens the background jobs of the other boxes (not even as an admin).
 - A box that restarted enigma2 could show as offline for up to two minutes: the poller's back-off now stops at one minute (was five).
 - A box address with a login (`http://user:pw@host`) keeps it: the login moves to the login fields instead of being dropped; fields filled in at the same time win.

@@ -12,7 +12,7 @@ Description: Modern web control for Dreambox receivers running DreamOS
  WebControl interface of a Dreambox (Enigma2/DreamOS satellite
  receiver): recordings, timers, the TV guide and AI recommendations,
  usable from any browser on the LAN. Runs alongside WebControl on its
- own port (8080) and never modifies it.
+ own port (8765) and never modifies it.
  .
  Includes a small Enigma2 launcher plugin: a QR code to open DreamHub
  on a phone and a backend status check, nothing more — everything else

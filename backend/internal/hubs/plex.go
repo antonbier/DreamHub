@@ -47,7 +47,7 @@ type Plex struct {
 	// User reads the (global) Plex settings for the background sync.
 	User store.User
 	// StreamBase is how the box reaches DreamHub itself, e.g.
-	// "http://127.0.0.1:8080" — set only when DreamHub runs on the box;
+	// "http://127.0.0.1:8765" — set only when DreamHub runs on the box;
 	// empty means films can't be played there.
 	StreamBase string
 	// StreamBaseFor, when set, gives it per box (internal/boxes.StreamBase)

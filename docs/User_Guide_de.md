@@ -16,7 +16,7 @@ DreamHub ändert von sich aus nichts: Jede Änderung an Aufnahmen, Timern oder E
 * MIPS-Boxen (DM7080, DM820, DM520, DM525) werden derzeit noch nicht unterstützt, ältere Dreamboxen ohne DreamOS überhaupt nicht.
 
 
-* Die Box in deinem Heimnetzwerk. DreamHub nutzt Port **8080**; WebControl bleibt auf Port 80.
+* Die Box in deinem Heimnetzwerk. DreamHub nutzt Port **8765**; WebControl bleibt auf Port 80.
 * Ca. 15 MB Speicherplatz auf der Root-Partition für das Programm; seine Datenbank liegt auf `/data`.
 
 ### Aktuell: Manuelle Installation des Pakets
@@ -32,7 +32,9 @@ dpkg -i /tmp/dreamhub_*.deb
 ```
 
 
-Dadurch wird der DreamHub-Dienst installiert und gestartet sowie das **DreamHub**-Plugin zur Plugin-Liste des TVs hinzugefügt. Die Benutzeroberfläche des TVs (enigma2) startet einmal neu, damit das Plugin sofort erscheint; nach späteren Updates startet sie nur neu, wenn sich das Plugin selbst geändert hat. Eine in diesem Moment laufende Aufnahme würde unterbrochen werden, installiere also, wenn gerade nichts aufnimmt.
+Falls Pakete fehlen, hole sie mit `apt-get -f install` nach.
+
+Dadurch wird der DreamHub-Dienst installiert und gestartet sowie das **DreamHub**-Plugin zur Plugin-Liste des TVs hinzugefügt. Die Benutzeroberfläche des TVs (enigma2) wird bei der Installation **nie neu gestartet**: Das Plugin erscheint beim nächsten Neustart von enigma2 (die Meldung am Ende der Installation weist darauf hin), den du machst, wenn es dir passt – DreamHub selbst läuft sofort im Browser.
 4. **Überprüfe es:** Öffne DreamHub (nächster Abschnitt), gehe dann zu **Gerät → Diagnose → Selbsttest ausführen**. Es fragt die Box nach allem ab, was DreamHub benötigt, und sollte durchgehend grün anzeigen.
 
 ### Später: Über einen Feed
@@ -60,8 +62,8 @@ dpkg -P dreamhub      # löscht auch /data/dreamhub — Einstellungen, Schlüsse
 Jede dieser Optionen funktioniert:
 
 * **Vom Fernseher aus:** Öffne die Plugin-Liste (oder das blaue Erweiterungen-Menü), wähle **DreamHub** und scanne den QR-Code mit deinem Smartphone.
-* **Über den Namen:** `http://<box-name>.local:8080` – die Box meldet sich selbst im Netzwerk an (mDNS). Die meisten Smartphones und Computer finden sie auf diese Weise.
-* **Über die IP-Adresse:** `http://<box-IP>:8080`, z. B. `[http://192.168.1.43:8080](http://192.168.1.43:8080)`.
+* **Über den Namen:** `http://<box-name>.local:8765` – die Box meldet sich selbst im Netzwerk an (mDNS). Die meisten Smartphones und Computer finden sie auf diese Weise.
+* **Über die IP-Adresse:** `http://<box-IP>:8765`, z. B. `[http://192.168.1.43:8765](http://192.168.1.43:8765)`.
 
 Tipp: Füge es zum Startbildschirm deines Smartphones hinzu – es öffnet sich dann wie eine App. Siehe [Abschnitt 4](https://www.google.com/search?q=%234-dreamhub-als-app).
 
@@ -217,12 +219,12 @@ DreamHub kann auf dem Startbildschirm deines Smartphones oder dem Desktop deines
 
 **DreamHub hinter HTTPS bereitstellen** (optional) erfordert ein zweites Gerät, das dauerhaft eingeschaltet ist, sowie einen Namen mit einem echten Zertifikat – zum Beispiel:
 
-* **Tailscale:** Auf jedem dauerhaft laufenden Gerät in deinem Netzwerk liefert `tailscale serve --bg [http://192.168.1.43:8080](http://192.168.1.43:8080)` eine Adresse wie `https://<gerätename>.<tailnet>.ts.net`, erreichbar von deinen Geräten zu Hause und unterwegs.
-* **Ein Reverse Proxy**, den du bereits betreibst (Caddy, Nginx Proxy Manager, Traefik auf einem NAS), mit einer Domain, die darauf verweist und an `http://<box-IP>:8080` weiterleitet.
+* **Tailscale:** Auf jedem dauerhaft laufenden Gerät in deinem Netzwerk liefert `tailscale serve --bg [http://192.168.1.43:8765](http://192.168.1.43:8765)` eine Adresse wie `https://<gerätename>.<tailnet>.ts.net`, erreichbar von deinen Geräten zu Hause und unterwegs.
+* **Ein Reverse Proxy**, den du bereits betreibst (Caddy, Nginx Proxy Manager, Traefik auf einem NAS), mit einer Domain, die darauf verweist und an `http://<box-IP>:8765` weiterleitet.
 
 Trage diesen Hostnamen in jedem Fall unter **Einstellungen → Zugriff → Netzwerk → Zusätzlich erlaubte Hostnamen** ein, da DreamHub an ihn gerichtete Anfragen andernfalls verweigert (Schutz vor DNS-Rebinding).
 
-Über HTTPS dekodiert der Browser HD-Sender im Live-TV zudem mit der eigenen Hardware des Geräts (über einfaches `http://` verweigert er dies), sodass HD auf Smartphones flüssiger läuft. Bestätigt mit Nginx Proxy Manager auf einem Unraid-Server (08.10.2026). Wenn das Gerät, auf dem der Proxy läuft, ausgeschaltet ist, ist auch die HTTPS-Adresse nicht erreichbar – die eigene Adresse der Box (`http://<box-IP>:8080`) funktioniert weiterhin.
+Über HTTPS dekodiert der Browser HD-Sender im Live-TV zudem mit der eigenen Hardware des Geräts (über einfaches `http://` verweigert er dies), sodass HD auf Smartphones flüssiger läuft. Bestätigt mit Nginx Proxy Manager auf einem Unraid-Server (08.10.2026). Wenn das Gerät, auf dem der Proxy läuft, ausgeschaltet ist, ist auch die HTTPS-Adresse nicht erreichbar – die eigene Adresse der Box (`http://<box-IP>:8765`) funktioniert weiterhin.
 
 **Behalte es in deinem Heimnetzwerk.** Nutze für den Zugriff von unterwegs Tailscale (oder ein anderes VPN), anstatt den Proxy für das Internet zu öffnen. Wenn DreamHub von außen erreichbar ist, schalte zuerst die Anmeldung ein (**Einstellungen → Zugriff**): Ohne diese kann jeder, der die Adresse erreicht, die Box steuern.
 
@@ -249,6 +251,7 @@ Datenschutz: Der Text einer Nachricht (Titel einer Aufnahme oder Serie, Senderna
 ## 6. Wenn etwas nicht funktioniert
 
 * **Nicht sicher, was auf deiner Box funktioniert?** **Gerät → Diagnose → Selbsttest ausführen** fragt die Box nach allem ab, was DreamHub benötigt, ohne etwas zu ändern, und markiert jede Antwort: in Ordnung, einen Blick wert, fehlgeschlagen oder nicht zutreffend. **Antworten der Box herunterladen** liefert eine ZIP-Datei, die beim Melden eines Problems hilft.
+* **DreamHub startet nicht und im Log steht „address already in use“:** Ein anderes Programm auf der Box nutzt den Port von DreamHub (**8765**). Wähle im TV-Plugin einen freien (**DreamHub → Einstellungen → Backend-Port**; nach deiner Bestätigung startet DreamHub neu) oder im Terminal: `echo 'DREAMHUB_LISTEN_ADDR=:8800' > /etc/default/dreamhub && systemctl restart dreamhub` – danach `http://<Box>:8800` öffnen.
 * **DreamHub öffnet sich nicht:** Überprüfe, ob der Dienst läuft – im WebAdmin-Terminal mit `systemctl status dreamhub`. Sein Protokoll: `journalctl -u dreamhub -n 100`.
 * **Ein Hub zeigt „Nicht verfügbar“ oder „Eingeschränkt“:** Der Punkt in der Seitenleiste und die Glocke erklären den Grund und die Lösung (fehlender Schlüssel, nicht installiertes Plugin, keine Antwort der Box). **Gerät → Diagnose** listet alle auf.
 * **„WebControl konnte nicht erreicht werden“:** Die Benutzeroberfläche der Box startet neu oder ist beschäftigt (nach einem Update benötigt enigma2 einen Moment) oder verlangt jetzt eine Anmeldung – gib diese unter **Einstellungen → Dienste → WebControl** ein.

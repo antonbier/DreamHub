@@ -24,10 +24,11 @@ Requires `go`, `msgfmt` (Debian/Ubuntu: `apt install gettext`) and `dpkg-deb`/`f
 | --- | --- |
 | `/usr/bin/dreamhub` | the backend binary (frontend embedded via `go:embed`) |
 | `/lib/systemd/system/dreamhub.service` | the systemd unit, enabled and started by `postinst` |
-| `/etc/avahi/services/dreamhub.service` | mDNS advertisement (`<box>.local:8080`) |
+| `/etc/default/dreamhub` | optional, not shipped: `DREAMHUB_LISTEN_ADDR=:<port>` read by the unit |
+| `/etc/avahi/services/dreamhub.service` | mDNS advertisement (`<box>.local:8765`) |
 | `/usr/lib/enigma2/python/Plugins/Extensions/DreamHub/` | the TV launcher plugin, `.po` files pre-compiled to `.mo` |
 
-`postinst` restarts `enigma2` only when the launcher plugin changed (it keeps a checksum), so the plugin shows up without a manual GUI restart — the same thing installing any other Extensions plugin through the Addon Manager does. It doesn't while the box records (or when it can't read the timer list): then the plugin loads at the next enigma2 restart, and the next install tries again. `postrm` only removes `/data/dreamhub` (the SQLite database and its settings) on `purge`, never on a plain removal, so reinstalling later picks up where the user left off. Install and in-place upgrades are confirmed on the reference box (ARCHITECTURE.md).
+`postinst` never restarts `enigma2`: when the launcher plugin changed (it keeps a checksum) it prints that the plugin loads at the next enigma2 restart, because a package script cannot ask whether someone is watching or a recording is about to start. It also copies the port from `/etc/default/dreamhub` (`DREAMHUB_LISTEN_ADDR=:<port>`, optional; the TV plugin's settings write it) into the avahi file, and says so if the service did not start (usually a taken port). `postrm` only removes `/data/dreamhub` (the SQLite database and its settings) on `purge`, never on a plain removal, so reinstalling later picks up where the user left off. Install and in-place upgrades are confirmed on the reference box (ARCHITECTURE.md).
 
 ## Making a release
 

@@ -206,7 +206,7 @@ var legacyApps = []legacyApp{
 		Description: "A BitTorrent client with a web UI.",
 		Image:       "linuxserver/qbittorrent",
 		Arches:      archesLinuxserver,
-		// 8080 is DreamHub's; WEBUI_PORT is the image's own setting.
+		// 8080 is the DreamOS stream server's on a DM900/DM920; WEBUI_PORT is the image's own setting.
 		ContainerPort: 8095, ConfigPath: "/config", DataPath: "/downloads",
 		Env:      map[string]string{"WEBUI_PORT": "8095"},
 		PortEnv:  "WEBUI_PORT",

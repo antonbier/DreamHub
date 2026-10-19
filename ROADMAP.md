@@ -32,7 +32,7 @@ Confirmed on the box 2026-10-09: SeriesHub against the box's real SerienRecorder
 
 ## v1 — release & packaging
 
-Done: `.deb` for arm64 (box) and armhf (built, not tried on a DM900/DM920) with systemd unit, avahi service and the TV plugin; CI builds both on every push; install and in-place upgrade confirmed on the box; `postinst` restarts enigma2 only for a changed plugin and never while the box records; `build-deb.sh` refuses a mismatched web UI or plugin version; user guide ([`docs/USER_GUIDE.md`](docs/USER_GUIDE.md)); first security pass (symlinks, CSRF coverage, image proxy). Making a release: [`docs/RELEASE.md`](docs/RELEASE.md).
+Done: `.deb` for arm64 (box) and armhf (built, not tried on a DM900/DM920) with systemd unit, avahi service and the TV plugin; CI builds both on every push; install and in-place upgrade confirmed on the box; `postinst` never restarts enigma2 (it only says the changed TV plugin loads at the next restart); `build-deb.sh` refuses a mismatched web UI or plugin version; user guide ([`docs/USER_GUIDE.md`](docs/USER_GUIDE.md)); first security pass (symlinks, CSRF coverage, image proxy). Making a release: [`docs/RELEASE.md`](docs/RELEASE.md).
 
 - [ ] apt feed (decision D4) (#21)
 - [x] Uninstall and purge on the box (#22) — confirmed 2026-10-12; two leftovers found and fixed in 0.4.0 (plugin directory with enigma2's compiled files, a dangling `multi-user.target.wants` link)

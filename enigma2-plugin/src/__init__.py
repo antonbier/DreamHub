@@ -39,13 +39,12 @@ localeInit()
 language.addCallback(localeInit)
 
 # The plugin's own settings (CONCEPT.md: "a few basic settings: auth
-# on/off, port"). Local to the plugin only — which port to call on
-# 127.0.0.1, and whether the backend has its own auth switched on, so a
-# future authenticated call knows to ask for credentials. Never writes
-# DreamHub's real settings; that stays the web UI's job (PRINCIPLES.md,
-# "one central menu").
-from Components.config import ConfigInteger, ConfigSubsection, ConfigYesNo, config  # noqa: E402
+# on/off, port"). Whether the backend has its own auth switched on is local
+# to the plugin, so a future authenticated call knows to ask for credentials.
+# The port is not stored here: portcfg.py reads and writes the one place the
+# backend itself reads it from (/etc/default/dreamhub). Everything else stays
+# the web UI's job (PRINCIPLES.md, "one central menu").
+from Components.config import ConfigSubsection, ConfigYesNo, config  # noqa: E402
 
 config.plugins.dreamhub = ConfigSubsection()
-config.plugins.dreamhub.port = ConfigInteger(default=8080, limits=(1, 65535))
 config.plugins.dreamhub.authEnabled = ConfigYesNo(default=False)

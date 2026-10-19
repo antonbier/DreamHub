@@ -126,7 +126,7 @@ const markerIdByFsid = computed(() => Object.fromEntries(markers.value.map((m) =
 // SerienRecorder's own web GUI (confirmed reachable, no X-Frame-Options/CSP
 // that would block embedding — ARCHITECTURE.md, #10) lives on the same
 // device, same host, just WebControl's port (80) rather than DreamHub's
-// (8080) — this only resolves correctly when DreamHub is actually deployed
+// (8765) — this only resolves correctly when DreamHub is actually deployed
 // on the box itself (PROJECT_PLAN.md's packaging plan), not in local dev
 // against a different device. DreamHub deliberately doesn't rebuild
 // SerienRecorder's own UI (PRINCIPLES.md) — this just gets the user to it.

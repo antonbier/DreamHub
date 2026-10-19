@@ -39,14 +39,14 @@ Packages are attached to each [release](https://github.com/antonbier/DreamHub/re
 
 ## Tech stack
 
-- **Backend:** Go, statically compiled, runs as a systemd service on port 8080. REST API, Server-Sent Events for live updates, SQLite for DreamHub's own state.
+- **Backend:** Go, statically compiled, runs as a systemd service on port 8765. REST API, Server-Sent Events for live updates, SQLite for DreamHub's own state.
 - **Frontend:** Vue 3 + TypeScript + Tailwind, embedded into the Go binary via `go:embed`; an installable web app (manifest + service worker over HTTPS).
 - **TV plugin:** a minimal Enigma2 plugin (Python 2.7) — a launcher with a QR code to open DreamHub on your phone.
 - **Distribution:** `.deb` packages from the releases; an apt feed is planned.
 
 ## Status
 
-**0.9.0** is the current release (0.1.0 was the first): several Dreamboxes behind one selector (pairing, Wake-on-LAN or a smart plug to switch one on, a recording of one box on another's screen), extensions that show their own values on the start page (the eWeLink plug's power and consumption), the eWeLink extension getting its keys through your own developer application and switching through the cloud when the plug refuses the LAN, extension logs, Docker apps with an install form, container list, updates with roll back and backups, marked ad breaks the TV really skips, and many small clarity fixes. Every released hub works against the real box — confirmed on the reference Dreambox One with the self-test (Device → Diagnostics), Plex playback on the box included — and against a mock for development, so no Dreambox is needed to work on it. Installing Docker apps needs Docker on the box, which AppsHub can set up itself. [ROADMAP.md](ROADMAP.md) has exactly what's done and what's open, [CHANGELOG.md](CHANGELOG.md) what changed, [PROJECT_PLAN.md](PROJECT_PLAN.md) why the project exists, and [backend/README.md](backend/README.md) / [frontend/README.md](frontend/README.md) how to run it locally.
+**0.9.1** is the current release (0.1.0 was the first): several Dreamboxes behind one selector (pairing, Wake-on-LAN or a smart plug to switch one on, a recording of one box on another's screen), extensions that show their own values on the start page (the eWeLink plug's power and consumption), the eWeLink extension getting its keys through your own developer application and switching through the cloud when the plug refuses the LAN, extension logs, Docker apps with an install form, container list, updates with roll back and backups, marked ad breaks the TV really skips, and many small clarity fixes. Every released hub works against the real box — confirmed on the reference Dreambox One with the self-test (Device → Diagnostics), Plex playback on the box included — and against a mock for development, so no Dreambox is needed to work on it. Installing Docker apps needs Docker on the box, which AppsHub can set up itself. [ROADMAP.md](ROADMAP.md) has exactly what's done and what's open, [CHANGELOG.md](CHANGELOG.md) what changed, [PROJECT_PLAN.md](PROJECT_PLAN.md) why the project exists, and [backend/README.md](backend/README.md) / [frontend/README.md](frontend/README.md) how to run it locally.
 
 ## License
 

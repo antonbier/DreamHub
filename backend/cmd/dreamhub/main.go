@@ -7,6 +7,7 @@ package main
 
 import (
 	"context"
+	"fmt"
 	"github.com/antonbier/DreamHub/backend/internal/autotimer"
 	atmock "github.com/antonbier/DreamHub/backend/internal/autotimer/mock"
 	"github.com/antonbier/DreamHub/backend/internal/boxes"
@@ -85,6 +86,17 @@ func envOr(key, fallback string) string {
 func run(logger *slog.Logger, level *logging.Level) error {
 	restrictFileModes()
 	cfg := config.Load()
+
+	// Bind the port before anything else is opened: a taken port must stop
+	// the start before the database is migrated and the background jobs run
+	// (they used to race the shutdown and log "database is closed").
+	ln, err := net.Listen("tcp", cfg.ListenAddr)
+	if err != nil {
+		return fmt.Errorf("cannot listen on %s: %w — another program uses this port. "+
+			"Set a free one with DREAMHUB_LISTEN_ADDR=:<port> in /etc/default/dreamhub "+
+			"(on a DM900/DM920 port 8080 belongs to the stream server), then restart the dreamhub service", cfg.ListenAddr, err)
+	}
+	defer ln.Close()
 
 	var wc webcontrol.Client
 	// boxFactory builds the connections of a further box from its saved
@@ -338,13 +350,13 @@ func run(logger *slog.Logger, level *logging.Level) error {
 	}
 
 	logger.Info("dreamhub starting", "version", api.Version, "addr", cfg.ListenAddr, "dataDir", cfg.DataDir)
-	return http.ListenAndServe(cfg.ListenAddr, a.Handler)
+	return http.Serve(ln, a.Handler)
 }
 
-// listenPort is the port of a listen address (":8080", "0.0.0.0:8080").
+// listenPort is the port of a listen address (":8765", "0.0.0.0:8765").
 func listenPort(addr string) string {
 	if _, port, err := net.SplitHostPort(addr); err == nil && port != "" {
 		return port
 	}
-	return "8080"
+	return "8765"
 }

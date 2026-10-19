@@ -47,3 +47,9 @@ msgstr "Annuler"
 
 msgid "Save"
 msgstr "Enregistrer"
+
+msgid "Change the DreamHub port to %d?\n\nDreamHub restarts for a few seconds. Browsers and bookmarks need the new address (http://<box>:%d)."
+msgstr "Changer le port de DreamHub en %d ?\n\nDreamHub redémarre pendant quelques secondes. Les navigateurs et favoris doivent utiliser la nouvelle adresse (http://<box>:%d)."
+
+msgid "The port could not be saved: %s"
+msgstr "Le port n'a pas pu être enregistré : %s"

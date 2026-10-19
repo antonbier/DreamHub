@@ -12,7 +12,7 @@ import (
 // overrides it). Device keys are secrets: the file is the extension
 // user's own, mode 0600.
 type Config struct {
-	// DreamHub is where to register (default http://127.0.0.1:8080).
+	// DreamHub is where to register (default http://127.0.0.1:8765).
 	DreamHub string `json:"dreamhub"`
 	// Listen is this extension's own loopback address (default
 	// 127.0.0.1:9101).
@@ -42,7 +42,7 @@ type DeviceConfig struct {
 }
 
 func loadConfig(path string) (Config, error) {
-	cfg := Config{DreamHub: "http://127.0.0.1:8080", Listen: "127.0.0.1:9101", Lang: "de"}
+	cfg := Config{DreamHub: "http://127.0.0.1:8765", Listen: "127.0.0.1:9101", Lang: "de"}
 	b, err := os.ReadFile(path)
 	if os.IsNotExist(err) {
 		return cfg, nil

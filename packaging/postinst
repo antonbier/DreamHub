@@ -16,6 +16,12 @@ if [ -d /run/systemd/system ]; then
     systemctl daemon-reload || true
     systemctl enable dreamhub.service || true
     systemctl restart dreamhub.service || true
+    sleep 2
+    if ! systemctl is-active --quiet dreamhub.service; then
+        echo "dreamhub: the service did not start. Most likely its port is taken by another program."
+        echo "dreamhub: see 'journalctl -u dreamhub -n 20'; set a free port with"
+        echo "dreamhub:   echo 'DREAMHUB_LISTEN_ADDR=:<port>' > /etc/default/dreamhub && systemctl restart dreamhub"
+    fi
     # Docker set up from the Apps tab: pick up a new helper binary. Never
     # restarts dockerd itself (the apps keep running).
     if systemctl is-enabled --quiet dreamhub-dockerd-helper.service 2>/dev/null; then
@@ -31,52 +37,34 @@ if [ -d /run/systemd/system ]; then
     done
 fi
 
+# The mDNS advertisement follows the port in /etc/default/dreamhub (if set).
+PORT=$(sed -n 's/^DREAMHUB_LISTEN_ADDR=.*:\([0-9][0-9]*\)$/\1/p' /etc/default/dreamhub 2>/dev/null | tail -n 1)
+if [ -n "$PORT" ] && [ -f /etc/avahi/services/dreamhub.service ]; then
+    sed -i "s|<port>[0-9]*</port>|<port>$PORT</port>|" /etc/avahi/services/dreamhub.service
+fi
+
 if command -v systemctl >/dev/null 2>&1 && systemctl is-active --quiet avahi-daemon 2>/dev/null; then
     systemctl reload avahi-daemon || true
 fi
 
 # The Enigma2 plugin only takes effect after enigma2 re-scans its plugin
-# list, which happens on GUI startup — same as installing any other
-# Extensions plugin through the Addon Manager. This does interrupt live
-# viewing for a few seconds; it's the standard, expected behavior for a
-# plugin install on this platform, not something DreamHub invented.
-#
-# Only when the plugin actually changed, though: an update that only
-# replaces the backend has no reason to cut into what's on TV. A checksum
-# of the installed plugin files is kept next to DreamHub's data.
+# list, which happens on GUI startup. enigma2 is never restarted from here
+# (PRINCIPLES.md, "Preview and confirm"): someone may be watching TV or a
+# recording may be about to start, and a package script cannot ask. The
+# message only says what to do. A checksum of the installed plugin files is
+# kept next to DreamHub's data so the note appears only when the plugin
+# actually changed.
 PLUGIN_DIR=/usr/lib/enigma2/python/Plugins/Extensions/DreamHub
 SUM_FILE=/data/dreamhub/.plugin.sum
 NEW_SUM=$(find "$PLUGIN_DIR" -type f ! -name '*.pyc' ! -name '*.pyo' -exec md5sum {} + 2>/dev/null | sort | md5sum | cut -d' ' -f1)
 OLD_SUM=$(cat "$SUM_FILE" 2>/dev/null || true)
-#
-# Never while the box records: restarting enigma2 would cut the recording.
-# Then the plugin waits for the next enigma2 restart (or reboot), and the
-# checksum isn't saved, so the next install tries again.
-recording_now() {
-    # e2state 2 = running (ARCHITECTURE.md). If the timer list can't be
-    # read (a WebControl login is set), assume a recording: a plugin that
-    # loads a little later beats a cut recording.
-    list=$(wget -q -T 5 -O - http://127.0.0.1/web/timerlist 2>/dev/null) || return 0
-    case "$list" in
-        *"<e2state>2</e2state>"*) return 0 ;;
-    esac
-    return 1
-}
 if [ "$NEW_SUM" != "$OLD_SUM" ]; then
-    if [ -d /run/systemd/system ] && systemctl is-active --quiet enigma2 2>/dev/null; then
-        if recording_now; then
-            echo "dreamhub: the box is recording (or its timer list can't be read) — enigma2 is NOT restarted."
-            echo "dreamhub: the launcher plugin loads at the next enigma2 restart: systemctl restart enigma2"
-        else
-            echo "dreamhub: restarting enigma2 to load the launcher plugin..."
-            systemctl restart enigma2 || true
-            echo "$NEW_SUM" > "$SUM_FILE"
-        fi
-    else
-        echo "$NEW_SUM" > "$SUM_FILE"
-    fi
+    echo "dreamhub: the launcher plugin for the TV screen is new or changed."
+    echo "dreamhub: it loads at the next enigma2 restart (when it suits you): systemctl restart enigma2"
+    echo "dreamhub: DreamHub itself works in the browser already."
+    echo "$NEW_SUM" > "$SUM_FILE"
 else
-    echo "dreamhub: launcher plugin unchanged, enigma2 keeps running"
+    echo "dreamhub: launcher plugin unchanged"
 fi
 
 exit 0

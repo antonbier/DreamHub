@@ -9,6 +9,9 @@ Wants=enigma2.service
 [Service]
 Type=simple
 Environment=DREAMHUB_MODE=live
+# Optional overrides, e.g. DREAMHUB_LISTEN_ADDR=:8765 (the TV plugin's port
+# setting writes this file).
+EnvironmentFile=-/etc/default/dreamhub
 ExecStart=/usr/bin/dreamhub
 Restart=on-failure
 RestartSec=5

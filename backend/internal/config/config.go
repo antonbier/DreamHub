@@ -20,7 +20,8 @@ const (
 
 // Config holds everything read from the environment at startup.
 type Config struct {
-	// Mode is ModeLive or ModeMock. Defaults to ModeMock so the backend is
+	// Mode is ModeLive or ModeMock. Defaults to ModeLive on a box (where
+	// /etc/enigma2 exists) and ModeMock elsewhere, so the backend is
 	// runnable out of the box without a device.
 	Mode Mode
 
@@ -51,19 +52,29 @@ type Config struct {
 // anything not set. Auth is not configured here: it lives in the settings
 // store and is changed through the settings API/UI.
 func Load() Config {
-	mode := Mode(getEnv("DREAMHUB_MODE", string(ModeMock)))
+	mode := Mode(getEnv("DREAMHUB_MODE", string(defaultMode())))
 	defaultDataDir := "/data/dreamhub"
 	if mode == ModeMock {
 		defaultDataDir = "./.dreamhub-data"
 	}
 	return Config{
 		Mode:          mode,
-		ListenAddr:    getEnv("DREAMHUB_LISTEN_ADDR", ":8080"),
+		ListenAddr:    getEnv("DREAMHUB_LISTEN_ADDR", ":8765"),
 		WebControlURL: getEnv("DREAMHUB_WEBCONTROL_URL", "http://127.0.0.1"),
 		DataDir:       getEnv("DREAMHUB_DATA_DIR", defaultDataDir),
 
 		EnableDeviceWrites: getEnv("DREAMHUB_ENABLE_DEVICE_WRITES", "1") != "0",
 	}
+}
+
+// defaultMode is live on a box (enigma2's configuration directory exists)
+// and mock anywhere else, so a manual start on the box does not silently run
+// on demo data; the packaged service sets DREAMHUB_MODE=live explicitly.
+func defaultMode() Mode {
+	if fi, err := os.Stat("/etc/enigma2"); err == nil && fi.IsDir() {
+		return ModeLive
+	}
+	return ModeMock
 }
 
 func getEnv(key, fallback string) string {

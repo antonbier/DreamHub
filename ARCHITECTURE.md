@@ -201,6 +201,10 @@ Correction to an earlier check in this doc: Docker **is** possible on this platf
 
 `avahi-daemon` is running (confirmed earlier) and already advertises several services (`/etc/avahi/services/`): `ssh`, `sftp-ssh`, `ftp`, `nfs`, and interestingly **`geminiandroid.service`** — almost certainly how an existing companion Android app discovers the box on the LAN via Bonjour/mDNS instead of the user typing in an IP. **DreamHub should do the same**: drop a `dreamhub.service` file into `/etc/avahi/services/` (as part of the `.deb` install) advertising its own `_http._tcp` service on port 8080, so a phone/browser can find it automatically instead of requiring a manual IP entry. Cheap to add, meaningfully nicer UX, and the infrastructure is already running.
 
+## Port 8080 on a DM900/DM920 (reported 2026-10-17, not reproduced on the reference box)
+
+A tester's DM900/DM920 (OE 2.5, armhf, DreamHub 0.9.0) could not start DreamHub: `listen tcp :8080: bind: address already in use`, and the owner of the socket was `1/init`, i.e. a systemd socket unit (`netstat -anp`). Most likely the stream server's HLS output (see "Hardware encoder and Dreambox's stream server": HLS default port **8080**), which exists only on boxes with a hardware encoder; not found on the Dreambox One. To confirm on such a box: `systemctl list-sockets | grep 8080`. Decision: DreamHub's default port became **8765** (`PROJECT_PLAN.md`), 8080 stays reserved against apps. Also found there: `dpkg -i` does not install missing dependencies (`apt-get -f install` does).
+
 ## Resource headroom (for capacity planning)
 
 Live snapshot on the reference device (enigma2 + all the services above already running): **1977 MB total RAM, ~1.2 GB "available"** (948 MB free + reclaimable cache), load average ~1.0 on a 6-core chip — healthy headroom for an additional lean Go process. **No swap configured at all** — if DreamHub's backend or embedded PWA assets balloon in memory use, there's no cushion, so keep the resident footprint deliberately small.

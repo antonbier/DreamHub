@@ -5,7 +5,7 @@ import tailwindcss from '@tailwindcss/vite'
 
 // The build output goes straight into the Go backend's embed directory —
 // see backend/internal/webui. `npm run dev` proxies /api to a locally
-// running backend (`go run ./cmd/dreamhub`, default port 8080) so the UI
+// running backend (`go run ./cmd/dreamhub`, default port 8765) so the UI
 // can be developed without rebuilding the Go binary on every change.
 export default defineConfig({
   plugins: [vue(), tailwindcss()],
@@ -18,7 +18,7 @@ export default defineConfig({
     port: 5173,
     proxy: {
       '/api': {
-        target: 'http://127.0.0.1:8080',
+        target: 'http://127.0.0.1:8765',
         changeOrigin: false,
       },
     },

@@ -25,7 +25,7 @@ type CompatError struct {
 func (e *CompatError) Error() string { return "boxes: versions do not fit: " + e.Status }
 
 // DefaultPeerPort is where DreamHub listens on a box.
-const DefaultPeerPort = "8080"
+const DefaultPeerPort = "8765"
 
 // PairInput is what pairing a box needs: the one-time code shown there, and
 // optionally the DreamHub's address when it isn't the box's address on the

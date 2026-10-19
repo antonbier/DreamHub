@@ -32,13 +32,13 @@ git checkout -- backend/internal/webui/dist/index.html   # only now
 
 ## 3. Install on the reference box
 
-- [ ] **Is the box recording?** `wget -q -O - http://<box>/web/timerlist | grep -c '<e2state>2</e2state>'` must be `0` when the TV plugin changed (`git diff <last tag> -- enigma2-plugin/`): installing then restarts enigma2. `postinst` won't restart it during a recording anyway, but then the plugin only loads at the next enigma2 restart. A backend-only update just restarts `dreamhub.service` and is safe any time.
+- [ ] Installing never restarts enigma2: when the TV plugin changed (`git diff <last tag> -- enigma2-plugin/`), `postinst` prints that it loads at the next enigma2 restart (check the message appears, and that nothing restarted). The update itself only restarts `dreamhub.service` and is safe any time.
 - [ ] Copy and install (the box's SSH has no SFTP: `scp -O`):
   ```sh
   scp -O dist/dreamhub_<version>_arm64.deb root@<box>:/tmp/
   ssh root@<box> 'dpkg -i /tmp/dreamhub_<version>_arm64.deb'
   ```
-- [ ] `curl http://<box>:8080/api/v1/health` shows the new version; the web UI loads (not blank); **System → Diagnostics → self-test** all green.
+- [ ] `curl http://<box>:8765/api/v1/health` shows the new version; the web UI loads (not blank); **System → Diagnostics → self-test** all green.
 
 ## 4. Publish
 

@@ -18,7 +18,7 @@
         <summary class="cursor-pointer text-muted">{{ t('boxes.pair.advanced') }}</summary>
         <label class="mt-2 block">
           <span class="mb-1 block text-muted">{{ t('boxes.pair.streamBase') }}</span>
-          <input v-model="streamBase" type="text" inputmode="url" autocapitalize="off" spellcheck="false" placeholder="192.168.1.5:8080" class="w-full max-w-[280px] rounded-sm border border-line bg-tile px-2.5 py-1.5 font-mono text-[14px] text-text" />
+          <input v-model="streamBase" type="text" inputmode="url" autocapitalize="off" spellcheck="false" placeholder="192.168.1.5:8765" class="w-full max-w-[280px] rounded-sm border border-line bg-tile px-2.5 py-1.5 font-mono text-[14px] text-text" />
           <span class="mt-1 block text-[12.5px] text-faint">{{ t('boxes.pair.streamBaseHint') }}</span>
         </label>
         <button type="button" class="mt-2 rounded-sm border border-line px-3 py-1.5 text-[13px] text-text hover:bg-tile disabled:opacity-60" :disabled="busy || streamBase.trim() === (box.streamBase ?? '')" @click="saveStreamBase">

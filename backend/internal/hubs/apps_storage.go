@@ -30,8 +30,8 @@ type StorageChoice struct {
 const minStorageFreeBytes = 1 << 30
 
 // boxPorts are the ports the box itself uses; an app can never be moved to
-// one (DreamHub 8080, its Docker helper 8090, WebControl 80, …).
-var boxPorts = map[int]bool{80: true, 443: true, 8080: true, 8090: true, 8001: true, 4200: true, 139: true, 445: true}
+// one (DreamHub 8765, the DreamOS stream server 8080, its Docker helper 8090, WebControl 80, …).
+var boxPorts = map[int]bool{80: true, 443: true, 8080: true, 8765: true, 8090: true, 8001: true, 4200: true, 139: true, 445: true}
 
 // storageFS are the file system types a database can live on safely; FAT,
 // NTFS and network shares can't hold a container's file ownership or

@@ -13,11 +13,11 @@
 # backend must never freeze the GUI thread.
 from twisted.web.client import getPage
 
-from . import config
+from .portcfg import readPort
 
 
 def backendURL(path):
-    return "http://127.0.0.1:%d%s" % (config.plugins.dreamhub.port.value, path)
+    return "http://127.0.0.1:%d%s" % (readPort(), path)
 
 
 def fetchHealth(onSuccess, onError):

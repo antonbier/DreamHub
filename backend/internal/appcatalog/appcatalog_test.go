@@ -11,7 +11,7 @@ import (
 
 // boxPorts are the reference box's own ports (ARCHITECTURE.md): no app on
 // the host network may need one of them.
-var boxPorts = map[int]bool{80: true, 443: true, 8080: true, 8001: true, 4200: true, 8090: true, 139: true, 445: true}
+var boxPorts = map[int]bool{80: true, 443: true, 8080: true, 8765: true, 8001: true, 4200: true, 8090: true, 139: true, 445: true}
 
 func TestApps_HaveRequiredFields(t *testing.T) {
 	seen := map[string]bool{}

@@ -94,7 +94,7 @@ type Options struct {
 	// connector into "not configured" for good.
 	Plex plex.Client
 	// StreamBase is how the box reaches this DreamHub ("http://127.0.0.1:
-	// 8080"), set only when DreamHub runs on the box; PlexHub plays films
+	// 8765"), set only when DreamHub runs on the box; PlexHub plays films
 	// there through it.
 	StreamBase string
 	// StreamPort is the port the other boxes reach this DreamHub on.

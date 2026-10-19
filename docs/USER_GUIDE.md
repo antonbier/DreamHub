@@ -14,7 +14,7 @@ DreamHub changes nothing on its own: every change to recordings, timers or setti
   - **Dreambox One or Two** (ARM64) — package `dreamhub_<version>_arm64.deb`. Developed and tested on a Dreambox One with DreamOS 2.6 (Gemini/AIO image).
   - **DM900 UHD or DM920 UHD** (ARMv7) — package `dreamhub_<version>_armhf.deb`. Built the same way, but not yet tested on such a box: feedback welcome.
   - The MIPS boxes (DM7080, DM820, DM520, DM525) aren't supported yet, older Dreamboxes without DreamOS not at all.
-- The box on your home network. DreamHub uses port **8080**; WebControl stays on port 80.
+- The box on your home network. DreamHub uses port **8765**; WebControl stays on port 80.
 - About 15 MB on the root partition for the program; its database lives on `/data`.
 
 ### Today: install the package by hand
@@ -29,7 +29,9 @@ There is no package feed to subscribe to yet (see *Later: from a feed* below), s
    dpkg -i /tmp/dreamhub_*.deb
    ```
 
-   This installs the DreamHub service and starts it, and adds the **DreamHub** plugin to the TV's plugin list. The TV's interface (enigma2) restarts once, so the plugin appears right away; after later updates it only restarts again if the plugin itself changed. A recording running at that moment would be cut, so install when nothing is recording.
+   If it complains about missing packages, run `apt-get -f install` and it fetches them.
+
+   This installs the DreamHub service and starts it, and adds the **DreamHub** plugin to the TV's plugin list. The TV's interface (enigma2) is **never restarted** by the installation: the plugin appears at the next restart of enigma2 (the message at the end of the installation says so), which you do when it suits you — DreamHub itself works in the browser right away.
 4. **Check it:** open DreamHub (next section), then **Box admin → Diagnostics → Run self-test**. It asks the box everything DreamHub needs and should come back all green.
 
 ### Later: from a feed
@@ -56,8 +58,8 @@ dpkg -P dreamhub      # also deletes /data/dreamhub — settings, keys, change l
 Any of these works:
 
 - **From the TV:** open the plugin list (or the blue Extensions menu), choose **DreamHub**, and scan the QR code with your phone.
-- **By name:** `http://<box name>.local:8080` — the box announces itself on the network (mDNS). Most phones and computers find it this way.
-- **By address:** `http://<box IP>:8080`, e.g. `http://192.168.1.43:8080`.
+- **By name:** `http://<box name>.local:8765` — the box announces itself on the network (mDNS). Most phones and computers find it this way.
+- **By address:** `http://<box IP>:8765`, e.g. `http://192.168.1.43:8765`.
 
 Tip: put it on your phone's home screen — it then opens like an app. See [section 4](#4-dreamhub-as-an-app).
 
@@ -86,8 +88,8 @@ A box that is switched off can be **switched on from here**. Under Settings → 
 For apps and scripts (a DreamDroid-style app, Home Assistant, your own tools): **Settings → Access → API tokens** creates a token — shown once, revocable on its own, acting as the profile that created it (so it sees that profile's boxes and permissions). Send it with every request:
 
 ```
-curl -H "Authorization: Bearer <token>" "http://dreambox.local:8080/api/v1/boxes"
-curl -H "Authorization: Bearer <token>" "http://dreambox.local:8080/api/v1/timers?box=bedroom"
+curl -H "Authorization: Bearer <token>" "http://dreambox.local:8765/api/v1/boxes"
+curl -H "Authorization: Bearer <token>" "http://dreambox.local:8765/api/v1/timers?box=bedroom"
 ```
 
 - **`box=<id>`** says which box a request is about; `GET /api/v1/boxes` lists the IDs you may use, with what each box can do (`capabilities`). Without it the first box you may use is meant, so a script written for one box keeps working when a second one is added.
@@ -228,12 +230,12 @@ DreamHub can sit on your phone's home screen or your computer's desktop and open
 
 **Putting DreamHub behind HTTPS** (optional) needs a second device that's always on and a name with a real certificate — for example:
 
-- **Tailscale:** on any always-on machine in your network, `tailscale serve --bg http://192.168.1.43:8080` gives `https://<machine>.<tailnet>.ts.net`, reachable from your devices at home and away.
-- **A reverse proxy** you already run (Caddy, Nginx Proxy Manager, Traefik on a NAS), with a domain that points to it, forwarding to `http://<box IP>:8080`.
+- **Tailscale:** on any always-on machine in your network, `tailscale serve --bg http://192.168.1.43:8765` gives `https://<machine>.<tailnet>.ts.net`, reachable from your devices at home and away.
+- **A reverse proxy** you already run (Caddy, Nginx Proxy Manager, Traefik on a NAS), with a domain that points to it, forwarding to `http://<box IP>:8765`.
 
 Either way, enter that host name under **Settings → Access → Network → Additional allowed host names**, or DreamHub refuses requests addressed to it (protection against DNS rebinding).
 
-Over HTTPS the browser also decodes HD channels in Live TV with the device's own hardware (it refuses that on plain `http://`), so HD plays more smoothly on phones. Confirmed with Nginx Proxy Manager on an Unraid server (2026-10-08). When the machine running the proxy is off, the HTTPS address is gone too — the box's own `http://<box IP>:8080` keeps working.
+Over HTTPS the browser also decodes HD channels in Live TV with the device's own hardware (it refuses that on plain `http://`), so HD plays more smoothly on phones. Confirmed with Nginx Proxy Manager on an Unraid server (2026-10-08). When the machine running the proxy is off, the HTTPS address is gone too — the box's own `http://<box IP>:8765` keeps working.
 
 **Keep it in your home network.** For access from away, use Tailscale (or another VPN) rather than opening the proxy to the internet. If DreamHub is reachable from outside at all, switch on its login (**Settings → Access**) first: without it, anyone who reaches the address can control the box.
 
@@ -261,6 +263,7 @@ Privacy: a message's text (a recording's or series' title, a channel name) passe
 
 - **Not sure what works on your box?** **Box admin → Diagnostics → Run self-test** asks the box everything DreamHub needs, without changing anything, and marks each answer: fine, worth a look, failed, or not applicable. **Download the box's answers** gives a zip that helps when reporting a problem.
 - **DreamHub doesn't open:** check that the service runs — in the WebAdmin terminal, `systemctl status dreamhub`. Its log: `journalctl -u dreamhub -n 100`.
+- **DreamHub doesn't start and the log says "address already in use":** another program on the box uses DreamHub's port (**8765**). Pick a free one in the TV plugin (**DreamHub → Settings → Backend port**; DreamHub restarts after you confirm), or in the terminal: `echo 'DREAMHUB_LISTEN_ADDR=:8800' > /etc/default/dreamhub && systemctl restart dreamhub` — then open `http://<box>:8800`.
 - **A hub shows "unavailable" or "degraded":** the sidebar dot and the bell say why and how to fix it (a missing key, a plugin that isn't installed, the box not answering). **Box admin → Diagnostics** lists all of them.
 - **"Could not reach WebControl":** the box's interface is restarting or busy (after an update, enigma2 takes a moment), or it now asks for a login — enter it under **Settings → Services → WebControl**.
 - **File actions are missing in Recordings:** they need DreamHub to run on the box itself; the page says so when they're not available.

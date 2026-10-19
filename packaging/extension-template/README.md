@@ -6,7 +6,7 @@ A starting point for packaging a DreamHub extension (`docs/EXTENSIONHUB_PLAN.md`
 
 A separate OS process — its own `.deb`, its own systemd service, its own small HTTP server on a **localhost-only** port — that on startup:
 
-1. Registers itself with DreamHub: `POST http://127.0.0.1:8080/api/v1/extensions/register` with `{"id", "name", "icon", "admin", "schemaVersion", "baseUrl"}` (`baseUrl` must itself be a loopback address — DreamHub rejects anything else, same as the request's own origin). No DreamHub login: this call is public but checked by remote address, exactly like `Plex.Stream` (`backend/internal/hubs/plex_play.go`).
+1. Registers itself with DreamHub: `POST http://127.0.0.1:8765/api/v1/extensions/register` with `{"id", "name", "icon", "admin", "schemaVersion", "baseUrl"}` (`baseUrl` must itself be a loopback address — DreamHub rejects anything else, same as the request's own origin). No DreamHub login: this call is public but checked by remote address, exactly like `Plex.Stream` (`backend/internal/hubs/plex_play.go`).
 2. From then on answers three calls DreamHub's backend makes of it, all under its own `baseUrl` (`backend/internal/extension/http_client.go` is the exact client that calls these):
    - `GET /widgets` → a JSON array of widgets (status/meter/list/action — `backend/internal/extension/extension.go` has the full shape and field names)
    - `POST /actions/{id}/plan` → `{"summary", "warnings", "fingerprint"}` (read-only preview)

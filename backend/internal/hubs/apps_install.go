@@ -57,7 +57,7 @@ const diskFullPercent = 90.0
 // conflict message (ARCHITECTURE.md) — a port missing from this map
 // still refuses the same way, just without naming what's on it.
 var knownPorts = map[int]string{
-	80: "WebControl", 8080: "DreamHub", 4200: "Terminal (shellinaboxd)",
+	80: "WebControl", 8765: "DreamHub", 8080: "the DreamOS stream server (DM900/DM920)", 4200: "Terminal (shellinaboxd)",
 	139: "Samba", 445: "Samba",
 	// connman's DNS proxy answers on 127.0.0.1:53 and ::1 (the box's
 	// resolv.conf points at it), which blocks an app that wants port 53

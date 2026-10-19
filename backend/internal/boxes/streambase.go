@@ -7,7 +7,7 @@ import (
 )
 
 // SetStreamBase tells the registry how DreamHub's own machine reaches itself
-// ("http://127.0.0.1:8080", "" when DreamHub is not on a box) and the port
+// ("http://127.0.0.1:8765", "" when DreamHub is not on a box) and the port
 // the other boxes use to reach it.
 func (r *Registry) SetStreamBase(local, port string) {
 	r.mu.Lock()

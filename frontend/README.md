@@ -11,7 +11,7 @@ npm install
 npm run dev
 ```
 
-Opens on `http://localhost:5173` and proxies `/api` to a backend running separately on port 8080 (`go run ./cmd/dreamhub` in `../backend`) — see `vite.config.ts`. This gives hot reload; nothing here works standalone without a backend, mock or real, to talk to.
+Opens on `http://localhost:5173` and proxies `/api` to a backend running separately on port 8765 (`go run ./cmd/dreamhub` in `../backend`) — see `vite.config.ts`. This gives hot reload; nothing here works standalone without a backend, mock or real, to talk to.
 
 ```sh
 npm run build

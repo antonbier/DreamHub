@@ -98,6 +98,7 @@ done
 cp "$ROOT/enigma2-plugin/src/plugin.png" "$PKG/usr/lib/enigma2/python/Plugins/Extensions/DreamHub/plugin.png"
 
 # --- control files ---
+chmod 755 "$PKG/DEBIAN"
 sed -e "s/@VERSION@/$VERSION/" -e "s/@ARCH@/$ARCH/" "$ROOT/packaging/control.in" > "$PKG/DEBIAN/control"
 INSTALLED_SIZE="$(du -sk "$PKG" --exclude=DEBIAN | cut -f1)"
 echo "Installed-Size: $INSTALLED_SIZE" >> "$PKG/DEBIAN/control"

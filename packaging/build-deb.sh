@@ -98,6 +98,7 @@ done
 cp "$ROOT/enigma2-plugin/src/plugin.png" "$PKG/usr/lib/enigma2/python/Plugins/Extensions/DreamHub/plugin.png"
 
 # --- control files ---
+chmod 755 "$PKG/DEBIAN"
 sed -e "s/@VERSION@/$VERSION/" -e "s/@ARCH@/$ARCH/" "$ROOT/packaging/control.in" > "$PKG/DEBIAN/control"
 INSTALLED_SIZE="$(du -sk "$PKG" --exclude=DEBIAN | cut -f1)"
 echo "Installed-Size: $INSTALLED_SIZE" >> "$PKG/DEBIAN/control"
@@ -105,6 +106,19 @@ for script in postinst prerm postrm; do
     cp "$ROOT/packaging/$script" "$PKG/DEBIAN/$script"
     chmod 755 "$PKG/DEBIAN/$script"
 done
+
+# --- modes ---
+# The modes in the package must not depend on the build machine's umask: a
+# build on a share with umask 0000 once produced 0777 directories and 0666
+# files, including /usr/bin/dreamhub (runs as root) and the systemd unit.
+find "$PKG" -type d -exec chmod 755 {} +
+find "$PKG" -type f -exec chmod 644 {} +
+chmod 755 "$PKG/usr/bin/dreamhub" "$PKG/usr/bin/dreamhub-dockerd-helper" \
+    "$PKG/DEBIAN/postinst" "$PKG/DEBIAN/prerm" "$PKG/DEBIAN/postrm"
+if [ -n "$(find "$PKG" -perm /022 ! -type l)" ]; then
+    echo "build-deb.sh: group- or world-writable entries in the package tree" >&2
+    exit 1
+fi
 
 # --- build ---
 mkdir -p "$OUT"

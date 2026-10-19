@@ -8,6 +8,7 @@ import (
 	"encoding/json"
 	"errors"
 	"log/slog"
+	"net"
 	"net/http"
 	"os"
 	"strconv"
@@ -39,7 +40,7 @@ import (
 
 // Version is DreamHub's own version, following SemVer per PRINCIPLES.md.
 // Reported by /api/v1/health so the Enigma2 plugin can detect a mismatch.
-const Version = "0.9.1"
+const Version = "0.9.2"
 
 // Mount is a hub's set of routes. The core serves them under the given
 // path prefixes, behind auth and the hub's enable switch.
@@ -315,6 +316,34 @@ func handleQR(d Deps) http.HandlerFunc {
 		w.Header().Set("Cache-Control", "no-store") // the box's address can change (DHCP); never cache a stale one
 		w.Write(png)
 	}
+}
+
+// reachableHost swaps a loopback host (the TV plugin calls 127.0.0.1) for the
+// box's LAN address, since a phone can't reach the box's own loopback.
+func reachableHost(host string) string {
+	h, port, err := net.SplitHostPort(host)
+	if err != nil {
+		h, port = host, ""
+	}
+	h = strings.Trim(h, "[]")
+	if ip := net.ParseIP(h); h != "localhost" && (ip == nil || !ip.IsLoopback()) {
+		return host
+	}
+	// Dialing UDP sends nothing; it only asks the kernel which local address
+	// would route to the LAN.
+	c, err := net.Dial("udp", "192.0.2.1:9")
+	if err != nil {
+		return host
+	}
+	defer c.Close()
+	lan, ok := c.LocalAddr().(*net.UDPAddr)
+	if !ok || lan.IP.IsLoopback() || lan.IP.IsUnspecified() {
+		return host
+	}
+	if port == "" {
+		return lan.IP.String()
+	}
+	return net.JoinHostPort(lan.IP.String(), port)
 }
 
 func handleHealth(d Deps) http.HandlerFunc {

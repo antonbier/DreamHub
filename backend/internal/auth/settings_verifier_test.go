@@ -88,3 +88,33 @@ func TestSettingsVerifier_CacheExpires(t *testing.T) {
 		t.Errorf("expired entries must be pruned, got %d", len(v.cache))
 	}
 }
+
+func TestSettingsVerifier_BlocksGuessing(t *testing.T) {
+	hash, _ := bcrypt.GenerateFromPassword([]byte("right-pw"), bcrypt.MinCost)
+	src := &staticSource{c: Config{Enabled: true, Username: "a", PasswordHash: string(hash), Version: 1}}
+	v := NewSettingsVerifier(src, staticTokens{"tok": true})
+	now := time.Unix(1_000_000, 0)
+	v.now = func() time.Time { return now }
+
+	req := func(addr, user, pass string) bool {
+		r := httptest.NewRequest("GET", "/", nil)
+		r.RemoteAddr = addr + ":5555"
+		r.SetBasicAuth(user, pass)
+		return v.Verify(r)
+	}
+	for i := 0; i < maxFailures; i++ {
+		if req("10.0.0.9", "a", "guess") {
+			t.Fatal("a wrong password was accepted")
+		}
+	}
+	if req("10.0.0.9", "a", "right-pw") {
+		t.Fatal("the guessing address must be blocked, even with the right password")
+	}
+	if !req("10.0.0.2", "a", "right-pw") {
+		t.Fatal("another address must not be affected")
+	}
+	now = now.Add(blockFor + time.Second)
+	if !req("10.0.0.9", "a", "right-pw") {
+		t.Fatal("the block must end")
+	}
+}

@@ -11,6 +11,7 @@
       <img src="/icons/icon-192.png" alt="" class="mx-auto mb-4 h-12 w-12 rounded-lg" />
       <h1 class="mb-1 text-[19px] font-bold">{{ t('unreachable.title') }}</h1>
       <p class="mb-5 text-[13.5px] text-muted">{{ t('unreachable.body') }}</p>
+      <p v-if="detail" class="mb-4 break-all font-mono text-[11.5px] text-muted">{{ detail }}</p>
       <button
         type="button"
         class="w-full rounded-sm bg-accent py-2 text-[14px] font-semibold text-bg disabled:opacity-60"
@@ -28,7 +29,7 @@ import { onBeforeUnmount, onMounted, ref } from 'vue'
 import { useI18n } from 'vue-i18n'
 
 const emit = defineEmits<{ retry: [] }>()
-const props = defineProps<{ check: () => Promise<void> }>()
+const props = defineProps<{ check: () => Promise<void>; detail?: string }>()
 const { t } = useI18n()
 
 const retrying = ref(false)

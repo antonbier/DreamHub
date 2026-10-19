@@ -28,7 +28,7 @@
           :disabled="!!pending"
           @click="previewSwitch(f)"
         >
-          <span class="absolute top-0.5 h-4 w-4 rounded-full bg-bg transition-all" :class="f.enabled ? 'left-[18px]' : 'left-0.5'" />
+          <span class="absolute top-0.5 h-4 w-4 rounded-full bg-bg transition-all" :class="f.enabled ? 'start-[18px]' : 'start-0.5'" />
         </button>
       </li>
     </ul>

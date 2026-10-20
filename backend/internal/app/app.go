@@ -413,6 +413,21 @@ func New(ctx context.Context, o Options) (*App, error) {
 	adminHub := &hubs_.Admin{Store: st, Level: level, Logs: o.Logs, FS: o.RecordingsFS,
 		Systemd: o.Systemd, Scripts: o.Scripts, Apt: o.Apt, Feeds: feeds, Packages: pkgManager, FeedManager: feedManager, AI: o.AI, Settings: svc,
 		Auth: svc, TerminalTarget: o.TerminalTarget, Plans: plans, WC: wc, Now: now, ReadOnly: o.ReadOnlyFiles}
+	// A package a hub names was installed, upgraded or removed: look at the
+	// hubs' status now, so a hub that became (un)available shows in the
+	// change log and the navigation at once.
+	adminHub.AfterPackages = func(ctx context.Context, _ []string) {
+		conns.Forget(ctx)
+		v, err := svc.Values(ctx, user)
+		if err != nil {
+			return
+		}
+		statuses := hubs.StatusesFor(ctx, v, conns.Reports(ctx, v, svc.Version()))
+		for _, t := range watcher.DiffBox(box.Key(ctx), statuses) {
+			detail, _ := json.Marshal(map[string]any{"hub": t.HubID, "from": t.From, "to": t.To})
+			_ = st.AppendChange(ctx, store.ChangeEntry{Action: "hub.statusChanged", Summary: t.Summary(), Detail: detail})
+		}
+	}
 	controlHub := &hubs_.Control{WC: wc}
 
 	// Extension Hub (docs/EXTENSIONHUB_PLAN.md, E1): the registry is

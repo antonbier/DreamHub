@@ -51,41 +51,53 @@ const CapJournald = "journald"
 // added when it's built.
 func V1() []Descriptor {
 	wc := Requirement{Connector: connector.IDWebControl}
+	// The package names are the ones dpkg reports on the reference box
+	// (2026-10-20): WebControl is the WebInterface plugin's, the optional
+	// plugins each have their own.
+	const (
+		pkgWebInterface = "enigma2-plugin-extensions-webinterface"
+		pkgBouquetEdit  = "enigma2-plugin-extensions-webbouqueteditor"
+		pkgSeriesRec    = "enigma2-plugin-extensions-serienrecorder"
+		pkgAutoTimer    = "enigma2-plugin-extensions-autotimer"
+	)
 	return []Descriptor{
 		{ID: IDMedia, Name: "MediaHub", Label: "hub.media", Icon: "recordings", Path: "/media", Group: GroupMedia, Order: 10,
 			Requires: []Requirement{wc, {Connector: connector.IDTMDB, Optional: true}},
 			Emits:    []string{events.DiskAboveLimit},
 			// AdScan and lossless trimming run the system ffmpeg (DreamHub's
 			// own package Depends on it).
-			Packages: []string{"ffmpeg"}},
+			Packages: []string{"ffmpeg", pkgWebInterface}},
 		{ID: IDSeries, Name: "SeriesHub", Label: "hub.series", Icon: "series", Path: "/series", Group: GroupMedia, Order: 20,
 			Requires: []Requirement{wc, {Connector: connector.IDSerienRecorder}},
-			Emits:    []string{events.MissingAiring}},
+			Emits:    []string{events.MissingAiring},
+			Packages: []string{pkgWebInterface, pkgSeriesRec}},
 		// Plex Mediathek: a Plex server's films and series. Built from the
 		// cache while the server is off (CONCEPT.md, "Connectors").
 		{ID: IDPlex, Name: "PlexHub", Label: "hub.plex", Icon: "library", Path: "/plex", Group: GroupMedia, Order: 30,
 			Requires: []Requirement{{Connector: connector.IDPlex, Cached: true}, {Hub: IDControl, Optional: true}}},
 		{ID: IDGuide, Name: "GuideHub", Label: "hub.guide", Icon: "guide", Path: "/guide", Group: GroupProgram, Order: 10,
-			Requires: []Requirement{wc, {Connector: connector.IDTMDB, Optional: true}}},
+			Requires: []Requirement{wc, {Connector: connector.IDTMDB, Optional: true}}, Packages: []string{pkgWebInterface}},
 		// Recording a radio programme needs TimerHub; listening doesn't.
 		{ID: IDRadio, Name: "RadioHub", Label: "hub.radio", Icon: "radio", Path: "/radio", Group: GroupProgram, Order: 15,
-			Requires: []Requirement{wc, {Hub: IDTimer, Optional: true}}},
+			Requires: []Requirement{wc, {Hub: IDTimer, Optional: true}}, Packages: []string{pkgWebInterface}},
 		// Live TV and recordings in the browser (built early, 2026-10-06).
 		{ID: IDStream, Name: "StreamHub", Label: "hub.stream", Icon: "stream", Path: "/stream", Group: GroupProgram, Order: 12,
-			Requires: []Requirement{wc}},
+			Requires: []Requirement{wc}, Packages: []string{pkgWebInterface}},
 		{ID: IDTimer, Name: "TimerHub", Label: "hub.timer", Icon: "timers", Path: "/timers", Group: GroupProgram, Order: 20,
-			Requires: []Requirement{wc}, Emits: []string{events.RecordingStarted, events.RecordingFinished, events.TimerConflict}},
+			Requires: []Requirement{wc}, Emits: []string{events.RecordingStarted, events.RecordingFinished, events.TimerConflict},
+			// AutoTimer's section is optional.
+			Packages: []string{pkgWebInterface, pkgAutoTimer}},
 		// Recommendations need an AI provider; creating a timer from one
 		// needs TimerHub, so without it DiscoveryHub still works, but degraded.
 		{ID: IDDiscovery, Name: "DiscoveryHub", Label: "hub.discovery", Icon: "recommendations", Path: "/discovery", Group: GroupProgram, Order: 30,
-			Requires: []Requirement{wc, {Connector: connector.IDOpenAI}, {Hub: IDTimer, Optional: true}}},
+			Requires: []Requirement{wc, {Connector: connector.IDOpenAI}, {Hub: IDTimer, Optional: true}}, Packages: []string{pkgWebInterface}},
 		{ID: IDControl, Name: "ControlHub", Label: "hub.control", Icon: "control", Path: "/control", Group: GroupDevice, Order: 20,
-			Requires: []Requirement{wc}},
+			Requires: []Requirement{wc}, Packages: []string{pkgWebInterface}},
 		// The channel list (docs/CHANNELHUB_PLAN.md): browsing needs only
 		// WebControl; editing goes through the optional BouquetEditor
 		// plugin, which the hub detects itself.
 		{ID: IDChannels, Name: "ChannelHub", Label: "hub.channels", Icon: "list", Path: "/channels", Group: GroupDevice, Order: 15,
-			Perm: perm.ChannelsManage, Requires: []Requirement{wc}},
+			Perm: perm.ChannelsManage, Requires: []Requirement{wc}, Packages: []string{pkgWebInterface, pkgBouquetEdit}},
 		// DeviceHub ("Gerät"): device status/diagnostics/change log plus
 		// administration (packages, logs, services, terminal — #47) in
 		// one nav entry. Both halves' own dependencies are optional here:
@@ -96,7 +108,9 @@ func V1() []Descriptor {
 		// specific reason still shows in the status banner.
 		{ID: IDDevice, Name: "DeviceHub", Label: "hub.device", Icon: "admin", Path: "/device", Group: GroupBottom, Order: 10,
 			Perm: perm.System, Requires: []Requirement{{Connector: connector.IDWebControl, Optional: true}, {Capability: CapJournald, Optional: true}},
-			Emits: []string{events.ServiceFailed, events.ServiceRecovered, events.PackageUpgradable}},
+			Emits: []string{events.ServiceFailed, events.ServiceRecovered, events.PackageUpgradable},
+			// Logs (journald) and the browser terminal.
+			Packages: []string{"enigma2-journald", "shellinabox"}},
 		// AppsHub: no requirements of its own — an individual extension's
 		// reachability is its own card's status, not this hub's
 		// (extensions.go's list handler), so installing zero extensions

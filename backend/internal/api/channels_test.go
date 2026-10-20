@@ -500,3 +500,21 @@ func TestChannels_SyncCreatesAMissingBouquet(t *testing.T) {
 		t.Fatalf("the new bouquet should exist on the second box: %+v", again.Bouquets)
 	}
 }
+
+func TestRadio_TextIsReadFromTheStream(t *testing.T) {
+	m := mock.New()
+	m.StreamFile = "../radiotext/testdata/dlf-kultur.ts"
+	e := newEnvWith(t, m)
+	var out struct{ Ref, Text string }
+	e.json(t, "GET", "/api/v1/radio/text?ref="+urlq("1:0:2:2BB6:3F3:1:C00000:0:0:0:"), "", nil, 200, &out)
+	if !strings.HasPrefix(out.Text, "Proms London: Mahlers 9.") {
+		t.Fatalf("radio text: %+v", out)
+	}
+	if resp, b := e.do(t, "GET", "/api/v1/radio/text?ref=4097:0:0:0:0:0:0:0:0:0:/etc/passwd", "", nil); resp.StatusCode != http.StatusBadRequest {
+		t.Fatalf("a file reference must be refused: %d %s", resp.StatusCode, b)
+	}
+	m.StreamFile = ""
+	if resp, b := e.do(t, "GET", "/api/v1/radio/text?ref="+urlq("1:0:2:2BB7:3F3:1:C00000:0:0:0:"), "", nil); resp.StatusCode != http.StatusServiceUnavailable {
+		t.Fatalf("without a stream: %d %s", resp.StatusCode, b)
+	}
+}

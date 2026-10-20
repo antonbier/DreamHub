@@ -44,6 +44,7 @@
             >
               {{ playingStation.now.title }}
             </button>
+            <div v-if="radioText && radioTextRef === playingStation.serviceReference" class="truncate text-[13.5px] italic text-muted" :title="radioText">{{ radioText }}</div>
           </div>
           <div v-if="playingStation.now" class="w-48 shrink-0 below-sm:w-full">
             <div class="h-1 overflow-hidden rounded-full bg-field">
@@ -60,6 +61,7 @@
           <div class="min-w-0 flex-1 below-sm:basis-[calc(100%-5rem)]" aria-live="polite">
             <div class="text-[12px] text-faint">{{ t('radio.inBrowser') }}</div>
             <div class="truncate text-[14.5px] font-semibold text-text">{{ listeningStation?.serviceName ?? listening }}</div>
+            <div v-if="radioText && radioTextRef === listening && !playingStation" class="truncate text-[13px] italic text-muted" :title="radioText">{{ radioText }}</div>
             <div v-if="listenState === 'loading'" class="text-[12.5px] text-muted">{{ t('stream.loading') }}</div>
             <div v-else-if="listenState === 'error'" class="text-[12.5px] text-warn">{{ listenErrorText }}</div>
             <div v-else-if="listeningStation?.now" class="truncate text-[12.5px] text-muted">{{ listeningStation.now.title }}</div>
@@ -445,6 +447,36 @@ const ticker = setInterval(() => {
   if (stations.value.some((s) => s.now && s.now.start + s.now.duration <= nowSec.value)) void loadStations()
 }, 30_000)
 onBeforeUnmount(() => clearInterval(ticker))
+
+// --- radio text: the line the station sends about what it plays ----------
+// Read from the station's stream by the backend, which takes a few seconds,
+// so it is asked for only the station that plays (on the box or here), and
+// again some time after each answer.
+const radioText = ref('')
+const radioTextRef = ref('')
+let radioTextRun = 0
+const textStation = computed(() => playingStation.value?.serviceReference || listening.value)
+watch(
+  textStation,
+  async (ref_) => {
+    const run = ++radioTextRun
+    radioText.value = ''
+    radioTextRef.value = ''
+    while (ref_ && run === radioTextRun) {
+      try {
+        const res = await api.radio.text(ref_)
+        if (run !== radioTextRun) return
+        radioText.value = res.text
+        radioTextRef.value = ref_
+      } catch {
+        // No tuner, a busy read, the box away: try again later.
+      }
+      await new Promise((r) => setTimeout(r, 25_000))
+    }
+  },
+  { immediate: true },
+)
+onBeforeUnmount(() => radioTextRun++)
 
 // --- listen in the browser (StreamHub's player) ---------------------------
 // The box's radio stream, unchanged, decoded here (MP2 mostly); offered

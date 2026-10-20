@@ -5499,6 +5499,38 @@
     }
    }
   },
+  "/radio/text": {
+   "get": {
+    "summary": "Read a station's radio text (now playing)",
+    "tags": [
+     "radio"
+    ],
+    "operationId": "GET_radio_text",
+    "parameters": [
+     {
+      "$ref": "#/components/parameters/Box"
+     },
+     {
+      "name": "ref",
+      "in": "query",
+      "required": true,
+      "schema": {
+       "type": "string"
+      },
+      "description": "The station's service reference."
+     }
+    ],
+    "description": "Listens in on the box's stream of the station for up to 25 s and reads the radio text out of it; the answer is `{ref, text}` (`text` is empty when the station sends none) and is reused for 30 s. The box's stream proxy needs the station on the playing transponder or a free tuner (`503 stream_no_tuner`); one read runs at a time per box (`429 radio_text_busy`).",
+    "responses": {
+     "200": {
+      "description": "OK"
+     },
+     "default": {
+      "$ref": "#/components/responses/Error"
+     }
+    }
+   }
+  },
   "/radio/timers": {
    "get": {
     "summary": "Read radio timers",

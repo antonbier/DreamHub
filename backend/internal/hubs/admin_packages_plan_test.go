@@ -1,9 +1,11 @@
 package hubs
 
 import (
+	"context"
 	"testing"
 
 	"github.com/antonbier/DreamHub/backend/internal/apt"
+	"github.com/antonbier/DreamHub/backend/internal/store"
 )
 
 // The real cascade seen on the box (ARCHITECTURE.md, "Box checks for
@@ -31,5 +33,33 @@ func TestPackageWarnings_NeededByHub(t *testing.T) {
 	}
 	if w := packageWarnings([]apt.Step{{Kind: "upgrade", Name: "ffmpeg"}}, []string{"ffmpeg"}); len(w) != 0 {
 		t.Fatalf("upgrading isn't removing: %+v", w)
+	}
+}
+
+// A package change that touches a package a hub names has the hubs looked
+// at again; any other change doesn't.
+func TestApplyPackages_RechecksOnlyForHubPackages(t *testing.T) {
+	st, err := store.Open(t.TempDir())
+	if err != nil {
+		t.Fatal(err)
+	}
+	defer st.Close()
+	var got [][]string
+	h := &Admin{Store: st, AfterPackages: func(_ context.Context, names []string) { got = append(got, names) }}
+	run := func(context.Context) (string, error) { return "ok", nil }
+	user := store.User{ID: 1}
+
+	if f := h.applyPackages(context.Background(), user, "install", []apt.Step{{Kind: "install", Name: "htop"}}, "htop", run); f != nil {
+		t.Fatal(f)
+	}
+	if len(got) != 0 {
+		t.Fatalf("htop is no hub's package: %v", got)
+	}
+	steps := []apt.Step{{Kind: "install", Name: "htop"}, {Kind: "install", Name: "enigma2-plugin-extensions-serienrecorder"}}
+	if f := h.applyPackages(context.Background(), user, "install", steps, "SerienRecorder", run); f != nil {
+		t.Fatal(f)
+	}
+	if len(got) != 1 || len(got[0]) != 1 || got[0][0] != "enigma2-plugin-extensions-serienrecorder" {
+		t.Fatalf("recheck: %v", got)
 	}
 }

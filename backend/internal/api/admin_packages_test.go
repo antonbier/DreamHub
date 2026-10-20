@@ -56,7 +56,7 @@ func TestAdminPackages_ListAndFilter(t *testing.T) {
 }
 
 // The "needed" view: what a hub uses, installed or not — the mock has
-// neither installed, both in the feed.
+// none installed, ffmpeg and the overlay module in the feed.
 func TestAdminPackages_Needed(t *testing.T) {
 	e := newEnv(t)
 	resp, b := e.do(t, "GET", "/api/v1/admin/packages?status=needed", "", nil)
@@ -69,7 +69,7 @@ func TestAdminPackages_Needed(t *testing.T) {
 		} `json:"packages"`
 	}
 	json.Unmarshal(b, &v)
-	if resp.StatusCode != http.StatusOK || len(v.Packages) != 2 {
+	if resp.StatusCode != http.StatusOK || len(v.Packages) != 8 {
 		t.Fatalf("needed: %d %s", resp.StatusCode, b)
 	}
 	byName := map[string]int{}

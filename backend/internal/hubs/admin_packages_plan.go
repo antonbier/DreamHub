@@ -167,6 +167,18 @@ func (h *Admin) applyPackages(ctx context.Context, user store.User, action strin
 	_ = h.Store.AppendChange(context.WithoutCancel(ctx), store.ChangeEntry{
 		UserID: user.ID, Action: "admin.package." + action, Summary: prefix + summary,
 	})
+	// Even a failed run may have changed packages.
+	if h.AfterPackages != nil {
+		var touched []string
+		for _, s := range steps {
+			if _, ok := packageNeeds[s.Name]; ok {
+				touched = append(touched, s.Name)
+			}
+		}
+		if len(touched) > 0 {
+			h.AfterPackages(context.WithoutCancel(ctx), touched)
+		}
+	}
 	if runErr != nil {
 		return &plan.Failure{Status: http.StatusBadGateway, Code: "package_apply_failed", Message: "apt-get reported an error; see its output", Details: map[string]any{"output": lastLinesOf(output, 12)}, Err: runErr}
 	}

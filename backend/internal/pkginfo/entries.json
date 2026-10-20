@@ -1,11 +1,7 @@
 {
   "_note": "Curated package information for the Packages tab (docs/APPSHUB_PLAN.md, App11). Written offline from what the repo documents and what is common knowledge about Enigma2/DreamOS; descriptions that were not certain are left out on purpose (the package's own apt Description is shown instead). The owner and the box feed fill the rest: run 'go run ./cmd/pkginfo-missing <Packages file>' to list the feed packages without an entry. Keys are package names; 'category' is optional (otherwise derived from the name, see category.go); 'neededBy' lists hub ids (the UI shows their plain page names). Names marked in 'unverified' follow the Enigma2 naming convention but have not been seen on the DreamOS feed yet; an entry whose name the feed does not use is simply never shown.",
   "unverified": [
-    "enigma2-plugin-extensions-autotimer",
-    "enigma2-plugin-extensions-bouqueteditor",
-    "enigma2-plugin-extensions-serienrecorder",
-    "enigma2-plugin-extensions-epgrefresh",
-    "shellinabox"
+    "enigma2-plugin-extensions-epgrefresh"
   ],
   "packages": {
     "enigma2": {
@@ -64,6 +60,23 @@
         "it": "Modulo aggiuntivo per MediaPortal: collegamenti a servizi video esterni."
       }
     },
+    "enigma2-plugin-extensions-webinterface": {
+      "neededBy": ["media", "series", "guide", "radio", "stream", "timer", "discovery", "control", "channels"],
+      "description": {
+        "de": "Die Weboberfläche der Box (WebControl). DreamHub liest darüber Programm, Timer und Aufnahmen und steuert die Box.",
+        "en": "The box's web interface (WebControl). DreamHub reads the guide, timers and recordings through it and controls the box.",
+        "it": "L'interfaccia web del box (WebControl). DreamHub ne legge guida, timer e registrazioni e controlla il box."
+      }
+    },
+    "enigma2-journald": {
+      "category": "system",
+      "neededBy": ["device"],
+      "description": {
+        "de": "Schreibt die Meldungen von enigma2 ins System-Journal, damit DreamHub sie unter Gerät anzeigen kann.",
+        "en": "Writes enigma2's messages to the system journal so DreamHub can show them under Device.",
+        "it": "Scrive i messaggi di enigma2 nel journal di sistema, così DreamHub può mostrarli in Dispositivo."
+      }
+    },
     "enigma2-plugin-extensions-autotimer": {
       "neededBy": ["timer"],
       "description": {
@@ -72,7 +85,7 @@
         "it": "AutoTimer: crea automaticamente le registrazioni quando un programma corrisponde a una ricerca salvata."
       }
     },
-    "enigma2-plugin-extensions-bouqueteditor": {
+    "enigma2-plugin-extensions-webbouqueteditor": {
       "neededBy": ["channels"],
       "description": {
         "de": "Bouquet-Editor: Senderlisten anlegen, sortieren und umbenennen, auch von außen über die Weboberfläche.",

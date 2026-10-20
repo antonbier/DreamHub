@@ -414,6 +414,9 @@ export const api = {
     // and what the box is playing.
     stations: (bouquet: string) =>
       request<{ stations: NowNext[]; playing: string }>('GET', `/api/v1/radio/stations?bouquet=${encodeURIComponent(bouquet)}`),
+    // The station's radio text (the "now playing" line its stream carries);
+    // listens in for up to ~25 s, so it is asked for the station that plays.
+    text: (ref: string) => request<{ ref: string; text: string }>('GET', `/api/v1/radio/text?ref=${encodeURIComponent(ref)}`),
     // Radio recordings that haven't ended yet, soonest first.
     timers: () => request<{ timers: Timer[] }>('GET', '/api/v1/radio/timers'),
     picon: (ref: string, name: string) => requestBlob(`/api/v1/radio/picon?ref=${encodeURIComponent(displayRef(ref))}&name=${encodeURIComponent(name)}`),

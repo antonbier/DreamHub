@@ -93,6 +93,15 @@ func (r *Registry) Get(id string) (Connector, bool) {
 	return c, ok
 }
 
+// Forget drops the remembered reports of the box in ctx, so the next call
+// to Reports checks again — after something changed on the box that a
+// connector looks at (a package was installed).
+func (r *Registry) Forget(ctx context.Context) {
+	r.mu.Lock()
+	delete(r.cache, box.Key(ctx))
+	r.mu.Unlock()
+}
+
 // Reports returns the state of every connector, keyed by ID. Results are
 // cached for the registry's TTL and recomputed immediately when the
 // settings version changes (e.g. an API key was just entered).

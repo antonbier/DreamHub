@@ -26,6 +26,8 @@ type Radio struct {
 	Now func() time.Time
 	// PiconDirs: as Guide's; nil means DefaultPiconDirs.
 	PiconDirs []string
+
+	rt radioTextState // radio_text.go
 }
 
 // Mount registers RadioHub's routes.
@@ -34,6 +36,7 @@ func (h *Radio) Mount(mux httpx.Mux) {
 	mux.HandleFunc("GET /api/v1/radio/stations", h.stations)
 	mux.HandleFunc("GET /api/v1/radio/timers", h.timers)
 	mux.HandleFunc("GET /api/v1/radio/picon", h.picon)
+	mux.HandleFunc("GET /api/v1/radio/text", h.text)
 }
 
 // radioBouquets is the box's radio bouquet list without headings.

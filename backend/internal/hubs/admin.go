@@ -1,6 +1,7 @@
 package hubs
 
 import (
+	"context"
 	"encoding/json"
 	"fmt"
 	"net/http"
@@ -66,6 +67,11 @@ type Admin struct {
 	// lists the "not installed" catalog (admin_packages_plan.go); nil
 	// keeps the browser read-only.
 	Packages apt.Manager
+	// AfterPackages is called after a package change that touched a package
+	// a hub names (hub.Descriptor.Packages): the hubs' status is checked at
+	// once instead of whenever someone next opens the app (ADMINHUB_PLAN.md,
+	// "A package change re-checks only the hubs it could affect"). nil: not.
+	AfterPackages func(ctx context.Context, names []string)
 	// FeedManager switches feeds on and off and adds one, as a plan
 	// (admin_feeds.go); nil keeps the feed list read-only.
 	FeedManager apt.FeedManager

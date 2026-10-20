@@ -48,7 +48,7 @@ Done: `.deb` for arm64 (box) and armhf (built, not tried on a DM900/DM920) with 
   - [x] Writing the breaks into `.ts.cuts` (the TV skips them) (#44) — `media.adscan.mark`, "Mark in cut list" in the detail dialog. Box (2026-10-16): the player skips the marked OUT→IN region; the positions count from the start of the recording, not in raw stream PTS (the first version wrote raw PTS, fixed in 0.7.0)
   - [ ] Phases 2–3: audio fingerprints, learned series patterns, learned timer margins, suspicious recordings (#44)
   - [x] Cutting by hand (own in/out points) (#27) — "Cut by hand" in the details dialog, the ad cut's flow with typed parts; box (2026-10-20): two hand cuts and a third on a 188 MB piece of a real recording, original in the trash, cut file decodes, 90 s removed as asked
-- [ ] Radio text / now playing (#28)
+- [x] Radio text / now playing (#28) — read from the station's own audio stream (RDS in the MPEG audio ancillary data; WebControl has nothing), `GET /api/v1/radio/text`; box (2026-10-20): Dlf Kultur, 6 s to the first complete line
 
 ## Later
 
@@ -62,7 +62,7 @@ Done: `.deb` for arm64 (box) and armhf (built, not tried on a DM900/DM920) with 
 - [x] **DeviceHub terminal** — `shellinaboxd` behind DreamHub's auth, off by default, re-auth required (A4, built 2026-10-11); box: the proxy reaches the real `shellinaboxd` and its login prompt (2026-10-12, #36)
 - [x] **DeviceHub**: package browser, feeds with a trust signal, update notifications, AI explain (A2 box-independent slices, built 2026-10-12, `docs/ADMINHUB_PLAN.md`); box: `dpkg-query`/`apt-get` output and the `X-DreamHub-Category` field confirmed 2026-10-12
 - [x] **DeviceHub**: package install/upgrade/remove as a plan — `apt-get -s` is the preview (every package touched, extra removals and enigma2 changes flagged), refused while recording when enigma2 is touched, DreamHub's own package refused, previous versions in the change log — and a "not installed" catalog (A2, built and confirmed on the box 2026-10-12: htop installed and removed, the skin cascade shown) (#47)
-- [ ] **DeviceHub**: targeted self-test re-check after a package change (A2 leftover); add BouquetEditor/SerienRecorder/WebInterface/shellinabox to the "needed by a hub" list once their package names are read off the box (#47)
+- [x] **DeviceHub**: targeted re-check after a package change (a package a hub names → hub status looked at at once, transitions in the change log) and the plugins' package names in the "needed by a hub" list, read off the box 2026-10-20 (#47)
 - [ ] Jellyfin / Emby connectors (#37)
 - [ ] More AI providers (#38)
 - [ ] Profiles: a kids role with allowed bouquets (prepared: `users.bouquets`) and a Plex age limit (#45)

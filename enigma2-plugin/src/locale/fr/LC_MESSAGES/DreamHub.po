@@ -39,9 +39,6 @@ msgstr "Réglages DreamHub"
 msgid "Backend port"
 msgstr "Port du backend"
 
-msgid "Backend requires a password"
-msgstr "Le backend demande un mot de passe"
-
 msgid "Cancel"
 msgstr "Annuler"
 
@@ -53,3 +50,12 @@ msgstr "Changer le port de DreamHub en %d ?\n\nDreamHub redémarre pendant quelq
 
 msgid "The port could not be saved: %s"
 msgstr "Le port n'a pas pu être enregistré : %s"
+
+msgid "Or open this address in a browser:\n%s"
+msgstr "Ou ouvrir cette adresse dans un navigateur :\n%s"
+
+msgid "The port DreamHub listens on (%d to %d). Changing it restarts DreamHub for a few seconds."
+msgstr "Le port sur lequel DreamHub écoute (%d à %d). Le changer redémarre DreamHub pendant quelques secondes."
+
+msgid "The port must be between %d and %d."
+msgstr "Le port doit être compris entre %d et %d."

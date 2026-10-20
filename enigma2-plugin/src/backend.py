@@ -4,9 +4,7 @@
 # second UI"; PRINCIPLES.md: no re-implementing what already exists
 # elsewhere). Both endpoints are deliberately public/unauthenticated on the
 # backend side (backend/internal/api's handleHealth, handleQR), so no
-# credentials are needed here yet, even with config.plugins.dreamhub.authEnabled
-# on — that flag is about calls this plugin doesn't make yet, kept for when
-# it does.
+# credentials are needed here.
 #
 # Uses Twisted's getPage, the same non-blocking HTTP mechanism the rest of
 # Enigma2 uses (e.g. Screens.Ipkg, SoftwareManager) — a slow or unreachable

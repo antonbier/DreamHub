@@ -58,22 +58,35 @@ def _toStr(value):
     return value
 
 
+# The coloured key hints: a bar of the key's colour and a white label, drawn
+# with plain eLabels so they look the same in every skin (the coloured text
+# the first version used was hard to read on the TV, and some skins have no
+# button pixmaps). Sizes assume the 1280x720 skin grid, like the other
+# plugins' screens.
+KEY_RED = "#e53935"
+KEY_GREEN = "#43a047"
+
+
 class DreamHubScreen(Screen):
     skin = """
-    <screen name="DreamHubScreen" position="center,center" size="560,420" title="DreamHub">
-        <widget name="qr" position="20,20" size="220,220" alphatest="blend" />
-        <widget name="status" position="260,20" size="280,180" font="Regular;22" valign="top" />
-        <widget name="hint" position="20,260" size="520,60" font="Regular;20" valign="top" />
-        <widget name="key_red" position="20,370" size="240,40" font="Regular;20" halign="left" valign="center" foregroundColor="red" />
-        <widget name="key_green" position="280,370" size="260,40" font="Regular;20" halign="left" valign="center" foregroundColor="green" />
+    <screen name="DreamHubScreen" position="center,center" size="760,480" title="DreamHub">
+        <widget name="qr" position="30,30" size="260,260" alphatest="blend" />
+        <widget name="status" position="320,30" size="410,150" font="Regular;24" valign="top" />
+        <widget name="address" position="320,190" size="410,100" font="Regular;24" valign="top" />
+        <widget name="hint" position="30,310" size="700,70" font="Regular;22" valign="top" />
+        <eLabel position="30,415" size="8,40" backgroundColor="%s" />
+        <widget name="key_red" position="48,415" size="320,40" font="Regular;24" halign="left" valign="center" />
+        <eLabel position="390,415" size="8,40" backgroundColor="%s" />
+        <widget name="key_green" position="408,415" size="320,40" font="Regular;24" halign="left" valign="center" />
     </screen>
-    """
+    """ % (KEY_RED, KEY_GREEN)
 
     def __init__(self, session):
         Screen.__init__(self, session)
         self.setTitle(_("DreamHub"))
         self["qr"] = Pixmap()
         self["status"] = Label(_("Checking backend…"))
+        self["address"] = Label("")
         self["hint"] = Label(_("Scan this code with your phone's camera to open DreamHub."))
         self["key_red"] = Label(_("Close"))
         self["key_green"] = Label(_("Settings"))
@@ -97,6 +110,10 @@ class DreamHubScreen(Screen):
         try:
             data = json.loads(raw)
             version = data.get("version", "?")
+            # Backends from 0.9.3 say which address a phone can use; show it
+            # under the QR code for when scanning doesn't work.
+            if data.get("address"):
+                self["address"].setText(_toStr(_("Or open this address in a browser:\n%s") % data["address"]))
         except Exception:
             _log("gotHealth: json.loads failed on %r\n%s" % (raw, traceback.format_exc()))
             match = re.search(r'"version"\s*:\s*"([^"]+)"', raw or "")

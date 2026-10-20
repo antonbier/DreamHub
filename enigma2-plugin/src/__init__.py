@@ -19,7 +19,7 @@ from Tools.Directories import SCOPE_PLUGINS, resolveFilename
 
 # Kept in sync by hand with backend/internal/api.Version — DreamHubScreen
 # shows a mismatch warning rather than silently assuming compatibility.
-PluginVersion = "0.9.2"
+PluginVersion = "0.9.3"
 
 PluginLanguageDomain = "DreamHub"
 PluginLanguagePath = "Extensions/DreamHub/locale"
@@ -38,12 +38,12 @@ def _(txt):
 localeInit()
 language.addCallback(localeInit)
 
-# The plugin's own settings (CONCEPT.md: "a few basic settings: auth
-# on/off, port"). Whether the backend has its own auth switched on is local
-# to the plugin, so a future authenticated call knows to ask for credentials.
-# The port is not stored here: portcfg.py reads and writes the one place the
-# backend itself reads it from (/etc/default/dreamhub). Everything else stays
-# the web UI's job (PRINCIPLES.md, "one central menu").
+# The plugin's own settings. The port is not stored here: portcfg.py reads
+# and writes the one place the backend itself reads it from
+# (/etc/default/dreamhub). Everything else stays the web UI's job
+# (PRINCIPLES.md, "one central menu"). authEnabled is no longer offered on
+# the settings screen (it never did anything); the entry stays so an
+# existing enigma2 settings file keeps loading.
 from Components.config import ConfigSubsection, ConfigYesNo, config  # noqa: E402
 
 config.plugins.dreamhub = ConfigSubsection()

@@ -39,9 +39,6 @@ msgstr "DreamHub ayarları"
 msgid "Backend port"
 msgstr "Backend portu"
 
-msgid "Backend requires a password"
-msgstr "Backend parola istiyor"
-
 msgid "Cancel"
 msgstr "İptal"
 
@@ -53,3 +50,12 @@ msgstr "DreamHub bağlantı noktası %d olarak değiştirilsin mi?\n\nDreamHub b
 
 msgid "The port could not be saved: %s"
 msgstr "Bağlantı noktası kaydedilemedi: %s"
+
+msgid "Or open this address in a browser:\n%s"
+msgstr "Veya bu adresi tarayıcıda açın:\n%s"
+
+msgid "The port DreamHub listens on (%d to %d). Changing it restarts DreamHub for a few seconds."
+msgstr "DreamHub'ın dinlediği bağlantı noktası (%d ile %d arası). Değiştirmek DreamHub'ı birkaç saniyeliğine yeniden başlatır."
+
+msgid "The port must be between %d and %d."
+msgstr "Bağlantı noktası %d ile %d arasında olmalıdır."

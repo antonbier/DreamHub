@@ -71,7 +71,7 @@ Package/feed/script actions need `system` (the same permission that already gate
 | # | Package | Contents |
 |---|---|---|
 | A1 | DeviceHub merge | **built 2026-10-11.** SystemHub + AdminHub → one nav entry (admin-only, no role split — see above), the redirect/link cleanup |
-| A2 | Packages & feeds | **built 2026-10-12**: browsing, feeds, update notifications, AI explain, and install/upgrade/remove as a plan with the `apt-get -s` preview plus a "not installed" catalog (confirmed on the box). Still open: targeted self-test re-check. The "needed by a hub" filter was built 2026-10-13 (see below) |
+| A2 | Packages & feeds | **built 2026-10-12**: browsing, feeds, update notifications, AI explain, and install/upgrade/remove as a plan with the `apt-get -s` preview plus a "not installed" catalog (confirmed on the box). The targeted re-check after a package change was built 2026-10-20 (`Admin.AfterPackages`: a package a hub names → the connector reports are dropped and the hubs' status is looked at at once, transitions go to the change log). The "needed by a hub" filter was built 2026-10-13 (see below) |
 | A3 | Scripts | **built 2026-10-11.** upload, store, run with confirm + change-log entry; run as a background job instead of a synchronous apply is future work if `scripts.Timeout` (2 min) turns out too short in practice |
 | A4 | Terminal (#36) | **built 2026-10-11.** `shellinaboxd` proxied behind DreamHub's auth, off by default (needs auth on + password re-entered), session start/end logged. The reverse-proxy path-stripping is tested against a fake shellinaboxd, not the real one yet — needs a box check that the real proxy reaches a working shell before release |
 

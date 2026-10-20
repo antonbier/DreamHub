@@ -185,7 +185,7 @@ Prepared in the data model from day one: preferences, language, time zone settin
 
 ## Enigma2 TV plugin
 
-- **v1**: a launcher, not a second UI. Shows a **QR code** on the TV that opens DreamHub on a phone without typing an IP address, shows whether the backend is running and its version, and offers a few basic settings (auth on/off, port). Language follows the system (`config.osd.language`). Same division of labor as the WebControl plugin: basic settings on the TV, everything else in the web UI.
+- **v1**: a launcher, not a second UI. Shows a **QR code** on the TV that opens DreamHub on a phone without typing an IP address, shows whether the backend is running and its version, and offers one basic setting (the port). Language follows the system (`config.osd.language`). Same division of labor as the WebControl plugin: basic settings on the TV, everything else in the web UI.
 - **Later**: recommendations and notifications shown directly on the TV.
 
 ## UX direction: a good-looking work tool

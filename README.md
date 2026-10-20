@@ -6,17 +6,17 @@ One place for everything your **Dreambox (DreamOS)** does — recordings, timers
 
 DreamHub is a **core** (dashboard, global search, notifications, settings in tabs with backup/restore, setup assistant, profiles with an admin and a viewer role) with **hubs** plugged into it:
 
-- **MediaHub** — recordings and folders, disk space, rename (also in bulk, by naming scheme, into folders), covers, trash; finding ad breaks by the channel logo and cutting them out without re-encoding
+- **MediaHub** — recordings and folders, disk space, rename (also in bulk, by naming scheme, into folders), covers, trash; finding ad breaks by the channel logo, cutting them out (or any part you name) without re-encoding, and flagging recordings that stopped early
 - **SeriesHub** — SerienRecorder: followed series, episode guide with what's missing (TVmaze), what's coming
 - **GuideHub** — the TV guide in four views (grid, now & next, tonight, one channel), channel logos, record or switch from any programme
-- **RadioHub** — radio stations with what's on, play on the box, radio recordings
+- **RadioHub** — radio stations with what's on and the song or line the station sends, play on the box or in the browser, radio recordings
 - **Live TV** (StreamHub) — TV channels and recordings right in the browser: the box sends its stream unchanged, your phone or PC decodes it (SD and HD, Dolby sound), no app needed
 - **TimerHub** — timers, disabling/enabling, AutoTimer, conflict detection
 - **DiscoveryHub** — AI recommendations from the EPG, optionally matched to your taste, one tap to a timer
 - **ControlHub** — a remote with the live picture, on every page; messages to the TV
 - **DeviceHub** ("Gerät") — device info, diagnostics with a box self-test, change log; for admins also the box's services with restart and logs (live), crash logs, a package browser with update notifications, a script library and a terminal
 - **PlexHub** ("Plex Mediathek") — your Plex server's films and series as tiles or a list, watched state synced with Plex, films played on the box's own player; the library stays visible while the server is off
-- **ChannelHub** ("Channel list") — your bouquets on the phone: sort, rename, add, remove, headings, new channels after a scan, a channel check and logo sets, with a backup before every change
+- **ChannelHub** ("Channel list") — your bouquets on the phone: sort, rename, add, remove, headings, new channels after a scan, a channel check and logo sets, with a backup before every change, and a copy of the list from another box
 - **AppsHub** — small third-party bridges as optional extensions (e.g. a smart switch — see [docs/BUILDING_EXTENSIONS.md](docs/BUILDING_EXTENSIONS.md) if you want to build one), and self-hosted apps (AdGuard Home, Pi-hole, Nextcloud with its own database, Vaultwarden, Home Assistant and more) run as Docker containers: browse, install, start/stop, update notifications, logs, a console, and backup — all admin-only
 - later: AutomationHub (see [ROADMAP.md](ROADMAP.md))
 
@@ -46,7 +46,7 @@ Packages are attached to each [release](https://github.com/antonbier/DreamHub/re
 
 ## Status
 
-**0.9.2** is the current release (0.1.0 was the first): several Dreamboxes behind one selector (pairing, Wake-on-LAN or a smart plug to switch one on, a recording of one box on another's screen), extensions that show their own values on the start page (the eWeLink plug's power and consumption), the eWeLink extension getting its keys through your own developer application and switching through the cloud when the plug refuses the LAN, extension logs, Docker apps with an install form, container list, updates with roll back and backups, marked ad breaks the TV really skips, and many small clarity fixes. Every released hub works against the real box — confirmed on the reference Dreambox One with the self-test (Device → Diagnostics), Plex playback on the box included — and against a mock for development, so no Dreambox is needed to work on it. Installing Docker apps needs Docker on the box, which AppsHub can set up itself. [ROADMAP.md](ROADMAP.md) has exactly what's done and what's open, [CHANGELOG.md](CHANGELOG.md) what changed, [PROJECT_PLAN.md](PROJECT_PLAN.md) why the project exists, and [backend/README.md](backend/README.md) / [frontend/README.md](frontend/README.md) how to run it locally.
+**0.9.3** is the current release (0.1.0 was the first): the TV plugin's QR code and screens fixed, radio text, cutting by hand, copying a channel list between boxes, several Dreamboxes behind one selector (pairing, Wake-on-LAN or a smart plug to switch one on, a recording of one box on another's screen), extensions that show their own values on the start page (the eWeLink plug's power and consumption), the eWeLink extension getting its keys through your own developer application and switching through the cloud when the plug refuses the LAN, extension logs, Docker apps with an install form, container list, updates with roll back and backups, marked ad breaks the TV really skips, and many small clarity fixes. Every released hub works against the real box — confirmed on the reference Dreambox One with the self-test (Device → Diagnostics), Plex playback on the box included — and against a mock for development, so no Dreambox is needed to work on it. Installing Docker apps needs Docker on the box, which AppsHub can set up itself. [ROADMAP.md](ROADMAP.md) has exactly what's done and what's open, [CHANGELOG.md](CHANGELOG.md) what changed, [PROJECT_PLAN.md](PROJECT_PLAN.md) why the project exists, and [backend/README.md](backend/README.md) / [frontend/README.md](frontend/README.md) how to run it locally.
 
 ## License
 

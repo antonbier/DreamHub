@@ -6,12 +6,23 @@ Format follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/); version
 
 ## [Unreleased]
 
+## [0.9.3] - 2026-10-20
+
 ### Added
 - **Recordings that stopped early are flagged (#44, phase 3)**: MediaHub's list says "Stopped early: 57 min of 2 h 4 min" when a recording is far shorter than the programme it was announced as (read from the `.eit` next to it; no ad detection needed). A recording you cut yourself, a programme under 10 minutes, a gap under 5 minutes and anything over 85 % are not flagged. On the reference box it finds, among others, a film recorded for 57 of 124 minutes and a recording of 2 seconds.
 - **Radio text (#28)**: RadioHub shows the line a station sends about what it plays ("Proms London: Mahler's 9th …") under the station that plays — on the box or in the browser. WebControl doesn't expose it; DreamHub reads it out of the station's audio stream (RDS in the MPEG audio frames' ancillary data), listening in for a few seconds at a time. `GET /api/v1/radio/text?ref=`.
 - **A package change checks the hubs at once (#47)**: installing, upgrading or removing a package a hub names (the WebInterface, BouquetEditor, SerienRecorder and AutoTimer plugins, `ffmpeg`, `shellinabox`, `enigma2-journald`, the overlay module) has the hubs' status looked at straight away — a hub that became (un)available shows up in the change log without waiting for someone to open the app. The "needed by a hub" list now carries the plugins' real package names, read off the box.
 - **Cutting by hand (#27)**: every recording's details have "Cut by hand": name the parts to cut out (m:ss or h:mm:ss), look at each boundary in the browser player, preview, confirm. It is the ad cut's own flow (no re-encoding, the original goes to the trash), and needs no ad detection first — the recording's length is read from the file.
 - **Multi-box M8 — copy the channel list from another box**: ChannelHub → Bouquets → "Copy from another box" (shown with two or more boxes). Pick the source box, see per bouquet whether it is created, brought in line or already the same, and which channels this box doesn't know; one confirm. Channels are matched by reference, then by name; bouquets of the same name and kind are made to look like the source's, others stay. Applying backs up the channel list first and checks every bouquet afterwards, like any bouquet edit. API: `POST /api/v1/channels/sync/plan` (`from`, optional `bouquets`).
+
+### Fixed
+- **The TV plugin's QR code really encodes the box's LAN address now.** 0.9.2 said so, but the fix was never wired into the QR handler, so the code still pointed at `127.0.0.1`, which no phone can open. The launcher also shows the address in words under the code (`GET /api/v1/health` has a new `address`).
+- **TV plugin screens**: the settings screen no longer cuts "Backend verlangt …" off, shows the port as `8765` instead of `08765`, checks the range (1024–65535) and says what the port is for; the launcher and settings screens are larger, with readable coloured key hints. The "Backend requires a password" switch is gone — it never did anything.
+- A cut file (ad cut or by hand) gets the original's file permissions; DreamHub's strict umask had left it readable by root only.
+
+### Changed
+- Cutting a recording needs no ad detection first (the length is read from the file); its change-log line says "parts" instead of "ad breaks".
+- Multi-box M8 has only been tried against the two mock boxes — a real second box is still missing. It shows only with two or more boxes.
 
 ## [0.9.2] - 2026-10-19
 

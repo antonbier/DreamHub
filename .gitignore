@@ -32,3 +32,7 @@ dist/
 
 # OS
 .DS_Store
+
+# Python bytecode (the TV plugin is Python 2.7; nothing compiled belongs in the repo)
+__pycache__/
+*.pyc

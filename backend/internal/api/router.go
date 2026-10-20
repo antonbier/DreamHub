@@ -40,7 +40,7 @@ import (
 
 // Version is DreamHub's own version, following SemVer per PRINCIPLES.md.
 // Reported by /api/v1/health so the Enigma2 plugin can detect a mismatch.
-const Version = "0.9.2"
+const Version = "0.9.3"
 
 // Mount is a hub's set of routes. The core serves them under the given
 // path prefixes, behind auth and the hub's enable switch.
@@ -301,13 +301,7 @@ func serverTimeZone() string {
 // ARCHITECTURE.md).
 func handleQR(d Deps) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
-		scheme := "http"
-		// Behind a TLS-terminating reverse proxy (a household domain with
-		// HTTPS) DreamHub itself sees plain HTTP; the proxy says so.
-		if r.TLS != nil || strings.EqualFold(r.Header.Get("X-Forwarded-Proto"), "https") {
-			scheme = "https"
-		}
-		png, err := qrcode.Encode(scheme+"://"+r.Host, qrcode.Medium, 256)
+		png, err := qrcode.Encode(originURL(r), qrcode.Medium, 256)
 		if err != nil {
 			httpx.WriteError(w, r, http.StatusInternalServerError, "internal", "could not generate the QR code")
 			return
@@ -316,6 +310,19 @@ func handleQR(d Deps) http.HandlerFunc {
 		w.Header().Set("Cache-Control", "no-store") // the box's address can change (DHCP); never cache a stale one
 		w.Write(png)
 	}
+}
+
+// originURL is the address a phone can use to open this DreamHub: the one
+// the request came in on, with the box's LAN address in place of a
+// loopback one (the TV plugin asks through 127.0.0.1).
+func originURL(r *http.Request) string {
+	scheme := "http"
+	// Behind a TLS-terminating reverse proxy (a household domain with
+	// HTTPS) DreamHub itself sees plain HTTP; the proxy says so.
+	if r.TLS != nil || strings.EqualFold(r.Header.Get("X-Forwarded-Proto"), "https") {
+		scheme = "https"
+	}
+	return scheme + "://" + reachableHost(r.Host)
 }
 
 // reachableHost swaps a loopback host (the TV plugin calls 127.0.0.1) for the
@@ -351,6 +358,8 @@ func handleHealth(d Deps) http.HandlerFunc {
 		httpx.WriteJSON(w, http.StatusOK, map[string]string{
 			"status":  "ok",
 			"version": Version,
+			// The address a phone can use (the TV plugin shows it under its QR code).
+			"address": originURL(r),
 			// Server time in UTC, so clients can warn when the box clock is off
 			// (CONCEPT.md, "Time zones").
 			"time":           d.Now().UTC().Format(time.RFC3339),

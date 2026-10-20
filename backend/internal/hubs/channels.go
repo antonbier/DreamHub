@@ -88,6 +88,7 @@ func (h *Channels) Mount(mux httpx.Mux) {
 	mux.HandleFunc("DELETE /api/v1/channels/logo", h.resetLogo)
 	mux.HandleFunc("POST /api/v1/channels/bouquet/plan", h.planBouquet)
 	mux.HandleFunc("POST /api/v1/channels/bouquets/plan", h.planBouquets)
+	mux.HandleFunc("POST /api/v1/channels/sync/plan", h.planSync)
 	mux.HandleFunc("GET /api/v1/channels/backups", h.backups)
 	mux.HandleFunc("POST /api/v1/channels/backups/restore/plan", h.planRestore)
 }
@@ -104,6 +105,7 @@ func (h *Channels) Perms() map[string]perm.Perm {
 		"GET /api/v1/channels/logo/preview":          perm.ChannelsManage,
 		"POST /api/v1/channels/bouquet/plan":         perm.ChannelsManage,
 		"POST /api/v1/channels/bouquets/plan":        perm.ChannelsManage,
+		"POST /api/v1/channels/sync/plan":            perm.ChannelsManage,
 		"POST /api/v1/channels/backups/restore/plan": perm.ChannelsManage,
 	}
 }

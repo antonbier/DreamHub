@@ -1427,3 +1427,9 @@ export interface LogoResult {
   name: string
   country: string
 }
+
+// POST /api/v1/channels/sync/plan — copy the bouquets of another box (M8).
+export interface ChannelSyncResult {
+  plan: Plan
+  bouquets: { name: string; kind: 'tv' | 'radio'; action: 'create' | 'update' | 'unchanged'; channels: number; changes: number; missing?: string[] }[]
+}

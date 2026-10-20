@@ -1,6 +1,6 @@
 # Multi-box — plan
 
-Status: **brainstormed and decided 2026-10-16 (six rounds with the owner). M1, M2 and M3 are built against the mock and merged to `main` (see "… as built"); nothing is released before the check of M1 on the reference box; M3a, M4, M5, M6 and M9 (pulled forward by the owner) and M7 are built too; M8 not started.** Replaces the "one box" assumption that runs through the backend (`app.Options.WebControl` is injected once into every hub, the poller and the jobs blocker).
+Status: **brainstormed and decided 2026-10-16 (six rounds with the owner). M1, M2 and M3 are built against the mock and merged to `main` (see "… as built"); nothing is released before the check of M1 on the reference box; M3a, M4, M5, M6 and M9 (pulled forward by the owner) and M7 are built too; M8 (channel list sync) built too — see "M8 as built".** Replaces the "one box" assumption that runs through the backend (`app.Options.WebControl` is injected once into every hub, the poller and the jobs blocker).
 
 ## Goal
 
@@ -91,7 +91,7 @@ Not a goal, not broken by anything here: no new hard-wired Dreambox assumptions 
 | M5 | **Streams of remote boxes through the hub**; notifications per box with name and switch. | Yes |
 | M6 | **Pairing to Full:** unpaired mode with code on TV/status page, token, version handshake, local-capabilities API; `StreamBase` per box. | Yes |
 | M7 | **Watch a recording of box A on box B.** Built (see "M7 as built"). | Yes |
-| M8 | **Channel list sync** (A → B as a plan), scheduled by effort. | Yes |
+| M8 | **Channel list sync** (A → B as a plan). Built (see "M8 as built"). | Yes |
 | M9 | **Power-on method** (WoL, extension action — pairs with E5). Built before M7 (see "M9 as built"). | Yes |
 | later | Slim agent variant · VU+/OpenWebif probe and capability list · search across boxes · tuner-aware recording · move/copy between boxes. | — |
 
@@ -188,3 +188,13 @@ How the wiring was done, so M2 onwards can build on it without re-reading the di
 - **Tests:** `api/boxes_m7_test.go` — recording of the bedroom box on the first box (ticket, bytes, unknown ticket), refusals (same box, missing file, non-ts, unknown or Basic target, empty body), paired target from the hub's address with Range and the address check (a request from elsewhere is 403), the box restriction of a profile. Checked in headless Chromium against the mock (Wohnzimmer → Dreambox): button, call, status sentence, no console errors.
 - **Not done:** resume position, playing a recording of A on B's *browser* is unchanged, a picker when many boxes (one button per box is fine for a household), the "A is on a box the hub can't reach but B can" case, a Plex-style progress report, AdScan marks of A applied while B plays.
 - **Box check (reference box):** needs a second box with DreamHub paired (or the reference box as target and a Basic box as source): start a recording of the other box and confirm the movie player opens, seeks and that DreamHub's log shows the relay requests from that box's address.
+
+## M8 as built (2026-10-20)
+
+- `POST /api/v1/channels/sync/plan?box=<target>` with `{"from": <source box>, "bouquets": [<source refs>]}` (no refs: all). The caller's profile must be allowed to use both boxes; the same box answers `409 sync_same_box`; nothing to change answers `409 channels_unchanged`. Code: `hubs/channels_sync.go`.
+- **Matching:** a source channel is looked up on the target by its reference without the name part (same satellite and service), then by name (case, spaces and punctuation ignored; "HD" counts), preferring the same quality. A channel the target box doesn't know is left out and listed in the preview (`missing`).
+- **Bouquets:** same name and kind → made to look like the source's (channels in the target's bouquet that the source lacks are removed — the preview shows it); no such bouquet → created. Target bouquets not named by the source are never touched. Headings keep the target's reference when it has one by that name.
+- **Applying** is `withBackup` + `applyBouquet` per bouquet, so the read-back check and the restore-on-difference of a hand edit apply. The plan's fingerprint covers both boxes' bouquets, so a change on either since the preview refuses the apply.
+- **UI:** `components/channels/ChannelSyncPanel.vue`, in ChannelHub's Bouquets tab, only with two or more boxes.
+- **Tested** against the two mock boxes (update path, create path, same box, unknown box, second run is a no-op). **Not checked on two real boxes.**
+

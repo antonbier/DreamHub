@@ -2206,6 +2206,19 @@
     }
   },
   "channels": {
+    "sync": {
+      "title": "Copy from another box",
+      "explain": "Makes the bouquets of another box the bouquets of {box}: bouquets with the same name are brought in line, missing ones are created, the rest stays. Channels are matched by name where the reference differs.",
+      "from": "Copy from",
+      "confirm": "Copy",
+      "saved": "Bouquets copied.",
+      "missing": "Not on this box and left out: {names}",
+      "action": {
+        "create": "new bouquet with {n} channels",
+        "update": "brought in line ({n} channels)",
+        "unchanged": "already the same"
+      }
+    },
     "tabs": {
       "label": "Parts of the channel list",
       "bouquets": "Bouquets",

@@ -2206,6 +2206,19 @@
     }
   },
   "channels": {
+    "sync": {
+      "title": "Von einer anderen Box kopieren",
+      "explain": "Übernimmt die Bouquets einer anderen Box für {box}: Bouquets mit gleichem Namen werden angeglichen, fehlende angelegt, alles andere bleibt. Kanäle werden über den Namen zugeordnet, wenn die Referenz abweicht.",
+      "from": "Kopieren von",
+      "confirm": "Kopieren",
+      "saved": "Bouquets kopiert.",
+      "missing": "Nicht auf dieser Box, deshalb ausgelassen: {names}",
+      "action": {
+        "create": "neues Bouquet mit {n} Kanälen",
+        "update": "wird angeglichen ({n} Kanäle)",
+        "unchanged": "schon gleich"
+      }
+    },
     "tabs": {
       "label": "Bereiche der Senderliste",
       "bouquets": "Bouquets",

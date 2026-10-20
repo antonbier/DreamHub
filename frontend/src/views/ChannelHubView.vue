@@ -127,6 +127,8 @@
           </li>
         </ol>
 
+        <ChannelSyncPanel v-if="editor && !editing && boxes.multi" @done="afterChange(t('channels.sync.saved'))" />
+
         <!-- Backups (C3) -->
         <details v-if="editor && !editing" class="mt-6 rounded-sm border border-line bg-tile p-3" @toggle="onBackupsToggle">
           <summary class="cursor-pointer text-[14px] font-semibold">{{ t('channels.backups.title') }}</summary>
@@ -323,6 +325,8 @@ import Icon from '@/components/Icon.vue'
 import ErrorText from '@/components/ErrorText.vue'
 import ChannelLogo from '@/components/guide/ChannelLogo.vue'
 import PlanPreview from '@/components/PlanPreview.vue'
+import { useBoxesStore } from '@/stores/boxes'
+import ChannelSyncPanel from '@/components/channels/ChannelSyncPanel.vue'
 import BouquetDraftEditor from '@/components/channels/BouquetDraftEditor.vue'
 import ChannelLogoPicker from '@/components/channels/ChannelLogoPicker.vue'
 import { useChannelChange } from '@/components/channels/useChannelChange'
@@ -335,6 +339,7 @@ const TABS = ['bouquets', 'find', 'picons'] as const
 type Tab = (typeof TABS)[number]
 
 const { t, locale } = useI18n()
+const boxes = useBoxesStore()
 const { hubTitle } = useHubLabel()
 const { friendly } = useFriendlyError()
 const { planErrorMessage } = usePlanError()

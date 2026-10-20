@@ -41,6 +41,7 @@ import type {
   AdScanResult,
   BouquetEntry,
   ChannelBackup,
+  ChannelSyncResult,
   DraftEntry,
   ChannelBouquet,
   ChannelInfo,
@@ -268,6 +269,8 @@ export const api = {
       request<{ plan: Plan }>('POST', '/api/v1/channels/bouquet/plan', { ref, kind, entries }),
     planBouquets: (action: 'create' | 'rename' | 'delete', kind: 'tv' | 'radio', ref: string, name: string) =>
       request<{ plan: Plan }>('POST', '/api/v1/channels/bouquets/plan', { action, kind, ref, name }),
+    planSync: (from: string, bouquets: string[] = []) =>
+      request<ChannelSyncResult>('POST', '/api/v1/channels/sync/plan', { from, bouquets }),
     backups: () => request<{ backups: ChannelBackup[] }>('GET', '/api/v1/channels/backups'),
     planRestore: (filename: string) => request<{ plan: Plan }>('POST', '/api/v1/channels/backups/restore/plan', { filename }),
   },

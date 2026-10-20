@@ -7,6 +7,10 @@ import (
 	"strings"
 	"testing"
 
+	atmock "github.com/antonbier/DreamHub/backend/internal/autotimer/mock"
+	"github.com/antonbier/DreamHub/backend/internal/boxes"
+	srmock "github.com/antonbier/DreamHub/backend/internal/serienrecorder/mock"
+	"github.com/antonbier/DreamHub/backend/internal/store"
 	"github.com/antonbier/DreamHub/backend/internal/webcontrol"
 	"github.com/antonbier/DreamHub/backend/internal/webcontrol/mock"
 )
@@ -368,5 +372,131 @@ func TestChannels_BouquetsPerProfileArePrepared(t *testing.T) {
 	e.json(t, "PATCH", "/api/v1/profiles/"+itoa(benID), `{"name":"Benjamin"}`, withProfile(admin), 200, nil)
 	if ben, _ = e.store.User(context.Background(), benID); len(ben.Bouquets) != 1 {
 		t.Fatalf("the list got lost on update: %+v", ben.Bouquets)
+	}
+}
+
+func TestChannels_SyncCopiesBouquetsFromAnotherBox(t *testing.T) {
+	e := newEnv(t)
+	living := mock.NewSecond()
+	e.app.Boxes.Add(store.Box{ID: "living", Name: "living"}, boxes.Clients{WC: living, Series: srmock.New(), AutoTimer: atmock.New()}, false)
+
+	if resp, b := e.do(t, "POST", "/api/v1/channels/sync/plan", `{"from":"main"}`, nil); resp.StatusCode != http.StatusConflict {
+		t.Fatalf("same box: %d %s", resp.StatusCode, b)
+	}
+	if resp, b := e.do(t, "POST", "/api/v1/channels/sync/plan", `{"from":"nowhere"}`, nil); resp.StatusCode != http.StatusNotFound {
+		t.Fatalf("unknown box: %d %s", resp.StatusCode, b)
+	}
+
+	type bouquetList struct {
+		Bouquets []struct{ Ref, Name, Kind string } `json:"bouquets"`
+	}
+	type entries struct {
+		Entries []struct{ Name string } `json:"entries"`
+	}
+	firstTV := func(query string) string {
+		var l bouquetList
+		e.json(t, "GET", "/api/v1/channels/bouquets"+query, "", nil, 200, &l)
+		for _, b := range l.Bouquets {
+			if b.Kind == "tv" {
+				return b.Ref
+			}
+		}
+		t.Fatal("no TV bouquet")
+		return ""
+	}
+	names := func(ref string) string {
+		var en entries
+		e.json(t, "GET", "/api/v1/channels/bouquet?ref="+urlq(ref), "", nil, 200, &en)
+		var out []string
+		for _, x := range en.Entries {
+			out = append(out, x.Name)
+		}
+		return strings.Join(out, "|")
+	}
+	mainTV := firstTV("")
+	before := names(mainTV)
+
+	var pl struct {
+		Plan     struct{ ID string } `json:"plan"`
+		Bouquets []struct {
+			Name, Action string
+			Channels     int
+			Missing      []string
+		} `json:"bouquets"`
+	}
+	e.json(t, "POST", "/api/v1/channels/sync/plan", syncBody(firstTV("?box=living")), nil, 200, &pl)
+	if len(pl.Bouquets) != 1 || pl.Bouquets[0].Action == "unchanged" {
+		t.Fatalf("preview: %+v", pl)
+	}
+	if !strings.Contains(strings.Join(pl.Bouquets[0].Missing, ","), "ProSieben HD") {
+		t.Fatalf("a channel the first box doesn't know must be listed: %+v", pl.Bouquets[0])
+	}
+	if names(mainTV) != before {
+		t.Fatal("the preview changed the bouquet")
+	}
+
+	e.json(t, "POST", "/api/v1/plans/"+pl.Plan.ID+"/apply", "", nil, 200, nil)
+	after := names(mainTV)
+	if after == before || !strings.Contains(after, "ZDF") || strings.Contains(after, "ProSieben") {
+		t.Fatalf("after the copy: %q (was %q)", after, before)
+	}
+	// Copying again changes nothing.
+	if resp, b := e.do(t, "POST", "/api/v1/channels/sync/plan", syncBody(firstTV("?box=living")), nil); resp.StatusCode != http.StatusConflict {
+		t.Fatalf("second copy should be a no-op: %d %s", resp.StatusCode, b)
+	}
+}
+
+func syncBody(refs ...string) string {
+	b, _ := json.Marshal(map[string]any{"from": "living", "bouquets": refs})
+	return string(b)
+}
+
+func TestChannels_SyncCreatesAMissingBouquet(t *testing.T) {
+	e := newEnv(t)
+	living := mock.NewSecond()
+	living.NoBouquetEditor = false
+	e.app.Boxes.Add(store.Box{ID: "living", Name: "living"}, boxes.Clients{WC: living, Series: srmock.New(), AutoTimer: atmock.New()}, false)
+
+	// A bouquet only the first box has.
+	var mk struct {
+		Plan struct{ ID string } `json:"plan"`
+	}
+	e.json(t, "POST", "/api/v1/channels/bouquets/plan", `{"action":"create","kind":"tv","name":"Kinder"}`, nil, 200, &mk)
+	e.json(t, "POST", "/api/v1/plans/"+mk.Plan.ID+"/apply", "", nil, 200, nil)
+
+	var src struct {
+		Bouquets []struct{ Ref, Name, Kind string } `json:"bouquets"`
+	}
+	e.json(t, "GET", "/api/v1/channels/bouquets", "", nil, 200, &src)
+	var refs []string
+	for _, b := range src.Bouquets {
+		refs = append(refs, b.Ref)
+	}
+	body, _ := json.Marshal(map[string]any{"from": "main", "bouquets": refs})
+	var pl struct {
+		Plan     struct{ ID string }                   `json:"plan"`
+		Bouquets []struct{ Name, Kind, Action string } `json:"bouquets"`
+	}
+	e.json(t, "POST", "/api/v1/channels/sync/plan?box=living", string(body), nil, 200, &pl)
+	created := 0
+	for _, b := range pl.Bouquets {
+		if b.Action == "create" {
+			created++
+		}
+	}
+	if created != 1 {
+		t.Fatalf("exactly one bouquet is new to the second box: %+v", pl.Bouquets)
+	}
+	e.json(t, "POST", "/api/v1/plans/"+pl.Plan.ID+"/apply?box=living", "", nil, 200, nil)
+	var again struct {
+		Bouquets []struct{ Name, Kind string } `json:"bouquets"`
+	}
+	e.json(t, "GET", "/api/v1/channels/bouquets?box=living", "", nil, 200, &again)
+	found := false
+	for _, b := range again.Bouquets {
+		found = found || strings.HasPrefix(b.Name, "Kinder")
+	}
+	if !found {
+		t.Fatalf("the new bouquet should exist on the second box: %+v", again.Bouquets)
 	}
 }

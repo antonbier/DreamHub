@@ -2740,6 +2740,47 @@
     "x-csrf": true
    }
   },
+  "/channels/sync/plan": {
+   "post": {
+    "summary": "Preview: copy the bouquets of another box",
+    "tags": [
+     "channels"
+    ],
+    "operationId": "POST_channels_sync_plan",
+    "parameters": [
+     {
+      "$ref": "#/components/parameters/Box"
+     }
+    ],
+    "description": "Body `{\"from\": <box id>, \"bouquets\": [<source bouquet refs>]}` (no refs: all of them). Channels are matched by reference, then by name; bouquets of the box named by `box` that have the same name and kind are made to look like the source box's, missing ones are created, others stay. Changes nothing. Returns a plan to show to the user; apply it with `POST /plans/{id}/apply`.",
+    "responses": {
+     "200": {
+      "description": "The plan",
+      "content": {
+       "application/json": {
+        "schema": {
+         "$ref": "#/components/schemas/PlanResponse"
+        }
+       }
+      }
+     },
+     "default": {
+      "$ref": "#/components/responses/Error"
+     }
+    },
+    "requestBody": {
+     "required": true,
+     "content": {
+      "application/json": {
+       "schema": {
+        "type": "object"
+       }
+      }
+     }
+    },
+    "x-csrf": true
+   }
+  },
   "/channels/check": {
    "get": {
     "summary": "Read channels check",

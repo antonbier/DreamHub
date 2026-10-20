@@ -2206,6 +2206,19 @@
     }
   },
   "channels": {
+    "sync": {
+      "title": "Copia da un altro box",
+      "explain": "Porta i bouquet di un altro box su {box}: quelli con lo stesso nome vengono allineati, quelli mancanti creati, il resto resta. I canali si abbinano per nome se il riferimento differisce.",
+      "from": "Copia da",
+      "confirm": "Copia",
+      "saved": "Bouquet copiati.",
+      "missing": "Non su questo box, esclusi: {names}",
+      "action": {
+        "create": "nuovo bouquet con {n} canali",
+        "update": "allineato ({n} canali)",
+        "unchanged": "già uguale"
+      }
+    },
     "tabs": {
       "label": "Sezioni della lista canali",
       "bouquets": "Bouquet",

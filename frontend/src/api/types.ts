@@ -334,6 +334,9 @@ export interface Movie {
   inUse?: 'recording' | 'playing'
   // The last ad detection's summary, when the recording was analysed.
   ads?: AdSummary
+  // Far shorter than the programme it was announced as (from the .eit); scheduled is that length in seconds.
+  short?: boolean
+  scheduled?: number
 }
 
 // backend/internal/hubs.adSummary — what the list shows of an analysis.

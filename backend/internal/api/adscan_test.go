@@ -6,6 +6,7 @@ import (
 	"encoding/json"
 	"net/http"
 	"net/url"
+	"strings"
 	"testing"
 	"time"
 
@@ -466,4 +467,40 @@ func content(m *mock.Client, p string) string {
 func exists(m *mock.Client, p string) bool {
 	_, err := m.FS.Lstat(p)
 	return err == nil
+}
+
+// A recording far shorter than its announced programme is flagged; a
+// recording of the announced length is not.
+func TestMedia_FlagsRecordingsCutShort(t *testing.T) {
+	m := mock.New()
+	m.RecordingLengths = map[string]string{bauer: "103:16"}
+	e := newEnvWith(t, m)
+	list := func() (short bool, scheduled int) {
+		var out struct {
+			Movies []struct {
+				Filename  string `json:"filename"`
+				Short     bool   `json:"short"`
+				Scheduled int    `json:"scheduled"`
+			} `json:"movies"`
+		}
+		e.json(t, "GET", "/api/v1/media/movies", "", nil, 200, &out)
+		for _, mv := range out.Movies {
+			if strings.HasSuffix(mv.Filename, "Bauer sucht Frau International.ts") {
+				return mv.Short, mv.Scheduled
+			}
+		}
+		t.Fatal("recording missing from the list")
+		return
+	}
+	if short, _ := list(); short {
+		t.Fatal("no .eit, nothing to compare with")
+	}
+	// Announced for 3 h (BCD 03:00:00), recorded 103 min.
+	eitFile := []byte{0x00, 0x01, 0xea, 0x29, 0x19, 0x15, 0x00, 0x03, 0x00, 0x00, 0x00}
+	if err := m.FS.WriteFile(strings.TrimSuffix(bauer, ".ts")+".eit", eitFile); err != nil {
+		t.Fatal(err)
+	}
+	if short, sched := list(); !short || sched != 3*3600 {
+		t.Fatalf("short=%v scheduled=%d", short, sched)
+	}
 }

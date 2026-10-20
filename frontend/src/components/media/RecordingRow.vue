@@ -49,6 +49,9 @@
           <template v-else>{{ t('media.notARecording') }}</template>
         </span>
       </span>
+      <span v-if="movie.short && movie.scheduled" class="shrink-0 whitespace-nowrap text-[12.5px] text-warn" :title="t('media.short.hint')">
+        {{ t('media.short.label', { recorded: formatMinutes(recordedSeconds, locale), scheduled: formatMinutes(movie.scheduled, locale) }) }}
+      </span>
       <span v-if="movie.inUse" class="flex shrink-0 items-center gap-1.5 text-[12.5px]" :class="movie.inUse === 'recording' ? 'text-onair' : 'text-muted'">
         <span class="h-1.5 w-1.5 rounded-full" :class="movie.inUse === 'recording' ? 'bg-onair' : 'bg-accent'" />
         {{ t(`media.inUse.${movie.inUse}`) }}
@@ -241,6 +244,12 @@ const adsText = computed(() => {
   if (a.trimmed) return t('media.ads.rowTrimmed')
   if (a.marked) return t('media.ads.rowMarked')
   return a.blocks === 0 ? t('media.ads.rowNone') : t('media.ads.rowMinutes', { minutes: formatMinutes(a.seconds, locale.value) })
+})
+// The movie list's length ("43:20" = minutes:seconds, "1:12:05"), in seconds.
+const recordedSeconds = computed(() => {
+  const p = props.movie.length.split(':').map(Number)
+  if (p.length < 2 || p.some((n) => !Number.isFinite(n))) return 0
+  return p.length === 2 ? p[0] * 60 + p[1] : p[0] * 3600 + p[1] * 60 + p[2]
 })
 const details = computed(() =>
   [

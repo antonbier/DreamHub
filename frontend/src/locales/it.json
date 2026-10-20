@@ -461,6 +461,10 @@
       "parts": "1 parte | {count} parti",
       "done": "Tagliato. L'originale è nel cestino."
     },
+    "short": {
+      "label": "Interrotta prima: {recorded} su {scheduled}",
+      "hint": "Questa registrazione è molto più corta del programma annunciato: probabilmente si è interrotta prima (un riavvio, il disco pieno, un timer terminato a mano)."
+    },
     "batch": {
       "open": "Rinomina secondo lo schema",
       "title": "Rinomina secondo lo schema",

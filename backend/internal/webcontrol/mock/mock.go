@@ -31,6 +31,9 @@ type Client struct {
 	timers []webcontrol.Timer
 	// scanned are channels added by AddChannel.
 	scanned []webcontrol.Service
+	// RecordingLengths gives recordings of the file-system movie list a
+	// length ("103:16"), by their path.
+	RecordingLengths map[string]string
 	// NoBouquetEditor plays a box without the BouquetEditor plugin.
 	NoBouquetEditor bool
 	// FailEditor makes that BouquetEditor operation ("moveservice", …) fail;
@@ -538,6 +541,8 @@ func (c *Client) MovieDir(ctx context.Context, dir string) (webcontrol.MovieFold
 				}
 			}
 		}
+		// The box knows each recording's length; a test says it here.
+		m.Length = c.RecordingLengths[full]
 		f.Movies = append(f.Movies, m)
 	}
 	return f, nil

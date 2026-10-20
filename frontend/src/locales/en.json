@@ -461,6 +461,10 @@
       "parts": "1 part | {count} parts",
       "done": "Cut. The original is in the trash."
     },
+    "short": {
+      "label": "Stopped early: {recorded} of {scheduled}",
+      "hint": "This recording is much shorter than the programme it was announced as — it probably stopped early (a restart, a full disk, a timer ended by hand)."
+    },
     "batch": {
       "open": "Rename by scheme",
       "title": "Rename by scheme",

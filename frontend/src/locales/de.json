@@ -461,6 +461,10 @@
       "parts": "1 Teil | {count} Teile",
       "done": "Geschnitten. Das Original liegt im Papierkorb."
     },
+    "short": {
+      "label": "Vorzeitig beendet: {recorded} von {scheduled}",
+      "hint": "Diese Aufnahme ist deutlich kürzer als die angekündigte Sendung — sie wurde wahrscheinlich vorzeitig beendet (Neustart, volle Platte, ein von Hand beendeter Timer)."
+    },
     "batch": {
       "open": "Nach Schema umbenennen",
       "title": "Nach Schema umbenennen",

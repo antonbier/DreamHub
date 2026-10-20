@@ -133,6 +133,12 @@ type MovieView struct {
 	// Ads is the last ad detection's summary (media_adscan.go), when the
 	// recording was analysed.
 	Ads *adSummary `json:"ads,omitempty"`
+	// Scheduled is the announced length of the programme in seconds (from
+	// the .eit next to the recording), when DreamHub runs on the box and
+	// the recording stopped well before it did — see media_short.go.
+	// Short is that same finding as a flag.
+	Scheduled int  `json:"scheduled,omitempty"`
+	Short     bool `json:"short,omitempty"`
 }
 
 // Search implements hub.SearchProvider: a case-insensitive substring match
@@ -220,6 +226,13 @@ func (h *Media) list(w http.ResponseWriter, r *http.Request) {
 				poster, backdrop := recfs.Covers(h.FS, p)
 				views[i].Cover, views[i].Backdrop = poster != "", backdrop != ""
 				views[i].Ads = h.adSummary(ctx, p)
+				if views[i].InUse == "" && (views[i].Ads == nil || !views[i].Ads.Trimmed) {
+					if rec, ok := parseMovieLength(m.Length); ok {
+						if sched := h.scheduledLength(p); cutShort(rec, sched) {
+							views[i].Short, views[i].Scheduled = true, int(sched/time.Second)
+						}
+					}
+				}
 			}
 		}
 	}

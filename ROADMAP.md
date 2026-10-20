@@ -47,7 +47,7 @@ Done: `.deb` for arm64 (box) and armhf (built, not tried on a DM900/DM920) with 
 - **Ad detection and cutting** ([`docs/ADSCAN_PLAN.md`](docs/ADSCAN_PLAN.md)) — logo learned per channel from keyframes, coarse sampling with bisection, a background job, results that follow renames; a timeline in the recording's details (breaks play in the browser), batch from the selection; cutting ticked breaks out without re-encoding, the original kept in the trash. Box (phase 0 and a real cut played on the TV confirmed 2026-10-09).
   - [x] Writing the breaks into `.ts.cuts` (the TV skips them) (#44) — `media.adscan.mark`, "Mark in cut list" in the detail dialog. Box (2026-10-16): the player skips the marked OUT→IN region; the positions count from the start of the recording, not in raw stream PTS (the first version wrote raw PTS, fixed in 0.7.0)
   - [ ] Phases 2–3: audio fingerprints, learned series patterns, learned timer margins, suspicious recordings (#44)
-  - [ ] Cutting by hand (own in/out points) (#27)
+  - [x] Cutting by hand (own in/out points) (#27) — "Cut by hand" in the details dialog, the ad cut's flow with typed parts; box (2026-10-20): two hand cuts and a third on a 188 MB piece of a real recording, original in the trash, cut file decodes, 90 s removed as asked
 - [ ] Radio text / now playing (#28)
 
 ## Later

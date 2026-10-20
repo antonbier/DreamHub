@@ -446,6 +446,21 @@
     "newTitle": "Titolo nell'elenco registrazioni del box",
     "titlePreview": "Titolo nell'elenco del box:",
     "selectAll": "Seleziona tutto",
+    "manual": {
+      "heading": "Taglia a mano",
+      "explain": "Taglia parti di questa registrazione — l'inizio, la fine o qualcosa nel mezzo. Non si ricodifica nulla; l'originale va nel cestino e si può ripristinare.",
+      "open": "Taglia a mano …",
+      "which": "Quali parti tagliare (m:ss o h:mm:ss)",
+      "from": "Da",
+      "to": "a",
+      "lookStart": "Guarda l'inizio",
+      "lookEnd": "Guarda la fine",
+      "remove": "Rimuovi",
+      "add": "Un'altra parte",
+      "summary": "Taglia {parts} dalla registrazione (nuova durata: {length}). Non si ricodifica nulla, quindi un taglio può essere impreciso fino a un secondo. L'originale mantiene tutti i suoi file e va nel cestino: puoi ripristinarlo.",
+      "parts": "1 parte | {count} parti",
+      "done": "Tagliato. L'originale è nel cestino."
+    },
     "batch": {
       "open": "Rinomina secondo lo schema",
       "title": "Rinomina secondo lo schema",

@@ -436,16 +436,25 @@ func TestTrim_TwiceKeepsBothOriginals(t *testing.T) {
 	}
 }
 
-func TestTrim_NeedsAnAnalysisAndSaneBlocks(t *testing.T) {
+func TestTrim_ByHandNeedsNoAnalysisButSaneBlocks(t *testing.T) {
 	e := newEnv(t)
-	resp, b := e.do(t, "POST", "/api/v1/media/trim/plan", `{"path":"`+bauer+`","blocks":[{"start":10,"end":20}]}`, nil)
-	if resp.StatusCode != http.StatusConflict {
-		t.Fatalf("without analysis: %d %s", resp.StatusCode, b)
+	// Cutting by hand: the length comes from the recording, not from ad detection.
+	var pr struct {
+		Plan struct{ ID string }            `json:"plan"`
+		Keep []struct{ Start, End float64 } `json:"keep"`
 	}
-	e.analyse(t, bauer)
-	resp, b = e.do(t, "POST", "/api/v1/media/trim/plan", `{"path":"`+bauer+`","blocks":[{"start":0,"end":99999}]}`, nil)
-	if resp.StatusCode != http.StatusBadRequest {
-		t.Fatalf("a block past the end: %d %s", resp.StatusCode, b)
+	e.json(t, "POST", "/api/v1/media/trim/plan", `{"path":"`+bauer+`","blocks":[{"start":10,"end":20}]}`, nil, 200, &pr)
+	if len(pr.Keep) != 2 || pr.Keep[0].End != 10 || pr.Keep[1].Start != 20 {
+		t.Fatalf("keep: %+v", pr.Keep)
+	}
+	for _, body := range []string{
+		`{"path":"` + bauer + `","blocks":[{"start":0,"end":99999}]}`, // past the end
+		`{"path":"` + bauer + `","blocks":[{"start":20,"end":10}]}`,   // backwards
+		`{"path":"` + bauer + `","blocks":[{"start":0,"end":3600}]}`,  // nothing left
+	} {
+		if resp, b := e.do(t, "POST", "/api/v1/media/trim/plan", body, nil); resp.StatusCode != http.StatusBadRequest {
+			t.Fatalf("%s: %d %s", body, resp.StatusCode, b)
+		}
 	}
 }
 

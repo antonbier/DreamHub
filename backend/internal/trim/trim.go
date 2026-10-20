@@ -131,7 +131,14 @@ func (f FFmpeg) Cut(ctx context.Context, src, dst string, keep []adscan.Span, du
 		}
 		return fmt.Errorf("trim: ffmpeg: %v: %s", err, tail(stderr.String()))
 	}
-	return nil
+	// DreamHub runs with a strict umask, so FFmpeg's file would be
+	// readable by root only; a recording is shared (Samba, NFS, other
+	// plugins), so the cut version gets the original's permissions.
+	mode := os.FileMode(0o644)
+	if fi, err := os.Stat(src); err == nil {
+		mode = fi.Mode().Perm()
+	}
+	return os.Chmod(dst, mode)
 }
 
 // concatList is the concat demuxer's script: the same file once per part,

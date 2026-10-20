@@ -7,6 +7,7 @@ Format follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/); version
 ## [Unreleased]
 
 ### Added
+- **Cutting by hand (#27)**: every recording's details have "Cut by hand": name the parts to cut out (m:ss or h:mm:ss), look at each boundary in the browser player, preview, confirm. It is the ad cut's own flow (no re-encoding, the original goes to the trash), and needs no ad detection first — the recording's length is read from the file.
 - **Multi-box M8 — copy the channel list from another box**: ChannelHub → Bouquets → "Copy from another box" (shown with two or more boxes). Pick the source box, see per bouquet whether it is created, brought in line or already the same, and which channels this box doesn't know; one confirm. Channels are matched by reference, then by name; bouquets of the same name and kind are made to look like the source's, others stay. Applying backs up the channel list first and checks every bouquet afterwards, like any bouquet edit. API: `POST /api/v1/channels/sync/plan` (`from`, optional `bouquets`).
 
 ## [0.9.2] - 2026-10-19

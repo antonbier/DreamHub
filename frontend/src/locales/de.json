@@ -446,6 +446,21 @@
     "newTitle": "Titel in der Aufnahmeliste der Box",
     "titlePreview": "Titel in der Box-Liste:",
     "selectAll": "Alle auswählen",
+    "manual": {
+      "heading": "Von Hand schneiden",
+      "explain": "Schneide Teile aus dieser Aufnahme heraus — Anfang, Ende oder etwas dazwischen. Es wird nichts neu codiert; das Original kommt in den Papierkorb und lässt sich wiederherstellen.",
+      "open": "Von Hand schneiden …",
+      "which": "Welche Teile herausgeschnitten werden (m:ss oder h:mm:ss)",
+      "from": "Von",
+      "to": "bis",
+      "lookStart": "Anfang ansehen",
+      "lookEnd": "Ende ansehen",
+      "remove": "Entfernen",
+      "add": "Noch ein Teil",
+      "summary": "Schneidet {parts} aus der Aufnahme (neue Länge: {length}). Es wird nichts neu codiert, ein Schnitt kann daher bis zu eine Sekunde danebenliegen. Das Original behält alle Dateien und kommt in den Papierkorb — du kannst es wiederherstellen.",
+      "parts": "1 Teil | {count} Teile",
+      "done": "Geschnitten. Das Original liegt im Papierkorb."
+    },
     "batch": {
       "open": "Nach Schema umbenennen",
       "title": "Nach Schema umbenennen",

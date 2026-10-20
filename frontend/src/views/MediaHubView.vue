@@ -271,6 +271,15 @@
         @analysed="(sum: AdSummary) => (openMovie!.ads = sum)"
         @trimmed="onTrimmed"
       />
+      <ManualCutPanel
+        v-if="openMovie.isRecording && openMovie.filename.endsWith('.ts') && fileOpsAvailable && !openMovie.inUse"
+        :path="openMovie.filename"
+        :title="openMovie.title"
+        :channel="openMovie.serviceName"
+        :length="openMovie.length"
+        :can-play="streamHubOn"
+        @trimmed="onTrimmed"
+      />
       <template #actions>
         <div class="flex flex-wrap items-center gap-2">
           <button
@@ -318,6 +327,7 @@ import { useI18n } from 'vue-i18n'
 import { api } from '@/api/client'
 import Icon from '@/components/Icon.vue'
 import PlanPreview from '@/components/PlanPreview.vue'
+import ManualCutPanel from '@/components/media/ManualCutPanel.vue'
 import AdScanPanel from '@/components/media/AdScanPanel.vue'
 import RecordingRow from '@/components/media/RecordingRow.vue'
 import TrashPreview from '@/components/media/TrashPreview.vue'

@@ -13,6 +13,7 @@ package hubs
 import (
 	"context"
 	"encoding/json"
+	"errors"
 	"fmt"
 	"net/http"
 	"path"
@@ -85,9 +86,15 @@ func (h *Media) trimPlan(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 	var res adscan.Result
-	if !found || json.Unmarshal(stored.Result, &res) != nil {
-		httpx.WriteError(w, r, http.StatusConflict, CodeAdScanNotAnalysed, "detect the ads first")
-		return
+	if !found || json.Unmarshal(stored.Result, &res) != nil || res.Duration <= 0 {
+		// Cutting by hand needs no ad detection: the length comes from the
+		// recording itself.
+		d, derr := h.recordingDuration(r.Context(), p)
+		if derr != nil {
+			httpx.WriteError(w, r, http.StatusConflict, CodeAdScanNotAnalysed, "could not read the recording's length")
+			return
+		}
+		res = adscan.Result{Duration: d}
 	}
 	for _, b := range req.Blocks {
 		if !(b.Start >= 0 && b.End > b.Start && b.End <= res.Duration+1) {
@@ -133,7 +140,7 @@ func (h *Media) trimPlan(w http.ResponseWriter, r *http.Request) {
 	pl := h.Plans.Create(r.Context(), user, plan.Draft{
 		Action:      "media.trim",
 		Changes:     changes,
-		Summary:     fmt.Sprintf("Cut %d ad break(s), %.0f s, out of %s; the original went to the trash", len(req.Blocks), cut, base),
+		Summary:     fmt.Sprintf("Cut %d part(s), %.0f s, out of %s; the original went to the trash", len(req.Blocks), cut, base),
 		Detail:      map[string]any{"path": p, "keep": keep},
 		Fingerprint: h.filesFingerprint([]string{p}),
 		Current:     func(context.Context) (string, error) { return h.filesFingerprint([]string{p}), nil },
@@ -305,4 +312,18 @@ func (h *Media) originalBase(dir, base string) (string, bool) {
 		}
 	}
 	return "", false
+}
+
+// recordingDuration is a recording's length in seconds, read from the file
+// (the same way ad detection reads it).
+func (h *Media) recordingDuration(ctx context.Context, p string) (float64, error) {
+	if h.AdScan == nil {
+		return 0, errors.New("no way to read the recording")
+	}
+	src, err := h.AdScan.Open(p)
+	if err != nil {
+		return 0, err
+	}
+	defer src.Close()
+	return src.Duration(ctx)
 }

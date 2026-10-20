@@ -446,6 +446,21 @@
     "newTitle": "Title in the box's recording list",
     "titlePreview": "Title in the box's list:",
     "selectAll": "Select all",
+    "manual": {
+      "heading": "Cut by hand",
+      "explain": "Cut parts out of this recording — the start, the end, anything in between. Nothing is re-encoded; the original goes to the trash and can be restored.",
+      "open": "Cut by hand …",
+      "which": "Which parts to cut out (m:ss or h:mm:ss)",
+      "from": "From",
+      "to": "to",
+      "lookStart": "Look at start",
+      "lookEnd": "Look at end",
+      "remove": "Remove",
+      "add": "Another part",
+      "summary": "Cuts {parts} out of the recording (new length: {length}). Nothing is re-encoded, so a cut can be off by up to a second. The original keeps all its files and goes to the trash — you can restore it.",
+      "parts": "1 part | {count} parts",
+      "done": "Cut. The original is in the trash."
+    },
     "batch": {
       "open": "Rename by scheme",
       "title": "Rename by scheme",

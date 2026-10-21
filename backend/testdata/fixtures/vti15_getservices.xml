@@ -1,0 +1,15 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<e2servicelist>
+	<e2service>
+		<e2servicereference>1:7:1:0:0:0:0:0:0:0:FROM BOUQUET "userbouquet.favourites.tv" ORDER BY bouquet</e2servicereference>
+		<e2servicename>Free TV</e2servicename>
+	</e2service>
+	<e2service>
+		<e2servicereference>1:7:1:0:0:0:0:0:0:0:FROM BOUQUET "userbouquet.music.tv" ORDER BY bouquet</e2servicereference>
+		<e2servicename>Music</e2servicename>
+	</e2service>
+	<e2service>
+		<e2servicereference>1:7:1:0:0:0:0:0:0:0:FROM BOUQUET "userbouquet.terrestrisch___kan__le_fta__tv_.tv" ORDER BY bouquet</e2servicereference>
+		<e2servicename>Terrestrisch - Kanäle FTA (TV)</e2servicename>
+	</e2service>
+</e2servicelist>

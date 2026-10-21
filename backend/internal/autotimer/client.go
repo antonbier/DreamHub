@@ -10,6 +10,7 @@
 package autotimer
 
 import (
+	"bytes"
 	"context"
 	"encoding/xml"
 	"errors"
@@ -150,6 +151,11 @@ func (c *HTTPClient) getXML(ctx context.Context, path string, v any) error {
 	data, err := io.ReadAll(resp.Body)
 	if err != nil {
 		return fmt.Errorf("autotimer: reading %s: %w", path, err)
+	}
+	// OpenWebif (VTi 15, 2026-10-21) answers /autotimer with 200 and this
+	// stub when the plugin is missing; the real sub-paths are then 404.
+	if bytes.Contains(data, []byte("AutoTimer Plugin not found")) {
+		return ErrNotInstalled
 	}
 	if err := xml.Unmarshal(data, v); err != nil {
 		return fmt.Errorf("autotimer: parsing %s: %w", path, err)

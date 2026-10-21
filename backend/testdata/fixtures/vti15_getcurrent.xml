@@ -1,0 +1,53 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<e2currentserviceinformation>
+	<e2service>
+		<e2servicereference>1:0:19:283D:3FB:1:C00000:0:0:0:</e2servicereference>
+		<e2servicename>Das Erste HD</e2servicename>
+		<e2providername>ARD</e2providername>
+		<e2videowidth>N/A</e2videowidth>
+		<e2videoheight>N/A</e2videoheight>
+		<e2servicevideosize>N/AxN/A</e2servicevideosize>
+		<e2iswidescreen>
+0		</e2iswidescreen>
+		<e2apid>5102</e2apid>
+		<e2vpid>5101</e2vpid>
+		<e2pcrpid>5101</e2pcrpid>
+		<e2pmtpid>N/A</e2pmtpid>
+		<e2txtpid>5104</e2txtpid>
+		<e2tsid>1019</e2tsid>
+		<e2onid>1</e2onid>
+		<e2sid>10301</e2sid>
+	</e2service>
+	<e2eventlist>
+		<e2event>
+			<e2eventservicereference>1:0:19:283D:3FB:1:C00000:0:0:0:</e2eventservicereference>
+			<e2eventservicename>Das Erste HD</e2eventservicename>
+			<e2eventprovidername>ARD</e2eventprovidername>
+			<e2eventid></e2eventid>
+			<e2eventname>N/A</e2eventname>
+			<e2eventtitle>N/A</e2eventtitle>
+			<e2eventdescription></e2eventdescription>
+			<e2eventstart>0</e2eventstart>
+			<e2eventduration>0</e2eventduration>
+			<e2eventremaining>0</e2eventremaining>
+			<e2eventcurrenttime>0</e2eventcurrenttime>
+			<e2eventdescriptionextended></e2eventdescriptionextended>
+			<e2eventgenre id="0"></e2eventgenre>
+		</e2event>
+		<e2event>
+			<e2eventservicereference>1:0:19:283D:3FB:1:C00000:0:0:0:</e2eventservicereference>
+			<e2eventservicename>Das Erste HD</e2eventservicename>
+			<e2eventprovidername>ARD</e2eventprovidername>
+			<e2eventid></e2eventid>
+			<e2eventname>N/A</e2eventname>
+			<e2eventtitle>N/A</e2eventtitle>
+			<e2eventdescription></e2eventdescription>
+			<e2eventstart>0</e2eventstart>
+			<e2eventduration>0</e2eventduration>
+			<e2eventremaining>0</e2eventremaining>
+			<e2eventcurrenttime>0</e2eventcurrenttime>
+			<e2eventdescriptionextended></e2eventdescriptionextended>
+			<e2eventgenre id="0"></e2eventgenre>
+		</e2event>
+	</e2eventlist>
+</e2currentserviceinformation>

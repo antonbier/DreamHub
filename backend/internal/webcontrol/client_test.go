@@ -454,3 +454,34 @@ func TestEPGNowNext_Fixture(t *testing.T) {
 		}
 	}
 }
+
+// OpenWebif images (VTi 15 on a VU+ Solo2) have no /screenshot; /grab does it.
+func TestScreenshot_FallsBackToGrab(t *testing.T) {
+	srv := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		if r.URL.Path != "/grab" {
+			http.NotFound(w, r)
+			return
+		}
+		w.Write([]byte("grabbed"))
+	}))
+	defer srv.Close()
+	img, err := NewHTTPClient(srv.URL).Screenshot(context.Background())
+	if err != nil {
+		t.Fatal(err)
+	}
+	if string(img) != "grabbed" {
+		t.Errorf("unexpected body: %s", img)
+	}
+}
+
+// A window that ends before it starts must never reach the box: enigma2 on a
+// VU+ Solo2 crashed on the negative minutes it turned into.
+func TestEPGMulti_RefusesEmptyWindow(t *testing.T) {
+	srv := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		t.Errorf("request reached the box: %s", r.URL)
+	}))
+	defer srv.Close()
+	if _, err := NewHTTPClient(srv.URL).EPGMulti(context.Background(), "bq", 1000, 120); err == nil {
+		t.Error("expected an error")
+	}
+}

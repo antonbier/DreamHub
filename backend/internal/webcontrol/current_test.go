@@ -65,3 +65,25 @@ func TestIsRecordingReference(t *testing.T) {
 		t.Error("live channel taken for a recording")
 	}
 }
+
+// OpenWebif's getcurrent has no <e2volume>; the volume comes from /web/vol.
+func TestCurrent_VolumeFromVolEndpoint(t *testing.T) {
+	srv := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		switch r.URL.Path {
+		case "/web/getcurrent":
+			w.Write([]byte(`<e2currentserviceinformation><e2service><e2servicereference>1:0:19:283D:3FB:1:C00000:0:0:0:</e2servicereference><e2servicename>Das Erste HD</e2servicename></e2service><e2eventlist></e2eventlist></e2currentserviceinformation>`))
+		case "/web/vol":
+			w.Write([]byte(`<e2volume><e2result>True</e2result><e2current>30</e2current><e2ismuted>True</e2ismuted></e2volume>`))
+		default:
+			http.NotFound(w, r)
+		}
+	}))
+	defer srv.Close()
+	cur, err := NewHTTPClient(srv.URL).Current(context.Background())
+	if err != nil {
+		t.Fatal(err)
+	}
+	if cur.Volume != 30 || !cur.Muted {
+		t.Errorf("volume=%d muted=%v, want 30 true", cur.Volume, cur.Muted)
+	}
+}

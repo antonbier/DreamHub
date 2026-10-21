@@ -6,6 +6,9 @@ Format follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/); version
 
 ## [Unreleased]
 
+### Fixed
+- **OpenWebif receivers (checked on a VU+ Solo2 with VTi 15)**: the screenshot falls back to `/grab` when the image has no `/screenshot`, the volume is read from `/web/vol` when `getcurrent` carries none, and a missing AutoTimer plugin is no longer reported as installed (OpenWebif answers `/autotimer` with a "not found" stub and status 200). The EPG window of `epgmulti` is refused when it ends before it starts (it crashed enigma2 on a VU+), and the daily channel snapshot waits between provider reads and gives up on a box that stops answering.
+
 ## [0.9.3] - 2026-10-20
 
 ### Added

@@ -73,3 +73,14 @@ func TestNotInstalled(t *testing.T) {
 		t.Errorf("want ErrNotInstalled, got %v", err)
 	}
 }
+
+// OpenWebif answers /autotimer with 200 and a stub when the plugin is missing.
+func TestNotInstalled_OpenWebifStub(t *testing.T) {
+	srv := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		w.Write([]byte(`<?xml version="1.0" ?><e2simplexmlresult><e2state>false</e2state><e2statetext>AutoTimer Plugin not found</e2statetext></e2simplexmlresult>`))
+	}))
+	defer srv.Close()
+	if _, err := NewHTTPClient(srv.URL).List(context.Background()); !errors.Is(err, ErrNotInstalled) {
+		t.Errorf("err = %v, want ErrNotInstalled", err)
+	}
+}

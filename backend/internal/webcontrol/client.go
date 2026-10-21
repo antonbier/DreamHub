@@ -586,6 +586,11 @@ func (c *HTTPClient) EPGMulti(ctx context.Context, bouquetRef string, start, end
 	// minutes" and returns the whole EPG (~25 days, megabytes) — confirmed
 	// live 2026-09-24 (ARCHITECTURE.md, "epgmulti's endTime is minutes").
 	minutes := (end - start + 59) / 60
+	if minutes < 1 {
+		// A negative or zero window crashed enigma2 on a VU+ Solo2 (VTi 15,
+		// 2026-10-21: a duration passed where an end timestamp belongs).
+		return nil, fmt.Errorf("webcontrol: epgmulti: end %d is not after start %d", end, start)
+	}
 	q := url.Values{
 		"bRef":    {bouquetRef},
 		"time":    {strconv.FormatInt(start, 10)},
@@ -864,6 +869,11 @@ func (c *HTTPClient) Message(ctx context.Context, text string, kind, timeout int
 // Read-only: not gated by AllowWrites.
 func (c *HTTPClient) Screenshot(ctx context.Context) ([]byte, error) {
 	body, err := c.get(ctx, "/screenshot?format=png&osd=1&video=1")
+	if errors.Is(err, ErrNotFound) {
+		// OpenWebif images (VTi on a VU+ Solo2, confirmed 2026-10-21) have
+		// no /screenshot; their /grab composites video and OSD itself.
+		body, err = c.get(ctx, "/grab?format=png")
+	}
 	if err != nil {
 		return nil, err
 	}

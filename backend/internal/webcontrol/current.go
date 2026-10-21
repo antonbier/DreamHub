@@ -52,6 +52,18 @@ func (c *HTTPClient) Current(ctx context.Context) (*CurrentService, error) {
 		Muted:            strings.EqualFold(strings.TrimSpace(res.Volume.Muted), "True"),
 	}
 	out.Volume, _ = strconv.Atoi(strings.TrimSpace(res.Volume.Current))
+	if strings.TrimSpace(res.Volume.Current) == "" {
+		// OpenWebif's getcurrent carries no <e2volume> (VTi 15, 2026-10-21);
+		// /web/vol has it. Best effort: the volume is not worth failing for.
+		var vol struct {
+			Current string `xml:"e2current"`
+			Muted   string `xml:"e2ismuted"`
+		}
+		if c.getXML(ctx, "/web/vol", &vol) == nil {
+			out.Volume, _ = strconv.Atoi(strings.TrimSpace(vol.Current))
+			out.Muted = strings.EqualFold(strings.TrimSpace(vol.Muted), "True")
+		}
+	}
 	for _, e := range res.Events {
 		id, err1 := strconv.ParseInt(strings.TrimSpace(e.ID), 10, 64)
 		start, err2 := strconv.ParseInt(strings.TrimSpace(e.Start), 10, 64)

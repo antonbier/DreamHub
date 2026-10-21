@@ -6,7 +6,7 @@ Status: **brainstormed and decided 2026-10-16 (six rounds with the owner). M1, M
 
 Control more than one Dreambox from one DreamHub: a **box selector** in the header, and everything below it (guide, timers, recordings, remote) refers to the selected box. A household with one box must see **nothing new** — that is an acceptance criterion, not a nice-to-have.
 
-Not goals (for now): non-Dreambox receivers (VU+ and other OpenWebif boxes — *prepared for, not built*), StreamHub multiview (parked: single tuner, untestable), cross-box actions beyond the two below.
+Not goals (for now): non-Dreambox receivers as **Full** boxes (VU+ and other OpenWebif boxes work as **Basic** boxes — see "Non-Dreambox receivers"), StreamHub multiview (parked: single tuner, untestable), cross-box actions beyond the two below.
 
 ## Decisions
 
@@ -77,6 +77,8 @@ PRINCIPLES.md promises an OpenAPI spec ("generated from the Go code, not hand-wr
 - Docs: `de/en/it` strings, USER_GUIDE, ARCHITECTURE, CHANGELOG; the second mock box for tests and screenshots.
 
 ## Non-Dreambox receivers (VU+ and OpenWebif boxes)
+**Update 2026-10-21:** the owner wants VU+/OpenWebif boxes supported as **Basic** boxes. The probe was done by hand on the Solo2 with VTi 15 (`ARCHITECTURE.md`, "VU+ Solo2 with VTi 15"): the existing `webcontrol` client works with three small fallbacks (screenshot via `/grab`, volume via `/web/vol`, AutoTimer stub). Full is out of reach on that box (45 MB flash, no systemd). Open: live stream, EPG/timers/writes with a signal, login enabled.
+
 Not a goal, not broken by anything here: no new hard-wired Dreambox assumptions (paths and folders from configuration, capabilities instead of "enigma2 does X"), and `webcontrol.Client` stays the seam. The owner has a VU+ Solo 2; a **read-only probe script** (which endpoints answer, response shapes, folder layout, tools present, Python and init system) is deferred but would give the fact base for a capability list. The Solo 2 is MIPS (`GOARCH=mipsle` cross-compiles).
 
 ## Packages

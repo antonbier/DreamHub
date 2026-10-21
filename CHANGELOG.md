@@ -6,12 +6,19 @@ Format follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/); version
 
 ## [Unreleased]
 
+## [0.9.4] - 2026-10-21
+
 ### Added
-- **Tuner state on OpenWebif boxes**: the timers view says what each tuner does ("Tuner A: live: Das Erste HD", "Tuner B: free") where the box tells; a Dreambox does not.
+- **VU+ and other OpenWebif receivers as Basic boxes (#56)**: add a receiver that offers the OpenWebif web interface under Settings → Boxes, like another Dreambox. Checked on a **VU+ Solo2 with VTi 15.0.04** (OWIF 1.5.2): live TV, the TV guide, timers, channel lists, the remote, screenshots and recordings (also played on another box's screen through the hub) work; the answers were compared with the current OpenWebif source. DreamHub itself does not run on such a receiver (too little flash, no systemd): it runs on a Dreambox or a server. AutoTimer and SerienRecorder show up only where the box has them. See "Supported boxes" in the README.
+- **Tuner state on OpenWebif boxes**: the timers view says what each tuner does ("Tuner A: live: Das Erste HD", "Tuner B: free") where the box tells; a Dreambox does not. `GET /api/v1/timers` answers `tunerStates`.
 - **A recording can be played on an OpenWebif box's TV** (zap to its reference, from the start) when it has no DreamHub plugin.
 
 ### Fixed
-- **OpenWebif receivers (checked on a VU+ Solo2 with VTi 15)**: the screenshot falls back to `/grab` when the image has no `/screenshot` (and says so when the box has no grab tool), the volume is read from `/web/vol` when `getcurrent` carries none, and a missing AutoTimer plugin is no longer reported as installed (OpenWebif answers `/autotimer` with a "not found" stub and status 200). The EPG window of `epgmulti` is refused when it ends before it starts (it crashed enigma2 on a VU+), and the daily channel snapshot waits between provider reads and gives up on a box that stops answering; on an OpenWebif box "every channel" is read from its bouquets instead of the one query that took a VU+ Solo2 off the network.
+- **The screenshot of an OpenWebif box**: it has no `/screenshot`, so DreamHub falls back to `/grab` (and says so when the box has no grab tool).
+- **The volume of an OpenWebif box** is read from `/web/vol` when `getcurrent` carries none.
+- **A missing AutoTimer plugin on an OpenWebif box** is no longer reported as installed (OpenWebif answers `/autotimer` with a "not found" stub and status 200).
+- **`epgmulti` with a window that ends before it starts** is refused before it reaches the box: a negative one crashed enigma2 on a VU+ Solo2.
+- **The channel list of an OpenWebif box** ("every channel", the daily snapshot) is read from its bouquets: the one query for every service by name took over 39 s on the Solo2 with a full satellite list, and the box dropped off the network soon after. The background refresh also waits a little between provider reads and gives up on a box that stops answering; a refresh someone waits for runs at full speed.
 
 ## [0.9.3] - 2026-10-20
 

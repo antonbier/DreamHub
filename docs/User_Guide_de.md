@@ -16,6 +16,7 @@ DreamHub ändert von sich aus nichts: Jede Änderung an Aufnahmen, Timern oder E
 * MIPS-Boxen (DM7080, DM820, DM520, DM525) werden derzeit noch nicht unterstützt, ältere Dreamboxen ohne DreamOS überhaupt nicht.
 
 
+* Ein **VU+ oder ein anderer OpenWebif-Receiver** funktioniert als zweite Box, ohne dass darauf etwas installiert wird – siehe *Mehr als eine Box* weiter unten und die Tabelle in der [README](../README.md#supported-boxes).
 * Die Box in deinem Heimnetzwerk. DreamHub nutzt Port **8765**; WebControl bleibt auf Port 80.
 * Ca. 15 MB Speicherplatz auf der Root-Partition für das Programm; seine Datenbank liegt auf `/data`.
 

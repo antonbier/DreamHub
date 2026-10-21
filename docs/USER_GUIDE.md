@@ -14,6 +14,7 @@ DreamHub changes nothing on its own: every change to recordings, timers or setti
   - **Dreambox One or Two** (ARM64) — package `dreamhub_<version>_arm64.deb`. Developed and tested on a Dreambox One with DreamOS 2.6 (Gemini/AIO image).
   - **DM900 UHD or DM920 UHD** (ARMv7) — package `dreamhub_<version>_armhf.deb`. Built the same way, but not yet tested on such a box: feedback welcome.
   - The MIPS boxes (DM7080, DM820, DM520, DM525) aren't supported yet, older Dreamboxes without DreamOS not at all.
+- A **VU+ or another OpenWebif receiver** works as a second box without installing anything on it — see *More than one box* below and the table in the [README](../README.md#supported-boxes).
 - The box on your home network. DreamHub uses port **8765**; WebControl stays on port 80.
 - About 15 MB on the root partition for the program; its database lives on `/data`.
 

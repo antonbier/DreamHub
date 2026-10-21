@@ -1320,6 +1320,9 @@ func (c *HTTPClient) openWebifLists(ctx context.Context, ref string) ([]Service,
 }
 
 func (c *HTTPClient) TunerStates(ctx context.Context) ([]TunerState, error) {
+	if !c.runsOpenWebif(ctx) {
+		return nil, nil // a Dreambox's /web/about has no tuner section
+	}
 	var res struct {
 		Tuners []TunerState `xml:"e2about>e2tunerinfo>e2nim"`
 	}

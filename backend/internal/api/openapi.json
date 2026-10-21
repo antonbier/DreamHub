@@ -2,7 +2,7 @@
  "openapi": "3.0.3",
  "info": {
   "title": "DreamHub API",
-  "version": "0.9.3",
+  "version": "0.9.4",
   "description": "DreamHub's REST API (`/api/v1`). Every request names the box it is about with the optional `box` query parameter; without it the profile's first allowed box is used, so clients written before multi-box support keep working. Changes to a box are always two steps: `POST …/plan` returns a preview, `POST /plans/{id}/apply` applies it. Authenticate with `Authorization: Bearer <token>` (Settings → Authentication → API tokens); a token acts as the profile that created it. Mutating requests need the header `X-DreamHub-Request: 1`. Operations marked `x-box: global` do not depend on the box. The set of operations is kept in step with the router by a test; schemas are filled in for the most useful endpoints first."
  },
  "servers": [
@@ -6131,6 +6131,26 @@
           },
           "tuners": {
            "type": "integer"
+          },
+          "tunerStates": {
+           "type": "array",
+           "description": "What each tuner does now; empty unless the box is an OpenWebif receiver, which tells.",
+           "items": {
+            "type": "object",
+            "properties": {
+             "name": {
+              "type": "string"
+             },
+             "live": {
+              "type": "string",
+              "description": "The channel it serves to the TV, e.g. \"19.2° O / Das Erste HD\"; empty if none."
+             },
+             "rec": {
+              "type": "string",
+              "description": "The recording it serves; empty if none."
+             }
+            }
+           }
           }
          }
         }

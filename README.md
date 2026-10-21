@@ -1,6 +1,6 @@
 # DreamHub
 
-One place for everything your **Dreambox (DreamOS)** does — recordings, timers, the TV guide, radio, series, recommendations, the remote — in a modern web interface that runs on the box itself, alongside the native WebControl rather than replacing it. Works in any browser and installs as an app on phones and desktops.
+One place for everything your **Dreambox (DreamOS)** — and, as a second box, a **VU+ or other OpenWebif receiver** — does — recordings, timers, the TV guide, radio, series, recommendations, the remote — in a modern web interface that runs on the box itself, alongside the native WebControl rather than replacing it. Works in any browser and installs as an app on phones and desktops.
 
 ## What it is
 
@@ -28,12 +28,35 @@ Hubs get their data through **connectors** (WebControl, SerienRecorder, AutoTime
 
 ## Supported boxes
 
-| Box | Package | Status |
+DreamHub runs **on** a Dreambox, or on any machine in your network (a server, a Raspberry Pi) that reaches the receivers. Receivers are used in one of two ways: **Full** — DreamHub runs on the box itself — or **Basic** — DreamHub reaches the box over the network through its web interface, nothing is installed on it.
+
+| Receiver | Image | DreamHub runs on it (Full) | As a box in DreamHub (Basic) |
+| --- | --- | --- | --- |
+| Dreambox One, Two (ARM64) | DreamOS | `dreamhub_<version>_arm64.deb` — developed and tested on a Dreambox One (DreamOS 2.6) | yes (WebControl) |
+| DM900 UHD, DM920 UHD (ARMv7) | DreamOS | `dreamhub_<version>_armhf.deb` — built, not yet tested on such a box | yes (WebControl), not yet tested |
+| DM7080, DM820, DM520, DM525 (MIPS) | DreamOS | not yet: the SQLite driver has no MIPS port | yes (WebControl), not yet tested |
+| Older Dreamboxes | without DreamOS | no (no dpkg, no systemd) | not tested |
+| **VU+ Solo2** | **VTi 15.0.04** (OpenWebif OWIF 1.5.2) | no (45 MB of free flash, no systemd) | **yes — checked** (details below) |
+| Other VU+ (Duo2, Solo SE, Zero, 4K models …) | VTi | no | expected to work like the Solo2, not tested |
+| Other Enigma2 receivers (Gigablue, Xtrend, Vu+, …) | OpenATV, OpenPLi, OpenVision, … with OpenWebif | no | expected to work (OpenWebif answers the same way), **not tested** — reports welcome |
+
+**What a Basic box does** (checked on the Solo2 with VTi 15, against a Dreambox One as the main box):
+
+| Feature | Dreambox (WebControl) | VU+ / OpenWebif (Basic) |
 | --- | --- | --- |
-| Dreambox One, Two (DreamOS, ARM64) | `dreamhub_<version>_arm64.deb` | developed and tested on a Dreambox One (DreamOS 2.6) |
-| DM900 UHD, DM920 UHD (DreamOS, ARMv7) | `dreamhub_<version>_armhf.deb` | built, not yet tested on such a box |
-| DM7080, DM820, DM520, DM525 (DreamOS, MIPS) | — | not yet: the SQLite driver has no MIPS port |
-| Older Dreamboxes without DreamOS | — | not supported (no dpkg, no systemd) |
+| Live TV in the browser, zapping, now & next, the guide | yes | yes |
+| Timers: list, add, delete, conflict hint | yes | yes; the view also shows what each tuner does |
+| Channel lists (bouquets) | yes | yes, through OpenWebif's BouquetEditor (adding and removing a bouquet tried) |
+| Remote, screenshot | yes | yes (the screenshot through `/grab`; needs the `grab` tool) |
+| Recordings: list, watch in the browser with seeking | yes | yes, read through the box's web interface |
+| Play a recording on the box's own TV | yes (DreamHub's TV plugin) | yes, from the start (no start position) |
+| Play a recording of another box on this box | yes | as the source: yes; as the target: no |
+| Recordings: rename, move, trash, ad cut, cutting by hand | yes | no — needs DreamHub on the box |
+| AutoTimer, SerienRecorder | where installed | where installed (VTi 15 has neither) |
+| Logos, packages, services, logs, terminal, Docker apps | yes | no — needs DreamHub on the box |
+| Wake from standby | WebControl | Wake-on-LAN or a smart plug (not tested from deep standby) |
+
+Not tested yet: a web login switched on at the receiver, the browser player and live TV in a browser against the Solo2 (the streams were checked as bytes and codecs: H.264, MP2 and AC3, like a Dreambox's), messages to the TV, and a Wi-Fi-only box under load (the Solo2 was on Wi-Fi, and dropped off the network once during the checks, cause not established). A **cable connection is recommended** for a receiver that is only reachable by Wi-Fi. How the receiver was checked: [ARCHITECTURE.md](ARCHITECTURE.md), "VU+ Solo2 with VTi 15"; the open points: [#56](https://github.com/antonbier/DreamHub/issues/56).
 
 Packages are attached to each [release](https://github.com/antonbier/DreamHub/releases).
 
@@ -46,7 +69,7 @@ Packages are attached to each [release](https://github.com/antonbier/DreamHub/re
 
 ## Status
 
-**0.9.3** is the current release (0.1.0 was the first): the TV plugin's QR code and screens fixed, radio text, cutting by hand, copying a channel list between boxes, several Dreamboxes behind one selector (pairing, Wake-on-LAN or a smart plug to switch one on, a recording of one box on another's screen), extensions that show their own values on the start page (the eWeLink plug's power and consumption), the eWeLink extension getting its keys through your own developer application and switching through the cloud when the plug refuses the LAN, extension logs, Docker apps with an install form, container list, updates with roll back and backups, marked ad breaks the TV really skips, and many small clarity fixes. Every released hub works against the real box — confirmed on the reference Dreambox One with the self-test (Device → Diagnostics), Plex playback on the box included — and against a mock for development, so no Dreambox is needed to work on it. Installing Docker apps needs Docker on the box, which AppsHub can set up itself. [ROADMAP.md](ROADMAP.md) has exactly what's done and what's open, [CHANGELOG.md](CHANGELOG.md) what changed, [PROJECT_PLAN.md](PROJECT_PLAN.md) why the project exists, and [backend/README.md](backend/README.md) / [frontend/README.md](frontend/README.md) how to run it locally.
+**0.9.4** is the current release (0.1.0 was the first): VU+ and other OpenWebif receivers as Basic boxes next to a Dreambox (checked on a VU+ Solo2 with VTi 15), what each tuner does, a lighter channel list on slow receivers, and a fix that kept a crashing request from reaching the box; before it the TV plugin's QR code and screens fixed, radio text, cutting by hand, copying a channel list between boxes, several Dreamboxes behind one selector (pairing, Wake-on-LAN or a smart plug to switch one on, a recording of one box on another's screen), extensions that show their own values on the start page, Docker apps with an install form, updates with roll back and backups, marked ad breaks the TV really skips, and many small clarity fixes. Every released hub works against the real box — confirmed on the reference Dreambox One with the self-test (Device → Diagnostics), Plex playback on the box included — and against a mock for development, so no Dreambox is needed to work on it. Installing Docker apps needs Docker on the box, which AppsHub can set up itself. [ROADMAP.md](ROADMAP.md) has exactly what's done and what's open, [CHANGELOG.md](CHANGELOG.md) what changed, [PROJECT_PLAN.md](PROJECT_PLAN.md) why the project exists, and [backend/README.md](backend/README.md) / [frontend/README.md](frontend/README.md) how to run it locally.
 
 ## License
 

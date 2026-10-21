@@ -4,6 +4,7 @@ import (
 	"context"
 	"errors"
 	"testing"
+	"time"
 
 	"github.com/antonbier/DreamHub/backend/internal/store"
 	"github.com/antonbier/DreamHub/backend/internal/webcontrol"
@@ -46,5 +47,26 @@ func TestChannels_RefreshStopsAskingAStrugglingBox(t *testing.T) {
 	seen, _, err := st.SeenChannels(context.Background())
 	if err != nil || len(seen) == 0 {
 		t.Errorf("snapshot: %d channels, err %v", len(seen), err)
+	}
+}
+
+// The pause between provider reads is for the background refresh only: a
+// refresh a person waits for must not take 250 ms per provider.
+func TestChannels_PauseOnlyInTheBackground(t *testing.T) {
+	st, err := store.Open(t.TempDir())
+	if err != nil {
+		t.Fatal(err)
+	}
+	defer st.Close()
+	h := &Channels{WC: mock.New(), Store: st, ProviderPause: time.Hour}
+	done := make(chan error, 1)
+	go func() { done <- h.refresh(context.Background()) }()
+	select {
+	case err := <-done:
+		if err != nil {
+			t.Fatal(err)
+		}
+	case <-time.After(10 * time.Second):
+		t.Fatal("a refresh a request waits for was paced")
 	}
 }

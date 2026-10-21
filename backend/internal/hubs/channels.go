@@ -41,9 +41,10 @@ type Channels struct {
 	LogoDir string
 	Logos   logosearch.Source
 	Now     func() time.Time
-	// ProviderPause is the wait between two provider reads of the snapshot
-	// refresh, so a box that answers one request at a time (every enigma2)
-	// can serve the people using it in between; 0 means none (tests).
+	// ProviderPause is the wait between two provider reads of the daily
+	// background refresh, so a box that answers one request at a time (every
+	// enigma2) can serve the people using it in between; 0 means none
+	// (tests). A refresh a request waits for is not slowed down by it.
 	ProviderPause time.Duration
 
 	// Boxes lists the box IDs the daily refresh visits; nil means just the
@@ -122,6 +123,10 @@ func (h *Channels) Init(ctx context.Context) {
 	}
 }
 
+// pacedRefresh marks the background refresh in a context: it leaves room for
+// other requests between its own; one a person waits for does not.
+type pacedRefresh struct{}
+
 // Watch refreshes the channel snapshot once a day, so "new since" also
 // knows channels from a scan nobody looked at in ChannelHub.
 func (h *Channels) Watch(ctx context.Context, logger *slog.Logger) {
@@ -141,7 +146,7 @@ func (h *Channels) Watch(ctx context.Context, logger *slog.Logger) {
 				if id != "" {
 					bctx = box.With(ctx, id)
 				}
-				if err := h.refresh(bctx); err != nil && logger != nil {
+				if err := h.refresh(context.WithValue(bctx, pacedRefresh{}, true)); err != nil && logger != nil {
 					logger.Warn("channel snapshot refresh failed", "box", id, "error", err)
 				}
 			}
@@ -313,7 +318,7 @@ func (h *Channels) refresh(ctx context.Context) error {
 				for _, s := range list {
 					provider[channelKey(s.ServiceReference)] = p.ServiceName
 				}
-				if h.ProviderPause > 0 {
+				if h.ProviderPause > 0 && ctx.Value(pacedRefresh{}) != nil {
 					select {
 					case <-ctx.Done():
 					case <-time.After(h.ProviderPause):

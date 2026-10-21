@@ -41,6 +41,10 @@ type Channels struct {
 	LogoDir string
 	Logos   logosearch.Source
 	Now     func() time.Time
+	// ProviderPause is the wait between two provider reads of the snapshot
+	// refresh, so a box that answers one request at a time (every enigma2)
+	// can serve the people using it in between; 0 means none (tests).
+	ProviderPause time.Duration
 
 	// Boxes lists the box IDs the daily refresh visits; nil means just the
 	// first box.
@@ -292,10 +296,27 @@ func (h *Channels) refresh(ctx context.Context) error {
 		}
 		provider := map[string]string{}
 		if providers, err := h.WC.Services(ctx, kind.providers); err == nil {
+			failures := 0
 			for _, p := range providers {
-				if list, err := h.WC.Services(ctx, p.ServiceReference); err == nil {
-					for _, s := range list {
-						provider[channelKey(s.ServiceReference)] = p.ServiceName
+				list, err := h.WC.Services(ctx, p.ServiceReference)
+				if err != nil {
+					// A box that stops answering is not asked a hundred more
+					// times (a VU+ Solo2 with a full satellite list went away
+					// under this, 2026-10-21): the names are kept, the
+					// providers of the rest are left out until the next run.
+					if failures++; failures >= 3 || ctx.Err() != nil {
+						break
+					}
+					continue
+				}
+				failures = 0
+				for _, s := range list {
+					provider[channelKey(s.ServiceReference)] = p.ServiceName
+				}
+				if h.ProviderPause > 0 {
+					select {
+					case <-ctx.Done():
+					case <-time.After(h.ProviderPause):
 					}
 				}
 			}

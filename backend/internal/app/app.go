@@ -381,7 +381,7 @@ func New(ctx context.Context, o Options) (*App, error) {
 		}
 	}
 
-	channelsHub := &hubs_.Channels{WC: wc, Plans: plans, Store: st, Settings: svc, User: user, PiconDirs: o.PiconDirs, LogoDir: filepath.Join(o.DataDir, "logos"), Logos: o.LogoSearch, Now: now}
+	channelsHub := &hubs_.Channels{WC: wc, Plans: plans, Store: st, Settings: svc, User: user, PiconDirs: o.PiconDirs, LogoDir: filepath.Join(o.DataDir, "logos"), Logos: o.LogoSearch, Now: now, ProviderPause: 250 * time.Millisecond}
 	channelsHub.Boxes = boxReg.IDs
 	channelsHub.Init(ctx)
 	timerHub := &hubs_.Timer{WC: wc, Plans: plans, Now: now, AT: at, Owners: st}

@@ -1436,3 +1436,12 @@ export interface ChannelSyncResult {
   plan: Plan
   bouquets: { name: string; kind: 'tv' | 'radio'; action: 'create' | 'update' | 'unchanged'; channels: number; changes: number; missing?: string[] }[]
 }
+
+/** What one tuner is doing now — only boxes with OpenWebif tell (`live` is
+ * "19.2° O / Das Erste HD" while it serves the TV picture, `rec` the
+ * recording; both empty when free). */
+export interface TunerState {
+  name: string
+  live: string
+  rec: string
+}

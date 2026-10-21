@@ -194,7 +194,11 @@ func (h *Timer) list(w http.ResponseWriter, r *http.Request) {
 	for i := range views {
 		views[i].MayChange = h.mayChange(r.Context(), user, views[i].Timer)
 	}
-	httpx.WriteJSON(w, http.StatusOK, map[string]any{"timers": views, "tuners": info.Tuners()})
+	states, _ := h.WC.TunerStates(r.Context()) // best effort: only OpenWebif tells
+	if states == nil {
+		states = []webcontrol.TunerState{}
+	}
+	httpx.WriteJSON(w, http.StatusOK, map[string]any{"timers": views, "tuners": info.Tuners(), "tunerStates": states})
 }
 
 // autoTimers lists the AutoTimer plugin's configuration. A box without the

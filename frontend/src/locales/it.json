@@ -1542,6 +1542,10 @@
       "done": "{count} timer rimosso | {count} timer rimossi"
     },
     "tuners": "{count} tuner | {count} tuner",
+    "tunerStates": "Stato dei tuner",
+    "tunerRec": "registrazione: {what}",
+    "tunerLive": "diretta: {what}",
+    "tunerFree": "libero",
     "empty": "Nessun timer in programma.",
     "today": "Oggi",
     "tomorrow": "Domani",

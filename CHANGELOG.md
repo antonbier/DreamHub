@@ -6,8 +6,12 @@ Format follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/); version
 
 ## [Unreleased]
 
+### Added
+- **Tuner state on OpenWebif boxes**: the timers view says what each tuner does ("Tuner A: live: Das Erste HD", "Tuner B: free") where the box tells; a Dreambox does not.
+- **A recording can be played on an OpenWebif box's TV** (zap to its reference, from the start) when it has no DreamHub plugin.
+
 ### Fixed
-- **OpenWebif receivers (checked on a VU+ Solo2 with VTi 15)**: the screenshot falls back to `/grab` when the image has no `/screenshot`, the volume is read from `/web/vol` when `getcurrent` carries none, and a missing AutoTimer plugin is no longer reported as installed (OpenWebif answers `/autotimer` with a "not found" stub and status 200). The EPG window of `epgmulti` is refused when it ends before it starts (it crashed enigma2 on a VU+), and the daily channel snapshot waits between provider reads and gives up on a box that stops answering.
+- **OpenWebif receivers (checked on a VU+ Solo2 with VTi 15)**: the screenshot falls back to `/grab` when the image has no `/screenshot`, the volume is read from `/web/vol` when `getcurrent` carries none, and a missing AutoTimer plugin is no longer reported as installed (OpenWebif answers `/autotimer` with a "not found" stub and status 200). The EPG window of `epgmulti` is refused when it ends before it starts (it crashed enigma2 on a VU+), and the daily channel snapshot waits between provider reads and gives up on a box that stops answering; on an OpenWebif box "every channel" is read from its bouquets instead of the one query that took a VU+ Solo2 off the network.
 
 ## [0.9.3] - 2026-10-20
 

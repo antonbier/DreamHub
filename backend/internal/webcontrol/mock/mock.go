@@ -195,6 +195,14 @@ func (c *Client) DeviceInfo(ctx context.Context) (*webcontrol.DeviceInfo, error)
 	}, nil
 }
 
+// TunerStates: the mock's one tuner shows the channel on screen.
+func (c *Client) TunerStates(ctx context.Context) ([]webcontrol.TunerState, error) {
+	if err := c.disturb(ctx); err != nil {
+		return nil, err
+	}
+	return []webcontrol.TunerState{{Name: "Tuner A", Live: "ZDF HD"}}, nil
+}
+
 func (c *Client) MovieList(ctx context.Context) ([]webcontrol.Movie, error) {
 	if err := c.disturb(ctx); err != nil {
 		return nil, err

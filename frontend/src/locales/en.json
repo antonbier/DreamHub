@@ -1542,6 +1542,10 @@
       "done": "{count} timer removed | {count} timers removed"
     },
     "tuners": "{count} tuner | {count} tuners",
+    "tunerStates": "Tuner states",
+    "tunerRec": "recording: {what}",
+    "tunerLive": "live: {what}",
+    "tunerFree": "free",
     "empty": "No upcoming timers.",
     "today": "Today",
     "tomorrow": "Tomorrow",

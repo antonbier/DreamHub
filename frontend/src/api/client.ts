@@ -15,6 +15,7 @@ import { shallowRef } from 'vue'
 import { authHeaders, handleUnauthorized } from './authState'
 import { withBox } from '@/lib/box'
 import type {
+  TunerState,
   AdminFeed,
   AdminPackage,
   PackageCategory,
@@ -310,7 +311,7 @@ export const api = {
   },
   hubs: () => request<{ hubs: HubStatus[] }>('GET', '/api/v1/hubs'),
   connectors: () => request<{ connectors: ConnectorState[] }>('GET', '/api/v1/connectors'),
-  timers: () => request<{ timers: Timer[]; tuners: number }>('GET', '/api/v1/timers'),
+  timers: () => request<{ timers: Timer[]; tuners: number; tunerStates?: TunerState[] }>('GET', '/api/v1/timers'),
   // backend/internal/hubs.createRequest (internal/hubs/timer.go) — used
   // directly by TimerHub's own future UI and by DiscoveryHub's "create
   // timer from a recommendation" hand-off (CONCEPT.md: DiscoveryHub calls

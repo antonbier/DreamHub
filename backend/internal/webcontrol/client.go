@@ -16,6 +16,7 @@ import (
 	"net/http"
 	"net/url"
 	"regexp"
+	"sort"
 	"strconv"
 	"strings"
 	"sync"
@@ -40,6 +41,19 @@ type Frontend struct {
 	Name  string `xml:"e2name" json:"name"`
 	Model string `xml:"e2model" json:"model"`
 }
+
+// TunerState is what one tuner is doing, as OpenWebif's /web/about reports
+// it (VU+ Solo2 with VTi 15, 2026-10-21): Live is "19.2° O / Das Erste HD"
+// while it serves the TV picture, Rec the recording it serves; both empty
+// when it is free.
+type TunerState struct {
+	Name string `xml:"name" json:"name"`
+	Live string `xml:"live" json:"live"`
+	Rec  string `xml:"rec" json:"rec"`
+}
+
+// Busy reports whether the tuner is in use.
+func (t TunerState) Busy() bool { return t.Live != "" || t.Rec != "" }
 
 // HDD is one storage device from /web/deviceinfo. Capacity and Free are
 // human-formatted strings as WebControl reports them (e.g. "2 TB",
@@ -262,6 +276,9 @@ type Client interface {
 	// DeleteTimer removes a timer. Deleting a running timer stops the
 	// recording in progress — the box aborts it (ARCHITECTURE.md).
 	DeleteTimer(ctx context.Context, ref TimerRef) error
+	// TunerStates says what each tuner is doing now (live, recording).
+	// Empty when the box does not tell: only OpenWebif's /web/about has it.
+	TunerStates(ctx context.Context) ([]TunerState, error)
 	// Bouquets lists the box's bouquets (GuideHub's channel groups).
 	Bouquets(ctx context.Context) ([]Service, error)
 	// Services lists the channels inside a bouquet (bouquetRef, as returned
@@ -386,6 +403,8 @@ type HTTPClient struct {
 
 	mu        sync.Mutex
 	sessionID string
+	// openWebif: 0 not asked yet, 1 the box runs OpenWebif, 2 it does not.
+	openWebif int
 
 	inflightMu sync.Mutex
 	inflight   map[string]*inflightGet
@@ -570,6 +589,12 @@ func (c *HTTPClient) Bouquets(ctx context.Context) ([]Service, error) {
 }
 
 func (c *HTTPClient) Services(ctx context.Context, bouquetRef string) ([]Service, error) {
+	switch bouquetRef {
+	case TVAll, RadioAll, TVProviders, RadioProviders:
+		if c.runsOpenWebif(ctx) {
+			return c.openWebifLists(ctx, bouquetRef)
+		}
+	}
 	var list serviceList
 	q := url.Values{"sRef": {bouquetRef}}
 	if err := c.getXML(ctx, "/web/getservices?"+q.Encode(), &list); err != nil {
@@ -793,6 +818,12 @@ func (c *HTTPClient) PlayMovie(ctx context.Context, serviceReference, title stri
 	}
 	defer c.wrote()
 	body, err := c.do(ctx, http.MethodPost, "/dreamhub/play", form)
+	if errors.Is(err, ErrNotFound) && c.runsOpenWebif(ctx) {
+		// No DreamHub plugin on an OpenWebif box (a Basic box): its zap
+		// takes a recording's reference and plays it (VU+ Solo2 with VTi 15,
+		// 2026-10-21), from the start — there is no start position here.
+		return c.Zap(ctx, serviceReference)
+	}
 	if err != nil {
 		return err
 	}
@@ -1202,4 +1233,89 @@ func (c *HTTPClient) BouquetEditorAvailable(ctx context.Context) bool {
 	}
 	body.Close()
 	return true
+}
+
+// runsOpenWebif reports whether the box is an OpenWebif image (VU+, VTi,
+// OpenATV, …) rather than a Dreambox's WebControl, from the web interface's
+// version ("OWIF 1.5.2" against the Dreambox's "1.9.1"). Asked once; a
+// failed ask counts as "no" this time and is repeated next time.
+func (c *HTTPClient) runsOpenWebif(ctx context.Context) bool {
+	c.mu.Lock()
+	known := c.openWebif
+	c.mu.Unlock()
+	if known != 0 {
+		return known == 1
+	}
+	info, err := c.DeviceInfo(ctx)
+	if err != nil {
+		return false
+	}
+	state := 2
+	if strings.HasPrefix(strings.TrimSpace(info.WebifVersion), "OWIF") {
+		state = 1
+	}
+	c.mu.Lock()
+	c.openWebif = state
+	c.mu.Unlock()
+	return state == 1
+}
+
+// openWebifLists answers the "every channel" and "every provider" lists on
+// an OpenWebif box. Its own answer to the Dreambox's queries ("every
+// service of these types, ordered by name", then one request per provider)
+// took over 39 s on a VU+ Solo2 with a full satellite list, and the box
+// went off the network soon after (ARCHITECTURE.md, "VU+ Solo2 with VTi
+// 15"). Here the channels are those in the box's bouquets, read bouquet by
+// bouquet (a few requests of under 0.1 s), by name; channels that are in no
+// bouquet are not seen, and there are no providers.
+func (c *HTTPClient) openWebifLists(ctx context.Context, ref string) ([]Service, error) {
+	if ref == TVProviders || ref == RadioProviders {
+		return nil, nil
+	}
+	root := RadioRoot
+	var bouquets []Service
+	var err error
+	if ref == TVAll {
+		bouquets, err = c.Bouquets(ctx)
+	} else {
+		bouquets, err = c.Services(ctx, root)
+	}
+	if err != nil {
+		return nil, err
+	}
+	seen := map[string]bool{}
+	var out []Service
+	for _, b := range bouquets {
+		if IsMarker(b.ServiceReference) {
+			continue
+		}
+		list, err := c.Services(ctx, b.ServiceReference)
+		if err != nil {
+			return nil, err
+		}
+		for _, s := range list {
+			if seen[s.ServiceReference] {
+				continue
+			}
+			seen[s.ServiceReference] = true
+			out = append(out, s)
+		}
+	}
+	sort.SliceStable(out, func(i, j int) bool { return strings.ToLower(out[i].ServiceName) < strings.ToLower(out[j].ServiceName) })
+	return out, nil
+}
+
+func (c *HTTPClient) TunerStates(ctx context.Context) ([]TunerState, error) {
+	var res struct {
+		Tuners []TunerState `xml:"e2about>e2tunerinfo>e2nim"`
+	}
+	if err := c.getXML(ctx, "/web/about", &res); err != nil {
+		return nil, err
+	}
+	for i := range res.Tuners {
+		res.Tuners[i].Name = strings.TrimSpace(res.Tuners[i].Name)
+		res.Tuners[i].Live = strings.TrimSpace(res.Tuners[i].Live)
+		res.Tuners[i].Rec = strings.TrimSpace(res.Tuners[i].Rec)
+	}
+	return res.Tuners, nil
 }

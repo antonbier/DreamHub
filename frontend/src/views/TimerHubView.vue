@@ -22,6 +22,12 @@
       <h1 class="text-[26px] font-bold">{{ hubTitle('timer', 'hub.timer') }}</h1>
       <span v-if="tuners > 0" class="ms-auto text-[13px] text-faint">{{ t('timers.tuners', { count: tuners }, tuners) }}</span>
     </div>
+    <ul v-if="tunerStates.length" class="mt-2 flex flex-wrap gap-x-4 gap-y-1 text-[13px] text-muted" :aria-label="t('timers.tunerStates')">
+      <li v-for="s in tunerStates" :key="s.name">
+        <span class="font-semibold">{{ s.name }}</span>:
+        {{ s.rec ? t('timers.tunerRec', { what: s.rec }) : s.live ? t('timers.tunerLive', { what: s.live }) : t('timers.tunerFree') }}
+      </li>
+    </ul>
 
     <HubStatusBanner :item="item" />
 
@@ -146,7 +152,7 @@ import { useNavigationStore } from '@/stores/navigation'
 import { usePlanError } from '@/composables/usePlanError'
 import { useDisplayTimeZone } from '@/composables/useDisplayTimeZone'
 import { zonedUnix } from '@/lib/zonedTime'
-import type { AutoTimers, Plan, SimulatedTimer, Timer } from '@/api/types'
+import type { AutoTimers, Plan, SimulatedTimer, Timer, TunerState } from '@/api/types'
 
 const { t, locale } = useI18n()
 const { hubTitle } = useHubLabel()
@@ -158,6 +164,7 @@ const item = computed(() => navigation.navigation?.sections.flatMap((s) => s.ite
 
 const timers = ref<Timer[]>([])
 const tuners = ref(0)
+const tunerStates = ref<TunerState[]>([])
 const loading = ref(true)
 const loadFailed = ref(false)
 const showFinished = ref(false)
@@ -205,6 +212,7 @@ async function load() {
     const res = await api.timers()
     timers.value = res.timers
     tuners.value = res.tuners
+    tunerStates.value = res.tunerStates ?? []
     loadFailed.value = false
   } catch {
     loadFailed.value = true

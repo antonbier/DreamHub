@@ -29,6 +29,14 @@ func (c *WebControl) DeviceInfo(ctx context.Context) (*webcontrol.DeviceInfo, er
 	return e.WC.DeviceInfo(ctx)
 }
 
+func (c *WebControl) TunerStates(ctx context.Context) ([]webcontrol.TunerState, error) {
+	e, err := c.reg.For(ctx)
+	if err != nil {
+		return nil, err
+	}
+	return e.WC.TunerStates(ctx)
+}
+
 func (c *WebControl) MovieList(ctx context.Context) ([]webcontrol.Movie, error) {
 	e, err := c.reg.For(ctx)
 	if err != nil {

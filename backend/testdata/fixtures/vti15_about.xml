@@ -1,0 +1,53 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<e2abouts>
+	<e2about>
+		<e2oeversion>OpenVuplus 2.1</e2oeversion>
+		<e2enigmaversion>2025-06-23-vti-master (4ef8eb3a9)</e2enigmaversion>
+		<e2distroversion>VTi-Team Image</e2distroversion>
+		<e2imageversion>15.0.04</e2imageversion>
+		<e2driverdate>20190429</e2driverdate>
+		<e2webifversion>OWIF 1.5.2</e2webifversion>
+		<e2fpversion>0</e2fpversion>
+		<e2model>Solo²</e2model>
+		<e2lanmac>00:00:00:00:00:00</e2lanmac>
+		<e2landhcp>True</e2landhcp>
+		<e2lanip>192.168.1.10</e2lanip>
+		<e2lanmask>255.255.255.0</e2lanmask>
+		<e2langw>192.168.1.1</e2langw>
+		<e2hddinfo>
+			<model>ATA(Hitachi HCC54755)</model>
+			<capacity>465.8 GB</capacity>
+			<free>196.8 GB</free>
+			<mount>/media/hdd</mount>
+		</e2hddinfo>
+		<e2tunerinfo>
+			<e2nim>
+				<name>Tuner A</name>
+				<type>BCM7356 DVB-S2 NIM (internal) (DVB-S2)</type>
+				<live>19.2° O / Das Erste HD</live>
+				<rec></rec>
+			</e2nim>
+			<e2nim>
+				<name>Tuner B</name>
+				<type>BCM7356 DVB-S2 NIM (internal) (DVB-S2)</type>
+				<live></live>
+				<rec></rec>
+			</e2nim>
+		</e2tunerinfo>
+		<e2servicename>Das Erste HD</e2servicename>
+		<e2servicenamespace>12582912</e2servicenamespace>
+		<e2serviceaspect>3</e2serviceaspect>
+		<e2serviceprovider>ARD</e2serviceprovider>
+		<e2videowidth>1280</e2videowidth>
+		<e2videoheight>720</e2videoheight>
+		<e2servicevideosize>1280x720</e2servicevideosize>
+		<e2apid>5102</e2apid>
+		<e2vpid>5101</e2vpid>
+		<e2pcrpid>5101</e2pcrpid>
+		<e2pmtpid>5100</e2pmtpid>
+		<e2txtpid>5104</e2txtpid>
+		<e2tsid>1019</e2tsid>
+		<e2onid>1</e2onid>
+		<e2sid>10301</e2sid>
+	</e2about>
+</e2abouts>

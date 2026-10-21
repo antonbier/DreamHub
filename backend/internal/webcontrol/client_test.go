@@ -462,14 +462,14 @@ func TestScreenshot_FallsBackToGrab(t *testing.T) {
 			http.NotFound(w, r)
 			return
 		}
-		w.Write([]byte("grabbed"))
+		w.Write([]byte("\x89PNGgrabbed"))
 	}))
 	defer srv.Close()
 	img, err := NewHTTPClient(srv.URL).Screenshot(context.Background())
 	if err != nil {
 		t.Fatal(err)
 	}
-	if string(img) != "grabbed" {
+	if string(img) != "\x89PNGgrabbed" {
 		t.Errorf("unexpected body: %s", img)
 	}
 }
@@ -483,5 +483,20 @@ func TestEPGMulti_RefusesEmptyWindow(t *testing.T) {
 	defer srv.Close()
 	if _, err := NewHTTPClient(srv.URL).EPGMulti(context.Background(), "bq", 1000, 120); err == nil {
 		t.Error("expected an error")
+	}
+}
+
+// Without the grab tool the box answers /grab with 200 and a text.
+func TestScreenshot_GrabWithoutTheToolIsAnError(t *testing.T) {
+	srv := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		if r.URL.Path != "/grab" {
+			http.NotFound(w, r)
+			return
+		}
+		w.Write([]byte("Grab is not installed"))
+	}))
+	defer srv.Close()
+	if _, err := NewHTTPClient(srv.URL).Screenshot(context.Background()); err == nil {
+		t.Error("expected an error, got a picture")
 	}
 }

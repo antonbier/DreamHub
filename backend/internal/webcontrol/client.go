@@ -901,9 +901,23 @@ func (c *HTTPClient) Message(ctx context.Context, text string, kind, timeout int
 func (c *HTTPClient) Screenshot(ctx context.Context) ([]byte, error) {
 	body, err := c.get(ctx, "/screenshot?format=png&osd=1&video=1")
 	if errors.Is(err, ErrNotFound) {
-		// OpenWebif images (VTi on a VU+ Solo2, confirmed 2026-10-21) have
-		// no /screenshot; their /grab composites video and OSD itself.
+		// OpenWebif images (VTi on a VU+ Solo2, confirmed 2026-10-21; the
+		// current OpenWebif source has no /screenshot either) have only
+		// /grab, which composites video and OSD itself — through the
+		// external "grab" binary: without it the box answers 200 with text.
 		body, err = c.get(ctx, "/grab?format=png")
+		if err != nil {
+			return nil, err
+		}
+		defer body.Close()
+		img, err := io.ReadAll(body)
+		if err != nil {
+			return nil, err
+		}
+		if !bytes.HasPrefix(img, []byte("\x89PNG")) {
+			return nil, fmt.Errorf("webcontrol: /grab: the box did not answer with a picture (is the grab tool installed?)")
+		}
+		return img, nil
 	}
 	if err != nil {
 		return nil, err

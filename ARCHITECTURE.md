@@ -655,3 +655,34 @@ Read-only: `ls`, `strings` on the plugins' `.pyo`, their `.py` source where it s
   - **Netcast** (`GP4/gemininetcast`, `gemininetcastwebif`): `netcastserver_<name>.json` define a source (`{"serverlist":[{name, mainUrl, mediatype (playlist, playlist_vod, playlist_live, playlist_radio, api), desc, pic, id, StreamUrlType, …}]}`; the plugin's `README.txt` documents the fields, among them `UpdateTime` in hours, `UserAgent`, `TVServiceType` 4097/1). `netcastepg_*.json` are EPG sources (`entrys`: `name`, `url`, `id`, `EPGrefreshHour`). `netcastlastepgupdate.json` is a timestamp per source and `netcast_streamreftype.json` a service-reference map — **runtime state**, not choices. `netcastfavo.bin` is binary (favourites). The settings (`config.gemininetcast.*`: bitrate, limit, sorting, `epgAutoUpdate`, `epgchanneltyp`, `hls_render`, volume, …, plus `lastdev`, `volumelast` as state) are in `gpsettings` and partly in `settings`.
   - **Blue Panel** (`GP4/geminibluepanel`): `bluepaneldesktop.json` (14 KB) is the layout — `entrys` (26: `type`, `activ`, `name`, `extname`, `extpic`, `path`, `hotkey`), `sort` (50: `path`, `name`, `weight`) and `hide`. It lists installed plugins by path, so it is **per box** and changes when a plugin is installed. The four settings (`config.gbluepanel.bp_over_bluekey`, `show_quickkeys`, `skin_name`, `last_icon_path`) are in `gpsettings`. `qbuttonconfig.json`/`qbuttonfunction.json` (the Q-button key map, `entrys` of `code`, `func`, `default`, `key`) are the same kind: a per-box layout.
   - `camd_*.json` hold a softcam's `name`, `binary` and `path` — box-specific.
+
+#### Software levels of the two boxes (2026-10-23)
+
+| | Dreambox One | VU+ Solo2 |
+|---|---|---|
+| Image | DreamOS "Gemini" build, `/etc/image-version` `version=1000202304241250`, "Experimental 2023-04-24"; `/etc/issue` opendreambox 2.6.0 | VTi-Team image 15.0.04 |
+| enigma2 | 5.0.0r117 (gutemine, 2024-08-12) | `vti-15.0.04-20200921-r01r04` (`/api/about` shows the build string `2025-06-23-vti-master`) |
+| Web interface | WebControl 1.9.1 (WebInterface plugin) | OpenWebif 1.5.2 (`git20230421`) |
+| Kernel / CPU | Linux 4.9 aarch64 | Linux 3.13.5 mips; drivers 20190429 |
+| Python on the box | 2.7.13 (`python`; no `python3`) | 2.7 |
+| Plugins, versions | AutoTimer, EPGRefresh and Toolkit `5.0.0+git1+3c9e40423b`; SerienRecorder 4.7.12; GithubPluginUpdater 1.7.2; DreamHub 0.9.4 (+ `dreamhub-ext-ewelink` 0.3.4); Gemini: netcast 2.4, comm 3.1, bluepanel 1.0-r8, widgets 1.0-r1, addonmanager 1.0-r8 | none of those |
+
+DreamHub's TV plugin is already on the One (`Extensions/DreamHub`, package `dreamhub` 0.9.4) — the walk for the settings can go into it.
+
+#### Writes on the Solo2 through OpenWebif (2026-10-23, done, put back)
+
+Tested with `config.usage.show_message_when_recording_starts` (a checkbox, default on) and `config.seek.speeds_slowmotion` (a multicheckbox); no recording, no timer on the box.
+
+- **`POST /api/saveconfig` (`key`, `value`) works**: `{"result": true}`, and `/api/config/usage` reads the new value back at once. **`/etc/enigma2/settings` did not change** (same checksum before and after; the key is not in the file while it has its default value).
+- **ConfigSet toggle confirmed**: `value=16` on `speeds_slowmotion` `[2, 4, 8]` → `[2, 4, 8, 16]`; the same call again → `[2, 4, 8]`. A plan must therefore send each value once and read back.
+- **Not saved to the file = lost when enigma2 dies**: after the checkbox was set to false, `killall -9 enigma2` (the init script restarted it in ~20 s) → the value was `true` again, the file still without the key. That is what a power cut would do.
+- **A GUI restart saves it**: `GET /api/powerstate?newstate=3` after setting the value false → the file then had `config.usage.show_message_when_recording_starts=false` and the value stayed false. Setting it back to true and restarting once more removed the line again (a value equal to its default is not written). Box and settings are as before the test.
+
+#### Netcast and the channel list (Dreambox One, 2026-10-23, read-only)
+
+- **Two things are called Netcast.** (1) The old internet-radio part with a web page at `/netcast/` on port 80 (`gemininetcastwebif`): `/netcast/web/menu`, `settings`, `list`, `external`, `current` answer with XML (`e2netcast…`); the page's JavaScript also calls `play`, `add`, `edit`, `remove` (favourites), `save` (bitrate, only-MPEG, recording folder, background picture) and `sort`. (2) The TV/VOD sources defined by `netcastserver_*.json` (Pluto TV, Samsung TV Plus, Vavoo, streamkiste, …) with their own EPG sources — no web route for those was found; they are handled in the TV screens.
+- **How a Netcast channel gets into the channel list**: through the normal bouquets. The plugin (`GeminiBouquetClass`) creates `userbouquet.<name>.tv` files and adds service references, then reloads the bouquets (`eDVBDB.reloadBouquets`). Two kinds exist:
+  - **Plain IPTV references**, which any enigma2 plays itself: `#SERVICE 4097:0:1:0:0:0:0:0:0:0:<URL, percent-encoded>:<name>` — the bouquet on the One has such an entry for a camera stream.
+  - **Placeholder references without a URL**: `4097:0:16:197:4:85:C00000:0:0:0:None` and `8193:0:0:58:96:75:397833:0:0:0:None` (name `None`). They carry only an id; the plugin resolves the stream when the channel is played (`netcast_streamreftype.json` maps the reference to a type number, `8739` here). Only the image's own plugin can play these.
+- **So for DreamHub**: IPTV channels from an M3U playlist can be put into a bouquet as plain `4097` references with a preview and a confirmation like any bouquet change (BouquetEditor's API, the same as ChannelHub uses); that works on both boxes and needs no Netcast. Managing Netcast's own sources means editing its JSON files (`netcastserver_*.json`, field list in the plugin's `README.txt`) — the plugin reads them itself; whether it re-reads without a GUI restart was not tried. The placeholder references are not something DreamHub should create.
+- **A credential showed up**: one bouquet entry on the One has the login of an IP camera inside its URL. A bouquet export or a channel list in DreamHub would show it; the URL's user and password part must be hidden in the UI and logs, like other secrets.

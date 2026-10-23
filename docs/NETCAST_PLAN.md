@@ -24,3 +24,9 @@ Software transcoding (`PROJECT_PLAN.md`), copying anyone's paid IPTV lists, anyt
 ## Netcast's own risky actions (seen 2026-10-23)
 
 The EPG-Loader menu on the box has **"Komplette EPG-Datenbank löschen"** (OK, no confirmation seen) next to "Alle EPG-Quellen aktualisieren"; the main menu has **"Picon und Zuweisungen löschen"**. DreamHub does not call them. If it ever offers an EPG refresh for Netcast sources it uses the plugin's refresh, never deletes the database (that one holds the broadcast guide too).
+
+## Findings that change the plan (2026-10-23, later tests)
+
+- **API sources work like playlists once in a bouquet** (Pluto tested): type `8193` entry with `netcastserver_<id>://` in front of the URL, playable with `/web/zap` while Netcast's own screen is closed (start may take several seconds; `getcurrent` named the channel for Pluto, not for the LG entry). So a bouquet that holds Netcast entries can be listed, played and tidied from DreamHub — creating them stays Netcast's job (green key on the TV), because a source's address is resolved by the plugin.
+- **A DreamHub page for Netcast could therefore be:** (1) a list of the installed Netcast sources with the installed addon packages (`opkg` through a read-only call), (2) add/edit/remove a playlist or EPG source file, (3) the Netcast bouquets with play/remove, (4) EPG assignment — not tested yet, see below.
+- **Not tested:** the EPG assignment ("EPG Referenz": DVB-channel guide or TVG-ID), Samsung TV Plus, Vavoo, the subchannel plugin (a `subchannel.xml` is not present), and whether the plugin re-reads a deleted source file the same way as an added one.

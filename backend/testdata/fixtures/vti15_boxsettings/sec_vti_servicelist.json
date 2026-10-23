@@ -1,0 +1,223 @@
+{
+ "configs": [
+  {
+   "path": "config.usage.servicelist_alternative_mode",
+   "data": {
+    "current": false,
+    "type": "checkbox",
+    "result": true
+   },
+   "description": "Alternative (horizontale) Kanalliste verwenden"
+  },
+  {
+   "path": "config.usage.show_event_progress_in_servicelist",
+   "data": {
+    "current": false,
+    "type": "checkbox",
+    "result": true
+   },
+   "description": "Sendungsfortschritt in Kanalliste anzeigen"
+  },
+  {
+   "path": "config.usage.servicelist_mark_rec_service",
+   "data": {
+    "current": true,
+    "type": "checkbox",
+    "result": true
+   },
+   "description": "Kanäle mit laufenden Aufnahmen in Kanalliste markieren"
+  },
+  {
+   "path": "config.usage.servicelist_show_rec_service_symbol",
+   "data": {
+    "current": true,
+    "type": "checkbox",
+    "result": true
+   },
+   "description": "Aufnahmesymbol bei Sendern mit laufenden Aufnahmen anzeigen"
+  },
+  {
+   "path": "config.usage.servicelist_two_lines",
+   "data": {
+    "current": false,
+    "type": "checkbox",
+    "result": true
+   },
+   "description": "Senderliste zweizeilig darstellen"
+  },
+  {
+   "path": "config.usage.servicelist_show_picon",
+   "data": {
+    "current": "0",
+    "type": "select",
+    "result": true,
+    "choices": [
+     [
+      "0",
+      "Aus"
+     ],
+     [
+      "100",
+      "100x60 px"
+     ],
+     [
+      "50",
+      "50x30 px"
+     ],
+     [
+      "1",
+      "Benutzerdefiniert"
+     ]
+    ]
+   },
+   "description": "Picons in Kanalliste anzeigen"
+  },
+  {
+   "path": "config.usage.servicelist_picon_dir",
+   "data": {
+    "type": "unknown",
+    "result": false
+   },
+   "description": "Picon-Verzeichnis für Kanalliste"
+  },
+  {
+   "path": "config.usage.servicelist_show_previewpic",
+   "data": {
+    "current": "0",
+    "type": "select",
+    "result": true,
+    "choices": [
+     [
+      "0",
+      "Aus"
+     ],
+     [
+      "100",
+      "100x60 px"
+     ],
+     [
+      "1",
+      "Benutzerdefiniert"
+     ]
+    ]
+   },
+   "description": "Zeige Vorschaubilder in der Kanalliste"
+  },
+  {
+   "path": "config.usage.servicelist_previewpic_cachetime",
+   "data": {
+    "current": 3,
+    "type": "number",
+    "result": true,
+    "limits": [
+     2,
+     30
+    ]
+   },
+   "description": "Zeit in Minuten bevor Vorschaubilder erneuert werden (2 - 30)"
+  },
+  {
+   "path": "config.usage.servicelist_show_service_type_icon",
+   "data": {
+    "current": false,
+    "type": "checkbox",
+    "result": true
+   },
+   "description": "Symbole für DVB-S/DVB-T/DVB-C anzeigen"
+  },
+  {
+   "path": "config.usage.servicelist_use_matrix",
+   "data": {
+    "current": false,
+    "type": "checkbox",
+    "result": true
+   },
+   "description": "Matrix-Modus für Kanalliste verwenden"
+  },
+  {
+   "path": "config.usage.servicelist_name_width",
+   "data": {
+    "current": 200,
+    "type": "number",
+    "result": true,
+    "limits": [
+     1,
+     1920
+    ]
+   },
+   "description": "Breite der Spalte des Sendernamens (Matrix-Modus) (1 - 1920)"
+  },
+  {
+   "path": "config.usage.servicelist_show_event_time",
+   "data": {
+    "current": false,
+    "type": "checkbox",
+    "result": true
+   },
+   "description": "Sendungszeiten in Kanalliste anzeigen"
+  },
+  {
+   "path": "config.usage.show_epg_progress_percent",
+   "data": {
+    "current": false,
+    "type": "checkbox",
+    "result": true
+   },
+   "description": "Sendungsfortschritt in % in Kanalliste anzeigen"
+  },
+  {
+   "path": "config.usage.servicelist_show_servicenumber",
+   "data": {
+    "current": true,
+    "type": "checkbox",
+    "result": true
+   },
+   "description": "Kanalnummer in Kanalliste anzeigen"
+  },
+  {
+   "path": "config.usage.servicelist_hide_service_name",
+   "data": {
+    "current": false,
+    "type": "checkbox",
+    "result": true
+   },
+   "description": "Sendernamen in der Kanalliste (einzeilig) ausblenden"
+  },
+  {
+   "path": "config.usage.servicelist_show_next_event",
+   "data": {
+    "current": false,
+    "type": "checkbox",
+    "result": true
+   },
+   "description": "Kanalnamen durch Infos zur nächsten Sendung ersetzen"
+  },
+  {
+   "path": "config.usage.servicelist_preview_mode",
+   "data": {
+    "current": false,
+    "type": "checkbox",
+    "result": true
+   },
+   "description": "Vorschaumodus in Kanalliste verwenden (2x-OK-Modus)"
+  },
+  {
+   "path": "config.misc.allow_service_delete",
+   "data": {
+    "current": false,
+    "type": "checkbox",
+    "result": true
+   },
+   "description": "Entfernen von Einträgen in Kanalliste erlauben"
+  },
+  {
+   "path": "config.misc.disable_auto_channel_list",
+   "data": {
+    "current": false,
+    "type": "checkbox",
+    "result": true
+   },
+   "description": "Automatische Aktualisierung der Kanalliste deaktivieren"
+  }
+ ]
+}

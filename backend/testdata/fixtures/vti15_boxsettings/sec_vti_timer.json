@@ -1,0 +1,391 @@
+{
+ "configs": [
+  {
+   "path": "config.usage.description",
+   "data": {
+    "type": "unknown",
+    "result": false
+   },
+   "description": "Tastenbelegung"
+  },
+  {
+   "path": "config.usage.rec_button",
+   "data": {
+    "current": "record_menu",
+    "type": "select",
+    "result": true,
+    "choices": [
+     [
+      "record_menu",
+      "Aufnahmemenü anzeigen"
+     ],
+     [
+      "running_record",
+      "Aktive Aufnahmen anzeigen"
+     ],
+     [
+      "timer_list",
+      "Timerliste anzeigen"
+     ],
+     [
+      "event_record",
+      "Aufnahme hinzufügen (aktuelle Sendung)"
+     ],
+     [
+      "indefinitely_record",
+      "Aufnahme hinzufügen (unbegrenzt)"
+     ],
+     [
+      "manualduration_record",
+      "Aufnahme hinzufügen (Aufnahmelänge eingeben)"
+     ],
+     [
+      "manualendtime_record",
+      "Aufnahme hinzufügen (Aufnahmeendzeit eingeben)"
+     ],
+     [
+      "timeshift_to_record",
+      "Timeshift in Aufnahme umwandeln"
+     ]
+    ]
+   },
+   "description": "REC-Taste drücken"
+  },
+  {
+   "path": "config.usage.rec_button_long",
+   "data": {
+    "current": "running_record",
+    "type": "select",
+    "result": true,
+    "choices": [
+     [
+      "record_menu",
+      "Aufnahmemenü anzeigen"
+     ],
+     [
+      "running_record",
+      "Aktive Aufnahmen anzeigen"
+     ],
+     [
+      "timer_list",
+      "Timerliste anzeigen"
+     ],
+     [
+      "event_record",
+      "Aufnahme hinzufügen (aktuelle Sendung)"
+     ],
+     [
+      "indefinitely_record",
+      "Aufnahme hinzufügen (unbegrenzt)"
+     ],
+     [
+      "manualduration_record",
+      "Aufnahme hinzufügen (Aufnahmelänge eingeben)"
+     ],
+     [
+      "manualendtime_record",
+      "Aufnahme hinzufügen (Aufnahmeendzeit eingeben)"
+     ],
+     [
+      "timeshift_to_record",
+      "Timeshift in Aufnahme umwandeln"
+     ]
+    ]
+   },
+   "description": "REC-Taste lange drücken"
+  },
+  {
+   "path": "config.usage.description",
+   "data": {
+    "type": "unknown",
+    "result": false
+   },
+   "description": "Timer anlegen"
+  },
+  {
+   "path": "config.recording.adjust_time_to_event",
+   "data": {
+    "current": false,
+    "type": "checkbox",
+    "result": true
+   },
+   "description": "Aufnahmezeiten automatisch an EPG Daten anpassen"
+  },
+  {
+   "path": "config.recording.autoadjust_margin_after",
+   "data": {
+    "current": 1,
+    "type": "number",
+    "result": true
+   },
+   "description": "Nachlauf in Minuten nach dem Stopp-Ereignis"
+  },
+  {
+   "path": "config.recording.margin_before",
+   "data": {
+    "current": 0,
+    "type": "number",
+    "result": true
+   },
+   "description": "Vorlauf vor Aufnahme (in Minuten)"
+  },
+  {
+   "path": "config.recording.margin_after",
+   "data": {
+    "current": 0,
+    "type": "number",
+    "result": true
+   },
+   "description": "Nachlauf hinter Aufnahme (in Minuten)"
+  },
+  {
+   "path": "config.usage.timer_check_free_space",
+   "data": {
+    "current": true,
+    "type": "checkbox",
+    "result": true
+   },
+   "description": "Freien Speicherplatz vor Aufnahme prüfen"
+  },
+  {
+   "path": "config.usage.ask_for_timer_typ",
+   "data": {
+    "current": true,
+    "type": "checkbox",
+    "result": true
+   },
+   "description": "Bei installiertem Autotimer nach Timerart fragen"
+  },
+  {
+   "path": "config.usage.timer_ask_path",
+   "data": {
+    "current": true,
+    "type": "checkbox",
+    "result": true
+   },
+   "description": "Nach Aufnahmepfad fragen wenn Timer mit REC Taste erstellt wird"
+  },
+  {
+   "path": "config.recording.ascii_filenames",
+   "data": {
+    "current": false,
+    "type": "checkbox",
+    "result": true
+   },
+   "description": "Reduzierter Zeichensatz für Aufnahmedateinamen"
+  },
+  {
+   "path": "config.recording.filename_composition",
+   "data": {
+    "current": "standard",
+    "type": "select",
+    "result": true,
+    "choices": [
+     [
+      "standard",
+      "Standard"
+     ],
+     [
+      "short",
+      "Kurze Dateinamen"
+     ],
+     [
+      "minimal",
+      "Kurz ohne Datum"
+     ],
+     [
+      "long",
+      "Lange Dateinamen"
+     ]
+    ]
+   },
+   "description": "Zusammensetzung des Aufnahmedateinamens"
+  },
+  {
+   "path": "config.usage.record_file_name_date_at_end",
+   "data": {
+    "current": false,
+    "type": "checkbox",
+    "result": true
+   },
+   "description": "Datum ans Ende des Aufnahmedateinamens anfügen"
+  },
+  {
+   "path": "config.usage.ask_timer_file_del",
+   "data": {
+    "current": true,
+    "type": "checkbox",
+    "result": true
+   },
+   "description": "Optionen zum Löschen der Dateien nach Timer-Abbruch anzeigen"
+  },
+  {
+   "path": "config.usage.description",
+   "data": {
+    "type": "unknown",
+    "result": false
+   },
+   "description": "Timerliste"
+  },
+  {
+   "path": "config.usage.timerlist_show_epg",
+   "data": {
+    "current": true,
+    "type": "checkbox",
+    "result": true
+   },
+   "description": "EPG-Daten in Timerliste anzeigen"
+  },
+  {
+   "path": "config.usage.timerlist_show_icon",
+   "data": {
+    "current": true,
+    "type": "checkbox",
+    "result": true
+   },
+   "description": "Symbole in Timerliste anzeigen"
+  },
+  {
+   "path": "config.usage.timerlist_finished_timer_position",
+   "data": {
+    "current": "beginning",
+    "type": "select",
+    "result": true,
+    "choices": [
+     [
+      "beginning",
+      "Am Anfang"
+     ],
+     [
+      "end",
+      "Am Ende"
+     ]
+    ]
+   },
+   "description": "Position beendeter Timer in Timerliste"
+  },
+  {
+   "path": "config.usage.remove_finished_timers",
+   "data": {
+    "current": true,
+    "type": "checkbox",
+    "result": true
+   },
+   "description": "Timer nach der Aufnahme entfernen"
+  },
+  {
+   "path": "config.usage.timerlist_style",
+   "data": {
+    "current": "0",
+    "type": "select",
+    "result": true,
+    "choices": [
+     [
+      "0",
+      "Standard"
+     ],
+     [
+      "1",
+      "Style 1"
+     ],
+     [
+      "2",
+      "Style 2"
+     ],
+     [
+      "3",
+      "Style 3"
+     ],
+     [
+      "4",
+      "Style 4"
+     ],
+     [
+      "5",
+      "Style 5"
+     ]
+    ]
+   },
+   "description": "Timer-Listenansicht wählen"
+  },
+  {
+   "path": "config.usage.description",
+   "data": {
+    "type": "unknown",
+    "result": false
+   },
+   "description": "Benachrichtigungen"
+  },
+  {
+   "path": "config.usage.blinking_display_clock_during_recording",
+   "data": {
+    "current": false,
+    "type": "checkbox",
+    "result": true
+   },
+   "description": "Blinkende Uhr im Display bei Aufnahmen anzeigen"
+  },
+  {
+   "path": "config.usage.show_message_when_recording_starts",
+   "data": {
+    "current": true,
+    "type": "checkbox",
+    "result": true
+   },
+   "description": "Benachrichtigung bei Aufnahmestart anzeigen"
+  },
+  {
+   "path": "config.usage.silent_rec_mode",
+   "data": {
+    "current": true,
+    "type": "checkbox",
+    "result": true
+   },
+   "description": "Stillen Modus für Aufnahmen verwenden"
+  },
+  {
+   "path": "config.usage.description",
+   "data": {
+    "type": "unknown",
+    "result": false
+   },
+   "description": "Allgemein"
+  },
+  {
+   "path": "config.usage.timer_allow_duplicate",
+   "data": {
+    "current": true,
+    "type": "checkbox",
+    "result": true
+   },
+   "description": "Aufnehmen auch wenn Aufnahme bereits in der Datenbank ist"
+  },
+  {
+   "path": "config.usage.timer_avoid_simultaneous_start",
+   "data": {
+    "current": false,
+    "type": "checkbox",
+    "result": true
+   },
+   "description": "Verhindere zeitgleiche Aufnahmestarts"
+  },
+  {
+   "path": "config.usage.zap_before_record",
+   "data": {
+    "current": false,
+    "type": "checkbox",
+    "result": true
+   },
+   "description": "Vor Aufnahmen auf den aufzunehmenden Sender schalten"
+  },
+  {
+   "path": "config.recording.asktozap",
+   "data": {
+    "current": true,
+    "type": "checkbox",
+    "result": true
+   },
+   "description": "Aufnahmen haben immer Vorrang"
+  }
+ ]
+}

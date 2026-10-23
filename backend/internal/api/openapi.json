@@ -592,6 +592,126 @@
       "type": "number"
      }
     }
+   },
+   "BoxSettingChoice": {
+    "type": "object",
+    "properties": {
+     "value": {
+      "type": "string"
+     },
+     "label": {
+      "type": "string"
+     }
+    }
+   },
+   "BoxSettingSection": {
+    "type": "object",
+    "properties": {
+     "key": {
+      "type": "string"
+     },
+     "title": {
+      "type": "string",
+      "description": "in the box's language"
+     },
+     "count": {
+      "type": "integer",
+      "description": "settings in it, title rows not counted"
+     },
+     "hiddenByLevel": {
+      "type": "integer",
+      "description": "more settings the box's setup file holds for a higher level than the box is set to"
+     }
+    }
+   },
+   "BoxSetting": {
+    "type": "object",
+    "description": "One setting of the receiver's setup menus (read only).",
+    "properties": {
+     "path": {
+      "type": "string",
+      "description": "the config path, e.g. config.recording.margin_before"
+     },
+     "label": {
+      "type": "string",
+      "description": "the box's own text, in its language"
+     },
+     "kind": {
+      "type": "string",
+      "enum": [
+       "choice",
+       "bool",
+       "number",
+       "text",
+       "multichoice",
+       "readonly",
+       "heading"
+      ]
+     },
+     "value": {
+      "nullable": true,
+      "description": "bool, number, string or a list of numbers; null for a heading, a read-only item and a secret"
+     },
+     "choices": {
+      "type": "array",
+      "items": {
+       "$ref": "#/components/schemas/BoxSettingChoice"
+      }
+     },
+     "level": {
+      "type": "integer",
+      "description": "0 simple, 1 advanced, 2 expert"
+     },
+     "levelKnown": {
+      "type": "boolean",
+      "description": "false when the box's setup files do not name the item"
+     },
+     "guiRestart": {
+      "type": "boolean",
+      "description": "a change takes effect only after a GUI restart"
+     },
+     "risk": {
+      "type": "string",
+      "enum": [
+       "A",
+       "B"
+      ],
+      "description": "A: a wrong value can leave the TV black or lock DreamHub out; B: it can break recording, the tuner, the parental lock or switch other devices"
+     },
+     "riskCategory": {
+      "type": "string",
+      "enum": [
+       "output",
+       "access",
+       "tuner",
+       "parental",
+       "power",
+       "sideeffects",
+       "storage",
+       "streaming",
+       "hardware"
+      ]
+     },
+     "secret": {
+      "type": "boolean",
+      "description": "a password, PIN or login: never shown"
+     },
+     "isSet": {
+      "type": "boolean",
+      "description": "for a secret: it holds a value"
+     },
+     "help": {
+      "type": "string",
+      "description": "the box's own description from its setup file (English); empty when it has none"
+     }
+    },
+    "required": [
+     "path",
+     "label",
+     "kind",
+     "level",
+     "levelKnown"
+    ]
    }
   }
  },
@@ -3547,6 +3667,181 @@
         }
        }
       }
+     },
+     "default": {
+      "$ref": "#/components/responses/Error"
+     }
+    }
+   }
+  },
+  "/boxsettings": {
+   "get": {
+    "summary": "The receiver's own setup menus: its sections (read only)",
+    "tags": [
+     "boxsettings"
+    ],
+    "operationId": "GET_boxsettings",
+    "description": "Admin only. The box is read once and kept for two minutes; refresh=1 reads it again. Only an OpenWebif box has the menus today (a Dreambox follows with the TV plugin).",
+    "parameters": [
+     {
+      "$ref": "#/components/parameters/Box"
+     },
+     {
+      "name": "refresh",
+      "in": "query",
+      "required": false,
+      "schema": {
+       "type": "string",
+       "enum": [
+        "1"
+       ]
+      },
+      "description": "read the box again"
+     }
+    ],
+    "responses": {
+     "200": {
+      "description": "OK; available false when the box cannot show its setup menus",
+      "content": {
+       "application/json": {
+        "schema": {
+         "type": "object",
+         "properties": {
+          "available": {
+           "type": "boolean"
+          },
+          "writes": {
+           "type": "boolean",
+           "description": "always false for now"
+          },
+          "boxLevel": {
+           "type": "integer",
+           "description": "the box's own setup level: 0 simple, 1 advanced, 2 expert; -1 unknown"
+          },
+          "boxLevelName": {
+           "type": "string"
+          },
+          "sections": {
+           "type": "array",
+           "items": {
+            "$ref": "#/components/schemas/BoxSettingSection"
+           }
+          }
+         }
+        }
+       }
+      }
+     },
+     "default": {
+      "$ref": "#/components/responses/Error"
+     }
+    }
+   }
+  },
+  "/boxsettings/search": {
+   "get": {
+    "summary": "Search the receiver's settings by name, path or description",
+    "tags": [
+     "boxsettings"
+    ],
+    "operationId": "GET_boxsettings_search",
+    "parameters": [
+     {
+      "$ref": "#/components/parameters/Box"
+     },
+     {
+      "name": "q",
+      "in": "query",
+      "required": true,
+      "schema": {
+       "type": "string"
+      },
+      "description": "words that all have to appear (box language label, English text, path, description)"
+     }
+    ],
+    "responses": {
+     "200": {
+      "description": "OK; at most 60 hits, label matches first",
+      "content": {
+       "application/json": {
+        "schema": {
+         "type": "object",
+         "properties": {
+          "available": {
+           "type": "boolean"
+          },
+          "hits": {
+           "type": "array",
+           "items": {
+            "type": "object",
+            "properties": {
+             "sectionKey": {
+              "type": "string"
+             },
+             "sectionTitle": {
+              "type": "string"
+             },
+             "item": {
+              "$ref": "#/components/schemas/BoxSetting"
+             }
+            }
+           }
+          }
+         }
+        }
+       }
+      }
+     },
+     "default": {
+      "$ref": "#/components/responses/Error"
+     }
+    }
+   }
+  },
+  "/boxsettings/sections/{key}": {
+   "get": {
+    "summary": "One section of the receiver's settings with its items",
+    "tags": [
+     "boxsettings"
+    ],
+    "operationId": "GET_boxsettings_sections_key",
+    "parameters": [
+     {
+      "$ref": "#/components/parameters/Box"
+     },
+     {
+      "name": "key",
+      "in": "path",
+      "required": true,
+      "schema": {
+       "type": "string"
+      }
+     }
+    ],
+    "responses": {
+     "200": {
+      "description": "OK",
+      "content": {
+       "application/json": {
+        "schema": {
+         "type": "object",
+         "properties": {
+          "section": {
+           "$ref": "#/components/schemas/BoxSettingSection"
+          },
+          "items": {
+           "type": "array",
+           "items": {
+            "$ref": "#/components/schemas/BoxSetting"
+           }
+          }
+         }
+        }
+       }
+      }
+     },
+     "404": {
+      "$ref": "#/components/responses/Error"
      },
      "default": {
       "$ref": "#/components/responses/Error"

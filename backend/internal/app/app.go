@@ -429,6 +429,7 @@ func New(ctx context.Context, o Options) (*App, error) {
 		}
 	}
 	controlHub := &hubs_.Control{WC: wc}
+	boxSettingsHub := &hubs_.BoxSettings{WC: wc}
 
 	// Extension Hub (docs/EXTENSIONHUB_PLAN.md, E1): the registry is
 	// always created (an extension can register at any time, over the
@@ -544,6 +545,7 @@ func New(ctx context.Context, o Options) (*App, error) {
 			{HubID: hub.IDDiscovery, Prefixes: []string{"/api/v1/discovery"}, Register: discoveryHub.Mount, Perms: discoveryHub.Perms()},
 			{HubID: hub.IDDevice, Prefixes: []string{"/api/v1/changes", "/api/v1/system"}, Register: systemHub.Mount, Perms: systemHub.Perms()},
 			{HubID: hub.IDDevice, Prefixes: []string{"/api/v1/admin"}, Register: adminHub.Mount},
+			{HubID: hub.IDDevice, Prefixes: []string{"/api/v1/boxsettings"}, Register: boxSettingsHub.Mount},
 			{HubID: hub.IDControl, Prefixes: []string{"/api/v1/control"}, Register: controlHub.Mount, Perms: controlHub.Perms()},
 			{HubID: hub.IDChannels, Prefixes: []string{"/api/v1/channels"}, Register: channelsHub.Mount, Perms: channelsHub.Perms()},
 			{HubID: hub.IDPlex, Prefixes: []string{"/api/v1/plex"}, Register: plexHub.Mount, Perms: plexHub.Perms()},

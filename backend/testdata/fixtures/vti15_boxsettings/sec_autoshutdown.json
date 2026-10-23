@@ -1,0 +1,116 @@
+{
+ "configs": [
+  {
+   "path": "config.autoshutdown.autostart",
+   "data": {
+    "current": false,
+    "type": "checkbox",
+    "result": true
+   },
+   "description": "Automatisches Ausschalten im Standby"
+  },
+  {
+   "path": "config.autoshutdown.time",
+   "data": {
+    "current": 120,
+    "type": "number",
+    "result": true,
+    "limits": [
+     1,
+     1440
+    ]
+   },
+   "description": "Verweildauer im Standby bis zum Ausschalten (min) (1 - 1440)"
+  },
+  {
+   "path": "config.autoshutdown.enableinactivity",
+   "data": {
+    "current": false,
+    "type": "checkbox",
+    "result": true
+   },
+   "description": "Aktion nach Inaktivität"
+  },
+  {
+   "path": "config.autoshutdown.inactivetime",
+   "data": {
+    "current": 300,
+    "type": "number",
+    "result": true,
+    "limits": [
+     1,
+     1440
+    ]
+   },
+   "description": "Zeit bis zur Aktion bei Inaktivität (min) (1 - 1440)"
+  },
+  {
+   "path": "config.autoshutdown.inactivityaction",
+   "data": {
+    "current": "standby",
+    "type": "select",
+    "result": true,
+    "choices": [
+     [
+      "standby",
+      "Standby"
+     ],
+     [
+      "deepstandby",
+      "Ausschalten"
+     ]
+    ]
+   },
+   "description": "Aktion bei Inaktivität"
+  },
+  {
+   "path": "config.autoshutdown.disable_at_ts",
+   "data": {
+    "current": false,
+    "type": "checkbox",
+    "result": true
+   },
+   "description": "Aktion bei Inaktivität bei aktivem Timeshift deaktivieren"
+  },
+  {
+   "path": "config.autoshutdown.inactivitymessage",
+   "data": {
+    "current": true,
+    "type": "checkbox",
+    "result": true
+   },
+   "description": "Nachricht vor dem Ausführen einer Aktion bei Inaktivität anzeigen"
+  },
+  {
+   "path": "config.autoshutdown.messagetimeout",
+   "data": {
+    "current": 20,
+    "type": "number",
+    "result": true,
+    "limits": [
+     1,
+     99
+    ]
+   },
+   "description": "Anzeigedauer der Nachricht (sec) (1 - 99)"
+  },
+  {
+   "path": "config.autoshutdown.epgrefresh",
+   "data": {
+    "current": true,
+    "type": "checkbox",
+    "result": true
+   },
+   "description": "Ausschalten während der Aktualisierung des EPG deaktivieren"
+  },
+  {
+   "path": "config.autoshutdown.plugin",
+   "data": {
+    "current": false,
+    "type": "checkbox",
+    "result": true
+   },
+   "description": "Unter Plugins/Erweiterungen anzeigen"
+  }
+ ]
+}

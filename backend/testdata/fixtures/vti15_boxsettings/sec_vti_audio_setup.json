@@ -1,0 +1,1405 @@
+{
+ "configs": [
+  {
+   "path": "config.usage.description",
+   "data": {
+    "type": "unknown",
+    "result": false
+   },
+   "description": "Ton"
+  },
+  {
+   "path": "config.autolanguage.audio_autoselect1",
+   "data": {
+    "current": "---",
+    "type": "select",
+    "result": true,
+    "choices": [
+     [
+      "---",
+      "Nichts"
+     ],
+     [
+      "orj dos ory org esl qaa und mis mul ORY ORJ Audio_ORJ",
+      "Original"
+     ],
+     [
+      "ara",
+      "Arabisch"
+     ],
+     [
+      "eus baq",
+      "Basque"
+     ],
+     [
+      "bul",
+      "Bulgarian"
+     ],
+     [
+      "hrv",
+      "Kroatisch"
+     ],
+     [
+      "chn sgp",
+      "Simplified Chinese"
+     ],
+     [
+      "twn hkn",
+      "Traditional Chinese"
+     ],
+     [
+      "ces cze",
+      "Tschechisch"
+     ],
+     [
+      "dan",
+      "Dänisch"
+     ],
+     [
+      "dut ndl",
+      "Niederländisch"
+     ],
+     [
+      "eng qaa",
+      "Englisch"
+     ],
+     [
+      "est",
+      "Estnisch"
+     ],
+     [
+      "fin",
+      "Finnisch"
+     ],
+     [
+      "fra fre",
+      "Französisch"
+     ],
+     [
+      "deu ger",
+      "Deutsch"
+     ],
+     [
+      "ell gre",
+      "Griechisch"
+     ],
+     [
+      "heb",
+      "Hebrew"
+     ],
+     [
+      "hun",
+      "Ungarisch"
+     ],
+     [
+      "ita",
+      "Italienisch"
+     ],
+     [
+      "lav",
+      "Lettisch"
+     ],
+     [
+      "lit",
+      "Litauisch"
+     ],
+     [
+      "ltz",
+      "Luxembourgish"
+     ],
+     [
+      "nor",
+      "Norwegisch"
+     ],
+     [
+      "pol",
+      "Polnisch"
+     ],
+     [
+      "por dub DUB ud1",
+      "Portugiesisch"
+     ],
+     [
+      "fas per",
+      "Persian"
+     ],
+     [
+      "ron rum",
+      "Romanian"
+     ],
+     [
+      "rus",
+      "Russisch"
+     ],
+     [
+      "srp",
+      "Serbisch"
+     ],
+     [
+      "slk slo",
+      "Slovak"
+     ],
+     [
+      "slv",
+      "Slowenisch"
+     ],
+     [
+      "spa",
+      "Spanisch"
+     ],
+     [
+      "swe",
+      "Schwedisch"
+     ],
+     [
+      "tha",
+      "Thai"
+     ],
+     [
+      "tur Audio_TUR",
+      "Türkisch"
+     ],
+     [
+      "ukr Ukr",
+      "Ukrainisch"
+     ]
+    ]
+   },
+   "description": "Erste Audio-Spur (Sprache)"
+  },
+  {
+   "path": "config.autolanguage.audio_autoselect2",
+   "data": {
+    "current": "---",
+    "type": "select",
+    "result": true,
+    "choices": [
+     [
+      "---",
+      "Nichts"
+     ],
+     [
+      "orj dos ory org esl qaa und mis mul ORY ORJ Audio_ORJ",
+      "Original"
+     ],
+     [
+      "ara",
+      "Arabisch"
+     ],
+     [
+      "eus baq",
+      "Basque"
+     ],
+     [
+      "bul",
+      "Bulgarian"
+     ],
+     [
+      "hrv",
+      "Kroatisch"
+     ],
+     [
+      "chn sgp",
+      "Simplified Chinese"
+     ],
+     [
+      "twn hkn",
+      "Traditional Chinese"
+     ],
+     [
+      "ces cze",
+      "Tschechisch"
+     ],
+     [
+      "dan",
+      "Dänisch"
+     ],
+     [
+      "dut ndl",
+      "Niederländisch"
+     ],
+     [
+      "eng qaa",
+      "Englisch"
+     ],
+     [
+      "est",
+      "Estnisch"
+     ],
+     [
+      "fin",
+      "Finnisch"
+     ],
+     [
+      "fra fre",
+      "Französisch"
+     ],
+     [
+      "deu ger",
+      "Deutsch"
+     ],
+     [
+      "ell gre",
+      "Griechisch"
+     ],
+     [
+      "heb",
+      "Hebrew"
+     ],
+     [
+      "hun",
+      "Ungarisch"
+     ],
+     [
+      "ita",
+      "Italienisch"
+     ],
+     [
+      "lav",
+      "Lettisch"
+     ],
+     [
+      "lit",
+      "Litauisch"
+     ],
+     [
+      "ltz",
+      "Luxembourgish"
+     ],
+     [
+      "nor",
+      "Norwegisch"
+     ],
+     [
+      "pol",
+      "Polnisch"
+     ],
+     [
+      "por dub DUB ud1",
+      "Portugiesisch"
+     ],
+     [
+      "fas per",
+      "Persian"
+     ],
+     [
+      "ron rum",
+      "Romanian"
+     ],
+     [
+      "rus",
+      "Russisch"
+     ],
+     [
+      "srp",
+      "Serbisch"
+     ],
+     [
+      "slk slo",
+      "Slovak"
+     ],
+     [
+      "slv",
+      "Slowenisch"
+     ],
+     [
+      "spa",
+      "Spanisch"
+     ],
+     [
+      "swe",
+      "Schwedisch"
+     ],
+     [
+      "tha",
+      "Thai"
+     ],
+     [
+      "tur Audio_TUR",
+      "Türkisch"
+     ],
+     [
+      "ukr Ukr",
+      "Ukrainisch"
+     ]
+    ]
+   },
+   "description": "Zweite Audio-Spur (Sprache)"
+  },
+  {
+   "path": "config.autolanguage.audio_autoselect3",
+   "data": {
+    "current": "---",
+    "type": "select",
+    "result": true,
+    "choices": [
+     [
+      "---",
+      "Nichts"
+     ],
+     [
+      "orj dos ory org esl qaa und mis mul ORY ORJ Audio_ORJ",
+      "Original"
+     ],
+     [
+      "ara",
+      "Arabisch"
+     ],
+     [
+      "eus baq",
+      "Basque"
+     ],
+     [
+      "bul",
+      "Bulgarian"
+     ],
+     [
+      "hrv",
+      "Kroatisch"
+     ],
+     [
+      "chn sgp",
+      "Simplified Chinese"
+     ],
+     [
+      "twn hkn",
+      "Traditional Chinese"
+     ],
+     [
+      "ces cze",
+      "Tschechisch"
+     ],
+     [
+      "dan",
+      "Dänisch"
+     ],
+     [
+      "dut ndl",
+      "Niederländisch"
+     ],
+     [
+      "eng qaa",
+      "Englisch"
+     ],
+     [
+      "est",
+      "Estnisch"
+     ],
+     [
+      "fin",
+      "Finnisch"
+     ],
+     [
+      "fra fre",
+      "Französisch"
+     ],
+     [
+      "deu ger",
+      "Deutsch"
+     ],
+     [
+      "ell gre",
+      "Griechisch"
+     ],
+     [
+      "heb",
+      "Hebrew"
+     ],
+     [
+      "hun",
+      "Ungarisch"
+     ],
+     [
+      "ita",
+      "Italienisch"
+     ],
+     [
+      "lav",
+      "Lettisch"
+     ],
+     [
+      "lit",
+      "Litauisch"
+     ],
+     [
+      "ltz",
+      "Luxembourgish"
+     ],
+     [
+      "nor",
+      "Norwegisch"
+     ],
+     [
+      "pol",
+      "Polnisch"
+     ],
+     [
+      "por dub DUB ud1",
+      "Portugiesisch"
+     ],
+     [
+      "fas per",
+      "Persian"
+     ],
+     [
+      "ron rum",
+      "Romanian"
+     ],
+     [
+      "rus",
+      "Russisch"
+     ],
+     [
+      "srp",
+      "Serbisch"
+     ],
+     [
+      "slk slo",
+      "Slovak"
+     ],
+     [
+      "slv",
+      "Slowenisch"
+     ],
+     [
+      "spa",
+      "Spanisch"
+     ],
+     [
+      "swe",
+      "Schwedisch"
+     ],
+     [
+      "tha",
+      "Thai"
+     ],
+     [
+      "tur Audio_TUR",
+      "Türkisch"
+     ],
+     [
+      "ukr Ukr",
+      "Ukrainisch"
+     ]
+    ]
+   },
+   "description": "Dritte Audio-Spur (Sprache)"
+  },
+  {
+   "path": "config.autolanguage.audio_autoselect4",
+   "data": {
+    "current": "---",
+    "type": "select",
+    "result": true,
+    "choices": [
+     [
+      "---",
+      "Nichts"
+     ],
+     [
+      "orj dos ory org esl qaa und mis mul ORY ORJ Audio_ORJ",
+      "Original"
+     ],
+     [
+      "ara",
+      "Arabisch"
+     ],
+     [
+      "eus baq",
+      "Basque"
+     ],
+     [
+      "bul",
+      "Bulgarian"
+     ],
+     [
+      "hrv",
+      "Kroatisch"
+     ],
+     [
+      "chn sgp",
+      "Simplified Chinese"
+     ],
+     [
+      "twn hkn",
+      "Traditional Chinese"
+     ],
+     [
+      "ces cze",
+      "Tschechisch"
+     ],
+     [
+      "dan",
+      "Dänisch"
+     ],
+     [
+      "dut ndl",
+      "Niederländisch"
+     ],
+     [
+      "eng qaa",
+      "Englisch"
+     ],
+     [
+      "est",
+      "Estnisch"
+     ],
+     [
+      "fin",
+      "Finnisch"
+     ],
+     [
+      "fra fre",
+      "Französisch"
+     ],
+     [
+      "deu ger",
+      "Deutsch"
+     ],
+     [
+      "ell gre",
+      "Griechisch"
+     ],
+     [
+      "heb",
+      "Hebrew"
+     ],
+     [
+      "hun",
+      "Ungarisch"
+     ],
+     [
+      "ita",
+      "Italienisch"
+     ],
+     [
+      "lav",
+      "Lettisch"
+     ],
+     [
+      "lit",
+      "Litauisch"
+     ],
+     [
+      "ltz",
+      "Luxembourgish"
+     ],
+     [
+      "nor",
+      "Norwegisch"
+     ],
+     [
+      "pol",
+      "Polnisch"
+     ],
+     [
+      "por dub DUB ud1",
+      "Portugiesisch"
+     ],
+     [
+      "fas per",
+      "Persian"
+     ],
+     [
+      "ron rum",
+      "Romanian"
+     ],
+     [
+      "rus",
+      "Russisch"
+     ],
+     [
+      "srp",
+      "Serbisch"
+     ],
+     [
+      "slk slo",
+      "Slovak"
+     ],
+     [
+      "slv",
+      "Slowenisch"
+     ],
+     [
+      "spa",
+      "Spanisch"
+     ],
+     [
+      "swe",
+      "Schwedisch"
+     ],
+     [
+      "tha",
+      "Thai"
+     ],
+     [
+      "tur Audio_TUR",
+      "Türkisch"
+     ],
+     [
+      "ukr Ukr",
+      "Ukrainisch"
+     ]
+    ]
+   },
+   "description": "Vierte Audio-Spur (Sprache)"
+  },
+  {
+   "path": "config.autolanguage.audio_usecache",
+   "data": {
+    "current": true,
+    "type": "checkbox",
+    "result": true
+   },
+   "description": "Verwende Audio-Spur die pro Sender gespeichert ist"
+  },
+  {
+   "path": "config.usage.description",
+   "data": {
+    "type": "unknown",
+    "result": false
+   },
+   "description": "Untertitel"
+  },
+  {
+   "path": "config.autolanguage.subtitle_autoselect1",
+   "data": {
+    "current": "---",
+    "type": "select",
+    "result": true,
+    "choices": [
+     [
+      "---",
+      "Nichts"
+     ],
+     [
+      "ara",
+      "Arabisch"
+     ],
+     [
+      "eus baq",
+      "Basque"
+     ],
+     [
+      "bul",
+      "Bulgarian"
+     ],
+     [
+      "hrv",
+      "Kroatisch"
+     ],
+     [
+      "chn sgp",
+      "Simplified Chinese"
+     ],
+     [
+      "twn hkn",
+      "Traditional Chinese"
+     ],
+     [
+      "ces cze",
+      "Tschechisch"
+     ],
+     [
+      "dan",
+      "Dänisch"
+     ],
+     [
+      "dut ndl",
+      "Niederländisch"
+     ],
+     [
+      "eng qaa",
+      "Englisch"
+     ],
+     [
+      "est",
+      "Estnisch"
+     ],
+     [
+      "fin",
+      "Finnisch"
+     ],
+     [
+      "fra fre",
+      "Französisch"
+     ],
+     [
+      "deu ger",
+      "Deutsch"
+     ],
+     [
+      "ell gre",
+      "Griechisch"
+     ],
+     [
+      "heb",
+      "Hebrew"
+     ],
+     [
+      "hun",
+      "Ungarisch"
+     ],
+     [
+      "ita",
+      "Italienisch"
+     ],
+     [
+      "lav",
+      "Lettisch"
+     ],
+     [
+      "lit",
+      "Litauisch"
+     ],
+     [
+      "ltz",
+      "Luxembourgish"
+     ],
+     [
+      "nor",
+      "Norwegisch"
+     ],
+     [
+      "pol",
+      "Polnisch"
+     ],
+     [
+      "por dub DUB ud1",
+      "Portugiesisch"
+     ],
+     [
+      "fas per",
+      "Persian"
+     ],
+     [
+      "ron rum",
+      "Romanian"
+     ],
+     [
+      "rus",
+      "Russisch"
+     ],
+     [
+      "srp",
+      "Serbisch"
+     ],
+     [
+      "slk slo",
+      "Slovak"
+     ],
+     [
+      "slv",
+      "Slowenisch"
+     ],
+     [
+      "spa",
+      "Spanisch"
+     ],
+     [
+      "swe",
+      "Schwedisch"
+     ],
+     [
+      "tha",
+      "Thai"
+     ],
+     [
+      "tur Audio_TUR",
+      "Türkisch"
+     ],
+     [
+      "ukr Ukr",
+      "Ukrainisch"
+     ]
+    ]
+   },
+   "description": "Erste Untertitel-Sprache"
+  },
+  {
+   "path": "config.autolanguage.subtitle_autoselect2",
+   "data": {
+    "current": "---",
+    "type": "select",
+    "result": true,
+    "choices": [
+     [
+      "---",
+      "Nichts"
+     ],
+     [
+      "ara",
+      "Arabisch"
+     ],
+     [
+      "eus baq",
+      "Basque"
+     ],
+     [
+      "bul",
+      "Bulgarian"
+     ],
+     [
+      "hrv",
+      "Kroatisch"
+     ],
+     [
+      "chn sgp",
+      "Simplified Chinese"
+     ],
+     [
+      "twn hkn",
+      "Traditional Chinese"
+     ],
+     [
+      "ces cze",
+      "Tschechisch"
+     ],
+     [
+      "dan",
+      "Dänisch"
+     ],
+     [
+      "dut ndl",
+      "Niederländisch"
+     ],
+     [
+      "eng qaa",
+      "Englisch"
+     ],
+     [
+      "est",
+      "Estnisch"
+     ],
+     [
+      "fin",
+      "Finnisch"
+     ],
+     [
+      "fra fre",
+      "Französisch"
+     ],
+     [
+      "deu ger",
+      "Deutsch"
+     ],
+     [
+      "ell gre",
+      "Griechisch"
+     ],
+     [
+      "heb",
+      "Hebrew"
+     ],
+     [
+      "hun",
+      "Ungarisch"
+     ],
+     [
+      "ita",
+      "Italienisch"
+     ],
+     [
+      "lav",
+      "Lettisch"
+     ],
+     [
+      "lit",
+      "Litauisch"
+     ],
+     [
+      "ltz",
+      "Luxembourgish"
+     ],
+     [
+      "nor",
+      "Norwegisch"
+     ],
+     [
+      "pol",
+      "Polnisch"
+     ],
+     [
+      "por dub DUB ud1",
+      "Portugiesisch"
+     ],
+     [
+      "fas per",
+      "Persian"
+     ],
+     [
+      "ron rum",
+      "Romanian"
+     ],
+     [
+      "rus",
+      "Russisch"
+     ],
+     [
+      "srp",
+      "Serbisch"
+     ],
+     [
+      "slk slo",
+      "Slovak"
+     ],
+     [
+      "slv",
+      "Slowenisch"
+     ],
+     [
+      "spa",
+      "Spanisch"
+     ],
+     [
+      "swe",
+      "Schwedisch"
+     ],
+     [
+      "tha",
+      "Thai"
+     ],
+     [
+      "tur Audio_TUR",
+      "Türkisch"
+     ],
+     [
+      "ukr Ukr",
+      "Ukrainisch"
+     ]
+    ]
+   },
+   "description": "Zweite Untertitel-Sprache"
+  },
+  {
+   "path": "config.autolanguage.subtitle_autoselect3",
+   "data": {
+    "current": "---",
+    "type": "select",
+    "result": true,
+    "choices": [
+     [
+      "---",
+      "Nichts"
+     ],
+     [
+      "ara",
+      "Arabisch"
+     ],
+     [
+      "eus baq",
+      "Basque"
+     ],
+     [
+      "bul",
+      "Bulgarian"
+     ],
+     [
+      "hrv",
+      "Kroatisch"
+     ],
+     [
+      "chn sgp",
+      "Simplified Chinese"
+     ],
+     [
+      "twn hkn",
+      "Traditional Chinese"
+     ],
+     [
+      "ces cze",
+      "Tschechisch"
+     ],
+     [
+      "dan",
+      "Dänisch"
+     ],
+     [
+      "dut ndl",
+      "Niederländisch"
+     ],
+     [
+      "eng qaa",
+      "Englisch"
+     ],
+     [
+      "est",
+      "Estnisch"
+     ],
+     [
+      "fin",
+      "Finnisch"
+     ],
+     [
+      "fra fre",
+      "Französisch"
+     ],
+     [
+      "deu ger",
+      "Deutsch"
+     ],
+     [
+      "ell gre",
+      "Griechisch"
+     ],
+     [
+      "heb",
+      "Hebrew"
+     ],
+     [
+      "hun",
+      "Ungarisch"
+     ],
+     [
+      "ita",
+      "Italienisch"
+     ],
+     [
+      "lav",
+      "Lettisch"
+     ],
+     [
+      "lit",
+      "Litauisch"
+     ],
+     [
+      "ltz",
+      "Luxembourgish"
+     ],
+     [
+      "nor",
+      "Norwegisch"
+     ],
+     [
+      "pol",
+      "Polnisch"
+     ],
+     [
+      "por dub DUB ud1",
+      "Portugiesisch"
+     ],
+     [
+      "fas per",
+      "Persian"
+     ],
+     [
+      "ron rum",
+      "Romanian"
+     ],
+     [
+      "rus",
+      "Russisch"
+     ],
+     [
+      "srp",
+      "Serbisch"
+     ],
+     [
+      "slk slo",
+      "Slovak"
+     ],
+     [
+      "slv",
+      "Slowenisch"
+     ],
+     [
+      "spa",
+      "Spanisch"
+     ],
+     [
+      "swe",
+      "Schwedisch"
+     ],
+     [
+      "tha",
+      "Thai"
+     ],
+     [
+      "tur Audio_TUR",
+      "Türkisch"
+     ],
+     [
+      "ukr Ukr",
+      "Ukrainisch"
+     ]
+    ]
+   },
+   "description": "Dritte Untertitel-Sprache"
+  },
+  {
+   "path": "config.autolanguage.subtitle_autoselect4",
+   "data": {
+    "current": "---",
+    "type": "select",
+    "result": true,
+    "choices": [
+     [
+      "---",
+      "Nichts"
+     ],
+     [
+      "ara",
+      "Arabisch"
+     ],
+     [
+      "eus baq",
+      "Basque"
+     ],
+     [
+      "bul",
+      "Bulgarian"
+     ],
+     [
+      "hrv",
+      "Kroatisch"
+     ],
+     [
+      "chn sgp",
+      "Simplified Chinese"
+     ],
+     [
+      "twn hkn",
+      "Traditional Chinese"
+     ],
+     [
+      "ces cze",
+      "Tschechisch"
+     ],
+     [
+      "dan",
+      "Dänisch"
+     ],
+     [
+      "dut ndl",
+      "Niederländisch"
+     ],
+     [
+      "eng qaa",
+      "Englisch"
+     ],
+     [
+      "est",
+      "Estnisch"
+     ],
+     [
+      "fin",
+      "Finnisch"
+     ],
+     [
+      "fra fre",
+      "Französisch"
+     ],
+     [
+      "deu ger",
+      "Deutsch"
+     ],
+     [
+      "ell gre",
+      "Griechisch"
+     ],
+     [
+      "heb",
+      "Hebrew"
+     ],
+     [
+      "hun",
+      "Ungarisch"
+     ],
+     [
+      "ita",
+      "Italienisch"
+     ],
+     [
+      "lav",
+      "Lettisch"
+     ],
+     [
+      "lit",
+      "Litauisch"
+     ],
+     [
+      "ltz",
+      "Luxembourgish"
+     ],
+     [
+      "nor",
+      "Norwegisch"
+     ],
+     [
+      "pol",
+      "Polnisch"
+     ],
+     [
+      "por dub DUB ud1",
+      "Portugiesisch"
+     ],
+     [
+      "fas per",
+      "Persian"
+     ],
+     [
+      "ron rum",
+      "Romanian"
+     ],
+     [
+      "rus",
+      "Russisch"
+     ],
+     [
+      "srp",
+      "Serbisch"
+     ],
+     [
+      "slk slo",
+      "Slovak"
+     ],
+     [
+      "slv",
+      "Slowenisch"
+     ],
+     [
+      "spa",
+      "Spanisch"
+     ],
+     [
+      "swe",
+      "Schwedisch"
+     ],
+     [
+      "tha",
+      "Thai"
+     ],
+     [
+      "tur Audio_TUR",
+      "Türkisch"
+     ],
+     [
+      "ukr Ukr",
+      "Ukrainisch"
+     ]
+    ]
+   },
+   "description": "Vierte Untertitel-Sprache"
+  },
+  {
+   "path": "config.autolanguage.equal_languages",
+   "data": {
+    "current": "0",
+    "type": "select",
+    "result": true,
+    "choices": [
+     [
+      "0",
+      "Nichts"
+     ],
+     [
+      "1",
+      "1"
+     ],
+     [
+      "2",
+      "2"
+     ],
+     [
+      "3",
+      "1,2"
+     ],
+     [
+      "4",
+      "3"
+     ],
+     [
+      "5",
+      "1,3"
+     ],
+     [
+      "6",
+      "2,3"
+     ],
+     [
+      "7",
+      "1,2,3"
+     ],
+     [
+      "8",
+      "4"
+     ],
+     [
+      "9",
+      "1,4"
+     ],
+     [
+      "10",
+      "2,4"
+     ],
+     [
+      "11",
+      "1,2,4"
+     ],
+     [
+      "12",
+      "3,4"
+     ],
+     [
+      "13",
+      "1,3,4"
+     ],
+     [
+      "14",
+      "2,3,4"
+     ],
+     [
+      "15",
+      "Alles"
+     ]
+    ]
+   },
+   "description": "Aktiviere Untertitel mit gleicher Sprache wie Audiosprache"
+  },
+  {
+   "path": "config.autolanguage.subtitle_hearingimpaired",
+   "data": {
+    "current": false,
+    "type": "checkbox",
+    "result": true
+   },
+   "description": "Untertitel für Hörgeschädigte automatisch aktivieren"
+  },
+  {
+   "path": "config.autolanguage.subtitle_defaultimpaired",
+   "data": {
+    "current": false,
+    "type": "checkbox",
+    "result": true
+   },
+   "description": "Untertitel für Hörgeschädigte als Standard festlegen"
+  },
+  {
+   "path": "config.autolanguage.subtitle_defaultdvb",
+   "data": {
+    "current": false,
+    "type": "checkbox",
+    "result": true
+   },
+   "description": "DVB-Untertitel bevorzugen"
+  },
+  {
+   "path": "config.autolanguage.subtitle_usecache",
+   "data": {
+    "current": true,
+    "type": "checkbox",
+    "result": true
+   },
+   "description": "Verwende Untertitel-Spur die pro Sender gespeichert ist"
+  },
+  {
+   "path": "config.subtitles.pango_autoturnon",
+   "data": {
+    "current": true,
+    "type": "checkbox",
+    "result": true
+   },
+   "description": "Externe Untertitel automatisch aktivieren"
+  }
+ ]
+}

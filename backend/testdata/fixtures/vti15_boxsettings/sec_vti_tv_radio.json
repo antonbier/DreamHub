@@ -1,0 +1,363 @@
+{
+ "configs": [
+  {
+   "path": "config.usage.description",
+   "data": {
+    "type": "unknown",
+    "result": false
+   },
+   "description": "Favoriten"
+  },
+  {
+   "path": "config.usage.multibouquet",
+   "data": {
+    "current": true,
+    "type": "checkbox",
+    "result": true
+   },
+   "description": "Mehrere Bouquets erlauben"
+  },
+  {
+   "path": "config.usage.multiepg_ask_bouquet",
+   "data": {
+    "current": false,
+    "type": "checkbox",
+    "result": true
+   },
+   "description": "Multi-EPG Bouquet-Auswahl"
+  },
+  {
+   "path": "config.usage.quickzap_bouquet_change",
+   "data": {
+    "current": true,
+    "type": "checkbox",
+    "result": true
+   },
+   "description": "Bouquet wechseln beim Schnellumschalten"
+  },
+  {
+   "path": "config.usage.description",
+   "data": {
+    "type": "unknown",
+    "result": false
+   },
+   "description": "Tastenbelegung"
+  },
+  {
+   "path": "config.usage.channelzap_w_bouquet",
+   "data": {
+    "current": true,
+    "type": "checkbox",
+    "result": true
+   },
+   "description": "Benutze die Kanal-Tasten +/- zum Senderwechsel"
+  },
+  {
+   "path": "config.usage.bqt_change_w_cross",
+   "data": {
+    "current": false,
+    "type": "checkbox",
+    "result": true
+   },
+   "description": "Steuerkreuz links/rechts für Favoritenwechsel in Senderliste"
+  },
+  {
+   "path": "config.usage.favourite_list_w_ok",
+   "data": {
+    "current": false,
+    "type": "checkbox",
+    "result": true
+   },
+   "description": "Kanalliste mit OK-Taste öffnen"
+  },
+  {
+   "path": "config.usage.doubleclick_timeout",
+   "data": {
+    "current": 350,
+    "type": "number",
+    "result": true,
+    "limits": [
+     10,
+     5000
+    ]
+   },
+   "description": "Timeout für Doppelklick in Millisekunden (10 - 5000)"
+  },
+  {
+   "path": "config.usage.numberzap_timeout",
+   "data": {
+    "current": 3000,
+    "type": "number",
+    "result": true,
+    "limits": [
+     100,
+     20000
+    ]
+   },
+   "description": "Zeitgrenze für Umschalten per Nummer in Millisekunden (100 - 20000)"
+  },
+  {
+   "path": "config.usage.enable_ok_double_click",
+   "data": {
+    "current": false,
+    "type": "checkbox",
+    "result": true
+   },
+   "description": "Aktiviere Doppelklick für OK-Taste"
+  },
+  {
+   "path": "config.usage.show_favourites_w_bouquet",
+   "data": {
+    "current": "down",
+    "type": "select",
+    "result": true,
+    "choices": [
+     [
+      "down",
+      "Kanal -"
+     ],
+     [
+      "up",
+      "Kanal +"
+     ],
+     [
+      "off",
+      "Aus"
+     ]
+    ]
+   },
+   "description": "Favoritenliste mit Bouquet-Taste (Channel+/-) anzeigen"
+  },
+  {
+   "path": "config.usage.description",
+   "data": {
+    "type": "unknown",
+    "result": false
+   },
+   "description": "Benutzeroberfläche"
+  },
+  {
+   "path": "config.usage.enable_zaphistory",
+   "data": {
+    "current": true,
+    "type": "checkbox",
+    "result": true
+   },
+   "description": "Zeige Liste zuletzt gesehener Sender (Taste EXIT)"
+  },
+  {
+   "path": "config.usage.numberzap_show_servicename",
+   "data": {
+    "current": true,
+    "type": "checkbox",
+    "result": true
+   },
+   "description": "Kanalnamen beim Umschalten per Nummern anzeigen"
+  },
+  {
+   "path": "config.usage.numberzap_show_picon",
+   "data": {
+    "current": true,
+    "type": "checkbox",
+    "result": true
+   },
+   "description": "Senderlogo beim Umschalten per Nummer anzeigen"
+  },
+  {
+   "path": "config.usage.show_servicelist_at_modeswitch",
+   "data": {
+    "current": false,
+    "type": "checkbox",
+    "result": true
+   },
+   "description": "Kanalliste beim Wechsel zwischen TV/Radio anzeigen"
+  },
+  {
+   "path": "config.usage.description",
+   "data": {
+    "type": "unknown",
+    "result": false
+   },
+   "description": "Bild im Bild (PiP)"
+  },
+  {
+   "path": "config.usage.pip_zero_button",
+   "data": {
+    "current": "swap",
+    "type": "select",
+    "result": true,
+    "choices": [
+     [
+      "standard",
+      "Standard"
+     ],
+     [
+      "swap",
+      "Bild-in-Bild und Hauptbild tauschen"
+     ],
+     [
+      "swapstop",
+      "Bild-in-Bild als Hauptbild verwenden"
+     ],
+     [
+      "stop",
+      "Bild-in-Bild (PiP) beenden"
+     ],
+     [
+      "zap_focus",
+      "Fokus beim Umschalten tauschen"
+     ]
+    ]
+   },
+   "description": "Verhalten der '0'-Taste bei Bild-in-Bild (PiP)"
+  },
+  {
+   "path": "config.usage.pip_zero_button_doubleclick",
+   "data": {
+    "current": "zap_focus",
+    "type": "select",
+    "result": true,
+    "choices": [
+     [
+      "standard",
+      "Standard"
+     ],
+     [
+      "swap",
+      "Bild-in-Bild und Hauptbild tauschen"
+     ],
+     [
+      "swapstop",
+      "Bild-in-Bild als Hauptbild verwenden"
+     ],
+     [
+      "stop",
+      "Bild-in-Bild (PiP) beenden"
+     ],
+     [
+      "zap_focus",
+      "Fokus beim Umschalten tauschen"
+     ]
+    ]
+   },
+   "description": "Verhalten der '0'-Taste (Doppelklick) bei Bild-in-Bild"
+  },
+  {
+   "path": "config.usage.default_zero_double_click_mode",
+   "data": {
+    "current": "pip",
+    "type": "select",
+    "result": true,
+    "choices": [
+     [
+      "splitscreen",
+      "Splitscreen"
+     ],
+     [
+      "audiozap",
+      "Audio-Zap"
+     ],
+     [
+      "pip",
+      "Bild im Bild (PiP)"
+     ]
+    ]
+   },
+   "description": "Standard für Taste 0 (Doppelklick)"
+  },
+  {
+   "path": "config.usage.default_pip_mode",
+   "data": {
+    "current": "pip",
+    "type": "select",
+    "result": true,
+    "choices": [
+     [
+      "splitscreen",
+      "Splitscreen"
+     ],
+     [
+      "audiozap",
+      "Audio-Zap"
+     ],
+     [
+      "pip",
+      "Bild im Bild (PiP)"
+     ]
+    ]
+   },
+   "description": "Standard für EXIT-Taste (lang)"
+  },
+  {
+   "path": "config.usage.pip_in_EPGBar",
+   "data": {
+    "current": true,
+    "type": "checkbox",
+    "result": true
+   },
+   "description": "Bild-in-Bild (PiP) in EPG-Infoleiste verwenden"
+  },
+  {
+   "path": "config.usage.zap_pip",
+   "data": {
+    "current": true,
+    "type": "checkbox",
+    "result": true
+   },
+   "description": "Bild-in-Bild (PiP) und nicht Hauptbild umschalten"
+  },
+  {
+   "path": "config.usage.description",
+   "data": {
+    "type": "unknown",
+    "result": false
+   },
+   "description": "Allgemein"
+  },
+  {
+   "path": "config.usage.startup_service_leavestandby",
+   "data": {
+    "current": false,
+    "type": "checkbox",
+    "result": true
+   },
+   "description": "Startkanal für Rückkehr aus Standby verwenden"
+  },
+  {
+   "path": "config.usage.overzap_notplayable",
+   "data": {
+    "current": true,
+    "type": "checkbox",
+    "result": true
+   },
+   "description": "Nicht verfügbare Kanäle beim Umschalten überspringen"
+  },
+  {
+   "path": "config.misc.use_ci_assignment",
+   "data": {
+    "current": true,
+    "type": "checkbox",
+    "result": true
+   },
+   "description": "Ermittlung verf. Kanäle inkl. Berücksichtigung der CI-Zuweisung"
+  },
+  {
+   "path": "config.misc.use_auto_ci_assignment",
+   "data": {
+    "current": true,
+    "type": "checkbox",
+    "result": true
+   },
+   "description": "Automatische CI Zuweisung aktivieren"
+  },
+  {
+   "path": "config.usage.e1like_radio_mode",
+   "data": {
+    "current": true,
+    "type": "checkbox",
+    "result": true
+   },
+   "description": "Alternativer Radio-Modus"
+  }
+ ]
+}

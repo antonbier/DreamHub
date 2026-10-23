@@ -1,0 +1,372 @@
+{
+ "configs": [
+  {
+   "path": "config.usage.description",
+   "data": {
+    "type": "unknown",
+    "result": false
+   },
+   "description": "Tastenbelegung"
+  },
+  {
+   "path": "config.usage.on_long_powerpress",
+   "data": {
+    "current": "show_menu",
+    "type": "select",
+    "result": true,
+    "choices": [
+     [
+      "show_menu",
+      "Ausschaltmenü anzeigen"
+     ],
+     [
+      "shutdown",
+      "Ausschalten"
+     ],
+     [
+      "standby",
+      "Standby"
+     ],
+     [
+      "restart",
+      "Neustart"
+     ],
+     [
+      "restart_gui",
+      "GUI neustarten"
+     ],
+     [
+      "nothing",
+      "Nichts"
+     ]
+    ]
+   },
+   "description": "Aktion nach langem Drücken auf Power"
+  },
+  {
+   "path": "config.usage.on_short_powerpress",
+   "data": {
+    "current": "standby",
+    "type": "select",
+    "result": true,
+    "choices": [
+     [
+      "show_menu",
+      "Ausschaltmenü anzeigen"
+     ],
+     [
+      "shutdown",
+      "Ausschalten"
+     ],
+     [
+      "standby",
+      "Standby"
+     ],
+     [
+      "restart",
+      "Neustart"
+     ],
+     [
+      "restart_gui",
+      "GUI neustarten"
+     ],
+     [
+      "nothing",
+      "Nichts"
+     ]
+    ]
+   },
+   "description": "Aktion nach kurzen Drücken auf Power"
+  },
+  {
+   "path": "config.usage.description",
+   "data": {
+    "type": "unknown",
+    "result": false
+   },
+   "description": "HbbTV / Teletext"
+  },
+  {
+   "path": "config.usage.enable_hbbtv_autostart",
+   "data": {
+    "current": true,
+    "type": "checkbox",
+    "result": true
+   },
+   "description": "HbbTV-Browser automatisch starten"
+  },
+  {
+   "path": "config.usage.remote_hbbtv",
+   "data": {
+    "current": true,
+    "type": "checkbox",
+    "result": true
+   },
+   "description": "HbbTV für Streaming-Dienste aktivieren"
+  },
+  {
+   "path": "config.usage.enable_tt_caching",
+   "data": {
+    "current": true,
+    "type": "checkbox",
+    "result": true
+   },
+   "description": "Videotext-Pufferung aktivieren"
+  },
+  {
+   "path": "config.usage.description",
+   "data": {
+    "type": "unknown",
+    "result": false
+   },
+   "description": "Allgemein"
+  },
+  {
+   "path": "config.misc.db_enabled",
+   "data": {
+    "current": true,
+    "type": "checkbox",
+    "result": true
+   },
+   "description": "SQL Datenbank aktivieren"
+  },
+  {
+   "path": "config.misc.db_path",
+   "data": {
+    "type": "unknown",
+    "result": false
+   },
+   "description": "Pfad für SQL Datenbank"
+  },
+  {
+   "path": "config.usage.alternatives_priority",
+   "data": {
+    "current": "0",
+    "type": "select",
+    "result": true,
+    "choices": [
+     [
+      "0",
+      "DVB-S/-C/-T"
+     ],
+     [
+      "1",
+      "DVB-S/-T/-C"
+     ],
+     [
+      "2",
+      "DVB-C/-S/-T"
+     ],
+     [
+      "3",
+      "DVB-C/-T/-S"
+     ],
+     [
+      "4",
+      "DVB-T/-C/-S"
+     ],
+     [
+      "5",
+      "DVB-T/-S/-C"
+     ]
+    ]
+   },
+   "description": "Tuner-Priorität bei alternativen Kanälen"
+  },
+  {
+   "path": "config.usage.frontend_priority",
+   "data": {
+    "current": "-1",
+    "type": "select",
+    "result": true,
+    "choices": [
+     [
+      "-1",
+      "Automatisch"
+     ],
+     [
+      "0",
+      "Tuner A"
+     ],
+     [
+      "1",
+      "Tuner B"
+     ]
+    ]
+   },
+   "description": "Spezifischen Tuner bevorzugen"
+  },
+  {
+   "path": "config.usage.description",
+   "data": {
+    "type": "unknown",
+    "result": false
+   },
+   "description": "Softwarepakete"
+  },
+  {
+   "path": "config.skin.primary_fallback_skin",
+   "data": {
+    "current": true,
+    "type": "checkbox",
+    "result": true
+   },
+   "description": "Bei Skin-Fehlern Standard-Skin aktivieren"
+  },
+  {
+   "path": "config.usage.check_for_updates",
+   "data": {
+    "current": 0,
+    "type": "number",
+    "result": true,
+    "limits": [
+     0,
+     24
+    ]
+   },
+   "description": "Automatisch alle X Stunden nach Aktualisierungen suchen ( 0 = aus ) (0 - 24)"
+  },
+  {
+   "path": "config.usage.show_notification_for_updates",
+   "data": {
+    "current": true,
+    "type": "checkbox",
+    "result": true
+   },
+   "description": "Benachrichtigung einblenden, wenn ein Update verfügbar ist"
+  },
+  {
+   "path": "config.usage.use_rm_autoremove",
+   "data": {
+    "current": true,
+    "type": "checkbox",
+    "result": true
+   },
+   "description": "Nicht mehr benötigte Pakete automatisch entfernen"
+  },
+  {
+   "path": "config.usage.use_rm_force_depends",
+   "data": {
+    "current": false,
+    "type": "checkbox",
+    "result": true
+   },
+   "description": "Entfernen von Systemsoftware erlauben"
+  },
+  {
+   "path": "config.usage.use_force_overwrite",
+   "data": {
+    "current": true,
+    "type": "checkbox",
+    "result": true
+   },
+   "description": "Updates haben Vorrang (--force-overwrite)"
+  },
+  {
+   "path": "config.usage.use_package_conffile",
+   "data": {
+    "current": true,
+    "type": "checkbox",
+    "result": true
+   },
+   "description": "Bei Aktualisierung Konfigurationsdateien überschreiben"
+  },
+  {
+   "path": "config.usage.description",
+   "data": {
+    "type": "unknown",
+    "result": false
+   },
+   "description": "Fehlersuche"
+  },
+  {
+   "path": "config.usage.show_bsod",
+   "data": {
+    "current": false,
+    "type": "checkbox",
+    "result": true
+   },
+   "description": "Absturzinformationen am TV anzeigen"
+  },
+  {
+   "path": "config.usage.include_config_in_crashlog",
+   "data": {
+    "current": true,
+    "type": "checkbox",
+    "result": true
+   },
+   "description": "Konfigurationsdateien in Crashdateien ausgeben"
+  },
+  {
+   "path": "config.usage.debug_type",
+   "data": {
+    "current": "off",
+    "type": "select",
+    "result": true,
+    "choices": [
+     [
+      "off",
+      "Aus"
+     ],
+     [
+      "all",
+      "An"
+     ],
+     [
+      "e2core",
+      "e2-core"
+     ],
+     [
+      "e2python",
+      "e2-python"
+     ]
+    ]
+   },
+   "description": "Debug-Typ"
+  },
+  {
+   "path": "config.usage.debug_config",
+   "data": {
+    "current": "off_",
+    "type": "select",
+    "result": true,
+    "choices": [
+     [
+      "off",
+      "Aus"
+     ],
+     [
+      "console",
+      "Konsole"
+     ],
+     [
+      "file",
+      "Datei"
+     ],
+     [
+      "fileloop",
+      "Datei (Schleife)"
+     ],
+     [
+      "console|file",
+      "Konsole & Datei"
+     ],
+     [
+      "console|fileloop",
+      "Konsole & Datei (Schleife)"
+     ]
+    ]
+   },
+   "description": "Debug-Ausgabe aktivieren"
+  },
+  {
+   "path": "config.usage.debug_advanced",
+   "data": {
+    "current": false,
+    "type": "checkbox",
+    "result": true
+   },
+   "description": "Erweiterten Python-Log aktivieren"
+  }
+ ]
+}

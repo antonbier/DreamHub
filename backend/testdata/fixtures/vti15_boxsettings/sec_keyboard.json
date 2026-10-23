@@ -1,0 +1,23 @@
+{
+ "configs": [
+  {
+   "path": "config.keyboard.keymap",
+   "data": {
+    "current": "eng.kmap",
+    "type": "select",
+    "result": true,
+    "choices": [
+     [
+      "eng.kmap",
+      "Keyboard English"
+     ],
+     [
+      "dream-de.kmap",
+      "Keyboard Deutsch"
+     ]
+    ]
+   },
+   "description": "Tastaturbelegung"
+  }
+ ]
+}

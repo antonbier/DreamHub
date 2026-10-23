@@ -1,0 +1,452 @@
+{
+ "configs": [
+  {
+   "path": "config.usage.description",
+   "data": {
+    "type": "unknown",
+    "result": false
+   },
+   "description": "TV / Radio"
+  },
+  {
+   "path": "config.usage.channelzap_w_bouquet",
+   "data": {
+    "current": true,
+    "type": "checkbox",
+    "result": true
+   },
+   "description": "Benutze die Kanal-Tasten +/- zum Senderwechsel"
+  },
+  {
+   "path": "config.usage.bqt_change_w_cross",
+   "data": {
+    "current": false,
+    "type": "checkbox",
+    "result": true
+   },
+   "description": "Steuerkreuz links/rechts für Favoritenwechsel in Senderliste"
+  },
+  {
+   "path": "config.usage.favourite_list_w_ok",
+   "data": {
+    "current": false,
+    "type": "checkbox",
+    "result": true
+   },
+   "description": "Kanalliste mit OK-Taste öffnen"
+  },
+  {
+   "path": "config.usage.enable_ok_double_click",
+   "data": {
+    "current": false,
+    "type": "checkbox",
+    "result": true
+   },
+   "description": "Aktiviere Doppelklick für OK-Taste"
+  },
+  {
+   "path": "config.usage.show_favourites_w_bouquet",
+   "data": {
+    "current": "down",
+    "type": "select",
+    "result": true,
+    "choices": [
+     [
+      "down",
+      "Kanal -"
+     ],
+     [
+      "up",
+      "Kanal +"
+     ],
+     [
+      "off",
+      "Aus"
+     ]
+    ]
+   },
+   "description": "Favoritenliste mit Bouquet-Taste (Channel+/-) anzeigen"
+  },
+  {
+   "path": "config.usage.pip_zero_button",
+   "data": {
+    "current": "swap",
+    "type": "select",
+    "result": true,
+    "choices": [
+     [
+      "standard",
+      "Standard"
+     ],
+     [
+      "swap",
+      "Bild-in-Bild und Hauptbild tauschen"
+     ],
+     [
+      "swapstop",
+      "Bild-in-Bild als Hauptbild verwenden"
+     ],
+     [
+      "stop",
+      "Bild-in-Bild (PiP) beenden"
+     ],
+     [
+      "zap_focus",
+      "Fokus beim Umschalten tauschen"
+     ]
+    ]
+   },
+   "description": "Verhalten der '0'-Taste bei Bild-in-Bild (PiP)"
+  },
+  {
+   "path": "config.usage.pip_zero_button_doubleclick",
+   "data": {
+    "current": "zap_focus",
+    "type": "select",
+    "result": true,
+    "choices": [
+     [
+      "standard",
+      "Standard"
+     ],
+     [
+      "swap",
+      "Bild-in-Bild und Hauptbild tauschen"
+     ],
+     [
+      "swapstop",
+      "Bild-in-Bild als Hauptbild verwenden"
+     ],
+     [
+      "stop",
+      "Bild-in-Bild (PiP) beenden"
+     ],
+     [
+      "zap_focus",
+      "Fokus beim Umschalten tauschen"
+     ]
+    ]
+   },
+   "description": "Verhalten der '0'-Taste (Doppelklick) bei Bild-in-Bild"
+  },
+  {
+   "path": "config.usage.default_zero_double_click_mode",
+   "data": {
+    "current": "pip",
+    "type": "select",
+    "result": true,
+    "choices": [
+     [
+      "splitscreen",
+      "Splitscreen"
+     ],
+     [
+      "audiozap",
+      "Audio-Zap"
+     ],
+     [
+      "pip",
+      "Bild im Bild (PiP)"
+     ]
+    ]
+   },
+   "description": "Standard für Taste 0 (Doppelklick)"
+  },
+  {
+   "path": "config.usage.default_pip_mode",
+   "data": {
+    "current": "pip",
+    "type": "select",
+    "result": true,
+    "choices": [
+     [
+      "splitscreen",
+      "Splitscreen"
+     ],
+     [
+      "audiozap",
+      "Audio-Zap"
+     ],
+     [
+      "pip",
+      "Bild im Bild (PiP)"
+     ]
+    ]
+   },
+   "description": "Standard für EXIT-Taste (lang)"
+  },
+  {
+   "path": "config.usage.description",
+   "data": {
+    "type": "unknown",
+    "result": false
+   },
+   "description": "Kanalliste"
+  },
+  {
+   "path": "config.usage.servicelist_preview_mode",
+   "data": {
+    "current": false,
+    "type": "checkbox",
+    "result": true
+   },
+   "description": "Vorschaumodus in Kanalliste verwenden (2x-OK-Modus)"
+  },
+  {
+   "path": "config.usage.description",
+   "data": {
+    "type": "unknown",
+    "result": false
+   },
+   "description": "Aufnahmen wiedergeben"
+  },
+  {
+   "path": "config.usage.movielist_leave_exit",
+   "data": {
+    "current": true,
+    "type": "checkbox",
+    "result": true
+   },
+   "description": "Filmwiedergabe mit der EXIT-Taste beenden"
+  },
+  {
+   "path": "config.seek.smartseek_enable",
+   "data": {
+    "current": true,
+    "type": "checkbox",
+    "result": true
+   },
+   "description": "SmartSeek aktivieren (Tasten AUF und AB)"
+  },
+  {
+   "path": "config.seek.smartseek_remap_skip_fw_rw",
+   "data": {
+    "current": false,
+    "type": "checkbox",
+    "result": true
+   },
+   "description": "Links/Rechts immer für SmartSeek Sprungintervall verwenden"
+  },
+  {
+   "path": "config.seek.on_pause",
+   "data": {
+    "current": "play",
+    "type": "select",
+    "result": true,
+    "choices": [
+     [
+      "play",
+      "Abspielen"
+     ],
+     [
+      "step",
+      "Einzelschritt (GOP)"
+     ],
+     [
+      "last",
+      "Letzte Geschwindigkeit"
+     ]
+    ]
+   },
+   "description": "Verhalten der Pause-Taste bei Standbild"
+  },
+  {
+   "path": "config.usage.description",
+   "data": {
+    "type": "unknown",
+    "result": false
+   },
+   "description": "Aufnahmen"
+  },
+  {
+   "path": "config.usage.rec_button",
+   "data": {
+    "current": "record_menu",
+    "type": "select",
+    "result": true,
+    "choices": [
+     [
+      "record_menu",
+      "Aufnahmemenü anzeigen"
+     ],
+     [
+      "running_record",
+      "Aktive Aufnahmen anzeigen"
+     ],
+     [
+      "timer_list",
+      "Timerliste anzeigen"
+     ],
+     [
+      "event_record",
+      "Aufnahme hinzufügen (aktuelle Sendung)"
+     ],
+     [
+      "indefinitely_record",
+      "Aufnahme hinzufügen (unbegrenzt)"
+     ],
+     [
+      "manualduration_record",
+      "Aufnahme hinzufügen (Aufnahmelänge eingeben)"
+     ],
+     [
+      "manualendtime_record",
+      "Aufnahme hinzufügen (Aufnahmeendzeit eingeben)"
+     ],
+     [
+      "timeshift_to_record",
+      "Timeshift in Aufnahme umwandeln"
+     ]
+    ]
+   },
+   "description": "REC-Taste drücken"
+  },
+  {
+   "path": "config.usage.rec_button_long",
+   "data": {
+    "current": "running_record",
+    "type": "select",
+    "result": true,
+    "choices": [
+     [
+      "record_menu",
+      "Aufnahmemenü anzeigen"
+     ],
+     [
+      "running_record",
+      "Aktive Aufnahmen anzeigen"
+     ],
+     [
+      "timer_list",
+      "Timerliste anzeigen"
+     ],
+     [
+      "event_record",
+      "Aufnahme hinzufügen (aktuelle Sendung)"
+     ],
+     [
+      "indefinitely_record",
+      "Aufnahme hinzufügen (unbegrenzt)"
+     ],
+     [
+      "manualduration_record",
+      "Aufnahme hinzufügen (Aufnahmelänge eingeben)"
+     ],
+     [
+      "manualendtime_record",
+      "Aufnahme hinzufügen (Aufnahmeendzeit eingeben)"
+     ],
+     [
+      "timeshift_to_record",
+      "Timeshift in Aufnahme umwandeln"
+     ]
+    ]
+   },
+   "description": "REC-Taste lange drücken"
+  },
+  {
+   "path": "config.usage.description",
+   "data": {
+    "type": "unknown",
+    "result": false
+   },
+   "description": "Timeshift"
+  },
+  {
+   "path": "config.usage.ts_use_history_keys",
+   "data": {
+    "current": true,
+    "type": "checkbox",
+    "result": true
+   },
+   "description": "Benutze vor/zurück für Wechsel der Timeshift Sendung"
+  },
+  {
+   "path": "config.usage.ts_use_cross_down",
+   "data": {
+    "current": true,
+    "type": "checkbox",
+    "result": true
+   },
+   "description": "Benutze Pfeil nach unten Taste zur Anzeige von Timeshiftdateien"
+  },
+  {
+   "path": "config.usage.description",
+   "data": {
+    "type": "unknown",
+    "result": false
+   },
+   "description": "System"
+  },
+  {
+   "path": "config.usage.on_long_powerpress",
+   "data": {
+    "current": "show_menu",
+    "type": "select",
+    "result": true,
+    "choices": [
+     [
+      "show_menu",
+      "Ausschaltmenü anzeigen"
+     ],
+     [
+      "shutdown",
+      "Ausschalten"
+     ],
+     [
+      "standby",
+      "Standby"
+     ],
+     [
+      "restart",
+      "Neustart"
+     ],
+     [
+      "restart_gui",
+      "GUI neustarten"
+     ],
+     [
+      "nothing",
+      "Nichts"
+     ]
+    ]
+   },
+   "description": "Aktion nach langem Drücken auf Power"
+  },
+  {
+   "path": "config.usage.on_short_powerpress",
+   "data": {
+    "current": "standby",
+    "type": "select",
+    "result": true,
+    "choices": [
+     [
+      "show_menu",
+      "Ausschaltmenü anzeigen"
+     ],
+     [
+      "shutdown",
+      "Ausschalten"
+     ],
+     [
+      "standby",
+      "Standby"
+     ],
+     [
+      "restart",
+      "Neustart"
+     ],
+     [
+      "restart_gui",
+      "GUI neustarten"
+     ],
+     [
+      "nothing",
+      "Nichts"
+     ]
+    ]
+   },
+   "description": "Aktion nach kurzen Drücken auf Power"
+  }
+ ]
+}

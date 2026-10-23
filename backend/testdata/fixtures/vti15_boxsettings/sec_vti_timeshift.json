@@ -1,0 +1,231 @@
+{
+ "configs": [
+  {
+   "path": "config.usage.ts_auto_start",
+   "data": {
+    "current": "10",
+    "type": "select",
+    "result": true,
+    "choices": [
+     [
+      "0",
+      "Aus"
+     ],
+     [
+      "1",
+      "1 Sekunde"
+     ],
+     [
+      "2",
+      "2 Sekunden"
+     ],
+     [
+      "3",
+      "3 Sekunden"
+     ],
+     [
+      "4",
+      "4 Sekunden"
+     ],
+     [
+      "5",
+      "5 Sekunden"
+     ],
+     [
+      "10",
+      "10 Sekunden"
+     ],
+     [
+      "20",
+      "20 Sekunden"
+     ],
+     [
+      "30",
+      "30 Sekunden"
+     ],
+     [
+      "60",
+      "1 Minute"
+     ],
+     [
+      "120",
+      "2 Minuten"
+     ],
+     [
+      "300",
+      "5 Minuten"
+     ]
+    ]
+   },
+   "description": "Starte Timeshift automatisch nach"
+  },
+  {
+   "path": "config.usage.ts_ask_before_service_changed",
+   "data": {
+    "current": "keep_ts",
+    "type": "select",
+    "result": true,
+    "choices": [
+     [
+      "ask",
+      "Benutzer fragen"
+     ],
+     [
+      "delete",
+      "Timeshift Datei löschen"
+     ],
+     [
+      "keep_ts",
+      "Timeshift Datei speichern"
+     ]
+    ]
+   },
+   "description": "Verhalten beim Senderwechsel während Timeshift"
+  },
+  {
+   "path": "config.usage.ts_event_change",
+   "data": {
+    "current": "split_and_keep",
+    "type": "select",
+    "result": true,
+    "choices": [
+     [
+      "ask",
+      "Benutzer fragen"
+     ],
+     [
+      "continue",
+      "Timeshift fortsetzen"
+     ],
+     [
+      "split_and_keep",
+      "teilen & behalten"
+     ],
+     [
+      "split_and_delete",
+      "teilen & löschen"
+     ],
+     [
+      "stop_and_keep",
+      "beenden & behalten"
+     ],
+     [
+      "stop_and_delete",
+      "beenden & löschen"
+     ]
+    ]
+   },
+   "description": "Verhalten wenn die Live TV Sendung wechselt"
+  },
+  {
+   "path": "config.usage.ts_min_duration",
+   "data": {
+    "current": "2",
+    "type": "select",
+    "result": true,
+    "choices": [
+     [
+      "0",
+      "Aus"
+     ],
+     [
+      "1",
+      "1 Minute"
+     ],
+     [
+      "2",
+      "2 Minuten"
+     ],
+     [
+      "5",
+      "5 Minuten"
+     ],
+     [
+      "10",
+      "10 minutes"
+     ]
+    ]
+   },
+   "description": "Timeshift Aufzeichnungen kürzer als X Minuten nicht speichern"
+  },
+  {
+   "path": "config.usage.ts_clean_ts_older_than",
+   "data": {
+    "current": "1",
+    "type": "select",
+    "result": true,
+    "choices": [
+     [
+      "0.0",
+      "Aus"
+     ],
+     [
+      "0.25",
+      "1/4"
+     ],
+     [
+      "0.5",
+      "1/2"
+     ],
+     [
+      "1.0",
+      "1"
+     ],
+     [
+      "2.0",
+      "2"
+     ],
+     [
+      "3.0",
+      "3"
+     ],
+     [
+      "4.0",
+      "4"
+     ],
+     [
+      "5.0",
+      "5"
+     ]
+    ]
+   },
+   "description": "Lösche Timeshift-Dateien die älter als X Tage sind"
+  },
+  {
+   "path": "config.usage.ts_use_history_keys",
+   "data": {
+    "current": true,
+    "type": "checkbox",
+    "result": true
+   },
+   "description": "Benutze vor/zurück für Wechsel der Timeshift Sendung"
+  },
+  {
+   "path": "config.usage.ts_use_cross_down",
+   "data": {
+    "current": true,
+    "type": "checkbox",
+    "result": true
+   },
+   "description": "Benutze Pfeil nach unten Taste zur Anzeige von Timeshiftdateien"
+  },
+  {
+   "path": "config.usage.ts_show_old_ts",
+   "data": {
+    "current": true,
+    "type": "checkbox",
+    "result": true
+   },
+   "description": "Alte Timeshift Aufzeichnungen anzeigen"
+  },
+  {
+   "path": "config.usage.movielist_hide_timeshift_files",
+   "data": {
+    "current": true,
+    "type": "checkbox",
+    "result": true
+   },
+   "description": "Timeshift Sendungen in der Filmliste ausblenden"
+  }
+ ]
+}

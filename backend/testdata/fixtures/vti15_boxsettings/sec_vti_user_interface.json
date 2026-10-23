@@ -1,0 +1,505 @@
+{
+ "configs": [
+  {
+   "path": "config.usage.description",
+   "data": {
+    "type": "unknown",
+    "result": false
+   },
+   "description": "Infoleiste"
+  },
+  {
+   "path": "config.usage.infobar_timeout",
+   "data": {
+    "current": "5",
+    "type": "select",
+    "result": true,
+    "choices": [
+     [
+      "0",
+      "Kein Zeitablauf"
+     ],
+     [
+      "1",
+      "1 Sekunde"
+     ],
+     [
+      "2",
+      "2 Sekunden"
+     ],
+     [
+      "3",
+      "3 Sekunden"
+     ],
+     [
+      "4",
+      "4 Sekunden"
+     ],
+     [
+      "5",
+      "5 Sekunden"
+     ],
+     [
+      "6",
+      "6 Sekunden"
+     ],
+     [
+      "7",
+      "7 Sekunden"
+     ],
+     [
+      "8",
+      "8 Sekunden"
+     ],
+     [
+      "9",
+      "9 Sekunden"
+     ],
+     [
+      "10",
+      "10 Sekunden"
+     ]
+    ]
+   },
+   "description": "Anzeigedauer der Infoleiste"
+  },
+  {
+   "path": "config.usage.show_infobar_on_zap",
+   "data": {
+    "current": true,
+    "type": "checkbox",
+    "result": true
+   },
+   "description": "Infoleiste bei Kanalwechsel anzeigen"
+  },
+  {
+   "path": "config.usage.show_infobar_on_splitscreen",
+   "data": {
+    "current": false,
+    "type": "checkbox",
+    "result": true
+   },
+   "description": "Infoleiste bei Kanalwechsel im Splitscreen anzeigen"
+  },
+  {
+   "path": "config.usage.show_infobar_on_skip",
+   "data": {
+    "current": true,
+    "type": "checkbox",
+    "result": true
+   },
+   "description": "Infoleiste beim Spulen anzeigen"
+  },
+  {
+   "path": "config.usage.show_infobar_on_event_change",
+   "data": {
+    "current": true,
+    "type": "checkbox",
+    "result": true
+   },
+   "description": "Infoleiste bei Sendungswechsel anzeigen"
+  },
+  {
+   "path": "config.usage.disable_infobar_timeout_okbutton",
+   "data": {
+    "current": false,
+    "type": "checkbox",
+    "result": true
+   },
+   "description": "Ausblenden der Infoleiste nach manuellem Aufruf deaktivieren"
+  },
+  {
+   "path": "config.usage.infobar_dimm",
+   "data": {
+    "current": "off",
+    "type": "select",
+    "result": true,
+    "choices": [
+     [
+      "fade_in",
+      "einblenden"
+     ],
+     [
+      "fade_in_out",
+      "ein-/ausblenden"
+     ],
+     [
+      "fade_out",
+      "ausblenden"
+     ],
+     [
+      "off",
+      "Aus"
+     ]
+    ]
+   },
+   "description": "Infoleiste ein-/ausblenden animieren"
+  },
+  {
+   "path": "config.usage.infobar_dimm_speed",
+   "data": {
+    "current": "30",
+    "type": "select",
+    "result": true,
+    "choices": [
+     [
+      "15",
+      "Schnell"
+     ],
+     [
+      "30",
+      "Standard"
+     ],
+     [
+      "50",
+      "Langsam"
+     ]
+    ]
+   },
+   "description": "Geschwindigkeit der Infoleistenanimation"
+  },
+  {
+   "path": "config.usage.description",
+   "data": {
+    "type": "unknown",
+    "result": false
+   },
+   "description": "Zweite Infoleiste (SecondInfoBar)"
+  },
+  {
+   "path": "config.usage.enable_secondinfobar",
+   "data": {
+    "current": true,
+    "type": "checkbox",
+    "result": true
+   },
+   "description": "Benutze integrierte Secondinfobar"
+  },
+  {
+   "path": "config.usage.secondinfobar_timeout",
+   "data": {
+    "current": "-1",
+    "type": "select",
+    "result": true,
+    "choices": [
+     [
+      "-1",
+      "wie normale Infoleiste"
+     ],
+     [
+      "0",
+      "Kein Zeitablauf"
+     ],
+     [
+      "1",
+      "1 Sekunde"
+     ],
+     [
+      "2",
+      "2 Sekunden"
+     ],
+     [
+      "3",
+      "3 Sekunden"
+     ],
+     [
+      "4",
+      "4 Sekunden"
+     ],
+     [
+      "5",
+      "5 Sekunden"
+     ],
+     [
+      "6",
+      "6 Sekunden"
+     ],
+     [
+      "7",
+      "7 Sekunden"
+     ],
+     [
+      "8",
+      "8 Sekunden"
+     ],
+     [
+      "9",
+      "9 Sekunden"
+     ],
+     [
+      "10",
+      "10 Sekunden"
+     ]
+    ]
+   },
+   "description": "Anzeigedauer Secondinfobar"
+  },
+  {
+   "path": "config.usage.hide_infobar_when_secondinfobar",
+   "data": {
+    "current": false,
+    "type": "checkbox",
+    "result": true
+   },
+   "description": "Infoleiste bei SecondInfobar ausblenden"
+  },
+  {
+   "path": "config.usage.description",
+   "data": {
+    "type": "unknown",
+    "result": false
+   },
+   "description": "Allgemein"
+  },
+  {
+   "path": "config.usage.rc_style",
+   "data": {
+    "current": "0",
+    "type": "select",
+    "result": true,
+    "choices": [
+     [
+      "0",
+      "Vu+ 1 (Duo, Solo, Uno, Solo2, Zero, Solo SE, Ultimo 4K, Uno 4K)"
+     ],
+     [
+      "1",
+      "Vu+ 2 (Ultimo)"
+     ],
+     [
+      "2",
+      "Vu+ 3 (Duo2)"
+     ],
+     [
+      "3",
+      "Vu+ 4 (BT/IR)"
+     ],
+     [
+      "4",
+      "Vu+ 5 (Uno 4K SE, Zero 4K, Duo 4K)"
+     ]
+    ]
+   },
+   "description": "Fernbedienung für die Hilfe-Anzeige"
+  },
+  {
+   "path": "config.usage.picon_dir",
+   "data": {
+    "type": "unknown",
+    "result": false
+   },
+   "description": "Primäres Verzeichnis für Picons"
+  },
+  {
+   "path": "config.usage.picon_scale",
+   "data": {
+    "current": true,
+    "type": "checkbox",
+    "result": true
+   },
+   "description": "Picons auf vorgegebene Skingröße skalieren"
+  },
+  {
+   "path": "config.usage.config_icons",
+   "data": {
+    "current": "vti-icon01",
+    "type": "select",
+    "result": true,
+    "choices": [
+     [
+      "False",
+      "Aus"
+     ],
+     [
+      "vti-icon01",
+      "Type 01"
+     ],
+     [
+      "vti-icon02",
+      "Type 02"
+     ],
+     [
+      "vti-icon03",
+      "Type 03"
+     ],
+     [
+      "vti-icon04",
+      "Type 04"
+     ],
+     [
+      "vti-icon05",
+      "Type 05"
+     ]
+    ]
+   },
+   "description": "Symbole für boolesche Konfigurationselemente anzeigen"
+  },
+  {
+   "path": "config.usage.menu_sort_mode",
+   "data": {
+    "current": "user",
+    "type": "select",
+    "result": true,
+    "choices": [
+     [
+      "a_z",
+      "Alphabetisch"
+     ],
+     [
+      "default",
+      "Standard"
+     ],
+     [
+      "user",
+      "Benutzerdefiniert"
+     ]
+    ]
+   },
+   "description": "Sortierreihenfolge für die Menüs"
+  },
+  {
+   "path": "config.usage.plugins_sort_mode",
+   "data": {
+    "current": "user",
+    "type": "select",
+    "result": true,
+    "choices": [
+     [
+      "a_z",
+      "Alphabetisch"
+     ],
+     [
+      "default",
+      "Standard"
+     ],
+     [
+      "user",
+      "Benutzerdefiniert"
+     ]
+    ]
+   },
+   "description": "Sortierreihenfolge für Plugins"
+  },
+  {
+   "path": "config.misc.ecm_info",
+   "data": {
+    "current": true,
+    "type": "checkbox",
+    "result": true
+   },
+   "description": "ECM-Infos anzeigen"
+  },
+  {
+   "path": "config.usage.showdish",
+   "data": {
+    "current": true,
+    "type": "checkbox",
+    "result": true
+   },
+   "description": "Rotorbewegung anzeigen"
+  },
+  {
+   "path": "config.usage.use_pig",
+   "data": {
+    "current": false,
+    "type": "checkbox",
+    "result": true
+   },
+   "description": "Bild-in-Grafik (PiG) verwenden"
+  },
+  {
+   "path": "config.usage.use_extended_pig",
+   "data": {
+    "current": false,
+    "type": "checkbox",
+    "result": true
+   },
+   "description": "Erweitertes Bild-in-Grafik verwenden (PiG + transparenter Skin)"
+  },
+  {
+   "path": "config.usage.use_extended_pig_channelselection",
+   "data": {
+    "current": false,
+    "type": "checkbox",
+    "result": true
+   },
+   "description": "Erweitertes Bild-in-Grafik auch in Kanalliste verwenden"
+  },
+  {
+   "path": "config.usage.disable_tuner_error_popup",
+   "data": {
+    "current": false,
+    "type": "checkbox",
+    "result": true
+   },
+   "description": "Benachrichtigungen für Tuner-Fehler deaktivieren"
+  },
+  {
+   "path": "config.usage.zap_notification_record",
+   "data": {
+    "current": true,
+    "type": "checkbox",
+    "result": true
+   },
+   "description": "Benachrichtigung beim Umschalten für Aufnahmen anzeigen"
+  },
+  {
+   "path": "config.usage.vfd_scroll_speed",
+   "data": {
+    "current": "300",
+    "type": "select",
+    "result": true,
+    "choices": [
+     [
+      "500",
+      "Langsam"
+     ],
+     [
+      "300",
+      "Normal"
+     ],
+     [
+      "100",
+      "Schnell"
+     ]
+    ]
+   },
+   "description": "VFD-Bildlaufgeschwindigkeit"
+  },
+  {
+   "path": "config.usage.vfd_scroll_delay",
+   "data": {
+    "current": "10000",
+    "type": "select",
+    "result": true,
+    "choices": [
+     [
+      "10000",
+      "10 Sekunden"
+     ],
+     [
+      "20000",
+      "20 Sekunden"
+     ],
+     [
+      "30000",
+      "30 Sekunden"
+     ],
+     [
+      "60000",
+      "1 Minute"
+     ],
+     [
+      "300000",
+      "5 Minuten"
+     ],
+     [
+      "noscrolling",
+      "Aus"
+     ]
+    ]
+   },
+   "description": "Zeit bis zum nächsten Scrollen des VFDs"
+  }
+ ]
+}

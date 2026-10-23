@@ -1,0 +1,369 @@
+{
+ "configs": [
+  {
+   "path": "config.hdmicec.enabled",
+   "data": {
+    "current": false,
+    "type": "checkbox",
+    "result": true
+   },
+   "description": "HDMI CEC enabled"
+  },
+  {
+   "path": "config.hdmicec.device_name",
+   "data": {
+    "current": "Vu+ Solo2",
+    "type": "text",
+    "result": true
+   },
+   "description": "Set VU+ device name"
+  },
+  {
+   "path": "config.hdmicec.tvinput",
+   "data": {
+    "current": "1",
+    "type": "select",
+    "result": true,
+    "choices": [
+     [
+      "1",
+      "HDMI 1"
+     ],
+     [
+      "2",
+      "HDMI 2"
+     ],
+     [
+      "3",
+      "HDMI 3"
+     ],
+     [
+      "4",
+      "HDMI 4"
+     ],
+     [
+      "5",
+      "HDMI 5"
+     ],
+     [
+      "6",
+      "HDMI 6"
+     ],
+     [
+      "7",
+      "HDMI 7"
+     ]
+    ]
+   },
+   "description": "Choose TV HDMI input"
+  },
+  {
+   "path": "config.hdmicec.avinput",
+   "data": {
+    "current": "0",
+    "type": "select",
+    "result": true,
+    "choices": [
+     [
+      "0",
+      "Kein A/V-Receiver"
+     ],
+     [
+      "1",
+      "HDMI 1"
+     ],
+     [
+      "2",
+      "HDMI 2"
+     ],
+     [
+      "3",
+      "HDMI 3"
+     ],
+     [
+      "4",
+      "HDMI 4"
+     ],
+     [
+      "5",
+      "HDMI 5"
+     ],
+     [
+      "6",
+      "HDMI 6"
+     ],
+     [
+      "7",
+      "HDMI 7"
+     ]
+    ]
+   },
+   "description": "Choose A/V-Receiver HDMI input"
+  },
+  {
+   "path": "config.hdmicec.standby_message",
+   "data": {
+    "current": "standby,inactive",
+    "type": "select",
+    "result": true,
+    "choices": [
+     [
+      "standby,inactive",
+      "TV aus"
+     ],
+     [
+      "standby,avpwroff,inactive,",
+      "TV und A/V-Receiver aus"
+     ],
+     [
+      "inactive",
+      "Quelle inaktiv"
+     ],
+     [
+      "nothing",
+      "Nichts"
+     ]
+    ]
+   },
+   "description": "VU+ standby => TV activity"
+  },
+  {
+   "path": "config.hdmicec.deepstandby_message",
+   "data": {
+    "current": "standby,inactive",
+    "type": "select",
+    "result": true,
+    "choices": [
+     [
+      "standby,inactive",
+      "TV aus"
+     ],
+     [
+      "standby,avdeeppwroff,inactive",
+      "TV und A/V-Receiver aus"
+     ],
+     [
+      "inactive",
+      "Quelle inaktiv"
+     ],
+     [
+      "nothing",
+      "Nichts"
+     ]
+    ]
+   },
+   "description": "VU+ deepstandby => TV activity"
+  },
+  {
+   "path": "config.hdmicec.wakeupstandby_message",
+   "data": {
+    "current": "wakeup,active,activevu",
+    "type": "select",
+    "result": true,
+    "choices": [
+     [
+      "wakeup,active,activevu",
+      "TV ein"
+     ],
+     [
+      "wakeup,active,activevu,avpwron",
+      "TV und A/V-Receiver ein"
+     ],
+     [
+      "avpwron,wakeup,active,activevu",
+      "A/V-Receiver und TV ein"
+     ],
+     [
+      "active",
+      "Quelle aktiv"
+     ],
+     [
+      "nothing",
+      "Nichts"
+     ]
+    ]
+   },
+   "description": "VU+ on from standby => TV activity"
+  },
+  {
+   "path": "config.hdmicec.wakeupdeepstandby_message",
+   "data": {
+    "current": "wakeup,active,activevu",
+    "type": "select",
+    "result": true,
+    "choices": [
+     [
+      "wakeup,active,activevu",
+      "TV ein"
+     ],
+     [
+      "wakeup,active,activevu,avpwron",
+      "TV und A/V-Receiver ein"
+     ],
+     [
+      "avpwron,wakeup,active,activevu",
+      "A/V-Receiver und TV ein"
+     ],
+     [
+      "active",
+      "Quelle aktiv"
+     ],
+     [
+      "nothing",
+      "Nichts"
+     ]
+    ]
+   },
+   "description": "VU+ on from deepstandby => TV activity"
+  },
+  {
+   "path": "config.hdmicec.vustandby_message",
+   "data": {
+    "current": "vustandby",
+    "type": "select",
+    "result": true,
+    "choices": [
+     [
+      "vustandby",
+      "Vu+ Standby"
+     ],
+     [
+      "vudeepstandby",
+      "Vu+ ausschalten"
+     ],
+     [
+      "vunothing",
+      "Nichts"
+     ]
+    ]
+   },
+   "description": "TV standby => VU+ activity"
+  },
+  {
+   "path": "config.hdmicec.vuwakeup_message",
+   "data": {
+    "current": "vuwakeup",
+    "type": "select",
+    "result": true,
+    "choices": [
+     [
+      "vuwakeup",
+      "Vu+ einschalten"
+     ],
+     [
+      "vunothing",
+      "Nichts"
+     ]
+    ]
+   },
+   "description": "TV on => VU+ activity"
+  },
+  {
+   "path": "config.hdmicec.disabletimerwakeup",
+   "data": {
+    "current": true,
+    "type": "checkbox",
+    "result": true
+   },
+   "description": "Disable power on actions for timer"
+  },
+  {
+   "path": "config.hdmicec.avvolumecontrol",
+   "data": {
+    "current": false,
+    "type": "checkbox",
+    "result": true
+   },
+   "description": "Use A/V-Receiver for volume control"
+  },
+  {
+   "path": "config.hdmicec.enabletvrc",
+   "data": {
+    "current": true,
+    "type": "checkbox",
+    "result": true
+   },
+   "description": "Use TV remotecontrol"
+  },
+  {
+   "path": "config.hdmicec.standby_message",
+   "data": {
+    "current": "standby,inactive",
+    "type": "select",
+    "result": true,
+    "choices": [
+     [
+      "standby,inactive",
+      "TV aus"
+     ],
+     [
+      "standby,avpwroff,inactive,",
+      "TV und A/V-Receiver aus"
+     ],
+     [
+      "inactive",
+      "Quelle inaktiv"
+     ],
+     [
+      "nothing",
+      "Nichts"
+     ]
+    ]
+   },
+   "description": "Active Source Reply On"
+  },
+  {
+   "path": "config.hdmicec.message_delay",
+   "data": {
+    "current": "10",
+    "type": "select",
+    "result": true,
+    "choices": [
+     [
+      "1",
+      "0.1 sec"
+     ],
+     [
+      "5",
+      "0.5 sec"
+     ],
+     [
+      "10",
+      "1 sec"
+     ],
+     [
+      "20",
+      "2 sec"
+     ],
+     [
+      "30",
+      "3 sec"
+     ],
+     [
+      "50",
+      "5 sec"
+     ]
+    ]
+   },
+   "description": "Delay between CEC messages"
+  },
+  {
+   "path": "config.hdmicec.logenabledfile",
+   "data": {
+    "current": false,
+    "type": "checkbox",
+    "result": true
+   },
+   "description": "Enable debug output to file"
+  },
+  {
+   "path": "config.hdmicec.logenabledserial",
+   "data": {
+    "current": false,
+    "type": "checkbox",
+    "result": true
+   },
+   "description": "Enable debug output to console"
+  }
+ ]
+}

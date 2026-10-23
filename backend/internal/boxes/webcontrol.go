@@ -17,8 +17,9 @@ func (r *Registry) WebControl() *WebControl { return &WebControl{reg: r} }
 type WebControl struct{ reg *Registry }
 
 var (
-	_ webcontrol.Client        = (*WebControl)(nil)
-	_ webcontrol.BouquetEditor = (*WebControl)(nil)
+	_ webcontrol.Client            = (*WebControl)(nil)
+	_ webcontrol.BouquetEditor     = (*WebControl)(nil)
+	_ webcontrol.BoxSettingsReader = (*WebControl)(nil)
 )
 
 func (c *WebControl) DeviceInfo(ctx context.Context) (*webcontrol.DeviceInfo, error) {
@@ -340,4 +341,43 @@ func (c *WebControl) Raw(ctx context.Context, path string) ([]byte, error) {
 		return nil, webcontrol.ErrNotFound
 	}
 	return raw.Raw(ctx, path)
+}
+
+// settingsReader is the box client's read side of the receiver's setup
+// menus; a client without it answers "not found", which the hub shows as
+// "this box has none".
+func (c *WebControl) settingsReader(ctx context.Context) (webcontrol.BoxSettingsReader, error) {
+	e, err := c.reg.For(ctx)
+	if err != nil {
+		return nil, err
+	}
+	r, ok := e.WC.(webcontrol.BoxSettingsReader)
+	if !ok {
+		return nil, webcontrol.ErrNotFound
+	}
+	return r, nil
+}
+
+func (c *WebControl) ConfigSections(ctx context.Context) ([]webcontrol.ConfigSection, error) {
+	r, err := c.settingsReader(ctx)
+	if err != nil {
+		return nil, err
+	}
+	return r.ConfigSections(ctx)
+}
+
+func (c *WebControl) ConfigItems(ctx context.Context, key string) ([]webcontrol.ConfigItem, error) {
+	r, err := c.settingsReader(ctx)
+	if err != nil {
+		return nil, err
+	}
+	return r.ConfigItems(ctx, key)
+}
+
+func (c *WebControl) SetupDefinition(ctx context.Context) ([]webcontrol.SetupSection, error) {
+	r, err := c.settingsReader(ctx)
+	if err != nil {
+		return nil, err
+	}
+	return r.SetupDefinition(ctx)
 }

@@ -36,6 +36,9 @@ type Client struct {
 	RecordingLengths map[string]string
 	// NoBouquetEditor plays a box without the BouquetEditor plugin.
 	NoBouquetEditor bool
+	// NoBoxSettings plays a box that cannot list its setup menus (a
+	// Dreambox, until the TV plugin does).
+	NoBoxSettings bool
 	// FailEditor makes that BouquetEditor operation ("moveservice", …) fail;
 	// Restores counts restores (bouqueteditor.go).
 	FailEditor string

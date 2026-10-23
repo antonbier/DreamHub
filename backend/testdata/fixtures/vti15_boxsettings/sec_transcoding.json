@@ -1,0 +1,71 @@
+{
+ "configs": [
+  {
+   "path": "config.plugins.transcodingsetup.port",
+   "data": {
+    "min": 8001,
+    "max": 8002,
+    "current": "8002",
+    "result": true,
+    "type": "select"
+   },
+   "description": "Port"
+  },
+  {
+   "path": "config.plugins.transcodingsetup.bitrate",
+   "data": {
+    "current": 400000,
+    "type": "number",
+    "result": true,
+    "limits": [
+     50000,
+     1000000
+    ]
+   },
+   "description": "Bitrate (50000 - 1000000)"
+  },
+  {
+   "path": "config.plugins.transcodingsetup.framerate",
+   "data": {
+    "current": "30000",
+    "type": "select",
+    "result": true,
+    "choices": [
+     [
+      "23976",
+      "23976"
+     ],
+     [
+      "24000",
+      "24000"
+     ],
+     [
+      "25000",
+      "25000"
+     ],
+     [
+      "29970",
+      "29970"
+     ],
+     [
+      "30000",
+      "30000"
+     ],
+     [
+      "50000",
+      "50000"
+     ],
+     [
+      "59940",
+      "59940"
+     ],
+     [
+      "60000",
+      "60000"
+     ]
+    ]
+   },
+   "description": "Bildwiederholrate"
+  }
+ ]
+}

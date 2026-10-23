@@ -1,0 +1,964 @@
+{
+ "configs": [
+  {
+   "path": "config.usage.description",
+   "data": {
+    "type": "unknown",
+    "result": false
+   },
+   "description": "Benutzeroberfläche"
+  },
+  {
+   "path": "config.usage.movielist_show_dir",
+   "data": {
+    "current": true,
+    "type": "checkbox",
+    "result": true
+   },
+   "description": "Verzeichnisse in Filmliste anzeigen"
+  },
+  {
+   "path": "config.usage.movielist_show_progress",
+   "data": {
+    "current": "progress_bar",
+    "type": "select",
+    "result": true,
+    "choices": [
+     [
+      "progress_bar",
+      "Fortschrittsbalken"
+     ],
+     [
+      "progress_percent",
+      "Prozent"
+     ],
+     [
+      "progress_calculate",
+      "Nur berechnen"
+     ],
+     [
+      "progress_off",
+      "Aus"
+     ]
+    ]
+   },
+   "description": "Fortschrittsanzeige in Filmliste anzeigen"
+  },
+  {
+   "path": "config.usage.movielist_show_icon",
+   "data": {
+    "current": true,
+    "type": "checkbox",
+    "result": true
+   },
+   "description": "Symbole in Filmliste anzeigen"
+  },
+  {
+   "path": "config.usage.movielist_show_last_stop_time",
+   "data": {
+    "current": false,
+    "type": "checkbox",
+    "result": true
+   },
+   "description": "Letzte Unterbrechung in Filmliste anzeigen"
+  },
+  {
+   "path": "config.usage.movielist_duration_in_min",
+   "data": {
+    "current": true,
+    "type": "checkbox",
+    "result": true
+   },
+   "description": "Sendungslänge in Filmliste in Minuten anzeigen"
+  },
+  {
+   "path": "config.usage.movielist_show_picon",
+   "data": {
+    "current": false,
+    "type": "checkbox",
+    "result": true
+   },
+   "description": "Picons in Filmliste anzeigen (VTi Listenstil)"
+  },
+  {
+   "path": "config.usage.movielist_show_duration",
+   "data": {
+    "current": true,
+    "type": "checkbox",
+    "result": true
+   },
+   "description": "Sendungslänge in Filmliste anzeigen (VTi Listenstil)"
+  },
+  {
+   "path": "config.usage.movielist_show_channel_info",
+   "data": {
+    "current": true,
+    "type": "checkbox",
+    "result": true
+   },
+   "description": "Senderinformation in Filmliste anzeigen (VTi Listenstil)"
+  },
+  {
+   "path": "config.usage.movielist_show_recording_date",
+   "data": {
+    "current": true,
+    "type": "checkbox",
+    "result": true
+   },
+   "description": "Aufnahmedatum in Filmliste anzeigen (VTi Listenstil)"
+  },
+  {
+   "path": "config.usage.movielist_only_day",
+   "data": {
+    "current": true,
+    "type": "checkbox",
+    "result": true
+   },
+   "description": "Nur Aufnahmetag in Filmliste anzeigen (VTi Listenstil)"
+  },
+  {
+   "path": "config.usage.movielist_show_file_size",
+   "data": {
+    "current": true,
+    "type": "checkbox",
+    "result": true
+   },
+   "description": "Dateigröße in Filmliste anzeigen (VTi Listenstil)"
+  },
+  {
+   "path": "config.usage.movielist_show_folder_info",
+   "data": {
+    "current": true,
+    "type": "checkbox",
+    "result": true
+   },
+   "description": "Zeige Verzeichnisinformationen"
+  },
+  {
+   "path": "config.usage.movielist_show_folder_info_new",
+   "data": {
+    "current": true,
+    "type": "checkbox",
+    "result": true
+   },
+   "description": "Anzeigen von neuen Aufnahmen in den Verzeichnisinformationen"
+  },
+  {
+   "path": "config.usage.movielist_show_folder_info_only_new",
+   "data": {
+    "current": true,
+    "type": "checkbox",
+    "result": true
+   },
+   "description": "Zeige nur neue Aufnahmen in den Verzeichnisinformationen"
+  },
+  {
+   "path": "config.usage.movielist_group_folder",
+   "data": {
+    "current": true,
+    "type": "checkbox",
+    "result": true
+   },
+   "description": "Gruppiere Aufnahmen nach Titel in virtuelle Ordner"
+  },
+  {
+   "path": "config.usage.movielist_group_min_item",
+   "data": {
+    "current": 2,
+    "type": "number",
+    "result": true,
+    "limits": [
+     2,
+     10
+    ]
+   },
+   "description": "Minimale Anzahl an Aufnahmen für die Gruppierung (2 - 10)"
+  },
+  {
+   "path": "config.usage.movielist_group_folder_sort_like_item",
+   "data": {
+    "current": false,
+    "type": "checkbox",
+    "result": true
+   },
+   "description": "Virtuelle Ordner wie normale Einträge sortieren"
+  },
+  {
+   "path": "config.usage.movielist_group_folder_splitstr",
+   "data": {
+    "current": "01",
+    "type": "select",
+    "result": true,
+    "choices": [
+     [
+      "01",
+      " : "
+     ],
+     [
+      "02",
+      " : - "
+     ],
+     [
+      "03",
+      " - : "
+     ],
+     [
+      "04",
+      " - "
+     ]
+    ]
+   },
+   "description": "Trenner für die Titelgruppierung"
+  },
+  {
+   "path": "config.usage.movielist_show_folder_info_sort_by_new",
+   "data": {
+    "current": true,
+    "type": "checkbox",
+    "result": true
+   },
+   "description": "Sortiere Ordner nach Anzahl neuer Aufnahmen"
+  },
+  {
+   "path": "config.usage.movielist_show_folder_info_dirs",
+   "data": {
+    "current": false,
+    "type": "checkbox",
+    "result": true
+   },
+   "description": "Anzeigen von Unterordnern in den Verzeichnisinformationen"
+  },
+  {
+   "path": "config.usage.movielist_show_folder_info_left",
+   "data": {
+    "current": false,
+    "type": "checkbox",
+    "result": true
+   },
+   "description": "Verzeichnisinformationen an den Anfang stellen"
+  },
+  {
+   "path": "config.usage.movielist_show_color",
+   "data": {
+    "current": true,
+    "type": "checkbox",
+    "result": true
+   },
+   "description": "Farbige Filmliste aktivieren"
+  },
+  {
+   "path": "config.usage.movielist_show_cover",
+   "data": {
+    "current": true,
+    "type": "checkbox",
+    "result": true
+   },
+   "description": "Film-Cover anzeigen"
+  },
+  {
+   "path": "config.usage.load_length_of_movies_in_moviellist",
+   "data": {
+    "current": true,
+    "type": "checkbox",
+    "result": true
+   },
+   "description": "Anzeigen der Spielzeit in Filmliste"
+  },
+  {
+   "path": "config.usage.description",
+   "data": {
+    "type": "unknown",
+    "result": false
+   },
+   "description": "Beginn/Ende der Wiedergabe"
+  },
+  {
+   "path": "config.movielist.start_videodir",
+   "data": {
+    "current": "last_video",
+    "type": "select",
+    "result": true,
+    "choices": [
+     [
+      "/media/hdd/movie/",
+      "/media/hdd/movie/"
+     ],
+     [
+      [
+       "off",
+       "off"
+      ],
+      [
+       "off",
+       "off"
+      ]
+     ],
+     [
+      [
+       "last_video",
+       "last video"
+      ],
+      [
+       "last_video",
+       "last video"
+      ]
+     ],
+     [
+      [
+       "latest_movies",
+       "latest movies"
+      ],
+      [
+       "latest_movies",
+       "latest movies"
+      ]
+     ],
+     [
+      [
+       "all_movies",
+       "All movies"
+      ],
+      [
+       "all_movies",
+       "All movies"
+      ]
+     ]
+    ]
+   },
+   "description": "Startverzeichnis für Filmliste"
+  },
+  {
+   "path": "config.usage.stop_seek_eof",
+   "data": {
+    "current": "20",
+    "type": "select",
+    "result": true,
+    "choices": [
+     [
+      "0",
+      "Aus"
+     ],
+     [
+      "10",
+      "10 Sekunden"
+     ],
+     [
+      "20",
+      "20 Sekunden"
+     ],
+     [
+      "30",
+      "30 Sekunden"
+     ],
+     [
+      "60",
+      "60 seconds"
+     ]
+    ]
+   },
+   "description": "Vorspulen am Ende des Films stoppen"
+  },
+  {
+   "path": "config.usage.movielist_resume_at_eof",
+   "data": {
+    "current": true,
+    "type": "checkbox",
+    "result": true
+   },
+   "description": "Als gesehen markiert Filme fortsetzen"
+  },
+  {
+   "path": "config.usage.on_movie_start",
+   "data": {
+    "current": "ask",
+    "type": "select",
+    "result": true,
+    "choices": [
+     [
+      "ask",
+      "Benutzer fragen"
+     ],
+     [
+      "resume",
+      "An letzter Position fortsetzen"
+     ],
+     [
+      "beginning",
+      "Am Anfang starten"
+     ]
+    ]
+   },
+   "description": "Verhalten beim Start eines Films"
+  },
+  {
+   "path": "config.usage.on_movie_stop",
+   "data": {
+    "current": "ask",
+    "type": "select",
+    "result": true,
+    "choices": [
+     [
+      "ask",
+      "Benutzer fragen"
+     ],
+     [
+      "movielist",
+      "Zurück zur Filmliste"
+     ],
+     [
+      "quit",
+      "Zurück zum vorherigen Kanal"
+     ]
+    ]
+   },
+   "description": "Verhalten beim Stoppen eines Films"
+  },
+  {
+   "path": "config.usage.on_movie_eof",
+   "data": {
+    "current": "ask",
+    "type": "select",
+    "result": true,
+    "choices": [
+     [
+      "ask",
+      "Benutzer fragen"
+     ],
+     [
+      "movielist",
+      "Zurück zur Filmliste"
+     ],
+     [
+      "quit",
+      "Zurück zum vorherigen Kanal"
+     ],
+     [
+      "pause",
+      "Am Filmende pausieren"
+     ],
+     [
+      "restart",
+      "Am Anfang starten"
+     ],
+     [
+      "playnext",
+      "Nächste Mediendatei abspielen"
+     ]
+    ]
+   },
+   "description": "Verhalten bei Filmende"
+  },
+  {
+   "path": "config.usage.description",
+   "data": {
+    "type": "unknown",
+    "result": false
+   },
+   "description": "SmartSeek"
+  },
+  {
+   "path": "config.seek.smartseek_enable",
+   "data": {
+    "current": true,
+    "type": "checkbox",
+    "result": true
+   },
+   "description": "SmartSeek aktivieren (Tasten AUF und AB)"
+  },
+  {
+   "path": "config.seek.smartseek_marker",
+   "data": {
+    "current": false,
+    "type": "checkbox",
+    "result": true
+   },
+   "description": "Marker am Start und Ende von SmartSeek setzen"
+  },
+  {
+   "path": "config.seek.smartseek_time",
+   "data": {
+    "current": 300,
+    "type": "number",
+    "result": true,
+    "limits": [
+     60,
+     999
+    ]
+   },
+   "description": "Startintervall in Sekunden für SmartSeek (60 - 999)"
+  },
+  {
+   "path": "config.seek.smartseek_min_time",
+   "data": {
+    "current": 10,
+    "type": "number",
+    "result": true,
+    "limits": [
+     2,
+     120
+    ]
+   },
+   "description": "Minimale Sprungzeit in Sekunden für SmartSeek (2 - 120)"
+  },
+  {
+   "path": "config.seek.smartseek_constant_time",
+   "data": {
+    "current": 15,
+    "type": "number",
+    "result": true,
+    "limits": [
+     5,
+     600
+    ]
+   },
+   "description": "Statisches SmartSeek Sprungintervall in Sekunden (links/rechts) (5 - 600)"
+  },
+  {
+   "path": "config.seek.smartseek_timeout",
+   "data": {
+    "current": 8,
+    "type": "number",
+    "result": true,
+    "limits": [
+     5,
+     30
+    ]
+   },
+   "description": "Timeout für SmartSeek (5 - 30)"
+  },
+  {
+   "path": "config.seek.smartseek_remap_skip_fw_rw",
+   "data": {
+    "current": false,
+    "type": "checkbox",
+    "result": true
+   },
+   "description": "Links/Rechts immer für SmartSeek Sprungintervall verwenden"
+  },
+  {
+   "path": "config.usage.description",
+   "data": {
+    "type": "unknown",
+    "result": false
+   },
+   "description": "Filmwiedergabe"
+  },
+  {
+   "path": "config.usage.movielist_leave_exit",
+   "data": {
+    "current": true,
+    "type": "checkbox",
+    "result": true
+   },
+   "description": "Filmwiedergabe mit der EXIT-Taste beenden"
+  },
+  {
+   "path": "config.seek.on_unpause",
+   "data": {
+    "current": "play",
+    "type": "select",
+    "result": true,
+    "choices": [
+     [
+      "play",
+      "Abspielen"
+     ],
+     [
+      "playpause",
+      "Abspielen/Pause"
+     ],
+     [
+      "pause_infobar",
+      "InfoBar bei Pause"
+     ],
+     [
+      "always_infobar",
+      "immer InfoBar"
+     ]
+    ]
+   },
+   "description": "Verhalten der OK Taste beim Spulen bzw. Pause"
+  },
+  {
+   "path": "config.seek.selfdefined_13",
+   "data": {
+    "current": 15,
+    "type": "number",
+    "result": true
+   },
+   "description": "Gewünschte Sprungzeit für '1'/'3'-Tasten"
+  },
+  {
+   "path": "config.seek.selfdefined_46",
+   "data": {
+    "current": 60,
+    "type": "number",
+    "result": true
+   },
+   "description": "Gewünschte Sprungzeit für '4'/'6'-Tasten"
+  },
+  {
+   "path": "config.seek.selfdefined_79",
+   "data": {
+    "current": 300,
+    "type": "number",
+    "result": true
+   },
+   "description": "Gewünschte Sprungzeit für '7'/'9'-Tasten"
+  },
+  {
+   "path": "config.seek.speeds_forward",
+   "data": {
+    "current": [
+     2,
+     4,
+     8,
+     16,
+     32,
+     64,
+     128
+    ],
+    "type": "multicheckbox",
+    "result": true,
+    "choices": [
+     2,
+     4,
+     6,
+     8,
+     12,
+     16,
+     24,
+     32,
+     48,
+     64,
+     96,
+     128
+    ]
+   },
+   "description": "Schnellvorlauf-Geschwindigkeiten"
+  },
+  {
+   "path": "config.seek.speeds_backward",
+   "data": {
+    "current": [
+     2,
+     4,
+     8,
+     16,
+     32,
+     64,
+     128
+    ],
+    "type": "multicheckbox",
+    "result": true,
+    "choices": [
+     1,
+     2,
+     4,
+     6,
+     8,
+     12,
+     16,
+     24,
+     32,
+     48,
+     64,
+     96,
+     128
+    ]
+   },
+   "description": "Rücklauf-Geschwindigkeiten"
+  },
+  {
+   "path": "config.seek.speeds_slowmotion",
+   "data": {
+    "current": [
+     2,
+     4,
+     8
+    ],
+    "type": "multicheckbox",
+    "result": true,
+    "choices": [
+     2,
+     4,
+     6,
+     8,
+     12,
+     16,
+     25
+    ]
+   },
+   "description": "Zeitlupen-Geschwindigkeiten"
+  },
+  {
+   "path": "config.seek.enter_forward",
+   "data": {
+    "current": "2",
+    "type": "select",
+    "result": true,
+    "choices": [
+     [
+      "2",
+      "2"
+     ],
+     [
+      "4",
+      "4"
+     ],
+     [
+      "8",
+      "8"
+     ],
+     [
+      "16",
+      "16"
+     ],
+     [
+      "32",
+      "32"
+     ],
+     [
+      "64",
+      "64"
+     ],
+     [
+      "128",
+      "128"
+     ]
+    ]
+   },
+   "description": "Initiale Schnellvorlauf-Geschwindigkeit"
+  },
+  {
+   "path": "config.seek.enter_backward",
+   "data": {
+    "current": "2",
+    "type": "select",
+    "result": true,
+    "choices": [
+     [
+      "2",
+      "2"
+     ],
+     [
+      "4",
+      "4"
+     ],
+     [
+      "8",
+      "8"
+     ],
+     [
+      "16",
+      "16"
+     ],
+     [
+      "32",
+      "32"
+     ],
+     [
+      "64",
+      "64"
+     ],
+     [
+      "128",
+      "128"
+     ]
+    ]
+   },
+   "description": "Initiale Rücklauf-Geschwindigkeit"
+  },
+  {
+   "path": "config.seek.on_pause",
+   "data": {
+    "current": "play",
+    "type": "select",
+    "result": true,
+    "choices": [
+     [
+      "play",
+      "Abspielen"
+     ],
+     [
+      "step",
+      "Einzelschritt (GOP)"
+     ],
+     [
+      "last",
+      "Letzte Geschwindigkeit"
+     ]
+    ]
+   },
+   "description": "Verhalten der Pause-Taste bei Standbild"
+  },
+  {
+   "path": "config.usage.description",
+   "data": {
+    "type": "unknown",
+    "result": false
+   },
+   "description": "Papierkorb"
+  },
+  {
+   "path": "config.usage.movielist_use_trash_dir",
+   "data": {
+    "current": false,
+    "type": "checkbox",
+    "result": true
+   },
+   "description": "Papierkorbfunktion aktivieren"
+  },
+  {
+   "path": "config.usage.movielist_show_trash_dir",
+   "data": {
+    "current": false,
+    "type": "checkbox",
+    "result": true
+   },
+   "description": "Papierkorb in Filmliste anzeigen"
+  },
+  {
+   "path": "config.usage.movielist_use_moviedb_trash",
+   "data": {
+    "current": true,
+    "type": "checkbox",
+    "result": true
+   },
+   "description": "Verwende Datenbank basierten Papierkorb"
+  },
+  {
+   "path": "config.usage.movielist_use_autodel_trash",
+   "data": {
+    "current": 0,
+    "type": "number",
+    "result": true,
+    "limits": [
+     0,
+     999
+    ]
+   },
+   "description": "Lösche Filme im Papierkorb die älter sind als X Tage (0 = aus) (0 - 999)"
+  },
+  {
+   "path": "config.usage.movielist_use_autodel_in_trash",
+   "data": {
+    "current": 0,
+    "type": "number",
+    "result": true,
+    "limits": [
+     0,
+     999
+    ]
+   },
+   "description": "Lösche Filme die länger als Y Tage im Papierkorb sind (0 = aus) (0 - 999)"
+  },
+  {
+   "path": "config.usage.movielist_link_autodel_config",
+   "data": {
+    "current": "or",
+    "type": "select",
+    "result": true,
+    "choices": [
+     [
+      "or",
+      "oder"
+     ],
+     [
+      "and",
+      "und"
+     ]
+    ]
+   },
+   "description": "Verknüpfe die Bedingungen X und Y Tage mit:"
+  },
+  {
+   "path": "config.usage.description",
+   "data": {
+    "type": "unknown",
+    "result": false
+   },
+   "description": "Allgemein"
+  },
+  {
+   "path": "config.usage.movielist_use_moviedb_autoupdate",
+   "data": {
+    "current": false,
+    "type": "checkbox",
+    "result": true
+   },
+   "description": "Filmdatenbank automatisch im Standby aktualisieren"
+  },
+  {
+   "path": "config.usage.movielist_show_service_path",
+   "data": {
+    "current": true,
+    "type": "checkbox",
+    "result": true
+   },
+   "description": "Zeige Dateipfad in Filmliste"
+  },
+  {
+   "path": "config.usage.movielist_folder_based_config",
+   "data": {
+    "current": true,
+    "type": "checkbox",
+    "result": true
+   },
+   "description": "Einstellungen für Sortier-/Listentyp verzeichnisbasiert verwenden"
+  },
+  {
+   "path": "config.usage.movielist_progress_seen",
+   "data": {
+    "current": 80,
+    "type": "number",
+    "result": true,
+    "limits": [
+     40,
+     99
+    ]
+   },
+   "description": "Film nach X% als gesehen markieren (40 - 99)"
+  },
+  {
+   "path": "config.usage.days_mark_as_new",
+   "data": {
+    "current": 3,
+    "type": "number",
+    "result": true,
+    "limits": [
+     0,
+     31
+    ]
+   },
+   "description": "Markiere Aufnahmen als 'NEU' für X Tage (0=aus) (0 - 31)"
+  },
+  {
+   "path": "config.usage.only_unseen_mark_as_new",
+   "data": {
+    "current": false,
+    "type": "checkbox",
+    "result": true
+   },
+   "description": "Markiere nur ungesehene Aufnahmen als 'NEU'"
+  },
+  {
+   "path": "config.usage.movielist_support_pig",
+   "data": {
+    "current": true,
+    "type": "checkbox",
+    "result": true
+   },
+   "description": "Letzten Kanal bei Rückkehr in Filmliste aktivieren (PiG)"
+  },
+  {
+   "path": "config.usage.movielist_ask_movie_del",
+   "data": {
+    "current": false,
+    "type": "checkbox",
+    "result": true
+   },
+   "description": "Aufnahmen ohne Nachfrage löschen"
+  }
+ ]
+}

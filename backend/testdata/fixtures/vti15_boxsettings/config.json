@@ -1,0 +1,77 @@
+{
+ "sections": [
+  {
+   "description": "A/V-Einstellungen",
+   "key": "avsetup"
+  },
+  {
+   "description": "Anpassen",
+   "key": "usage"
+  },
+  {
+   "description": "Aufnahmen",
+   "key": "vti_movies"
+  },
+  {
+   "description": "AutoShutDown",
+   "key": "autoshutdown"
+  },
+  {
+   "description": "Automatische Audio/Untertitel-Spurauswahl",
+   "key": "vti_audio_setup"
+  },
+  {
+   "description": "Benutzeroberfläche",
+   "key": "vti_user_interface"
+  },
+  {
+   "description": "Festplatteneinstellungen",
+   "key": "harddisk"
+  },
+  {
+   "description": "HDMI CEC",
+   "key": "hdmi_cec"
+  },
+  {
+   "description": "Kanalliste",
+   "key": "vti_servicelist"
+  },
+  {
+   "description": "System",
+   "key": "vti_system_setup"
+  },
+  {
+   "description": "TV / Radio",
+   "key": "vti_tv_radio"
+  },
+  {
+   "description": "Tastatureinstellung",
+   "key": "keyboard"
+  },
+  {
+   "description": "Tastenbelegung",
+   "key": "vti_button_setup"
+  },
+  {
+   "description": "Timer",
+   "key": "vti_timer"
+  },
+  {
+   "description": "Timeshift",
+   "key": "vti_timeshift"
+  },
+  {
+   "description": "Transkodierung einrichten",
+   "key": "transcoding"
+  },
+  {
+   "description": "Untertitel-Einstellungen",
+   "key": "subtitlesetup"
+  },
+  {
+   "description": "Zeitzone",
+   "key": "timezone"
+  }
+ ],
+ "result": true
+}

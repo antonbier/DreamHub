@@ -1,6 +1,6 @@
 # Box settings — plan
 
-Status: **planned 2026-10-23, nothing built.** The owner's decisions are below; the open questions at the end are still open. The OpenWebif side was read on the VU+ Solo2 (`ARCHITECTURE.md`, "VU+ Solo2 with VTi 15", "OpenWebif features beyond DreamHub's calls"); the Dreambox side is not checked yet (the One was off). Tracked in `ROADMAP.md`, v1.1, "Box features from OpenWebif". Once a package lands, its status moves to `ROADMAP.md`.
+Status: **planned 2026-10-23, nothing built.** The owner's decisions are below, including the answers of the same day (end of this file). The OpenWebif side was read on the VU+ Solo2 (`ARCHITECTURE.md`, "VU+ Solo2 with VTi 15", "OpenWebif features beyond DreamHub's calls"); the Dreambox side is not checked yet (the One was off). Tracked in `ROADMAP.md`, v1.1, "Box features from OpenWebif". Once a package lands, its status moves to `ROADMAP.md`.
 
 ## Why
 
@@ -49,9 +49,9 @@ Owner's decision: everything is shown; a risky item is marked, and changing it n
 - **Access to the box itself** — the web interface's port, login and HTTPS (`config.plugins.Webinterface.*`, `config.OpenWebif.*`), and anything DreamHub needs to reach the box: a wrong one locks DreamHub out.
 - **Network**, **tuner configuration** (`config.Nims.*`), **parental control and its PIN** (`config.ParentalControl.*`), **softcam**, **deep standby and wake-up** (`config.usage.*shutdown*`, AutoShutDown) — mostly not in `setup.xml`, so they appear only through the plugin tree walk, still marked.
 
-The extra step: the warning says what can go wrong and how to undo it on the TV; then the **profile's PIN** (the one from profiles, `PUT /api/v1/profiles/me/pin`; without one, the DreamHub password) before the plan can be confirmed.
+The extra step: the warning says what can go wrong and how to undo it on the TV; then the **profile's PIN** (the one from profiles, `PUT /api/v1/profiles/me/pin`) before the plan can be confirmed; a profile without a PIN gets the warning in red with "Are you sure?" instead.
 
-**Proposed on top** (needs the owner's yes, see questions): for picture output and access settings, the change is **taken back by itself after 60 seconds unless it is confirmed again** from DreamHub — like a PC's "keep these display settings?". If the TV went black or DreamHub can no longer reach the box, nothing needs doing. This is the same kind of safety step ChannelHub already takes (an automatic restore when a change fails), not an automatic change of its own; it only works on a Dreambox (the TV plugin keeps the timer inside enigma2 — over OpenWebif DreamHub can't take a change back if the box no longer answers).
+**Decided** (see the end): for picture output and access settings, the change is **taken back by itself after 60 seconds unless it is confirmed again** from DreamHub — like a PC's "keep these display settings?". If the TV went black or DreamHub can no longer reach the box, nothing needs doing. This is the same kind of safety step ChannelHub already takes (an automatic restore when a change fails), not an automatic change of its own; it only works on a Dreambox (the TV plugin keeps the timer inside enigma2 — over OpenWebif DreamHub can't take a change back if the box no longer answers).
 
 ### Settings that take effect only after a restart
 
@@ -82,11 +82,11 @@ Only keys that exist on both boxes with the same type and a choice the target kn
 - **S3 — change**: plans, read-back, the per-change backup and Undo, the PIN step for risky keys; the full snapshot.
 - **S4 — restart**: the "Restart GUI" plan with the recording check.
 - **S5 — copy between boxes.**
-- **S6 — the 60-second take-back**, if the owner wants it.
+- **S6 — the 60-second take-back** (Dreambox).
 
-## Open questions
+## Decided 2026-10-23 (the owner's answers)
 
-1. **The 60-second take-back** for picture output and access settings: wanted? It is a step the box takes on its own if nobody confirms.
-2. **PIN or password**: the profile PIN for risky keys, and the DreamHub password when the profile has none — or always the password?
-3. **Who may change box settings**: admins only (like DeviceHub), or a separate permission?
-4. **OpenWebif's missing `configfile.save()`**: accept that a VU+ keeps a change only after a clean shutdown (said in the preview), or offer a "Restart GUI" there too, which saves on the way?
+1. **The 60-second take-back: yes** (package S6, Dreambox only, see above).
+2. **The profile PIN alone** for risky keys. A profile without a PIN gets no extra input, but the warning is shown in red with "Are you sure?" before the plan can be confirmed — never the DreamHub password.
+3. **Admins only**, like DeviceHub.
+4. **OpenWebif's missing `configfile.save()`**: after applying on a VU+, DreamHub **offers** "Restart GUI" to save at once (the same plan as in S4, with the recording check), next to **"OK"** (keep the change; it is saved on the next clean shutdown) and **"Undo"** (set the old values back). Offered, never done by itself.

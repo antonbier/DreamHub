@@ -20,3 +20,7 @@ Status: **idea, brainstormed 2026-10-23, nothing built.** Facts are in `ARCHITEC
 ## Out of scope
 
 Software transcoding (`PROJECT_PLAN.md`), copying anyone's paid IPTV lists, anything that bypasses a provider's terms: DreamHub only handles URLs the user gives it.
+
+## Netcast's own risky actions (seen 2026-10-23)
+
+The EPG-Loader menu on the box has **"Komplette EPG-Datenbank löschen"** (OK, no confirmation seen) next to "Alle EPG-Quellen aktualisieren"; the main menu has **"Picon und Zuweisungen löschen"**. DreamHub does not call them. If it ever offers an EPG refresh for Netcast sources it uses the plugin's refresh, never deletes the database (that one holds the broadcast guide too).

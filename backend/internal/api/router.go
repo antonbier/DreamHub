@@ -129,6 +129,7 @@ func NewRouterWithRoutes(d Deps) (http.Handler, []Route) {
 	core := guardMux{mux: protected, hub: perm.Watch, routes: corePerms, seen: &routes}
 	core.HandleFunc("GET /api/v1/whoami", handleWhoami(d))
 	core.HandleFunc("GET /api/v1/deviceinfo", handleDeviceInfo(d))
+	core.HandleFunc("GET /api/v1/deviceinfo/signal", handleTunerSignal(d))
 	core.HandleFunc("GET /api/v1/settings", handleGetSettings(d))
 	core.HandleFunc("PATCH /api/v1/settings", handlePatchSettings(d))
 	core.HandleFunc("GET /api/v1/navigation", handleNavigation(d))
@@ -401,6 +402,23 @@ func handleDeviceInfo(d Deps) http.HandlerFunc {
 			return
 		}
 		httpx.WriteJSON(w, http.StatusOK, info)
+	}
+}
+
+// handleTunerSignal: the reception of the tuner showing the current
+// channel. {available: false} when the box has no such call; signal is
+// null when it gives no numbers (standby, no tuner in use).
+func handleTunerSignal(d Deps) http.HandlerFunc {
+	return func(w http.ResponseWriter, r *http.Request) {
+		s, err := d.WebControl.TunerSignal(r.Context())
+		switch {
+		case errors.Is(err, webcontrol.ErrNotFound):
+			httpx.WriteJSON(w, http.StatusOK, map[string]any{"available": false, "signal": nil})
+		case err != nil:
+			httpx.WriteError(w, r, http.StatusBadGateway, "webcontrol_unavailable", "could not reach WebControl")
+		default:
+			httpx.WriteJSON(w, http.StatusOK, map[string]any{"available": true, "signal": s})
+		}
 	}
 }
 

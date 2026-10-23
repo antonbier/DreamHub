@@ -6,6 +6,10 @@ Format follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/); version
 
 ## [Unreleased]
 
+### Added
+- **Reception in DeviceHub**: Overview shows the signal quality (SNR) and strength (AGC) of the tuner showing the current channel, the bit error rate and, where the box gives a real one, the SNR in dB — read every 5 seconds while the page is open, handy when aligning a dish. New: `GET /api/v1/deviceinfo/signal`. Checked on the VU+ Solo2 (VTi 15, which repeats the percentage where the dB value belongs, so none is shown there); a Dreambox's answer is not checked yet.
+- **Other airings in the guide**: a programme's dialog lists when it runs again ("Also on"), each opening in the same dialog to be recorded there — the box's own search for repeats of the same broadcast, so it finds the next Tagesschau but not the next episode of a series. New: `GET /api/v1/guide/similar`. Checked on the Solo2; a Dreambox's answer is not checked yet.
+
 ## [0.9.4] - 2026-10-21
 
 ### Added

@@ -37,6 +37,22 @@ func (c *WebControl) TunerStates(ctx context.Context) ([]webcontrol.TunerState, 
 	return e.WC.TunerStates(ctx)
 }
 
+func (c *WebControl) TunerSignal(ctx context.Context) (*webcontrol.Signal, error) {
+	e, err := c.reg.For(ctx)
+	if err != nil {
+		return nil, err
+	}
+	return e.WC.TunerSignal(ctx)
+}
+
+func (c *WebControl) SimilarEvents(ctx context.Context, serviceReference string, eventID int64) ([]webcontrol.EPGEvent, error) {
+	e, err := c.reg.For(ctx)
+	if err != nil {
+		return nil, err
+	}
+	return e.WC.SimilarEvents(ctx, serviceReference, eventID)
+}
+
 func (c *WebControl) MovieList(ctx context.Context) ([]webcontrol.Movie, error) {
 	e, err := c.reg.For(ctx)
 	if err != nil {

@@ -603,7 +603,11 @@
     "switch": "Cambia canale",
     "filteredEmpty": "Niente corrisponde ai filtri scelti.",
     "primeSlot": "Inizio tra le {from} e le {to}",
-    "epgText": "Dalla guida ai programmi"
+    "epgText": "Dalla guida ai programmi",
+    "repeats": {
+      "title": "Altre messe in onda",
+      "showAll": "Mostra tutte ({n})"
+    }
   },
   "series": {
     "tracked": "Serie seguite",
@@ -1976,6 +1980,15 @@
         "dmi": "Database trovato — usato per primo per i dettagli.",
         "radioFavouritesEmpty": "I preferiti radio sono vuoti — la pagina Radio mostra invece tutte le {stations} emittenti ({withEpg} con informazioni sul programma)."
       }
+    },
+    "signal": {
+      "title": "Ricezione",
+      "hint": "Tuner del canale attuale, letto di nuovo ogni 5 secondi",
+      "none": "Nessun valore al momento – il box è in standby o nessun tuner è in uso.",
+      "snr": "Qualità del segnale (SNR)",
+      "agc": "Intensità del segnale (AGC)",
+      "ber": "Tasso di errore (BER)",
+      "db": "{value} dB"
     }
   },
   "enrich": {

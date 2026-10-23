@@ -203,6 +203,16 @@ func (c *Client) TunerStates(ctx context.Context) ([]webcontrol.TunerState, erro
 	return []webcontrol.TunerState{{Name: "Tuner A", Live: "ZDF HD"}}, nil
 }
 
+// TunerSignal: good satellite reception with a dB reading, as a
+// Dreambox's frontend gives it.
+func (c *Client) TunerSignal(ctx context.Context) (*webcontrol.Signal, error) {
+	if err := c.disturb(ctx); err != nil {
+		return nil, err
+	}
+	db := 12.4
+	return &webcontrol.Signal{SNR: 78, AGC: 91, BER: 0, SNRdB: &db}, nil
+}
+
 func (c *Client) MovieList(ctx context.Context) ([]webcontrol.Movie, error) {
 	if err := c.disturb(ctx); err != nil {
 		return nil, err
@@ -493,6 +503,28 @@ func (c *Client) EPGSearch(ctx context.Context, query string) ([]webcontrol.EPGE
 	var out []webcontrol.EPGEvent
 	for _, e := range c.schedule("") {
 		if strings.Contains(strings.ToLower(e.Title), q) {
+			out = append(out, e)
+		}
+	}
+	return out, nil
+}
+
+// SimilarEvents answers the other events of the schedule with the same
+// title as the asked one — the box's search finds repeats of one event.
+func (c *Client) SimilarEvents(ctx context.Context, serviceReference string, eventID int64) ([]webcontrol.EPGEvent, error) {
+	if err := c.disturb(ctx); err != nil {
+		return nil, err
+	}
+	events := c.schedule("")
+	title := ""
+	for _, e := range events {
+		if e.ID == eventID && e.ServiceReference == serviceReference {
+			title = e.Title
+		}
+	}
+	var out []webcontrol.EPGEvent
+	for _, e := range events {
+		if title != "" && e.Title == title && !(e.ID == eventID && e.ServiceReference == serviceReference) {
 			out = append(out, e)
 		}
 	}

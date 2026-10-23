@@ -603,7 +603,11 @@
     "switch": "Umschalten",
     "filteredEmpty": "Nichts passt zu den gewählten Filtern.",
     "primeSlot": "Beginn zwischen {from} und {to}",
-    "epgText": "Aus dem Programmführer"
+    "epgText": "Aus dem Programmführer",
+    "repeats": {
+      "title": "Weitere Termine",
+      "showAll": "Alle {n} zeigen"
+    }
   },
   "series": {
     "tracked": "Verfolgte Serien",
@@ -1976,6 +1980,15 @@
         "dmi": "Datenbank gefunden – wird zuerst für Details genutzt.",
         "radioFavouritesEmpty": "Die Radio-Favoriten sind leer – die Radio-Seite zeigt stattdessen alle {stations} Radiosender ({withEpg} mit Programmdaten)."
       }
+    },
+    "signal": {
+      "title": "Empfang",
+      "hint": "Tuner des laufenden Senders, alle 5 Sekunden neu gelesen",
+      "none": "Gerade keine Werte – die Box ist im Standby oder kein Tuner ist in Betrieb.",
+      "snr": "Signalqualität (SNR)",
+      "agc": "Signalstärke (AGC)",
+      "ber": "Bitfehlerrate",
+      "db": "{value} dB"
     }
   },
   "enrich": {

@@ -274,6 +274,22 @@ func TestDeviceInfo_UsesMock(t *testing.T) {
 	}
 }
 
+func TestDeviceInfo_Signal(t *testing.T) {
+	e := newEnv(t)
+	resp, b := e.do(t, "GET", "/api/v1/deviceinfo/signal", "", nil)
+	var body struct {
+		Available bool `json:"available"`
+		Signal    *struct {
+			SNR   int      `json:"snr"`
+			SNRdB *float64 `json:"snrDb"`
+		} `json:"signal"`
+	}
+	json.Unmarshal(b, &body)
+	if resp.StatusCode != http.StatusOK || !body.Available || body.Signal == nil || body.Signal.SNR != 78 || body.Signal.SNRdB == nil {
+		t.Errorf("%d %s", resp.StatusCode, b)
+	}
+}
+
 func TestMedia_MoviesDistinguishesRecordingsFromOtherMedia(t *testing.T) {
 	e := newEnv(t)
 	_, b := e.do(t, "GET", "/api/v1/media/movies", "", nil)

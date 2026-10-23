@@ -83,7 +83,11 @@ func (f failingClient) DeleteTimer(context.Context, webcontrol.TimerRef) error {
 func (f failingClient) EPGSearch(context.Context, string) ([]webcontrol.EPGEvent, error) {
 	return nil, f.fail()
 }
-func (f failingClient) Locations(context.Context) ([]string, error) { return nil, f.fail() }
+func (f failingClient) SimilarEvents(context.Context, string, int64) ([]webcontrol.EPGEvent, error) {
+	return nil, f.fail()
+}
+func (f failingClient) TunerSignal(context.Context) (*webcontrol.Signal, error) { return nil, f.fail() }
+func (f failingClient) Locations(context.Context) ([]string, error)             { return nil, f.fail() }
 func (f failingClient) MovieDir(context.Context, string) (webcontrol.MovieFolder, error) {
 	return webcontrol.MovieFolder{}, f.fail()
 }

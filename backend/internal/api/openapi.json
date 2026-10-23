@@ -572,6 +572,26 @@
       "description": "A pairing code is shown on that box right now"
      }
     }
+   },
+   "TunerSignal": {
+    "type": "object",
+    "description": "Reception of the tuner showing the current channel (/web/signal). snrDb only with a real dB reading.",
+    "properties": {
+     "snr": {
+      "type": "integer",
+      "description": "percent"
+     },
+     "agc": {
+      "type": "integer",
+      "description": "percent"
+     },
+     "ber": {
+      "type": "integer"
+     },
+     "snrDb": {
+      "type": "number"
+     }
+    }
    }
   }
  },
@@ -3492,6 +3512,48 @@
     }
    }
   },
+  "/deviceinfo/signal": {
+   "get": {
+    "summary": "Reception of the tuner showing the current channel",
+    "tags": [
+     "deviceinfo"
+    ],
+    "operationId": "GET_deviceinfo_signal",
+    "parameters": [
+     {
+      "$ref": "#/components/parameters/Box"
+     }
+    ],
+    "responses": {
+     "200": {
+      "description": "OK; available false when the box has no such call, signal null when it gives no numbers",
+      "content": {
+       "application/json": {
+        "schema": {
+         "type": "object",
+         "properties": {
+          "available": {
+           "type": "boolean"
+          },
+          "signal": {
+           "nullable": true,
+           "allOf": [
+            {
+             "$ref": "#/components/schemas/TunerSignal"
+            }
+           ]
+          }
+         }
+        }
+       }
+      }
+     },
+     "default": {
+      "$ref": "#/components/responses/Error"
+     }
+    }
+   }
+  },
   "/discovery/recommendations": {
    "get": {
     "summary": "Read discovery recommendations",
@@ -3916,6 +3978,64 @@
            "type": "array",
            "items": {
             "$ref": "#/components/schemas/NowNext"
+           }
+          }
+         }
+        }
+       }
+      }
+     },
+     "default": {
+      "$ref": "#/components/responses/Error"
+     }
+    }
+   }
+  },
+  "/guide/similar": {
+   "get": {
+    "summary": "Other airings of a programme, not over yet, soonest first",
+    "tags": [
+     "guide"
+    ],
+    "operationId": "GET_guide_similar",
+    "parameters": [
+     {
+      "$ref": "#/components/parameters/Box"
+     },
+     {
+      "name": "ref",
+      "in": "query",
+      "required": true,
+      "schema": {
+       "type": "string"
+      },
+      "description": "the programme's service reference"
+     },
+     {
+      "name": "event",
+      "in": "query",
+      "required": true,
+      "schema": {
+       "type": "integer"
+      },
+      "description": "the programme's EPG event id"
+     }
+    ],
+    "responses": {
+     "200": {
+      "description": "OK; available false when the box has no such call",
+      "content": {
+       "application/json": {
+        "schema": {
+         "type": "object",
+         "properties": {
+          "available": {
+           "type": "boolean"
+          },
+          "events": {
+           "type": "array",
+           "items": {
+            "$ref": "#/components/schemas/EpgEvent"
            }
           }
          }

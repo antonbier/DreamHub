@@ -83,6 +83,8 @@ import type {
   CreatedApiToken,
   DashboardLayout,
   DeviceInfo,
+  EPGEvent,
+  TunerSignal,
   Disk,
   DiscoveryStatus,
   EnrichExtras,
@@ -302,6 +304,8 @@ export const api = {
     code: () => request<PairingCode>('POST', '/api/v1/peer/code'),
   },
   deviceInfo: () => request<DeviceInfo>('GET', '/api/v1/deviceinfo'),
+  // Reception of the tuner showing the current channel; signal null without numbers.
+  tunerSignal: () => request<{ available: boolean; signal: TunerSignal | null }>('GET', '/api/v1/deviceinfo/signal'),
   navigation: () => request<Navigation>('GET', '/api/v1/navigation'),
   settings: {
     get: () => request<SettingsView>('GET', '/api/v1/settings'),
@@ -405,6 +409,9 @@ export const api = {
       ),
     // Now and next on every channel of a bouquet, one call to the box.
     nowNext: (bouquet: string) => request<{ channels: NowNext[] }>('GET', `/api/v1/guide/nownext?bouquet=${encodeURIComponent(bouquet)}`),
+    // Other airings of a programme, not over yet; available: false when the box has no such search.
+    similar: (ref: string, event: number) =>
+      request<{ available: boolean; events: EPGEvent[] }>('GET', `/api/v1/guide/similar?ref=${encodeURIComponent(ref)}&event=${event}`),
     // The channel's logo from the box (404 when it has none).
     picon: (ref: string, name: string) => requestBlob(`/api/v1/guide/picon?ref=${encodeURIComponent(displayRef(ref))}&name=${encodeURIComponent(name)}`),
   },

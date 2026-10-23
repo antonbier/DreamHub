@@ -2,6 +2,7 @@ package hubs
 
 import (
 	"context"
+	"errors"
 	"net/http"
 	"sort"
 	"strconv"
@@ -68,6 +69,7 @@ func (h *Guide) Mount(mux httpx.Mux) {
 	mux.HandleFunc("GET /api/v1/guide/bouquets", h.bouquets)
 	mux.HandleFunc("GET /api/v1/guide/grid", h.grid)
 	mux.HandleFunc("GET /api/v1/guide/nownext", h.nowNext)
+	mux.HandleFunc("GET /api/v1/guide/similar", h.similar)
 	mux.HandleFunc("GET /api/v1/guide/picon", h.picon)
 }
 
@@ -78,6 +80,41 @@ func (h *Guide) bouquets(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 	httpx.WriteJSON(w, http.StatusOK, map[string]any{"bouquets": visibleBouquets(r.Context(), bouquets)})
+}
+
+// maxSimilar caps the other airings shown for one programme.
+const maxSimilar = 20
+
+// similar lists other airings of one programme (?ref=&event=), the ones not
+// over yet, soonest first. {available: false} when the box has no such call.
+func (h *Guide) similar(w http.ResponseWriter, r *http.Request) {
+	ref := strings.TrimSpace(r.URL.Query().Get("ref"))
+	id, err := strconv.ParseInt(r.URL.Query().Get("event"), 10, 64)
+	if ref == "" || err != nil || id <= 0 {
+		httpx.WriteError(w, r, http.StatusBadRequest, "invalid_request", "ref and event are required")
+		return
+	}
+	events, err := h.WC.SimilarEvents(r.Context(), ref, id)
+	switch {
+	case errors.Is(err, webcontrol.ErrNotFound):
+		httpx.WriteJSON(w, http.StatusOK, map[string]any{"available": false, "events": []webcontrol.EPGEvent{}})
+		return
+	case err != nil:
+		httpx.WriteError(w, r, http.StatusBadGateway, "webcontrol_unavailable", "could not reach WebControl")
+		return
+	}
+	now := h.Now().Unix()
+	upcoming := []webcontrol.EPGEvent{}
+	for _, e := range events {
+		if e.Start+e.Duration > now {
+			upcoming = append(upcoming, e)
+		}
+	}
+	sort.SliceStable(upcoming, func(i, j int) bool { return upcoming[i].Start < upcoming[j].Start })
+	if len(upcoming) > maxSimilar {
+		upcoming = upcoming[:maxSimilar]
+	}
+	httpx.WriteJSON(w, http.StatusOK, map[string]any{"available": true, "events": upcoming})
 }
 
 // ChannelSchedule is one channel's events within the requested window.

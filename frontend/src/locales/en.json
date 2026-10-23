@@ -603,7 +603,11 @@
     "switch": "Switch",
     "filteredEmpty": "Nothing matches the chosen filters.",
     "primeSlot": "Starting between {from} and {to}",
-    "epgText": "From the programme guide"
+    "epgText": "From the programme guide",
+    "repeats": {
+      "title": "Also on",
+      "showAll": "Show all {n}"
+    }
   },
   "series": {
     "tracked": "Tracked series",
@@ -1976,6 +1980,15 @@
         "dmi": "Database found — used first for details.",
         "radioFavouritesEmpty": "The radio favourites are empty — the Radio page shows all {stations} radio stations instead ({withEpg} with programme information)."
       }
+    },
+    "signal": {
+      "title": "Reception",
+      "hint": "Tuner of the current channel, read again every 5 seconds",
+      "none": "No readings right now – the box is in standby or no tuner is in use.",
+      "snr": "Signal quality (SNR)",
+      "agc": "Signal strength (AGC)",
+      "ber": "Bit error rate",
+      "db": "{value} dB"
     }
   },
   "enrich": {

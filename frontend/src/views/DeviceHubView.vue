@@ -4,7 +4,8 @@
   `system` permission — SystemHub was never actually visible to a plain
   user despite CONCEPT.md's older description, which is corrected now
   too). Same device, three tabs instead of two separate hub screens:
-  - Übersicht: device info, the change log (ex-SystemHubView)
+  - Übersicht: device info, the reception of the tuner in use
+    (TunerSignalPanel), the change log (ex-SystemHubView)
   - Diagnose: the self-test, every hub's status (ex-SystemHubView)
   - Administration: services, log level, journald log viewer, crash logs
     (ex-AdminHubView)
@@ -86,6 +87,8 @@
             </template>
           </dl>
         </section>
+
+        <TunerSignalPanel />
 
         <!-- Backup & restore, and About, moved to Settings → System: both
              are app-level, administrative information, not live device
@@ -319,6 +322,7 @@ import ServicesPanel from '@/components/admin/ServicesPanel.vue'
 import ScriptsPanel from '@/components/admin/ScriptsPanel.vue'
 import TerminalPanel from '@/components/admin/TerminalPanel.vue'
 import SelfTestPanel from '@/components/system/SelfTestPanel.vue'
+import TunerSignalPanel from '@/components/system/TunerSignalPanel.vue'
 import { formatBytes } from '@/lib/format'
 import { openEventStream } from '@/composables/useEventStream'
 import { useNavigationStore } from '@/stores/navigation'

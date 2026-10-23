@@ -279,6 +279,10 @@ type Client interface {
 	// TunerStates says what each tuner is doing now (live, recording).
 	// Empty when the box does not tell: only OpenWebif's /web/about has it.
 	TunerStates(ctx context.Context) ([]TunerState, error)
+	// TunerSignal is the reception of the tuner showing the current channel
+	// (/web/signal). ErrNotFound when the box has no such call, nil when it
+	// gives no numbers.
+	TunerSignal(ctx context.Context) (*Signal, error)
 	// Bouquets lists the box's bouquets (GuideHub's channel groups).
 	Bouquets(ctx context.Context) ([]Service, error)
 	// Services lists the channels inside a bouquet (bouquetRef, as returned
@@ -293,6 +297,9 @@ type Client interface {
 	EPGNowNext(ctx context.Context, bouquetRef string) ([]NowNext, error)
 	// EPGSearch finds EPG events by title substring (the box's own search).
 	EPGSearch(ctx context.Context, query string) ([]EPGEvent, error)
+	// SimilarEvents lists other airings of an EPG event (the box's own
+	// "similar broadcasts" search). ErrNotFound when the box has no such call.
+	SimilarEvents(ctx context.Context, serviceReference string, eventID int64) ([]EPGEvent, error)
 	// Locations lists the box's recording folders (/web/getlocations).
 	Locations(ctx context.Context) ([]string, error)
 	// MovieDir lists one recording folder: its recordings and its direct

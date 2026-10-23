@@ -12,7 +12,8 @@
   The chosen view is remembered per browser; a phone starts on Now & next.
   Two filters apply to every view: films only, rated 7+ (enrichment —
   useGuideFilters). Any programme opens the shared details dialog
-  (ProgrammeDialog): what the data sources know, the EPG's text, "Record"
+  (ProgrammeDialog): what the data sources know, the EPG's text, other
+  airings of it (GuideRepeats, each opening in the same dialog), "Record"
   through TimerHub's own plan → apply with the EPG event id (so the box
   links the timer to the programme), and "Switch now" while it airs.
   ?at=<unix seconds> (global search results) opens the grid at that time.
@@ -106,6 +107,7 @@
         <h3 class="text-[12.5px] text-faint">{{ t('guide.epgText') }}</h3>
         <p class="mt-1 text-[14px] text-text">{{ selected.description }}</p>
       </section>
+      <GuideRepeats :event="selected" :format="formatWhen" @select="select" />
 
       <template #actions>
         <p v-if="record.status === 'created'" class="flex items-center gap-1.5 text-[13.5px] text-ok" role="status">
@@ -174,6 +176,7 @@ import GuideGrid from '@/components/guide/GuideGrid.vue'
 import GuideNowNext from '@/components/guide/GuideNowNext.vue'
 import GuideTonight from '@/components/guide/GuideTonight.vue'
 import GuideChannel from '@/components/guide/GuideChannel.vue'
+import GuideRepeats from '@/components/guide/GuideRepeats.vue'
 import { useEnrichStore } from '@/stores/enrich'
 import { usePlanError } from '@/composables/usePlanError'
 import { useNavigationStore } from '@/stores/navigation'

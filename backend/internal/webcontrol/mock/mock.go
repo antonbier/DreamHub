@@ -39,6 +39,9 @@ type Client struct {
 	// NoBoxSettings plays a box that cannot list its setup menus (a
 	// Dreambox, until the TV plugin does).
 	NoBoxSettings bool
+	// OldSettingsPlugin plays a Dreambox whose DreamHub plugin has no
+	// settings route yet.
+	OldSettingsPlugin bool
 	// FailEditor makes that BouquetEditor operation ("moveservice", …) fail;
 	// Restores counts restores (bouqueteditor.go).
 	FailEditor string

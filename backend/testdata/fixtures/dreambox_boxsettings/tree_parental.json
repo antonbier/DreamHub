@@ -1,0 +1,368 @@
+{
+ "items": [
+  {
+   "class": "ConfigYesNo",
+   "default": false,
+   "dirty": false,
+   "kind": "bool",
+   "notifiers": [
+    0,
+    0
+   ],
+   "path": "config.ParentalControl.configured",
+   "readOnly": null,
+   "rev": "0a32a03e3bd0fa62",
+   "secret": false,
+   "store": "settings",
+   "value": false,
+   "valueText": "false"
+  },
+  {
+   "choiceCount": 2,
+   "choices": [
+    [
+     "simple",
+     "einfach"
+    ],
+    [
+     "complex",
+     "Komplex"
+    ]
+   ],
+   "choicesTruncated": false,
+   "class": "ConfigSelection",
+   "default": "simple",
+   "dirty": false,
+   "kind": "choice",
+   "notifiers": [
+    0,
+    0
+   ],
+   "path": "config.ParentalControl.mode",
+   "readOnly": null,
+   "rev": "6668584485ef460e",
+   "secret": false,
+   "store": "settings",
+   "value": "simple",
+   "valueText": "simple"
+  },
+  {
+   "class": "ConfigInteger",
+   "default": 3,
+   "dirty": false,
+   "kind": "integer",
+   "limits": [
+    0,
+    9999999999
+   ],
+   "notifiers": [
+    0,
+    0
+   ],
+   "path": "config.ParentalControl.retries.servicepin.time",
+   "readOnly": null,
+   "rev": "bd8f033747e1b455",
+   "secret": false,
+   "store": "settings",
+   "value": 3,
+   "valueText": "3"
+  },
+  {
+   "class": "ConfigInteger",
+   "default": 3,
+   "dirty": false,
+   "kind": "integer",
+   "limits": [
+    0,
+    9999999999
+   ],
+   "notifiers": [
+    0,
+    0
+   ],
+   "path": "config.ParentalControl.retries.servicepin.tries",
+   "readOnly": null,
+   "rev": "bd8f033747e1b455",
+   "secret": false,
+   "store": "settings",
+   "value": 3,
+   "valueText": "3"
+  },
+  {
+   "class": "ConfigInteger",
+   "default": 3,
+   "dirty": false,
+   "kind": "integer",
+   "limits": [
+    0,
+    9999999999
+   ],
+   "notifiers": [
+    0,
+    0
+   ],
+   "path": "config.ParentalControl.retries.setuppin.time",
+   "readOnly": null,
+   "rev": "bd8f033747e1b455",
+   "secret": false,
+   "store": "settings",
+   "value": 3,
+   "valueText": "3"
+  },
+  {
+   "class": "ConfigInteger",
+   "default": 3,
+   "dirty": false,
+   "kind": "integer",
+   "limits": [
+    0,
+    9999999999
+   ],
+   "notifiers": [
+    0,
+    0
+   ],
+   "path": "config.ParentalControl.retries.setuppin.tries",
+   "readOnly": null,
+   "rev": "bd8f033747e1b455",
+   "secret": false,
+   "store": "settings",
+   "value": 3,
+   "valueText": "3"
+  },
+  {
+   "class": "ConfigPIN",
+   "default": null,
+   "dirty": false,
+   "isSet": false,
+   "kind": "pin",
+   "limits": [
+    0,
+    9999
+   ],
+   "notifiers": [
+    0,
+    0
+   ],
+   "path": "config.ParentalControl.servicepin.0",
+   "readOnly": null,
+   "rev": "39de036affb897a8",
+   "secret": true,
+   "store": "settings",
+   "value": null
+  },
+  {
+   "class": "ConfigPIN",
+   "default": null,
+   "dirty": false,
+   "isSet": false,
+   "kind": "pin",
+   "limits": [
+    0,
+    9999
+   ],
+   "notifiers": [
+    0,
+    0
+   ],
+   "path": "config.ParentalControl.servicepin.1",
+   "readOnly": null,
+   "rev": "39de036affb897a8",
+   "secret": true,
+   "store": "settings",
+   "value": null
+  },
+  {
+   "class": "ConfigPIN",
+   "default": null,
+   "dirty": false,
+   "isSet": false,
+   "kind": "pin",
+   "limits": [
+    0,
+    9999
+   ],
+   "notifiers": [
+    0,
+    0
+   ],
+   "path": "config.ParentalControl.servicepin.2",
+   "readOnly": null,
+   "rev": "39de036affb897a8",
+   "secret": true,
+   "store": "settings",
+   "value": null
+  },
+  {
+   "class": "ConfigYesNo",
+   "default": false,
+   "dirty": false,
+   "kind": "bool",
+   "notifiers": [
+    0,
+    0
+   ],
+   "path": "config.ParentalControl.servicepinactive",
+   "readOnly": null,
+   "rev": "0a32a03e3bd0fa62",
+   "secret": false,
+   "store": "settings",
+   "value": false,
+   "valueText": "false"
+  },
+  {
+   "class": "ConfigPIN",
+   "default": null,
+   "dirty": false,
+   "isSet": false,
+   "kind": "pin",
+   "limits": [
+    0,
+    9999
+   ],
+   "notifiers": [
+    0,
+    0
+   ],
+   "path": "config.ParentalControl.setuppin",
+   "readOnly": null,
+   "rev": "39de036affb897a8",
+   "secret": true,
+   "store": "settings",
+   "value": null
+  },
+  {
+   "class": "ConfigYesNo",
+   "default": false,
+   "dirty": false,
+   "kind": "bool",
+   "notifiers": [
+    0,
+    0
+   ],
+   "path": "config.ParentalControl.setuppinactive",
+   "readOnly": null,
+   "rev": "0a32a03e3bd0fa62",
+   "secret": false,
+   "store": "settings",
+   "value": false,
+   "valueText": "false"
+  },
+  {
+   "choiceCount": 5,
+   "choices": [
+    [
+     "never",
+     "niemals"
+    ],
+    [
+     "5",
+     "5 Minuten"
+    ],
+    [
+     "30",
+     "30 Minuten"
+    ],
+    [
+     "60",
+     "60 Minuten"
+    ],
+    [
+     "standby",
+     "bis zum standby/neustart"
+    ]
+   ],
+   "choicesTruncated": false,
+   "class": "ConfigSelection",
+   "default": null,
+   "dirty": false,
+   "isSet": false,
+   "kind": "choice",
+   "notifiers": [
+    0,
+    0
+   ],
+   "path": "config.ParentalControl.storeservicepin",
+   "readOnly": null,
+   "rev": "40c9003e3b3f0dad",
+   "secret": true,
+   "store": "settings",
+   "value": null
+  },
+  {
+   "choiceCount": 5,
+   "choices": [
+    [
+     "never",
+     "niemals"
+    ],
+    [
+     "5",
+     "5 Minuten"
+    ],
+    [
+     "30",
+     "30 Minuten"
+    ],
+    [
+     "60",
+     "60 Minuten"
+    ],
+    [
+     "standby",
+     "bis zum standby/neustart"
+    ]
+   ],
+   "choicesTruncated": false,
+   "class": "ConfigSelection",
+   "default": "never",
+   "dirty": false,
+   "kind": "choice",
+   "notifiers": [
+    0,
+    0
+   ],
+   "path": "config.ParentalControl.storeservicepincancel",
+   "readOnly": null,
+   "rev": "40c9003e3b3f0dad",
+   "secret": false,
+   "store": "settings",
+   "value": "never",
+   "valueText": "never"
+  },
+  {
+   "choiceCount": 2,
+   "choices": [
+    [
+     "whitelist",
+     "Positivliste"
+    ],
+    [
+     "blacklist",
+     "Negativliste"
+    ]
+   ],
+   "choicesTruncated": false,
+   "class": "ConfigSelection",
+   "default": "blacklist",
+   "dirty": false,
+   "kind": "choice",
+   "notifiers": [
+    0,
+    0
+   ],
+   "path": "config.ParentalControl.type",
+   "readOnly": null,
+   "rev": "473cc8ec73236be0",
+   "secret": false,
+   "store": "settings",
+   "value": "blacklist",
+   "valueText": "blacklist"
+  }
+ ],
+ "offset": 0,
+ "ok": true,
+ "root": "config.ParentalControl",
+ "store": "settings",
+ "total": 15
+}

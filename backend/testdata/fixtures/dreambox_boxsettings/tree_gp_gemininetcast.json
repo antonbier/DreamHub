@@ -1,0 +1,442 @@
+{
+ "items": [
+  {
+   "class": "ConfigText",
+   "default": "",
+   "dirty": false,
+   "kind": "text",
+   "notifiers": [
+    0,
+    0
+   ],
+   "path": "config.gemininetcast.autostart_netcast",
+   "readOnly": null,
+   "rev": "3eb416223e9e69e6",
+   "secret": false,
+   "store": "gp",
+   "value": "",
+   "valueText": ""
+  },
+  {
+   "choiceCount": 10,
+   "choices": [
+    [
+     "0",
+     "aus"
+    ],
+    [
+     "64",
+     "64 kbps"
+    ],
+    [
+     "128",
+     "128 kbps"
+    ],
+    [
+     "192",
+     "192 kbps"
+    ],
+    [
+     "256",
+     "256 kbps"
+    ],
+    [
+     "320",
+     "320 kbps"
+    ],
+    [
+     "384",
+     "384 kbps"
+    ],
+    [
+     "448",
+     "448 kbps"
+    ],
+    [
+     "512",
+     "512 kbps"
+    ],
+    [
+     "576",
+     "576 kbps"
+    ]
+   ],
+   "choicesTruncated": false,
+   "class": "ConfigSelection",
+   "default": "128",
+   "dirty": false,
+   "kind": "choice",
+   "notifiers": [
+    0,
+    0
+   ],
+   "path": "config.gemininetcast.bitrate",
+   "readOnly": null,
+   "rev": "025bc6a3b1e69505",
+   "secret": false,
+   "store": "gp",
+   "value": "128",
+   "valueText": "128"
+  },
+  {
+   "class": "ConfigOnOff",
+   "default": true,
+   "dirty": false,
+   "kind": "bool",
+   "notifiers": [
+    0,
+    0
+   ],
+   "path": "config.gemininetcast.display_pics",
+   "readOnly": null,
+   "rev": "8d4017579661153a",
+   "secret": false,
+   "store": "gp",
+   "value": true,
+   "valueText": "true"
+  },
+  {
+   "class": "ConfigOnOff",
+   "default": false,
+   "dirty": false,
+   "kind": "bool",
+   "notifiers": [
+    0,
+    0
+   ],
+   "path": "config.gemininetcast.epgAutoUpdate",
+   "readOnly": null,
+   "rev": "8d4017579661153a",
+   "secret": false,
+   "store": "gp",
+   "value": true,
+   "valueText": "true"
+  },
+  {
+   "choiceCount": 3,
+   "choices": [
+    [
+     "dvb-tv",
+     "Einen DVB-TV-Kanal benutzen"
+    ],
+    [
+     "dvb-radio",
+     "Einen DVB-Radio-Kanal benutzen"
+    ],
+    [
+     "tvgid",
+     "benutze TVG-ID"
+    ]
+   ],
+   "choicesTruncated": false,
+   "class": "ConfigSelection",
+   "default": "dvb-tv",
+   "dirty": false,
+   "kind": "choice",
+   "notifiers": [
+    0,
+    0
+   ],
+   "path": "config.gemininetcast.epgchanneltyp",
+   "readOnly": null,
+   "rev": "d67bf9dcbef31541",
+   "secret": false,
+   "store": "gp",
+   "value": "tvgid",
+   "valueText": "tvgid"
+  },
+  {
+   "class": "ConfigOnOff",
+   "default": false,
+   "dirty": false,
+   "kind": "bool",
+   "notifiers": [
+    0,
+    0
+   ],
+   "path": "config.gemininetcast.hls_render",
+   "readOnly": null,
+   "rev": "0a32a03e3bd0fa62",
+   "secret": false,
+   "store": "gp",
+   "value": false,
+   "valueText": "false"
+  },
+  {
+   "class": "ConfigText",
+   "default": "/data",
+   "dirty": false,
+   "kind": "text",
+   "notifiers": [
+    0,
+    0
+   ],
+   "path": "config.gemininetcast.last_icon_path",
+   "readOnly": null,
+   "rev": "bf8590d30748a790",
+   "secret": false,
+   "store": "gp",
+   "value": "/data",
+   "valueText": "/data"
+  },
+  {
+   "class": "ConfigInteger",
+   "default": 50,
+   "dirty": false,
+   "kind": "integer",
+   "limits": [
+    10,
+    500
+   ],
+   "notifiers": [
+    0,
+    0
+   ],
+   "path": "config.gemininetcast.limit",
+   "readOnly": null,
+   "rev": "9e0cbeb186f0bd00",
+   "secret": false,
+   "store": "gp",
+   "value": 80,
+   "valueText": "80"
+  },
+  {
+   "class": "ConfigOnOff",
+   "default": true,
+   "dirty": false,
+   "kind": "bool",
+   "notifiers": [
+    0,
+    0
+   ],
+   "path": "config.gemininetcast.long_exit",
+   "readOnly": null,
+   "rev": "8d4017579661153a",
+   "secret": false,
+   "store": "gp",
+   "value": true,
+   "valueText": "true"
+  },
+  {
+   "class": "ConfigOnOff",
+   "default": true,
+   "dirty": false,
+   "kind": "bool",
+   "notifiers": [
+    0,
+    0
+   ],
+   "path": "config.gemininetcast.onlympeg",
+   "readOnly": null,
+   "rev": "8d4017579661153a",
+   "secret": false,
+   "store": "gp",
+   "value": true,
+   "valueText": "true"
+  },
+  {
+   "class": "ConfigOnOff",
+   "default": true,
+   "dirty": false,
+   "kind": "bool",
+   "notifiers": [
+    0,
+    0
+   ],
+   "path": "config.gemininetcast.read_playlist",
+   "readOnly": null,
+   "rev": "8d4017579661153a",
+   "secret": false,
+   "store": "gp",
+   "value": true,
+   "valueText": "true"
+  },
+  {
+   "class": "ConfigOnOff",
+   "default": false,
+   "dirty": false,
+   "kind": "bool",
+   "notifiers": [
+    0,
+    0
+   ],
+   "path": "config.gemininetcast.remove_tmpdir",
+   "readOnly": null,
+   "rev": "0a32a03e3bd0fa62",
+   "secret": false,
+   "store": "gp",
+   "value": false,
+   "valueText": "false"
+  },
+  {
+   "class": "ConfigSet",
+   "error": "IndexError",
+   "kind": "unknown",
+   "path": "config.gemininetcast.search_netcast",
+   "readOnly": "unreadable",
+   "secret": false,
+   "store": "gp"
+  },
+  {
+   "class": "ConfigOnOff",
+   "default": true,
+   "dirty": false,
+   "kind": "bool",
+   "notifiers": [
+    0,
+    0
+   ],
+   "path": "config.gemininetcast.short_exit",
+   "readOnly": null,
+   "rev": "0a32a03e3bd0fa62",
+   "secret": false,
+   "store": "gp",
+   "value": false,
+   "valueText": "false"
+  },
+  {
+   "class": "ConfigOnOff",
+   "default": false,
+   "dirty": false,
+   "kind": "bool",
+   "notifiers": [
+    0,
+    0
+   ],
+   "path": "config.gemininetcast.show_timerlist_menu",
+   "readOnly": null,
+   "rev": "0a32a03e3bd0fa62",
+   "secret": false,
+   "store": "gp",
+   "value": false,
+   "valueText": "false"
+  },
+  {
+   "class": "ConfigOnOff",
+   "default": false,
+   "dirty": false,
+   "kind": "bool",
+   "notifiers": [
+    0,
+    0
+   ],
+   "path": "config.gemininetcast.showepgsymbol",
+   "readOnly": null,
+   "rev": "0a32a03e3bd0fa62",
+   "secret": false,
+   "store": "gp",
+   "value": false,
+   "valueText": "false"
+  },
+  {
+   "class": "ConfigText",
+   "default": "gcommanderlist_tile_3_7",
+   "dirty": false,
+   "kind": "text",
+   "notifiers": [
+    0,
+    0
+   ],
+   "path": "config.gemininetcast.skin_name",
+   "readOnly": null,
+   "rev": "4c40c5ed2c52cda2",
+   "secret": false,
+   "store": "gp",
+   "value": "gcommanderlist_tile_3_7",
+   "valueText": "gcommanderlist_tile_3_7"
+  },
+  {
+   "choiceCount": 4,
+   "choices": [
+    [
+     "sorting_off",
+     "nicht sortieren"
+    ],
+    [
+     "sorting_bitrate",
+     "Bitrate"
+    ],
+    [
+     "sorting_name_a_z",
+     "Name (a-z)"
+    ],
+    [
+     "sorting_name_z_a",
+     "Name (z-a)"
+    ]
+   ],
+   "choicesTruncated": false,
+   "class": "ConfigSelection",
+   "default": "sorting_off",
+   "dirty": false,
+   "kind": "choice",
+   "notifiers": [
+    0,
+    0
+   ],
+   "path": "config.gemininetcast.sortNetcast",
+   "readOnly": null,
+   "rev": "a13476e5ad0cb72f",
+   "secret": false,
+   "store": "gp",
+   "value": "sorting_off",
+   "valueText": "sorting_off"
+  },
+  {
+   "class": "ConfigText",
+   "default": "",
+   "dirty": false,
+   "kind": "text",
+   "notifiers": [
+    0,
+    0
+   ],
+   "path": "config.gemininetcast.sort_netcast",
+   "readOnly": null,
+   "rev": "13636aa7934d09d5",
+   "secret": false,
+   "store": "gp",
+   "value": "favouriteslist_live,favouriteslist_video,favouriteslist_music,favouriteslist_series,favouriteslist_channels,favouriteslist_genre,favouriteslist_playlists,netcastserver_seriestreamapi,netcastserver_plutotvallapi,netcastserver_radiobrowserapi,netcastserver_radionetapi_fr,netcastserver_tuneinapi,netcastserver_radionetapi_de,netcastserver_radionetapi_net,netcastserver_shoutcastapi,netcastserver_plutotvapi,netcastserver_samsungtvplusapi,netcastserver_iptv-org,netcastserver_lautfmapi,netcastserver_kodi,netcastserver_pornapi,netcastserver_vavooapi",
+   "valueText": "favouriteslist_live,favouriteslist_video,favouriteslist_music,favouriteslist_series,favouriteslist_channels,favouriteslist_genre,favouriteslist_playlists,netcastserver_seriestreamapi,netcastserver_plutotvallapi,netcastserver_radiobrowserapi,netcastserver_radionetapi_fr,netcastserver_tuneinapi,netcastserver_radionetapi_de,netcastserver_radionetapi_net,netcastserver_shoutcastapi,netcastserver_plutotvapi,netcastserver_samsungtvplusapi,netcastserver_iptv-org,netcastserver_lautfmapi,netcastserver_kodi,netcastserver_pornapi,netcastserver_vavooapi"
+  },
+  {
+   "class": "ConfigOnOff",
+   "default": true,
+   "dirty": false,
+   "kind": "bool",
+   "notifiers": [
+    0,
+    0
+   ],
+   "path": "config.gemininetcast.sort_playlist",
+   "readOnly": null,
+   "rev": "8d4017579661153a",
+   "secret": false,
+   "store": "gp",
+   "value": true,
+   "valueText": "true"
+  },
+  {
+   "class": "ConfigOnOff",
+   "default": true,
+   "dirty": false,
+   "kind": "bool",
+   "notifiers": [
+    0,
+    0
+   ],
+   "path": "config.gemininetcast.upnp_playlist",
+   "readOnly": null,
+   "rev": "8d4017579661153a",
+   "secret": false,
+   "store": "gp",
+   "value": true,
+   "valueText": "true"
+  }
+ ],
+ "offset": 0,
+ "ok": true,
+ "root": "config.gemininetcast",
+ "store": "gp",
+ "total": 21
+}

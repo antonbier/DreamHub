@@ -253,3 +253,37 @@ func TestSectionLookup(t *testing.T) {
 		t.Error("unknown section found")
 	}
 }
+
+func TestRuntimeState(t *testing.T) {
+	for path, want := range map[string]bool{
+		"config.misc.startCounter":            true,
+		"config.tv.lastservice":               true,
+		"config.plugins.epgrefresh.lastscan":  true,
+		"config.gemininetcast.last_icon_path": true,
+		"config.startupservice.lastroot":      true,
+		"config.plugins.epgrefresh.interval":  false,
+		"config.recording.margin_before":      false,
+		"config.usage.show_infobar_on_zap":    false,
+	} {
+		if RuntimeState(path) != want {
+			t.Errorf("%s: %v, want %v", path, !want, want)
+		}
+	}
+}
+
+func TestBuild_TreeSectionsKeepTheirGroupAndAPluginSaidSecret(t *testing.T) {
+	sections := []webcontrol.ConfigSection{{Key: "tree.settings.plugins.x", Title: "plugins.x", Group: webcontrol.GroupTree}}
+	items := map[string][]webcontrol.ConfigItem{sections[0].Key: {
+		{Path: "config.plugins.x.mood", Label: "mood", Kind: webcontrol.KindText, Secret: true, IsSet: true},
+		{Path: "config.plugins.x.on", Label: "on", Kind: webcontrol.KindBool, Value: true},
+	}}
+	c := Build(sections, items, nil)
+	info, got, _ := c.Section(sections[0].Key)
+	if info.Group != webcontrol.GroupTree || !got[0].Tree || !got[1].Tree {
+		t.Errorf("group: %+v %+v", info, got)
+	}
+	// the plugin's word is enough: the name `mood` is on no list
+	if !got[0].Secret || !got[0].IsSet || got[0].Value != nil || got[1].Secret {
+		t.Errorf("secret: %+v", got)
+	}
+}

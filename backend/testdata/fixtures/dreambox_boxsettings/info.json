@@ -1,0 +1,17 @@
+{
+ "api": 1,
+ "level": 2,
+ "ok": true,
+ "plugin": "0.9.4",
+ "stores": [
+  {
+   "id": "gp",
+   "present": true
+  },
+  {
+   "id": "settings",
+   "present": true
+  }
+ ],
+ "writes": false
+}

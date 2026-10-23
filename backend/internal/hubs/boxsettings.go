@@ -53,8 +53,24 @@ func (h *BoxSettings) now() time.Time {
 }
 
 // errBoxSettingsUnsupported: the box's client or the box itself has no
-// setup menus to read (a Dreambox, until the TV plugin serves them — S2).
-var errBoxSettingsUnsupported = errors.New("boxsettings: not supported by this box")
+// setup menus to read; errBoxSettingsNeedsPlugin: a Dreambox whose DreamHub
+// plugin is missing or too old to serve them (S2).
+var (
+	errBoxSettingsUnsupported = errors.New("boxsettings: not supported by this box")
+	errBoxSettingsNeedsPlugin = errors.New("boxsettings: the box's DreamHub plugin has no settings route")
+)
+
+// unavailable maps what a read of the box failed with to one of the two
+// "cannot show" errors, or nil for a real failure.
+func unavailable(err error) error {
+	switch {
+	case errors.Is(err, webcontrol.ErrNeedsPlugin):
+		return errBoxSettingsNeedsPlugin
+	case errors.Is(err, webcontrol.ErrNotFound):
+		return errBoxSettingsUnsupported
+	}
+	return nil
+}
 
 // catalog reads the box's setup menus, or reuses the last read.
 func (h *BoxSettings) catalog(ctx context.Context, force bool) (*boxsettings.Catalog, error) {
@@ -70,8 +86,8 @@ func (h *BoxSettings) catalog(ctx context.Context, force bool) (*boxsettings.Cat
 	}
 	sections, err := reader.ConfigSections(ctx)
 	if err != nil {
-		if errors.Is(err, webcontrol.ErrNotFound) {
-			return nil, errBoxSettingsUnsupported
+		if u := unavailable(err); u != nil {
+			return nil, u
 		}
 		return nil, err
 	}
@@ -79,6 +95,9 @@ func (h *BoxSettings) catalog(ctx context.Context, force bool) (*boxsettings.Cat
 	for _, s := range sections {
 		list, err := reader.ConfigItems(ctx, s.Key)
 		if err != nil {
+			if u := unavailable(err); u != nil {
+				return nil, u
+			}
 			return nil, err
 		}
 		items[s.Key] = list
@@ -99,11 +118,14 @@ func (h *BoxSettings) catalog(ctx context.Context, force bool) (*boxsettings.Cat
 
 // load answers the error cases the same way for every route; ok is false
 // when it has already written the answer.
-func (h *BoxSettings) load(w http.ResponseWriter, r *http.Request, unsupported func()) (*boxsettings.Catalog, bool) {
+func (h *BoxSettings) load(w http.ResponseWriter, r *http.Request, unsupported func(reason string)) (*boxsettings.Catalog, bool) {
 	cat, err := h.catalog(r.Context(), r.URL.Query().Get("refresh") == "1")
 	switch {
 	case errors.Is(err, errBoxSettingsUnsupported):
-		unsupported()
+		unsupported("unsupported")
+		return nil, false
+	case errors.Is(err, errBoxSettingsNeedsPlugin):
+		unsupported("plugin")
 		return nil, false
 	case err != nil:
 		httpx.WriteError(w, r, http.StatusBadGateway, "webcontrol_unavailable", "could not reach the box")
@@ -113,10 +135,12 @@ func (h *BoxSettings) load(w http.ResponseWriter, r *http.Request, unsupported f
 }
 
 // overview: {available, writes, boxLevel, boxLevelName, sections}.
-// available is false for a box that cannot show its setup menus.
+// available is false for a box that cannot show its setup menus; reason
+// says why: "plugin" (a Dreambox whose DreamHub plugin has no settings route)
+// or "unsupported".
 func (h *BoxSettings) overview(w http.ResponseWriter, r *http.Request) {
-	cat, ok := h.load(w, r, func() {
-		httpx.WriteJSON(w, http.StatusOK, map[string]any{"available": false, "writes": false, "sections": []boxsettings.SectionInfo{}})
+	cat, ok := h.load(w, r, func(reason string) {
+		httpx.WriteJSON(w, http.StatusOK, map[string]any{"available": false, "reason": reason, "writes": false, "sections": []boxsettings.SectionInfo{}})
 	})
 	if !ok {
 		return
@@ -131,7 +155,7 @@ func (h *BoxSettings) overview(w http.ResponseWriter, r *http.Request) {
 }
 
 func (h *BoxSettings) section(w http.ResponseWriter, r *http.Request) {
-	cat, ok := h.load(w, r, func() {
+	cat, ok := h.load(w, r, func(string) {
 		httpx.WriteError(w, r, http.StatusNotFound, "not_found", "this box has no setup menus to show")
 	})
 	if !ok {
@@ -151,8 +175,8 @@ func (h *BoxSettings) search(w http.ResponseWriter, r *http.Request) {
 		httpx.WriteError(w, r, http.StatusBadRequest, "invalid_request", "q is required")
 		return
 	}
-	cat, ok := h.load(w, r, func() {
-		httpx.WriteJSON(w, http.StatusOK, map[string]any{"available": false, "hits": []boxsettings.Hit{}})
+	cat, ok := h.load(w, r, func(reason string) {
+		httpx.WriteJSON(w, http.StatusOK, map[string]any{"available": false, "reason": reason, "hits": []boxsettings.Hit{}})
 	})
 	if !ok {
 		return

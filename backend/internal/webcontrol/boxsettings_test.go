@@ -164,9 +164,9 @@ func TestSetupDefinition(t *testing.T) {
 	}
 }
 
-func TestBoxSettingsNeedAnOpenWebifBox(t *testing.T) {
+func TestBoxSettingsOnADreamboxWithoutThePlugin(t *testing.T) {
 	srv := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-		// a Dreambox: WebControl's own deviceinfo, no /api/config
+		// a Dreambox: WebControl's own deviceinfo, no /api/config, no plugin route
 		if r.URL.Path == "/web/deviceinfo" {
 			b, _ := os.ReadFile("../../testdata/fixtures/deviceinfo.xml")
 			w.Write(b)
@@ -176,13 +176,13 @@ func TestBoxSettingsNeedAnOpenWebifBox(t *testing.T) {
 	}))
 	defer srv.Close()
 	c := NewHTTPClient(srv.URL)
-	for name, call := range map[string]func() error{
-		"sections": func() error { _, err := c.ConfigSections(context.Background()); return err },
-		"items":    func() error { _, err := c.ConfigItems(context.Background(), "usage"); return err },
-		"setup":    func() error { _, err := c.SetupDefinition(context.Background()); return err },
-	} {
-		if err := call(); !errors.Is(err, ErrNotFound) {
-			t.Errorf("%s on a Dreambox: %v", name, err)
-		}
+	if _, err := c.ConfigSections(context.Background()); !errors.Is(err, ErrNeedsPlugin) {
+		t.Errorf("sections: %v", err)
+	}
+	if _, err := c.ConfigItems(context.Background(), "usage"); !errors.Is(err, ErrNeedsPlugin) {
+		t.Errorf("items: %v", err)
+	}
+	if _, err := c.SetupDefinition(context.Background()); !errors.Is(err, ErrNotFound) {
+		t.Errorf("setup: %v", err)
 	}
 }

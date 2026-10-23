@@ -2635,6 +2635,13 @@
       "usage_ts_min_duration": "Le registrazioni timeshift più brevi di questi minuti non vengono conservate.",
       "usage_ts_clean_ts_older_than": "Elimina i file timeshift più vecchi di questi giorni."
     },
-    "reload": "Rileggi il box"
+    "reload": "Rileggi il box",
+    "needsPlugin": "Questa Dreambox ha bisogno di un plugin DreamHub più recente per mostrare le sue impostazioni. Aggiorna il pacchetto DreamHub sul box.",
+    "menusGroup": "Menu di configurazione",
+    "treeGroup": "Tutte le impostazioni, per nome della chiave",
+    "treeWhy": "Un'impostazione dalla configurazione del box, elencata con il nome della chiave — non ha un testo di menu. I plugin le leggono per lo più all'avvio, quindi una modifica può richiedere il riavvio del plugin o della GUI.",
+    "stateMark": "Sembra uno stato",
+    "stateWhy": "Sembra qualcosa che il box ricorda per sé (l'ultimo canale, un contatore, un'ora), non una scelta tua.",
+    "levelAll": "Modalità di configurazione del box: {level}. Qui è elencata ogni impostazione, qualunque sia il livello; il livello è indicato accanto."
   }
 }

@@ -116,7 +116,7 @@ Only keys that exist on both boxes with the same type and a choice the target kn
 ## Packages
 
 - **S1 — view (OpenWebif)**: sections, items, search, the box's level, the risk and restart marks, read-only. `setup.xml` through `/file` supplies `level`, `guirestart`, `description`. Against the mock (fixtures from the Solo2) and the Solo2.
-- **S2 — view (Dreambox)**: the TV plugin's endpoint (the 10 core sections from `setup.xml`, which `/file` already serves, plus the `config.plugins.*` tree walk for everything else; types and choices only the plugin can tell).
+- **S2 — view (Dreambox)** — **built 2026-10-23, read only**, checked on the One (`ARCHITECTURE.md`, "Box settings route on the Dreambox One, first deploy"): the TV plugin's endpoint (the 10 core sections from `setup.xml`, which `/file` already serves, plus the `config.plugins.*` tree walk for everything else; types and choices only the plugin can tell).
 - **S2b — plugin routes (Dreambox, after S3)**: apply AutoTimer, EPGRefresh and SerienRecorder changes through their own routes, then persist through the TV plugin (see above). Until then the walk alone writes them.
 - **S3 — change**: plans, read-back, the per-change backup and Undo, the PIN step for risky keys; the full snapshot.
 - **S4 — restart**: the "Restart GUI" plan with the recording check.

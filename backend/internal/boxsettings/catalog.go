@@ -27,6 +27,9 @@ type section struct {
 type SectionInfo struct {
 	Key   string `json:"key"`
 	Title string `json:"title"`
+	// Group is "" for a menu of the box and "tree" for a part of the config
+	// tree a Dreambox's plugin walks (settings by key name, no menu text).
+	Group string `json:"group,omitempty"`
 	// Count is the settings in it (titles between them not counted).
 	Count int `json:"count"`
 	// HiddenByLevel is how many more settings the box's own setup file
@@ -52,6 +55,12 @@ type Item struct {
 	// Risk and RiskCategory: see lists.go; empty when not risky.
 	Risk         Risk   `json:"risk,omitempty"`
 	RiskCategory string `json:"riskCategory,omitempty"`
+	// Tree: the item comes from the config tree, not from a setup menu — its
+	// label is its key name, and what a change needs is not known.
+	Tree bool `json:"tree,omitempty"`
+	// State: it looks like something the box keeps for itself (the last
+	// channel, a counter), not a choice.
+	State bool `json:"state,omitempty"`
 	// Secret: a password, PIN or login — set or not, never shown.
 	Secret bool `json:"secret,omitempty"`
 	// IsSet is true for a secret that holds a value.
@@ -103,10 +112,10 @@ func Build(sections []webcontrol.ConfigSection, items map[string][]webcontrol.Co
 	}
 
 	for _, s := range sections {
-		out := section{info: SectionInfo{Key: s.Key, Title: s.Title}}
+		out := section{info: SectionInfo{Key: s.Key, Title: s.Title, Group: s.Group}}
 		listed := map[string]bool{}
 		for _, raw := range items[s.Key] {
-			it := Item{Path: raw.Path, Label: raw.Label, Kind: raw.Kind, Value: raw.Value, Choices: raw.Choices}
+			it := Item{Path: raw.Path, Label: raw.Label, Kind: raw.Kind, Value: raw.Value, Choices: raw.Choices, Tree: s.Group == webcontrol.GroupTree}
 			if raw.Kind != webcontrol.KindHeading {
 				listed[raw.Path] = true
 				out.info.Count++
@@ -122,9 +131,10 @@ func Build(sections []webcontrol.ConfigSection, items map[string][]webcontrol.Co
 				if NeedsGuiRestart(raw.Path) {
 					it.GuiRestart = true
 				}
-				if IsSecret(raw.Path) {
+				it.State = RuntimeState(raw.Path)
+				if raw.Secret || IsSecret(raw.Path) {
 					it.Secret = true
-					it.IsSet = raw.Value != nil && raw.Value != "" && raw.Value != false
+					it.IsSet = raw.IsSet || (raw.Value != nil && raw.Value != "" && raw.Value != false)
 					it.Value = nil
 				}
 			}

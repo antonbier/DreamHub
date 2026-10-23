@@ -1,0 +1,65 @@
+{
+ "ok": true,
+ "sections": [
+  {
+   "available": true,
+   "items": 3,
+   "key": "rc",
+   "title": "Fernbedienung"
+  },
+  {
+   "available": true,
+   "items": 2,
+   "key": "timezone",
+   "title": "Zeitzone"
+  },
+  {
+   "available": true,
+   "items": 9,
+   "key": "avsetup",
+   "title": "A/V-Einstellungen"
+  },
+  {
+   "available": true,
+   "items": 52,
+   "key": "usage",
+   "title": "Anpassen"
+  },
+  {
+   "available": true,
+   "items": 1,
+   "key": "harddisk",
+   "title": "Festplatten-Einstellungen"
+  },
+  {
+   "available": true,
+   "items": 1,
+   "key": "keyboard",
+   "title": "Tastatureinstellung"
+  },
+  {
+   "available": true,
+   "items": 3,
+   "key": "osd",
+   "title": "OSD-Einstellungen"
+  },
+  {
+   "available": true,
+   "items": 3,
+   "key": "lcd",
+   "title": "Display-Einstellungen"
+  },
+  {
+   "available": true,
+   "items": 7,
+   "key": "led",
+   "title": "LED Einstellungen"
+  },
+  {
+   "available": true,
+   "items": 6,
+   "key": "satconfig",
+   "title": "Sat-/Schüsseleinstellungen"
+  }
+ ]
+}

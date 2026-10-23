@@ -52,6 +52,14 @@ func mockSettings() []mockSection {
 		{webcontrol.ConfigSection{Key: "parental", Title: "Parental control"}, []webcontrol.ConfigItem{
 			{Path: "config.ParentalControl.setuppin", Label: "Setup PIN", Kind: webcontrol.KindText, Value: "0000"},
 		}},
+		// A part of the config tree, as a Dreambox's plugin lists it: key
+		// names only.
+		{webcontrol.ConfigSection{Key: "tree.settings.plugins.demo", Title: "plugins.demo", Group: webcontrol.GroupTree}, []webcontrol.ConfigItem{
+			{Path: "config.plugins.demo.enabled", Label: "enabled", Kind: webcontrol.KindBool, Value: true},
+			{Path: "config.plugins.demo.interval", Label: "interval", Kind: webcontrol.KindNumber, Value: float64(30)},
+			{Path: "config.plugins.demo.lastscan", Label: "lastscan", Kind: webcontrol.KindNumber, Value: float64(1761300000)},
+			{Path: "config.plugins.demo.password", Label: "password", Kind: webcontrol.KindText, Secret: true, IsSet: true},
+		}},
 	}
 }
 
@@ -78,13 +86,25 @@ func mockSetup() []webcontrol.SetupSection {
 	}
 }
 
+// noSettings is the mock box without setup menus: an OpenWebif-less box
+// (NoBoxSettings) or a Dreambox whose plugin is too old (OldSettingsPlugin).
+func (c *Client) noSettings(what string) error {
+	if c.OldSettingsPlugin {
+		return fmt.Errorf("mock: %s: %w", what, webcontrol.ErrNeedsPlugin)
+	}
+	if c.NoBoxSettings {
+		return fmt.Errorf("mock: %s: %w", what, webcontrol.ErrNotFound)
+	}
+	return nil
+}
+
 // ConfigSections lists the mock box's sections.
 func (c *Client) ConfigSections(ctx context.Context) ([]webcontrol.ConfigSection, error) {
 	if err := c.disturb(ctx); err != nil {
 		return nil, err
 	}
-	if c.NoBoxSettings {
-		return nil, fmt.Errorf("mock: /api/config: %w", webcontrol.ErrNotFound)
+	if err := c.noSettings("/api/config"); err != nil {
+		return nil, err
 	}
 	var out []webcontrol.ConfigSection
 	for _, s := range mockSettings() {
@@ -98,8 +118,8 @@ func (c *Client) ConfigItems(ctx context.Context, key string) ([]webcontrol.Conf
 	if err := c.disturb(ctx); err != nil {
 		return nil, err
 	}
-	if c.NoBoxSettings {
-		return nil, fmt.Errorf("mock: /api/config: %w", webcontrol.ErrNotFound)
+	if err := c.noSettings("/api/config"); err != nil {
+		return nil, err
 	}
 	for _, s := range mockSettings() {
 		if s.Key == key {

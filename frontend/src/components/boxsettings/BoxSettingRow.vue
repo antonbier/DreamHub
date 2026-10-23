@@ -4,8 +4,9 @@
   level in a small line below, and the marks — a risky setting, one that
   needs a GUI restart. A "?" button opens a short explanation under the row:
   DreamHub's own text for the setting if there is one, the receiver's own
-  description (English) otherwise, plus what the marks mean. A setting with
-  nothing to explain has no button — its label says it all.
+  description (English) otherwise, plus what the marks mean. A setting from
+  the config tree (a Dreambox's plugins, listed by key name) says so there.
+  A setting with nothing to explain has no button — its label says it all.
 -->
 <template>
   <li class="border-b border-line-soft py-2.5 last:border-none">
@@ -20,6 +21,7 @@
             {{ t(`boxsettings.risk.${item.risk}`) }}
           </span>
           <span v-if="item.guiRestart" class="text-muted">{{ t('boxsettings.guiRestart') }}</span>
+          <span v-if="item.state" class="text-muted">{{ t('boxsettings.stateMark') }}</span>
         </p>
       </div>
       <p class="max-w-[45%] shrink-0 break-words text-end text-[13.5px] text-text below-sm:max-w-[40%]" :class="{ 'text-muted': item.kind === 'readonly' }">
@@ -49,6 +51,8 @@
         {{ t(`boxsettings.riskWhy.${item.riskCategory}`) }}
       </p>
       <p v-if="item.guiRestart" class="mt-2 text-muted">{{ t('boxsettings.guiRestartWhy') }}</p>
+      <p v-if="item.state" class="mt-2 text-muted">{{ t('boxsettings.stateWhy') }}</p>
+      <p v-if="item.tree" class="mt-2 text-muted">{{ t('boxsettings.treeWhy') }}</p>
       <p v-if="item.secret" class="mt-2 text-muted">{{ t('boxsettings.secretWhy') }}</p>
     </div>
   </li>
@@ -75,5 +79,5 @@ const ownHelp = computed(() => {
   return te(key) ? t(key) : ''
 })
 
-const hasHelp = computed(() => !!(ownHelp.value || props.item.help || props.item.risk || props.item.guiRestart || props.item.secret))
+const hasHelp = computed(() => !!(ownHelp.value || props.item.help || props.item.risk || props.item.guiRestart || props.item.secret || props.item.state || props.item.tree))
 </script>

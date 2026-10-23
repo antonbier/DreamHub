@@ -107,5 +107,18 @@ def register(session):
 
     root = resource.Resource()
     root.putChild("play", PlayResource(session))
+    try:
+        # The box's settings, read only (websettings.py). A fault in it must
+        # not take /dreamhub/play down with it.
+        from .websettings import SettingsResource
+
+        root.putChild("settings", SettingsResource(session))
+    except Exception:
+        # Say why in enigma2's log (journalctl): a silent skip would look like
+        # an old plugin to the backend.
+        import traceback
+
+        print("[DreamHub] /dreamhub/settings not registered:")
+        traceback.print_exc()
     # (path, resource, name, version, listed in WebInterface's menu)
     addExternalChild(("dreamhub", root, "DreamHub", "1", False))

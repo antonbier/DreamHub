@@ -2635,6 +2635,13 @@
       "usage_ts_min_duration": "Timeshift recordings shorter than this many minutes are not kept.",
       "usage_ts_clean_ts_older_than": "Deletes timeshift files that are older than this many days."
     },
-    "reload": "Read the box again"
+    "reload": "Read the box again",
+    "needsPlugin": "This Dreambox needs a newer DreamHub plugin to show its settings. Update the DreamHub package on the box.",
+    "menusGroup": "Setup menus",
+    "treeGroup": "All settings, by key name",
+    "treeWhy": "A setting from the box's configuration, listed by its key name — it has no menu text. Plugins mostly read these when they start, so a change may need a restart of the plugin or the GUI.",
+    "stateMark": "Looks like state",
+    "stateWhy": "This looks like something the box keeps for itself (the last channel, a counter, a time), not a choice you made.",
+    "levelAll": "Setup mode of the box: {level}. Every setting is listed here, whatever its level; the level of each shows beside it."
   }
 }

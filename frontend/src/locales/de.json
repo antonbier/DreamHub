@@ -2635,6 +2635,13 @@
       "usage_ts_min_duration": "Timeshift-Aufzeichnungen, die kürzer als so viele Minuten sind, werden nicht behalten.",
       "usage_ts_clean_ts_older_than": "Löscht Timeshift-Dateien, die älter als so viele Tage sind."
     },
-    "reload": "Box erneut auslesen"
+    "reload": "Box erneut auslesen",
+    "needsPlugin": "Diese Dreambox braucht ein neueres DreamHub-Plugin, um ihre Einstellungen zu zeigen. Aktualisiere das DreamHub-Paket auf der Box.",
+    "menusGroup": "Einstellungsmenüs",
+    "treeGroup": "Alle Einstellungen, nach Schlüsselname",
+    "treeWhy": "Eine Einstellung aus der Konfiguration der Box, aufgeführt unter ihrem Schlüsselnamen — sie hat keinen Menütext. Plugins lesen diese meist beim Start, daher kann eine Änderung einen Neustart des Plugins oder der GUI brauchen.",
+    "stateMark": "Sieht nach Zustand aus",
+    "stateWhy": "Das sieht nach etwas aus, das die Box für sich selbst merkt (der letzte Sender, ein Zähler, eine Uhrzeit), nicht nach einer Auswahl von dir.",
+    "levelAll": "Einrichtungsmodus der Box: {level}. Hier steht jede Einstellung, egal welcher Stufe; die Stufe steht jeweils daneben."
   }
 }

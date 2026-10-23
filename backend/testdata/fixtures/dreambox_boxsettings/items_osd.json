@@ -1,0 +1,38 @@
+{
+ "available": true,
+ "items": [
+  {
+   "available": true,
+   "heading": false,
+   "label": "Transparenz",
+   "level": 0,
+   "missing": "not_found",
+   "notify": false,
+   "path": "config.osd.alpha",
+   "requires": null
+  },
+  {
+   "available": true,
+   "heading": false,
+   "label": "Helligkeit",
+   "level": 0,
+   "missing": "not_found",
+   "notify": false,
+   "path": "config.osd.bright",
+   "requires": null
+  },
+  {
+   "available": true,
+   "heading": false,
+   "label": "Kontrast",
+   "level": 0,
+   "missing": "not_found",
+   "notify": false,
+   "path": "config.osd.contrast",
+   "requires": null
+  }
+ ],
+ "key": "osd",
+ "ok": true,
+ "title": "OSD-Einstellungen"
+}

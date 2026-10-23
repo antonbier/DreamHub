@@ -1,0 +1,371 @@
+{
+ "ok": true,
+ "roots": [
+  {
+   "count": 144,
+   "root": "config.AdvancedMovieSelection",
+   "store": "settings"
+  },
+  {
+   "count": 116,
+   "root": "config.Nims",
+   "store": "settings"
+  },
+  {
+   "count": 15,
+   "root": "config.ParentalControl",
+   "store": "settings"
+  },
+  {
+   "count": 2,
+   "root": "config.SleepTimer",
+   "store": "settings"
+  },
+  {
+   "count": 30,
+   "root": "config.Styles",
+   "store": "settings"
+  },
+  {
+   "count": 2,
+   "root": "config.audio",
+   "store": "settings"
+  },
+  {
+   "count": 28,
+   "root": "config.av",
+   "store": "settings"
+  },
+  {
+   "count": 20,
+   "root": "config.cec",
+   "store": "settings"
+  },
+  {
+   "count": 4,
+   "root": "config.ci",
+   "store": "settings"
+  },
+  {
+   "count": 1,
+   "root": "config.cmdline",
+   "store": "settings"
+  },
+  {
+   "count": 5,
+   "root": "config.expert",
+   "store": "settings"
+  },
+  {
+   "count": 7,
+   "root": "config.fp",
+   "store": "settings"
+  },
+  {
+   "count": 1,
+   "root": "config.gbackground",
+   "store": "settings"
+  },
+  {
+   "count": 11,
+   "root": "config.gemininetcast",
+   "store": "settings"
+  },
+  {
+   "count": 5,
+   "root": "config.geminiwebremote",
+   "store": "settings"
+  },
+  {
+   "count": 5,
+   "root": "config.gsripper",
+   "store": "settings"
+  },
+  {
+   "count": 17,
+   "root": "config.inputDevices",
+   "store": "settings"
+  },
+  {
+   "count": 1,
+   "root": "config.keyboard",
+   "store": "settings"
+  },
+  {
+   "count": 4,
+   "root": "config.lcd",
+   "store": "settings"
+  },
+  {
+   "count": 3,
+   "root": "config.log",
+   "store": "settings"
+  },
+  {
+   "count": 1,
+   "root": "config.media_database",
+   "store": "settings"
+  },
+  {
+   "count": 2,
+   "root": "config.mediaplayer",
+   "store": "settings"
+  },
+  {
+   "count": 30,
+   "root": "config.misc",
+   "store": "settings"
+  },
+  {
+   "count": 13,
+   "root": "config.movielist",
+   "store": "settings"
+  },
+  {
+   "count": 1,
+   "root": "config.mpgz",
+   "store": "settings"
+  },
+  {
+   "count": 1,
+   "root": "config.network",
+   "store": "settings"
+  },
+  {
+   "count": 1,
+   "root": "config.osd",
+   "store": "settings"
+  },
+  {
+   "count": 2,
+   "root": "config.parental",
+   "store": "settings"
+  },
+  {
+   "count": 15,
+   "root": "config.pep",
+   "store": "settings"
+  },
+  {
+   "count": 2,
+   "root": "config.plugins.DreamExplorer",
+   "store": "settings"
+  },
+  {
+   "count": 20,
+   "root": "config.plugins.EasyInfo",
+   "store": "settings"
+  },
+  {
+   "count": 4,
+   "root": "config.plugins.SecondInfoBar",
+   "store": "settings"
+  },
+  {
+   "count": 15,
+   "root": "config.plugins.TeleText",
+   "store": "settings"
+  },
+  {
+   "count": 9,
+   "root": "config.plugins.WebBrowser",
+   "store": "settings"
+  },
+  {
+   "count": 17,
+   "root": "config.plugins.Webinterface",
+   "store": "settings"
+  },
+  {
+   "count": 1,
+   "root": "config.plugins.automatictimerlistcleanup",
+   "store": "settings"
+  },
+  {
+   "count": 33,
+   "root": "config.plugins.autotimer",
+   "store": "settings"
+  },
+  {
+   "count": 2,
+   "root": "config.plugins.configurationbackup",
+   "store": "settings"
+  },
+  {
+   "count": 1,
+   "root": "config.plugins.dreamhub",
+   "store": "settings"
+  },
+  {
+   "count": 8,
+   "root": "config.plugins.dreammediainfo",
+   "store": "settings"
+  },
+  {
+   "count": 13,
+   "root": "config.plugins.easyMedia",
+   "store": "settings"
+  },
+  {
+   "count": 7,
+   "root": "config.plugins.emission",
+   "store": "settings"
+  },
+  {
+   "count": 25,
+   "root": "config.plugins.epgrefresh",
+   "store": "settings"
+  },
+  {
+   "count": 13,
+   "root": "config.plugins.epgsearch",
+   "store": "settings"
+  },
+  {
+   "count": 26,
+   "root": "config.plugins.eventdatamanager",
+   "store": "settings"
+  },
+  {
+   "count": 21,
+   "root": "config.plugins.githubpluginupdater",
+   "store": "settings"
+  },
+  {
+   "count": 3,
+   "root": "config.plugins.hbbtv",
+   "store": "settings"
+  },
+  {
+   "count": 5,
+   "root": "config.plugins.imdb",
+   "store": "settings"
+  },
+  {
+   "count": 3,
+   "root": "config.plugins.mediarenderer",
+   "store": "settings"
+  },
+  {
+   "count": 7,
+   "root": "config.plugins.mediaserver",
+   "store": "settings"
+  },
+  {
+   "count": 29,
+   "root": "config.plugins.plexdream",
+   "store": "settings"
+  },
+  {
+   "count": 141,
+   "root": "config.plugins.serienRec",
+   "store": "settings"
+  },
+  {
+   "count": 5,
+   "root": "config.plugins.servicescanupdates",
+   "store": "settings"
+  },
+  {
+   "count": 5,
+   "root": "config.plugins.skinreloader",
+   "store": "settings"
+  },
+  {
+   "count": 1,
+   "root": "config.plugins.softwaremanager",
+   "store": "settings"
+  },
+  {
+   "count": 15,
+   "root": "config.plugins.svenh",
+   "store": "settings"
+  },
+  {
+   "count": 4,
+   "root": "config.plugins.tvspielfilm",
+   "store": "settings"
+  },
+  {
+   "count": 3,
+   "root": "config.plugins.updatechecker",
+   "store": "settings"
+  },
+  {
+   "count": 1,
+   "root": "config.plugins.upnp",
+   "store": "settings"
+  },
+  {
+   "count": 2,
+   "root": "config.radio",
+   "store": "settings"
+  },
+  {
+   "count": 6,
+   "root": "config.recording",
+   "store": "settings"
+  },
+  {
+   "count": 20,
+   "root": "config.sec",
+   "store": "settings"
+  },
+  {
+   "count": 9,
+   "root": "config.seek",
+   "store": "settings"
+  },
+  {
+   "count": 1,
+   "root": "config.servicelist",
+   "store": "settings"
+  },
+  {
+   "count": 1,
+   "root": "config.skin",
+   "store": "settings"
+  },
+  {
+   "count": 3,
+   "root": "config.startupservice",
+   "store": "settings"
+  },
+  {
+   "count": 3,
+   "root": "config.startupserviceleavingstandbymode",
+   "store": "settings"
+  },
+  {
+   "count": 5,
+   "root": "config.storage",
+   "store": "settings"
+  },
+  {
+   "count": 1,
+   "root": "config.storage_options",
+   "store": "settings"
+  },
+  {
+   "count": 7,
+   "root": "config.streamservices",
+   "store": "settings"
+  },
+  {
+   "count": 3,
+   "root": "config.timezone",
+   "store": "settings"
+  },
+  {
+   "count": 2,
+   "root": "config.tv",
+   "store": "settings"
+  },
+  {
+   "count": 63,
+   "root": "config.usage",
+   "store": "settings"
+  }
+ ],
+ "store": "settings"
+}

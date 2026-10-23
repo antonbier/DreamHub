@@ -148,3 +148,29 @@ func NeedsGuiRestart(path string) bool {
 	}
 	return false
 }
+
+// stateKeys are settings that hold what the box does or did last, not what
+// anybody chose (ARCHITECTURE.md, "Plugin data survey"): counters, the last
+// channel, wake-up times. Shown, but marked, and left out of any copy.
+var stateKeys = []string{
+	"config.misc.startCounter", "config.misc.firstrun", "config.misc.defaultchosen",
+	"config.misc.prev_wakeup", "config.misc.rcused", "config.misc.initialchannelselection",
+	"config.misc.initialharddisknotification", "config.misc.missingdefaultstoragenotification",
+	"config.misc.fsbl_update_never", "config.misc.graph_mepg",
+	"config.startupservice.", "config.startupserviceleavingstandbymode.",
+	"config.servicelist.lastmode", "config.tv.last", "config.radio.last", "config.movielist.last_",
+	"config.timezone.version", "config.Webinterface.version",
+}
+
+// RuntimeState says whether a setting looks like state the box keeps itself:
+// on the list, or a name whose last part starts with "last" (lastservice,
+// lastscan, lastcheck, last_icon_path).
+func RuntimeState(path string) bool {
+	for _, k := range stateKeys {
+		if strings.HasPrefix(path, k) {
+			return true
+		}
+	}
+	last := path[strings.LastIndex(path, ".")+1:]
+	return strings.HasPrefix(strings.ToLower(last), "last")
+}

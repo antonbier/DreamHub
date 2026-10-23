@@ -1,0 +1,151 @@
+{
+ "ok": true,
+ "roots": [
+  {
+   "count": 1,
+   "root": "config.filmpalast",
+   "store": "gp"
+  },
+  {
+   "count": 4,
+   "root": "config.gbluepanel",
+   "store": "gp"
+  },
+  {
+   "count": 1,
+   "root": "config.gbluez",
+   "store": "gp"
+  },
+  {
+   "count": 1,
+   "root": "config.gcammanager",
+   "store": "gp"
+  },
+  {
+   "count": 45,
+   "root": "config.gcommander",
+   "store": "gp"
+  },
+  {
+   "count": 47,
+   "root": "config.geminiGlobal",
+   "store": "gp"
+  },
+  {
+   "count": 6,
+   "root": "config.geminiaddon",
+   "store": "gp"
+  },
+  {
+   "count": 21,
+   "root": "config.gemininetcast",
+   "store": "gp"
+  },
+  {
+   "count": 6,
+   "root": "config.gemininetscan",
+   "store": "gp"
+  },
+  {
+   "count": 2,
+   "root": "config.geminioscam",
+   "store": "gp"
+  },
+  {
+   "count": 2,
+   "root": "config.geminiqbutton",
+   "store": "gp"
+  },
+  {
+   "count": 15,
+   "root": "config.geminiserver",
+   "store": "gp"
+  },
+  {
+   "count": 4,
+   "root": "config.geminispinner",
+   "store": "gp"
+  },
+  {
+   "count": 11,
+   "root": "config.ghwmanger",
+   "store": "gp"
+  },
+  {
+   "count": 5,
+   "root": "config.gimagebackup",
+   "store": "gp"
+  },
+  {
+   "count": 5,
+   "root": "config.gsripper",
+   "store": "gp"
+  },
+  {
+   "count": 28,
+   "root": "config.gwidgets",
+   "store": "gp"
+  },
+  {
+   "count": 3,
+   "root": "config.gzerotier",
+   "store": "gp"
+  },
+  {
+   "count": 1,
+   "root": "config.hdfilme",
+   "store": "gp"
+  },
+  {
+   "count": 17,
+   "root": "config.plutotv",
+   "store": "gp"
+  },
+  {
+   "count": 1,
+   "root": "config.radiobrowser",
+   "store": "gp"
+  },
+  {
+   "count": 24,
+   "root": "config.receive",
+   "store": "gp"
+  },
+  {
+   "count": 12,
+   "root": "config.samsungtvplus",
+   "store": "gp"
+  },
+  {
+   "count": 1,
+   "root": "config.serienstream",
+   "store": "gp"
+  },
+  {
+   "count": 1,
+   "root": "config.streamcloud",
+   "store": "gp"
+  },
+  {
+   "count": 1,
+   "root": "config.streamkiste",
+   "store": "gp"
+  },
+  {
+   "count": 3,
+   "root": "config.tunein",
+   "store": "gp"
+  },
+  {
+   "count": 19,
+   "root": "config.vavoo",
+   "store": "gp"
+  },
+  {
+   "count": 5,
+   "root": "config.youtube",
+   "store": "gp"
+  }
+ ],
+ "store": "gp"
+}

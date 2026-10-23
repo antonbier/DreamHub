@@ -451,12 +451,14 @@ export interface TunerSignal {
 export interface BoxSettingSection {
   key: string
   title: string // the box's language
+  group?: 'tree' // a part of the config tree (a Dreambox's plugin walks it), not a setup menu
   count: number
   hiddenByLevel: number
 }
 
 export interface BoxSettingsOverview {
   available: boolean
+  reason?: 'plugin' | 'unsupported' // why not: a Dreambox whose DreamHub plugin has no settings route yet, or no way at all
   writes: boolean
   boxLevel?: number // 0 simple, 1 advanced, 2 expert; -1 unknown
   boxLevelName?: string
@@ -485,6 +487,8 @@ export interface BoxSetting {
   level: number // 0 simple, 1 advanced, 2 expert
   levelKnown: boolean
   guiRestart?: boolean
+  tree?: boolean // from the config tree: the label is the key name, a restart need unknown
+  state?: boolean // looks like state the box keeps itself (last channel, a counter)
   risk?: BoxSettingRisk
   riskCategory?: BoxSettingRiskCategory
   secret?: boolean

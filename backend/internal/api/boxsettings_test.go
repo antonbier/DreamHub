@@ -29,7 +29,7 @@ func TestBoxSettings_Overview(t *testing.T) {
 	if err := json.Unmarshal(b, &body); err != nil {
 		t.Fatal(err)
 	}
-	if !body.Available || body.Writes || body.BoxLevel != 1 || body.BoxLevelName != "Advanced" || len(body.Sections) != 4 {
+	if !body.Available || body.Writes || body.BoxLevel != 1 || body.BoxLevelName != "Advanced" || len(body.Sections) != 5 {
 		t.Fatalf("overview: %s", b)
 	}
 	if body.Sections[0].Key != "usage" || body.Sections[0].Count != 5 || body.Sections[0].HiddenByLevel != 1 {
@@ -117,5 +117,66 @@ func TestBoxSettings_ABoxWithoutSetupMenus(t *testing.T) {
 	_, b = e.do(t, "GET", "/api/v1/boxsettings/search?q=margin", "", nil)
 	if !strings.Contains(string(b), `"available":false`) {
 		t.Errorf("search: %s", b)
+	}
+}
+
+func TestBoxSettings_ATreeSectionIsMarkedAndItsStateAndSecretsToo(t *testing.T) {
+	e := newEnv(t)
+	_, b := e.do(t, "GET", "/api/v1/boxsettings", "", nil)
+	var ov struct {
+		Sections []struct{ Key, Group string } `json:"sections"`
+	}
+	json.Unmarshal(b, &ov)
+	if ov.Sections[4].Key != "tree.settings.plugins.demo" || ov.Sections[4].Group != "tree" || ov.Sections[0].Group != "" {
+		t.Fatalf("groups: %s", b)
+	}
+	_, b = e.do(t, "GET", "/api/v1/boxsettings/sections/tree.settings.plugins.demo", "", nil)
+	var sec struct {
+		Items []struct {
+			Path   string `json:"path"`
+			Tree   bool   `json:"tree"`
+			State  bool   `json:"state"`
+			Secret bool   `json:"secret"`
+			IsSet  bool   `json:"isSet"`
+			Value  any    `json:"value"`
+		} `json:"items"`
+	}
+	if err := json.Unmarshal(b, &sec); err != nil || len(sec.Items) != 4 {
+		t.Fatalf("tree section: %s", b)
+	}
+	for _, it := range sec.Items {
+		if !it.Tree {
+			t.Errorf("%s is not marked as a tree item", it.Path)
+		}
+		switch it.Path {
+		case "config.plugins.demo.lastscan":
+			if !it.State {
+				t.Error("lastscan is not marked as state")
+			}
+		case "config.plugins.demo.password":
+			if !it.Secret || !it.IsSet || it.Value != nil {
+				t.Errorf("password: %+v", it)
+			}
+		case "config.plugins.demo.enabled":
+			if it.State || it.Secret {
+				t.Errorf("enabled: %+v", it)
+			}
+		}
+	}
+}
+
+func TestBoxSettings_ADreamboxWithAnOldPluginSaysSo(t *testing.T) {
+	m := mock.New()
+	m.OldSettingsPlugin = true
+	e := newEnvWith(t, m)
+	_, b := e.do(t, "GET", "/api/v1/boxsettings", "", nil)
+	if !strings.Contains(string(b), `"available":false`) || !strings.Contains(string(b), `"reason":"plugin"`) {
+		t.Errorf("overview: %s", b)
+	}
+	m2 := mock.New()
+	m2.NoBoxSettings = true
+	_, b = newEnvWith(t, m2).do(t, "GET", "/api/v1/boxsettings", "", nil)
+	if !strings.Contains(string(b), `"reason":"unsupported"`) {
+		t.Errorf("unsupported: %s", b)
 	}
 }

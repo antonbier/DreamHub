@@ -1,0 +1,548 @@
+{
+ "items": [
+  {
+   "choiceCount": 4,
+   "choices": [
+    [
+     "main",
+     "Hauptbild"
+    ],
+    [
+     "pip",
+     "Bild in Bild (PiP)"
+    ],
+    [
+     "pip_hidden",
+     "Bild in Bild (versteckt)"
+    ],
+    [
+     "record",
+     "Pseudoaufnahme"
+    ]
+   ],
+   "choicesTruncated": false,
+   "class": "ConfigSelection",
+   "default": "record",
+   "dirty": false,
+   "kind": "choice",
+   "notifiers": [
+    0,
+    0
+   ],
+   "path": "config.plugins.epgrefresh.adapter",
+   "readOnly": null,
+   "rev": "04fb16edab6f10c1",
+   "secret": false,
+   "store": "settings",
+   "value": "record",
+   "valueText": "record"
+  },
+  {
+   "choiceCount": 4,
+   "choices": [
+    [
+     "nothing",
+     "nichts"
+    ],
+    [
+     "auto",
+     "automatisch"
+    ],
+    [
+     "standby",
+     "Standby"
+    ],
+    [
+     "idle",
+     "Idle-Modus"
+    ]
+   ],
+   "choicesTruncated": false,
+   "class": "ConfigSelection",
+   "default": "nothing",
+   "dirty": false,
+   "kind": "choice",
+   "notifiers": [
+    0,
+    0
+   ],
+   "path": "config.plugins.epgrefresh.afterevent",
+   "readOnly": null,
+   "rev": "8a6b965199761c53",
+   "secret": false,
+   "store": "settings",
+   "value": "nothing",
+   "valueText": "nothing"
+  },
+  {
+   "class": "ConfigYesNo",
+   "default": false,
+   "dirty": false,
+   "kind": "bool",
+   "notifiers": [
+    0,
+    0
+   ],
+   "path": "config.plugins.epgrefresh.background",
+   "readOnly": null,
+   "rev": "0a32a03e3bd0fa62",
+   "secret": false,
+   "store": "settings",
+   "value": false,
+   "valueText": "false"
+  },
+  {
+   "class": "ConfigClock",
+   "default": [
+    20,
+    15
+   ],
+   "dirty": false,
+   "kind": "clock",
+   "limits": [
+    [
+     0,
+     23
+    ],
+    [
+     0,
+     59
+    ]
+   ],
+   "notifiers": [
+    0,
+    0
+   ],
+   "path": "config.plugins.epgrefresh.begin",
+   "readOnly": null,
+   "rev": "e2a76d1b80ab458e",
+   "secret": false,
+   "separator": ":",
+   "store": "settings",
+   "value": [
+    20,
+    15
+   ],
+   "valueText": "20:15"
+  },
+  {
+   "class": "ConfigNumber",
+   "default": 10,
+   "dirty": false,
+   "kind": "number",
+   "notifiers": [
+    0,
+    0
+   ],
+   "path": "config.plugins.epgrefresh.delay_standby",
+   "readOnly": null,
+   "rev": "59caffe5d9e3861f",
+   "secret": false,
+   "store": "settings",
+   "value": 10,
+   "valueText": "10"
+  },
+  {
+   "class": "ConfigYesNo",
+   "default": false,
+   "dirty": false,
+   "kind": "bool",
+   "notifiers": [
+    0,
+    0
+   ],
+   "path": "config.plugins.epgrefresh.dontshutdownonabort",
+   "readOnly": null,
+   "rev": "0a32a03e3bd0fa62",
+   "secret": false,
+   "store": "settings",
+   "value": false,
+   "valueText": "false"
+  },
+  {
+   "class": "ConfigYesNo",
+   "default": false,
+   "dirty": false,
+   "kind": "bool",
+   "notifiers": [
+    0,
+    0
+   ],
+   "path": "config.plugins.epgrefresh.enabled",
+   "readOnly": null,
+   "rev": "0a32a03e3bd0fa62",
+   "secret": false,
+   "store": "settings",
+   "value": false,
+   "valueText": "false"
+  },
+  {
+   "class": "ConfigYesNo",
+   "default": true,
+   "dirty": false,
+   "kind": "bool",
+   "notifiers": [
+    0,
+    0
+   ],
+   "path": "config.plugins.epgrefresh.enablemessage",
+   "readOnly": null,
+   "rev": "8d4017579661153a",
+   "secret": false,
+   "store": "settings",
+   "value": true,
+   "valueText": "true"
+  },
+  {
+   "class": "ConfigClock",
+   "default": [
+    6,
+    30
+   ],
+   "dirty": false,
+   "kind": "clock",
+   "limits": [
+    [
+     0,
+     23
+    ],
+    [
+     0,
+     59
+    ]
+   ],
+   "notifiers": [
+    0,
+    0
+   ],
+   "path": "config.plugins.epgrefresh.end",
+   "readOnly": null,
+   "rev": "3636359d6cf1cfe9",
+   "secret": false,
+   "separator": ":",
+   "store": "settings",
+   "value": [
+    6,
+    30
+   ],
+   "valueText": "6:30"
+  },
+  {
+   "class": "ConfigYesNo",
+   "default": false,
+   "dirty": false,
+   "kind": "bool",
+   "notifiers": [
+    0,
+    0
+   ],
+   "path": "config.plugins.epgrefresh.epgreset",
+   "readOnly": null,
+   "rev": "0a32a03e3bd0fa62",
+   "secret": false,
+   "store": "settings",
+   "value": false,
+   "valueText": "false"
+  },
+  {
+   "class": "ConfigYesNo",
+   "default": false,
+   "dirty": false,
+   "kind": "bool",
+   "notifiers": [
+    0,
+    0
+   ],
+   "path": "config.plugins.epgrefresh.epgsave",
+   "readOnly": null,
+   "rev": "0a32a03e3bd0fa62",
+   "secret": false,
+   "store": "settings",
+   "value": false,
+   "valueText": "false"
+  },
+  {
+   "class": "ConfigYesNo",
+   "default": false,
+   "dirty": false,
+   "kind": "bool",
+   "notifiers": [
+    0,
+    0
+   ],
+   "path": "config.plugins.epgrefresh.force",
+   "readOnly": null,
+   "rev": "0a32a03e3bd0fa62",
+   "secret": false,
+   "store": "settings",
+   "value": false,
+   "valueText": "false"
+  },
+  {
+   "class": "ConfigYesNo",
+   "default": false,
+   "dirty": false,
+   "kind": "bool",
+   "notifiers": [
+    0,
+    0
+   ],
+   "path": "config.plugins.epgrefresh.inherit_autotimer",
+   "readOnly": null,
+   "rev": "0a32a03e3bd0fa62",
+   "secret": false,
+   "store": "settings",
+   "value": false,
+   "valueText": "false"
+  },
+  {
+   "class": "ConfigNumber",
+   "default": 2,
+   "dirty": false,
+   "kind": "number",
+   "notifiers": [
+    0,
+    0
+   ],
+   "path": "config.plugins.epgrefresh.interval",
+   "readOnly": null,
+   "rev": "66f51dd12de25859",
+   "secret": false,
+   "store": "settings",
+   "value": 2,
+   "valueText": "2"
+  },
+  {
+   "class": "ConfigNumber",
+   "default": 120,
+   "dirty": false,
+   "kind": "number",
+   "notifiers": [
+    0,
+    0
+   ],
+   "path": "config.plugins.epgrefresh.interval_seconds",
+   "readOnly": null,
+   "rev": "eb926fb87c832bf2",
+   "secret": false,
+   "store": "settings",
+   "value": 120,
+   "valueText": "120"
+  },
+  {
+   "class": "ConfigNumber",
+   "default": 0,
+   "dirty": false,
+   "kind": "number",
+   "notifiers": [
+    0,
+    0
+   ],
+   "path": "config.plugins.epgrefresh.lastscan",
+   "readOnly": null,
+   "rev": "f117748b1c426375",
+   "secret": false,
+   "store": "settings",
+   "value": 0,
+   "valueText": "0"
+  },
+  {
+   "choiceCount": 5,
+   "choices": [
+    [
+     "always",
+     "Ja"
+    ],
+    [
+     "never",
+     "Nein"
+    ],
+    [
+     "bg_only",
+     "Nur im Hintergrund"
+    ],
+    [
+     "ask_yes",
+     "Fragen default Ja"
+    ],
+    [
+     "ask_no",
+     "Fragen default Nein"
+    ]
+   ],
+   "choicesTruncated": false,
+   "class": "ConfigSelection",
+   "default": "never",
+   "dirty": false,
+   "kind": "choice",
+   "notifiers": [
+    0,
+    0
+   ],
+   "path": "config.plugins.epgrefresh.parse_autotimer",
+   "readOnly": null,
+   "rev": "40c9003e3b3f0dad",
+   "secret": false,
+   "store": "settings",
+   "value": "never",
+   "valueText": "never"
+  },
+  {
+   "class": "ConfigYesNo",
+   "default": true,
+   "dirty": false,
+   "kind": "bool",
+   "notifiers": [
+    0,
+    0
+   ],
+   "path": "config.plugins.epgrefresh.show_help",
+   "readOnly": null,
+   "rev": "8d4017579661153a",
+   "secret": false,
+   "store": "settings",
+   "value": true,
+   "valueText": "true"
+  },
+  {
+   "class": "ConfigYesNo",
+   "default": false,
+   "dirty": false,
+   "kind": "bool",
+   "notifiers": [
+    1,
+    0
+   ],
+   "path": "config.plugins.epgrefresh.show_in_extensionsmenu",
+   "readOnly": null,
+   "rev": "0a32a03e3bd0fa62",
+   "secret": false,
+   "store": "settings",
+   "value": false,
+   "valueText": "false"
+  },
+  {
+   "class": "ConfigYesNo",
+   "default": true,
+   "dirty": false,
+   "kind": "bool",
+   "notifiers": [
+    1,
+    0
+   ],
+   "path": "config.plugins.epgrefresh.show_run_in_extensionsmenu",
+   "readOnly": null,
+   "rev": "8d4017579661153a",
+   "secret": false,
+   "store": "settings",
+   "value": true,
+   "valueText": "true"
+  },
+  {
+   "class": "ConfigYesNo",
+   "default": false,
+   "dirty": false,
+   "kind": "bool",
+   "notifiers": [
+    0,
+    0
+   ],
+   "path": "config.plugins.epgrefresh.showadvancedoptions",
+   "readOnly": "not_persistent",
+   "rev": "68a7ba8457a49335",
+   "secret": false,
+   "store": "settings",
+   "value": false,
+   "valueText": "false"
+  },
+  {
+   "choiceCount": 2,
+   "choices": [
+    [
+     "bg_only",
+     "Nur im Hintergrund"
+    ],
+    [
+     "always",
+     "auch im Vordergrund"
+    ]
+   ],
+   "choicesTruncated": false,
+   "class": "ConfigSelection",
+   "default": "bg_only",
+   "dirty": false,
+   "kind": "choice",
+   "notifiers": [
+    0,
+    0
+   ],
+   "path": "config.plugins.epgrefresh.skipProtectedServices",
+   "readOnly": null,
+   "rev": "20459557512d760d",
+   "secret": false,
+   "store": "settings",
+   "value": "bg_only",
+   "valueText": "bg_only"
+  },
+  {
+   "class": "ConfigYesNo",
+   "default": false,
+   "dirty": false,
+   "kind": "bool",
+   "notifiers": [
+    0,
+    0
+   ],
+   "path": "config.plugins.epgrefresh.usetimebased",
+   "readOnly": null,
+   "rev": "0a32a03e3bd0fa62",
+   "secret": false,
+   "store": "settings",
+   "value": false,
+   "valueText": "false"
+  },
+  {
+   "class": "ConfigYesNo",
+   "default": false,
+   "dirty": false,
+   "kind": "bool",
+   "notifiers": [
+    0,
+    0
+   ],
+   "path": "config.plugins.epgrefresh.wakeup",
+   "readOnly": null,
+   "rev": "0a32a03e3bd0fa62",
+   "secret": false,
+   "store": "settings",
+   "value": false,
+   "valueText": "false"
+  },
+  {
+   "class": "ConfigInteger",
+   "default": -1,
+   "dirty": false,
+   "kind": "integer",
+   "limits": [
+    0,
+    9999999999
+   ],
+   "notifiers": [
+    0,
+    0
+   ],
+   "path": "config.plugins.epgrefresh.wakeup_time",
+   "readOnly": null,
+   "rev": "39de036affb897a8",
+   "secret": false,
+   "store": "settings",
+   "value": -1,
+   "valueText": "-1"
+  }
+ ],
+ "offset": 0,
+ "ok": true,
+ "root": "config.plugins.epgrefresh",
+ "store": "settings",
+ "total": 25
+}

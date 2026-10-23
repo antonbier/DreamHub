@@ -29,10 +29,17 @@ type BoxSettingsReader interface {
 }
 
 // ConfigSection is one entry of /api/config. Title is in the box's language.
+// Group is "" for a section of the box's own setup menus and GroupTree for a
+// group of the config tree a Dreambox's plugin walks (every setting there is,
+// by key name — ARCHITECTURE.md, "Box settings on both boxes").
 type ConfigSection struct {
 	Key   string `json:"key"`
 	Title string `json:"title"`
+	Group string `json:"group,omitempty"`
 }
+
+// GroupTree marks a section that is a part of the config tree, not a menu.
+const GroupTree = "tree"
 
 // Item kinds, as DreamHub names them (OpenWebif: select, checkbox, number,
 // text, multicheckbox, unknown).
@@ -55,6 +62,11 @@ type ConfigItem struct {
 	Kind    string         `json:"kind"`
 	Value   any            `json:"value"`
 	Choices []ConfigChoice `json:"choices,omitempty"`
+	// Secret and IsSet: the box's plugin says this is a password or PIN and
+	// whether it holds a value; Value is nil then. Left false by OpenWebif,
+	// which hides such items by showing them as a type it cannot read.
+	Secret bool `json:"secret,omitempty"`
+	IsSet  bool `json:"isSet,omitempty"`
 }
 
 // ConfigChoice is one value a choice or multi-choice item accepts.
@@ -97,7 +109,7 @@ const systemSetupFile = "/usr/share/enigma2/setup.xml"
 // OpenWebif image.
 func (c *HTTPClient) ConfigSections(ctx context.Context) ([]ConfigSection, error) {
 	if !c.runsOpenWebif(ctx) {
-		return nil, fmt.Errorf("webcontrol: /api/config: %w", ErrNotFound)
+		return c.dreamboxSections(ctx)
 	}
 	body, err := c.get(ctx, "/api/config")
 	if err != nil {
@@ -129,7 +141,7 @@ func (c *HTTPClient) ConfigItems(ctx context.Context, key string) ([]ConfigItem,
 		return nil, fmt.Errorf("webcontrol: invalid section key %q", key)
 	}
 	if !c.runsOpenWebif(ctx) {
-		return nil, fmt.Errorf("webcontrol: /api/config: %w", ErrNotFound)
+		return c.dreamboxItems(ctx, key)
 	}
 	body, err := c.get(ctx, "/api/config/"+url.PathEscape(key))
 	if err != nil {
@@ -140,11 +152,11 @@ func (c *HTTPClient) ConfigItems(ctx context.Context, key string) ([]ConfigItem,
 }
 
 func validSectionKey(key string) bool {
-	if key == "" || len(key) > 64 {
+	if key == "" || len(key) > 96 {
 		return false
 	}
 	for _, r := range key {
-		if !(r >= 'a' && r <= 'z' || r >= 'A' && r <= 'Z' || r >= '0' && r <= '9' || r == '_' || r == '-') {
+		if !(r >= 'a' && r <= 'z' || r >= 'A' && r <= 'Z' || r >= '0' && r <= '9' || r == '_' || r == '-' || r == '.') {
 			return false
 		}
 	}
@@ -246,14 +258,15 @@ func scalarString(v any) string {
 
 // SetupDefinition reads the system setup.xml and the plugins' ones through
 // /file. The system file is required (its failure is the error); a plugin's
-// missing file is skipped. A box that is not an OpenWebif image: ErrNotFound.
+// missing file is skipped. A Dreambox's is the same file without the
+// description and restart attributes and has no plugin files (ARCHITECTURE.md).
 func (c *HTTPClient) SetupDefinition(ctx context.Context) ([]SetupSection, error) {
-	if !c.runsOpenWebif(ctx) {
-		return nil, fmt.Errorf("webcontrol: setup.xml: %w", ErrNotFound)
-	}
 	sections, err := c.setupFile(ctx, systemSetupFile)
 	if err != nil {
 		return nil, err
+	}
+	if !c.runsOpenWebif(ctx) {
+		return sections, nil
 	}
 	for _, f := range pluginSetupFiles {
 		more, err := c.setupFile(ctx, f)

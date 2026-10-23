@@ -9,11 +9,15 @@
   <div class="mt-4">
     <p v-if="loading" class="text-[14px] text-muted">{{ t('common.loading') }}</p>
     <p v-else-if="loadFailed" class="text-[14px] text-muted"><ErrorText /></p>
-    <p v-else-if="!overview?.available" class="text-[14px] text-muted">{{ t('boxsettings.unavailable') }}</p>
+    <p v-else-if="!overview?.available" class="text-[14px] text-muted">
+      {{ overview?.reason === 'plugin' ? t('boxsettings.needsPlugin') : t('boxsettings.unavailable') }}
+    </p>
     <template v-else>
       <p class="text-[13px] text-muted">{{ t('boxsettings.intro') }}</p>
       <p class="mt-1 text-[12.5px] text-faint">
-        <template v-if="overview.boxLevelName">{{ t('boxsettings.level', { level: overview.boxLevelName }) }} </template>
+        <template v-if="overview.boxLevelName">
+          {{ t(groups.length > 1 ? 'boxsettings.levelAll' : 'boxsettings.level', { level: overview.boxLevelName }) }}
+        </template>
         <button type="button" class="text-accent hover:underline disabled:opacity-60" :disabled="reloading" @click="reload">
           {{ reloading ? t('common.loading') : t('boxsettings.reload') }}
         </button>
@@ -52,20 +56,23 @@
       <!-- Sections -->
       <div v-else class="mt-4 grid grid-cols-[14rem_1fr] gap-5 below-md:grid-cols-1 below-md:gap-3">
         <nav :aria-label="t('boxsettings.sections')" class="below-md:hidden">
-          <ul class="flex flex-col gap-0.5">
-            <li v-for="s in overview.sections" :key="s.key">
-              <button
-                type="button"
-                class="flex w-full items-baseline justify-between gap-2 rounded-sm px-2.5 py-1.5 text-start text-[13.5px]"
-                :class="s.key === current ? 'bg-tile-2 font-semibold text-text' : 'text-muted hover:bg-tile hover:text-text'"
-                :aria-current="s.key === current ? 'true' : undefined"
-                @click="openSection(s.key)"
-              >
-                <span class="min-w-0 truncate">{{ s.title }}</span>
-                <span class="shrink-0 text-[12px] tabular-nums text-faint">{{ s.count }}</span>
-              </button>
-            </li>
-          </ul>
+          <template v-for="g in groups" :key="g.id">
+            <p v-if="groups.length > 1" class="px-2.5 pb-1 pt-3 text-[12.5px] font-semibold text-muted first:pt-0">{{ g.label }}</p>
+            <ul class="flex flex-col gap-0.5" :class="g.id === 'tree' ? 'max-h-[28rem] overflow-y-auto' : ''">
+              <li v-for="s in g.sections" :key="s.key">
+                <button
+                  type="button"
+                  class="flex w-full items-baseline justify-between gap-2 rounded-sm px-2.5 py-1.5 text-start text-[13.5px]"
+                  :class="s.key === current ? 'bg-tile-2 font-semibold text-text' : 'text-muted hover:bg-tile hover:text-text'"
+                  :aria-current="s.key === current ? 'true' : undefined"
+                  @click="openSection(s.key)"
+                >
+                  <span class="min-w-0 truncate">{{ s.title }}</span>
+                  <span class="shrink-0 text-[12px] tabular-nums text-faint">{{ s.count }}</span>
+                </button>
+              </li>
+            </ul>
+          </template>
         </nav>
         <label class="hidden below-md:block">
           <span class="sr-only">{{ t('boxsettings.sections') }}</span>
@@ -74,7 +81,9 @@
             class="w-full rounded-sm border border-line bg-field px-2.5 py-2 text-[13.5px] text-text"
             @change="openSection(($event.target as HTMLSelectElement).value)"
           >
-            <option v-for="s in overview.sections" :key="s.key" :value="s.key">{{ s.title }} ({{ s.count }})</option>
+            <optgroup v-for="g in groups" :key="g.id" :label="groups.length > 1 ? g.label : ''">
+              <option v-for="s in g.sections" :key="s.key" :value="s.key">{{ s.title }} ({{ s.count }})</option>
+            </optgroup>
           </select>
         </label>
 
@@ -119,6 +128,17 @@ const current = ref('')
 const section = ref<{ section: BoxSettingSection; items: BoxSetting[] } | null>(null)
 const sectionBusy = ref(false)
 const sectionFailed = ref(false)
+
+// The sections in two groups: the box's own setup menus, and — on a Dreambox —
+// the rest of its config tree by key name.
+const groups = computed(() => {
+  const all = overview.value?.sections ?? []
+  const menus = all.filter((s) => s.group !== 'tree')
+  const tree = all.filter((s) => s.group === 'tree')
+  const out = [{ id: 'menus', label: t('boxsettings.menusGroup'), sections: menus }]
+  if (tree.length > 0) out.push({ id: 'tree', label: t('boxsettings.treeGroup'), sections: tree })
+  return out.filter((g) => g.sections.length > 0)
+})
 
 const query = ref('')
 const hits = ref<BoxSettingHit[]>([])

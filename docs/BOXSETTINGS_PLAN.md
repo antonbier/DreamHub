@@ -1,6 +1,6 @@
 # Box settings — plan
 
-Status: **planned 2026-10-23, nothing built.** The owner's decisions are below; the open questions at the end are still his to answer. The OpenWebif side was read on the VU+ Solo2 (`ARCHITECTURE.md`, "VU+ Solo2 with VTi 15", "OpenWebif features beyond DreamHub's calls"); the Dreambox side is not checked yet (the One was off). Tracked in `ROADMAP.md`, v1.1, "Box features from OpenWebif". Once a package lands, its status moves to `ROADMAP.md`.
+Status: **planned 2026-10-23, nothing built.** The owner's decisions are below; the open questions at the end are still open. The OpenWebif side was read on the VU+ Solo2 (`ARCHITECTURE.md`, "VU+ Solo2 with VTi 15", "OpenWebif features beyond DreamHub's calls"); the Dreambox side is not checked yet (the One was off). Tracked in `ROADMAP.md`, v1.1, "Box features from OpenWebif". Once a package lands, its status moves to `ROADMAP.md`.
 
 ## Why
 

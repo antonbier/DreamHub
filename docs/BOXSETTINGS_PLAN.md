@@ -134,3 +134,16 @@ Only keys that exist on both boxes with the same type and a choice the target kn
 1. **Plugin routes or the walk alone?** Recommendation: S2 and S3 use the walk only (one mechanism, same for every plugin); S2b adds the plugins' own routes where a setting needs the plugin's follow-up (restart the AutoTimer poller, start the EPGRefresh run). Say if the follow-up isn't worth a second route.
 2. **Should a snapshot include the plugins' data files?** `autotimer.xml` and `epgrefresh.xml` are small and readable through `/file`; `SerienRecorder.db` is a live SQLite file (SerienRecorder has its own backup in `/media/hdd/SR_Backup`). Recommendation: the snapshot holds settings only; AutoTimer/EPGRefresh data belong to the hub that manages them, and SerienRecorder keeps its own backup. Files with credentials (`gemini-www-password.txt`, `geminitelegramtoken.json`) never go in.
 3. **Gemini settings (`gpsettings`): read-only first?** Recommendation: yes — show them, but write only after S2 has found the plugin's own save call on the One; they're the image's own plugins (Netcast, Commander, widgets), so a wrong value is more likely to break a screen than the box.
+
+## What is still missing (2026-10-23)
+
+Nothing in this plan has been *written* on a box yet; everything above is read from source, files and GETs. Before S3 the following need a real test, the first four on the Solo2 (the owner allows changes there), the rest on the One in S2:
+
+1. **A harmless write through OpenWebif's `saveconfig`** on the Solo2 and back: does the value take effect, does `/etc/enigma2/settings` stay unchanged until a clean shutdown (as read), and does `getconfig` read it back.
+2. **Whether the Solo2 runs a ConfigSet toggle** as read (each call adds or removes the value): confirm with one multi-select item before the plan format depends on it.
+3. **The power-cut claim** — "a change not yet saved is lost" — is read from source only; test with a restart of enigma2 (not a power cut) after a `saveconfig` write.
+4. **How DreamHub's TV plugin on the One can walk `config.*`** (the plugin exists in `Extensions/DreamHub`): list `config.plugins.*` with types, limits and choices, then set and read back one value. This is the basis of S2 and untested.
+5. **The save call of the Gemini plugins** (`gpsettings`), and whether `elem.save()` + `configfile.save()` alone is enough for the other plugins on the One (EPGRefresh and AutoTimer settings are the test: they differ in their own route, see above).
+6. **Plugin routes**: EPGRefresh's route names for settings and channels (only `/epgrefresh` and `/epgrefresh/get` were called) and when AutoTimer writes `autotimer.xml` without `always_write_config`.
+7. **Data files of other plugins**: MediaPortal (`mp_*`), EventDataManager, PlexDream/EmbyDream (`config.plugins.plexdream`, `embydream` probably hold server logins) — check for credentials before the walk shows them; the walk needs a name-based filter (`password`, `token`, `pin`, `login`, `key`) that shows "set" instead of the value.
+8. **Web login on** (still open, changes the box) and **other OpenWebif images**.

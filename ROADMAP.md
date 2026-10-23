@@ -50,6 +50,15 @@ Done: `.deb` for arm64 (box) and armhf (built, not tried on a DM900/DM920) with 
   - [ ] Phases 2–3, the rest: audio fingerprints, learned series patterns, learned timer margins, duplicates, "GB of ads on disk" tile, a notification when a recording ends early (#44)
   - [x] Cutting by hand (own in/out points) (#27) — "Cut by hand" in the details dialog, the ad cut's flow with typed parts; box (2026-10-20): two hand cuts and a third on a 188 MB piece of a real recording, original in the trash, cut file decodes, 90 s removed as asked
 - [x] Radio text / now playing (#28) — read from the station's own audio stream (RDS in the MPEG audio ancillary data; WebControl has nothing), `GET /api/v1/radio/text`; box (2026-10-20): Dlf Kultur, 6 s to the first complete line
+- **Box features from OpenWebif** — what OpenWebif offers beyond what DreamHub calls, checked read-only on the VU+ Solo2 (`ARCHITECTURE.md`, "VU+ Solo2 with VTi 15"); chosen by the owner 2026-10-23. Each one through the Basic box's OpenWebif, and on a Dreambox through WebControl where it has the same call, or else the TV plugin inside enigma2. Which WebControl has is still to be checked on the One. Every write is a plan with a preview first. Issues not opened yet.
+  - [ ] **Box settings** — the receiver's own setup menus (sections and items from `setup.xml`, as OpenWebif's `/api/config` gives them) as a form generated from the box's own list; a change shows the old and new value, then saves. VU+: `/api/saveconfig`. Dreambox: an endpoint in the TV plugin that sets the value inside enigma2 and calls `configfile.save()` at once (an outside edit of `/etc/enigma2/settings` is overwritten on shutdown)
+  - [ ] **Tuner signal** — SNR, AGC and bit error rate per tuner in DeviceHub (`tunersignal`)
+  - [ ] **Audio track and subtitles** — show and switch the running channel's audio track (e.g. Dolby, "Klare Sprache") and subtitles from the remote / now view (`getaudiotracks`, `selectaudiotrack`, `getsubtitles`)
+  - [ ] **Repeats** — other airings of the same programme in the guide and as a way out of a timer conflict (`epgsimilar`; finds repeats, not the next episode)
+  - [ ] **Pause a timer** — disable and re-enable instead of deleting (`timertogglestatus`)
+  - [ ] **EPG save and reload** — a maintenance action in diagnostics (`saveepg`, `loadepg`)
+  - [ ] **Sleep timer**, **a yes/no question on the TV** (`messageanswer`), **a playlist on the box** (`mediaplayer*`), **recording tags** (`movietags`)
+  - Not taken: XMLTV/M3U export, NAS mounts, VPS, parental control, OpenWebif's package management (DreamHub has its own on a Dreambox)
 
 ## Later
 

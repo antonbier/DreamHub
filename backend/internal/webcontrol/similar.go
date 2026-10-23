@@ -6,7 +6,6 @@ import (
 	"encoding/json"
 	"fmt"
 	"io"
-	"net/http"
 	"net/url"
 	"strconv"
 	"strings"
@@ -21,7 +20,11 @@ import (
 // On OpenWebif the XML form (/web/epgsimilar) answers "Processing Failed"
 // (OWIF 1.5.2 on VTi 15, 2026-10-23: the handler returns a list where its
 // template expects a dict), so the JSON form /api/epgsimilar is used there;
-// a Dreambox's WebControl has XML only.
+// a Dreambox's WebControl has XML only. A Dreambox One (DreamOS, 2026-10-23)
+// answers a GET with the parameters, and its list is wider than a VTi's: past
+// airings, unsorted, and the same programme on regional feeds of the channel
+// ("SAT.1 Bayern", "RAS Das Erste HD", "ARD-Test-1") — most of them not in
+// any bouquet of the user. The caller sorts and drops what is over.
 func (c *HTTPClient) SimilarEvents(ctx context.Context, serviceReference string, eventID int64) ([]EPGEvent, error) {
 	var events []EPGEvent
 	if c.runsOpenWebif(ctx) {
@@ -35,15 +38,9 @@ func (c *HTTPClient) SimilarEvents(ctx context.Context, serviceReference string,
 			return nil, err
 		}
 	} else {
-		body, err := c.do(ctx, http.MethodPost, "/web/epgsimilar", url.Values{
-			"sRef": {serviceReference}, "eventid": {strconv.FormatInt(eventID, 10)},
-		})
-		if err != nil {
-			return nil, err
-		}
-		defer body.Close()
+		q := url.Values{"sRef": {serviceReference}, "eventid": {strconv.FormatInt(eventID, 10)}}
 		var list epgEventList
-		if err := decodeXML(body, "/web/epgsimilar", &list); err != nil {
+		if err := c.getXML(ctx, "/web/epgsimilar?"+q.Encode(), &list); err != nil {
 			return nil, err
 		}
 		events = list.Events

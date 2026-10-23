@@ -34,7 +34,7 @@ func TestVTi15_TunerSignal(t *testing.T) {
 	if err != nil {
 		t.Fatal(err)
 	}
-	if s == nil || s.SNR != 99 || s.AGC != 91 || s.BER != 0 || s.SNRdB != nil {
+	if s == nil || s.SNR != 99 || s.AGC == nil || *s.AGC != 91 || s.BER != 0 || s.SNRdB != nil {
 		t.Errorf("signal: %+v", s)
 	}
 }
@@ -44,7 +44,7 @@ func TestTunerSignal_RealDB(t *testing.T) {
 	if err != nil {
 		t.Fatal(err)
 	}
-	if s == nil || s.SNR != 78 || s.AGC != 88 || s.BER != 3 || s.SNRdB == nil || *s.SNRdB != 12.5 {
+	if s == nil || s.SNR != 78 || s.AGC == nil || *s.AGC != 88 || s.BER != 3 || s.SNRdB == nil || *s.SNRdB != 12.5 {
 		t.Errorf("signal: %+v", s)
 	}
 }
@@ -96,5 +96,17 @@ func TestSimilarEvents_DreamboxXML(t *testing.T) {
 	got, err := c.SimilarEvents(context.Background(), "1:0:19:283D:3FB:1:C00000:0:0:0:", 5)
 	if err != nil || len(got) != 1 || got[0].ID != 7 {
 		t.Errorf("similar: %+v %v", got, err)
+	}
+}
+
+// A Dreambox One (DreamOS, 2026-10-23) answers "14.25 dB", "89 %" and an AGC
+// of "0 %" that never moves: no strength reading, so none is reported.
+func TestDreambox_TunerSignalWithoutAGC(t *testing.T) {
+	s, err := fakeBox(t, map[string]string{"/web/signal": "dreambox_signal.xml"}).TunerSignal(context.Background())
+	if err != nil {
+		t.Fatal(err)
+	}
+	if s == nil || s.SNR != 89 || s.AGC != nil || s.BER != 0 || s.SNRdB == nil || *s.SNRdB != 14.25 {
+		t.Errorf("signal: %+v", s)
 	}
 }

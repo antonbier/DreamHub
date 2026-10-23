@@ -51,7 +51,11 @@ const EVERY_MS = 5_000
 
 const available = ref(false)
 const signal = ref<TunerSignal | null>(null)
-const meters = computed(() => (signal.value ? [{ key: 'snr', value: signal.value.snr }, { key: 'agc', value: signal.value.agc }] : []))
+const meters = computed(() => {
+  const s = signal.value
+  if (!s) return []
+  return s.agc === undefined ? [{ key: 'snr', value: s.snr }] : [{ key: 'snr', value: s.snr }, { key: 'agc', value: s.agc }]
+})
 
 function clamp(v: number): number {
   return Math.min(100, Math.max(0, v))

@@ -438,10 +438,10 @@ export interface Bouquet {
 
 // backend/internal/webcontrol.EPGEvent, embedded in ChannelSchedule.
 // GET /api/v1/deviceinfo/signal: SNR and AGC in percent; snrDb only with a
-// real dB reading from the box.
+// real dB reading from the box, agc only when the box reports a strength.
 export interface TunerSignal {
   snr: number
-  agc: number
+  agc?: number
   ber: number
   snrDb?: number
 }

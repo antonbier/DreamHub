@@ -210,7 +210,8 @@ func (c *Client) TunerSignal(ctx context.Context) (*webcontrol.Signal, error) {
 		return nil, err
 	}
 	db := 12.4
-	return &webcontrol.Signal{SNR: 78, AGC: 91, BER: 0, SNRdB: &db}, nil
+	agc := 91
+	return &webcontrol.Signal{SNR: 78, AGC: &agc, BER: 0, SNRdB: &db}, nil
 }
 
 func (c *Client) MovieList(ctx context.Context) ([]webcontrol.Movie, error) {

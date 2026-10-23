@@ -71,6 +71,7 @@ const ICONS: Record<string, string> = {
   rewind: '<path d="M11 6l-7 6 7 6zM20 6l-7 6 7 6z"/>',
   'fast-forward': '<path d="M13 6l7 6-7 6zM4 6l7 6-7 6z"/>',
   info: '<circle cx="12" cy="12" r="9"/><path d="M12 11v5.5M12 7.5h.01"/>',
+  help: '<circle cx="12" cy="12" r="9"/><path d="M9.5 9.6a2.6 2.6 0 0 1 5 .9c0 1.8-2.5 2.2-2.5 4M12 17.4h.01"/>',
   back: '<path d="M9 7L4.5 11.5 9 16"/><path d="M4.5 11.5H15a4.5 4.5 0 0 1 0 9h-2"/>',
   lock: '<rect x="5" y="11" width="14" height="9" rx="2"/><path d="M8 11V8a4 4 0 0 1 8 0v3"/>',
   more: '<circle cx="5" cy="12" r="1.4" fill="currentColor"/><circle cx="12" cy="12" r="1.4" fill="currentColor"/><circle cx="19" cy="12" r="1.4" fill="currentColor"/>',

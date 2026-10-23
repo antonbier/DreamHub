@@ -1836,7 +1836,8 @@
       "repo": "Source on GitHub ↗"
     },
     "tabs": {
-      "overview": "Overview"
+      "overview": "Overview",
+      "boxsettings": "Box settings"
     },
     "backup": {
       "title": "Backup & restore",
@@ -2562,5 +2563,78 @@
       "confirm": "Switch on",
       "sent": "Signal sent"
     }
+  },
+  "boxsettings": {
+    "intro": "The receiver's own setup menus, as the box lists them. Read only for now — changing settings comes next.",
+    "level": "Setup mode of the box: {level}. The box lists only settings up to this level on the web.",
+    "unavailable": "This box can't show its setup menus yet. Receivers with OpenWebif (such as a VU+) can; a Dreambox follows with the next DreamHub plugin.",
+    "search": "Search settings",
+    "searchPlaceholder": "Search all settings (e.g. margin, HDMI, subtitles)",
+    "searchEmpty": "No setting matches “{query}”.",
+    "searchCount": "{count} result | {count} results",
+    "sections": "Sections",
+    "sectionEmpty": "This section has no settings the box lists.",
+    "hidden": "One more setting at a higher level — raise the box's setup mode on the TV to see it. | {count} more settings at higher levels — raise the box's setup mode on the TV to see them.",
+    "value": {
+      "on": "On",
+      "off": "Off",
+      "empty": "(empty)",
+      "none": "None",
+      "set": "Set",
+      "notSet": "Not set",
+      "notShown": "Not shown here"
+    },
+    "levelName": {
+      "1": "Advanced",
+      "2": "Expert"
+    },
+    "risk": {
+      "A": "Can lock you out",
+      "B": "Handle with care"
+    },
+    "riskWhy": {
+      "output": "A wrong value can leave the TV black or without sound. If the picture is gone, put the value back on the TV.",
+      "access": "A wrong value can lock DreamHub and other apps out of the box (port, login, network, remote control). It may then only be fixable on the TV.",
+      "tuner": "A wrong value can stop reception on a tuner until the configuration is put back.",
+      "parental": "Changes the parental lock or its PIN. A forgotten PIN keeps channels or menus locked.",
+      "power": "Changes how the receiver goes to standby, switches off or wakes up — a recording or a wake-up for a timer may not happen.",
+      "sideeffects": "A wrong value can switch the TV or other devices on and off at odd moments.",
+      "storage": "A path that does not exist, or a disk that is not there, stops recordings and timeshift.",
+      "streaming": "Affects streaming and transcoding; a wrong value can make streams stop working.",
+      "hardware": "Affects fans, front panel or picture enhancement at once; the effect is visible or audible immediately."
+    },
+    "guiRestart": "Needs a GUI restart",
+    "guiRestartWhy": "A change takes effect only after the receiver's user interface is restarted (Restart GUI).",
+    "secretWhy": "This is a password or PIN. DreamHub never shows it — only whether it is set.",
+    "helpButton": "What does “{name}” do?",
+    "helpTitle": "What does this do?",
+    "fromBox": "From the receiver (English)",
+    "help": {
+      "recording_margin_before": "How many minutes before the programme's start the recording begins, so the first seconds are not lost. A longer margin uses more disk space and can overlap with the recording before.",
+      "recording_margin_after": "How many minutes the recording runs on after the programme's planned end — useful for programmes that overrun.",
+      "recording_adjust_time_to_event": "Moves a timer's start and end to the times the programme guide gives, when those differ from what the timer says.",
+      "usage_hdd_standby": "How long the disk may stay idle before it spins down. A short time saves power and noise; opening a recording after a spin-down takes a few seconds longer.",
+      "usage_setup_level": "Decides how many settings the receiver's own menus — and this page — list: simple, advanced or expert. DreamHub shows what the box lists for its own level; to see more, raise the level on the TV.",
+      "hdmicec_enabled": "Lets the receiver and the TV control each other over the HDMI cable: switching on and off together, remote control, volume. The other settings in this section decide what is sent. A wrong setting can switch the TV on or off at odd moments.",
+      "hdmicec_disabletimerwakeup": "Does not switch the TV on when the receiver wakes up for a timer — the recording starts without the TV lighting up.",
+      "hdmicec_avvolumecontrol": "Uses the A/V receiver connected over HDMI for the volume instead of the receiver's own output.",
+      "hdmicec_enabletvrc": "Lets the TV's remote control operate this receiver.",
+      "hdmicec_message_delay": "The pause between two messages to the TV. A longer pause helps with TVs that miss quick messages.",
+      "av_generalAC3delay": "Delays the Dolby Digital sound against the picture, in milliseconds. Use it when the sound is out of step with the picture on a receiver or soundbar.",
+      "av_generalPCMdelay": "Delays the PCM (stereo) sound against the picture, in milliseconds. Use it when the sound is out of step with the picture.",
+      "av_bypass_edid_checking": "Ignores what the TV says it can show and sends the picture anyway. Meant for finding the cause of a black screen; the picture may then be in a mode the TV cannot show.",
+      "av_downmix_ac3": "Mixes Dolby Digital and DTS sound down to stereo on the outputs that carry only two channels.",
+      "av_avl": "Automatic volume levelling: keeps loud adverts and quiet scenes at a more even volume.",
+      "autoshutdown_autostart": "Switches the receiver completely off after it has been in standby for the time set below.",
+      "autoshutdown_time": "How many minutes the receiver stays in standby before it switches itself off.",
+      "autoshutdown_enableinactivity": "Lets the receiver act after a time with no key presses and no recording — go to standby or switch off, as set below.",
+      "autoshutdown_inactivetime": "How many minutes without key presses before the action below happens.",
+      "autoshutdown_inactivityaction": "What the receiver does after that time without key presses.",
+      "autoshutdown_epgrefresh": "Keeps the receiver from switching off while it is updating the programme guide.",
+      "usage_ts_auto_start": "Starts timeshift by itself after the time chosen on a channel. Timeshift is a rolling recording of the live programme that lets you pause and rewind it.",
+      "usage_ts_min_duration": "Timeshift recordings shorter than this many minutes are not kept.",
+      "usage_ts_clean_ts_older_than": "Deletes timeshift files that are older than this many days."
+    },
+    "reload": "Read the box again"
   }
 }

@@ -1836,7 +1836,8 @@
       "repo": "Codice sorgente su GitHub ↗"
     },
     "tabs": {
-      "overview": "Panoramica"
+      "overview": "Panoramica",
+      "boxsettings": "Impostazioni del ricevitore"
     },
     "backup": {
       "title": "Backup e ripristino",
@@ -2562,5 +2563,78 @@
       "confirm": "Accendi",
       "sent": "Segnale inviato"
     }
+  },
+  "boxsettings": {
+    "intro": "I menu di configurazione del ricevitore, come li elenca il box. Per ora solo lettura — la modifica arriva dopo.",
+    "level": "Modalità di configurazione del box: {level}. Sul web il box elenca solo le impostazioni fino a questo livello.",
+    "unavailable": "Questo box non può ancora mostrare i suoi menu di configurazione. Lo fanno i ricevitori con OpenWebif (come un VU+); una Dreambox seguirà con il prossimo plugin DreamHub.",
+    "search": "Cerca impostazioni",
+    "searchPlaceholder": "Cerca in tutte le impostazioni (es. margine, HDMI, sottotitoli)",
+    "searchEmpty": "Nessuna impostazione corrisponde a «{query}».",
+    "searchCount": "{count} risultato | {count} risultati",
+    "sections": "Sezioni",
+    "sectionEmpty": "Questa sezione non ha impostazioni elencate dal box.",
+    "hidden": "Un'altra impostazione a un livello superiore — alza la modalità di configurazione del box sulla TV per vederla. | {count} altre impostazioni a livelli superiori — alza la modalità di configurazione del box sulla TV per vederle.",
+    "value": {
+      "on": "Attivo",
+      "off": "Disattivo",
+      "empty": "(vuoto)",
+      "none": "Nessuno",
+      "set": "Impostato",
+      "notSet": "Non impostato",
+      "notShown": "Non mostrato qui"
+    },
+    "levelName": {
+      "1": "Avanzato",
+      "2": "Esperto"
+    },
+    "risk": {
+      "A": "Può bloccarti fuori",
+      "B": "Attenzione"
+    },
+    "riskWhy": {
+      "output": "Un valore sbagliato può lasciare la TV nera o senza audio. Se l'immagine scompare, rimetti il valore dalla TV.",
+      "access": "Un valore sbagliato può escludere DreamHub e altre app dal box (porta, accesso, rete, telecomando). Poi potrebbe essere risolvibile solo dalla TV.",
+      "tuner": "Un valore sbagliato può interrompere la ricezione su un tuner finché la configurazione non viene ripristinata.",
+      "parental": "Cambia il blocco famiglia o il suo PIN. Un PIN dimenticato lascia canali o menu bloccati.",
+      "power": "Cambia come il ricevitore va in standby, si spegne o si riaccende — una registrazione o l'accensione per un timer può non avvenire.",
+      "sideeffects": "Un valore sbagliato può accendere e spegnere la TV o altri dispositivi nei momenti sbagliati.",
+      "storage": "Un percorso che non esiste, o un disco assente, ferma registrazioni e timeshift.",
+      "streaming": "Riguarda streaming e transcodifica; un valore sbagliato può bloccare gli stream.",
+      "hardware": "Riguarda subito ventole, display frontale o miglioramento dell'immagine; l'effetto si vede o si sente subito."
+    },
+    "guiRestart": "Richiede il riavvio della GUI",
+    "guiRestartWhy": "Una modifica ha effetto solo dopo il riavvio dell'interfaccia del ricevitore (Riavvia GUI).",
+    "secretWhy": "È una password o un PIN. DreamHub non lo mostra mai — solo se è impostato.",
+    "helpButton": "Cosa fa «{name}»?",
+    "helpTitle": "Cosa fa?",
+    "fromBox": "Dal ricevitore (inglese)",
+    "help": {
+      "recording_margin_before": "Quanti minuti prima dell'inizio del programma parte la registrazione, per non perdere i primi secondi. Un margine più lungo occupa più spazio e può sovrapporsi alla registrazione precedente.",
+      "recording_margin_after": "Quanti minuti la registrazione continua dopo la fine prevista del programma — utile per i programmi che sforano.",
+      "recording_adjust_time_to_event": "Sposta inizio e fine di un timer agli orari della guida programmi, quando differiscono da quelli del timer.",
+      "usage_hdd_standby": "Per quanto tempo il disco può restare inattivo prima di fermarsi. Un tempo breve risparmia energia e rumore; aprire una registrazione dopo l'arresto richiede qualche secondo in più.",
+      "usage_setup_level": "Decide quante impostazioni elencano i menu del ricevitore — e questa pagina: semplice, avanzato o esperto. DreamHub mostra ciò che il box elenca per il proprio livello; per vedere di più alza il livello dalla TV.",
+      "hdmicec_enabled": "Permette a ricevitore e TV di controllarsi a vicenda tramite il cavo HDMI: accensione e spegnimento insieme, telecomando, volume. Le altre impostazioni di questa sezione decidono cosa viene inviato. Un'impostazione sbagliata può accendere o spegnere la TV nei momenti sbagliati.",
+      "hdmicec_disabletimerwakeup": "Non accende la TV quando il ricevitore si riaccende per un timer — la registrazione parte senza che la TV si accenda.",
+      "hdmicec_avvolumecontrol": "Usa per il volume il ricevitore A/V collegato via HDMI invece dell'uscita del ricevitore.",
+      "hdmicec_enabletvrc": "Permette al telecomando della TV di comandare questo ricevitore.",
+      "hdmicec_message_delay": "La pausa tra due messaggi alla TV. Una pausa più lunga aiuta con le TV che perdono i messaggi rapidi.",
+      "av_generalAC3delay": "Ritarda l'audio Dolby Digital rispetto all'immagine, in millisecondi. Usalo quando l'audio non è sincronizzato su un ricevitore o una soundbar.",
+      "av_generalPCMdelay": "Ritarda l'audio PCM (stereo) rispetto all'immagine, in millisecondi. Usalo quando l'audio non è sincronizzato.",
+      "av_bypass_edid_checking": "Ignora ciò che la TV dichiara di poter mostrare e invia comunque l'immagine. Serve a cercare la causa di uno schermo nero; l'immagine può poi arrivare in una modalità che la TV non sa mostrare.",
+      "av_downmix_ac3": "Riduce l'audio Dolby Digital e DTS a stereo sulle uscite che portano solo due canali.",
+      "av_avl": "Livellamento automatico del volume: mantiene più uniforme il volume tra pubblicità forti e scene silenziose.",
+      "autoshutdown_autostart": "Spegne del tutto il ricevitore dopo il tempo di standby impostato qui sotto.",
+      "autoshutdown_time": "Quanti minuti il ricevitore resta in standby prima di spegnersi da solo.",
+      "autoshutdown_enableinactivity": "Fa agire il ricevitore dopo un tempo senza tasti premuti e senza registrazione — standby o spegnimento, come impostato sotto.",
+      "autoshutdown_inactivetime": "Quanti minuti senza tasti premuti prima dell'azione qui sotto.",
+      "autoshutdown_inactivityaction": "Cosa fa il ricevitore dopo quel tempo senza tasti premuti.",
+      "autoshutdown_epgrefresh": "Impedisce al ricevitore di spegnersi mentre aggiorna la guida programmi.",
+      "usage_ts_auto_start": "Avvia il timeshift da solo dopo il tempo scelto su un canale. Il timeshift è una registrazione continua del programma in diretta che permette di fermarlo e riavvolgerlo.",
+      "usage_ts_min_duration": "Le registrazioni timeshift più brevi di questi minuti non vengono conservate.",
+      "usage_ts_clean_ts_older_than": "Elimina i file timeshift più vecchi di questi giorni."
+    },
+    "reload": "Rileggi il box"
   }
 }

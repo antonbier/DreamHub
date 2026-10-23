@@ -446,6 +446,58 @@ export interface TunerSignal {
   snrDb?: number
 }
 
+// GET /api/v1/boxsettings and friends (backend/internal/boxsettings): the
+// receiver's own setup menus, read only.
+export interface BoxSettingSection {
+  key: string
+  title: string // the box's language
+  count: number
+  hiddenByLevel: number
+}
+
+export interface BoxSettingsOverview {
+  available: boolean
+  writes: boolean
+  boxLevel?: number // 0 simple, 1 advanced, 2 expert; -1 unknown
+  boxLevelName?: string
+  sections: BoxSettingSection[]
+}
+
+export type BoxSettingKind = 'choice' | 'bool' | 'number' | 'text' | 'multichoice' | 'readonly' | 'heading'
+export type BoxSettingRisk = 'A' | 'B'
+export type BoxSettingRiskCategory =
+  | 'output'
+  | 'access'
+  | 'tuner'
+  | 'parental'
+  | 'power'
+  | 'sideeffects'
+  | 'storage'
+  | 'streaming'
+  | 'hardware'
+
+export interface BoxSetting {
+  path: string
+  label: string // the box's own text
+  kind: BoxSettingKind
+  value: boolean | number | string | number[] | null
+  choices?: { value: string; label: string }[]
+  level: number // 0 simple, 1 advanced, 2 expert
+  levelKnown: boolean
+  guiRestart?: boolean
+  risk?: BoxSettingRisk
+  riskCategory?: BoxSettingRiskCategory
+  secret?: boolean
+  isSet?: boolean
+  help?: string // the box's own description, English
+}
+
+export interface BoxSettingHit {
+  sectionKey: string
+  sectionTitle: string
+  item: BoxSetting
+}
+
 export interface EPGEvent {
   id: number
   start: number // Unix seconds, UTC

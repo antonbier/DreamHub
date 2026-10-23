@@ -33,7 +33,7 @@ type cachedCatalog struct {
 }
 
 // boxSettingsKeep is how long a read of the box's setup menus is reused.
-const boxSettingsKeep = 2 * time.Minute
+const boxSettingsKeep = 10 * time.Minute
 
 // maxSettingsHits caps one search.
 const maxSettingsHits = 60

@@ -85,6 +85,10 @@ import type {
   DeviceInfo,
   EPGEvent,
   TunerSignal,
+  BoxSetting,
+  BoxSettingHit,
+  BoxSettingSection,
+  BoxSettingsOverview,
   Disk,
   DiscoveryStatus,
   EnrichExtras,
@@ -306,6 +310,13 @@ export const api = {
   deviceInfo: () => request<DeviceInfo>('GET', '/api/v1/deviceinfo'),
   // Reception of the tuner showing the current channel; signal null without numbers.
   tunerSignal: () => request<{ available: boolean; signal: TunerSignal | null }>('GET', '/api/v1/deviceinfo/signal'),
+  // The receiver's own setup menus, read only (docs/BOXSETTINGS_PLAN.md, S1).
+  boxSettings: {
+    overview: (refresh = false) => request<BoxSettingsOverview>('GET', `/api/v1/boxsettings${refresh ? '?refresh=1' : ''}`),
+    section: (key: string) =>
+      request<{ section: BoxSettingSection; items: BoxSetting[] }>('GET', `/api/v1/boxsettings/sections/${encodeURIComponent(key)}`),
+    search: (q: string) => request<{ available: boolean; hits: BoxSettingHit[] }>('GET', `/api/v1/boxsettings/search?q=${encodeURIComponent(q)}`),
+  },
   navigation: () => request<Navigation>('GET', '/api/v1/navigation'),
   settings: {
     get: () => request<SettingsView>('GET', '/api/v1/settings'),

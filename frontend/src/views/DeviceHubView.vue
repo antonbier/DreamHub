@@ -3,10 +3,12 @@
   merged into one nav entry, admin-only (both already needed the same
   `system` permission — SystemHub was never actually visible to a plain
   user despite CONCEPT.md's older description, which is corrected now
-  too). Same device, three tabs instead of two separate hub screens:
+  too). Same device, tabs instead of two separate hub screens:
   - Übersicht: device info, the reception of the tuner in use
     (TunerSignalPanel), the change log (ex-SystemHubView)
   - Diagnose: the self-test, every hub's status (ex-SystemHubView)
+  - Box settings: the receiver's own setup menus, read only for now
+    (docs/BOXSETTINGS_PLAN.md, S1) — any box, a Basic one too
   - Administration: services, log level, journald log viewer, crash logs
     (ex-AdminHubView)
   - Erweitert: scripts and the terminal. Packages and feeds moved to
@@ -47,6 +49,16 @@
         @click="tab = 'diagnostics'"
       >
         {{ t('diagnostics.title') }}
+      </button>
+      <button
+        type="button"
+        role="tab"
+        :aria-selected="tab === 'boxsettings'"
+        class="shrink-0 whitespace-nowrap border-b-2 px-3 py-2.5 text-[13.5px] font-semibold"
+        :class="tab === 'boxsettings' ? 'border-accent text-text' : 'border-transparent text-muted hover:text-text'"
+        @click="tab = 'boxsettings'"
+      >
+        {{ t('system.tabs.boxsettings') }}
       </button>
       <button
         v-if="navigation.isFull"
@@ -177,6 +189,8 @@
     <!-- Advanced: for people who know their way around a shell. Scripts
          and the terminal are the two ways to run things on the box by
          hand, so they sit together instead of among the services. -->
+    <BoxSettingsPanel v-else-if="tab === 'boxsettings'" />
+
     <template v-else-if="tab === 'advanced'">
       <p class="mt-3 text-[13px] text-muted">{{ t('admin.advancedIntro') }}</p>
       <ScriptsPanel />
@@ -321,6 +335,7 @@ import Icon from '@/components/Icon.vue'
 import ServicesPanel from '@/components/admin/ServicesPanel.vue'
 import ScriptsPanel from '@/components/admin/ScriptsPanel.vue'
 import TerminalPanel from '@/components/admin/TerminalPanel.vue'
+import BoxSettingsPanel from '@/components/boxsettings/BoxSettingsPanel.vue'
 import SelfTestPanel from '@/components/system/SelfTestPanel.vue'
 import TunerSignalPanel from '@/components/system/TunerSignalPanel.vue'
 import { formatBytes } from '@/lib/format'
@@ -347,15 +362,17 @@ function formatDate(iso: string): string {
   return new Intl.DateTimeFormat(locale.value, { dateStyle: 'short', timeStyle: 'medium', timeZone: timeZone.value }).format(new Date(iso))
 }
 
-type Tab = 'overview' | 'diagnostics' | 'admin' | 'advanced'
+type Tab = 'overview' | 'diagnostics' | 'boxsettings' | 'admin' | 'advanced'
 const tab = ref<Tab>(
   route.query.tab === 'diagnostics'
     ? 'diagnostics'
-    : route.query.tab === 'advanced'
-      ? 'advanced'
-      : route.query.tab === 'admin' || typeof route.query.logUnit === 'string'
-        ? 'admin'
-        : 'overview',
+    : route.query.tab === 'boxsettings'
+      ? 'boxsettings'
+      : route.query.tab === 'advanced'
+        ? 'advanced'
+        : route.query.tab === 'admin' || typeof route.query.logUnit === 'string'
+          ? 'admin'
+          : 'overview',
 )
 watch(tab, (t) => router.replace({ query: { ...route.query, tab: t === 'overview' ? undefined : t } }))
 // A Basic box has no administration (it needs DreamHub on that box).

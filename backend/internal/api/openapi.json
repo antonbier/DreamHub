@@ -3681,7 +3681,7 @@
      "boxsettings"
     ],
     "operationId": "GET_boxsettings",
-    "description": "Admin only. The box is read once and kept for two minutes; refresh=1 reads it again. Only an OpenWebif box has the menus today (a Dreambox follows with the TV plugin).",
+    "description": "Admin only. The box is read once (about 7 s on a VU+ Solo2: 19 small requests) and kept for ten minutes; refresh=1 reads it again. Only an OpenWebif box has the menus today (a Dreambox follows with the TV plugin).",
     "parameters": [
      {
       "$ref": "#/components/parameters/Box"

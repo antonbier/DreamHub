@@ -1836,7 +1836,8 @@
       "repo": "Quellcode auf GitHub ↗"
     },
     "tabs": {
-      "overview": "Übersicht"
+      "overview": "Übersicht",
+      "boxsettings": "Box-Einstellungen"
     },
     "backup": {
       "title": "Sicherung & Wiederherstellung",
@@ -2562,5 +2563,78 @@
       "confirm": "Einschalten",
       "sent": "Signal gesendet"
     }
+  },
+  "boxsettings": {
+    "intro": "Die eigenen Einstellungsmenüs des Receivers, so wie die Box sie auflistet. Vorerst nur lesen — das Ändern kommt als Nächstes.",
+    "level": "Einrichtungsmodus der Box: {level}. Die Box listet im Web nur Einstellungen bis zu dieser Stufe auf.",
+    "unavailable": "Diese Box kann ihre Einstellungsmenüs noch nicht zeigen. Receiver mit OpenWebif (z. B. ein VU+) können es; eine Dreambox folgt mit dem nächsten DreamHub-Plugin.",
+    "search": "Einstellungen durchsuchen",
+    "searchPlaceholder": "Alle Einstellungen durchsuchen (z. B. Vorlauf, HDMI, Untertitel)",
+    "searchEmpty": "Keine Einstellung passt zu „{query}“.",
+    "searchCount": "{count} Treffer | {count} Treffer",
+    "sections": "Bereiche",
+    "sectionEmpty": "Dieser Bereich hat keine Einstellungen, die die Box auflistet.",
+    "hidden": "Eine weitere Einstellung auf einer höheren Stufe — erhöhe den Einrichtungsmodus der Box am Fernseher, um sie zu sehen. | {count} weitere Einstellungen auf höheren Stufen — erhöhe den Einrichtungsmodus der Box am Fernseher, um sie zu sehen.",
+    "value": {
+      "on": "An",
+      "off": "Aus",
+      "empty": "(leer)",
+      "none": "Keine",
+      "set": "Gesetzt",
+      "notSet": "Nicht gesetzt",
+      "notShown": "Hier nicht angezeigt"
+    },
+    "levelName": {
+      "1": "Fortgeschritten",
+      "2": "Experte"
+    },
+    "risk": {
+      "A": "Kann dich aussperren",
+      "B": "Vorsicht"
+    },
+    "riskWhy": {
+      "output": "Ein falscher Wert kann den Fernseher schwarz oder ohne Ton lassen. Ist das Bild weg, stelle den Wert am Fernseher zurück.",
+      "access": "Ein falscher Wert kann DreamHub und andere Apps von der Box aussperren (Port, Anmeldung, Netzwerk, Fernbedienung). Dann hilft unter Umständen nur noch der Fernseher.",
+      "tuner": "Ein falscher Wert kann den Empfang an einem Tuner stoppen, bis die Konfiguration zurückgesetzt ist.",
+      "parental": "Ändert die Kindersicherung oder ihre PIN. Eine vergessene PIN lässt Sender oder Menüs gesperrt.",
+      "power": "Ändert, wie der Receiver in den Standby geht, sich ausschaltet oder aufwacht — eine Aufnahme oder das Aufwachen für einen Timer kann ausfallen.",
+      "sideeffects": "Ein falscher Wert kann den Fernseher oder andere Geräte zu unpassenden Zeiten ein- und ausschalten.",
+      "storage": "Ein Pfad, den es nicht gibt, oder eine fehlende Festplatte stoppt Aufnahmen und Timeshift.",
+      "streaming": "Betrifft Streaming und Transcodierung; ein falscher Wert kann Streams lahmlegen.",
+      "hardware": "Betrifft Lüfter, Frontdisplay oder Bildverbesserung sofort; die Wirkung ist gleich zu sehen oder zu hören."
+    },
+    "guiRestart": "Braucht einen GUI-Neustart",
+    "guiRestartWhy": "Eine Änderung wirkt erst, nachdem die Benutzeroberfläche des Receivers neu gestartet wurde (GUI neu starten).",
+    "secretWhy": "Das ist ein Passwort oder eine PIN. DreamHub zeigt sie nie — nur, ob sie gesetzt ist.",
+    "helpButton": "Was macht „{name}“?",
+    "helpTitle": "Was macht das?",
+    "fromBox": "Vom Receiver (Englisch)",
+    "help": {
+      "recording_margin_before": "Wie viele Minuten vor Sendungsbeginn die Aufnahme startet, damit die ersten Sekunden nicht fehlen. Ein größerer Vorlauf braucht mehr Speicherplatz und kann sich mit der vorherigen Aufnahme überschneiden.",
+      "recording_margin_after": "Wie viele Minuten die Aufnahme nach dem geplanten Sendungsende weiterläuft — nützlich bei Sendungen, die überziehen.",
+      "recording_adjust_time_to_event": "Verschiebt Start und Ende eines Timers auf die Zeiten aus dem Programmführer, wenn diese von denen des Timers abweichen.",
+      "usage_hdd_standby": "Wie lange die Festplatte ungenutzt bleiben darf, bevor sie herunterfährt. Eine kurze Zeit spart Strom und Lärm; eine Aufnahme zu öffnen dauert nach dem Herunterfahren ein paar Sekunden länger.",
+      "usage_setup_level": "Legt fest, wie viele Einstellungen die Menüs des Receivers — und diese Seite — auflisten: einfach, fortgeschritten oder Experte. DreamHub zeigt, was die Box für ihre eigene Stufe auflistet; für mehr erhöhe die Stufe am Fernseher.",
+      "hdmicec_enabled": "Lässt Receiver und Fernseher sich über das HDMI-Kabel gegenseitig steuern: gemeinsam ein- und ausschalten, Fernbedienung, Lautstärke. Die übrigen Einstellungen in diesem Bereich legen fest, was gesendet wird. Eine falsche Einstellung kann den Fernseher zu unpassenden Zeiten ein- oder ausschalten.",
+      "hdmicec_disabletimerwakeup": "Schaltet den Fernseher nicht ein, wenn der Receiver für einen Timer aufwacht — die Aufnahme startet, ohne dass der Fernseher angeht.",
+      "hdmicec_avvolumecontrol": "Nutzt den über HDMI angeschlossenen A/V-Receiver für die Lautstärke statt des eigenen Ausgangs des Receivers.",
+      "hdmicec_enabletvrc": "Lässt die Fernbedienung des Fernsehers diesen Receiver bedienen.",
+      "hdmicec_message_delay": "Die Pause zwischen zwei Nachrichten an den Fernseher. Eine längere Pause hilft bei Fernsehern, die schnelle Nachrichten verpassen.",
+      "av_generalAC3delay": "Verzögert den Dolby-Digital-Ton gegenüber dem Bild, in Millisekunden. Nutze es, wenn der Ton an einem Receiver oder einer Soundbar nicht zum Bild passt.",
+      "av_generalPCMdelay": "Verzögert den PCM-Ton (Stereo) gegenüber dem Bild, in Millisekunden. Nutze es, wenn der Ton nicht zum Bild passt.",
+      "av_bypass_edid_checking": "Ignoriert, was der Fernseher als darstellbar meldet, und sendet das Bild trotzdem. Gedacht für die Suche nach der Ursache eines schwarzen Bildes; das Bild kann dann in einem Modus kommen, den der Fernseher nicht zeigen kann.",
+      "av_downmix_ac3": "Mischt Dolby-Digital- und DTS-Ton auf Stereo herunter, an Ausgängen, die nur zwei Kanäle führen.",
+      "av_avl": "Automatische Lautstärkeanpassung: hält laute Werbung und leise Szenen auf einer gleichmäßigeren Lautstärke.",
+      "autoshutdown_autostart": "Schaltet den Receiver ganz aus, nachdem er die unten eingestellte Zeit im Standby war.",
+      "autoshutdown_time": "Wie viele Minuten der Receiver im Standby bleibt, bevor er sich selbst ausschaltet.",
+      "autoshutdown_enableinactivity": "Lässt den Receiver nach einer Zeit ohne Tastendruck und ohne Aufnahme handeln — in den Standby gehen oder ausschalten, wie unten eingestellt.",
+      "autoshutdown_inactivetime": "Wie viele Minuten ohne Tastendruck, bevor die Aktion unten ausgeführt wird.",
+      "autoshutdown_inactivityaction": "Was der Receiver nach dieser Zeit ohne Tastendruck tut.",
+      "autoshutdown_epgrefresh": "Verhindert, dass der Receiver sich ausschaltet, während er den Programmführer aktualisiert.",
+      "usage_ts_auto_start": "Startet Timeshift von selbst nach der gewählten Zeit auf einem Sender. Timeshift ist eine mitlaufende Aufnahme der Live-Sendung, mit der du anhalten und zurückspulen kannst.",
+      "usage_ts_min_duration": "Timeshift-Aufzeichnungen, die kürzer als so viele Minuten sind, werden nicht behalten.",
+      "usage_ts_clean_ts_older_than": "Löscht Timeshift-Dateien, die älter als so viele Tage sind."
+    },
+    "reload": "Box erneut auslesen"
   }
 }

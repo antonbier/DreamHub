@@ -4,8 +4,10 @@ import (
 	"context"
 	"net/http"
 	"net/url"
+	"regexp"
 	"sort"
 	"strconv"
+	"strings"
 	"sync"
 	"time"
 
@@ -320,12 +322,17 @@ func (h *Netcast) logo(w http.ResponseWriter, r *http.Request) {
 		http.NotFound(w, r)
 		return
 	}
-	addr := s.pl.Entries[id].Logo
-	if u, err := url.Parse(addr); addr == "" || err != nil || u.Host == "" || (u.Scheme != "http" && u.Scheme != "https") {
-		http.NotFound(w, r)
-		return
+	e := s.pl.Entries[id]
+	var png []byte
+	if u, err := url.Parse(e.Logo); e.Logo != "" && err == nil && u.Host != "" && (u.Scheme == "http" || u.Scheme == "https") {
+		png = h.logoPNG(r.Context(), e.Logo)
 	}
-	png := h.logoPNG(r.Context(), addr)
+	if png == nil {
+		// The list's own logo is missing or its server is not reachable from
+		// the box (Vavoo's logo host refuses it): the picon the box has for
+		// a channel of that name, if any.
+		png = h.piconByName(e.Name)
+	}
 	if png == nil {
 		http.NotFound(w, r)
 		return
@@ -333,6 +340,29 @@ func (h *Netcast) logo(w http.ResponseWriter, r *http.Request) {
 	w.Header().Set("Content-Type", "image/png")
 	w.Header().Set("Cache-Control", "private, max-age=86400")
 	w.Write(png)
+}
+
+var bracketed = regexp.MustCompile(`\s*[\[(][^\])]*[\])]`)
+
+// piconByName looks the channel up in the picon sets by its name, the way a
+// name-based set (snp) is laid out: "Sky Cinema Premieren [SAT]" as
+// skycinemapremieren.png, then skycinemapremierenhd.png.
+func (h *Netcast) piconByName(name string) []byte {
+	base := strings.TrimSpace(bracketed.ReplaceAllString(name, ""))
+	if base == "" {
+		return nil
+	}
+	dirs := h.Channels.PiconDirs
+	if dirs == nil {
+		dirs = DefaultPiconDirs
+	}
+	search := piconSearchDirs(dirs)
+	for _, n := range []string{base, base + " HD"} {
+		if b, ok := readPiconIn(search, "", n); ok {
+			return b
+		}
+	}
+	return nil
 }
 
 func (h *Netcast) logoPNG(ctx context.Context, addr string) []byte {

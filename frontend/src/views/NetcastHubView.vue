@@ -100,7 +100,7 @@
     <!-- what plays on the TV now -->
     <div v-if="current" class="sticky bottom-0 z-20 -mx-6 mt-6 border-t border-line bg-side px-6 py-2 below-md:-mx-4 below-md:px-4" role="region" :aria-label="t('netcast.nowPlaying')">
       <div class="flex items-center gap-3">
-        <div class="h-10 w-16 shrink-0 overflow-hidden rounded-sm bg-tile-2"><NetcastLogo :token="current.token" :id="current.c.id" :name="current.c.name" :has-logo="!!current.c.hasLogo" /></div>
+        <div class="h-10 w-16 shrink-0 overflow-hidden rounded-sm bg-tile-2"><NetcastLogo :token="current.token" :id="current.c.id" :name="current.c.name" :has-logo="true" /></div>
         <div class="min-w-0 grow">
           <p class="truncate text-[11.5px] text-onair">{{ t('netcast.nowPlaying') }}</p>
           <p class="truncate text-[14px] font-semibold text-text">{{ current.c.name }}<span v-if="current.c.variants && current.c.variants.length > 1" class="ms-2 text-[12px] font-normal text-muted">{{ current.c.variants[variantOf(current)] }}</span></p>

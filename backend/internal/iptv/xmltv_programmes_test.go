@@ -1,6 +1,9 @@
 package iptv
 
 import (
+	"bytes"
+	"compress/gzip"
+	"github.com/ulikunitz/xz"
 	"strings"
 	"testing"
 	"time"
@@ -58,6 +61,35 @@ func TestNormName(t *testing.T) {
 	} {
 		if got := NormName(in); got != want {
 			t.Errorf("NormName(%q) = %q, want %q", in, got, want)
+		}
+	}
+}
+
+func TestSchedule_ReadsXZAndGzip(t *testing.T) {
+	at := time.Date(2026, 10, 24, 17, 30, 0, 0, time.UTC)
+	var xb bytes.Buffer
+	xw, err := xz.NewWriter(&xb)
+	if err != nil {
+		t.Fatal(err)
+	}
+	xw.Write([]byte(scheduleXML))
+	xw.Close()
+	var gb bytes.Buffer
+	gw := gzip.NewWriter(&gb)
+	gw.Write([]byte(scheduleXML))
+	gw.Close()
+	for name, data := range map[string][]byte{"xz": xb.Bytes(), "gzip": gb.Bytes()} {
+		s, err := ParseSchedule(bytes.NewReader(data), at.Add(-time.Hour), at.Add(6*time.Hour))
+		if err != nil {
+			t.Fatalf("%s: %v", name, err)
+		}
+		if now, _ := s.Find("a.de", "", at); now == nil || now.Title != "Jetzt & hier" {
+			t.Errorf("%s: %+v", name, now)
+		}
+		// the coverage check reads the channel list of the same files
+		gc, err := ParseGuideChannels(bytes.NewReader(data))
+		if err != nil || len(gc.Channels) != 2 {
+			t.Errorf("%s channels: %v %+v", name, err, gc)
 		}
 	}
 }

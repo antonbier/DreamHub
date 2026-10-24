@@ -907,8 +907,13 @@ func TestIPTV_GuideSourcesAndGitHub(t *testing.T) {
 	e := newEnv(t)
 	var cur struct{ Sources []struct{ ID, URL string } }
 	e.json(t, "GET", "/api/v1/channels/iptv/guide-sources", "", nil, 200, &cur)
-	if len(cur.Sources) == 0 || !strings.HasPrefix(cur.Sources[0].URL, "https://") {
+	if len(cur.Sources) == 0 {
 		t.Errorf("curated: %+v", cur)
+	}
+	for _, s := range cur.Sources { // Rytec's server is plain http, the same address Netcast ships
+		if !strings.HasPrefix(s.URL, "https://") && !strings.HasPrefix(s.URL, "http://") {
+			t.Errorf("curated address: %+v", s)
+		}
 	}
 	resp, b := e.do(t, "POST", "/api/v1/channels/iptv/github", `{"url":"https://example.com/a/b"}`, nil)
 	if resp.StatusCode != 400 || !strings.Contains(string(b), "iptv_invalid_url") {

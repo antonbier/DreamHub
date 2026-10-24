@@ -1,4 +1,9 @@
 [
+  {"id": "rytec-de-basic", "name": "Rytec — Germany, main channels (ARD, ZDF, RTL …)", "url": "http://www.xmltvepg.nl/rytecDE_Basic.xz", "region": "de"},
+  {"id": "rytec-de-sportmovies", "name": "Rytec — Germany, sport and film (Sky …)", "url": "http://www.xmltvepg.nl/rytecDE_SportMovies.xz", "region": "de"},
+  {"id": "rytec-de-common", "name": "Rytec — Germany, more channels (the one Netcast ships)", "url": "http://www.xmltvepg.nl/rytecDE_Common.xz", "region": "de"},
+  {"id": "rytec-it-basic", "name": "Rytec — Italy, main channels", "url": "http://www.xmltvepg.nl/rytecIT_Basic.xz", "region": "it"},
+  {"id": "rytec-it-sportmovies", "name": "Rytec — Italy, sport and film (Sky …)", "url": "http://www.xmltvepg.nl/rytecIT_SportMovies.xz", "region": "it"},
   {"id": "epgshare-de", "name": "EPGShare01 — Germany", "url": "https://epgshare01.online/epgshare01/epg_ripper_DE1.xml.gz", "region": "de"},
   {"id": "epgshare-at", "name": "EPGShare01 — Austria", "url": "https://epgshare01.online/epgshare01/epg_ripper_AT1.xml.gz", "region": "at"},
   {"id": "epgshare-ch", "name": "EPGShare01 — Switzerland", "url": "https://epgshare01.online/epgshare01/epg_ripper_CH1.xml.gz", "region": "ch"},

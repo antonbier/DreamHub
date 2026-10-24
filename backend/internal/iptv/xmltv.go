@@ -3,7 +3,6 @@ package iptv
 import (
 	"bufio"
 	"bytes"
-	"compress/gzip"
 	"context"
 	"encoding/xml"
 	"errors"
@@ -70,9 +69,6 @@ func (f *Fetcher) ReadGuideChannels(ctx context.Context, rawURL string) (*GuideC
 	if err != nil || (u.Scheme != "http" && u.Scheme != "https") || u.Host == "" {
 		return nil, &FetchError{Kind: KindInvalidURL}
 	}
-	if strings.HasSuffix(strings.ToLower(u.Path), ".xz") {
-		return nil, &FetchError{Kind: KindUnsupported}
-	}
 	req, err := http.NewRequestWithContext(ctx, http.MethodGet, u.String(), nil)
 	if err != nil {
 		return nil, &FetchError{Kind: KindInvalidURL}
@@ -104,12 +100,12 @@ func ParseGuideChannels(r io.Reader) (*GuideChannels, error) {
 	if bom, _ := br.Peek(3); bytes.Equal(bom, []byte{0xef, 0xbb, 0xbf}) {
 		br.Discard(3)
 	}
-	if head, _ := br.Peek(2); bytes.Equal(head, []byte{0x1f, 0x8b}) {
-		zr, err := gzip.NewReader(br)
+	if head, _ := br.Peek(2); bytes.Equal(head, []byte{0x1f, 0x8b}) || bytes.HasPrefix(peek6(br), []byte{0xfd, '7', 'z', 'X', 'Z', 0x00}) {
+		zr, closeZ, err := decompress(br)
 		if err != nil {
-			return nil, &FetchError{Kind: KindNotGuide}
+			return nil, err
 		}
-		defer zr.Close()
+		defer closeZ()
 		zb := bufio.NewReader(&capReader{r: zr, left: MaxGuideBytes})
 		if bom, _ := zb.Peek(3); bytes.Equal(bom, []byte{0xef, 0xbb, 0xbf}) {
 			zb.Discard(3)
@@ -181,3 +177,5 @@ func decodeGuide(r io.Reader) (*GuideChannels, error) {
 		}
 	}
 }
+
+func peek6(br *bufio.Reader) []byte { b, _ := br.Peek(6); return b }

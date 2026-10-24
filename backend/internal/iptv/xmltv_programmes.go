@@ -13,6 +13,8 @@ import (
 	"strings"
 	"time"
 	"unicode"
+
+	"github.com/ulikunitz/xz"
 )
 
 // What is on now and next, from an XMLTV file the person has set up in
@@ -98,9 +100,6 @@ func (f *Fetcher) ReadSchedule(ctx context.Context, rawURL string, from, to time
 	if err != nil || (u.Scheme != "http" && u.Scheme != "https") || u.Host == "" {
 		return nil, &FetchError{Kind: KindInvalidURL}
 	}
-	if strings.HasSuffix(strings.ToLower(u.Path), ".xz") {
-		return nil, &FetchError{Kind: KindUnsupported}
-	}
 	req, err := http.NewRequestWithContext(ctx, http.MethodGet, u.String(), nil)
 	if err != nil {
 		return nil, &FetchError{Kind: KindInvalidURL}
@@ -125,18 +124,14 @@ func (f *Fetcher) ReadSchedule(ctx context.Context, rawURL string, from, to time
 	return ParseSchedule(resp.Body, from, to)
 }
 
-// ParseSchedule reads an XMLTV stream (gzip is detected).
+// ParseSchedule reads an XMLTV stream (gzip and xz are detected).
 func ParseSchedule(r io.Reader, from, to time.Time) (*Schedule, error) {
 	br := bufio.NewReader(r)
-	var src io.Reader = br
-	if head, _ := br.Peek(2); bytes.Equal(head, []byte{0x1f, 0x8b}) {
-		zr, err := gzip.NewReader(br)
-		if err != nil {
-			return nil, &FetchError{Kind: KindNotGuide}
-		}
-		defer zr.Close()
-		src = zr
+	src, closeSrc, err := decompress(br)
+	if err != nil {
+		return nil, err
 	}
+	defer closeSrc()
 	dec := xml.NewDecoder(bufio.NewReader(&capReader{r: src, left: MaxProgrammeBytes}))
 	dec.Strict = false
 	dec.CharsetReader = func(label string, in io.Reader) (io.Reader, error) { return in, nil }
@@ -208,4 +203,24 @@ func parseXMLTVTime(s string) (time.Time, error) {
 		return t, nil
 	}
 	return time.Parse("200601021504", s)
+}
+
+// decompress unpacks a gzip or xz stream (told by its first bytes) and passes
+// anything else through.
+func decompress(br *bufio.Reader) (io.Reader, func(), error) {
+	if head, _ := br.Peek(6); bytes.HasPrefix(head, []byte{0xfd, '7', 'z', 'X', 'Z', 0x00}) {
+		xr, err := xz.NewReader(br)
+		if err != nil {
+			return nil, nil, &FetchError{Kind: KindNotGuide}
+		}
+		return xr, func() {}, nil
+	}
+	if head, _ := br.Peek(2); bytes.Equal(head, []byte{0x1f, 0x8b}) {
+		zr, err := gzip.NewReader(br)
+		if err != nil {
+			return nil, nil, &FetchError{Kind: KindNotGuide}
+		}
+		return zr, func() { zr.Close() }, nil
+	}
+	return br, func() {}, nil
 }

@@ -14,7 +14,7 @@
     @click="canPlay && emit('play')"
   >
     <span class="block aspect-video overflow-hidden rounded-t-sm bg-tile-2">
-      <NetcastLogo :token="row.token" :id="row.c.id" :name="row.c.name" :has-logo="!!row.c.hasLogo" />
+      <NetcastLogo :token="row.token" :id="row.c.id" :name="row.c.name" :has-logo="true" />
     </span>
     <span class="block px-2 pb-2 pt-1.5">
       <span class="flex items-center gap-1">

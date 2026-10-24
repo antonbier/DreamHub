@@ -37,6 +37,10 @@ type Source struct {
 	Address   string `json:"address,omitempty"`   // without login, query and fragment
 	HasLogin  bool   `json:"hasLogin,omitempty"`  // a user name or password, or one in the address
 	Desc      string `json:"desc,omitempty"`
+	// Fetch is the address as the file has it — a query kept — when it holds
+	// no login, so DreamHub may load the list itself. Never sent to the
+	// browser (json:"-"); empty when there is a login or no address.
+	Fetch string `json:"-"`
 }
 
 // File is a parsed source file.
@@ -129,6 +133,9 @@ func source(m map[string]any) Source {
 		if a := str(m[k]); a != "" {
 			s.Address = iptv.Display(a)
 			s.HasLogin = s.HasLogin || iptv.HasLogin(a)
+			if !s.HasLogin {
+				s.Fetch = a
+			}
 			break
 		}
 	}

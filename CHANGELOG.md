@@ -6,6 +6,9 @@ Format follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/); version
 
 ## [Unreleased]
 
+### Added
+- **A "Netcast" page of its own (Dreambox One)**: Media → Netcast, only on a box that has Netcast (a Solo2 has no entry). Sources are tabs ("All" searches them all); a channel is a tile with its logo and what runs on it now and next, grouped in shelves, and a click plays it on the TV — no bouquet is touched — with a bar showing what plays and previous/next. A source Netcast has not downloaded yet is loaded by DreamHub from the address in the source's own file (never one with a login); sources that cannot be opened are listed with the reason. The programme comes from the box's own guide for channels already in a bouquet, otherwise from the XMLTV files set up in Netcast, loaded by DreamHub only while the page is open, matched by tvg-id and name — no streaming service is asked. Logos are fetched by DreamHub, never by the browser. "Put into a bouquet…" hands a source's list to the IPTV tab. New routes `GET /netcast/sources`, `POST /netcast/read`, `/play` (`control`), `/guide`, `GET /netcast/logo`. Mock-tested; box check pending.
+
 ## [0.9.6] - 2026-10-24
 
 ### Added

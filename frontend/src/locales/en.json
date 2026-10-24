@@ -25,7 +25,8 @@
     "stream": "Live TV",
     "plex": "Plex library",
     "channels": "Channel list",
-    "apps": "Apps"
+    "apps": "Apps",
+    "netcast": "Netcast"
   },
   "status": {
     "noDetail": "This isn't working right now."
@@ -2852,5 +2853,40 @@
     "stateMark": "Looks like state",
     "stateWhy": "This looks like something the box keeps for itself (the last channel, a counter, a time), not a choice you made.",
     "levelAll": "Setup mode of the box: {level}. Every setting is listed here, whatever its level; the level of each shows beside it."
+  },
+  "netcast": {
+    "intro": "The internet channels of the Netcast plugin on the box. Pick a channel to play it on the TV right away; channels you want to keep go into a bouquet.",
+    "none": "This box has no Netcast sources (Netcast is a Dreambox One plugin).",
+    "noSources": "Netcast has no source here whose channels can be listed.",
+    "all": "All",
+    "unavailable": "Not available here ({n})",
+    "reasonWaiting": "Netcast has not downloaded this list yet.",
+    "reasonUnsupported": "Plays only inside Netcast; no channel list to show.",
+    "fetchedNote": "Netcast had not downloaded this list; DreamHub loaded it from {host}.",
+    "opening": "Opening…",
+    "search": "Search channels",
+    "group": "Group",
+    "allGroups": "All groups",
+    "backToShelves": "All groups",
+    "summary": "{n} channel | {n} channels",
+    "more": "Show more",
+    "showAll": "Show all",
+    "noMatch": "No channel matches.",
+    "play": "Play on the TV",
+    "playNamed": "Play {name} on the TV",
+    "nowPlaying": "Playing on the TV",
+    "previous": "Previous channel",
+    "next": "Next channel",
+    "starting": "Starting “{name}” on the TV…",
+    "toBouquet": "Put into a bouquet…",
+    "toBouquetHint": "Opens the list in the channel list, where you pick channels and see a preview before anything changes.",
+    "login": "with login",
+    "needsHeaders": "needs headers",
+    "playFailed": "The box could not play that channel.",
+    "gone": "The list is no longer kept; open the source again.",
+    "readOnlyHint": "You may browse; playing needs the remote permission.",
+    "guideLoading": "Loading the guide…",
+    "noGuide": "No guide for these channels.",
+    "guideFrom": "Programme from your Netcast guide sources and the box."
   }
 }

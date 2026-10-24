@@ -25,7 +25,8 @@
     "stream": "TV in diretta",
     "plex": "Mediateca Plex",
     "channels": "Lista canali",
-    "apps": "App"
+    "apps": "App",
+    "netcast": "Netcast"
   },
   "status": {
     "noDetail": "Al momento non funziona."
@@ -2852,5 +2853,40 @@
     "stateMark": "Sembra uno stato",
     "stateWhy": "Sembra qualcosa che il box ricorda per sé (l'ultimo canale, un contatore, un'ora), non una scelta tua.",
     "levelAll": "Modalità di configurazione del box: {level}. Qui è elencata ogni impostazione, qualunque sia il livello; il livello è indicato accanto."
+  },
+  "netcast": {
+    "intro": "I canali internet del plugin Netcast sul box. Scegli un canale per riprodurlo subito sul televisore; quelli da tenere vanno in un bouquet.",
+    "none": "Questo box non ha fonti Netcast (Netcast è un plugin del Dreambox One).",
+    "noSources": "Netcast qui non ha fonti i cui canali si possano elencare.",
+    "all": "Tutti",
+    "unavailable": "Non disponibili qui ({n})",
+    "reasonWaiting": "Netcast non ha ancora scaricato questo elenco.",
+    "reasonUnsupported": "Funziona solo dentro Netcast; nessun elenco di canali da mostrare.",
+    "fetchedNote": "Netcast non aveva ancora scaricato questo elenco; DreamHub lo ha caricato da {host}.",
+    "opening": "Apertura…",
+    "search": "Cerca canali",
+    "group": "Gruppo",
+    "allGroups": "Tutti i gruppi",
+    "backToShelves": "Tutti i gruppi",
+    "summary": "{n} canale | {n} canali",
+    "more": "Mostra altri",
+    "showAll": "Mostra tutti",
+    "noMatch": "Nessun canale corrisponde.",
+    "play": "Riproduci sul televisore",
+    "playNamed": "Riproduci {name} sul televisore",
+    "nowPlaying": "In riproduzione sul televisore",
+    "previous": "Canale precedente",
+    "next": "Canale successivo",
+    "starting": "Avvio di «{name}» sul televisore…",
+    "toBouquet": "Inserisci in un bouquet…",
+    "toBouquetHint": "Apre l'elenco nella lista canali, dove scegli i canali e vedi un'anteprima prima di qualsiasi modifica.",
+    "login": "con login",
+    "needsHeaders": "richiede header",
+    "playFailed": "Il box non ha potuto riprodurre il canale.",
+    "gone": "L'elenco non è più conservato; riapri la fonte.",
+    "readOnlyHint": "Puoi sfogliare; riprodurre richiede il permesso telecomando.",
+    "guideLoading": "Caricamento della guida…",
+    "noGuide": "Nessuna guida per questi canali.",
+    "guideFrom": "Programma dalle tue fonti guida Netcast e dal box."
   }
 }

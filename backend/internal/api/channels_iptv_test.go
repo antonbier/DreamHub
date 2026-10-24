@@ -5,6 +5,7 @@ import (
 	"context"
 	"image"
 	"image/png"
+	"io"
 	"net/http"
 	"net/http/httptest"
 	"strconv"
@@ -1208,5 +1209,146 @@ func TestNetcast_SamsungAndPlutoListsAreNativeEntries(t *testing.T) {
 	if len(got.Entries) != 2 || !strings.HasPrefix(got.Entries[0].Ref, "4097:") || !strings.HasPrefix(got.Entries[1].Ref, "8193:256:0:") ||
 		!strings.Contains(got.Entries[1].Ref, "netcastserver_kodi%3a//tv.example/live/toon.m3u8") {
 		t.Errorf("playlist entries: %+v", got.Entries)
+	}
+}
+
+func TestNetcastHub_ReadAndPlayAChannelWithoutABouquet(t *testing.T) {
+	m := mock.New()
+	e := newEnvWith(t, m)
+	var r iptvRead
+	e.json(t, "POST", "/api/v1/netcast/read", `{"id":"kodi"}`, nil, 200, &r)
+	if r.Token == "" || len(r.Channels) != 2 {
+		t.Fatalf("read: %+v", r)
+	}
+	var src struct{ Available bool }
+	e.json(t, "GET", "/api/v1/netcast/sources", "", nil, 200, &src)
+	if !src.Available {
+		t.Errorf("sources: %+v", src)
+	}
+	resp, b := e.do(t, "POST", "/api/v1/netcast/play", `{"token":`+jsonStr(r.Token)+`,"id":1}`, nil)
+	if resp.StatusCode != 200 || !strings.HasPrefix(m.LastZapped, "8193:") && !strings.HasPrefix(m.LastZapped, "4097:") {
+		t.Fatalf("play: %d %s zapped %q", resp.StatusCode, b, m.LastZapped)
+	}
+	for body, code := range map[string]int{
+		`{"token":"nope","id":0}`:                   404,
+		`{"token":` + jsonStr(r.Token) + `}`:        400,
+		`{"token":` + jsonStr(r.Token) + `,"id":9}`: 400,
+	} {
+		if resp, b := e.do(t, "POST", "/api/v1/netcast/play", body, nil); resp.StatusCode != code {
+			t.Errorf("%s: %d %s, want %d", body, resp.StatusCode, b, code)
+		}
+	}
+}
+
+func TestNetcastHub_SourcesShowTheirState_AndAnUncachedPlaylistIsFetched(t *testing.T) {
+	list := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		io.WriteString(w, "#EXTM3U\n#EXTINF:-1 tvg-id=\"lg1.at\" group-title=\"News\",LG News\nhttps://lg.example/news.m3u8\n")
+	}))
+	defer list.Close()
+	m := mock.New()
+	m.Files["/etc/enigma2/netcastserver_gemini.json"] = []byte(`{"serverlist":[
+		{"id":"kodi","name":"Kodi IPTV","mainUrl":"https://iptv.example/kodi.m3u","mediatype":"playlist_live"},
+		{"id":"lgat","name":"LG Channels AT","mainUrl":"` + list.URL + `/lg.m3u8","mediatype":"playlist_live"},
+		{"id":"login","name":"Paid","mainUrl":"https://paid.example/x.m3u","Username":"me","mediatype":"playlist"},
+		{"id":"vavoo.livetv","name":"Vavoo","mediatype":"api"}]}`)
+	e := newEnvWith(t, m)
+	var src struct {
+		Available bool
+		Sources   []struct{ ID, State string }
+	}
+	e.json(t, "GET", "/api/v1/netcast/sources", "", nil, 200, &src)
+	got := map[string]string{}
+	for _, s := range src.Sources {
+		got[s.ID] = s.State
+	}
+	want := map[string]string{"kodi": "ready", "lgat": "fetch", "login": "waiting", "vavoo.livetv": "unsupported"}
+	for id, st := range want {
+		if got[id] != st {
+			t.Errorf("source %s: %q, want %q (all: %v)", id, got[id], st, got)
+		}
+	}
+	if resp, _ := e.do(t, "POST", "/api/v1/channels/netcast/read", `{"id":"lgat"}`, nil); resp.StatusCode != http.StatusNotFound {
+		t.Errorf("ChannelHub's read still only reads the cache: %d", resp.StatusCode)
+	}
+	var r struct {
+		Token    string
+		Fetched  bool
+		Channels []struct{ Name string }
+	}
+	e.json(t, "POST", "/api/v1/netcast/read", `{"id":"lgat"}`, nil, 200, &r)
+	if !r.Fetched || len(r.Channels) != 1 || r.Channels[0].Name != "LG News" {
+		t.Fatalf("fetched list: %+v", r)
+	}
+	if resp, b := e.do(t, "POST", "/api/v1/netcast/read", `{"id":"login"}`, nil); resp.StatusCode != http.StatusNotFound {
+		t.Errorf("a source with a login is never fetched: %d %s", resp.StatusCode, b)
+	}
+}
+
+func TestNetcastHub_GuideFromTheUsersOwnXMLTVSource(t *testing.T) {
+	// fixedNow is 2026-09-23 18:07 UTC
+	xmltv := `<?xml version="1.0"?><tv><channel id="one.de"><display-name>One News</display-name></channel>
+<programme start="20260923180000 +0000" stop="20260923190000 +0000" channel="one.de"><title>Abendnachrichten</title></programme>
+<programme start="20260923190000 +0000" stop="20260923200000 +0000" channel="one.de"><title>Wetter</title></programme>
+<programme start="20260923180000 +0000" stop="20260923190000 +0000" channel="toon.x"><title>Kinderfilm</title></programme></tv>`
+	guide := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) { io.WriteString(w, xmltv) }))
+	defer guide.Close()
+	m := mock.New()
+	m.Files["/etc/enigma2/netcastepg_gemini.json"] = []byte(`{"entrys":[{"id":"g","name":"G","url":"` + guide.URL + `/epg.xml"}]}`)
+	e := newEnvWith(t, m)
+	var r iptvRead
+	e.json(t, "POST", "/api/v1/netcast/read", `{"id":"kodi"}`, nil, 200, &r)
+	type prog struct {
+		Title string
+		Start int64
+	}
+	var g struct {
+		Programmes map[string]struct{ Now, Next *prog }
+		Loading    bool
+		Sources    int
+	}
+	body := `{"token":` + jsonStr(r.Token) + `,"ids":[0,1]}`
+	for i := 0; i < 50; i++ {
+		e.json(t, "POST", "/api/v1/netcast/guide", body, nil, 200, &g)
+		if !g.Loading && len(g.Programmes) > 0 {
+			break
+		}
+		time.Sleep(100 * time.Millisecond)
+	}
+	one := g.Programmes["0"] // "One News", matched by tvg-id
+	if g.Sources != 1 || one.Now == nil || one.Now.Title != "Abendnachrichten" || one.Next == nil || one.Next.Title != "Wetter" {
+		t.Fatalf("guide: %+v", g)
+	}
+	if _, ok := g.Programmes["1"]; ok {
+		t.Errorf("Toon has no match in the guide: %+v", g.Programmes["1"])
+	}
+	if resp, _ := e.do(t, "POST", "/api/v1/netcast/guide", `{"token":"nope","ids":[0]}`, nil); resp.StatusCode != 404 {
+		t.Errorf("unknown token: %d", resp.StatusCode)
+	}
+}
+
+func TestNetcastHub_LogoComesThroughTheBackend(t *testing.T) {
+	img := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		var b bytes.Buffer
+		png.Encode(&b, image.NewRGBA(image.Rect(0, 0, 8, 8)))
+		w.Write(b.Bytes())
+	}))
+	defer img.Close()
+	list := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		io.WriteString(w, "#EXTM3U\n#EXTINF:-1 tvg-logo=\""+img.URL+"/l.png\",With\nhttps://x.example/a.m3u8\n#EXTINF:-1,Without\nhttps://x.example/b.m3u8\n")
+	}))
+	defer list.Close()
+	m := mock.New()
+	m.Files["/etc/enigma2/netcastserver_gemini.json"] = []byte(`{"serverlist":[{"id":"lgat","name":"L","mainUrl":"` + list.URL + `/l.m3u","mediatype":"playlist_live"}]}`)
+	e := newEnvWith(t, m)
+	var r iptvRead
+	e.json(t, "POST", "/api/v1/netcast/read", `{"id":"lgat"}`, nil, 200, &r)
+	resp, b := e.do(t, "GET", "/api/v1/netcast/logo?token="+r.Token+"&id=0", "", nil)
+	if resp.StatusCode != 200 || resp.Header.Get("Content-Type") != "image/png" || len(b) == 0 {
+		t.Fatalf("logo: %d %s", resp.StatusCode, resp.Header.Get("Content-Type"))
+	}
+	for _, q := range []string{"token=" + r.Token + "&id=1", "token=" + r.Token + "&id=9", "token=x&id=0"} {
+		if resp, _ := e.do(t, "GET", "/api/v1/netcast/logo?"+q, "", nil); resp.StatusCode != 404 {
+			t.Errorf("%s: %d", q, resp.StatusCode)
+		}
 	}
 }

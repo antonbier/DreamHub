@@ -53,6 +53,8 @@ import type {
   IptvTwinHit,
   IptvTwinSuggestion,
   NetcastPlanBody,
+  NetcastHubSources,
+  NetcastNowNext,
   NetcastSources,
   RepoListing,
   DraftEntry,
@@ -262,6 +264,15 @@ export function displayRef(ref: string): string {
 export const api = {
   health: () => request<HealthInfo>('GET', '/api/v1/health'),
   whoami: () => request<WhoAmI>('GET', '/api/v1/whoami'),
+  // NetcastHub: the Netcast plugin's sources, played on the box.
+  netcast: {
+    sources: () => request<NetcastHubSources>('GET', '/api/v1/netcast/sources'),
+    read: (id: string) => request<IptvList & { fetched?: boolean }>('POST', '/api/v1/netcast/read', { id }),
+    play: (token: string, id: number) => request<{ played: string }>('POST', '/api/v1/netcast/play', { token, id }),
+    guide: (token: string, ids: number[]) =>
+      request<{ programmes: Record<string, NetcastNowNext>; loading: boolean; sources: number }>('POST', '/api/v1/netcast/guide', { token, ids }),
+    logo: (token: string, id: number) => requestBlob(`/api/v1/netcast/logo?token=${encodeURIComponent(token)}&id=${id}`),
+  },
   channels: {
     bouquets: () => request<{ bouquets: ChannelBouquet[]; editor: boolean }>('GET', '/api/v1/channels/bouquets'),
     bouquet: (ref: string) => request<{ entries: BouquetEntry[] }>('GET', `/api/v1/channels/bouquet?ref=${encodeURIComponent(ref)}`),

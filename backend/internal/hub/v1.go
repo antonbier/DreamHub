@@ -26,6 +26,7 @@ const (
 	IDChannels = "channels"
 	IDRadio    = "radio"
 	IDPlex     = "plex"
+	IDNetcast  = "netcast"
 	IDStream   = "stream"
 	// IDApps: AppsHub (docs/APPSHUB_PLAN.md, App1) — renamed and widened
 	// from Extension Hub (docs/EXTENSIONHUB_PLAN.md, E1, #46): one nav
@@ -75,6 +76,11 @@ func V1() []Descriptor {
 		// cache while the server is off (CONCEPT.md, "Connectors").
 		{ID: IDPlex, Name: "PlexHub", Label: "hub.plex", Icon: "library", Path: "/plex", Group: GroupMedia, Order: 30,
 			Requires: []Requirement{{Connector: connector.IDPlex, Cached: true}, {Hub: IDControl, Optional: true}}},
+		// Netcast (docs/NETCAST_PLAN.md): the Gemini plugin's sources, played
+		// on the box or handed to ChannelHub. A box without the plugin shows
+		// an empty page that says so.
+		{ID: IDNetcast, Name: "NetcastHub", Label: "hub.netcast", Icon: "stream", Path: "/netcast", Group: GroupMedia, Order: 40,
+			Requires: []Requirement{wc}, Packages: []string{pkgWebInterface}},
 		{ID: IDGuide, Name: "GuideHub", Label: "hub.guide", Icon: "guide", Path: "/guide", Group: GroupProgram, Order: 10,
 			Requires: []Requirement{wc, {Connector: connector.IDTMDB, Optional: true}}, Packages: []string{pkgWebInterface}},
 		// Recording a radio programme needs TimerHub; listening doesn't.

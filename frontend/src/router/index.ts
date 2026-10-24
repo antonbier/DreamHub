@@ -113,6 +113,11 @@ const router = createRouter({
       meta: { perm: 'system' },
     },
     {
+      path: '/netcast',
+      name: 'netcast',
+      component: () => import('@/views/NetcastHubView.vue'),
+    },
+    {
       path: '/channels',
       name: 'channels',
       component: () => import('@/views/ChannelHubView.vue'),

@@ -25,7 +25,8 @@
     "stream": "Live-TV",
     "plex": "Plex Mediathek",
     "channels": "Senderliste",
-    "apps": "Apps"
+    "apps": "Apps",
+    "netcast": "Netcast"
   },
   "status": {
     "noDetail": "Das funktioniert gerade nicht."
@@ -2852,5 +2853,40 @@
     "stateMark": "Sieht nach Zustand aus",
     "stateWhy": "Das sieht nach etwas aus, das die Box für sich selbst merkt (der letzte Sender, ein Zähler, eine Uhrzeit), nicht nach einer Auswahl von dir.",
     "levelAll": "Einrichtungsmodus der Box: {level}. Hier steht jede Einstellung, egal welcher Stufe; die Stufe steht jeweils daneben."
+  },
+  "netcast": {
+    "intro": "Die Internet-Sender des Netcast-Plugins auf der Box. Sender anklicken, um ihn sofort auf dem Fernseher zu spielen; Sender, die bleiben sollen, kommen in ein Bouquet.",
+    "none": "Diese Box hat keine Netcast-Quellen (Netcast ist ein Plugin der Dreambox One).",
+    "noSources": "Netcast hat hier keine Quelle, deren Sender sich auflisten lassen.",
+    "all": "Alle",
+    "unavailable": "Hier nicht verfügbar ({n})",
+    "reasonWaiting": "Netcast hat diese Liste noch nicht heruntergeladen.",
+    "reasonUnsupported": "Läuft nur innerhalb von Netcast; keine Senderliste zum Anzeigen.",
+    "fetchedNote": "Netcast hatte diese Liste noch nicht heruntergeladen; DreamHub hat sie von {host} geladen.",
+    "opening": "Öffnet …",
+    "search": "Sender suchen",
+    "group": "Gruppe",
+    "allGroups": "Alle Gruppen",
+    "backToShelves": "Alle Gruppen",
+    "summary": "{n} Sender | {n} Sender",
+    "more": "Mehr anzeigen",
+    "showAll": "Alle anzeigen",
+    "noMatch": "Kein Sender passt.",
+    "play": "Auf dem Fernseher abspielen",
+    "playNamed": "{name} auf dem Fernseher abspielen",
+    "nowPlaying": "Läuft auf dem Fernseher",
+    "previous": "Vorheriger Sender",
+    "next": "Nächster Sender",
+    "starting": "„{name}“ startet auf dem Fernseher …",
+    "toBouquet": "In ein Bouquet übernehmen …",
+    "toBouquetHint": "Öffnet die Liste in der Senderliste. Dort wählst du Sender aus und siehst eine Vorschau, bevor sich etwas ändert.",
+    "login": "mit Login",
+    "needsHeaders": "braucht Header",
+    "playFailed": "Die Box konnte den Sender nicht abspielen.",
+    "gone": "Die Liste wird nicht mehr vorgehalten; Quelle erneut öffnen.",
+    "readOnlyHint": "Du darfst stöbern; Abspielen braucht die Fernbedienungs-Berechtigung.",
+    "guideLoading": "Programm wird geladen …",
+    "noGuide": "Kein Programm für diese Sender.",
+    "guideFrom": "Programm aus deinen Netcast-Programmquellen und von der Box."
   }
 }

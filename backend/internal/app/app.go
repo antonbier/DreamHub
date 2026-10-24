@@ -388,6 +388,7 @@ func New(ctx context.Context, o Options) (*App, error) {
 	channelsHub := &hubs_.Channels{WC: wc, Plans: plans, Store: st, Settings: svc, User: user, PiconDirs: o.PiconDirs, LogoDir: filepath.Join(o.DataDir, "logos"), Logos: o.LogoSearch, IPTV: o.IPTV, Now: now, ProviderPause: 250 * time.Millisecond}
 	channelsHub.Boxes = boxReg.IDs
 	channelsHub.Init(ctx)
+	netcastHub := &hubs_.Netcast{Channels: channelsHub}
 	timerHub := &hubs_.Timer{WC: wc, Plans: plans, Now: now, AT: at, Owners: st}
 	mediaHub := &hubs_.Media{WC: wc, Plans: plans, FS: o.RecordingsFS, ReadOnly: o.ReadOnlyFiles,
 		Settings: svc, Store: st, AI: o.AI, TMDB: o.TMDB, Enrich: enricher, Now: now,
@@ -539,6 +540,7 @@ func New(ctx context.Context, o Options) (*App, error) {
 		Enrich:     enricher,
 		Push:       notifier,
 		Jobs:       jobQueue,
+		NavHidden:  func(ctx context.Context, id string) bool { return id == hub.IDNetcast && !netcastHub.Present(ctx) },
 		Mounts: []api.Mount{
 			{HubID: hub.IDTimer, Prefixes: []string{"/api/v1/timers"}, Register: timerHub.Mount, Perms: timerHub.Perms()},
 			{HubID: hub.IDMedia, Prefixes: []string{"/api/v1/media"}, Register: mediaHub.Mount, Perms: mediaHub.Perms()},
@@ -552,6 +554,7 @@ func New(ctx context.Context, o Options) (*App, error) {
 			{HubID: hub.IDDevice, Prefixes: []string{"/api/v1/boxsettings"}, Register: boxSettingsHub.Mount},
 			{HubID: hub.IDControl, Prefixes: []string{"/api/v1/control"}, Register: controlHub.Mount, Perms: controlHub.Perms()},
 			{HubID: hub.IDChannels, Prefixes: []string{"/api/v1/channels"}, Register: channelsHub.Mount, Perms: channelsHub.Perms()},
+			{HubID: hub.IDNetcast, Prefixes: []string{"/api/v1/netcast"}, Register: netcastHub.Mount, Perms: netcastHub.Perms()},
 			{HubID: hub.IDPlex, Prefixes: []string{"/api/v1/plex"}, Register: plexHub.Mount, Perms: plexHub.Perms()},
 			{HubID: hub.IDApps, Prefixes: []string{"/api/v1/extensions"}, Register: extensionsHub.Mount, Perms: extensionsHub.Perms()},
 			{HubID: hub.IDApps, Prefixes: []string{"/api/v1/apps"}, Register: appsHub.Mount, Perms: appsHub.Perms()},

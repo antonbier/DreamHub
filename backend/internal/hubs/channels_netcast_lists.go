@@ -56,6 +56,13 @@ func netcastCachedList(ctx context.Context, rd webcontrol.BoxFileReader, id stri
 	if err != nil {
 		return nil, err
 	}
+	return parseNetcastPlaylist(id, raw)
+}
+
+// parseNetcastPlaylist reads an M3U of playlist source id, as cached by the
+// plugin or fetched by DreamHub from the source's own address, and marks its
+// entries the way the plugin does.
+func parseNetcastPlaylist(id string, raw []byte) (*iptv.Playlist, error) {
 	pl, err := iptv.Parse(bytes.NewReader(raw))
 	if err != nil {
 		return nil, err

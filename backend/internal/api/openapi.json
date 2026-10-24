@@ -7879,6 +7879,161 @@
     },
     "x-csrf": true
    }
+  },
+  "/netcast/sources": {
+   "get": {
+    "summary": "List Netcast's sources on the box",
+    "tags": [
+     "netcast"
+    ],
+    "operationId": "GET_netcast_sources",
+    "parameters": [
+     {
+      "$ref": "#/components/parameters/Box"
+     }
+    ],
+    "description": "`{available, sources: [{id, name, desc?, mediaType?, host?, hasLogin?, state}]}`. `state` is `ready` (the channels can be listed now), `fetch` (Netcast has not downloaded the playlist; opening it makes DreamHub load it from the address in the source's file — never one with a login), `waiting` (no list yet and none DreamHub may fetch) or `unsupported` (Vavoo, films and series: no channel list DreamHub can use). A box without Netcast answers `available: false`, and its navigation has no Netcast entry. Read only.",
+    "responses": {
+     "200": {
+      "description": "OK",
+      "content": {
+       "application/json": {
+        "schema": {
+         "type": "object"
+        }
+       }
+      }
+     }
+    }
+   }
+  },
+  "/netcast/read": {
+   "post": {
+    "summary": "Read a Netcast source's channel list",
+    "tags": [
+     "netcast"
+    ],
+    "operationId": "POST_netcast_read",
+    "parameters": [
+     {
+      "$ref": "#/components/parameters/Box"
+     }
+    ],
+    "description": "Body `{id}`. The answer of `POST /channels/netcast/read` (token, channels, groups) plus `fetched: true` when the playlist was not on the box and DreamHub loaded it from the source's address. The list is kept for the session so `play`, `guide`, `logo` and the IPTV tab's plan can use its token.",
+    "responses": {
+     "200": {
+      "description": "OK",
+      "content": {
+       "application/json": {
+        "schema": {
+         "type": "object"
+        }
+       }
+      }
+     }
+    }
+   }
+  },
+  "/netcast/play": {
+   "post": {
+    "summary": "Play a Netcast channel on the box",
+    "tags": [
+     "netcast"
+    ],
+    "operationId": "POST_netcast_play",
+    "parameters": [
+     {
+      "$ref": "#/components/parameters/Box"
+     }
+    ],
+    "description": "Body `{token, id}`: a channel of a list read with `/netcast/read`. Switches the box to it with the reference a bouquet entry would have (the plugin's own kind for a Netcast entry); no bouquet is touched. Needs `control`. `iptv_session_gone` (404): read the list again.",
+    "responses": {
+     "200": {
+      "description": "OK",
+      "content": {
+       "application/json": {
+        "schema": {
+         "type": "object"
+        }
+       }
+      }
+     }
+    }
+   }
+  },
+  "/netcast/guide": {
+   "post": {
+    "summary": "What runs now and next on a list's channels",
+    "tags": [
+     "netcast"
+    ],
+    "operationId": "POST_netcast_guide",
+    "parameters": [
+     {
+      "$ref": "#/components/parameters/Box"
+     }
+    ],
+    "description": "Body `{token, ids}` (at most 400 ids of a list read with `/netcast/read`). Answers `{programmes: {\"<id>\": {now?, next?: {title, start, end}}}, loading, sources}` with Unix seconds (UTC). From the box's own guide for a channel that is in one of its bouquets, else from the XMLTV files set up in Netcast (`netcastepg_*.json`, never one with a login), matched by tvg-id and then by name; those files are loaded by DreamHub in the background, so the first answer may have `loading: true` — ask again a few seconds later. Nothing is asked of any streaming service.",
+    "responses": {
+     "200": {
+      "description": "OK",
+      "content": {
+       "application/json": {
+        "schema": {
+         "type": "object"
+        }
+       }
+      }
+     }
+    }
+   }
+  },
+  "/netcast/logo": {
+   "get": {
+    "summary": "A channel's logo",
+    "tags": [
+     "netcast"
+    ],
+    "operationId": "GET_netcast_logo",
+    "parameters": [
+     {
+      "$ref": "#/components/parameters/Box"
+     },
+     {
+      "name": "token",
+      "in": "query",
+      "required": true,
+      "schema": {
+       "type": "string"
+      }
+     },
+     {
+      "name": "id",
+      "in": "query",
+      "required": true,
+      "schema": {
+       "type": "integer"
+      }
+     }
+    ],
+    "description": "The logo of channel `id` of a list read with `/netcast/read`, fetched by DreamHub (the browser never loads an outside address) and answered as a PNG; 404 when the channel has none or it cannot be had.",
+    "responses": {
+     "200": {
+      "description": "The logo",
+      "content": {
+       "image/png": {
+        "schema": {
+         "type": "string",
+         "format": "binary"
+        }
+       }
+      }
+     },
+     "404": {
+      "description": "No logo"
+     }
+    }
+   }
   }
  }
 }

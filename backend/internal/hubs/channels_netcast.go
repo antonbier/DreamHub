@@ -314,6 +314,14 @@ var netcastIDPattern = regexp.MustCompile(`^[A-Za-z0-9_-]{1,64}$`)
 // it is the list the TV shows. Such a list is not remembered for "Compare
 // again" (it has no address of its own).
 func (h *Channels) readNetcastList(w http.ResponseWriter, r *http.Request) {
+	h.openNetcastList(w, r, false)
+}
+
+// openNetcastList is readNetcastList; with allowFetch a playlist source the
+// plugin has not downloaded yet is loaded by DreamHub from the address in the
+// source's own file (never one with a login) — what the plugin would do, and
+// the same safeguards as any list read from an address.
+func (h *Channels) openNetcastList(w http.ResponseWriter, r *http.Request, allowFetch bool) {
 	var body struct {
 		ID string `json:"id"`
 	}
@@ -328,6 +336,21 @@ func (h *Channels) readNetcastList(w http.ResponseWriter, r *http.Request) {
 	}
 	ctx := r.Context()
 	pl, err := netcastCachedList(ctx, rd, body.ID)
+	var view netcastView
+	var haveView bool
+	fetched := false
+	if allowFetch && errors.Is(err, webcontrol.ErrNotFound) {
+		if v, verr := readNetcast(ctx, rd); verr == nil {
+			view, haveView = v, true
+			if src, ok := netcastSourceByID(v, body.ID); ok && src.Fetch != "" && strings.HasPrefix(src.MediaType, "playlist") {
+				var raw []byte
+				if raw, err = h.fetcher().Fetch(ctx, src.Fetch); err == nil {
+					pl, err = parseNetcastPlaylist(body.ID, raw)
+					fetched = err == nil
+				}
+			}
+		}
+	}
 	var fe *iptv.FetchError
 	switch {
 	case errors.Is(err, errNetcastUnsupported):
@@ -347,17 +370,35 @@ func (h *Channels) readNetcastList(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 	name := body.ID
-	if view, err := readNetcast(ctx, rd); err == nil {
-		for _, f := range view.Files {
-			for _, s := range f.Sources {
-				if s.ID == body.ID && s.Name != "" {
-					name = s.Name
-				}
-			}
+	if !haveView {
+		if v, err := readNetcast(ctx, rd); err == nil {
+			view, haveView = v, true
+		}
+	}
+	if haveView {
+		if s, ok := netcastSourceByID(view, body.ID); ok && s.Name != "" {
+			name = s.Name
 		}
 	}
 	user, _ := httpx.User(ctx)
 	s := &iptvSession{token: randomHex(16), userID: user.ID, name: "Netcast: " + name, fromFile: true, read: h.now(), pl: pl}
 	h.keepIPTV(s)
-	httpx.WriteJSON(w, http.StatusOK, iptvListView(s))
+	out := iptvListView(s)
+	out["fetched"] = fetched
+	httpx.WriteJSON(w, http.StatusOK, out)
+}
+
+// netcastSourceByID finds a source of the "server" files by its id.
+func netcastSourceByID(v netcastView, id string) (netcast.Source, bool) {
+	for _, f := range v.Files {
+		if f.Kind != "server" {
+			continue
+		}
+		for _, s := range f.Sources {
+			if s.ID == id {
+				return s, true
+			}
+		}
+	}
+	return netcast.Source{}, false
 }

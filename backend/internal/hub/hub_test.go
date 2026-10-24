@@ -156,7 +156,7 @@ func TestNavigation(t *testing.T) {
 		t.Errorf("dashboard must come first, got %+v", first)
 	}
 	media := nav.Sections[1].Items
-	if len(media) != 2 || media[0].ID != IDMedia || media[1].ID != IDPlex {
+	if len(media) != 3 || media[0].ID != IDMedia || media[1].ID != IDPlex || media[2].ID != IDNetcast {
 		t.Errorf("disabled SeriesHub must be hidden from the media group, got %+v", media)
 	}
 	program := nav.Sections[2].Items

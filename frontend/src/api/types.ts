@@ -1679,3 +1679,33 @@ export interface NetcastPlanBody {
   mediaType?: string
   desc?: string
 }
+
+// NetcastHub's source list: what can be done with each source. `fetch` means
+// Netcast has not downloaded the list and DreamHub loads it from the source's
+// own address; `waiting` and `unsupported` cannot be opened.
+export interface NetcastHubSource {
+  id: string
+  name: string
+  desc?: string
+  mediaType?: string
+  host?: string
+  hasLogin?: boolean
+  state: 'ready' | 'fetch' | 'waiting' | 'unsupported'
+}
+
+export interface NetcastHubSources {
+  available: boolean
+  sources: NetcastHubSource[]
+}
+
+// What runs on a channel; times are Unix seconds, UTC.
+export interface NetcastProgramme {
+  title: string
+  start: number
+  end: number
+}
+
+export interface NetcastNowNext {
+  now?: NetcastProgramme
+  next?: NetcastProgramme
+}

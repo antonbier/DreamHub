@@ -5,6 +5,7 @@
 package api
 
 import (
+	"context"
 	"encoding/json"
 	"errors"
 	"log/slog"
@@ -64,6 +65,10 @@ type PublicRoute struct {
 
 // Deps are the router's dependencies.
 type Deps struct {
+	// NavHidden says that a hub does not belong in the navigation of the box
+	// the request is about (Netcast on a box without the plugin); nil hides
+	// nothing. The hub's routes stay; this only keeps its menu entry away.
+	NavHidden  func(ctx context.Context, hubID string) bool
 	Public     []PublicRoute
 	WebControl webcontrol.Client
 	// Boxes are the boxes the `box` query parameter picks from; nil means
@@ -499,6 +504,13 @@ func handleNavigation(d Deps) http.HandlerFunc {
 			d.Logger.Error("navigation failed", "requestId", httpx.RequestID(r.Context()), "error", err)
 			httpx.WriteError(w, r, http.StatusInternalServerError, "internal", "could not build navigation")
 			return
+		}
+		if d.NavHidden != nil {
+			for i := range statuses {
+				if d.NavHidden(r.Context(), statuses[i].ID) {
+					statuses[i].Hidden = true
+				}
+			}
 		}
 		nav := d.Hubs.Navigation(statuses, perms(r), "")
 		if d.Boxes != nil {

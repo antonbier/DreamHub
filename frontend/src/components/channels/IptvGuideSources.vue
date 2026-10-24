@@ -64,6 +64,9 @@
         <button type="button" class="rounded-sm bg-accent px-3 py-1.5 text-[13.5px] font-semibold text-bg disabled:opacity-50" :disabled="checking || url.trim() === ''" @click="check">
           {{ checking ? t('channels.iptv.guideSources.checking') : t('channels.iptv.guideSources.check') }}
         </button>
+        <button type="button" class="rounded-sm border border-line px-3 py-1.5 text-[13.5px] text-text hover:bg-tile-2 disabled:opacity-50" :disabled="url.trim() === ''" @click="toNetcast">
+          {{ t('channels.iptv.guideSources.toNetcast') }}
+        </button>
         <span class="text-faint">{{ ids.length > 0 ? t('channels.iptv.guideSources.scope', { n: number(ids.length) }) : t('channels.iptv.guideSources.scopeAll', { n: number(total) }) }}</span>
       </div>
       <p v-if="checkError" class="text-[13px] text-warn" role="alert"><ErrorText :error="checkError" /></p>
@@ -89,12 +92,16 @@
 <script setup lang="ts">
 import { ref } from 'vue'
 import { useI18n } from 'vue-i18n'
+import { useRouter } from 'vue-router'
 import { api } from '@/api/client'
 import type { GuideCoverage, GuideSource, RepoListing } from '@/api/types'
 import ErrorText from '@/components/ErrorText.vue'
+import { useNetcastDraft } from '@/composables/useNetcastDraft'
 
 const props = defineProps<{ token: string; ids: number[]; total: number }>()
 const { t, n: formatNumber } = useI18n()
+const router = useRouter()
+const { offer } = useNetcastDraft()
 const number = (v: number) => formatNumber(v)
 
 const opened = ref(false)
@@ -152,6 +159,21 @@ async function listRepo(address: string) {
 function openDir(dir: string) {
   if (!listed.value) return
   void listRepo(`https://github.com/${listed.value.repo}/tree/${listed.value.ref || 'HEAD'}/${dir}`)
+}
+
+// Hands the chosen file to the Netcast tab's "add a source" form (a preview
+// first, there); the address stays in memory, not in the page address.
+function toNetcast() {
+  const c = curated.value.find((x) => x.id === curatedId.value)
+  const name = c?.name ?? (() => {
+    try {
+      return new URL(url.value.trim()).hostname
+    } catch {
+      return ''
+    }
+  })()
+  offer({ kind: 'epg', name, address: url.value.trim() })
+  void router.push({ query: { tab: 'netcast' } })
 }
 
 async function check() {

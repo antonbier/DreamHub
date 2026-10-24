@@ -25,6 +25,17 @@ type BoxFileReader interface {
 	ListBoxFiles(ctx context.Context, dir, pattern string) ([]string, error)
 }
 
+// BoxFileWriter writes a small file on the box. Neither WebControl nor
+// OpenWebif has a call for it: it needs a write route in the DreamHub TV
+// plugin (box settings S3), so the real client answers ErrNeedsPlugin until
+// that exists. The writer is told nothing about what the file is for; the
+// plan that uses it reads the file back and keeps a copy of the old one.
+type BoxFileWriter interface {
+	// CanWriteBoxFiles says whether the box has the write route.
+	CanWriteBoxFiles(ctx context.Context) bool
+	WriteBoxFile(ctx context.Context, path string, data []byte) error
+}
+
 // MaxBoxFile caps what ReadBoxFile returns: these are small JSON files.
 const MaxBoxFile = 1 << 20
 
@@ -97,3 +108,10 @@ func firstNonEmpty(s ...string) string {
 	}
 	return ""
 }
+
+// WriteBoxFile: the plugin's write route does not exist yet.
+func (c *HTTPClient) WriteBoxFile(ctx context.Context, p string, data []byte) error {
+	return fmt.Errorf("webcontrol: writing a box file: %w", ErrNeedsPlugin)
+}
+
+func (c *HTTPClient) CanWriteBoxFiles(ctx context.Context) bool { return false }

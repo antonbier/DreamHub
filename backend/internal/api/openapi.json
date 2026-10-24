@@ -7750,6 +7750,86 @@
      }
     }
    }
+  },
+  "/channels/netcast/plan": {
+   "post": {
+    "summary": "Plan a change to Netcast's sources",
+    "tags": [
+     "channels"
+    ],
+    "operationId": "POST_channels_netcast_plan",
+    "parameters": [
+     {
+      "$ref": "#/components/parameters/Box"
+     }
+    ],
+    "description": "Body `{action: add|update|remove, kind: server|epg, file?, id?, name?, address?, mediaType?, desc?}`. Returns `{plan, file}`; nothing is written until the plan is applied. `add` appends a source to `file` (a `netcast*_*.json` of that kind) or, without `file`, makes a new file named from the source (`netcastserver_dh<name>.json`); `update` changes the given fields and keeps every other field of the entry (a stored login stays); `remove` takes the entry out. Applying keeps a copy of the old file (`<file>.dreamhub-backup`), writes the new one and reads it back; on a difference the old file is put back (`netcast_write_mismatch`). A file changed since the preview makes the plan stale. The preview never shows a login. Errors: `netcast_needs_plugin` (409: the box has no write route for its files yet), `netcast_no_source`, `netcast_source_exists`, `netcast_bad_file`, `validation_failed`.",
+    "responses": {
+     "200": {
+      "description": "The plan",
+      "content": {
+       "application/json": {
+        "schema": {
+         "type": "object"
+        }
+       }
+      }
+     },
+     "default": {
+      "$ref": "#/components/responses/Error"
+     }
+    },
+    "requestBody": {
+     "required": true,
+     "content": {
+      "application/json": {
+       "schema": {
+        "type": "object",
+        "properties": {
+         "action": {
+          "type": "string",
+          "enum": [
+           "add",
+           "update",
+           "remove"
+          ]
+         },
+         "kind": {
+          "type": "string",
+          "enum": [
+           "server",
+           "epg"
+          ]
+         },
+         "file": {
+          "type": "string"
+         },
+         "id": {
+          "type": "string"
+         },
+         "name": {
+          "type": "string"
+         },
+         "address": {
+          "type": "string"
+         },
+         "mediaType": {
+          "type": "string"
+         },
+         "desc": {
+          "type": "string"
+         }
+        },
+        "required": [
+         "action",
+         "kind"
+        ]
+       }
+      }
+     }
+    },
+    "x-csrf": true
+   }
   }
  }
 }

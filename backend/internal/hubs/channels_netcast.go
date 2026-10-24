@@ -1,13 +1,19 @@
 package hubs
 
 import (
+	"bytes"
 	"context"
+	"crypto/sha256"
+	"encoding/hex"
 	"errors"
 	"net/http"
 	"path"
+	"strings"
 
 	"github.com/antonbier/DreamHub/backend/internal/httpx"
+	"github.com/antonbier/DreamHub/backend/internal/iptv"
 	"github.com/antonbier/DreamHub/backend/internal/netcast"
+	"github.com/antonbier/DreamHub/backend/internal/plan"
 	"github.com/antonbier/DreamHub/backend/internal/webcontrol"
 )
 
@@ -18,8 +24,10 @@ import (
 
 type netcastView struct {
 	// Available is false when the box serves no files or has no Netcast file.
-	Available bool           `json:"available"`
-	Files     []netcast.File `json:"files"`
+	Available bool `json:"available"`
+	// Writable is true when the box has a write route for these files.
+	Writable bool           `json:"writable"`
+	Files    []netcast.File `json:"files"`
 	// Listed is true when the box listed its directory; false means the
 	// well-known names were tried instead, so a file of the person's own
 	// may be missing.
@@ -36,6 +44,9 @@ func (h *Channels) netcastSources(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 	view, err := readNetcast(r.Context(), rd)
+	if wr, ok := h.WC.(webcontrol.BoxFileWriter); ok {
+		view.Writable = wr.CanWriteBoxFiles(r.Context())
+	}
 	if err != nil {
 		httpx.WriteError(w, r, http.StatusBadGateway, "webcontrol_unavailable", "could not reach WebControl")
 		return
@@ -84,4 +95,203 @@ func readNetcast(ctx context.Context, rd webcontrol.BoxFileReader) (netcastView,
 	}
 	view.Available = len(view.Files) > 0 || len(view.Unreadable) > 0
 	return view, nil
+}
+
+// --- writing a source (a plan) -----------------------------------------------------
+
+// Error codes of the Netcast routes.
+const (
+	CodeNetcastNeedsPlugin = "netcast_needs_plugin" // the box has no write route for its files
+	CodeNetcastNoSource    = "netcast_no_source"
+	CodeNetcastExists      = "netcast_source_exists"
+	CodeNetcastBadFile     = "netcast_bad_file"
+	CodeNetcastMismatch    = "netcast_write_mismatch"
+)
+
+// backupSuffix is added to a file's name for the copy kept before an edit; it
+// does not end in .json, so the plugin does not read it.
+const backupSuffix = ".dreamhub-backup"
+
+type netcastPlanRequest struct {
+	Action    string `json:"action"` // "add", "update", "remove"
+	Kind      string `json:"kind"`   // "server" or "epg"
+	File      string `json:"file"`   // the file to change; for "add" optional (else a new file)
+	ID        string `json:"id"`     // the source, for update and remove
+	Name      string `json:"name"`
+	Address   string `json:"address"`
+	MediaType string `json:"mediaType"`
+	Desc      string `json:"desc"`
+}
+
+// NetcastChange is a line of the preview. Address has no login.
+type NetcastChange struct {
+	Name    string `json:"name"`
+	File    string `json:"file"`
+	Kind    string `json:"kind"`
+	Address string `json:"address,omitempty"`
+}
+
+func contentHash(b []byte, exists bool) string {
+	if !exists {
+		return "absent"
+	}
+	sum := sha256.Sum256(b)
+	return hex.EncodeToString(sum[:])
+}
+
+func (h *Channels) planNetcast(w http.ResponseWriter, r *http.Request) {
+	var req netcastPlanRequest
+	if err := httpx.DecodeJSON(r, &req); err != nil {
+		httpx.WriteError(w, r, http.StatusBadRequest, "invalid_body", `expected {"action", "kind", "file", "id", "name", "address"}`)
+		return
+	}
+	ctx := r.Context()
+	user, _ := httpx.User(ctx)
+	rd, rok := h.WC.(webcontrol.BoxFileReader)
+	wr, wok := h.WC.(webcontrol.BoxFileWriter)
+	if !rok || !wok || !wr.CanWriteBoxFiles(ctx) {
+		httpx.WriteError(w, r, http.StatusConflict, CodeNetcastNeedsPlugin, "the box has no way to change Netcast's files yet")
+		return
+	}
+	in := netcast.Input{ID: req.ID, Name: req.Name, Address: req.Address, MediaType: req.MediaType, Desc: req.Desc}
+	invalid := func(field string) {
+		httpx.WriteErrorDetails(w, r, http.StatusBadRequest, "validation_failed", "nothing was planned", map[string]httpx.FieldError{field: {Code: "invalid"}})
+	}
+	if req.Kind != "server" && req.Kind != "epg" {
+		invalid("kind")
+		return
+	}
+	file := strings.TrimSpace(req.File)
+	if file != "" && (strings.Contains(file, "/") || netcast.KindOf(file) != req.Kind) {
+		invalid("file")
+		return
+	}
+
+	// the file as it is now
+	var old []byte
+	exists := false
+	if file != "" {
+		b, err := rd.ReadBoxFile(ctx, path.Join(netcast.Dir, file))
+		switch {
+		case err == nil:
+			old, exists = b, true
+		case errors.Is(err, webcontrol.ErrNotFound) && req.Action == "add":
+		case errors.Is(err, webcontrol.ErrNotFound):
+			httpx.WriteError(w, r, http.StatusNotFound, CodeNetcastNoSource, "no such file")
+			return
+		default:
+			httpx.WriteError(w, r, http.StatusBadGateway, "webcontrol_unavailable", "could not reach WebControl")
+			return
+		}
+	}
+
+	var content []byte
+	var err error
+	var change plan.Change
+	var name string
+	switch req.Action {
+	case "add":
+		var id string
+		content, id, err = netcast.Add(req.Kind, old, in)
+		if err == nil && file == "" {
+			file = netcast.FileName(req.Kind, id)
+			if _, rerr := rd.ReadBoxFile(ctx, path.Join(netcast.Dir, file)); rerr == nil {
+				err = netcast.ErrExists // the new file's name is taken: a source of that id is there
+			}
+		}
+		name = strings.TrimSpace(req.Name)
+		change = plan.Change{Type: "netcast.source.add", After: NetcastChange{Name: name, File: file, Kind: req.Kind, Address: iptv.Display(req.Address)}}
+	case "update", "remove":
+		if file == "" || req.ID == "" {
+			invalid("id")
+			return
+		}
+		before, _ := netcast.Find(file, old, req.ID)
+		name = before.Name
+		if req.Action == "update" {
+			content, err = netcast.Update(req.Kind, old, req.ID, in)
+			after := NetcastChange{Name: firstOf(strings.TrimSpace(req.Name), before.Name), File: file, Kind: req.Kind, Address: firstOf(iptv.Display(req.Address), before.Address)}
+			change = plan.Change{Type: "netcast.source.update", Before: NetcastChange{Name: before.Name, File: file, Kind: req.Kind, Address: before.Address}, After: after}
+		} else {
+			content, err = netcast.Remove(req.Kind, old, req.ID)
+			change = plan.Change{Type: "netcast.source.remove", Before: NetcastChange{Name: before.Name, File: file, Kind: req.Kind, Address: before.Address}}
+		}
+	default:
+		invalid("action")
+		return
+	}
+	switch {
+	case errors.Is(err, netcast.ErrInvalid):
+		httpx.WriteErrorDetails(w, r, http.StatusBadRequest, "validation_failed", "nothing was planned", map[string]httpx.FieldError{"source": {Code: "invalid"}})
+		return
+	case errors.Is(err, netcast.ErrExists):
+		httpx.WriteError(w, r, http.StatusConflict, CodeNetcastExists, "a source with that id exists already")
+		return
+	case errors.Is(err, netcast.ErrNoSource):
+		httpx.WriteError(w, r, http.StatusNotFound, CodeNetcastNoSource, "no such source")
+		return
+	case errors.Is(err, netcast.ErrBadFile):
+		httpx.WriteError(w, r, http.StatusUnprocessableEntity, CodeNetcastBadFile, "that file is not a source list DreamHub can edit")
+		return
+	case err != nil:
+		httpx.WriteError(w, r, http.StatusInternalServerError, "internal", "could not prepare the change")
+		return
+	}
+
+	full := path.Join(netcast.Dir, file)
+	summary := "Netcast sources: " + req.Action + " " + name
+	pl := h.Plans.Create(ctx, user, plan.Draft{
+		Action:      "channels.netcast." + req.Action,
+		Changes:     []plan.Change{change},
+		Summary:     summary,
+		Detail:      map[string]any{"file": file, "kind": req.Kind, "source": name},
+		Fingerprint: contentHash(old, exists),
+		Current: func(ctx context.Context) (string, error) {
+			b, err := rd.ReadBoxFile(ctx, full)
+			if errors.Is(err, webcontrol.ErrNotFound) {
+				return contentHash(nil, false), nil
+			}
+			if err != nil {
+				return "", err
+			}
+			return contentHash(b, true), nil
+		},
+		Execute: func(ctx context.Context) error {
+			// a copy of what is there, then the new content, then a look
+			// at what the box now holds
+			if exists {
+				if err := wr.WriteBoxFile(ctx, full+backupSuffix, old); err != nil {
+					return netcastWriteFailure(err)
+				}
+			}
+			if err := wr.WriteBoxFile(ctx, full, content); err != nil {
+				return netcastWriteFailure(err)
+			}
+			got, err := rd.ReadBoxFile(ctx, full)
+			if err != nil || !bytes.Equal(got, content) {
+				if exists {
+					_ = wr.WriteBoxFile(ctx, full, old) // put it back
+				}
+				return &plan.Failure{Status: http.StatusBadGateway, Code: CodeNetcastMismatch, Message: "the box does not hold what was written", Err: err}
+			}
+			return nil
+		},
+	})
+	httpx.WriteJSON(w, http.StatusOK, map[string]any{"plan": pl, "file": file})
+}
+
+func netcastWriteFailure(err error) error {
+	if errors.Is(err, webcontrol.ErrNeedsPlugin) {
+		return &plan.Failure{Status: http.StatusConflict, Code: CodeNetcastNeedsPlugin, Message: "the box has no way to change Netcast's files yet", Err: err}
+	}
+	return err
+}
+
+func firstOf(s ...string) string {
+	for _, x := range s {
+		if x != "" {
+			return x
+		}
+	}
+	return ""
 }

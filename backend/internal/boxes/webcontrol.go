@@ -21,6 +21,7 @@ var (
 	_ webcontrol.BouquetEditor     = (*WebControl)(nil)
 	_ webcontrol.BoxSettingsReader = (*WebControl)(nil)
 	_ webcontrol.BoxFileReader     = (*WebControl)(nil)
+	_ webcontrol.BoxFileWriter     = (*WebControl)(nil)
 )
 
 func (c *WebControl) DeviceInfo(ctx context.Context) (*webcontrol.DeviceInfo, error) {
@@ -411,4 +412,25 @@ func (c *WebControl) ListBoxFiles(ctx context.Context, dir, pattern string) ([]s
 		return nil, err
 	}
 	return r.ListBoxFiles(ctx, dir, pattern)
+}
+
+func (c *WebControl) WriteBoxFile(ctx context.Context, path string, data []byte) error {
+	e, err := c.reg.For(ctx)
+	if err != nil {
+		return err
+	}
+	w, ok := e.WC.(webcontrol.BoxFileWriter)
+	if !ok {
+		return webcontrol.ErrNotFound
+	}
+	return w.WriteBoxFile(ctx, path, data)
+}
+
+func (c *WebControl) CanWriteBoxFiles(ctx context.Context) bool {
+	e, err := c.reg.For(ctx)
+	if err != nil {
+		return false
+	}
+	w, ok := e.WC.(webcontrol.BoxFileWriter)
+	return ok && w.CanWriteBoxFiles(ctx)
 }

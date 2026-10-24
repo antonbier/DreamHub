@@ -13,7 +13,10 @@ import (
 // The mock box's files (webcontrol.BoxFileReader): Netcast's source files in
 // the layout of a Dreambox One with the Gemini plugins (ARCHITECTURE.md,
 // "Netcast sources on the One"), with made-up addresses.
-var _ webcontrol.BoxFileReader = (*Client)(nil)
+var (
+	_ webcontrol.BoxFileReader = (*Client)(nil)
+	_ webcontrol.BoxFileWriter = (*Client)(nil)
+)
 
 func mockBoxFiles() map[string][]byte {
 	return map[string][]byte{
@@ -22,8 +25,8 @@ func mockBoxFiles() map[string][]byte {
 			{"id":"lgat","name":"LG Channels AT","mainUrl":"https://iptv.example/lg/at.m3u8","mediatype":"playlist_live"}]}`),
 		"/etc/enigma2/netcastserver_plutotv.json": []byte(`{"serverlist":[
 			{"id":"pluto","name":"Pluto TV","mediatype":"api","epgUpdate":"3600","Username":"me","Password":"hunter2"}]}`),
-		"/etc/enigma2/netcastepg_gemini.json": []byte(`{"epglist":[
-			{"id":"gemini","name":"XMLTV DE","epgUrl":"https://epg.example/de.xml.gz","EPGrefreshHour":"96"}]}`),
+		"/etc/enigma2/netcastepg_gemini.json": []byte(`{"entrys":[
+			{"id":"gemini","name":"XMLTV DE","url":"https://epg.example/de.xml.gz","EPGrefreshHour":96}]}`),
 	}
 }
 
@@ -58,6 +61,29 @@ func (c *Client) ListBoxFiles(ctx context.Context, dir, pattern string) ([]strin
 	}
 	sort.Strings(out)
 	return out, nil
+}
+
+// CanWriteBoxFiles: the mock box has the write route unless it is made not to.
+func (c *Client) CanWriteBoxFiles(ctx context.Context) bool { return !c.NoBoxFiles && !c.ReadOnlyFiles }
+
+// WriteBoxFile stores a file on the mock box, as the TV plugin's write route
+// will: NoBoxFiles is a box with no file service, ReadOnlyFiles one whose
+// plugin has no write route yet. CorruptWrites stores something else than
+// asked, to test the read-back.
+func (c *Client) WriteBoxFile(ctx context.Context, p string, data []byte) error {
+	if c.NoBoxFiles {
+		return fmt.Errorf("mock: %w", webcontrol.ErrNotFound)
+	}
+	if c.ReadOnlyFiles {
+		return fmt.Errorf("mock: %w", webcontrol.ErrNeedsPlugin)
+	}
+	c.mu.Lock()
+	defer c.mu.Unlock()
+	if c.CorruptWrites {
+		data = append(append([]byte(nil), data...), ' ')
+	}
+	c.boxFiles()[p] = append([]byte(nil), data...)
+	return nil
 }
 
 // boxFiles is the files, made on first use; the caller holds c.mu.

@@ -980,3 +980,125 @@ func TestNetcast_BoxThatCannotListFallsBackToKnownNames(t *testing.T) {
 		t.Errorf("fallback: %+v", v)
 	}
 }
+
+type netcastPlanView struct {
+	Plan struct {
+		ID      string `json:"id"`
+		Changes []struct {
+			Type string `json:"type"`
+		} `json:"changes"`
+	} `json:"plan"`
+	File string `json:"file"`
+}
+
+func TestNetcast_AddAGuideSourceAsAPlan(t *testing.T) {
+	m := mock.New()
+	e := newEnvWith(t, m)
+	body := `{"action":"add","kind":"epg","name":"My Guide","address":"https://u:p@g.example/de.xml.gz?key=s3cret"}`
+	resp, raw := e.do(t, "POST", "/api/v1/channels/netcast/plan", body, nil)
+	if resp.StatusCode != 200 {
+		t.Fatalf("plan: %d %s", resp.StatusCode, raw)
+	}
+	for _, leak := range []string{"s3cret", "u:p"} {
+		if strings.Contains(string(raw), leak) {
+			t.Errorf("the preview holds %q: %s", leak, raw)
+		}
+	}
+	// nothing is written before the confirmation
+	if _, ok := m.Files["/etc/enigma2/netcastepg_dhmyguide.json"]; ok {
+		t.Fatal("the file exists before the plan is applied")
+	}
+	var p netcastPlanView
+	e.json(t, "POST", "/api/v1/channels/netcast/plan", body, nil, 200, &p)
+	if p.File != "netcastepg_dhmyguide.json" || len(p.Plan.Changes) != 1 || p.Plan.Changes[0].Type != "netcast.source.add" {
+		t.Fatalf("plan: %+v", p)
+	}
+	if resp, b := e.do(t, "POST", "/api/v1/plans/"+p.Plan.ID+"/apply", "", nil); resp.StatusCode != 200 {
+		t.Fatalf("apply: %d %s", resp.StatusCode, b)
+	}
+	if got := string(m.Files["/etc/enigma2/netcastepg_dhmyguide.json"]); !strings.Contains(got, "s3cret") || !strings.Contains(got, `"id": "dhmyguide"`) {
+		t.Errorf("file: %s", got)
+	}
+	var v netcastSourcesView
+	e.json(t, "GET", "/api/v1/channels/netcast/sources", "", nil, 200, &v)
+	if len(v.Files) != 4 {
+		t.Errorf("sources: %+v", v)
+	}
+	if resp, b := e.do(t, "GET", "/api/v1/channels/netcast/sources", "", nil); strings.Contains(string(b), "s3cret") || resp.StatusCode != 200 {
+		t.Errorf("the login is shown: %s", b)
+	}
+}
+
+func TestNetcast_EditKeepsALoginAndACopyOfTheOldFile(t *testing.T) {
+	m := mock.New()
+	e := newEnvWith(t, m)
+	old := string(m.Files["/etc/enigma2/netcastserver_plutotv.json"])
+	// an update is previewed, then applied; the stored login stays
+	var p netcastPlanView
+	e.json(t, "POST", "/api/v1/channels/netcast/plan", `{"action":"update","kind":"server","file":"netcastserver_plutotv.json","id":"pluto","name":"Pluto DE"}`, nil, 200, &p)
+	if p.Plan.Changes[0].Type != "netcast.source.update" {
+		t.Fatalf("plan: %+v", p)
+	}
+	if resp, b := e.do(t, "POST", "/api/v1/plans/"+p.Plan.ID+"/apply", "", nil); resp.StatusCode != 200 {
+		t.Fatalf("apply: %d %s", resp.StatusCode, b)
+	}
+	now := string(m.Files["/etc/enigma2/netcastserver_plutotv.json"])
+	if !strings.Contains(now, "Pluto DE") || !strings.Contains(now, "hunter2") {
+		t.Errorf("file: %s", now)
+	}
+	if string(m.Files["/etc/enigma2/netcastserver_plutotv.json.dreamhub-backup"]) != old {
+		t.Error("the old file was not kept")
+	}
+	// removing the source
+	e.json(t, "POST", "/api/v1/channels/netcast/plan", `{"action":"remove","kind":"server","file":"netcastserver_plutotv.json","id":"pluto"}`, nil, 200, &p)
+	if resp, b := e.do(t, "POST", "/api/v1/plans/"+p.Plan.ID+"/apply", "", nil); resp.StatusCode != 200 {
+		t.Fatalf("apply: %d %s", resp.StatusCode, b)
+	}
+	if strings.Contains(string(m.Files["/etc/enigma2/netcastserver_plutotv.json"]), "pluto") {
+		t.Error("the source is still there")
+	}
+}
+
+func TestNetcast_PlanRefusals(t *testing.T) {
+	m := mock.New()
+	e := newEnvWith(t, m)
+	for body, want := range map[string]string{
+		`{"action":"add","kind":"epg","name":"x"}`: "validation_failed",
+		`{"action":"add","kind":"epg","name":"Gemini","address":"https://e.example/x.xml","id":"gemini","file":"netcastepg_gemini.json"}`: "netcast_source_exists",
+		`{"action":"remove","kind":"server","file":"netcastserver_gemini.json","id":"nope"}`:                                              "netcast_no_source",
+		`{"action":"remove","kind":"server","file":"netcastserver_missing.json","id":"x"}`:                                                "netcast_no_source",
+		`{"action":"add","kind":"server","file":"../x.json","name":"x","address":"https://h/x"}`:                                          "validation_failed",
+		`{"action":"explode","kind":"server"}`: "validation_failed",
+	} {
+		if resp, b := e.do(t, "POST", "/api/v1/channels/netcast/plan", body, nil); resp.StatusCode < 400 || !strings.Contains(string(b), want) {
+			t.Errorf("%s: %d %s, want %s", body, resp.StatusCode, b, want)
+		}
+	}
+	m.ReadOnlyFiles = true
+	resp, b := e.do(t, "POST", "/api/v1/channels/netcast/plan", `{"action":"add","kind":"epg","name":"x","address":"https://h/x.xml"}`, nil)
+	if resp.StatusCode != http.StatusConflict || !strings.Contains(string(b), "netcast_needs_plugin") {
+		t.Errorf("read-only box: %d %s", resp.StatusCode, b)
+	}
+	var v netcastSourcesView
+	e.json(t, "GET", "/api/v1/channels/netcast/sources", "", nil, 200, &v)
+}
+
+func TestNetcast_ChangedFileAndCorruptWriteAreCaught(t *testing.T) {
+	m := mock.New()
+	e := newEnvWith(t, m)
+	const f = "/etc/enigma2/netcastserver_gemini.json"
+	var p netcastPlanView
+	e.json(t, "POST", "/api/v1/channels/netcast/plan", `{"action":"update","kind":"server","file":"netcastserver_gemini.json","id":"kodi","name":"Kodi 2"}`, nil, 200, &p)
+	before := string(m.Files[f])
+	m.Files[f] = append(m.Files[f], '\n') // somebody edited it since the preview
+	if resp, b := e.do(t, "POST", "/api/v1/plans/"+p.Plan.ID+"/apply", "", nil); resp.StatusCode < 400 {
+		t.Errorf("a changed file: %d %s", resp.StatusCode, b)
+	}
+	m.Files[f] = []byte(before)
+	e.json(t, "POST", "/api/v1/channels/netcast/plan", `{"action":"update","kind":"server","file":"netcastserver_gemini.json","id":"kodi","name":"Kodi 2"}`, nil, 200, &p)
+	m.CorruptWrites = true
+	resp, b := e.do(t, "POST", "/api/v1/plans/"+p.Plan.ID+"/apply", "", nil)
+	if resp.StatusCode < 400 || !strings.Contains(string(b), "netcast_write_mismatch") {
+		t.Errorf("a corrupt write: %d %s", resp.StatusCode, b)
+	}
+}

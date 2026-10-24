@@ -45,6 +45,8 @@ type Client struct {
 	Files         map[string][]byte
 	NoBoxFiles    bool
 	NoFileListing bool
+	ReadOnlyFiles bool
+	CorruptWrites bool
 	// OldSettingsPlugin plays a Dreambox whose DreamHub plugin has no
 	// settings route yet.
 	OldSettingsPlugin bool
@@ -168,7 +170,7 @@ func (c *Client) RecordNow(now time.Time) {
 
 // New returns a mock with the fixture timers.
 func New() *Client {
-	return &Client{FS: recfs.NewMem(recordingFixtures()), timers: []webcontrol.Timer{
+	return &Client{FS: recfs.NewMem(recordingFixtures()), Files: mockBoxFiles(), timers: []webcontrol.Timer{
 		{
 			ServiceReference: "1:0:19:2EE3:441:1:C00000:0:0:0:",
 			ServiceName:      "RTL Television",

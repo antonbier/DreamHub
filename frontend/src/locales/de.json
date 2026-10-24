@@ -836,7 +836,12 @@
       "iptv_nothing_to_add": "Alle gewählten Sender sind schon im Bouquet.",
       "timer_no_tuner": "Ein Internet-Sender hat keinen Tuner und lässt sich nicht aufnehmen. Nimm denselben Sender über einen Satelliten-, Kabel- oder Antennen-Sender auf.",
       "guide_not_xmltv": "Das ist keine XMLTV-Guide-Datei.",
-      "guide_unsupported_format": "Dateien mit .xz kann DreamHub hier nicht lesen. Nimm die .xml- oder .xml.gz-Datei."
+      "guide_unsupported_format": "Dateien mit .xz kann DreamHub hier nicht lesen. Nimm die .xml- oder .xml.gz-Datei.",
+      "netcast_needs_plugin": "Diese Box kann die Netcast-Dateien noch nicht ändern.",
+      "netcast_no_source": "Diese Quelle oder Datei gibt es nicht mehr.",
+      "netcast_source_exists": "Eine Quelle mit diesem Namen gibt es schon.",
+      "netcast_bad_file": "Diese Datei ist keine Quellenliste, die DreamHub ändern kann.",
+      "netcast_write_mismatch": "Die Box hat nicht das gespeichert, was geschrieben wurde; die alte Datei wurde zurückgelegt."
     },
     "media": {
       "not_a_recording": "Diese Aufnahme gibt es nicht (mehr).",
@@ -2553,7 +2558,8 @@
         "truncated": "Die Datei wurde nach {n} Sendern abgeschnitten.",
         "missing": "In dieser Quelle nicht gefunden ({n})",
         "missingMore": "und {n} weitere",
-        "playlistFile": "Playlist"
+        "playlistFile": "Playlist",
+        "toNetcast": "In Netcast eintragen…"
       },
       "repo": {
         "title": "Oder eine Playlist aus einem GitHub-Repository",
@@ -2578,7 +2584,30 @@
       "kind": {
         "server": "Sender-Quellen",
         "epg": "Guide-Quellen"
-      }
+      },
+      "readOnly": "Diese Box kann die Netcast-Dateien noch nicht ändern — dafür braucht sie die Schreibroute des DreamHub-Plugins. Die Quellen werden angezeigt; Hinzufügen, Ändern und Entfernen kommen, sobald die Box das kann.",
+      "add": "Quelle hinzufügen",
+      "name": "Name",
+      "addressServer": "Adresse der Playlist (M3U)",
+      "addressEpg": "Adresse der Guide-Datei (XMLTV, .xml oder .xml.gz)",
+      "mediaType": "Art der Playlist",
+      "desc": "Beschreibung (optional)",
+      "media": {
+        "playlist_live": "Live-TV",
+        "playlist": "Playlist",
+        "playlist_vod": "Filme und Serien",
+        "playlist_radio": "Radio"
+      },
+      "review": "Änderung ansehen",
+      "confirm": "Datei schreiben",
+      "change": "Ändern",
+      "remove": "Entfernen",
+      "newAddress": "Neue Adresse (leer lassen, um sie zu behalten)",
+      "saved": "Die Datei wurde geschrieben und zurückgelesen.",
+      "backupNote": "Eine Kopie der alten Datei bleibt daneben liegen (.dreamhub-backup). Netcast liest die Datei beim nächsten Öffnen seines Bildschirms.",
+      "change_add": "Neue Quelle „{name}“ in {file} ({address})",
+      "change_update": "Quelle „{name}“ in {file} wird geändert",
+      "change_remove": "Quelle „{name}“ wird aus {file} entfernt"
     }
   },
   "updates": {

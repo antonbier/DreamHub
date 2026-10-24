@@ -1661,8 +1661,21 @@ export interface NetcastFile {
 
 export interface NetcastSources {
   available: boolean
+  // The box has a way to change these files.
+  writable: boolean
   files: NetcastFile[]
   // The box listed its folder; false means only well-known names were tried.
   listed: boolean
   unreadable: string[]
+}
+
+export interface NetcastPlanBody {
+  action: 'add' | 'update' | 'remove'
+  kind: 'server' | 'epg'
+  file?: string
+  id?: string
+  name?: string
+  address?: string
+  mediaType?: string
+  desc?: string
 }

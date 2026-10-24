@@ -836,7 +836,12 @@
       "iptv_nothing_to_add": "All chosen channels are in the bouquet already.",
       "timer_no_tuner": "An internet channel has no tuner, so it can't be recorded. Record the same station on a satellite, cable or antenna channel instead.",
       "guide_not_xmltv": "That is not an XMLTV guide file.",
-      "guide_unsupported_format": "Files ending in .xz cannot be read here. Use the .xml or .xml.gz file."
+      "guide_unsupported_format": "Files ending in .xz cannot be read here. Use the .xml or .xml.gz file.",
+      "netcast_needs_plugin": "This box cannot change Netcast's files yet.",
+      "netcast_no_source": "That source or file is no longer there.",
+      "netcast_source_exists": "A source with that name exists already.",
+      "netcast_bad_file": "That file is not a source list DreamHub can edit.",
+      "netcast_write_mismatch": "The box does not hold what was written; the old file was put back."
     },
     "media": {
       "not_a_recording": "This recording doesn't exist (anymore).",
@@ -2553,7 +2558,8 @@
         "truncated": "The file was cut after {n} channels.",
         "missing": "Not found in this source ({n})",
         "missingMore": "and {n} more",
-        "playlistFile": "playlist"
+        "playlistFile": "playlist",
+        "toNetcast": "Add to Netcast…"
       },
       "repo": {
         "title": "Or a playlist from a GitHub repository",
@@ -2578,7 +2584,30 @@
       "kind": {
         "server": "Channel sources",
         "epg": "Guide sources"
-      }
+      },
+      "readOnly": "This box cannot change Netcast's files yet — that needs the DreamHub plugin's write route. The sources are shown; adding, changing and removing come as soon as the box has it.",
+      "add": "Add a source",
+      "name": "Name",
+      "addressServer": "Address of the playlist (M3U)",
+      "addressEpg": "Address of the guide file (XMLTV, .xml or .xml.gz)",
+      "mediaType": "Kind of playlist",
+      "desc": "Description (optional)",
+      "media": {
+        "playlist_live": "Live TV",
+        "playlist": "Playlist",
+        "playlist_vod": "Films and series",
+        "playlist_radio": "Radio"
+      },
+      "review": "Show what will change",
+      "confirm": "Write the file",
+      "change": "Change",
+      "remove": "Remove",
+      "newAddress": "New address (leave empty to keep it)",
+      "saved": "The file was written and read back.",
+      "backupNote": "A copy of the old file stays next to it (.dreamhub-backup). Netcast reads the file the next time its screen is opened.",
+      "change_add": "New source “{name}” in {file} ({address})",
+      "change_update": "Source “{name}” in {file} changes",
+      "change_remove": "Source “{name}” is removed from {file}"
     }
   },
   "updates": {

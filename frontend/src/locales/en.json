@@ -2887,6 +2887,8 @@
     "readOnlyHint": "You may browse; playing needs the remote permission.",
     "guideLoading": "Loading the guide…",
     "noGuide": "No guide for these channels.",
-    "guideFrom": "Programme from your Netcast guide sources and the box."
+    "guideFrom": "Programme from your Netcast guide sources and the box.",
+    "variant": "Stream {n} of {total}",
+    "variantHint": "Try the next stream of this channel — not every one plays on the box"
   }
 }

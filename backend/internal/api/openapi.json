@@ -7919,7 +7919,7 @@
       "$ref": "#/components/parameters/Box"
      }
     ],
-    "description": "Body `{id}`. The answer of `POST /channels/netcast/read` (token, channels, groups) plus `fetched: true` when the playlist was not on the box and DreamHub loaded it from the source's address. The list is kept for the session so `play`, `guide`, `logo` and the IPTV tab's plan can use its token.",
+    "description": "Body `{id}`. The answer of `POST /channels/netcast/read` (token, channels, groups) plus `fetched: true` when the playlist was not on the box and DreamHub loaded it from the source's address. The list is kept for the session so `play`, `guide`, `logo` and the IPTV tab's plan can use its token. A channel with several streams lists their names as `variants`.",
     "responses": {
      "200": {
       "description": "OK",
@@ -7946,7 +7946,7 @@
       "$ref": "#/components/parameters/Box"
      }
     ],
-    "description": "Body `{token, id}`: a channel of a list read with `/netcast/read`. Switches the box to it with the reference a bouquet entry would have (the plugin's own kind for a Netcast entry); no bouquet is touched. Needs `control`. `iptv_session_gone` (404): read the list again.",
+    "description": "Body `{token, id}`: a channel of a list read with `/netcast/read`. Switches the box to it with the reference a bouquet entry would have (the plugin's own kind for a Netcast entry); no bouquet is touched. Optional `variant` (an index into the channel's `variants` from `/netcast/read`, Vavoo's several streams per channel; 400 for an unknown one). Needs `control`. `iptv_session_gone` (404): read the list again.",
     "responses": {
      "200": {
       "description": "OK",

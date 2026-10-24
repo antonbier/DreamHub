@@ -1521,6 +1521,8 @@ export interface IptvChannel {
   hasLogo?: boolean
   duplicate?: boolean
   needsHeaders?: boolean
+  // Names of the channel's other streams (Vavoo), in the order a variant counts them.
+  variants?: string[]
 }
 
 export interface IptvList {

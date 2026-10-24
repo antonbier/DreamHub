@@ -2887,6 +2887,8 @@
     "readOnlyHint": "Puoi sfogliare; riprodurre richiede il permesso telecomando.",
     "guideLoading": "Caricamento della guida…",
     "noGuide": "Nessuna guida per questi canali.",
-    "guideFrom": "Programma dalle tue fonti guida Netcast e dal box."
+    "guideFrom": "Programma dalle tue fonti guida Netcast e dal box.",
+    "variant": "Flusso {n} di {total}",
+    "variantHint": "Prova il flusso successivo di questo canale: non tutti funzionano sul box"
   }
 }

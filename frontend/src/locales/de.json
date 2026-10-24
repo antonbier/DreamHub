@@ -2887,6 +2887,8 @@
     "readOnlyHint": "Du darfst stöbern; Abspielen braucht die Fernbedienungs-Berechtigung.",
     "guideLoading": "Programm wird geladen …",
     "noGuide": "Kein Programm für diese Sender.",
-    "guideFrom": "Programm aus deinen Netcast-Programmquellen und von der Box."
+    "guideFrom": "Programm aus deinen Netcast-Programmquellen und von der Box.",
+    "variant": "Stream {n} von {total}",
+    "variantHint": "Nächsten Stream dieses Senders probieren – nicht jeder läuft auf der Box"
   }
 }

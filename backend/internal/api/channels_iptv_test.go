@@ -1372,7 +1372,8 @@ func TestNetcastHub_VavooListedFromThePluginsCacheAndPlayedThroughItsProxy(t *te
 	m.Files["/data/Netcast/server/vavoo.livetv.json"] = []byte(`{"Italy":{"CANALE 2":{"url":"","logo":"https://l.example/c2.png","tvgid":"","streams":[
 		{"url":"https://vavoo.to/vavoo-iptv/play/abc123","type":"HLS-Vavoo","name":"CANALE 2 .c"}]},
 		"No Stream":{"streams":[]}},
-		"Germany":{"Das Erste":{"streams":[{"url":"https://vavoo.to/vavoo-iptv/play/def456","type":"HLS-Vavoo"}]}}}`)
+		"Germany":{"Das Erste":{"streams":[{"url":"https://vavoo.to/vavoo-iptv/play/def456","type":"HLS-Vavoo","name":"DAS ERSTE RAW .b"},
+		{"url":"https://vavoo.to/vavoo-iptv/play/def457","type":"HLS-Vavoo","name":"DAS ERSTE HD .b"}]}}}`)
 	e.json(t, "GET", "/api/v1/netcast/sources", "", nil, 200, &src)
 	found := false
 	for _, s := range src.Sources {
@@ -1396,6 +1397,26 @@ func TestNetcastHub_VavooListedFromThePluginsCacheAndPlayedThroughItsProxy(t *te
 	}
 	if !strings.HasPrefix(m.LastZapped, "4097:0:1:0:0:0:0:0:0:0:http%3a//127.0.0.1%3a4323/vavoo?url=https%253A%252F%252Fvavoo.to%252Fvavoo-iptv%252Fplay%252Fabc123") {
 		t.Errorf("zapped %q", m.LastZapped)
+	}
+	// Das Erste has two streams: the plain one is first, RAW last; another can be asked for
+	var raw struct {
+		Channels []struct {
+			Name     string
+			Variants []string
+		}
+	}
+	e.json(t, "POST", "/api/v1/netcast/read", `{"id":"vavooapi"}`, nil, 200, &raw)
+	if v := raw.Channels[0].Variants; len(v) != 2 || v[0] != "DAS ERSTE HD .b" || v[1] != "DAS ERSTE RAW .b" {
+		t.Errorf("variants: %+v", raw.Channels[0])
+	}
+	if len(raw.Channels[1].Variants) != 0 {
+		t.Errorf("one stream, no variants: %+v", raw.Channels[1])
+	}
+	if resp, b := e.do(t, "POST", "/api/v1/netcast/play", `{"token":`+jsonStr(r.Token)+`,"id":0,"variant":1}`, nil); resp.StatusCode != 200 || !strings.HasSuffix(m.LastZapped, "def456") {
+		t.Errorf("variant 1: %d %s zapped %q", resp.StatusCode, b, m.LastZapped)
+	}
+	if resp, _ := e.do(t, "POST", "/api/v1/netcast/play", `{"token":`+jsonStr(r.Token)+`,"id":0,"variant":5}`, nil); resp.StatusCode != 400 {
+		t.Errorf("unknown variant: %d", resp.StatusCode)
 	}
 	// ChannelHub's own read, which feeds bouquets, still refuses it
 	if resp, _ := e.do(t, "POST", "/api/v1/channels/netcast/read", `{"id":"vavooapi"}`, nil); resp.StatusCode != 422 {

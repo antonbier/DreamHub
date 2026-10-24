@@ -88,6 +88,30 @@ func parseNetcastPlaylist(id string, raw []byte) (*iptv.Playlist, error) {
 	return pl, nil
 }
 
+// vavooRank orders a channel's streams: the plain ones first, the ones the
+// box's player is least likely to take (HEVC/H.265, RAW, a backup, a local
+// or satellite feed) last. A guess from the names — which stream plays is
+// found out on the TV, and the page lets one pick.
+func vavooRank(name string) int {
+	n := strings.ToUpper(name)
+	rank := 0
+	for _, w := range []string{"RAW", "HEVC", "H265", "UHD", "LOCAL"} {
+		if strings.Contains(n, w) {
+			rank += 20
+		}
+	}
+	if strings.Contains(n, "BACKUP") {
+		rank += 10
+	}
+	if strings.Contains(n, "[") {
+		rank += 5
+	}
+	if strings.Contains(n, "+24") {
+		rank += 3
+	}
+	return rank
+}
+
 // netcastVavooList reads Vavoo's cached channel list. Not part of
 // netcastCachedList: only NetcastHub plays it, and it never goes into a
 // bouquet (the entry is a proxy address that means something on this box only).
@@ -110,6 +134,7 @@ func parseVavooList(raw []byte) (*iptv.Playlist, error) {
 		Streams []struct {
 			URL  string `json:"url"`
 			Type string `json:"type"`
+			Name string `json:"name"`
 		} `json:"streams"`
 	}
 	if err := json.Unmarshal(raw, &doc); err != nil || len(doc) == 0 {
@@ -129,24 +154,26 @@ func parseVavooList(raw []byte) (*iptv.Playlist, error) {
 		sort.Slice(names, func(i, j int) bool { return strings.ToLower(names[i]) < strings.ToLower(names[j]) })
 		for _, name := range names {
 			ch := doc[country][name]
-			addr := ""
+			var alts []iptv.Alt
+			seen := map[string]bool{}
 			for _, st := range ch.Streams {
-				if st.Type == "HLS-Vavoo" && strings.HasPrefix(st.URL, "https://") {
-					addr = st.URL
-					break
+				if st.Type != "HLS-Vavoo" || !strings.HasPrefix(st.URL, "https://") || seen[st.URL] {
+					continue
 				}
+				seen[st.URL] = true
+				// The plugin writes it percent-encoded into the proxy's
+				// query (seen in `getcurrent` on the One).
+				alts = append(alts, iptv.Alt{Name: strings.TrimSpace(st.Name), URL: netcastVavooProxy + url.QueryEscape(st.URL)})
 			}
-			if addr == "" || strings.TrimSpace(name) == "" {
+			if len(alts) == 0 || strings.TrimSpace(name) == "" {
 				continue
 			}
-			// The plugin writes it percent-encoded into the proxy's query
-			// (seen in `getcurrent` on the One).
-			addr = url.QueryEscape(addr)
+			sort.SliceStable(alts, func(i, j int) bool { return vavooRank(alts[i].Name) < vavooRank(alts[j].Name) })
 			if len(pl.Entries) >= iptv.MaxEntries {
 				pl.Truncated = true
 				break
 			}
-			e := iptv.Entry{Name: strings.TrimSpace(name), URL: netcastVavooProxy + addr, Group: country, TvgID: ch.TvgID}
+			e := iptv.Entry{Name: strings.TrimSpace(name), URL: alts[0].URL, Alts: alts, Group: country, TvgID: ch.TvgID}
 			if strings.HasPrefix(ch.Logo, "http") {
 				e.Logo = ch.Logo
 			}

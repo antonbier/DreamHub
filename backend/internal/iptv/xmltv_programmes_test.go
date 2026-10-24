@@ -47,3 +47,17 @@ func TestSchedule_NowNextByIDAndByName(t *testing.T) {
 		t.Error("an HTML page is not a guide")
 	}
 }
+
+func TestNormName(t *testing.T) {
+	for in, want := range map[string]string{
+		"SKY CINEMA PREMIEREN [SAT] []": "skycinemapremieren",
+		"Sky Cinema Premieren HD":       "skycinemapremieren",
+		"SKY SPORT F1 (BACKUP) HD+":     "skysportf1",
+		"Das Erste UHD":                 "daserste",
+		"HD":                            "hd",
+	} {
+		if got := NormName(in); got != want {
+			t.Errorf("NormName(%q) = %q, want %q", in, got, want)
+		}
+	}
+}

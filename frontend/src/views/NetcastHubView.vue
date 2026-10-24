@@ -71,7 +71,7 @@
               <button v-if="s.rows.length > SHELF" type="button" class="rounded-sm px-2 py-0.5 text-[13px] text-accent hover:bg-tile-2" @click="group = s.name">{{ t('netcast.showAll') }}</button>
             </div>
             <div class="mt-2 flex gap-3 overflow-x-auto pb-2">
-              <NetcastTile v-for="r in s.rows.slice(0, SHELF)" :key="r.key" class="w-44 shrink-0" :row="r" :guide="guide[r.key]" :now-sec="nowSec" :playing="current?.key === r.key" :busy="starting === r.key" :can-play="canControl" :clock="clock" @play="play(r)" />
+              <NetcastTile v-for="r in s.rows.slice(0, SHELF)" :key="r.key" class="w-44 shrink-0" :row="r" :guide="guide[r.key]" :now-sec="nowSec" :playing="current?.key === r.key" :busy="starting === r.key" :can-play="canControl" :clock="clock" :variant="variantOf(r)" @play="play(r)" @variant="nextVariant(r)" />
             </div>
           </section>
           <button v-if="hiddenShelves > 0" type="button" class="mt-4 rounded-sm px-3 py-1.5 text-[13px] text-accent hover:bg-tile-2" @click="shelfLimit += SHELVES">{{ t('netcast.more') }}</button>
@@ -82,7 +82,7 @@
           <button v-if="group !== ALL && query.trim() === ''" type="button" class="mt-4 rounded-sm px-2 py-1 text-[13px] text-accent hover:bg-tile-2" @click="group = ALL">‹ {{ t('netcast.backToShelves') }}</button>
           <p v-if="filtered.length === 0 && opening.size === 0" class="mt-5 text-[14px] text-muted">{{ t('netcast.noMatch') }}</p>
           <div class="mt-3 grid grid-cols-5 gap-3 below-lg:grid-cols-4 below-md:grid-cols-3 below-sm:grid-cols-2">
-            <NetcastTile v-for="r in gridRows" :key="r.key" :row="r" :guide="guide[r.key]" :now-sec="nowSec" :playing="current?.key === r.key" :busy="starting === r.key" :can-play="canControl" :clock="clock" @play="play(r)" />
+            <NetcastTile v-for="r in gridRows" :key="r.key" :row="r" :guide="guide[r.key]" :now-sec="nowSec" :playing="current?.key === r.key" :busy="starting === r.key" :can-play="canControl" :clock="clock" :variant="variantOf(r)" @play="play(r)" @variant="nextVariant(r)" />
           </div>
           <button v-if="filtered.length > gridRows.length" type="button" class="mt-3 rounded-sm px-3 py-1.5 text-[13px] text-accent hover:bg-tile-2" @click="limit += PAGE">{{ t('netcast.more') }}</button>
         </template>
@@ -103,7 +103,7 @@
         <div class="h-10 w-16 shrink-0 overflow-hidden rounded-sm bg-tile-2"><NetcastLogo :token="current.token" :id="current.c.id" :name="current.c.name" :has-logo="!!current.c.hasLogo" /></div>
         <div class="min-w-0 grow">
           <p class="truncate text-[11.5px] text-onair">{{ t('netcast.nowPlaying') }}</p>
-          <p class="truncate text-[14px] font-semibold text-text">{{ current.c.name }}</p>
+          <p class="truncate text-[14px] font-semibold text-text">{{ current.c.name }}<span v-if="current.c.variants && current.c.variants.length > 1" class="ms-2 text-[12px] font-normal text-muted">{{ current.c.variants[variantOf(current)] }}</span></p>
           <p v-if="guide[current.key]?.now" class="truncate text-[12.5px] text-muted">
             {{ clock(guide[current.key]!.now!.start) }} {{ guide[current.key]!.now!.title }}
           </p>
@@ -315,12 +315,37 @@ watch(
 const current = ref<NetcastRow | null>(null)
 const starting = ref('')
 
+// Which of a channel's streams (Vavoo keeps several, and not every one plays on
+// the box) was picked: remembered in this browser per source and channel.
+const VARIANT_KEY = 'dreamhub.netcast.variants'
+const variants = reactive<Record<string, number>>(readVariants())
+function readVariants(): Record<string, number> {
+  try {
+    return JSON.parse(localStorage.getItem(VARIANT_KEY) ?? '{}') as Record<string, number>
+  } catch {
+    return {}
+  }
+}
+const variantKey = (r: NetcastRow) => `${r.sid}:${r.c.name}`
+const variantOf = (r: NetcastRow) => variants[variantKey(r)] ?? 0
+function nextVariant(r: NetcastRow) {
+  const n = r.c.variants?.length ?? 0
+  if (n < 2) return
+  variants[variantKey(r)] = (variantOf(r) + 1) % n
+  try {
+    localStorage.setItem(VARIANT_KEY, JSON.stringify(variants))
+  } catch {
+    /* private mode: the choice just is not remembered */
+  }
+  void play(r)
+}
+
 async function play(r: NetcastRow) {
   if (!canControl.value || starting.value) return
   starting.value = r.key
   error.value = ''
   try {
-    await api.netcast.play(r.token, r.c.id)
+    await api.netcast.play(r.token, r.c.id, r.c.variants && r.c.variants.length > 1 ? variantOf(r) : undefined)
     current.value = r
   } catch (err) {
     error.value = err instanceof ApiError && err.code === 'iptv_session_gone' ? t('netcast.gone') : planErrorMessage(err)

@@ -20,6 +20,12 @@ import (
 	"unicode/utf8"
 )
 
+// Alt is one of a channel's streams.
+type Alt struct {
+	Name string
+	URL  string
+}
+
 // MaxEntries is how many channels one list may hold; provider lists with
 // more are cut here and Playlist.Truncated says so.
 const MaxEntries = 30000
@@ -47,6 +53,9 @@ type Entry struct {
 	// from anywhere else: the entry is then a plain 4097 stream.
 	Netcast    string
 	NetcastURL string
+	// Alts are other streams of the same channel (Vavoo keeps several per
+	// channel); the first is the one URL holds. Only NetcastHub uses them.
+	Alts []Alt
 }
 
 // Skip is an entry that was left out, and why.

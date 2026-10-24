@@ -3,11 +3,12 @@
   progress) and what comes next. A click plays it on the TV.
 -->
 <template>
+  <div class="rounded-sm border bg-tile" :class="playing ? 'border-onair' : 'border-line'">
   <component
     :is="canPlay ? 'button' : 'div'"
     :type="canPlay ? 'button' : undefined"
-    class="group block rounded-sm border bg-tile text-start"
-    :class="[playing ? 'border-onair' : 'border-line', canPlay ? 'hover:bg-tile-2' : '']"
+    class="group block w-full text-start"
+    :class="canPlay ? 'hover:bg-tile-2' : ''"
     :aria-label="canPlay ? t('netcast.playNamed', { name: row.c.name }) : undefined"
     :aria-busy="busy || undefined"
     @click="canPlay && emit('play')"
@@ -31,6 +32,14 @@
       <span v-else-if="!guide?.now" class="mt-0.5 block truncate text-[11.5px] text-faint">{{ [row.c.group, row.c.radio ? t('channels.iptv.radio') : ''].filter(Boolean).join(' · ') }}</span>
     </span>
   </component>
+  <button
+    v-if="canPlay && variants.length > 1"
+    type="button"
+    class="block w-full truncate border-t border-line-soft px-2 py-1 text-start text-[11.5px] text-accent hover:bg-tile-2"
+    :title="t('netcast.variantHint')"
+    @click="emit('variant')"
+  >{{ t('netcast.variant', { n: variant + 1, total: variants.length }) }} · {{ variants[variant] }}</button>
+  </div>
 </template>
 
 <script lang="ts">
@@ -52,8 +61,10 @@ import { useI18n } from 'vue-i18n'
 import NetcastLogo from '@/components/channels/NetcastLogo.vue'
 import type { NetcastNowNext } from '@/api/types'
 
-const props = defineProps<{ row: NetcastRow; guide?: NetcastNowNext; nowSec: number; playing: boolean; busy: boolean; canPlay: boolean; clock: (s: number) => string }>()
-const emit = defineEmits<{ play: [] }>()
+const props = defineProps<{ row: NetcastRow; guide?: NetcastNowNext; nowSec: number; playing: boolean; busy: boolean; canPlay: boolean; clock: (s: number) => string; variant?: number }>()
+const emit = defineEmits<{ play: []; variant: [] }>()
+const variants = computed(() => props.row.c.variants ?? [])
+const variant = computed(() => Math.min(props.variant ?? 0, Math.max(0, variants.value.length - 1)))
 const { t } = useI18n()
 
 const progress = computed(() => {

@@ -97,8 +97,9 @@ func (h *Netcast) Perms() map[string]perm.Perm {
 // touching any bouquet. The address and any login stay on the server.
 func (h *Netcast) play(w http.ResponseWriter, r *http.Request) {
 	var body struct {
-		Token string `json:"token"`
-		ID    *int   `json:"id"`
+		Token   string `json:"token"`
+		ID      *int   `json:"id"`
+		Variant *int   `json:"variant"` // another stream of the channel (Vavoo)
 	}
 	if err := httpx.DecodeJSON(r, &body); err != nil || body.Token == "" || body.ID == nil {
 		httpx.WriteError(w, r, http.StatusBadRequest, "invalid_body", `expected {"token","id"}`)
@@ -115,7 +116,15 @@ func (h *Netcast) play(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 	e := s.pl.Entries[*body.ID]
-	if err := h.Channels.WC.Zap(r.Context(), iptv.EntryRef(e)); err != nil {
+	ref := iptv.EntryRef(e)
+	if body.Variant != nil {
+		if *body.Variant < 0 || *body.Variant >= len(e.Alts) {
+			httpx.WriteError(w, r, http.StatusBadRequest, "invalid_body", "unknown variant")
+			return
+		}
+		ref = iptv.Ref(e.Alts[*body.Variant].URL)
+	}
+	if err := h.Channels.WC.Zap(r.Context(), ref); err != nil {
 		writeControlError(w, r, "zap", err)
 		return
 	}

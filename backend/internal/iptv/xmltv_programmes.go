@@ -39,16 +39,31 @@ type Schedule struct {
 	To     time.Time
 }
 
-// NormName makes names comparable: lower case, letters and digits only, a
-// trailing "hd" dropped.
+// NormName makes names comparable: bracketed notes ("[SAT]", "(BACKUP)")
+// dropped, lower case, letters and digits only, a trailing "hd" or "uhd"
+// dropped.
 func NormName(s string) string {
 	var b strings.Builder
+	depth := 0
 	for _, r := range strings.ToLower(s) {
-		if unicode.IsLetter(r) || unicode.IsDigit(r) {
+		switch {
+		case r == '[' || r == '(':
+			depth++
+		case r == ']' || r == ')':
+			if depth > 0 {
+				depth--
+			}
+		case depth == 0 && (unicode.IsLetter(r) || unicode.IsDigit(r)):
 			b.WriteRune(r)
 		}
 	}
-	return strings.TrimSuffix(b.String(), "hd")
+	n := b.String()
+	for _, suf := range []string{"uhd", "hd"} {
+		if strings.HasSuffix(n, suf) && len(n) > len(suf) {
+			return strings.TrimSuffix(n, suf)
+		}
+	}
+	return n
 }
 
 // Find returns the programme running at at and the one after it for a

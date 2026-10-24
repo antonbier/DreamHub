@@ -133,6 +133,9 @@ type IPTVChannel struct {
 	// NeedsHeaders: the list asks for a user agent or other headers
 	// (#EXTVLCOPT), which the box's player cannot send.
 	NeedsHeaders bool `json:"needsHeaders,omitempty"`
+	// Variants name the channel's other streams (Vavoo), in the order a
+	// "variant" counts them; the addresses stay on the server.
+	Variants []string `json:"variants,omitempty"`
 }
 
 type iptvGroup struct {
@@ -152,6 +155,11 @@ func iptvListView(s *iptvSession) map[string]any {
 	for i, e := range s.pl.Entries {
 		c := IPTVChannel{ID: i, Name: e.Name, Group: e.Group, TvgID: e.TvgID, Host: iptv.Host(e.URL), Scheme: iptv.Scheme(e.URL),
 			Radio: e.Radio, HasLogin: iptv.HasLogin(e.URL), HasLogo: e.Logo != "", NeedsHeaders: len(e.Options) > 0}
+		if len(e.Alts) > 1 {
+			for _, a := range e.Alts {
+				c.Variants = append(c.Variants, a.Name)
+			}
+		}
 		key := iptv.EntryRef(e)
 		c.Duplicate = seen[key]
 		seen[key] = true

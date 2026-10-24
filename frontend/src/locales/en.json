@@ -2889,6 +2889,7 @@
     "noGuide": "No guide for these channels.",
     "guideFrom": "Programme from your Netcast guide sources and the box.",
     "variant": "Stream {n} of {total}",
-    "variantHint": "Try the next stream of this channel — not every one plays on the box"
+    "variantHint": "Try the next stream of this channel — not every one plays on the box",
+    "proxyWarning": "The Vavoo proxy of the Netcast addon is not running and could not be started. On the TV, open Netcast → Vavoo once; until then Vavoo channels say “unknown media type”."
   }
 }

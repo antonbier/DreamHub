@@ -2889,6 +2889,7 @@
     "noGuide": "Nessuna guida per questi canali.",
     "guideFrom": "Programma dalle tue fonti guida Netcast e dal box.",
     "variant": "Flusso {n} di {total}",
-    "variantHint": "Prova il flusso successivo di questo canale: non tutti funzionano sul box"
+    "variantHint": "Prova il flusso successivo di questo canale: non tutti funzionano sul box",
+    "proxyWarning": "Il proxy Vavoo dell'addon Netcast non è attivo e non si è riusciti ad avviarlo. Sul televisore apri una volta Netcast → Vavoo; fino ad allora i canali Vavoo dicono «tipo di media sconosciuto»."
   }
 }

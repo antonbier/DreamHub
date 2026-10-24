@@ -58,6 +58,7 @@ import (
 	"github.com/antonbier/DreamHub/backend/internal/settings"
 	"github.com/antonbier/DreamHub/backend/internal/store"
 	"github.com/antonbier/DreamHub/backend/internal/systemd"
+	"github.com/antonbier/DreamHub/backend/internal/vavooproxy"
 	"github.com/antonbier/DreamHub/backend/internal/webcontrol"
 )
 
@@ -388,7 +389,13 @@ func New(ctx context.Context, o Options) (*App, error) {
 	channelsHub := &hubs_.Channels{WC: wc, Plans: plans, Store: st, Settings: svc, User: user, PiconDirs: o.PiconDirs, LogoDir: filepath.Join(o.DataDir, "logos"), Logos: o.LogoSearch, IPTV: o.IPTV, Now: now, ProviderPause: 250 * time.Millisecond}
 	channelsHub.Boxes = boxReg.IDs
 	channelsHub.Init(ctx)
-	netcastHub := &hubs_.Netcast{Channels: channelsHub}
+	vavooProxy := &vavooproxy.Manager{}
+	netcastHub := &hubs_.Netcast{Channels: channelsHub, VavooProxy: func(ctx context.Context) error {
+		if !boxReg.Full(ctx) { // the addon's script is on the machine DreamHub runs on only
+			return vavooproxy.ErrNoScript
+		}
+		return vavooProxy.Ensure(ctx)
+	}}
 	timerHub := &hubs_.Timer{WC: wc, Plans: plans, Now: now, AT: at, Owners: st}
 	mediaHub := &hubs_.Media{WC: wc, Plans: plans, FS: o.RecordingsFS, ReadOnly: o.ReadOnlyFiles,
 		Settings: svc, Store: st, AI: o.AI, TMDB: o.TMDB, Enrich: enricher, Now: now,

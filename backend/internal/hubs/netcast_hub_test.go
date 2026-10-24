@@ -1,8 +1,18 @@
 package hubs
 
 import (
+	"encoding/json"
+	"errors"
+	"net/http/httptest"
+	"strconv"
+	"strings"
+	"time"
+
 	"bytes"
 	"context"
+	"github.com/antonbier/DreamHub/backend/internal/httpx"
+	"github.com/antonbier/DreamHub/backend/internal/iptv"
+	"github.com/antonbier/DreamHub/backend/internal/store"
 	"image"
 	"image/png"
 	"os"
@@ -45,5 +55,36 @@ func TestNetcastPiconByName(t *testing.T) {
 	}
 	if h.piconByName("Unknown Channel") != nil || h.piconByName("[SAT]") != nil {
 		t.Error("no picon, no answer")
+	}
+}
+
+func TestNetcastPlay_StartsTheVavooProxyOnlyForVavoo(t *testing.T) {
+	m := mock.New()
+	calls := 0
+	h := &Netcast{Channels: &Channels{WC: m, Now: func() time.Time { return time.Unix(1, 0) }}, VavooProxy: func(context.Context) error { calls++; return nil }}
+	user := store.User{ID: 1}
+	sess := &iptvSession{token: "t", userID: user.ID, read: time.Unix(1, 0), pl: &iptv.Playlist{Entries: []iptv.Entry{
+		{Name: "Vavoo ch", URL: netcastVavooProxy + "https%3A%2F%2Fvavoo.to%2Fplay%2Fabc"},
+		{Name: "Plain", URL: "https://tv.example/a.m3u8"},
+	}}}
+	h.Channels.keepIPTV(sess)
+	play := func(id int) map[string]any {
+		rec := httptest.NewRecorder()
+		req := httptest.NewRequest("POST", "/api/v1/netcast/play", strings.NewReader(`{"token":"t","id":`+strconv.Itoa(id)+`}`))
+		req = req.WithContext(httpx.WithUser(req.Context(), user))
+		h.play(rec, req)
+		var out map[string]any
+		json.Unmarshal(rec.Body.Bytes(), &out)
+		return out
+	}
+	if out := play(1); calls != 0 || out["warning"] != nil {
+		t.Errorf("a plain stream needs no proxy: %d %v", calls, out)
+	}
+	if out := play(0); calls != 1 || out["warning"] != nil {
+		t.Errorf("a Vavoo channel makes sure of it: %d %v", calls, out)
+	}
+	h.VavooProxy = func(context.Context) error { return errors.New("no") }
+	if out := play(0); out["warning"] != "vavoo_proxy" {
+		t.Errorf("a failed start warns: %v", out)
 	}
 }

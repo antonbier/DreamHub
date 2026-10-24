@@ -1397,8 +1397,13 @@ func TestNetcastHub_VavooListedFromThePluginsCacheAndPlayedThroughItsProxy(t *te
 	if len(r.Channels) != 2 || r.Channels[0].Name != "Das Erste" {
 		t.Fatalf("channels (Germany first, a channel without a stream left out): %+v", r.Channels)
 	}
-	if resp, b := e.do(t, "POST", "/api/v1/netcast/play", `{"token":`+jsonStr(r.Token)+`,"id":1}`, nil); resp.StatusCode != 200 {
+	resp, b := e.do(t, "POST", "/api/v1/netcast/play", `{"token":`+jsonStr(r.Token)+`,"id":1}`, nil)
+	if resp.StatusCode != 200 {
 		t.Fatalf("play: %d %s", resp.StatusCode, b)
+	}
+	// the addon's proxy script is not on a test machine: the play goes ahead and says so
+	if !strings.Contains(string(b), `"warning":"vavoo_proxy"`) {
+		t.Errorf("a Vavoo play without a proxy to start warns: %s", b)
 	}
 	if !strings.HasPrefix(m.LastZapped, "4097:0:1:0:0:0:0:0:0:0:http%3a//127.0.0.1%3a4323/vavoo?url=https%253A%252F%252Fvavoo.to%252Fvavoo-iptv%252Fplay%252Fabc123") {
 		t.Errorf("zapped %q", m.LastZapped)

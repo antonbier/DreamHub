@@ -26,6 +26,11 @@ import (
 // needs.
 type Netcast struct {
 	Channels *Channels
+	// VavooProxy makes sure the Vavoo addon's proxy answers before a Vavoo
+	// channel is played (internal/vavooproxy); nil does nothing. A failure
+	// does not stop the play — the box may have a proxy of its own — but is
+	// reported to the page.
+	VavooProxy func(ctx context.Context) error
 
 	mu      sync.Mutex
 	present map[string]presence // per box
@@ -124,11 +129,17 @@ func (h *Netcast) play(w http.ResponseWriter, r *http.Request) {
 		}
 		ref = iptv.Ref(e.Alts[*body.Variant].URL)
 	}
+	out := map[string]any{"played": e.Name}
+	if h.VavooProxy != nil && strings.HasPrefix(iptv.URLPart(ref), iptv.URLPart(iptv.Ref(netcastVavooProxy))) {
+		if err := h.VavooProxy(r.Context()); err != nil {
+			out["warning"] = "vavoo_proxy"
+		}
+	}
 	if err := h.Channels.WC.Zap(r.Context(), ref); err != nil {
 		writeControlError(w, r, "zap", err)
 		return
 	}
-	httpx.WriteJSON(w, http.StatusOK, map[string]any{"played": e.Name})
+	httpx.WriteJSON(w, http.StatusOK, out)
 }
 
 // NetcastSourceView is a source as the page lists it, with what can be done

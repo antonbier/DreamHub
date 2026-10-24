@@ -269,7 +269,7 @@ export const api = {
     sources: () => request<NetcastHubSources>('GET', '/api/v1/netcast/sources'),
     read: (id: string) => request<IptvList & { fetched?: boolean }>('POST', '/api/v1/netcast/read', { id }),
     play: (token: string, id: number, variant?: number) =>
-      request<{ played: string }>('POST', '/api/v1/netcast/play', variant === undefined ? { token, id } : { token, id, variant }),
+      request<{ played: string; warning?: 'vavoo_proxy' }>('POST', '/api/v1/netcast/play', variant === undefined ? { token, id } : { token, id, variant }),
     guide: (token: string, ids: number[]) =>
       request<{ programmes: Record<string, NetcastNowNext>; loading: boolean; sources: number }>('POST', '/api/v1/netcast/guide', { token, ids }),
     logo: (token: string, id: number) => requestBlob(`/api/v1/netcast/logo?token=${encodeURIComponent(token)}&id=${id}`),

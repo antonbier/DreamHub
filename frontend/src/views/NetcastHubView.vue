@@ -345,8 +345,9 @@ async function play(r: NetcastRow) {
   starting.value = r.key
   error.value = ''
   try {
-    await api.netcast.play(r.token, r.c.id, r.c.variants && r.c.variants.length > 1 ? variantOf(r) : undefined)
+    const res = await api.netcast.play(r.token, r.c.id, r.c.variants && r.c.variants.length > 1 ? variantOf(r) : undefined)
     current.value = r
+    if (res.warning === 'vavoo_proxy') error.value = t('netcast.proxyWarning')
   } catch (err) {
     error.value = err instanceof ApiError && err.code === 'iptv_session_gone' ? t('netcast.gone') : planErrorMessage(err)
   } finally {

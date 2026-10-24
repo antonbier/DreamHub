@@ -2889,6 +2889,7 @@
     "noGuide": "Kein Programm für diese Sender.",
     "guideFrom": "Programm aus deinen Netcast-Programmquellen und von der Box.",
     "variant": "Stream {n} von {total}",
-    "variantHint": "Nächsten Stream dieses Senders probieren – nicht jeder läuft auf der Box"
+    "variantHint": "Nächsten Stream dieses Senders probieren – nicht jeder läuft auf der Box",
+    "proxyWarning": "Der Vavoo-Proxy des Netcast-Addons läuft nicht und ließ sich nicht starten. Öffne am Fernseher einmal Netcast → Vavoo; bis dahin melden Vavoo-Sender „Unbekannter Medientyp“."
   }
 }

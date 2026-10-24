@@ -31,10 +31,11 @@ var errNetcastUnsupported = errors.New("hubs: this Netcast source has no channel
 const (
 	// Vavoo (docs/NETCAST_PLAN.md, "Vavoo"): the plugin keeps the channel list
 	// of its Vavoo addon in /data/Netcast/server/vavoo.livetv.json and plays
-	// every channel through a proxy of its own in the enigma2 process
-	// (127.0.0.1:4323, always listening there; checked on the One
-	// 2026-10-24). DreamHub only reads that list and hands the proxy address
-	// to the box's player; it never talks to Vavoo itself.
+	// every channel through a proxy of its own (127.0.0.1:4323), which the
+	// addon starts only when its Vavoo screen is opened at the TV
+	// (internal/vavooproxy starts it when it is not there; checked on the One
+	// 2026-10-24). DreamHub reads that list and hands the proxy address to the
+	// box's player; it never talks to Vavoo itself.
 	netcastVavooID    = "vavooapi"
 	netcastVavooFile  = "vavoo.livetv.json"
 	netcastVavooProxy = "http://127.0.0.1:4323/vavoo?url="

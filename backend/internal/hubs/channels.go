@@ -15,6 +15,7 @@ import (
 	"time"
 
 	"github.com/antonbier/DreamHub/backend/internal/httpx"
+	"github.com/antonbier/DreamHub/backend/internal/iptv"
 	"github.com/antonbier/DreamHub/backend/internal/perm"
 	"github.com/antonbier/DreamHub/backend/internal/plan"
 	"github.com/antonbier/DreamHub/backend/internal/settings"
@@ -51,8 +52,15 @@ type Channels struct {
 	// first box.
 	Boxes func() []string
 
+	// IPTV reads playlists from an address (channels_iptv.go); nil means a
+	// default one.
+	IPTV *iptv.Fetcher
+
 	mu          sync.Mutex
 	refreshedAt map[string]time.Time // per box
+
+	iptvMu   sync.Mutex
+	iptvSess []*iptvSession // playlists read so far, kept for a while
 }
 
 // KeyPiconSet is the picon set an admin chose for DreamHub's logos (a
@@ -94,6 +102,9 @@ func (h *Channels) Mount(mux httpx.Mux) {
 	mux.HandleFunc("POST /api/v1/channels/bouquet/plan", h.planBouquet)
 	mux.HandleFunc("POST /api/v1/channels/bouquets/plan", h.planBouquets)
 	mux.HandleFunc("POST /api/v1/channels/sync/plan", h.planSync)
+	mux.HandleFunc("POST /api/v1/channels/iptv/read", h.readIPTV)
+	mux.HandleFunc("POST /api/v1/channels/iptv/upload", h.uploadIPTV)
+	mux.HandleFunc("POST /api/v1/channels/iptv/plan", h.planIPTV)
 	mux.HandleFunc("GET /api/v1/channels/backups", h.backups)
 	mux.HandleFunc("POST /api/v1/channels/backups/restore/plan", h.planRestore)
 }
@@ -111,6 +122,9 @@ func (h *Channels) Perms() map[string]perm.Perm {
 		"POST /api/v1/channels/bouquet/plan":         perm.ChannelsManage,
 		"POST /api/v1/channels/bouquets/plan":        perm.ChannelsManage,
 		"POST /api/v1/channels/sync/plan":            perm.ChannelsManage,
+		"POST /api/v1/channels/iptv/read":            perm.ChannelsManage,
+		"POST /api/v1/channels/iptv/upload":          perm.ChannelsManage,
+		"POST /api/v1/channels/iptv/plan":            perm.ChannelsManage,
 		"POST /api/v1/channels/backups/restore/plan": perm.ChannelsManage,
 	}
 }

@@ -45,6 +45,7 @@ import (
 	"github.com/antonbier/DreamHub/backend/internal/fanart"
 	"github.com/antonbier/DreamHub/backend/internal/hub"
 	hubs_ "github.com/antonbier/DreamHub/backend/internal/hubs"
+	"github.com/antonbier/DreamHub/backend/internal/iptv"
 	"github.com/antonbier/DreamHub/backend/internal/jobs"
 	"github.com/antonbier/DreamHub/backend/internal/journald"
 	"github.com/antonbier/DreamHub/backend/internal/logging"
@@ -139,6 +140,9 @@ type Options struct {
 	// LogoSearch finds a channel's logo online for ChannelHub (internal/logosearch);
 	// nil hides that.
 	LogoSearch logosearch.Source
+	// IPTV reads playlists for ChannelHub (internal/iptv); nil means the
+	// default, which refuses addresses on this machine.
+	IPTV *iptv.Fetcher
 	// Docker reaches AppsHub's isolated Docker helper
 	// (internal/dockerd.HTTPClient on the box, the in-memory mock
 	// otherwise): nil disables install/remove/start/stop and the
@@ -381,7 +385,7 @@ func New(ctx context.Context, o Options) (*App, error) {
 		}
 	}
 
-	channelsHub := &hubs_.Channels{WC: wc, Plans: plans, Store: st, Settings: svc, User: user, PiconDirs: o.PiconDirs, LogoDir: filepath.Join(o.DataDir, "logos"), Logos: o.LogoSearch, Now: now, ProviderPause: 250 * time.Millisecond}
+	channelsHub := &hubs_.Channels{WC: wc, Plans: plans, Store: st, Settings: svc, User: user, PiconDirs: o.PiconDirs, LogoDir: filepath.Join(o.DataDir, "logos"), Logos: o.LogoSearch, IPTV: o.IPTV, Now: now, ProviderPause: 250 * time.Millisecond}
 	channelsHub.Boxes = boxReg.IDs
 	channelsHub.Init(ctx)
 	timerHub := &hubs_.Timer{WC: wc, Plans: plans, Now: now, AT: at, Owners: st}

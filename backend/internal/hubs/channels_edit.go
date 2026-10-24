@@ -12,6 +12,7 @@ import (
 	"unicode/utf8"
 
 	"github.com/antonbier/DreamHub/backend/internal/httpx"
+	"github.com/antonbier/DreamHub/backend/internal/iptv"
 	"github.com/antonbier/DreamHub/backend/internal/plan"
 	"github.com/antonbier/DreamHub/backend/internal/store"
 	"github.com/antonbier/DreamHub/backend/internal/webcontrol"
@@ -374,7 +375,7 @@ func (h *Channels) applyBouquet(ctx context.Context, editor webcontrol.BouquetEd
 			}
 		}
 		if at < 0 {
-			return fmt.Errorf("channels: %q missing after adding", want)
+			return fmt.Errorf("channels: %q missing after adding", iptv.RedactRef(want))
 		}
 		if err := editor.MoveInBouquet(ctx, d.Ref, want, i, radio); err != nil {
 			return err
@@ -392,13 +393,13 @@ func (h *Channels) applyBouquet(ctx context.Context, editor webcontrol.BouquetEd
 	}
 	for i, s := range after {
 		if s.ServiceReference != target[i] {
-			return fmt.Errorf("channels: entry %d is %q, %q expected", i, s.ServiceReference, target[i])
+			return fmt.Errorf("channels: entry %d is %q, %q expected", i, iptv.RedactRef(s.ServiceReference), iptv.RedactRef(target[i]))
 		}
 	}
 	for _, e := range diff.rename {
 		for _, s := range after {
 			if s.ServiceReference == e.Ref && s.ServiceName != e.Name {
-				return fmt.Errorf("channels: %q wasn't renamed", e.Ref)
+				return fmt.Errorf("channels: %q wasn't renamed", iptv.RedactRef(e.Ref))
 			}
 		}
 	}

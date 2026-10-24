@@ -40,6 +40,7 @@ import (
 	"github.com/antonbier/DreamHub/backend/internal/app"
 	"github.com/antonbier/DreamHub/backend/internal/events"
 	"github.com/antonbier/DreamHub/backend/internal/httpx"
+	"github.com/antonbier/DreamHub/backend/internal/iptv"
 	"github.com/antonbier/DreamHub/backend/internal/journald"
 	jmock "github.com/antonbier/DreamHub/backend/internal/journald/mock"
 	srmock "github.com/antonbier/DreamHub/backend/internal/serienrecorder/mock"
@@ -143,6 +144,7 @@ func newEnvFull(t *testing.T, wc webcontrol.Client, at autotimer.Client, recFS r
 	}
 	a, err := app.New(context.Background(), app.Options{
 		ReadOnlyFiles:   readOnly,
+		IPTV:            &iptv.Fetcher{AllowLoopback: true}, // the test lists come from httptest servers
 		BoxFactory:      testBoxFactory,
 		TMDB:            tmdbmock.New(),
 		TVmaze:          tvmazemock.New(),

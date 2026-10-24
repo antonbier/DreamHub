@@ -43,6 +43,8 @@ import type {
   BouquetEntry,
   ChannelBackup,
   ChannelSyncResult,
+  IptvList,
+  IptvPlanResult,
   DraftEntry,
   ChannelBouquet,
   ChannelInfo,
@@ -278,6 +280,12 @@ export const api = {
       request<{ plan: Plan }>('POST', '/api/v1/channels/bouquets/plan', { action, kind, ref, name }),
     planSync: (from: string, bouquets: string[] = []) =>
       request<ChannelSyncResult>('POST', '/api/v1/channels/sync/plan', { from, bouquets }),
+    // Internet channels from an M3U list (N1): read it, then plan putting
+    // chosen channels into a bouquet. Stream addresses never come back.
+    readIptv: (url: string) => request<IptvList>('POST', '/api/v1/channels/iptv/read', { url }),
+    uploadIptv: (file: Blob, name: string) => request<IptvList>('POST', `/api/v1/channels/iptv/upload?name=${encodeURIComponent(name)}`, file),
+    planIptv: (target: { token: string; ids: number[] } & ({ bouquet: string } | { newName: string; kind: 'tv' | 'radio' })) =>
+      request<IptvPlanResult>('POST', '/api/v1/channels/iptv/plan', target),
     backups: () => request<{ backups: ChannelBackup[] }>('GET', '/api/v1/channels/backups'),
     planRestore: (filename: string) => request<{ plan: Plan }>('POST', '/api/v1/channels/backups/restore/plan', { filename }),
   },

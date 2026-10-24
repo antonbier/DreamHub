@@ -1502,6 +1502,41 @@ export interface ChannelSyncResult {
   bouquets: { name: string; kind: 'tv' | 'radio'; action: 'create' | 'update' | 'unchanged'; channels: number; changes: number; missing?: string[] }[]
 }
 
+// POST /api/v1/channels/iptv/read and /iptv/upload — a playlist as read by
+// the box (docs/NETCAST_PLAN.md, N1). The stream addresses stay on the server;
+// a channel only says where it points and whether its address holds a login.
+export interface IptvChannel {
+  id: number
+  name: string
+  group?: string
+  tvgId?: string
+  host: string
+  scheme: string
+  radio?: boolean
+  hasLogin?: boolean
+  hasLogo?: boolean
+  duplicate?: boolean
+  needsHeaders?: boolean
+}
+
+export interface IptvList {
+  token: string
+  name: string
+  // The address without login and query; empty for an uploaded file.
+  source: string
+  fromFile: boolean
+  channels: IptvChannel[]
+  groups: { name: string; count: number }[]
+  skipped: { reason: 'scheme' | 'invalid'; count: number }[]
+  truncated: boolean
+  limit: number
+}
+
+export interface IptvPlanResult {
+  plan: Plan
+  skipped: { id: number; name: string; reason: string }[]
+}
+
 /** What one tuner is doing now — only boxes with OpenWebif tell (`live` is
  * "19.2° O / Das Erste HD" while it serves the TV picture, `rec` the
  * recording; both empty when free). */

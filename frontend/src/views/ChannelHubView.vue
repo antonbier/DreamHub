@@ -1,10 +1,10 @@
 <!--
   ChannelHub (/channels, docs/CHANNELHUB_PLAN.md): the box's channel list
-  on a phone. Four tabs, each its own address (?tab=): the bouquets and
+  on a phone. Tabs, each its own address (?tab=): the bouquets and
   what's in them, finding channels (search, new since DreamHub's first
-  look, in no bouquet, TV/radio, HD, provider), the channel check, and the
-  picon sets. Reading only for now — editing goes through the
-  BouquetEditor plugin and comes next; without the plugin, the hub says so.
+  look, in no bouquet, TV/radio, HD, provider), the channel check and the
+  picon sets, and internet channels from an M3U list (IPTV). Editing goes
+  through the BouquetEditor plugin; without the plugin, the hub says so.
 -->
 <template>
   <div class="mx-auto max-w-content p-6 below-md:p-4">
@@ -233,6 +233,8 @@
     </section>
 
     <!-- Picons -->
+    <IptvPanel v-else-if="tab === 'iptv'" :bouquets="bouquets" :editor="editor" @done="loadBouquets" />
+
     <section v-else class="mt-4">
       <p class="mb-3 text-[13.5px] text-muted">{{ t('channels.picons.explain') }}</p>
       <p v-if="piconsLoading" class="text-[14px] text-muted">{{ t('common.loading') }}</p>
@@ -327,6 +329,7 @@ import ChannelLogo from '@/components/guide/ChannelLogo.vue'
 import PlanPreview from '@/components/PlanPreview.vue'
 import { useBoxesStore } from '@/stores/boxes'
 import ChannelSyncPanel from '@/components/channels/ChannelSyncPanel.vue'
+import IptvPanel from '@/components/channels/IptvPanel.vue'
 import BouquetDraftEditor from '@/components/channels/BouquetDraftEditor.vue'
 import ChannelLogoPicker from '@/components/channels/ChannelLogoPicker.vue'
 import { useChannelChange } from '@/components/channels/useChannelChange'
@@ -335,7 +338,7 @@ import { useFriendlyError } from '@/composables/useFriendlyError'
 import { usePlanError } from '@/composables/usePlanError'
 import type { BouquetEntry, ChannelBackup, ChannelBouquet, ChannelInfo, ChannelIssue, PiconSet, Plan } from '@/api/types'
 
-const TABS = ['bouquets', 'find', 'picons'] as const
+const TABS = ['bouquets', 'find', 'picons', 'iptv'] as const
 type Tab = (typeof TABS)[number]
 
 const { t, locale } = useI18n()

@@ -2578,7 +2578,7 @@
       "playing": "„{name}“ startet auf dem Fernseher."
     },
     "netcast": {
-      "explain": "Die Quellen, die das Netcast-Plugin auf der Box eingerichtet hat — Internet-Playlists, Dienste und Programmführer, gelesen aus seinen eigenen Dateien. Das ist nur eine Ansicht: hier wird nichts geändert.",
+      "explain": "Die Quellen, die das Netcast-Plugin auf der Box eingerichtet hat — Internet-Playlists, Dienste und Programmführer, gelesen aus seinen eigenen Dateien. Mit „Als Liste nehmen…“ kommen die Kanäle einer Quelle in ein Bouquet; Hinzufügen, Ändern oder Entfernen einer Quelle zeigt immer zuerst eine Vorschau.",
       "none": "Diese Box hat keine Netcast-Quellen (Netcast ist ein Plugin der Dreambox One).",
       "notListed": "Die Box konnte ihre Dateien nicht auflisten, deshalb wurden nur die üblichen Dateinamen versucht. Eine eigene Datei mit anderem Namen kann fehlen.",
       "empty": "Keine Quellen in dieser Datei.",

@@ -2578,7 +2578,7 @@
       "playing": "\"{name}\" is starting on the TV."
     },
     "netcast": {
-      "explain": "The sources the Netcast plugin on the box has set up — internet playlists, services and guides, read from its own files. This is a view only: nothing is changed here.",
+      "explain": "The sources the Netcast plugin on the box has set up — internet playlists, services and guides, read from its own files. With “Use as list…” a source's channels go into a bouquet; adding, changing or removing a source is always a preview first.",
       "none": "This box has no Netcast sources (Netcast is a Dreambox One plugin).",
       "notListed": "The box could not list its files, so only the usual file names were tried. A file of your own with another name may be missing.",
       "empty": "No sources in this file.",

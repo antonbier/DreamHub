@@ -2578,7 +2578,7 @@
       "playing": "\"{name}\" sta partendo sulla TV."
     },
     "netcast": {
-      "explain": "Le fonti che il plugin Netcast ha impostato sul box — playlist internet, servizi e guide, lette dai suoi file. È solo una vista: qui non cambia nulla.",
+      "explain": "Le fonti che il plugin Netcast ha impostato sul box — playlist internet, servizi e guide, lette dai suoi file. Con «Usa come lista…» i canali di una fonte vanno in un bouquet; aggiungere, modificare o rimuovere una fonte mostra sempre prima un'anteprima.",
       "none": "Questo box non ha fonti Netcast (Netcast è un plugin della Dreambox One).",
       "notListed": "Il box non ha potuto elencare i suoi file, quindi sono stati provati solo i nomi usuali. Un file proprio con un altro nome può mancare.",
       "empty": "Nessuna fonte in questo file.",

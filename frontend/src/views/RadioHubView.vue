@@ -126,7 +126,7 @@
           >
             <div class="flex w-44 shrink-0 items-center gap-2 below-sm:w-auto below-sm:min-w-0 below-sm:flex-1">
               <ChannelLogo source="radio" :service-reference="st.serviceReference" :service-name="st.serviceName" :height="22" />
-              <span class="truncate text-[13.5px] font-semibold text-text">{{ st.serviceName }}</span>
+              <span class="truncate text-[13.5px] font-semibold text-text below-sm:whitespace-normal below-sm:break-words">{{ st.serviceName }}</span>
             </div>
             <div class="min-w-0 flex-1 below-sm:order-last below-sm:basis-full">
               <template v-if="st.now">
@@ -455,6 +455,8 @@ onBeforeUnmount(() => clearInterval(ticker))
 const radioText = ref('')
 const radioTextRef = ref('')
 let radioTextRun = 0
+// declared here, not with the player below: the immediate watch reads it during setup
+const listening = ref('')
 const textStation = computed(() => playingStation.value?.serviceReference || listening.value)
 watch(
   textStation,
@@ -487,7 +489,6 @@ const streamHubOn = computed(() => {
   const s = navItems.value.find((i) => i.id === 'stream')
   return !!s && s.status !== 'unavailable'
 })
-const listening = ref('')
 const listenState = ref<PlayerState | 'idle'>('idle')
 const listenError = ref<Error | null>(null)
 const listeningStation = computed(() => stations.value.find((s) => s.serviceReference === listening.value) ?? null)

@@ -841,7 +841,8 @@
       "netcast_no_source": "Diese Quelle oder Datei gibt es nicht mehr.",
       "netcast_source_exists": "Eine Quelle mit diesem Namen gibt es schon.",
       "netcast_bad_file": "Diese Datei ist keine Quellenliste, die DreamHub ändern kann.",
-      "netcast_write_mismatch": "Die Box hat nicht das gespeichert, was geschrieben wurde; die alte Datei wurde zurückgelegt."
+      "netcast_write_mismatch": "Die Box hat nicht das gespeichert, was geschrieben wurde; die alte Datei wurde zurückgelegt.",
+      "netcast_list_missing": "Netcast hat diese Liste noch nicht geladen. Öffne die Quelle einmal in Netcast am TV und versuche es dann noch einmal."
     },
     "media": {
       "not_a_recording": "Diese Aufnahme gibt es nicht (mehr).",
@@ -2607,7 +2608,8 @@
       "backupNote": "Eine Kopie der alten Datei bleibt daneben liegen (.dreamhub-backup). Netcast liest die Datei beim nächsten Öffnen seines Bildschirms.",
       "change_add": "Neue Quelle „{name}“ in {file} ({address})",
       "change_update": "Quelle „{name}“ in {file} wird geändert",
-      "change_remove": "Quelle „{name}“ wird aus {file} entfernt"
+      "change_remove": "Quelle „{name}“ wird aus {file} entfernt",
+      "useList": "Als Liste nehmen…"
     }
   },
   "updates": {

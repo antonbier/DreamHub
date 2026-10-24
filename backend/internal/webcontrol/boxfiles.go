@@ -20,6 +20,9 @@ type BoxFileReader interface {
 	// ReadBoxFile returns the file's content (an error wrapping ErrNotFound
 	// when it is not there, ErrTooLarge past MaxBoxFile bytes).
 	ReadBoxFile(ctx context.Context, path string) ([]byte, error)
+	// ReadBoxFileMax is ReadBoxFile with its own size limit, for a list that
+	// is bigger than a settings file (Netcast's cached playlists).
+	ReadBoxFileMax(ctx context.Context, path string, max int64) ([]byte, error)
 	// ListBoxFiles returns the names of the files in dir that match the
 	// glob pattern ("netcast*.json").
 	ListBoxFiles(ctx context.Context, dir, pattern string) ([]string, error)
@@ -43,16 +46,20 @@ const MaxBoxFile = 1 << 20
 var ErrTooLarge = fmt.Errorf("webcontrol: the file is too large")
 
 func (c *HTTPClient) ReadBoxFile(ctx context.Context, p string) ([]byte, error) {
+	return c.ReadBoxFileMax(ctx, p, MaxBoxFile)
+}
+
+func (c *HTTPClient) ReadBoxFileMax(ctx context.Context, p string, max int64) ([]byte, error) {
 	body, err := c.get(ctx, "/file?"+url.Values{"action": {"download"}, "file": {p}}.Encode())
 	if err != nil {
 		return nil, err
 	}
 	defer body.Close()
-	b, err := io.ReadAll(io.LimitReader(body, MaxBoxFile+1))
+	b, err := io.ReadAll(io.LimitReader(body, max+1))
 	if err != nil {
 		return nil, err
 	}
-	if len(b) > MaxBoxFile {
+	if int64(len(b)) > max {
 		return nil, ErrTooLarge
 	}
 	return b, nil

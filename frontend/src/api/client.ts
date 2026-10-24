@@ -309,6 +309,7 @@ export const api = {
     testIptv: (token: string, ids: number[]) =>
       request<{ results: { id: number; result: IptvProbe; status?: number }[] }>('POST', '/api/v1/channels/iptv/test', { token, ids }),
     netcastSources: () => request<NetcastSources>('GET', '/api/v1/channels/netcast/sources'),
+    readNetcastList: (id: string) => request<IptvList>('POST', '/api/v1/channels/netcast/read', { id }),
     planNetcast: (body: NetcastPlanBody) => request<{ plan: Plan; file: string }>('POST', '/api/v1/channels/netcast/plan', body),
     guideSources: () => request<{ sources: GuideSource[] }>('GET', '/api/v1/channels/iptv/guide-sources'),
     listGithub: (url: string) => request<RepoListing>('POST', '/api/v1/channels/iptv/github', { url }),

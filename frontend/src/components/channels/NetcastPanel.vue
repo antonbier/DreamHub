@@ -70,13 +70,17 @@
               <span class="text-[14.5px] font-semibold text-text">{{ s.name }}</span>
               <span v-if="s.mediaType" class="rounded-sm border border-line px-1 text-[11.5px] text-muted">{{ s.mediaType }}</span>
               <span v-if="s.hasLogin" class="rounded-sm border border-line px-1 text-[11.5px] text-muted">{{ t('channels.iptv.login') }}</span>
-              <span v-if="data.writable && s.id && !plan" class="ms-auto flex gap-1">
+              <span class="ms-auto flex gap-1">
+                <button v-if="isPlaylist(f, s)" type="button" class="rounded-sm px-2 py-1 text-[13px] text-accent hover:bg-tile-2" :disabled="busy" @click="useList(s)">{{ t('channels.netcast.useList') }}</button>
+              </span>
+              <span v-if="data.writable && s.id && !plan" class="flex gap-1">
                 <button type="button" class="rounded-sm px-2 py-1 text-[13px] text-accent hover:bg-tile-2" :disabled="busy" @click="startEdit(f, s)">{{ t('channels.netcast.change') }}</button>
                 <button type="button" class="rounded-sm px-2 py-1 text-[13px] text-muted hover:bg-tile-2" :disabled="busy" @click="review('remove', { kind: f.kind, name: s.name, address: '', mediaType: '', desc: '' }, f.name, s.id)">{{ t('channels.netcast.remove') }}</button>
               </span>
             </div>
             <p v-if="s.address" class="truncate text-[12.5px] text-faint">{{ s.address }}</p>
             <p v-if="s.desc" class="text-[12.5px] text-muted">{{ s.desc }}</p>
+            <p v-if="listError && listFor === s.id" class="text-[13px] text-warn" role="alert">{{ listError }}</p>
             <form v-if="editing && editing.file === f.name && editing.id === s.id && !plan" class="mt-2 flex flex-col gap-2 rounded-sm border border-line-soft bg-bg p-2" @submit.prevent="review('update', edit, f.name, s.id)">
               <label class="flex flex-col gap-0.5 text-[13px]">
                 <span class="text-faint">{{ t('channels.netcast.name') }}</span>
@@ -108,12 +112,14 @@
 
 <script setup lang="ts">
 import { onMounted, reactive, ref } from 'vue'
+import { useRouter } from 'vue-router'
 import { useI18n } from 'vue-i18n'
 import { api } from '@/api/client'
 import ErrorText from '@/components/ErrorText.vue'
 import PlanPreview from '@/components/PlanPreview.vue'
 import { usePlanError } from '@/composables/usePlanError'
 import { useNetcastDraft } from '@/composables/useNetcastDraft'
+import { useIptvHandoff } from '@/composables/useIptvHandoff'
 import type { NetcastFile, NetcastPlanBody, NetcastSource, NetcastSources, Plan, PlanChange } from '@/api/types'
 
 const MEDIA_TYPES = ['playlist_live', 'playlist', 'playlist_vod', 'playlist_radio'] as const
@@ -129,6 +135,10 @@ interface Fields {
 const { t } = useI18n()
 const { planErrorMessage } = usePlanError()
 const { take } = useNetcastDraft()
+const router = useRouter()
+const { offer } = useIptvHandoff()
+const listError = ref('')
+const listFor = ref('')
 
 const data = ref<NetcastSources | null>(null)
 const loading = ref(true)
@@ -142,6 +152,24 @@ const addOpen = ref(false)
 const form = reactive<Fields>({ kind: 'server', name: '', address: '', mediaType: 'playlist_live', desc: '' })
 const editing = ref<{ file: string; id: string } | null>(null)
 const edit = reactive<Fields>({ kind: 'server', name: '', address: '', mediaType: '', desc: '' })
+
+// A playlist source Netcast has downloaded can be read like any list: the
+// IPTV tab then picks, tests and puts channels into a bouquet.
+const isPlaylist = (f: NetcastFile, s: NetcastSource) => f.kind === 'server' && !!s.id && (s.mediaType ?? '').startsWith('playlist')
+
+async function useList(s: NetcastSource) {
+  busy.value = true
+  listError.value = ''
+  listFor.value = s.id ?? ''
+  try {
+    offer(await api.channels.readNetcastList(s.id ?? ''))
+    await router.push({ query: { tab: 'iptv' } })
+  } catch (err) {
+    listError.value = planErrorMessage(err)
+  } finally {
+    busy.value = false
+  }
+}
 
 function describe(c: PlanChange): string {
   const b = (c.before ?? {}) as { name?: string; file?: string }

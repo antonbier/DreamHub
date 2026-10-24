@@ -841,7 +841,8 @@
       "netcast_no_source": "That source or file is no longer there.",
       "netcast_source_exists": "A source with that name exists already.",
       "netcast_bad_file": "That file is not a source list DreamHub can edit.",
-      "netcast_write_mismatch": "The box does not hold what was written; the old file was put back."
+      "netcast_write_mismatch": "The box does not hold what was written; the old file was put back.",
+      "netcast_list_missing": "Netcast has not downloaded this list yet. Open the source once in Netcast on the TV, then try again."
     },
     "media": {
       "not_a_recording": "This recording doesn't exist (anymore).",
@@ -2607,7 +2608,8 @@
       "backupNote": "A copy of the old file stays next to it (.dreamhub-backup). Netcast reads the file the next time its screen is opened.",
       "change_add": "New source “{name}” in {file} ({address})",
       "change_update": "Source “{name}” in {file} changes",
-      "change_remove": "Source “{name}” is removed from {file}"
+      "change_remove": "Source “{name}” is removed from {file}",
+      "useList": "Use as list…"
     }
   },
   "updates": {

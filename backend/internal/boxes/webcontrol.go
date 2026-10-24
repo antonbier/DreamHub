@@ -434,3 +434,11 @@ func (c *WebControl) CanWriteBoxFiles(ctx context.Context) bool {
 	w, ok := e.WC.(webcontrol.BoxFileWriter)
 	return ok && w.CanWriteBoxFiles(ctx)
 }
+
+func (c *WebControl) ReadBoxFileMax(ctx context.Context, path string, max int64) ([]byte, error) {
+	r, err := c.fileReader(ctx)
+	if err != nil {
+		return nil, err
+	}
+	return r.ReadBoxFileMax(ctx, path, max)
+}

@@ -1102,3 +1102,33 @@ func TestNetcast_ChangedFileAndCorruptWriteAreCaught(t *testing.T) {
 		t.Errorf("a corrupt write: %d %s", resp.StatusCode, b)
 	}
 }
+
+func TestNetcast_ACachedListBecomesAnIPTVList(t *testing.T) {
+	m := mock.New()
+	e := newEnvWith(t, m)
+	var r iptvRead
+	e.json(t, "POST", "/api/v1/channels/netcast/read", `{"id":"kodi"}`, nil, 200, &r)
+	if r.Token == "" || !r.FromFile || r.Name != "Netcast: Kodi IPTV" || len(r.Channels) != 2 {
+		t.Fatalf("read: %+v", r)
+	}
+	// it is an ordinary list now: a plan into a new bouquet works
+	body := `{"token":` + jsonStr(r.Token) + `,"ids":[0,1],"newName":"Netcast Kodi","kind":"tv"}`
+	var p struct{ Plan struct{ ID string } }
+	e.json(t, "POST", "/api/v1/channels/iptv/plan", body, nil, 200, &p)
+	if resp, b := e.do(t, "POST", "/api/v1/plans/"+p.Plan.ID+"/apply", "", nil); resp.StatusCode != 200 {
+		t.Fatalf("apply: %d %s", resp.StatusCode, b)
+	}
+	for body, want := range map[string]string{
+		`{"id":"nolist"}`:      "netcast_list_missing",
+		`{"id":"../../etc/x"}`: "invalid_body",
+		`{}`:                   "invalid_body",
+	} {
+		if resp, b := e.do(t, "POST", "/api/v1/channels/netcast/read", body, nil); resp.StatusCode < 400 || !strings.Contains(string(b), want) {
+			t.Errorf("%s: %d %s, want %s", body, resp.StatusCode, b, want)
+		}
+	}
+	m.NoBoxFiles = true
+	if resp, b := e.do(t, "POST", "/api/v1/channels/netcast/read", `{"id":"kodi"}`, nil); resp.StatusCode != http.StatusNotFound {
+		t.Errorf("a box without files: %d %s", resp.StatusCode, b)
+	}
+}

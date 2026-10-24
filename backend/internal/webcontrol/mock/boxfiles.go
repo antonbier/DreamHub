@@ -27,6 +27,9 @@ func mockBoxFiles() map[string][]byte {
 			{"id":"pluto","name":"Pluto TV","mediatype":"api","epgUpdate":"3600","Username":"me","Password":"hunter2"}]}`),
 		"/etc/enigma2/netcastepg_gemini.json": []byte(`{"entrys":[
 			{"id":"gemini","name":"XMLTV DE","url":"https://epg.example/de.xml.gz","EPGrefreshHour":96}]}`),
+		"/data/Netcast/server/playlist_netcastserver_kodi": []byte("#EXTM3U\n" +
+			"#EXTINF:-1 tvg-id=\"one.de\" group-title=\"News\",One News\nhttp://tv.example:8080/live/one.m3u8\n" +
+			"#EXTINF:-1 group-title=\"Kids\",Toon\nhttps://tv.example/live/toon.m3u8\n"),
 	}
 }
 
@@ -41,6 +44,15 @@ func (c *Client) ReadBoxFile(ctx context.Context, p string) ([]byte, error) {
 		return append([]byte(nil), b...), nil
 	}
 	return nil, fmt.Errorf("mock: %s: %w", p, webcontrol.ErrNotFound)
+}
+
+// ReadBoxFileMax is ReadBoxFile with a size limit.
+func (c *Client) ReadBoxFileMax(ctx context.Context, p string, max int64) ([]byte, error) {
+	b, err := c.ReadBoxFile(ctx, p)
+	if err == nil && int64(len(b)) > max {
+		return nil, webcontrol.ErrTooLarge
+	}
+	return b, err
 }
 
 // ListBoxFiles lists the mock box's files in dir that match pattern.

@@ -8,6 +8,7 @@ import (
 	"errors"
 	"net/http"
 	"path"
+	"regexp"
 	"strings"
 
 	"github.com/antonbier/DreamHub/backend/internal/httpx"
@@ -106,6 +107,7 @@ const (
 	CodeNetcastExists      = "netcast_source_exists"
 	CodeNetcastBadFile     = "netcast_bad_file"
 	CodeNetcastMismatch    = "netcast_write_mismatch"
+	CodeNetcastNoList      = "netcast_list_missing" // the plugin has not downloaded that list yet
 )
 
 // backupSuffix is added to a file's name for the copy kept before an edit; it
@@ -294,4 +296,64 @@ func firstOf(s ...string) string {
 		}
 	}
 	return ""
+}
+
+// --- a Netcast playlist as a list for the IPTV tab ----------------------------------------
+
+// netcastCacheDir is where the plugin keeps the lists it has downloaded
+// (ARCHITECTURE.md): playlist_netcastserver_<id> is the M3U as fetched.
+const netcastCacheDir = "/data/Netcast/server"
+
+var netcastIDPattern = regexp.MustCompile(`^[A-Za-z0-9_-]{1,64}$`)
+
+// readNetcastList reads the list Netcast cached for a playlist source and
+// keeps it like a list read from an address, so the IPTV tab's picking,
+// guide, test and plan work on it. Nothing is fetched from the internet:
+// it is the list the TV shows. Such a list is not remembered for "Compare
+// again" (it has no address of its own).
+func (h *Channels) readNetcastList(w http.ResponseWriter, r *http.Request) {
+	var body struct {
+		ID string `json:"id"`
+	}
+	if err := httpx.DecodeJSON(r, &body); err != nil || !netcastIDPattern.MatchString(body.ID) {
+		httpx.WriteError(w, r, http.StatusBadRequest, "invalid_body", `expected {"id"}`)
+		return
+	}
+	rd, ok := h.WC.(webcontrol.BoxFileReader)
+	if !ok {
+		httpx.WriteError(w, r, http.StatusNotFound, CodeNetcastNoList, "this box has no Netcast lists")
+		return
+	}
+	ctx := r.Context()
+	raw, err := rd.ReadBoxFileMax(ctx, path.Join(netcastCacheDir, "playlist_netcastserver_"+body.ID), iptvMaxUploadSize)
+	switch {
+	case errors.Is(err, webcontrol.ErrNotFound):
+		httpx.WriteError(w, r, http.StatusNotFound, CodeNetcastNoList, "Netcast has not downloaded that list yet")
+		return
+	case errors.Is(err, webcontrol.ErrTooLarge):
+		writeFetchError(w, r, &iptv.FetchError{Kind: iptv.KindTooLarge})
+		return
+	case err != nil:
+		httpx.WriteError(w, r, http.StatusBadGateway, "webcontrol_unavailable", "could not reach WebControl")
+		return
+	}
+	pl, err := iptv.Parse(strings.NewReader(string(raw)))
+	if err != nil {
+		writeFetchError(w, r, err)
+		return
+	}
+	name := body.ID
+	if view, err := readNetcast(ctx, rd); err == nil {
+		for _, f := range view.Files {
+			for _, s := range f.Sources {
+				if s.ID == body.ID && s.Name != "" {
+					name = s.Name
+				}
+			}
+		}
+	}
+	user, _ := httpx.User(ctx)
+	s := &iptvSession{token: randomHex(16), userID: user.ID, name: "Netcast: " + name, fromFile: true, read: h.now(), pl: pl}
+	h.keepIPTV(s)
+	httpx.WriteJSON(w, http.StatusOK, iptvListView(s))
 }

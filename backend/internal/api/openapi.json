@@ -7830,6 +7830,55 @@
     },
     "x-csrf": true
    }
+  },
+  "/channels/netcast/read": {
+   "post": {
+    "summary": "Read a list Netcast has downloaded",
+    "tags": [
+     "channels"
+    ],
+    "operationId": "POST_channels_netcast_read",
+    "parameters": [
+     {
+      "$ref": "#/components/parameters/Box"
+     }
+    ],
+    "description": "Body `{id}`: the id of a Netcast playlist source. Reads the M3U the plugin cached for it (`/data/Netcast/server/playlist_netcastserver_<id>`, through the box's `/file`, 8 MB at most) and keeps it like an uploaded list: the answer is that of `POST /channels/iptv/upload` (token, channels, groups), so the IPTV routes — twins, test, plan — work on it. Nothing is fetched from the internet and the list is not remembered for comparing. `netcast_list_missing` (404): the plugin has not downloaded it yet, or the box has no Netcast lists.",
+    "responses": {
+     "200": {
+      "description": "The list",
+      "content": {
+       "application/json": {
+        "schema": {
+         "type": "object"
+        }
+       }
+      }
+     },
+     "default": {
+      "$ref": "#/components/responses/Error"
+     }
+    },
+    "requestBody": {
+     "required": true,
+     "content": {
+      "application/json": {
+       "schema": {
+        "type": "object",
+        "properties": {
+         "id": {
+          "type": "string"
+         }
+        },
+        "required": [
+         "id"
+        ]
+       }
+      }
+     }
+    },
+    "x-csrf": true
+   }
   }
  }
 }

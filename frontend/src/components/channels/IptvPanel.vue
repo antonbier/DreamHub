@@ -179,7 +179,7 @@
 </template>
 
 <script setup lang="ts">
-import { computed, ref, watch } from 'vue'
+import { computed, ref, watch, onMounted } from 'vue'
 import { useI18n } from 'vue-i18n'
 import { api } from '@/api/client'
 import PlanPreview from '@/components/PlanPreview.vue'
@@ -189,6 +189,7 @@ import IptvRepoPicker from '@/components/channels/IptvRepoPicker.vue'
 import IptvSources from '@/components/channels/IptvSources.vue'
 import { useChannelChange } from '@/components/channels/useChannelChange'
 import { usePlanError } from '@/composables/usePlanError'
+import { useIptvHandoff } from '@/composables/useIptvHandoff'
 import type { ChannelBouquet, IptvList, IptvPlanResult, IptvProbe, IptvTwin } from '@/api/types'
 
 const props = defineProps<{ bouquets: ChannelBouquet[]; editor: boolean }>()
@@ -197,6 +198,7 @@ const emit = defineEmits<{ done: [] }>()
 const { t, n: formatNumber } = useI18n()
 const { planErrorMessage } = usePlanError()
 const { describeChange } = useChannelChange()
+const handoff = useIptvHandoff()
 
 const ALL = '\u0000all'
 const PAGE = 150
@@ -298,6 +300,12 @@ function selectShown() {
   for (const c of filtered.value) s.add(c.id)
   selected.value = s
 }
+
+// A list the Netcast tab read is waiting here.
+onMounted(() => {
+  const l = handoff.take()
+  if (l) take(l)
+})
 
 function take(l: IptvList) {
   list.value = l

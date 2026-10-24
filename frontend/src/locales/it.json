@@ -841,7 +841,8 @@
       "netcast_no_source": "Quella fonte o quel file non c'è più.",
       "netcast_source_exists": "Esiste già una fonte con quel nome.",
       "netcast_bad_file": "Quel file non è un elenco di fonti che DreamHub può modificare.",
-      "netcast_write_mismatch": "Il box non contiene ciò che è stato scritto; il vecchio file è stato rimesso."
+      "netcast_write_mismatch": "Il box non contiene ciò che è stato scritto; il vecchio file è stato rimesso.",
+      "netcast_list_missing": "Netcast non ha ancora scaricato questa lista. Apri la fonte una volta in Netcast sul TV e riprova."
     },
     "media": {
       "not_a_recording": "Questa registrazione non esiste (più).",
@@ -2607,7 +2608,8 @@
       "backupNote": "Una copia del vecchio file resta accanto (.dreamhub-backup). Netcast legge il file alla prossima apertura della sua schermata.",
       "change_add": "Nuova fonte «{name}» in {file} ({address})",
       "change_update": "La fonte «{name}» in {file} cambia",
-      "change_remove": "La fonte «{name}» viene rimossa da {file}"
+      "change_remove": "La fonte «{name}» viene rimossa da {file}",
+      "useList": "Usa come lista…"
     }
   },
   "updates": {

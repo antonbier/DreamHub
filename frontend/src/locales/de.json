@@ -834,7 +834,9 @@
       "iptv_session_gone": "Die Liste wurde vor zu langer Zeit gelesen. Bitte noch einmal lesen.",
       "iptv_bouquet_exists": "Ein Bouquet mit diesem Namen gibt es schon. Wähle es stattdessen als Ziel.",
       "iptv_nothing_to_add": "Alle gewählten Sender sind schon im Bouquet.",
-      "timer_no_tuner": "Ein Internet-Sender hat keinen Tuner und lässt sich nicht aufnehmen. Nimm denselben Sender über einen Satelliten-, Kabel- oder Antennen-Sender auf."
+      "timer_no_tuner": "Ein Internet-Sender hat keinen Tuner und lässt sich nicht aufnehmen. Nimm denselben Sender über einen Satelliten-, Kabel- oder Antennen-Sender auf.",
+      "guide_not_xmltv": "Das ist keine XMLTV-Guide-Datei.",
+      "guide_unsupported_format": "Dateien mit .xz kann DreamHub hier nicht lesen. Nimm die .xml- oder .xml.gz-Datei."
     },
     "media": {
       "not_a_recording": "Diese Aufnahme gibt es nicht (mehr).",
@@ -2524,6 +2526,33 @@
           "error": "Fehler",
           "blocked": "nicht erlaubt"
         }
+      },
+      "guideSources": {
+        "title": "Guide-Quellen",
+        "explain": "Woher ein Programmführer für diese Sender kommen könnte. Geprüft wird nur, welche deiner gewählten Sender eine Guide-Datei kennt — auf der Box wird nichts geändert.",
+        "curated": "Vorgeschlagene Quellen",
+        "own": "Adresse einer Guide-Datei (.xml oder .xml.gz)",
+        "repo": "GitHub-Repository",
+        "repoHint": "Zum Beispiel https://github.com/owner/repo oder ein Ordner darin. Nur öffentliche Repositories.",
+        "list": "Dateien auflisten",
+        "listing": "Suche…",
+        "files": "Gefundene Dateien",
+        "noFiles": "In diesem Ordner liegen keine Guide- oder Playlist-Dateien.",
+        "folders": "Ordner",
+        "openFolder": "Öffnen",
+        "useGuide": "Als Guide-Quelle nehmen",
+        "guideOnly": "Nur Guide-Dateien",
+        "chosen": "Gewählte Quelle",
+        "check": "Abdeckung prüfen",
+        "checking": "Prüfe…",
+        "scope": "Prüft {n} gewählte Sender.",
+        "scopeAll": "Prüft alle {n} Sender der Liste.",
+        "result": "Diese Quelle kennt {known} von {total} Sendern.",
+        "sourceHas": "Die Datei enthält {n} Sender.",
+        "truncated": "Die Datei wurde nach {n} Sendern abgeschnitten.",
+        "missing": "In dieser Quelle nicht gefunden ({n})",
+        "missingMore": "und {n} weitere",
+        "playlistFile": "Playlist"
       }
     },
     "stream": {

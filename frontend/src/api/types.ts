@@ -1607,3 +1607,36 @@ export interface TunerState {
   live: string
   rec: string
 }
+
+// A guide source (N5): an XMLTV file, from the curated list or a repository.
+export interface GuideSource {
+  id: string
+  name: string
+  url: string
+  region?: string
+}
+
+export interface RepoFile {
+  name: string
+  path: string
+  kind: 'guide' | 'playlist'
+  size: number
+  url: string
+}
+
+export interface RepoListing {
+  repo: string
+  ref: string
+  dir: string
+  files: RepoFile[]
+  dirs: string[]
+}
+
+export interface GuideCoverage {
+  known: number
+  total: number
+  sourceChannels: number
+  truncated: boolean
+  missing: { id: number; name: string }[]
+  missingCount: number
+}

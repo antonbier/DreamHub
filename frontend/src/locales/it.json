@@ -834,7 +834,9 @@
       "iptv_session_gone": "La lista è stata letta troppo tempo fa. Leggila di nuovo.",
       "iptv_bouquet_exists": "Esiste già un bouquet con questo nome. Sceglilo invece come destinazione.",
       "iptv_nothing_to_add": "Tutti i canali scelti sono già nel bouquet.",
-      "timer_no_tuner": "Un canale internet non ha un tuner e non si può registrare. Registra la stessa emittente da un canale satellite, cavo o antenna."
+      "timer_no_tuner": "Un canale internet non ha un tuner e non si può registrare. Registra la stessa emittente da un canale satellite, cavo o antenna.",
+      "guide_not_xmltv": "Non è un file di guida XMLTV.",
+      "guide_unsupported_format": "I file .xz non si possono leggere qui. Usa il file .xml o .xml.gz."
     },
     "media": {
       "not_a_recording": "Questa registrazione non esiste (più).",
@@ -2524,6 +2526,33 @@
           "error": "errore",
           "blocked": "non consentito"
         }
+      },
+      "guideSources": {
+        "title": "Fonti della guida",
+        "explain": "Da dove potrebbe arrivare una guida programmi per questi canali. Si controlla solo quali dei canali scelti un file di guida conosce — sul box non cambia nulla.",
+        "curated": "Fonti suggerite",
+        "own": "Indirizzo di un file di guida (.xml o .xml.gz)",
+        "repo": "Repository GitHub",
+        "repoHint": "Ad esempio https://github.com/owner/repo o una sua cartella. Solo repository pubblici.",
+        "list": "Elenca i file",
+        "listing": "Ricerca…",
+        "files": "File trovati",
+        "noFiles": "Nessun file di guida o playlist in questa cartella.",
+        "folders": "Cartelle",
+        "openFolder": "Apri",
+        "useGuide": "Usa come fonte della guida",
+        "guideOnly": "Solo file di guida",
+        "chosen": "Fonte scelta",
+        "check": "Controlla la copertura",
+        "checking": "Controllo…",
+        "scope": "Controlla {n} canali scelti.",
+        "scopeAll": "Controlla tutti i {n} canali della lista.",
+        "result": "Questa fonte conosce {known} canali su {total}.",
+        "sourceHas": "Il file contiene {n} canali.",
+        "truncated": "Il file è stato troncato dopo {n} canali.",
+        "missing": "Non trovati in questa fonte ({n})",
+        "missingMore": "e altri {n}",
+        "playlistFile": "playlist"
       }
     },
     "stream": {

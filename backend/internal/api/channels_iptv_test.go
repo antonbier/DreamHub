@@ -866,3 +866,51 @@ func TestTimers_AnInternetChannelCannotBeRecorded(t *testing.T) {
 		t.Fatalf("a channel with a tuner: %d %s", resp.StatusCode, b)
 	}
 }
+
+const guideXML = "<?xml version=\"1.0\"?><tv>" +
+	"<channel id=\"one.de\"><display-name>Something</display-name></channel>" +
+	"<channel id=\"x\"><display-name>Two News</display-name></channel>" +
+	"<programme channel=\"x\"></programme></tv>"
+
+func TestIPTV_GuideCoverage(t *testing.T) {
+	e := newEnv(t)
+	r := e.readList(t)
+	srv := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, _ *http.Request) { w.Write([]byte(guideXML)) }))
+	t.Cleanup(srv.Close)
+	var out struct {
+		Known, Total, MissingCount int
+		Missing                    []struct {
+			ID   int
+			Name string
+		}
+	}
+	body := `{"token":` + jsonStr(r.Token) + `,"ids":[0,1,2],"url":` + jsonStr(srv.URL+"/g.xml") + `}`
+	e.json(t, "POST", "/api/v1/channels/iptv/guide-coverage", body, nil, 200, &out)
+	// "One News" matches by tvg-id, "Two News" by name, "Toon" not at all
+	if out.Known != 2 || out.Total != 3 || out.MissingCount != 1 || len(out.Missing) != 1 || out.Missing[0].Name != "Toon" {
+		t.Errorf("coverage: %+v", out)
+	}
+	html := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, _ *http.Request) { w.Write([]byte("<html></html>")) }))
+	t.Cleanup(html.Close)
+	resp, b := e.do(t, "POST", "/api/v1/channels/iptv/guide-coverage", `{"token":`+jsonStr(r.Token)+`,"url":`+jsonStr(html.URL+"/g.xml")+`}`, nil)
+	if resp.StatusCode != http.StatusUnprocessableEntity || !strings.Contains(string(b), "guide_not_xmltv") {
+		t.Errorf("html: %d %s", resp.StatusCode, b)
+	}
+	resp, b = e.do(t, "POST", "/api/v1/channels/iptv/guide-coverage", `{"token":"nope","url":"http://x.example/g.xml"}`, nil)
+	if resp.StatusCode != http.StatusGone {
+		t.Errorf("gone: %d %s", resp.StatusCode, b)
+	}
+}
+
+func TestIPTV_GuideSourcesAndGitHub(t *testing.T) {
+	e := newEnv(t)
+	var cur struct{ Sources []struct{ ID, URL string } }
+	e.json(t, "GET", "/api/v1/channels/iptv/guide-sources", "", nil, 200, &cur)
+	if len(cur.Sources) == 0 || !strings.HasPrefix(cur.Sources[0].URL, "https://") {
+		t.Errorf("curated: %+v", cur)
+	}
+	resp, b := e.do(t, "POST", "/api/v1/channels/iptv/github", `{"url":"https://example.com/a/b"}`, nil)
+	if resp.StatusCode != 400 || !strings.Contains(string(b), "iptv_invalid_url") {
+		t.Errorf("not github: %d %s", resp.StatusCode, b)
+	}
+}

@@ -105,6 +105,8 @@
       <!-- 3. A guide (optional) -->
       <IptvGuidePicker v-if="!result && selected.size > 0" v-model="twinPicks" class="mt-4" :token="list.token" :channels="list.channels" :ids="selectedIds" />
 
+      <IptvGuideSources v-if="!result && selected.size > 0" class="mt-3" :token="list.token" :ids="selectedIds" :total="list.channels.length" />
+
       <!-- 4. Where to put them -->
       <form v-if="!result" class="mt-4 flex flex-wrap items-end gap-3 rounded-sm border border-line bg-tile p-3" @submit.prevent="review">
         <fieldset class="flex flex-col gap-1 text-[13.5px]">
@@ -181,6 +183,7 @@ import { useI18n } from 'vue-i18n'
 import { api } from '@/api/client'
 import PlanPreview from '@/components/PlanPreview.vue'
 import IptvGuidePicker from '@/components/channels/IptvGuidePicker.vue'
+import IptvGuideSources from '@/components/channels/IptvGuideSources.vue'
 import IptvSources from '@/components/channels/IptvSources.vue'
 import { useChannelChange } from '@/components/channels/useChannelChange'
 import { usePlanError } from '@/composables/usePlanError'

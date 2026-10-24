@@ -43,6 +43,8 @@ import type {
   BouquetEntry,
   ChannelBackup,
   ChannelSyncResult,
+  GuideCoverage,
+  GuideSource,
   IptvCompare,
   IptvList,
   IptvPlanResult,
@@ -50,6 +52,7 @@ import type {
   IptvSource,
   IptvTwinHit,
   IptvTwinSuggestion,
+  RepoListing,
   DraftEntry,
   ChannelBouquet,
   ChannelInfo,
@@ -303,6 +306,10 @@ export const api = {
     // Opens the chosen streams for a moment and says which answer.
     testIptv: (token: string, ids: number[]) =>
       request<{ results: { id: number; result: IptvProbe; status?: number }[] }>('POST', '/api/v1/channels/iptv/test', { token, ids }),
+    guideSources: () => request<{ sources: GuideSource[] }>('GET', '/api/v1/channels/iptv/guide-sources'),
+    listGithub: (url: string) => request<RepoListing>('POST', '/api/v1/channels/iptv/github', { url }),
+    guideCoverage: (token: string, ids: number[], url: string) =>
+      request<GuideCoverage>('POST', '/api/v1/channels/iptv/guide-coverage', { token, ids, url }),
     forgetIptv: (id: number) => request<void>('DELETE', `/api/v1/channels/iptv/sources/${id}`),
     backups: () => request<{ backups: ChannelBackup[] }>('GET', '/api/v1/channels/backups'),
     planRestore: (filename: string) => request<{ plan: Plan }>('POST', '/api/v1/channels/backups/restore/plan', { filename }),

@@ -7582,6 +7582,144 @@
     },
     "x-csrf": true
    }
+  },
+  "/channels/iptv/guide-sources": {
+   "get": {
+    "summary": "List the curated guide sources",
+    "tags": [
+     "channels"
+    ],
+    "operationId": "GET_channels_iptv_guide-sources",
+    "parameters": [
+     {
+      "$ref": "#/components/parameters/Box"
+     }
+    ],
+    "description": "The curated XMLTV guide sources of the repository: `{sources: [{id, name, url, region?}]}`. Nothing is fetched.",
+    "responses": {
+     "200": {
+      "description": "The result",
+      "content": {
+       "application/json": {
+        "schema": {
+         "type": "object"
+        }
+       }
+      }
+     },
+     "default": {
+      "$ref": "#/components/responses/Error"
+     }
+    }
+   }
+  },
+  "/channels/iptv/github": {
+   "post": {
+    "summary": "List the list files of a GitHub repository",
+    "tags": [
+     "channels"
+    ],
+    "operationId": "POST_channels_iptv_github",
+    "parameters": [
+     {
+      "$ref": "#/components/parameters/Box"
+     }
+    ],
+    "description": "Body `{url}`: a public repository or folder address (`https://github.com/owner/repo[/tree/ref/dir]` or `owner/repo`). Lists the guide (`.xml`, `.xml.gz`) and playlist (`.m3u`, `.m3u8`) files of that folder through GitHub's contents API, as `{repo, ref, dir, files: [{name, path, kind: guide|playlist, size, url}], dirs}`; `url` is a raw.githubusercontent.com address. Cached for 30 minutes (60 unauthenticated calls an hour). Nothing is changed.",
+    "responses": {
+     "200": {
+      "description": "The result",
+      "content": {
+       "application/json": {
+        "schema": {
+         "type": "object"
+        }
+       }
+      }
+     },
+     "default": {
+      "$ref": "#/components/responses/Error"
+     }
+    },
+    "requestBody": {
+     "required": true,
+     "content": {
+      "application/json": {
+       "schema": {
+        "type": "object",
+        "properties": {
+         "url": {
+          "type": "string"
+         }
+        },
+        "required": [
+         "url"
+        ]
+       }
+      }
+     }
+    },
+    "x-csrf": true
+   }
+  },
+  "/channels/iptv/guide-coverage": {
+   "post": {
+    "summary": "Check what a guide source knows",
+    "tags": [
+     "channels"
+    ],
+    "operationId": "POST_channels_iptv_guide-coverage",
+    "parameters": [
+     {
+      "$ref": "#/components/parameters/Box"
+     }
+    ],
+    "description": "Body `{token, ids?, url}`: the backend reads the channel list of the XMLTV file at `url` (the first channels only, up to 32 MB, `.gz` unpacked, `.xz` refused) and matches the chosen channels of a read playlist (`ids`; empty means all) by tvg-id, then by name. Answers `{known, total, sourceChannels, truncated, missing: [{id, name}] (200 at most), missingCount}`. Errors: `guide_not_xmltv`, `guide_unsupported_format` and the playlist fetch errors. Nothing is changed.",
+    "responses": {
+     "200": {
+      "description": "The result",
+      "content": {
+       "application/json": {
+        "schema": {
+         "type": "object"
+        }
+       }
+      }
+     },
+     "default": {
+      "$ref": "#/components/responses/Error"
+     }
+    },
+    "requestBody": {
+     "required": true,
+     "content": {
+      "application/json": {
+       "schema": {
+        "type": "object",
+        "properties": {
+         "token": {
+          "type": "string"
+         },
+         "ids": {
+          "type": "array",
+          "items": {
+           "type": "integer"
+          }
+         },
+         "url": {
+          "type": "string"
+         }
+        },
+        "required": [
+         "token",
+         "url"
+        ]
+       }
+      }
+     }
+    },
+    "x-csrf": true
+   }
   }
  }
 }

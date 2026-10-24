@@ -834,7 +834,9 @@
       "iptv_session_gone": "The list was read too long ago. Please read it again.",
       "iptv_bouquet_exists": "A bouquet with that name exists already. Choose it as the target instead.",
       "iptv_nothing_to_add": "All chosen channels are in the bouquet already.",
-      "timer_no_tuner": "An internet channel has no tuner, so it can't be recorded. Record the same station on a satellite, cable or antenna channel instead."
+      "timer_no_tuner": "An internet channel has no tuner, so it can't be recorded. Record the same station on a satellite, cable or antenna channel instead.",
+      "guide_not_xmltv": "That is not an XMLTV guide file.",
+      "guide_unsupported_format": "Files ending in .xz cannot be read here. Use the .xml or .xml.gz file."
     },
     "media": {
       "not_a_recording": "This recording doesn't exist (anymore).",
@@ -2524,6 +2526,33 @@
           "error": "error",
           "blocked": "not allowed"
         }
+      },
+      "guideSources": {
+        "title": "Guide sources",
+        "explain": "Where a programme guide for these channels could come from. This only checks which of your chosen channels a guide file knows — nothing is changed or fetched into the box.",
+        "curated": "Suggested sources",
+        "own": "Address of a guide file (.xml or .xml.gz)",
+        "repo": "GitHub repository",
+        "repoHint": "For example https://github.com/owner/repo or a folder in it. Only public repositories.",
+        "list": "List files",
+        "listing": "Looking…",
+        "files": "Files found",
+        "noFiles": "No guide or playlist files in this folder.",
+        "folders": "Folders",
+        "openFolder": "Open",
+        "useGuide": "Use as guide source",
+        "guideOnly": "Guide files only",
+        "chosen": "Chosen source",
+        "check": "Check coverage",
+        "checking": "Checking…",
+        "scope": "Checks {n} chosen channels.",
+        "scopeAll": "Checks all {n} channels of the list.",
+        "result": "This source knows {known} of {total} channels.",
+        "sourceHas": "The file has {n} channels.",
+        "truncated": "The file was cut after {n} channels.",
+        "missing": "Not found in this source ({n})",
+        "missingMore": "and {n} more",
+        "playlistFile": "playlist"
       }
     },
     "stream": {

@@ -1,0 +1,6 @@
+[
+  {"id": "epgshare-de", "name": "EPGShare01 — Germany", "url": "https://epgshare01.online/epgshare01/epg_ripper_DE1.xml.gz", "region": "de"},
+  {"id": "epgshare-at", "name": "EPGShare01 — Austria", "url": "https://epgshare01.online/epgshare01/epg_ripper_AT1.xml.gz", "region": "at"},
+  {"id": "epgshare-ch", "name": "EPGShare01 — Switzerland", "url": "https://epgshare01.online/epgshare01/epg_ripper_CH1.xml.gz", "region": "ch"},
+  {"id": "epgshare-it", "name": "EPGShare01 — Italy", "url": "https://epgshare01.online/epgshare01/epg_ripper_IT1.xml.gz", "region": "it"}
+]

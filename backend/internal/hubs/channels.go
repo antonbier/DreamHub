@@ -113,6 +113,9 @@ func (h *Channels) Mount(mux httpx.Mux) {
 	mux.HandleFunc("POST /api/v1/channels/iptv/sources/{id}/compare", h.compareIPTV)
 	mux.HandleFunc("POST /api/v1/channels/iptv/sources/{id}/plan", h.planIPTVCompare)
 	mux.HandleFunc("DELETE /api/v1/channels/iptv/sources/{id}", h.forgetIPTV)
+	mux.HandleFunc("GET /api/v1/channels/iptv/guide-sources", h.guideSources)
+	mux.HandleFunc("POST /api/v1/channels/iptv/github", h.githubFiles)
+	mux.HandleFunc("POST /api/v1/channels/iptv/guide-coverage", h.guideCoverage)
 	mux.HandleFunc("GET /api/v1/channels/backups", h.backups)
 	mux.HandleFunc("POST /api/v1/channels/backups/restore/plan", h.planRestore)
 }
@@ -140,6 +143,9 @@ func (h *Channels) Perms() map[string]perm.Perm {
 		"POST /api/v1/channels/iptv/sources/{id}/compare": perm.ChannelsManage,
 		"POST /api/v1/channels/iptv/sources/{id}/plan":    perm.ChannelsManage,
 		"DELETE /api/v1/channels/iptv/sources/{id}":       perm.ChannelsManage,
+		"GET /api/v1/channels/iptv/guide-sources":         perm.ChannelsManage,
+		"POST /api/v1/channels/iptv/github":               perm.ChannelsManage,
+		"POST /api/v1/channels/iptv/guide-coverage":       perm.ChannelsManage,
 		"POST /api/v1/channels/backups/restore/plan":      perm.ChannelsManage,
 	}
 }

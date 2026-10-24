@@ -6,6 +6,8 @@ Format follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/); version
 
 ## [Unreleased]
 
+## [0.9.5] - 2026-10-24
+
 ### Added
 - **Changing Netcast's sources on a Dreambox One**: add, change and remove now work against a real box. The DreamHub plugin has a new file route (`/dreamhub/files/write`) that writes only `netcastserver_*.json` / `netcastepg_*.json` in `/etc/enigma2` (and the `.dreamhub-backup` copy): valid JSON, at most 1 MiB, replaced atomically, refused unless the new setting "Edit Netcast sources" in DreamHub's settings on the TV is on (off by default), and only for a POST with DreamHub's request header and a `Host` the box answers to. The directory listing now also works on a Dreambox (its media player's listing), so every source file shows, not just three well-known ones.
 - **Netcast sources in the channel list (read only)**: a new "Netcast" tab shows the sources the Netcast plugin has set up on a Dreambox One — channel playlists and services, and guide sources — read from the plugin's own files. A login is never shown, only that a source has one; a box without Netcast says so. A source can be added, changed or removed as a plan (a copy of the old file is kept, the file is read back) — as soon as the box has a way to write the file, which it does not yet — and the guide-source check offers "Add to Netcast". A playlist source Netcast has already downloaded can be opened as a list in the IPTV tab ("Use as list…") to pick channels from it, give them a guide and put them in a bouquet. Also: a GitHub repository can now be used to pick a playlist in the IPTV tab. New: `GET /api/v1/channels/netcast/sources`, `POST /api/v1/channels/netcast/plan`, `POST /api/v1/channels/netcast/read`.

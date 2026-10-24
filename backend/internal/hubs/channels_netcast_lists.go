@@ -139,9 +139,9 @@ func parseVavooList(raw []byte) (*iptv.Playlist, error) {
 			if addr == "" || strings.TrimSpace(name) == "" {
 				continue
 			}
-			if strings.ContainsAny(addr, "&#") {
-				addr = url.QueryEscape(addr)
-			}
+			// The plugin writes it percent-encoded into the proxy's query
+			// (seen in `getcurrent` on the One).
+			addr = url.QueryEscape(addr)
 			if len(pl.Entries) >= iptv.MaxEntries {
 				pl.Truncated = true
 				break

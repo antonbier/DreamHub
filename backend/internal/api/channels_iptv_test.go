@@ -1394,7 +1394,7 @@ func TestNetcastHub_VavooListedFromThePluginsCacheAndPlayedThroughItsProxy(t *te
 	if resp, b := e.do(t, "POST", "/api/v1/netcast/play", `{"token":`+jsonStr(r.Token)+`,"id":1}`, nil); resp.StatusCode != 200 {
 		t.Fatalf("play: %d %s", resp.StatusCode, b)
 	}
-	if !strings.HasPrefix(m.LastZapped, "4097:0:1:0:0:0:0:0:0:0:http%3a//127.0.0.1%3a4323/vavoo?url=https%3a//vavoo.to/vavoo-iptv/play/abc123") {
+	if !strings.HasPrefix(m.LastZapped, "4097:0:1:0:0:0:0:0:0:0:http%3a//127.0.0.1%3a4323/vavoo?url=https%253A%252F%252Fvavoo.to%252Fvavoo-iptv%252Fplay%252Fabc123") {
 		t.Errorf("zapped %q", m.LastZapped)
 	}
 	// ChannelHub's own read, which feeds bouquets, still refuses it

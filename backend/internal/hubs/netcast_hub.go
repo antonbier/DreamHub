@@ -2,6 +2,7 @@ package hubs
 
 import (
 	"context"
+	"errors"
 	"net/http"
 	"path"
 	"strings"
@@ -160,14 +161,14 @@ func (h *Netcast) sources(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 	out.Available = view.Available
-	// What the plugin has cached; unknown (nil) when the folder cannot be
-	// listed, then a source is offered as ready and the read says otherwise.
-	var cached map[string]bool
-	if names, err := rd.ListBoxFiles(r.Context(), netcastCacheDir, "*"); err == nil {
-		cached = map[string]bool{}
-		for _, n := range names {
-			cached[n] = true
-		}
+	// What the plugin has cached: asked file by file (a listing of the
+	// folder shows media files only on a Dreambox). Reading one byte more
+	// than allowed tells "there" from "not there" without downloading it; a
+	// box that cannot be asked counts as having it, and the read says otherwise.
+	ctx := r.Context()
+	has := func(name string) bool {
+		_, err := rd.ReadBoxFileMax(ctx, path.Join(netcastCacheDir, name), 1)
+		return err == nil || !errors.Is(err, webcontrol.ErrNotFound)
 	}
 	for _, f := range view.Files {
 		if f.Kind != "server" {
@@ -178,14 +179,13 @@ func (h *Netcast) sources(w http.ResponseWriter, r *http.Request) {
 				continue
 			}
 			out.Sources = append(out.Sources, NetcastSourceView{ID: s.ID, Name: s.Name, Desc: s.Desc, MediaType: s.MediaType,
-				Host: iptv.Host(s.Address), HasLogin: s.HasLogin, State: netcastSourceState(s, cached), NoBouquet: s.ID == netcastVavooID})
+				Host: iptv.Host(s.Address), HasLogin: s.HasLogin, State: netcastSourceState(s, has), NoBouquet: s.ID == netcastVavooID})
 		}
 	}
 	httpx.WriteJSON(w, http.StatusOK, out)
 }
 
-func netcastSourceState(s netcast.Source, cached map[string]bool) string {
-	has := func(name string) bool { return cached == nil || cached[path.Base(name)] }
+func netcastSourceState(s netcast.Source, has func(name string) bool) string {
 	if s.ID == netcastVavooID {
 		if has(netcastVavooFile) {
 			return "ready"

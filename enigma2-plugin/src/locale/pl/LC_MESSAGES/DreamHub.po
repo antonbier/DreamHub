@@ -36,6 +36,9 @@ msgstr "Backend na tym odbiorniku nie odpowiada.\nCzy DreamHub jest zainstalowan
 msgid "DreamHub Settings"
 msgstr "Ustawienia DreamHub"
 
+msgid "Edit Netcast sources"
+msgstr "Zmieniaj źródła Netcast"
+
 msgid "Backend port"
 msgstr "Port backendu"
 

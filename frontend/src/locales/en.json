@@ -2586,7 +2586,7 @@
         "server": "Channel sources",
         "epg": "Guide sources"
       },
-      "readOnly": "This box cannot change Netcast's files yet — that needs the DreamHub plugin's write route. The sources are shown; adding, changing and removing come as soon as the box has it.",
+      "readOnly": "This box cannot change Netcast's files yet — that needs the DreamHub plugin (0.9.5 or newer) on the box, with “Edit Netcast sources” turned on in its settings on the TV. The sources are shown; adding, changing and removing come as soon as the box allows it.",
       "add": "Add a source",
       "name": "Name",
       "addressServer": "Address of the playlist (M3U)",

@@ -1036,7 +1036,13 @@ func (c *HTTPClient) coalescedGet(ctx context.Context, path string) ([]byte, err
 // fetches a session from /web/session once and retries with it, the same
 // way WebControl's own UI does (ARCHITECTURE.md).
 func (c *HTTPClient) do(ctx context.Context, method, path string, form url.Values) (io.ReadCloser, error) {
-	resp, err := c.send(ctx, method, path, form, c.session())
+	return c.doWithHeader(ctx, method, path, form, nil)
+}
+
+// doWithHeader is do with extra request headers (the plugin's write routes
+// want X-DreamHub-Request).
+func (c *HTTPClient) doWithHeader(ctx context.Context, method, path string, form url.Values, hdr http.Header) (io.ReadCloser, error) {
+	resp, err := c.send(ctx, method, path, form, c.session(), hdr)
 	if err != nil {
 		return nil, err
 	}
@@ -1046,7 +1052,7 @@ func (c *HTTPClient) do(ctx context.Context, method, path string, form url.Value
 		if err != nil {
 			return nil, err
 		}
-		if resp, err = c.send(ctx, method, path, form, sid); err != nil {
+		if resp, err = c.send(ctx, method, path, form, sid, hdr); err != nil {
 			return nil, err
 		}
 	}
@@ -1065,7 +1071,7 @@ func (c *HTTPClient) do(ctx context.Context, method, path string, form url.Value
 	}
 }
 
-func (c *HTTPClient) send(ctx context.Context, method, path string, form url.Values, sessionID string) (*http.Response, error) {
+func (c *HTTPClient) send(ctx context.Context, method, path string, form url.Values, sessionID string, hdr http.Header) (*http.Response, error) {
 	var body io.Reader
 	if method == http.MethodPost {
 		f := url.Values{}
@@ -1089,6 +1095,9 @@ func (c *HTTPClient) send(ctx context.Context, method, path string, form url.Val
 	}
 	if method == http.MethodPost {
 		req.Header.Set("Content-Type", "application/x-www-form-urlencoded")
+	}
+	for k, v := range hdr {
+		req.Header[k] = v
 	}
 	if c.Credentials != nil {
 		if user, pass := c.Credentials(); user != "" {
@@ -1128,7 +1137,7 @@ type sessionResult struct {
 }
 
 func (c *HTTPClient) refreshSession(ctx context.Context) (string, error) {
-	resp, err := c.send(ctx, http.MethodPost, "/web/session", nil, "")
+	resp, err := c.send(ctx, http.MethodPost, "/web/session", nil, "", nil)
 	if err != nil {
 		return "", err
 	}

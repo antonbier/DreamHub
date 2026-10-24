@@ -36,6 +36,9 @@ msgstr "El backend no responde en este receptor.\n¿Está DreamHub instalado y e
 msgid "DreamHub Settings"
 msgstr "Ajustes de DreamHub"
 
+msgid "Edit Netcast sources"
+msgstr "Editar fuentes de Netcast"
+
 msgid "Backend port"
 msgstr "Puerto del backend"
 

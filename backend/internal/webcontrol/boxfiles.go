@@ -3,8 +3,11 @@ package webcontrol
 import (
 	"context"
 	"encoding/json"
+	"encoding/xml"
+	"errors"
 	"fmt"
 	"io"
+	"net/http"
 	"net/url"
 	"path"
 	"sort"
@@ -67,6 +70,11 @@ func (c *HTTPClient) ReadBoxFileMax(ctx context.Context, p string, max int64) ([
 
 func (c *HTTPClient) ListBoxFiles(ctx context.Context, dir, pattern string) ([]string, error) {
 	body, err := c.get(ctx, "/file?"+url.Values{"dir": {dir}, "pattern": {pattern}}.Encode())
+	if errors.Is(err, ErrNotFound) {
+		// A Dreambox's WebControl has no /file listing; its media player's
+		// listing shows any folder (confirmed on the One, 2026-10-24).
+		return c.listViaMediaPlayer(ctx, dir, pattern)
+	}
 	if err != nil {
 		return nil, err
 	}
@@ -76,6 +84,58 @@ func (c *HTTPClient) ListBoxFiles(ctx context.Context, dir, pattern string) ([]s
 		return nil, err
 	}
 	return ParseFileList(raw, pattern)
+}
+
+// listViaMediaPlayer lists dir through /web/mediaplayerlist. The call glues
+// the folder and the file name together without a slash
+// ("/etc/enigma2netcast_x.json"), and without a `types` filter shows only
+// media files, so the pattern's extension is passed as the filter.
+func (c *HTTPClient) listViaMediaPlayer(ctx context.Context, dir, pattern string) ([]string, error) {
+	dir = strings.TrimRight(dir, "/")
+	q := url.Values{"path": {dir}}
+	if ext := path.Ext(pattern); ext != "" && !strings.ContainsAny(ext, "*?[") {
+		q.Set("types", strings.TrimPrefix(ext, "."))
+	}
+	body, err := c.get(ctx, "/web/mediaplayerlist?"+q.Encode())
+	if err != nil {
+		return nil, err
+	}
+	defer body.Close()
+	raw, err := io.ReadAll(io.LimitReader(body, 4*MaxBoxFile))
+	if err != nil {
+		return nil, err
+	}
+	return ParseMediaPlayerList(raw, dir, pattern)
+}
+
+// ParseMediaPlayerList reads /web/mediaplayerlist (e2filelist) and keeps the
+// files of dir that match the pattern, as names, sorted.
+func ParseMediaPlayerList(raw []byte, dir, pattern string) ([]string, error) {
+	var v struct {
+		Files []struct {
+			Ref   string `xml:"e2servicereference"`
+			IsDir string `xml:"e2isdirectory"`
+		} `xml:"e2file"`
+	}
+	if err := xml.Unmarshal(raw, &v); err != nil {
+		return nil, fmt.Errorf("webcontrol: reading a directory listing: %w", err)
+	}
+	var names []string
+	for _, f := range v.Files {
+		if strings.EqualFold(strings.TrimSpace(f.IsDir), "true") {
+			continue
+		}
+		name := strings.TrimPrefix(strings.TrimSpace(f.Ref), dir)
+		name = strings.TrimPrefix(name, "/")
+		if name == "" || strings.Contains(name, "/") {
+			continue
+		}
+		if ok, _ := path.Match(pattern, name); ok {
+			names = append(names, name)
+		}
+	}
+	sort.Strings(names)
+	return names, nil
 }
 
 // ParseFileList reads OpenWebif's directory answer ({"files": [...]}, each a
@@ -116,9 +176,72 @@ func firstNonEmpty(s ...string) string {
 	return ""
 }
 
-// WriteBoxFile: the plugin's write route does not exist yet.
-func (c *HTTPClient) WriteBoxFile(ctx context.Context, p string, data []byte) error {
-	return fmt.Errorf("webcontrol: writing a box file: %w", ErrNeedsPlugin)
+// ErrWritesOff: the box has the write route but the switch in DreamHub's
+// settings on the TV is off (config.plugins.dreamhub.fileWrite).
+var ErrWritesOff = errors.New("webcontrol: file writing is turned off in DreamHub's settings on the box")
+
+const dreamboxFilesPath = "/dreamhub/files/"
+
+// filesInfo asks the plugin's file route what it can do; ErrNeedsPlugin when
+// the box has none (no DreamHub plugin, or one older than 0.9.5).
+func (c *HTTPClient) filesInfo(ctx context.Context) (writes bool, err error) {
+	body, err := c.get(ctx, dreamboxFilesPath+"info")
+	if err != nil {
+		if errors.Is(err, ErrNotFound) {
+			return false, fmt.Errorf("%w (%sinfo)", ErrNeedsPlugin, dreamboxFilesPath)
+		}
+		return false, err
+	}
+	defer body.Close()
+	var v struct {
+		OK     bool `json:"ok"`
+		API    int  `json:"api"`
+		Writes bool `json:"writes"`
+	}
+	if err := json.NewDecoder(io.LimitReader(body, 1<<16)).Decode(&v); err != nil || !v.OK || v.API < 1 {
+		return false, fmt.Errorf("%w (%sinfo)", ErrNeedsPlugin, dreamboxFilesPath)
+	}
+	return v.Writes, nil
 }
 
-func (c *HTTPClient) CanWriteBoxFiles(ctx context.Context) bool { return false }
+// WriteBoxFile replaces one of Netcast's source lists through the DreamHub
+// plugin's /dreamhub/files/write (enigma2-plugin/src/webfiles.py): a POST with
+// the custom header, refused unless the switch on the TV is on. The plugin
+// takes only netcast*_*.json in /etc/enigma2 (and the .dreamhub-backup copy).
+func (c *HTTPClient) WriteBoxFile(ctx context.Context, p string, data []byte) error {
+	writes, err := c.filesInfo(ctx)
+	if err != nil {
+		return err
+	}
+	if !writes {
+		return ErrWritesOff
+	}
+	defer c.wrote()
+	body, err := c.doWithHeader(ctx, http.MethodPost, dreamboxFilesPath+"write",
+		url.Values{"path": {p}, "data": {string(data)}}, http.Header{"X-Dreamhub-Request": {"1"}})
+	if err != nil {
+		return err
+	}
+	defer body.Close()
+	var res struct {
+		OK      bool   `json:"ok"`
+		Error   string `json:"error"`
+		Message string `json:"message"`
+	}
+	if err := json.NewDecoder(io.LimitReader(body, 1<<16)).Decode(&res); err != nil {
+		return fmt.Errorf("webcontrol: %swrite: %w", dreamboxFilesPath, err)
+	}
+	if res.OK {
+		return nil
+	}
+	if res.Error == "writes_off" {
+		return ErrWritesOff
+	}
+	return &RejectedError{Op: "write file", Text: res.Error + ": " + res.Message}
+}
+
+// CanWriteBoxFiles: the plugin has the route and the switch is on.
+func (c *HTTPClient) CanWriteBoxFiles(ctx context.Context) bool {
+	writes, err := c.filesInfo(ctx)
+	return err == nil && writes
+}

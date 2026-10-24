@@ -120,5 +120,15 @@ def register(session):
 
         print("[DreamHub] /dreamhub/settings not registered:")
         traceback.print_exc()
+    try:
+        # Netcast's source lists, the one file write (webfiles.py).
+        from .webfiles import FilesResource
+
+        root.putChild("files", FilesResource())
+    except Exception:
+        import traceback
+
+        print("[DreamHub] /dreamhub/files not registered:")
+        traceback.print_exc()
     # (path, resource, name, version, listed in WebInterface's menu)
     addExternalChild(("dreamhub", root, "DreamHub", "1", False))

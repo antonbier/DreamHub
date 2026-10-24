@@ -48,3 +48,6 @@ from Components.config import ConfigSubsection, ConfigYesNo, config  # noqa: E40
 
 config.plugins.dreamhub = ConfigSubsection()
 config.plugins.dreamhub.authEnabled = ConfigYesNo(default=False)
+# The switch for the one file write (webfiles.py): off until it is turned on
+# at the TV, so nothing on the network can change Netcast's lists before.
+config.plugins.dreamhub.fileWrite = ConfigYesNo(default=False)

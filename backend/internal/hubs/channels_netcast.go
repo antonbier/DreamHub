@@ -26,7 +26,8 @@ import (
 type netcastView struct {
 	// Available is false when the box serves no files or has no Netcast file.
 	Available bool `json:"available"`
-	// Writable is true when the box has a write route for these files.
+	// Writable is true when the box has a write route for these files and
+	// its switch (DreamHub's settings on the TV) is on.
 	Writable bool           `json:"writable"`
 	Files    []netcast.File `json:"files"`
 	// Listed is true when the box listed its directory; false means the
@@ -283,7 +284,7 @@ func (h *Channels) planNetcast(w http.ResponseWriter, r *http.Request) {
 }
 
 func netcastWriteFailure(err error) error {
-	if errors.Is(err, webcontrol.ErrNeedsPlugin) {
+	if errors.Is(err, webcontrol.ErrNeedsPlugin) || errors.Is(err, webcontrol.ErrWritesOff) {
 		return &plan.Failure{Status: http.StatusConflict, Code: CodeNetcastNeedsPlugin, Message: "the box has no way to change Netcast's files yet", Err: err}
 	}
 	return err

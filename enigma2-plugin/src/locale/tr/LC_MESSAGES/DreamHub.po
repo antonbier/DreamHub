@@ -36,6 +36,9 @@ msgstr "Bu kutuda backend'e ulaşılamıyor.\nDreamHub kurulu ve çalışıyor m
 msgid "DreamHub Settings"
 msgstr "DreamHub ayarları"
 
+msgid "Edit Netcast sources"
+msgstr "Netcast kaynaklarını düzenle"
+
 msgid "Backend port"
 msgstr "Backend portu"
 

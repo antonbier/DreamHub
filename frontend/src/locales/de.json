@@ -2586,7 +2586,7 @@
         "server": "Sender-Quellen",
         "epg": "Guide-Quellen"
       },
-      "readOnly": "Diese Box kann die Netcast-Dateien noch nicht ändern — dafür braucht sie die Schreibroute des DreamHub-Plugins. Die Quellen werden angezeigt; Hinzufügen, Ändern und Entfernen kommen, sobald die Box das kann.",
+      "readOnly": "Diese Box kann die Netcast-Dateien noch nicht ändern — dafür braucht sie das DreamHub-Plugin (ab 0.9.5) mit eingeschaltetem „Netcast-Quellen ändern“ in dessen Einstellungen am Fernseher. Die Quellen werden angezeigt; Hinzufügen, Ändern und Entfernen kommen, sobald die Box das erlaubt.",
       "add": "Quelle hinzufügen",
       "name": "Name",
       "addressServer": "Adresse der Playlist (M3U)",

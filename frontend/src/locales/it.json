@@ -2586,7 +2586,7 @@
         "server": "Fonti dei canali",
         "epg": "Fonti della guida"
       },
-      "readOnly": "Questo box non può ancora modificare i file di Netcast — serve la route di scrittura del plugin DreamHub. Le fonti sono mostrate; aggiungere, modificare e rimuovere arriveranno quando il box lo permette.",
+      "readOnly": "Questo box non può ancora modificare i file di Netcast — serve il plugin DreamHub (dalla 0.9.5) con «Modifica fonti Netcast» attivo nelle sue impostazioni sul TV. Le fonti sono mostrate; aggiungere, modificare e rimuovere arriveranno quando il box lo permette.",
       "add": "Aggiungi una fonte",
       "name": "Nome",
       "addressServer": "Indirizzo della playlist (M3U)",

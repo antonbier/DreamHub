@@ -36,6 +36,9 @@ msgstr "Backend injoignable sur ce récepteur.\nDreamHub est-il installé et dé
 msgid "DreamHub Settings"
 msgstr "Réglages DreamHub"
 
+msgid "Edit Netcast sources"
+msgstr "Modifier sources Netcast"
+
 msgid "Backend port"
 msgstr "Port du backend"
 

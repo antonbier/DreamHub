@@ -36,6 +36,9 @@ msgstr "Backend niet bereikbaar op deze box.\nIs DreamHub geïnstalleerd en gest
 msgid "DreamHub Settings"
 msgstr "DreamHub-instellingen"
 
+msgid "Edit Netcast sources"
+msgstr "Netcast-bronnen wijzigen"
+
 msgid "Backend port"
 msgstr "Backend-poort"
 

@@ -6,7 +6,7 @@
 # the first version had here did nothing (the plugin makes no
 # authenticated calls), so it is gone rather than left to confuse.
 from Components.ActionMap import ActionMap
-from Components.config import ConfigNumber, getConfigListEntry
+from Components.config import ConfigNumber, config, configfile, getConfigListEntry
 from Components.ConfigList import ConfigListScreen
 from Components.Label import Label
 from enigma import eConsoleAppContainer
@@ -24,8 +24,8 @@ MAX_PORT = 65535
 class DreamHubSetup(Screen, ConfigListScreen):
     skin = """
     <screen name="DreamHubSetup" position="center,center" size="760,300" title="DreamHub Settings">
-        <widget name="config" position="30,30" size="700,60" itemHeight="48" scrollbarMode="showOnDemand" />
-        <widget name="hint" position="30,120" size="700,100" font="Regular;22" valign="top" />
+        <widget name="config" position="30,30" size="700,110" itemHeight="48" scrollbarMode="showOnDemand" />
+        <widget name="hint" position="30,150" size="700,60" font="Regular;22" valign="top" />
         <eLabel position="30,235" size="8,40" backgroundColor="%s" />
         <widget name="key_red" position="48,235" size="320,40" font="Regular;24" halign="left" valign="center" />
         <eLabel position="390,235" size="8,40" backgroundColor="%s" />
@@ -42,7 +42,10 @@ class DreamHubSetup(Screen, ConfigListScreen):
         # ConfigNumber shows "8765", not the zero-padded "08765" a
         # ConfigInteger of five digits does.
         self.port = ConfigNumber(default=self.oldPort)
-        self.list = [getConfigListEntry(_("Backend port"), self.port)]
+        self.list = [
+            getConfigListEntry(_("Backend port"), self.port),
+            getConfigListEntry(_("Edit Netcast sources"), config.plugins.dreamhub.fileWrite),
+        ]
         ConfigListScreen.__init__(self, self.list, session=session)
         self["hint"] = Label(_("The port DreamHub listens on (%d to %d). Changing it restarts DreamHub for a few seconds.") % (MIN_PORT, MAX_PORT))
         self["key_red"] = Label(_("Cancel"))
@@ -58,6 +61,10 @@ class DreamHubSetup(Screen, ConfigListScreen):
         )
 
     def keySave(self):
+        # The switch is an ordinary enigma2 setting: saved at once, apart from the port.
+        config.plugins.dreamhub.fileWrite.save()
+        config.plugins.dreamhub.save()
+        configfile.save()
         port = self.port.value
         if not MIN_PORT <= port <= MAX_PORT:
             self.session.open(MessageBox, _("The port must be between %d and %d.") % (MIN_PORT, MAX_PORT), MessageBox.TYPE_ERROR)

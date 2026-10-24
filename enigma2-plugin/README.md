@@ -20,6 +20,8 @@ src/                        # becomes Extensions/DreamHub/ at install time
   backend.py                 # the two HTTP calls to 127.0.0.1, via Twisted's getPage (non-blocking)
   webplay.py                 # /dreamhub/play on the box's web server: opens the movie player (PlexHub's films); also registers /dreamhub/settings
   boxsettings.py             # the box's settings, READ ONLY (docs/BOXSETTINGS_PLAN.md, S2): setup.xml sections and the whole config tree with types, limits and choices; no function that writes
+  boxfiles.py                # the one file write (Netcast's lists in /etc/enigma2): path allowlist, JSON check, size cap, atomic replace, Host check; pure Python, tests/test_boxfiles.py
+  webfiles.py                # /dreamhub/files/{info,write}: the switch config.plugins.dreamhub.fileWrite (off by default, set on the TV settings screen), header and Host guards
   websettings.py             # GET /dreamhub/settings/{info,sections,roots,items,item}: JSON, application errors as HTTP 200 {"ok": false, "error": …}, POST is 405
 tests/                       # Python 3 tests of boxsettings.py/websettings.py against the box's real Components/config.py (not in the repo; see tests/test_boxsettings.py)
   locale/<lang>/LC_MESSAGES/DreamHub.po   # translation sources; de and it done, en is gettext's own source text

@@ -1,6 +1,6 @@
 # Netcast and IPTV channels — plan
 
-Status: **planned 2026-10-24, packages N1–N4, nothing built.** Brainstormed 2026-10-23; the owner's first answers are below, open questions at the end. Facts are in `ARCHITECTURE.md` ("Netcast and the channel list", "Netcast sources on the One, and what the forum says"). Netcast needs a Dreambox One with the Gemini plugins (Netcast 2.4); the Solo2 has none. Plain IPTV (N1) works on both boxes.
+Status: **planned 2026-10-24, packages N1–N5, nothing built.** Brainstormed 2026-10-23 and 2026-10-24; the owner's answers are below. Facts are in `ARCHITECTURE.md` ("Netcast and the channel list", "Netcast sources on the One, and what the forum says"). Netcast needs a Dreambox One with the Gemini plugins (Netcast 2.4); the Solo2 has none. Plain IPTV (N1) works on both boxes.
 
 ## What it could be
 
@@ -13,13 +13,22 @@ Status: **planned 2026-10-24, packages N1–N4, nothing built.** Brainstormed 20
 
 1. **Where**: IPTV (N1) and the Netcast bouquet entries (N2) are a tab **"IPTV"** in the channel list (ChannelHub); the Netcast sources (N3) are a second tab **"Netcast"** next to it, shown only on a box where Netcast is installed. No new sidebar entry (see "Navigation" below).
 2. **Credentials in a URL** (`http://user:pass@…`, `?username=…&password=…`): never shown on screen and never logged, the same way the channel logos already strip `user:pass@` (`channel_logos.go`). Shown as "with login".
+3. **Remembering a source: option b** — the source (name, URL, the bouquet it fills, last compared) in DreamHub's database per box; the bouquet on the box stays the truth. Later, for Netcast's own sources, the source is the plugin's `netcastserver_*.json` (option d) behind the same "source" layer.
+4. **"Compare again" only on a button** in N1; a background notice ("12 new, 3 gone") later if wanted.
+5. **Logos**: `tvg-logo` is an option in the plan (ticked by default), a download from the list's own server, shown in the preview.
+6. **An M3U file can be uploaded** as well as a URL; a file source is marked "from a file, no compare".
+7. **Guide: DVB twin (A) and an own XMLTV source (C)**; Netcast's TVG-ID assignment (B) is not automated.
+8. **Subchannels only where the plugin is installed** (checked per box like the other capabilities); otherwise the option is not shown.
+9. **Matching a channel to a guide is partly manual**, and manual matches are remembered per box (see "Linking a guide").
 
 ## Packages
 
 - **N1 — IPTV from an M3U (both boxes, mock-testable).** Fetch and parse, pick channels, the bouquet as a plan, apply through BouquetEditor, read back; remembering the source and comparing it again later (below). Built and tested against the mock (`backend/internal/webcontrol/mock`) with recorded M3U fixtures; the box check comes when a box is back.
 - **N2 — Netcast and IPTV entries in the channel list (both boxes).** ChannelHub recognises `4097` and `8193` entries: a marker "Internet", no timer button, the Netcast source's name for `netcastserver_<id>://` (read from its JSON through `/file`), play with `/web/zap`, move/rename/remove like any entry. It never creates `8193` entries.
-- **N3 — Netcast sources (One, Gemini only, needs the box).** Listing the `netcastserver_*.json`/`netcastepg_*.json` files and the installed addon packages works read-only (`/file`, the package list DeviceHub already has). Writing a file needs a write route in the TV plugin with the same guards as box settings S3 (kill switch, `Host` check, custom header, read back, copy of the old file). Comes after box settings S3 so both share one write mechanism.
+- **N3 — Netcast sources (One, Gemini only; read-only first, writing needs the box).** Listing the `netcastserver_*.json`/`netcastepg_*.json` files and the installed addon packages works read-only (`/file`, the package list DeviceHub already has). Writing a file needs a write route in the TV plugin with the same guards as box settings S3 (kill switch, `Host` check, custom header, read back, copy of the old file). Comes after box settings S3 so both share one write mechanism.
+- **N3c — Netcast channels into the channel list (the goal, One).** Pick channels of an installed Netcast source, set the guide and optional extra streams, one plan, see the next section. Needs the tests under "To find out first" and the write path of N3.
 - **N4 — Netcast radio favourites.** Later, maybe never; `/netcast/web/*` is XML on port 80 and needs no plugin.
+- **N5 — Guide sources.** A list of XMLTV sources (curated, an own URL, a GitHub repository), the coverage check against the chosen channels, and adding a source to Netcast (a `netcastepg_*.json`, so it needs N3's write path). The list and the coverage check need no box and can be built alongside N1.
 
 ## N1 in detail
 
@@ -37,7 +46,7 @@ Status: **planned 2026-10-24, packages N1–N4, nothing built.** Brainstormed 20
 - Preview lists the bouquet, every entry, the ones skipped (unsupported scheme, duplicates) and the ones "with login"; Confirm applies through the BouquetEditor API, reads the bouquet back and reports differences. The existing bouquet backup of ChannelHub covers Undo.
 - **Check before adding (on demand, optional):** "Test streams" opens each chosen URL for a second and reports "answers / doesn't answer / needs login". Only when asked, never in the background, capped in parallel requests.
 
-### Remembering a source (open question 1)
+### Remembering a source (decided: option b)
 
 Recommendation: DreamHub keeps, in its own database per box, only **the source**: name, URL (stored, never shown when it carries a login), the bouquet it fills, and when it was last compared. Not the channels — **the box's bouquet stays the truth**: comparing reads the bouquet back and matches its entries to the fresh M3U by URL, then `tvg-id`, then name.
 
@@ -49,6 +58,40 @@ Alternatives considered: not remembering at all (the user pastes the URL again e
 
 Recording or timers on IPTV channels, a guide for channels without a DVB twin (would mean writing `epg.db`), playing IPTV in the browser (the stream proxy only opens tuner references, `stream.go`), Xtream Codes' login API (an M3U URL works for those too), and anything that bypasses a provider's terms: DreamHub only handles URLs the user gives it.
 
+## Netcast channels into the channel list (the goal, N3c)
+
+Pick Netcast channels in DreamHub and have them in the One's channel list, with a guide and optionally more streams per channel.
+
+1. **Source and channels**: DreamHub reads the list the plugin has already cached in `/data/Netcast/server/` (`playlist_netcastserver_<id>` for playlist sources, the source's channel list for API sources such as Pluto and Samsung TV Plus) through `/file` — the same list the TV shows, nothing fetched by DreamHub, no logins in URLs. Search, groups, several sources at once.
+2. **Per channel**: the stream (the main one), the guide (below), the logo, and — only with the subchannel plugin — extra streams.
+3. **One plan**: the new entries in a bouquet (new or existing), the guide links, the `subchannel.xml` change; Confirm applies through the BouquetEditor API (and the plugin's write route for files), reads back, and the bouquet backup of ChannelHub gives Undo.
+4. **The entry format** is the plugin's own (`8193:256:0:<sid>:<tsid>:<onid>:<namespace>:0:0:0:netcastserver_<id>%3a//<URL>:<name>`), so the plugin keeps refreshing the address. **Untested assumption: the plugin accepts an entry DreamHub built.** If it does not, the fallback is a plain `4097` entry with the real URL and a DVB twin (both tested), which loses the plugin's address refresh.
+
+## Linking a guide
+
+A channel's guide is whatever events `epg.db` holds under the channel's identity (`ARCHITECTURE.md`, "Why Netcast channels carry a DVB identity").
+
+- **A — DVB twin (default).** The entry carries the identity of a box service that has events. Matching in three steps: **sure** (the normalised names are equal, e.g. "Das Erste HD": ticked), **suggested** (similar names: shown, not ticked), **by hand** (a search over all services of the box with a filter by bouquet and **the current programme of each candidate**, so a wrong twin shows at once — better than Netcast's alphabetical list full of junk names). Every manual match is remembered per box (channel of the source → service or XMLTV id) and used again at the next compare.
+- **C — an own XMLTV source** for channels with no twin (Pluto-only channels): a `netcastepg_*.json` that Netcast loads into `epg.db` as its own source. DreamHub shows which of the chosen channels a source knows (coverage, below) and writes the file (N3's write path).
+- **B — Netcast's TVG-ID assignment** is bound to a favourite, kept in the running process until a clean shutdown and drawn by Netcast's overlay: not automated.
+- A channel may have no guide; it is marked, not refused. DreamHub never writes events into `epg.db`.
+
+### Guide sources (N5)
+
+- A **curated list** of XMLTV sources in the repository (starting with the ones Netcast already uses, `www.xmltvepg.nl`), an **own URL**, and a **GitHub repository**: paste a repository (or folder) address, DreamHub lists the `.xml`, `.xml.gz` and `.m3u` files in it through GitHub's public contents API and uses `raw.githubusercontent.com` addresses. The same "add a repository" works for playlist sources in N1. Public repositories only; the unauthenticated API allows 60 requests an hour, so listings are cached. DreamHub does not search GitHub; which repositories publish a ready guide file (not just a grabber tool that builds one) is to be checked when the list is made.
+- **Coverage check**: DreamHub streams the file and reads only the `<channel>` elements (`id`, `display-name`), with a size cap and `.gz`/`.xz` handling, and shows "this source knows 31 of your 40 chosen channels". The fetch is the backend's, never the browser's.
+- Adding a source to Netcast writes a `netcastepg_*.json` (fields from the plugin's README). Do not use the separate EPG-Importer next to it (same database).
+
+## Subchannels
+
+The "Subchannel" plugin reads a `subchannel.xml` in `/etc/enigma2`: several streams for one channel, one in the bouquet, the others opened with the green key; the channel name in the stream address must equal the bouquet's and the reference numbers must match, or the guide and picon are lost. **Whether the plugin is installed on the One, and the file's format, are unknown** (no `subchannel.xml` on the box). DreamHub offers "Add another stream" only on a box where the plugin is installed; the plan then writes the bouquet entry and the file together. Without the plugin the option is absent.
+
+## Vavoo
+
+What is known (`ARCHITECTURE.md`, "Samsung TV Plus, Vavoo and the EPG assignment"): in Netcast's screen the green key on a Vavoo channel offered only "Video zu Favoriten hinzufügen", no bouquet entry; the stream is served by a local proxy (`http://127.0.0.1:4323/vavoo?url=…`); the picture was never seen. A forum thread is titled "Bouquet aus Netcast (Vavoo) erstellen", so another version or route may exist: **"cannot be put in a bouquet" holds for the tested route only.**
+
+Idea (owner, 2026-10-24): a page of its own, like Plex and Live TV, where the channel list (from the cached `vavoo.livetv.json`) is searched and a channel is **played on the TV** the way Plex is (`plex_play.go`: a `4097` reference with the URL, `/web/zap`), no bouquet. It depends on whether the proxy runs without Netcast's screen open and whether a reference with the proxy address plays from outside — one test on the One. DreamHub does not talk to Vavoo's servers itself: it only uses what the installed plugin provides, and only for URLs the plugin has made.
+
 ## Navigation
 
 The sidebar has Dashboard, three groups (Media, Program, Device) and the bottom section with DeviceHub, AppsHub and Settings — about 15 items. New features go into **tabs of an existing page** (as Box settings went into DeviceHub, and IPTV/Netcast go into the channel list) rather than new sidebar items. If the sidebar still gets too long, the options are (a) groups that fold open and closed, (b) sub-items under a page (its tabs shown in the sidebar when the page is open), (c) fewer, broader pages. Not decided — to be looked at with the whole sidebar once more hubs are in; then `DESIGN.md` gets the result.
@@ -59,6 +102,7 @@ The sidebar has Dashboard, three groups (Media, Program, Device) and the bottom 
 - ~~Does Netcast re-read a changed `netcastserver_*.json` without a restart?~~ **Done**: yes, when its screen is opened again.
 - ~~What does the plugin write on "green key → bouquet"?~~ **Done**: one bouquet file and one line in `bouquets.tv`, entry type `8193` with `netcastserver_<id>://`.
 - Which sources need credentials (`Username`/`Password`) — to be hidden.
+- **For N3c/N5/Vavoo:** (1) does the plugin play and keep refreshing an `8193 … netcastserver_<id>://` entry that DreamHub created through the BouquetEditor; (2) the same entry with a DVB twin's identity: does it play and show the real programme; (3) how the plugin picks its made-up identity and whether a DreamHub entry would need the same for `GeminiEPG` events to attach; (4) is the subchannel plugin installed, the format of `subchannel.xml`, re-read without a restart; (5) the cached channel lists in `/data/Netcast/server/`: all fields (id, logo, group), sizes; (6) does the Vavoo proxy run without Netcast's screen open, does a `4097` reference with its address play from `/web/zap`.
 - Netcast's sources such as Vavoo, Pluto, Samsung TV Plus, Filmpalast and HD-Filme are separate packages (`libgemini*`, `vavoo-nc`): a Netcast page in DreamHub lists what is installed and offers no source whose package is missing.
 - **For N1 on a box:** how many `4097` entries a bouquet takes before the channel list gets slow (big lists), whether `https` streams play on both boxes (the Solo2's VTi image and its player differ), and whether the Solo2's OpenWebif bouquet route takes a `4097` reference the same way.
 
@@ -74,12 +118,12 @@ The EPG-Loader menu on the box has **"Komplette EPG-Datenbank löschen"** (OK, n
 
 - **API sources work like playlists once in a bouquet** (Pluto tested): type `8193` entry with `netcastserver_<id>://` in front of the URL, playable with `/web/zap` while Netcast's own screen is closed (start may take several seconds; `getcurrent` named the channel for Pluto, not for the LG entry). So a bouquet that holds Netcast entries can be listed, played and tidied from DreamHub — creating them stays Netcast's job (green key on the TV), because a source's address is resolved by the plugin.
 - **A DreamHub page for Netcast could therefore be:** (1) a list of the installed Netcast sources with the installed addon packages (`opkg` through a read-only call), (2) add/edit/remove a playlist or EPG source file, (3) the Netcast bouquets with play/remove, (4) EPG assignment — not tested yet, see below.
-- **Tested later the same day** (`ARCHITECTURE.md`, "Samsung TV Plus, Vavoo and the EPG assignment"): Samsung TV Plus works like Pluto (bouquet entry, zap plays, `getcurrent` shows the event and a rewritten reference, a stale name). **Vavoo cannot be put in a bouquet** (favourites only; the stream comes through a local proxy on port 4323) — so DreamHub can play nothing from Vavoo by reference. The **EPG assignment** is per favourite (DVB service or TVG-ID of an XMLTV list), held in the running process until a clean shutdown, and drawn by Netcast's overlay, not by enigma2's EPG — so a DreamHub guide view would not see it. The assignment is not something to automate from outside.
+- **Tested later the same day** (`ARCHITECTURE.md`, "Samsung TV Plus, Vavoo and the EPG assignment"): Samsung TV Plus works like Pluto (bouquet entry, zap plays, `getcurrent` shows the event and a rewritten reference, a stale name). **Vavoo could not be put in a bouquet by the green key** (favourites only; the stream comes through a local proxy on port 4323) — whether DreamHub can play it by a reference with that proxy address is untested (see "Vavoo"). The **EPG assignment** is per favourite (DVB service or TVG-ID of an XMLTV list), held in the running process until a clean shutdown, and drawn by Netcast's overlay, not by enigma2's EPG — so a DreamHub guide view would not see it. The assignment is not something to automate from outside.
 - **Not tested:** the subchannel plugin (no `subchannel.xml` on the box), and whether the plugin re-reads a deleted source file the same way as an added one.
 
-## Open for the owner (2026-10-24)
+## Still open
 
-1. **Remembering a source**: as recommended above (the source in DreamHub's database, the bouquet as the truth, "Compare again" as a plan)?
-2. **A notice when a remembered list changed?** DreamHub could compare in the background (say once a day) and only *tell* ("Pluto list: 12 new, 3 gone") — the change itself stays a plan. Or compare only on the button. Recommendation: only on the button in N1; the notice later if wanted.
-3. **Logos**: take `tvg-logo` into DreamHub's channel logos (ChannelHub's Logos tab) for the new entries? It would be a download from the list's own server, shown in the preview. Recommendation: yes, as a ticked option in the plan.
-4. **Upload an M3U file** as well as a URL? Recommendation: yes — a file can't be compared again later, so it is shown as "from a file, no compare".
+1. **Vavoo**: only after the test above; whether the page is worth building depends on it.
+2. **Which GitHub repositories publish a ready guide file or playlist** — to be checked when the curated list is made.
+3. **Channels per bouquet**: a full Pluto or Samsung list has hundreds of entries; how the TV's channel list copes is untested.
+4. **Copying an IPTV bouquet to another box** (channel-list copy, M8): plain `4097` entries travel as they are; `8193 netcastserver_` entries only make sense where the same Netcast source exists — the copy plan must say so.

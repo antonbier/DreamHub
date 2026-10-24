@@ -218,7 +218,7 @@ const fetchedNote = computed(() => {
 })
 
 // The list the IPTV tab can take: only with one source open.
-const boxList = computed(() => (wanted.value.length === 1 && canManage.value ? (lists[wanted.value[0].id] ?? null) : null))
+const boxList = computed(() => (wanted.value.length === 1 && canManage.value && !wanted.value[0].noBouquet ? (lists[wanted.value[0].id] ?? null) : null))
 const canManage = computed(() => can('channels.manage'))
 
 // --- the rows ------------------------------------------------------------------------

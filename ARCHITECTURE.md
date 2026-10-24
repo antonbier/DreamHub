@@ -825,3 +825,7 @@ IPTV list = the Netcast-cached `playlist_netcastserver_lgat` (180 channels), a t
 - **Plugin source is readable** under `/usr/lib/enigma2/python/Plugins/GP4/lib/*_parser.py` (the `.py` files ship next to the `.pyo`).
 - DreamHub's identity for a native entry is made up from a hash of the source and channel id (stable per channel), in ranges the plugin's own entries use; not collision-checked against the box's services.
 
+
+#### Vavoo on the One: the cached list and the proxy (2026-10-24)
+
+Read on the box, nothing changed. `/etc/enigma2/netcastserver_vavoo.json` has one source, `id: vavooapi`, `mediatype: api`. The plugin's cache `/data/Netcast/server/vavoo.livetv.json` (495 KB, one line) is `{"<country>": {"<channel>": {"url": "", "logo": "<address>", "tvgid": "", "streams": [{"url": "https://vavoo.to/vavoo-iptv/play/<hex>", "type": "HLS-Vavoo", "name": "<channel> .c", "catalogId": "vto-iptv"}]}}}`; a channel can have several streams. **The proxy is always there**: enigma2 itself listens on `127.0.0.1:4323` (not a separate process) without any Netcast screen open; `GET /vavoo?url=<stream url>` answered `302 Found` (TwistedWeb) — it resolves the Vavoo address and redirects. DreamHub reads the list through `/file` and plays a channel with a plain `4097` reference whose address is `http://127.0.0.1:4323/vavoo?url=<stream url>` (NetcastHub; `iptv.Ref`), so the box's player does the talking; whether the picture plays from `/web/zap` is the open check. Vavoo's own servers are never contacted by DreamHub.

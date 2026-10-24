@@ -1691,6 +1691,8 @@ export interface NetcastHubSource {
   host?: string
   hasLogin?: boolean
   state: 'ready' | 'fetch' | 'waiting' | 'unsupported'
+  // The channels play from the page only (Vavoo): no bouquet.
+  noBouquet?: boolean
 }
 
 export interface NetcastHubSources {

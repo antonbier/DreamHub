@@ -90,6 +90,8 @@ The "Subchannel" plugin reads a `subchannel.xml` in `/etc/enigma2`: several stre
 
 What is known (`ARCHITECTURE.md`, "Samsung TV Plus, Vavoo and the EPG assignment"): in Netcast's screen the green key on a Vavoo channel offered only "Video zu Favoriten hinzufügen", no bouquet entry; the stream is served by a local proxy (`http://127.0.0.1:4323/vavoo?url=…`); the picture was never seen. A forum thread is titled "Bouquet aus Netcast (Vavoo) erstellen", so another version or route may exist: **"cannot be put in a bouquet" holds for the tested route only.**
 
+**Update, 2026-10-24: built (mock-tested) in the narrow form: NetcastHub lists Vavoo's cached channels by country and plays one through the plugin's proxy (`ARCHITECTURE.md`, "Vavoo on the One"); no bouquet entries, no contact with Vavoo's servers by DreamHub, and ChannelHub's own list route still refuses it.** Box check of the picture pending.
+
 Idea (owner, 2026-10-24): a page of its own, like Plex and Live TV, where the channel list (from the cached `vavoo.livetv.json`) is searched and a channel is **played on the TV** the way Plex is (`plex_play.go`: a `4097` reference with the URL, `/web/zap`), no bouquet. It depends on whether the proxy runs without Netcast's screen open and whether a reference with the proxy address plays from outside — one test on the One. DreamHub does not talk to Vavoo's servers itself: it only uses what the installed plugin provides, and only for URLs the plugin has made.
 
 ## Navigation

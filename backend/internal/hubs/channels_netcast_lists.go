@@ -7,6 +7,7 @@ import (
 	"encoding/json"
 	"errors"
 	"io"
+	"net/url"
 	"path"
 	"sort"
 	"strings"
@@ -28,9 +29,18 @@ import (
 var errNetcastUnsupported = errors.New("hubs: this Netcast source has no channel list DreamHub can use")
 
 const (
-	netcastSamsungID = "samsungtvplusapi"
-	netcastPlutoID   = "plutotvapi"
-	netcastPlutoBase = "http://cfd-v4-service-channel-stitcher-use1-1.prd.pluto.tv/v2/stitch/hls/channel/"
+	// Vavoo (docs/NETCAST_PLAN.md, "Vavoo"): the plugin keeps the channel list
+	// of its Vavoo addon in /data/Netcast/server/vavoo.livetv.json and plays
+	// every channel through a proxy of its own in the enigma2 process
+	// (127.0.0.1:4323, always listening there; checked on the One
+	// 2026-10-24). DreamHub only reads that list and hands the proxy address
+	// to the box's player; it never talks to Vavoo itself.
+	netcastVavooID    = "vavooapi"
+	netcastVavooFile  = "vavoo.livetv.json"
+	netcastVavooProxy = "http://127.0.0.1:4323/vavoo?url="
+	netcastSamsungID  = "samsungtvplusapi"
+	netcastPlutoID    = "plutotvapi"
+	netcastPlutoBase  = "http://cfd-v4-service-channel-stitcher-use1-1.prd.pluto.tv/v2/stitch/hls/channel/"
 )
 
 // netcastCachedList reads the cached list of source id.
@@ -74,6 +84,77 @@ func parseNetcastPlaylist(id string, raw []byte) (*iptv.Playlist, error) {
 		if rest, ok := strings.CutPrefix(pl.Entries[i].URL, "https://"); ok {
 			pl.Entries[i].Netcast, pl.Entries[i].NetcastURL = id, rest
 		}
+	}
+	return pl, nil
+}
+
+// netcastVavooList reads Vavoo's cached channel list. Not part of
+// netcastCachedList: only NetcastHub plays it, and it never goes into a
+// bouquet (the entry is a proxy address that means something on this box only).
+func netcastVavooList(ctx context.Context, rd webcontrol.BoxFileReader) (*iptv.Playlist, error) {
+	raw, err := rd.ReadBoxFileMax(ctx, path.Join(netcastCacheDir, netcastVavooFile), iptvMaxUploadSize)
+	if err != nil {
+		return nil, err
+	}
+	return parseVavooList(raw)
+}
+
+// parseVavooList reads {"<country>": {"<channel>": {"url", "logo", "tvgid",
+// "streams": [{"url", "type": "HLS-Vavoo", "name"}]}}}. A channel's group is
+// its country; its address is the plugin's proxy with the first Vavoo
+// stream.
+func parseVavooList(raw []byte) (*iptv.Playlist, error) {
+	var doc map[string]map[string]struct {
+		Logo    string `json:"logo"`
+		TvgID   string `json:"tvgid"`
+		Streams []struct {
+			URL  string `json:"url"`
+			Type string `json:"type"`
+		} `json:"streams"`
+	}
+	if err := json.Unmarshal(raw, &doc); err != nil || len(doc) == 0 {
+		return nil, &iptv.FetchError{Kind: iptv.KindNotPlaylist}
+	}
+	pl := &iptv.Playlist{}
+	countries := make([]string, 0, len(doc))
+	for c := range doc {
+		countries = append(countries, c)
+	}
+	sort.Strings(countries)
+	for _, country := range countries {
+		names := make([]string, 0, len(doc[country]))
+		for n := range doc[country] {
+			names = append(names, n)
+		}
+		sort.Slice(names, func(i, j int) bool { return strings.ToLower(names[i]) < strings.ToLower(names[j]) })
+		for _, name := range names {
+			ch := doc[country][name]
+			addr := ""
+			for _, st := range ch.Streams {
+				if st.Type == "HLS-Vavoo" && strings.HasPrefix(st.URL, "https://") {
+					addr = st.URL
+					break
+				}
+			}
+			if addr == "" || strings.TrimSpace(name) == "" {
+				continue
+			}
+			if strings.ContainsAny(addr, "&#") {
+				addr = url.QueryEscape(addr)
+			}
+			if len(pl.Entries) >= iptv.MaxEntries {
+				pl.Truncated = true
+				break
+			}
+			e := iptv.Entry{Name: strings.TrimSpace(name), URL: netcastVavooProxy + addr, Group: country, TvgID: ch.TvgID}
+			if strings.HasPrefix(ch.Logo, "http") {
+				e.Logo = ch.Logo
+			}
+			pl.Entries = append(pl.Entries, e)
+		}
+	}
+	if len(pl.Entries) == 0 {
+		return nil, &iptv.FetchError{Kind: iptv.KindNotPlaylist}
 	}
 	return pl, nil
 }

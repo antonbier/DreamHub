@@ -135,6 +135,9 @@ type NetcastSourceView struct {
 	Host      string `json:"host,omitempty"`
 	HasLogin  bool   `json:"hasLogin,omitempty"`
 	State     string `json:"state"`
+	// NoBouquet: the channels play from this page only (Vavoo's go through a
+	// proxy of the plugin), so there is no "put into a bouquet".
+	NoBouquet bool `json:"noBouquet,omitempty"`
 }
 
 // netcastApis are the sources whose channel lists the plugin caches in a form
@@ -175,7 +178,7 @@ func (h *Netcast) sources(w http.ResponseWriter, r *http.Request) {
 				continue
 			}
 			out.Sources = append(out.Sources, NetcastSourceView{ID: s.ID, Name: s.Name, Desc: s.Desc, MediaType: s.MediaType,
-				Host: iptv.Host(s.Address), HasLogin: s.HasLogin, State: netcastSourceState(s, cached)})
+				Host: iptv.Host(s.Address), HasLogin: s.HasLogin, State: netcastSourceState(s, cached), NoBouquet: s.ID == netcastVavooID})
 		}
 	}
 	httpx.WriteJSON(w, http.StatusOK, out)
@@ -183,6 +186,12 @@ func (h *Netcast) sources(w http.ResponseWriter, r *http.Request) {
 
 func netcastSourceState(s netcast.Source, cached map[string]bool) string {
 	has := func(name string) bool { return cached == nil || cached[path.Base(name)] }
+	if s.ID == netcastVavooID {
+		if has(netcastVavooFile) {
+			return "ready"
+		}
+		return "waiting"
+	}
 	for _, id := range netcastApis {
 		if s.ID == id {
 			if id == netcastPlutoID {

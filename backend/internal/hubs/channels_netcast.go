@@ -335,7 +335,13 @@ func (h *Channels) openNetcastList(w http.ResponseWriter, r *http.Request, allow
 		return
 	}
 	ctx := r.Context()
-	pl, err := netcastCachedList(ctx, rd, body.ID)
+	var pl *iptv.Playlist
+	var err error
+	if allowFetch && body.ID == netcastVavooID {
+		pl, err = netcastVavooList(ctx, rd) // NetcastHub only
+	} else {
+		pl, err = netcastCachedList(ctx, rd, body.ID)
+	}
 	var view netcastView
 	var haveView bool
 	fetched := false

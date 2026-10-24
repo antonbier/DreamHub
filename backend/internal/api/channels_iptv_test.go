@@ -1352,3 +1352,53 @@ func TestNetcastHub_LogoComesThroughTheBackend(t *testing.T) {
 		}
 	}
 }
+
+func TestNetcastHub_VavooListedFromThePluginsCacheAndPlayedThroughItsProxy(t *testing.T) {
+	m := mock.New()
+	m.Files["/etc/enigma2/netcastserver_vavoo.json"] = []byte(`{"serverlist":[{"id":"vavooapi","name":"Vavoo","mainUrl":"https://vavoo.example/x","mediatype":"api"}]}`)
+	e := newEnvWith(t, m)
+	var src struct {
+		Sources []struct {
+			ID, State string
+			NoBouquet bool
+		}
+	}
+	e.json(t, "GET", "/api/v1/netcast/sources", "", nil, 200, &src)
+	for _, s := range src.Sources {
+		if s.ID == "vavooapi" && s.State != "waiting" {
+			t.Errorf("without the plugin's cache Vavoo waits: %+v", s)
+		}
+	}
+	m.Files["/data/Netcast/server/vavoo.livetv.json"] = []byte(`{"Italy":{"CANALE 2":{"url":"","logo":"https://l.example/c2.png","tvgid":"","streams":[
+		{"url":"https://vavoo.to/vavoo-iptv/play/abc123","type":"HLS-Vavoo","name":"CANALE 2 .c"}]},
+		"No Stream":{"streams":[]}},
+		"Germany":{"Das Erste":{"streams":[{"url":"https://vavoo.to/vavoo-iptv/play/def456","type":"HLS-Vavoo"}]}}}`)
+	e.json(t, "GET", "/api/v1/netcast/sources", "", nil, 200, &src)
+	found := false
+	for _, s := range src.Sources {
+		if s.ID == "vavooapi" {
+			found = true
+			if s.State != "ready" || !s.NoBouquet {
+				t.Errorf("Vavoo with its cache: %+v", s)
+			}
+		}
+	}
+	if !found {
+		t.Fatalf("no Vavoo source: %+v", src)
+	}
+	var r iptvRead
+	e.json(t, "POST", "/api/v1/netcast/read", `{"id":"vavooapi"}`, nil, 200, &r)
+	if len(r.Channels) != 2 || r.Channels[0].Name != "Das Erste" {
+		t.Fatalf("channels (Germany first, a channel without a stream left out): %+v", r.Channels)
+	}
+	if resp, b := e.do(t, "POST", "/api/v1/netcast/play", `{"token":`+jsonStr(r.Token)+`,"id":1}`, nil); resp.StatusCode != 200 {
+		t.Fatalf("play: %d %s", resp.StatusCode, b)
+	}
+	if !strings.HasPrefix(m.LastZapped, "4097:0:1:0:0:0:0:0:0:0:http%3a//127.0.0.1%3a4323/vavoo?url=https%3a//vavoo.to/vavoo-iptv/play/abc123") {
+		t.Errorf("zapped %q", m.LastZapped)
+	}
+	// ChannelHub's own read, which feeds bouquets, still refuses it
+	if resp, _ := e.do(t, "POST", "/api/v1/channels/netcast/read", `{"id":"vavooapi"}`, nil); resp.StatusCode != 422 {
+		t.Errorf("ChannelHub reading Vavoo: %d", resp.StatusCode)
+	}
+}

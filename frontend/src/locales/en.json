@@ -2378,7 +2378,8 @@
         "add": "\"{name}\" is added (number {to})",
         "remove": "\"{name}\" is removed",
         "move": "\"{name}\" moves from {from} to {to}",
-        "rename": "\"{name}\" becomes \"{newName}\""
+        "rename": "\"{name}\" becomes \"{newName}\"",
+        "update": "\"{name}\" gets a new address"
       },
       "marker": {
         "add": "New heading \"{name}\"",
@@ -2453,7 +2454,38 @@
       "moreChanges": "…and {n} more",
       "leftOut": "{n} channel left out because it is in the bouquet already. | {n} channels left out because they are in the bouquet already.",
       "saved": "Added {n} channel to \"{bouquet}\". | Added {n} channels to \"{bouquet}\".",
-      "group": "Group"
+      "group": "Group",
+      "sources": {
+        "title": "Remembered lists",
+        "explain": "Lists you put into a bouquet and asked DreamHub to remember. Comparing reads the list again and shows what differs from the bouquet; nothing changes until you confirm.",
+        "none": "No list is remembered yet. Tick \"Remember this list\" when you put channels from a list at an address into a bouquet.",
+        "remember": "Remember this list, so it can be compared with the bouquet later",
+        "rememberHint": "The address stays on the box and is never shown.",
+        "bouquet": "Bouquet: {name}",
+        "compared": "Last compared {when}",
+        "neverCompared": "Not compared yet",
+        "gone": "The bouquet is no longer on the box.",
+        "compare": "Compare again",
+        "comparing": "Comparing…",
+        "forget": "Forget",
+        "forgetAsk": "Forget this list? The bouquet stays as it is.",
+        "forgetYes": "Forget",
+        "nothing": "Nothing differs. The bouquet matches the list ({n} channels in the list).",
+        "action": {
+          "update": "Address changed in the list",
+          "gone": "No longer in the list",
+          "new": "New in the list"
+        },
+        "hint": {
+          "update": "The channel keeps its place and its name.",
+          "gone": "These stay in the bouquet unless you tick them.",
+          "new": "Not added unless you tick them."
+        },
+        "review": "Review",
+        "confirm": "Apply",
+        "close": "Close",
+        "saved": "The bouquet is brought in line with the list."
+      }
     }
   },
   "updates": {

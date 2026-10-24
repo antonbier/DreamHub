@@ -2378,7 +2378,8 @@
         "add": "\"{name}\" viene aggiunto (numero {to})",
         "remove": "\"{name}\" viene rimosso",
         "move": "\"{name}\" passa da {from} a {to}",
-        "rename": "\"{name}\" diventa \"{newName}\""
+        "rename": "\"{name}\" diventa \"{newName}\"",
+        "update": "\"{name}\" riceve un nuovo indirizzo"
       },
       "marker": {
         "add": "Nuovo separatore \"{name}\"",
@@ -2452,8 +2453,39 @@
       "backupNote": "Prima viene fatto un backup della lista canali. Questi canali non hanno un tuner: non si possono registrare e non hanno timer.",
       "moreChanges": "…e altri {n}",
       "leftOut": "{n} canale escluso perché è già nel bouquet. | {n} canali esclusi perché sono già nel bouquet.",
-      "saved": "{n} canale aggiunto a «{bouquet}». | {n} canali aggiunti a «{bouquet}».",
-      "group": "Gruppo"
+      "saved": "{n} canale aggiunto a \"{bouquet}\". | {n} canali aggiunti a \"{bouquet}\".",
+      "group": "Gruppo",
+      "sources": {
+        "title": "Liste memorizzate",
+        "explain": "Liste che hai messo in un bouquet e che DreamHub ha memorizzato. Il confronto rilegge la lista e mostra cosa differisce dal bouquet; non cambia nulla finché non confermi.",
+        "none": "Nessuna lista memorizzata. Spunta \"Memorizza questa lista\" quando metti nel bouquet canali di una lista a un indirizzo.",
+        "remember": "Memorizza questa lista, per confrontarla più tardi con il bouquet",
+        "rememberHint": "L'indirizzo resta sul box e non viene mai mostrato.",
+        "bouquet": "Bouquet: {name}",
+        "compared": "Ultimo confronto {when}",
+        "neverCompared": "Non ancora confrontata",
+        "gone": "Il bouquet non è più sul box.",
+        "compare": "Confronta di nuovo",
+        "comparing": "Confronto…",
+        "forget": "Dimentica",
+        "forgetAsk": "Dimenticare questa lista? Il bouquet resta com'è.",
+        "forgetYes": "Dimentica",
+        "nothing": "Nessuna differenza. Il bouquet corrisponde alla lista ({n} canali nella lista).",
+        "action": {
+          "update": "Indirizzo cambiato nella lista",
+          "gone": "Non più nella lista",
+          "new": "Nuovi nella lista"
+        },
+        "hint": {
+          "update": "Il canale mantiene posto e nome.",
+          "gone": "Restano nel bouquet se non li spunti.",
+          "new": "Non vengono aggiunti se non li spunti."
+        },
+        "review": "Controlla",
+        "confirm": "Applica",
+        "close": "Chiudi",
+        "saved": "Il bouquet ora corrisponde alla lista."
+      }
     }
   },
   "updates": {

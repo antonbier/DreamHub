@@ -2378,7 +2378,8 @@
         "add": "„{name}“ kommt dazu (Platz {to})",
         "remove": "„{name}“ wird entfernt",
         "move": "„{name}“ wandert von Platz {from} auf Platz {to}",
-        "rename": "„{name}“ heißt künftig „{newName}“"
+        "rename": "„{name}“ heißt künftig „{newName}“",
+        "update": "„{name}“ bekommt eine neue Adresse"
       },
       "marker": {
         "add": "Neue Trennlinie „{name}“",
@@ -2453,7 +2454,38 @@
       "moreChanges": "…und {n} weitere",
       "leftOut": "{n} Sender ausgelassen, weil er schon im Bouquet ist. | {n} Sender ausgelassen, weil sie schon im Bouquet sind.",
       "saved": "{n} Sender zu „{bouquet}“ hinzugefügt. | {n} Sender zu „{bouquet}“ hinzugefügt.",
-      "group": "Gruppe"
+      "group": "Gruppe",
+      "sources": {
+        "title": "Gemerkte Listen",
+        "explain": "Listen, die du in ein Bouquet gelegt und von DreamHub hast merken lassen. Beim Vergleichen wird die Liste neu gelesen und gezeigt, was vom Bouquet abweicht; erst nach deiner Bestätigung ändert sich etwas.",
+        "none": "Noch keine Liste gemerkt. Setze beim Ablegen von Sendern aus einer Liste unter einer Adresse den Haken „Liste merken“.",
+        "remember": "Liste merken, damit sie später mit dem Bouquet verglichen werden kann",
+        "rememberHint": "Die Adresse bleibt auf der Box und wird nie angezeigt.",
+        "bouquet": "Bouquet: {name}",
+        "compared": "Zuletzt verglichen {when}",
+        "neverCompared": "Noch nicht verglichen",
+        "gone": "Das Bouquet ist nicht mehr auf der Box.",
+        "compare": "Erneut vergleichen",
+        "comparing": "Vergleicht…",
+        "forget": "Vergessen",
+        "forgetAsk": "Diese Liste vergessen? Das Bouquet bleibt, wie es ist.",
+        "forgetYes": "Vergessen",
+        "nothing": "Kein Unterschied. Das Bouquet passt zur Liste ({n} Sender in der Liste).",
+        "action": {
+          "update": "Adresse in der Liste geändert",
+          "gone": "Nicht mehr in der Liste",
+          "new": "Neu in der Liste"
+        },
+        "hint": {
+          "update": "Der Sender behält Platz und Namen.",
+          "gone": "Bleiben im Bouquet, wenn du sie nicht wählst.",
+          "new": "Werden nicht hinzugefügt, wenn du sie nicht wählst."
+        },
+        "review": "Prüfen",
+        "confirm": "Übernehmen",
+        "close": "Schließen",
+        "saved": "Das Bouquet passt jetzt zur Liste."
+      }
     }
   },
   "updates": {

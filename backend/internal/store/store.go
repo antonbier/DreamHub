@@ -423,6 +423,35 @@ var migrations = []string{
 	ALTER TABLE boxes ADD COLUMN wake_ext TEXT NOT NULL DEFAULT '';
 	ALTER TABLE boxes ADD COLUMN wake_action TEXT NOT NULL DEFAULT '';
 	`,
+	`
+	-- Playlists remembered for a later comparison (docs/NETCAST_PLAN.md, N1):
+	-- the address of an M3U list, the bouquet it fills, and which channels of
+	-- it were put there. The bouquet on the box stays the truth; "seen" is a
+	-- list of 8-byte keys of every channel the list had at the last look, so a
+	-- channel that is new in the list can be told from one never picked. The
+	-- address may hold a login and is never sent to the browser.
+	CREATE TABLE iptv_sources (
+		id           INTEGER PRIMARY KEY AUTOINCREMENT,
+		box_id       TEXT NOT NULL DEFAULT 'main',
+		name         TEXT NOT NULL,
+		url          TEXT NOT NULL,
+		display_url  TEXT NOT NULL,
+		bouquet_ref  TEXT NOT NULL,
+		bouquet_name TEXT NOT NULL,
+		kind         TEXT NOT NULL CHECK (kind IN ('tv', 'radio')),
+		created_at   TEXT NOT NULL,
+		compared_at  TEXT NOT NULL DEFAULT '',
+		seen         BLOB NOT NULL DEFAULT x'',
+		UNIQUE (box_id, url, bouquet_ref)
+	);
+	CREATE TABLE iptv_source_entries (
+		source_id INTEGER NOT NULL REFERENCES iptv_sources(id) ON DELETE CASCADE,
+		url_hash  TEXT NOT NULL,
+		ident     TEXT NOT NULL,
+		name      TEXT NOT NULL,
+		PRIMARY KEY (source_id, url_hash)
+	);
+	`,
 }
 
 func (s *Store) migrate(ctx context.Context) error {

@@ -304,7 +304,27 @@ func URLPart(ref string) string {
 	if len(parts) < 11 || parts[0] != "4097" {
 		return ""
 	}
-	return parts[10]
+	return lowerEscapes(parts[10])
+}
+
+// lowerEscapes writes the hex digits of every %XX in lower case, so the same
+// address compares equal however the box spells it.
+func lowerEscapes(s string) string {
+	if !strings.Contains(s, "%") {
+		return s
+	}
+	b := []byte(s)
+	for i := 0; i+2 < len(b); i++ {
+		if b[i] == '%' {
+			for k := 1; k <= 2; k++ {
+				if c := b[i+k]; c >= 'A' && c <= 'F' {
+					b[i+k] = c + ('a' - 'A')
+				}
+			}
+			i += 2
+		}
+	}
+	return string(b)
 }
 
 // RedactRef hides the address of a 4097 reference for messages and logs.

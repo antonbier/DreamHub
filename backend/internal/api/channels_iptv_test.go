@@ -3,7 +3,9 @@ package api_test
 import (
 	"net/http"
 	"net/http/httptest"
+	"strconv"
 	"strings"
+	"sync"
 	"testing"
 
 	"github.com/antonbier/DreamHub/backend/internal/webcontrol/mock"
@@ -274,5 +276,241 @@ func TestIPTV_AdminOnly(t *testing.T) {
 		if resp, _ := e.do(t, "POST", "/api/v1/channels/iptv/"+path, "{}", withProfile(viewer)); resp.StatusCode != http.StatusForbidden {
 			t.Errorf("%s as a viewer: %d", path, resp.StatusCode)
 		}
+	}
+}
+
+// --- remembering a list and comparing it again ---------------------------------------
+
+type liveList struct {
+	mu   sync.Mutex
+	text string
+}
+
+func (l *liveList) set(s string) { l.mu.Lock(); l.text = s; l.mu.Unlock() }
+
+func (e *env) serveLiveList(t *testing.T, l *liveList) string {
+	t.Helper()
+	srv := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		l.mu.Lock()
+		defer l.mu.Unlock()
+		w.Write([]byte(l.text))
+	}))
+	t.Cleanup(srv.Close)
+	return srv.URL + "/get.php?username=me&password=hunter2"
+}
+
+const listV1 = "#EXTM3U\n" +
+	"#EXTINF:-1 tvg-id=\"a\" group-title=\"News\",Alpha\nhttp://tv.example/a1.m3u8\n" +
+	"#EXTINF:-1 tvg-id=\"b\" group-title=\"News\",Beta\nhttp://tv.example/b1.m3u8\n" +
+	"#EXTINF:-1 tvg-id=\"c\" group-title=\"News\",Gamma\nhttp://tv.example/c1.m3u8\n" +
+	"#EXTINF:-1 group-title=\"Kids\",Delta\nhttp://tv.example/d1.m3u8\n"
+
+// Alpha's address changed, Beta is gone, Gamma and Delta as before, two new.
+const listV2 = "#EXTM3U\n" +
+	"#EXTINF:-1 tvg-id=\"a\" group-title=\"News\",Alpha HD\nhttp://tv.example/a2.m3u8\n" +
+	"#EXTINF:-1 tvg-id=\"c\" group-title=\"News\",Gamma\nhttp://tv.example/c1.m3u8\n" +
+	"#EXTINF:-1 group-title=\"Kids\",Delta\nhttp://tv.example/d1.m3u8\n" +
+	"#EXTINF:-1 tvg-id=\"e\" group-title=\"News\",Epsilon\nhttp://tv.example/e1.m3u8\n" +
+	"#EXTINF:-1 tvg-id=\"f\" group-title=\"News\",Zeta\nhttp://tv.example/f1.m3u8\n"
+
+type iptvSources struct {
+	Sources []struct {
+		ID         int64  `json:"id"`
+		Name       string `json:"name"`
+		Source     string `json:"source"`
+		Bouquet    string `json:"bouquet"`
+		BouquetRef string `json:"bouquetRef"`
+		Gone       bool   `json:"gone"`
+		ComparedAt string `json:"comparedAt"`
+	} `json:"sources"`
+}
+
+type iptvCompared struct {
+	Token string `json:"token"`
+	Items []struct {
+		ID      int    `json:"id"`
+		Action  string `json:"action"`
+		Name    string `json:"name"`
+		OldName string `json:"oldName"`
+	} `json:"items"`
+	Unchanged int `json:"unchanged"`
+}
+
+func (c iptvCompared) ids(actions ...string) []int {
+	var out []int
+	for _, it := range c.Items {
+		for _, a := range actions {
+			if it.Action == a {
+				out = append(out, it.ID)
+			}
+		}
+	}
+	return out
+}
+
+func idsJSON(ids []int) string {
+	parts := make([]string, len(ids))
+	for i, id := range ids {
+		parts[i] = strconv.Itoa(id)
+	}
+	return "[" + strings.Join(parts, ",") + "]"
+}
+
+func TestIPTV_RememberAndCompare(t *testing.T) {
+	e := newEnvWith(t, mock.New())
+	live := &liveList{text: listV1}
+	addr := e.serveLiveList(t, live)
+
+	var r iptvRead
+	e.json(t, "POST", "/api/v1/channels/iptv/read", `{"url":`+jsonStr(addr)+`}`, nil, 200, &r)
+	e.planAndApply(t, "/api/v1/channels/iptv/plan", `{"token":`+jsonStr(r.Token)+`,"ids":[0,1,2],"newName":"Net","kind":"tv","remember":true}`, 200)
+
+	// remembered, with no address in sight
+	resp, raw := e.do(t, "GET", "/api/v1/channels/iptv/sources", "", nil)
+	if resp.StatusCode != 200 {
+		t.Fatalf("sources: %d %s", resp.StatusCode, raw)
+	}
+	for _, leak := range []string{"hunter2", "password", "username"} {
+		if strings.Contains(string(raw), leak) {
+			t.Errorf("the list of sources holds %q: %s", leak, raw)
+		}
+	}
+	var srcs iptvSources
+	e.json(t, "GET", "/api/v1/channels/iptv/sources", "", nil, 200, &srcs)
+	if len(srcs.Sources) != 1 || srcs.Sources[0].Bouquet != "Net (TV)" || srcs.Sources[0].Gone || srcs.Sources[0].ComparedAt == "" {
+		t.Fatalf("sources: %+v", srcs)
+	}
+	src := srcs.Sources[0]
+	base := "/api/v1/channels/iptv/sources/" + strconv.FormatInt(src.ID, 10)
+
+	// nothing changed in the list: nothing to do
+	var same iptvCompared
+	e.json(t, "POST", base+"/compare", "", nil, 200, &same)
+	if len(same.Items) != 0 || same.Unchanged != 3 {
+		t.Fatalf("same list: %+v", same)
+	}
+
+	live.set(listV2)
+	var c iptvCompared
+	resp, raw = e.do(t, "POST", base+"/compare", "", nil)
+	if resp.StatusCode != 200 {
+		t.Fatalf("compare: %d %s", resp.StatusCode, raw)
+	}
+	for _, leak := range []string{"hunter2", "a2.m3u8"} {
+		if strings.Contains(string(raw), leak) {
+			t.Errorf("the comparison holds %q: %s", leak, raw)
+		}
+	}
+	e.json(t, "POST", base+"/compare", "", nil, 200, &c)
+	got := map[string]string{}
+	for _, it := range c.Items {
+		got[it.Name] = it.Action
+	}
+	// Alpha's new address (ticked by the screen), Beta gone, Epsilon and Zeta
+	// new; Delta was never picked but is no news; Gamma is unchanged.
+	if len(c.Items) != 4 || got["Alpha HD"] != "update" || got["Beta"] != "gone" || got["Epsilon"] != "new" || got["Zeta"] != "new" || c.Unchanged != 1 {
+		t.Fatalf("compare: %+v", c)
+	}
+	if c.Items[0].OldName != "Alpha" {
+		t.Errorf("the bouquet's own name is kept: %+v", c.Items[0])
+	}
+
+	// Carry out the update, the removal and Epsilon; leave Zeta.
+	var epsilon int
+	for _, it := range c.Items {
+		if it.Name == "Epsilon" {
+			epsilon = it.ID
+		}
+	}
+	ids := append(c.ids("update", "gone"), epsilon)
+	var p struct {
+		Plan struct {
+			Changes []struct {
+				Type string `json:"type"`
+			} `json:"changes"`
+		} `json:"plan"`
+	}
+	body := `{"token":` + jsonStr(c.Token) + `,"ids":` + idsJSON(ids) + `}`
+	e.json(t, "POST", base+"/plan", body, nil, 200, &p)
+	types := map[string]int{}
+	for _, ch := range p.Plan.Changes {
+		types[ch.Type]++
+	}
+	if types["channel.update"] != 1 || types["channel.remove"] != 1 || types["channel.add"] != 1 || len(p.Plan.Changes) != 3 {
+		t.Fatalf("preview: %+v", types)
+	}
+	e.planAndApply(t, base+"/plan", body, 200)
+	after := e.entries(t, src.BouquetRef)
+	var names []string
+	for _, x := range after.Entries {
+		names = append(names, x.Name)
+	}
+	if strings.Join(names, "|") != "Alpha|Gamma|Epsilon" {
+		t.Fatalf("bouquet after: %v", names)
+	}
+	if !strings.Contains(after.Entries[0].Ref, "a2.m3u8") || strings.Contains(after.Entries[0].Ref, "a1.m3u8") {
+		t.Errorf("Alpha has its new address in the same place: %q", after.Entries[0].Ref)
+	}
+
+	// Zeta was not taken, so it is offered again; nothing else is.
+	var again iptvCompared
+	e.json(t, "POST", base+"/compare", "", nil, 200, &again)
+	if len(again.Items) != 1 || again.Items[0].Name != "Zeta" || again.Items[0].Action != "new" || again.Unchanged != 3 {
+		t.Fatalf("second comparison: %+v", again)
+	}
+
+	// Forgetting a list leaves the bouquet alone.
+	if resp, _ := e.do(t, "DELETE", base, "", nil); resp.StatusCode != http.StatusNoContent {
+		t.Fatalf("forget: %d", resp.StatusCode)
+	}
+	e.json(t, "GET", "/api/v1/channels/iptv/sources", "", nil, 200, &srcs)
+	if len(srcs.Sources) != 0 || len(e.entries(t, src.BouquetRef).Entries) != 3 {
+		t.Fatalf("after forgetting: %+v", srcs)
+	}
+	if resp, _ := e.do(t, "POST", base+"/compare", "", nil); resp.StatusCode != http.StatusNotFound {
+		t.Errorf("compare after forgetting: %d", resp.StatusCode)
+	}
+}
+
+func TestIPTV_CompareWhenTheBouquetIsGone(t *testing.T) {
+	e := newEnvWith(t, mock.New())
+	addr := e.serveLiveList(t, &liveList{text: listV1})
+	var r iptvRead
+	e.json(t, "POST", "/api/v1/channels/iptv/read", `{"url":`+jsonStr(addr)+`}`, nil, 200, &r)
+	e.planAndApply(t, "/api/v1/channels/iptv/plan", `{"token":`+jsonStr(r.Token)+`,"ids":[0],"newName":"Net","kind":"tv","remember":true}`, 200)
+	var srcs iptvSources
+	e.json(t, "GET", "/api/v1/channels/iptv/sources", "", nil, 200, &srcs)
+	e.planAndApply(t, "/api/v1/channels/bouquets/plan", `{"action":"delete","kind":"tv","ref":`+jsonStr(srcs.Sources[0].BouquetRef)+`}`, 200)
+	e.json(t, "GET", "/api/v1/channels/iptv/sources", "", nil, 200, &srcs)
+	if len(srcs.Sources) != 1 || !srcs.Sources[0].Gone {
+		t.Fatalf("a bouquet that is gone is shown as gone: %+v", srcs)
+	}
+	resp, b := e.do(t, "POST", "/api/v1/channels/iptv/sources/"+strconv.FormatInt(srcs.Sources[0].ID, 10)+"/compare", "", nil)
+	if resp.StatusCode != http.StatusConflict || !strings.Contains(string(b), "iptv_bouquet_gone") {
+		t.Fatalf("compare: %d %s", resp.StatusCode, b)
+	}
+}
+
+func TestIPTV_AFileIsNotRemembered(t *testing.T) {
+	e := newEnvWith(t, mock.New())
+	r := e.readList(t)
+	e.planAndApply(t, "/api/v1/channels/iptv/plan", `{"token":`+jsonStr(r.Token)+`,"ids":[0],"newName":"Mine","kind":"tv","remember":true}`, 200)
+	var srcs iptvSources
+	e.json(t, "GET", "/api/v1/channels/iptv/sources", "", nil, 200, &srcs)
+	if len(srcs.Sources) != 0 {
+		t.Fatalf("a file has no address to compare with: %+v", srcs)
+	}
+}
+
+func TestIPTV_NotRememberedUnlessAsked(t *testing.T) {
+	e := newEnvWith(t, mock.New())
+	addr := e.serveLiveList(t, &liveList{text: listV1})
+	var r iptvRead
+	e.json(t, "POST", "/api/v1/channels/iptv/read", `{"url":`+jsonStr(addr)+`}`, nil, 200, &r)
+	e.planAndApply(t, "/api/v1/channels/iptv/plan", `{"token":`+jsonStr(r.Token)+`,"ids":[0],"newName":"Net","kind":"tv"}`, 200)
+	var srcs iptvSources
+	e.json(t, "GET", "/api/v1/channels/iptv/sources", "", nil, 200, &srcs)
+	if len(srcs.Sources) != 0 {
+		t.Fatalf("remembered without being asked: %+v", srcs)
 	}
 }

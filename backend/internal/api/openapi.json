@@ -7239,7 +7239,7 @@
       "$ref": "#/components/parameters/Box"
      }
     ],
-    "description": "Body `{token, ids: [channel numbers of the list], bouquet | newName + kind}`: puts the chosen channels into an existing bouquet (after its entries; one whose address is in it already is left out) or into a new one, as plain 4097 references. Changes nothing; apply the plan with `POST /plans/{id}/apply` — a backup of the channel list is made first and the bouquet is read back. The answer also lists `skipped` channels. `410 iptv_session_gone` when the list was read too long ago, `409 iptv_bouquet_exists`, `409 iptv_nothing_to_add`.",
+    "description": "Body `{token, ids: [channel numbers of the list], bouquet | newName + kind, remember?}` (`remember` keeps the address of a list read from an address, to compare it later): puts the chosen channels into an existing bouquet (after its entries; one whose address is in it already is left out) or into a new one, as plain 4097 references. Changes nothing; apply the plan with `POST /plans/{id}/apply` — a backup of the channel list is made first and the bouquet is read back. The answer also lists `skipped` channels. `410 iptv_session_gone` when the list was read too long ago, `409 iptv_bouquet_exists`, `409 iptv_nothing_to_add`.",
     "responses": {
      "200": {
       "description": "The plan",
@@ -7263,6 +7263,171 @@
         "type": "object"
        }
       }
+     }
+    },
+    "x-csrf": true
+   }
+  },
+  "/channels/iptv/sources": {
+   "get": {
+    "summary": "Read remembered internet-channel lists",
+    "tags": [
+     "channels"
+    ],
+    "operationId": "GET_channels_iptv_sources",
+    "parameters": [
+     {
+      "$ref": "#/components/parameters/Box"
+     }
+    ],
+    "description": "The playlists DreamHub keeps for comparing with their bouquets: `{sources: [{id, name, source, bouquet, bouquetRef, kind, comparedAt, gone}]}`. `source` is the address without login or query; the address itself is never returned. `gone` is true when the bouquet is no longer on the box.",
+    "responses": {
+     "200": {
+      "description": "The lists",
+      "content": {
+       "application/json": {
+        "schema": {
+         "type": "object"
+        }
+       }
+      }
+     },
+     "default": {
+      "$ref": "#/components/responses/Error"
+     }
+    }
+   }
+  },
+  "/channels/iptv/sources/{id}/compare": {
+   "post": {
+    "summary": "Compare a remembered list with its bouquet",
+    "tags": [
+     "channels"
+    ],
+    "operationId": "POST_channels_iptv_sources_id_compare",
+    "parameters": [
+     {
+      "$ref": "#/components/parameters/Box"
+     },
+     {
+      "name": "id",
+      "in": "path",
+      "required": true,
+      "schema": {
+       "type": "integer"
+      }
+     }
+    ],
+    "description": "Fetches the list again and reads the bouquet as it is now; changes nothing. `{token, source, items: [{id, action: update|gone|new, name, oldName, group, host, hasLogin}], unchanged, listSize}`. `update`: a channel of the bouquet whose address changed in the list; `gone`: the list no longer has it; `new`: the list gained it since the last look. Channels added by hand to the bouquet are left alone. `409 iptv_bouquet_gone`, and the read errors of `iptv/read`.",
+    "responses": {
+     "200": {
+      "description": "The differences",
+      "content": {
+       "application/json": {
+        "schema": {
+         "type": "object"
+        }
+       }
+      }
+     },
+     "default": {
+      "$ref": "#/components/responses/Error"
+     }
+    },
+    "x-csrf": true
+   }
+  },
+  "/channels/iptv/sources/{id}/plan": {
+   "post": {
+    "summary": "Preview: bring a bouquet in line with its list",
+    "tags": [
+     "channels"
+    ],
+    "operationId": "POST_channels_iptv_sources_id_plan",
+    "parameters": [
+     {
+      "$ref": "#/components/parameters/Box"
+     },
+     {
+      "name": "id",
+      "in": "path",
+      "required": true,
+      "schema": {
+       "type": "integer"
+      }
+     }
+    ],
+    "description": "Body `{token, ids: [item ids of the comparison]}`: the chosen differences as one plan (an address change keeps the channel's place and name). Changes nothing; apply with `POST /plans/{id}/apply` — a backup first, the bouquet read back. `410 iptv_session_gone` when the comparison is too old or the bouquet changed since.",
+    "responses": {
+     "200": {
+      "description": "The plan",
+      "content": {
+       "application/json": {
+        "schema": {
+         "$ref": "#/components/schemas/PlanResponse"
+        }
+       }
+      }
+     },
+     "default": {
+      "$ref": "#/components/responses/Error"
+     }
+    },
+    "requestBody": {
+     "required": true,
+     "content": {
+      "application/json": {
+       "schema": {
+        "type": "object",
+        "properties": {
+         "token": {
+          "type": "string"
+         },
+         "ids": {
+          "type": "array",
+          "items": {
+           "type": "integer"
+          }
+         }
+        },
+        "required": [
+         "token",
+         "ids"
+        ]
+       }
+      }
+     }
+    },
+    "x-csrf": true
+   }
+  },
+  "/channels/iptv/sources/{id}": {
+   "delete": {
+    "summary": "Forget a remembered list",
+    "tags": [
+     "channels"
+    ],
+    "operationId": "DELETE_channels_iptv_sources_id",
+    "parameters": [
+     {
+      "$ref": "#/components/parameters/Box"
+     },
+     {
+      "name": "id",
+      "in": "path",
+      "required": true,
+      "schema": {
+       "type": "integer"
+      }
+     }
+    ],
+    "description": "DreamHub forgets the list; the bouquet on the box is not touched.",
+    "responses": {
+     "204": {
+      "description": "Forgotten"
+     },
+     "default": {
+      "$ref": "#/components/responses/Error"
      }
     },
     "x-csrf": true

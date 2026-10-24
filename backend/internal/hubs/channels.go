@@ -105,6 +105,10 @@ func (h *Channels) Mount(mux httpx.Mux) {
 	mux.HandleFunc("POST /api/v1/channels/iptv/read", h.readIPTV)
 	mux.HandleFunc("POST /api/v1/channels/iptv/upload", h.uploadIPTV)
 	mux.HandleFunc("POST /api/v1/channels/iptv/plan", h.planIPTV)
+	mux.HandleFunc("GET /api/v1/channels/iptv/sources", h.iptvSources)
+	mux.HandleFunc("POST /api/v1/channels/iptv/sources/{id}/compare", h.compareIPTV)
+	mux.HandleFunc("POST /api/v1/channels/iptv/sources/{id}/plan", h.planIPTVCompare)
+	mux.HandleFunc("DELETE /api/v1/channels/iptv/sources/{id}", h.forgetIPTV)
 	mux.HandleFunc("GET /api/v1/channels/backups", h.backups)
 	mux.HandleFunc("POST /api/v1/channels/backups/restore/plan", h.planRestore)
 }
@@ -112,20 +116,24 @@ func (h *Channels) Mount(mux httpx.Mux) {
 // Perms are ChannelHub's route permissions beyond the hub's own.
 func (h *Channels) Perms() map[string]perm.Perm {
 	return map[string]perm.Perm{
-		"PUT /api/v1/channels/picons":                perm.ChannelsManage,
-		"PUT /api/v1/channels/logo":                  perm.ChannelsManage,
-		"POST /api/v1/channels/logo/upload":          perm.ChannelsManage,
-		"POST /api/v1/channels/logo/online":          perm.ChannelsManage,
-		"DELETE /api/v1/channels/logo":               perm.ChannelsManage,
-		"GET /api/v1/channels/logo/search":           perm.ChannelsManage,
-		"GET /api/v1/channels/logo/preview":          perm.ChannelsManage,
-		"POST /api/v1/channels/bouquet/plan":         perm.ChannelsManage,
-		"POST /api/v1/channels/bouquets/plan":        perm.ChannelsManage,
-		"POST /api/v1/channels/sync/plan":            perm.ChannelsManage,
-		"POST /api/v1/channels/iptv/read":            perm.ChannelsManage,
-		"POST /api/v1/channels/iptv/upload":          perm.ChannelsManage,
-		"POST /api/v1/channels/iptv/plan":            perm.ChannelsManage,
-		"POST /api/v1/channels/backups/restore/plan": perm.ChannelsManage,
+		"PUT /api/v1/channels/picons":                     perm.ChannelsManage,
+		"PUT /api/v1/channels/logo":                       perm.ChannelsManage,
+		"POST /api/v1/channels/logo/upload":               perm.ChannelsManage,
+		"POST /api/v1/channels/logo/online":               perm.ChannelsManage,
+		"DELETE /api/v1/channels/logo":                    perm.ChannelsManage,
+		"GET /api/v1/channels/logo/search":                perm.ChannelsManage,
+		"GET /api/v1/channels/logo/preview":               perm.ChannelsManage,
+		"POST /api/v1/channels/bouquet/plan":              perm.ChannelsManage,
+		"POST /api/v1/channels/bouquets/plan":             perm.ChannelsManage,
+		"POST /api/v1/channels/sync/plan":                 perm.ChannelsManage,
+		"POST /api/v1/channels/iptv/read":                 perm.ChannelsManage,
+		"POST /api/v1/channels/iptv/upload":               perm.ChannelsManage,
+		"POST /api/v1/channels/iptv/plan":                 perm.ChannelsManage,
+		"GET /api/v1/channels/iptv/sources":               perm.ChannelsManage,
+		"POST /api/v1/channels/iptv/sources/{id}/compare": perm.ChannelsManage,
+		"POST /api/v1/channels/iptv/sources/{id}/plan":    perm.ChannelsManage,
+		"DELETE /api/v1/channels/iptv/sources/{id}":       perm.ChannelsManage,
+		"POST /api/v1/channels/backups/restore/plan":      perm.ChannelsManage,
 	}
 }
 

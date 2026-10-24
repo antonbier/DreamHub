@@ -1532,6 +1532,40 @@ export interface IptvList {
   limit: number
 }
 
+// A playlist DreamHub remembers to compare with its bouquet (N1). The address
+// is never sent, only `source`, which has no login or query.
+export interface IptvSource {
+  id: number
+  name: string
+  source: string
+  bouquet: string
+  bouquetRef: string
+  kind: 'tv' | 'radio'
+  comparedAt?: string
+  // The bouquet is no longer on the box.
+  gone?: boolean
+}
+
+export interface IptvCompareItem {
+  id: number
+  action: 'update' | 'gone' | 'new'
+  name: string
+  // The name in the bouquet, when it differs from the list's.
+  oldName?: string
+  group?: string
+  host?: string
+  hasLogin?: boolean
+}
+
+export interface IptvCompare {
+  token: string
+  source: IptvSource
+  items: IptvCompareItem[]
+  unchanged: number
+  listSize: number
+  truncated: boolean
+}
+
 export interface IptvPlanResult {
   plan: Plan
   skipped: { id: number; name: string; reason: string }[]

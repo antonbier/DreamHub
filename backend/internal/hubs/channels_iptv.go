@@ -54,6 +54,11 @@ type iptvSession struct {
 	fromFile bool
 	read     time.Time
 	pl       *iptv.Playlist
+	// url is the address as given, possibly with a login: kept on the server
+	// to remember the list; never sent to the browser.
+	url string
+	// compare is set for a list read to compare it with its bouquet.
+	compare *iptvCompare
 }
 
 func (h *Channels) fetcher() *iptv.Fetcher {
@@ -219,6 +224,7 @@ func (h *Channels) readIPTV(w http.ResponseWriter, r *http.Request) {
 	s := &iptvSession{token: randomHex(16), userID: user.ID, display: iptv.Display(strings.TrimSpace(body.URL)),
 		read: h.now(), pl: pl}
 	s.name = iptv.Host(strings.TrimSpace(body.URL))
+	s.url = strings.TrimSpace(body.URL)
 	h.keepIPTV(s)
 	httpx.WriteJSON(w, http.StatusOK, iptvListView(s))
 }
@@ -259,6 +265,9 @@ type iptvPlanRequest struct {
 	// Exactly one is given.
 	Bouquet string `json:"bouquet"`
 	NewName string `json:"newName"`
+	// Remember keeps the list's address so it can be compared with the
+	// bouquet later; ignored for an uploaded file.
+	Remember bool `json:"remember"`
 }
 
 // IPTVSkip is a chosen channel that is not added, and why.
@@ -387,6 +396,7 @@ func (h *Channels) planIPTV(w http.ResponseWriter, r *http.Request) {
 	}
 	sort.Ints(ids)
 	var add []DraftEntry
+	var addedEntries []iptv.Entry
 	var skipped []IPTVSkip
 	for _, id := range ids {
 		e := sess.pl.Entries[id]
@@ -401,6 +411,7 @@ func (h *Channels) planIPTV(w http.ResponseWriter, r *http.Request) {
 		default:
 			have[iptv.URLPart(ref)] = true
 			add = append(add, DraftEntry{Ref: ref, Name: name})
+			addedEntries = append(addedEntries, e)
 		}
 	}
 	if len(add) == 0 {
@@ -438,9 +449,15 @@ func (h *Channels) planIPTV(w http.ResponseWriter, r *http.Request) {
 			return listFingerprint(now), nil
 		}
 		d.Execute = func(ctx context.Context) error {
-			return h.withBackup(ctx, editor, user, summary, func(ctx context.Context) error {
+			if err := h.withBackup(ctx, editor, user, summary, func(ctx context.Context) error {
 				return h.applyBouquet(ctx, editor, bouquetDraft{Ref: bref, Kind: kind, Entries: draft}, current, diff)
-			})
+			}); err != nil {
+				return err
+			}
+			if req.Remember {
+				h.rememberIPTV(ctx, sess, bref, bouquetName, kind, addedEntries)
+			}
+			return nil
 		}
 	} else {
 		d.Fingerprint = bouquetsFingerprint(bouquets)
@@ -452,13 +469,21 @@ func (h *Channels) planIPTV(w http.ResponseWriter, r *http.Request) {
 			return bouquetsFingerprint(now), nil
 		}
 		d.Execute = func(ctx context.Context) error {
-			return h.withBackup(ctx, editor, user, summary, func(ctx context.Context) error {
+			var newRef string
+			if err := h.withBackup(ctx, editor, user, summary, func(ctx context.Context) error {
 				ref, err := h.createBouquet(ctx, editor, req.NewName, kind)
 				if err != nil {
 					return err
 				}
+				newRef = ref
 				return h.applyBouquet(ctx, editor, bouquetDraft{Ref: ref, Kind: kind, Entries: add}, nil, diffBouquet(nil, add))
-			})
+			}); err != nil {
+				return err
+			}
+			if req.Remember {
+				h.rememberIPTV(ctx, sess, newRef, webcontrol.BouquetDisplayName(req.NewName, kind == "radio"), kind, addedEntries)
+			}
+			return nil
 		}
 	}
 	pl := h.Plans.Create(ctx, user, d)

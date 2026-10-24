@@ -113,6 +113,13 @@
             <option v-for="b in bouquets" :key="b.ref" :value="b.ref">{{ b.name }} ({{ t(`channels.kind.${b.kind}`) }})</option>
           </select>
         </label>
+        <label v-if="!list.fromFile" class="flex w-full items-start gap-2 text-[13.5px]">
+          <input v-model="remember" type="checkbox" class="mt-0.5 h-4 w-4 shrink-0" />
+          <span>
+            {{ t('channels.iptv.sources.remember') }}
+            <span class="block text-[12px] text-faint">{{ t('channels.iptv.sources.rememberHint') }}</span>
+          </span>
+        </label>
         <button type="submit" class="rounded-sm bg-accent px-3 py-1.5 text-[13.5px] font-semibold text-bg disabled:opacity-50" :disabled="busy || !editor || selected.size === 0 || (mode === 'new' ? !newName.trim() : !existing)">
           {{ t('channels.iptv.review') }}
         </button>
@@ -136,6 +143,8 @@
         <p class="mt-2 text-[12.5px] text-faint">{{ t('channels.iptv.backupNote') }}</p>
       </PlanPreview>
     </template>
+
+    <IptvSources v-if="!list" :editor="editor" @done="emit('done')" />
   </section>
 </template>
 
@@ -144,6 +153,7 @@ import { computed, ref, watch } from 'vue'
 import { useI18n } from 'vue-i18n'
 import { api } from '@/api/client'
 import PlanPreview from '@/components/PlanPreview.vue'
+import IptvSources from '@/components/channels/IptvSources.vue'
 import { useChannelChange } from '@/components/channels/useChannelChange'
 import { usePlanError } from '@/composables/usePlanError'
 import type { ChannelBouquet, IptvList, IptvPlanResult } from '@/api/types'
@@ -179,6 +189,7 @@ const newName = ref('')
 const kind = ref<'tv' | 'radio'>('tv')
 const existing = ref('')
 const result = ref<IptvPlanResult | null>(null)
+const remember = ref(true)
 
 const filtered = computed(() => {
   const l = list.value
@@ -290,7 +301,8 @@ async function review() {
   try {
     const ids = [...selected.value].sort((a, b) => a - b)
     result.value = await api.channels.planIptv(
-      mode.value === 'new' ? { token: l.token, ids, newName: newName.value.trim(), kind: kind.value } : { token: l.token, ids, bouquet: existing.value },
+      mode.value === 'new' ? { token: l.token, ids, newName: newName.value.trim(), kind: kind.value, remember: remember.value && !l.fromFile }
+        : { token: l.token, ids, bouquet: existing.value, remember: remember.value && !l.fromFile },
     )
   } catch (err) {
     error.value = planErrorMessage(err)

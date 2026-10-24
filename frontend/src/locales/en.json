@@ -833,7 +833,8 @@
       "iptv_not_playlist": "That is not an M3U playlist.",
       "iptv_session_gone": "The list was read too long ago. Please read it again.",
       "iptv_bouquet_exists": "A bouquet with that name exists already. Choose it as the target instead.",
-      "iptv_nothing_to_add": "All chosen channels are in the bouquet already."
+      "iptv_nothing_to_add": "All chosen channels are in the bouquet already.",
+      "timer_no_tuner": "An internet channel has no tuner, so it can't be recorded. Record the same station on a satellite, cable or antenna channel instead."
     },
     "media": {
       "not_a_recording": "This recording doesn't exist (anymore).",
@@ -2502,7 +2503,36 @@
         "count": "{n} with a guide | {n} with a guide",
         "more": "Show more",
         "summary": "{n} channel gets the guide of a channel of the box. | {n} channels get the guide of a channel of the box."
+      },
+      "logos": {
+        "option": "Fetch the logos the list gives",
+        "hint": "The box downloads them from the list's own servers after you confirm.",
+        "preview": "Logos of {n} channel are fetched from {hosts} after you confirm. | Logos of {n} channels are fetched from {hosts} after you confirm."
+      },
+      "test": {
+        "button": "Test streams",
+        "running": "Testing {done} of {total}…",
+        "stop": "Stop",
+        "summary": "{ok} answer, {bad} do not | {ok} answer, {bad} do not",
+        "untick": "Untick those that don't answer",
+        "hint": "Opens each stream for a moment. Streams on rtsp, rtmp and udp are not tried.",
+        "result": {
+          "ok": "answers",
+          "login": "wants a login",
+          "gone": "gone",
+          "unreachable": "no answer",
+          "error": "error",
+          "blocked": "not allowed"
+        }
       }
+    },
+    "stream": {
+      "iptv": "Internet",
+      "netcast": "Netcast",
+      "tip": "An internet channel: it plays through the box's player and has no tuner, so it can't be recorded.",
+      "play": "Play",
+      "playNamed": "Play {name} on the TV",
+      "playing": "\"{name}\" is starting on the TV."
     }
   },
   "updates": {

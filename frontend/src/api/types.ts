@@ -1435,6 +1435,10 @@ export interface BouquetEntry {
   marker?: boolean
   quality?: 'sd' | 'hd' | 'uhd'
   picon: boolean
+  // An internet channel (no tuner, so no recording): a plain stream, or a Netcast entry.
+  stream?: 'iptv' | 'netcast'
+  // The Netcast source of a Netcast entry.
+  source?: string
   now?: EPGEvent
 }
 
@@ -1555,7 +1559,10 @@ export interface IptvCompareItem {
   group?: string
   host?: string
   hasLogin?: boolean
+  hasLogo?: boolean
 }
+
+export type IptvProbe = 'ok' | 'login' | 'gone' | 'unreachable' | 'error' | 'blocked' | 'unchecked' | 'unknown'
 
 export interface IptvCompare {
   token: string
@@ -1587,6 +1594,8 @@ export interface IptvTwinHit extends IptvTwin {
 
 export interface IptvPlanResult {
   plan: Plan
+  // Logos the list gives: how many are fetched after the change is confirmed, and from which servers.
+  logos?: { count: number; hosts: string[] }
   skipped: { id: number; name: string; reason: string }[]
 }
 

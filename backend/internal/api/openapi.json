@@ -7239,7 +7239,7 @@
       "$ref": "#/components/parameters/Box"
      }
     ],
-    "description": "Body `{token, ids: [channel numbers of the list], bouquet | newName + kind, remember?, twins?: [{id, service}]}` (`remember` keeps the address of a list read from an address, to compare it later; `twins` give chosen channels the guide of the box channel `service`, which is remembered): puts the chosen channels into an existing bouquet (after its entries; one whose address is in it already is left out) or into a new one, as plain 4097 references. Changes nothing; apply the plan with `POST /plans/{id}/apply` — a backup of the channel list is made first and the bouquet is read back. The answer also lists `skipped` channels. `410 iptv_session_gone` when the list was read too long ago, `409 iptv_bouquet_exists`, `409 iptv_nothing_to_add`.",
+    "description": "Body `{token, ids: [channel numbers of the list], bouquet | newName + kind, remember?, twins?: [{id, service}], logos?}` (`remember` keeps the address of a list read from an address, to compare it later; `twins` give chosen channels the guide of the box channel `service`, which is remembered; `logos` fetches the logos the list gives, from the list's own servers, after the change is confirmed, and the answer's `logos` says how many and from which hosts): puts the chosen channels into an existing bouquet (after its entries; one whose address is in it already is left out) or into a new one, as plain 4097 references. Changes nothing; apply the plan with `POST /plans/{id}/apply` — a backup of the channel list is made first and the bouquet is read back. The answer also lists `skipped` channels. `410 iptv_session_gone` when the list was read too long ago, `409 iptv_bouquet_exists`, `409 iptv_nothing_to_add`.",
     "responses": {
      "200": {
       "description": "The plan",
@@ -7357,7 +7357,7 @@
       }
      }
     ],
-    "description": "Body `{token, ids: [item ids of the comparison]}`: the chosen differences as one plan (an address change keeps the channel's place and name). Changes nothing; apply with `POST /plans/{id}/apply` — a backup first, the bouquet read back. `410 iptv_session_gone` when the comparison is too old or the bouquet changed since.",
+    "description": "Body `{token, ids: [item ids of the comparison], logos?}`: the chosen differences as one plan (an address change keeps the channel's place and name). Changes nothing; apply with `POST /plans/{id}/apply` — a backup first, the bouquet read back. `410 iptv_session_gone` when the comparison is too old or the bouquet changed since.",
     "responses": {
      "200": {
       "description": "The plan",
@@ -7525,6 +7525,62 @@
       "$ref": "#/components/responses/Error"
      }
     }
+   }
+  },
+  "/channels/iptv/test": {
+   "post": {
+    "summary": "Test internet streams",
+    "tags": [
+     "channels"
+    ],
+    "operationId": "POST_channels_iptv_test",
+    "parameters": [
+     {
+      "$ref": "#/components/parameters/Box"
+     }
+    ],
+    "description": "Body `{token, ids}` (100 at most). The box opens each http(s) stream for a moment (the first kilobyte) and reports `{results: [{id, result: ok|login|gone|unreachable|error|blocked|unchecked|unknown, status?}]}`. rtsp, rtmp and udp are `unchecked`; `unknown` means the time ran out first. Only on request, at most a few at a time; nothing is changed.",
+    "responses": {
+     "200": {
+      "description": "The results",
+      "content": {
+       "application/json": {
+        "schema": {
+         "type": "object"
+        }
+       }
+      }
+     },
+     "default": {
+      "$ref": "#/components/responses/Error"
+     }
+    },
+    "requestBody": {
+     "required": true,
+     "content": {
+      "application/json": {
+       "schema": {
+        "type": "object",
+        "properties": {
+         "token": {
+          "type": "string"
+         },
+         "ids": {
+          "type": "array",
+          "items": {
+           "type": "integer"
+          }
+         }
+        },
+        "required": [
+         "token",
+         "ids"
+        ]
+       }
+      }
+     }
+    },
+    "x-csrf": true
    }
   }
  }

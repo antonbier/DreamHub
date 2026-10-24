@@ -12,6 +12,7 @@ import (
 	"net/netip"
 	"net/url"
 	"strings"
+	"sync"
 	"syscall"
 	"time"
 )
@@ -53,6 +54,7 @@ type Fetcher struct {
 	// AllowLoopback lets tests reach a server on 127.0.0.1.
 	AllowLoopback bool
 
+	once   sync.Once
 	client *http.Client
 }
 
@@ -78,10 +80,14 @@ func (f *Fetcher) blocked(ip netip.Addr) bool {
 	return ip.IsUnspecified() || ip.IsMulticast() || ip.IsLinkLocalUnicast() || ip.IsLinkLocalMulticast()
 }
 
+// httpClient builds the client once; several requests may ask at the same time
+// (the logos of a change, the stream test).
 func (f *Fetcher) httpClient() *http.Client {
-	if f.client != nil {
-		return f.client
-	}
+	f.once.Do(f.buildClient)
+	return f.client
+}
+
+func (f *Fetcher) buildClient() {
 	timeout := f.Timeout
 	if timeout <= 0 {
 		timeout = 30 * time.Second
@@ -119,12 +125,17 @@ func (f *Fetcher) httpClient() *http.Client {
 			return nil
 		},
 	}
-	return f.client
 }
 
 // Fetch downloads the list at rawURL. The body is read up to MaxBytes after
 // decompression; a gzip body is unpacked whether or not the server said so.
 func (f *Fetcher) Fetch(ctx context.Context, rawURL string) ([]byte, error) {
+	return f.FetchLimited(ctx, rawURL, f.maxBytes())
+}
+
+// FetchLimited is Fetch with its own size limit, for a logo or another small
+// file the list points to.
+func (f *Fetcher) FetchLimited(ctx context.Context, rawURL string, max int64) ([]byte, error) {
 	u, err := url.Parse(strings.TrimSpace(rawURL))
 	if err != nil || (u.Scheme != "http" && u.Scheme != "https") || u.Host == "" {
 		return nil, &FetchError{Kind: KindInvalidURL}
@@ -152,15 +163,14 @@ func (f *Fetcher) Fetch(ctx context.Context, rawURL string) ([]byte, error) {
 	if resp.StatusCode != http.StatusOK {
 		return nil, &FetchError{Kind: KindStatus, Status: resp.StatusCode}
 	}
-	return f.readLimited(resp.Body)
+	return f.readLimited(resp.Body, max)
 }
 
 // ReadUpload applies the same size limit and gzip handling to a list the
 // person uploaded.
-func (f *Fetcher) ReadUpload(r io.Reader) ([]byte, error) { return f.readLimited(r) }
+func (f *Fetcher) ReadUpload(r io.Reader) ([]byte, error) { return f.readLimited(r, f.maxBytes()) }
 
-func (f *Fetcher) readLimited(r io.Reader) ([]byte, error) {
-	max := f.maxBytes()
+func (f *Fetcher) readLimited(r io.Reader, max int64) ([]byte, error) {
 	raw, err := io.ReadAll(io.LimitReader(r, max+1))
 	if err != nil {
 		return nil, &FetchError{Kind: KindUnreachable}
@@ -182,4 +192,64 @@ func (f *Fetcher) readLimited(r io.Reader) ([]byte, error) {
 		}
 	}
 	return raw, nil
+}
+
+// Probe results (ProbeResult.Kind).
+const (
+	ProbeOK        = "ok"          // the server answers with something
+	ProbeLogin     = "login"       // 401/403: it wants a login, or refuses this one
+	ProbeGone      = "gone"        // 404/410
+	ProbeNoAnswer  = "unreachable" // no connection, a timeout, a TLS error
+	ProbeError     = "error"       // another error answer
+	ProbeBlocked   = "blocked"     // the address leads to this box itself
+	ProbeUnchecked = "unchecked"   // not an http(s) address: rtsp, rtmp and udp are not tried
+)
+
+// ProbeResult says whether a stream address answers.
+type ProbeResult struct {
+	Kind   string
+	Status int
+}
+
+// Probe asks an http(s) stream address for its first kilobyte and reports
+// whether anything sensible answers. It does not play the stream: the body
+// is cut after 1 KB. The caller sets the time limit with ctx.
+func (f *Fetcher) Probe(ctx context.Context, rawURL string) ProbeResult {
+	u, err := url.Parse(strings.TrimSpace(rawURL))
+	if err != nil || u.Host == "" {
+		return ProbeResult{Kind: ProbeError}
+	}
+	if u.Scheme != "http" && u.Scheme != "https" {
+		return ProbeResult{Kind: ProbeUnchecked}
+	}
+	req, err := http.NewRequestWithContext(ctx, http.MethodGet, u.String(), nil)
+	if err != nil {
+		return ProbeResult{Kind: ProbeError}
+	}
+	ua := f.UserAgent
+	if ua == "" {
+		ua = "DreamHub"
+	}
+	req.Header.Set("User-Agent", ua)
+	req.Header.Set("Range", "bytes=0-1023")
+	resp, err := f.httpClient().Do(req)
+	if err != nil {
+		var fe *FetchError
+		if errors.As(err, &fe) && fe.Kind == KindBlocked {
+			return ProbeResult{Kind: ProbeBlocked}
+		}
+		return ProbeResult{Kind: ProbeNoAnswer}
+	}
+	defer resp.Body.Close()
+	io.Copy(io.Discard, io.LimitReader(resp.Body, 1024))
+	switch c := resp.StatusCode; {
+	case c == http.StatusOK, c == http.StatusPartialContent, c == http.StatusRequestedRangeNotSatisfiable:
+		return ProbeResult{Kind: ProbeOK, Status: c}
+	case c == http.StatusUnauthorized, c == http.StatusForbidden, c == http.StatusProxyAuthRequired:
+		return ProbeResult{Kind: ProbeLogin, Status: c}
+	case c == http.StatusNotFound, c == http.StatusGone:
+		return ProbeResult{Kind: ProbeGone, Status: c}
+	default:
+		return ProbeResult{Kind: ProbeError, Status: c}
+	}
 }

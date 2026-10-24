@@ -19,6 +19,7 @@ import (
 	"github.com/antonbier/DreamHub/backend/internal/autotimer"
 	"github.com/antonbier/DreamHub/backend/internal/httpx"
 	"github.com/antonbier/DreamHub/backend/internal/hub"
+	"github.com/antonbier/DreamHub/backend/internal/iptv"
 	"github.com/antonbier/DreamHub/backend/internal/perm"
 	"github.com/antonbier/DreamHub/backend/internal/plan"
 	"github.com/antonbier/DreamHub/backend/internal/status"
@@ -101,6 +102,8 @@ const (
 const (
 	CodeTimerConflict  = "timer.conflict"
 	CodeTimerDuplicate = "timer.duplicate"
+	// CodeTimerNoTuner: the channel is an internet stream (a 4097/8193 entry).
+	CodeTimerNoTuner = "timer_no_tuner"
 	// CodeTimerDeleteRunning warns that deleting stops a recording in
 	// progress — the box aborts a running timer on delete (ARCHITECTURE.md).
 	CodeTimerDeleteRunning = "timer.deleteRunning"
@@ -370,6 +373,11 @@ func (h *Timer) planCreate(w http.ResponseWriter, r *http.Request) {
 	}
 	if errs := req.validate(h.Now()); len(errs) > 0 {
 		httpx.WriteErrorDetails(w, r, http.StatusBadRequest, "validation_failed", "the timer is invalid; nothing was planned", errs)
+		return
+	}
+	// An internet stream has no tuner: the box cannot record it.
+	if kind, _ := iptv.StreamKind(req.ServiceReference); kind != "" {
+		httpx.WriteError(w, r, http.StatusConflict, CodeTimerNoTuner, "an internet channel has no tuner and cannot be recorded")
 		return
 	}
 

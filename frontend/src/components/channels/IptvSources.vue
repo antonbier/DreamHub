@@ -78,11 +78,16 @@
             @cancel="cancelPlan"
           >
             <p v-for="(c, n) in plan.changes.slice(0, PREVIEW_LINES)" :key="n">{{ describeChange(c) }}</p>
+            <p v-if="planLogos && planLogos.count > 0" class="mt-2 text-[12.5px] text-muted">{{ t('channels.iptv.logos.preview', { n: number(planLogos.count), hosts: planLogos.hosts.join(', ') }, planLogos.count) }}</p>
             <p v-if="plan.changes.length > PREVIEW_LINES" class="text-muted">{{ t('channels.iptv.moreChanges', { n: number(plan.changes.length - PREVIEW_LINES) }) }}</p>
             <p class="mt-2 text-[12.5px] text-faint">{{ t('channels.iptv.backupNote') }}</p>
           </PlanPreview>
 
           <div v-else class="mt-2 flex flex-wrap items-center gap-2">
+            <label v-if="newWithLogo" class="flex w-full items-center gap-2 text-[13px]">
+              <input v-model="logos" type="checkbox" class="h-4 w-4 shrink-0" />
+              {{ t('channels.iptv.logos.option') }}
+            </label>
             <button
               v-if="open.items.length > 0"
               type="button"
@@ -103,7 +108,7 @@
 </template>
 
 <script setup lang="ts">
-import { onMounted, ref } from 'vue'
+import { computed, onMounted, ref } from 'vue'
 import { useI18n } from 'vue-i18n'
 import { api } from '@/api/client'
 import ErrorText from '@/components/ErrorText.vue'
@@ -138,7 +143,10 @@ const saved = ref('')
 const open = ref<IptvCompare | null>(null)
 const picked = ref(new Set<number>())
 const plan = ref<Plan | null>(null)
+const planLogos = ref<{ count: number; hosts: string[] } | null>(null)
+const logos = ref(true)
 
+const newWithLogo = computed(() => open.value?.items.some((i) => i.action === 'new' && i.hasLogo && picked.value.has(i.id)) ?? false)
 const itemsOf = (a: IptvCompareItem['action']) => open.value?.items.filter((i) => i.action === a) ?? []
 
 async function load() {
@@ -193,6 +201,7 @@ function close() {
 
 function cancelPlan() {
   plan.value = null
+  planLogos.value = null
   error.value = ''
 }
 
@@ -202,7 +211,9 @@ async function review() {
   busy.value = true
   error.value = ''
   try {
-    plan.value = (await api.channels.planIptvCompare(o.source.id, o.token, [...picked.value].sort((a, b) => a - b))).plan
+    const res = await api.channels.planIptvCompare(o.source.id, o.token, [...picked.value].sort((a, b) => a - b), logos.value && newWithLogo.value)
+    plan.value = res.plan
+    planLogos.value = res.logos ?? null
   } catch (err) {
     fail(o.source.id, err)
   } finally {

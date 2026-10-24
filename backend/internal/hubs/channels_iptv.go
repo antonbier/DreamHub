@@ -272,6 +272,9 @@ type iptvPlanRequest struct {
 	// Twins gives channels of the list the guide of a channel of the box:
 	// Service is that channel's reference (internal/hubs/channels_iptv_twins.go).
 	Twins []iptvTwinPick `json:"twins"`
+	// Logos fetches the logos the list gives for the chosen channels, from the
+	// list's own servers, once the change is confirmed.
+	Logos bool `json:"logos"`
 }
 
 type iptvTwinPick struct {
@@ -423,6 +426,7 @@ func (h *Channels) planIPTV(w http.ResponseWriter, r *http.Request) {
 	var add []DraftEntry
 	var addedEntries []iptv.Entry
 	usedTwins := map[string]store.IPTVTwin{}
+	var logoJobs []iptvLogoJob
 	var skipped []IPTVSkip
 	for _, id := range ids {
 		e := sess.pl.Entries[id]
@@ -446,6 +450,11 @@ func (h *Channels) planIPTV(w http.ResponseWriter, r *http.Request) {
 			have[iptv.URLPart(ref)] = true
 			add = append(add, DraftEntry{Ref: ref, Name: name})
 			addedEntries = append(addedEntries, e)
+			if req.Logos {
+				if j, ok := iptvLogoJobFor(e, ref+":"+name); ok {
+					logoJobs = append(logoJobs, j)
+				}
+			}
 			if hasTwin {
 				usedTwins[iptvIdentHex(iptvKey(e))] = store.IPTVTwin{ServiceRef: twin.ref, ServiceName: twin.name}
 			}
@@ -495,6 +504,7 @@ func (h *Channels) planIPTV(w http.ResponseWriter, r *http.Request) {
 				h.rememberIPTV(ctx, sess, bref, bouquetName, kind, addedEntries)
 			}
 			h.rememberTwins(ctx, usedTwins)
+			h.fetchIPTVLogos(logoJobs)
 			return nil
 		}
 	} else {
@@ -522,9 +532,11 @@ func (h *Channels) planIPTV(w http.ResponseWriter, r *http.Request) {
 				h.rememberIPTV(ctx, sess, newRef, webcontrol.BouquetDisplayName(req.NewName, kind == "radio"), kind, addedEntries)
 			}
 			h.rememberTwins(ctx, usedTwins)
+			h.fetchIPTVLogos(logoJobs)
 			return nil
 		}
 	}
 	pl := h.Plans.Create(ctx, user, d)
-	httpx.WriteJSON(w, http.StatusOK, map[string]any{"plan": pl, "skipped": skipped})
+	httpx.WriteJSON(w, http.StatusOK, map[string]any{"plan": pl, "skipped": skipped,
+		"logos": map[string]any{"count": len(logoJobs), "hosts": iptvLogoHosts(logoJobs)}})
 }

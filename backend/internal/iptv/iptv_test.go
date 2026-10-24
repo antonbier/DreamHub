@@ -207,3 +207,56 @@ func TestTwinRefAndWithURL(t *testing.T) {
 		t.Errorf("URLPart of a twin reference: %q", URLPart(got))
 	}
 }
+
+func TestProbe(t *testing.T) {
+	mux := http.NewServeMux()
+	mux.HandleFunc("/ok", func(w http.ResponseWriter, r *http.Request) { w.Write([]byte("#EXTM3U\n")) })
+	// a live stream that never ends: only its first kilobyte is read
+	mux.HandleFunc("/live", func(w http.ResponseWriter, r *http.Request) {
+		for i := 0; i < 1000; i++ {
+			if _, err := w.Write(bytes.Repeat([]byte("x"), 512)); err != nil {
+				return
+			}
+		}
+	})
+	mux.HandleFunc("/login", func(w http.ResponseWriter, r *http.Request) { http.Error(w, "no", http.StatusUnauthorized) })
+	mux.HandleFunc("/gone", func(w http.ResponseWriter, r *http.Request) { http.NotFound(w, r) })
+	mux.HandleFunc("/boom", func(w http.ResponseWriter, r *http.Request) { http.Error(w, "x", http.StatusInternalServerError) })
+	srv := httptest.NewServer(mux)
+	defer srv.Close()
+	f := &Fetcher{AllowLoopback: true}
+	for path, want := range map[string]string{"/ok": ProbeOK, "/live": ProbeOK, "/login": ProbeLogin, "/gone": ProbeGone, "/boom": ProbeError} {
+		if got := f.Probe(context.Background(), srv.URL+path); got.Kind != want {
+			t.Errorf("%s: %+v, want %s", path, got, want)
+		}
+	}
+	if got := f.Probe(context.Background(), "rtsp://cam.example/s"); got.Kind != ProbeUnchecked {
+		t.Errorf("rtsp: %+v", got)
+	}
+	if got := f.Probe(context.Background(), "http://127.0.0.1:1/a"); got.Kind != ProbeNoAnswer {
+		t.Errorf("closed port: %+v", got)
+	}
+	if got := NewFetcher().Probe(context.Background(), srv.URL+"/ok"); got.Kind != ProbeBlocked {
+		t.Errorf("this machine: %+v", got)
+	}
+}
+
+func TestStreamKind(t *testing.T) {
+	for ref, want := range map[string][2]string{
+		"4097:0:1:0:0:0:0:0:0:0:http%3a//tv.example/a.m3u8:One":                             {StreamIPTV, ""},
+		"4097:0:19:2B66:3F3:1:C00000:0:0:0:http%3a//tv.example/a.m3u8:ZDF":                  {StreamIPTV, ""},
+		"8193:256:0:73:1:66:515476:0:0:0:netcastserver_lgat%3a//host/p/playlist.m3u8:205 X": {StreamNetcast, "lgat"},
+		"4097:0:16:197:4:85:C00000:0:0:0:None":                                              {StreamNetcast, ""},
+		"8193:0:0:58:96:75:397833:0:0:0:None":                                               {StreamNetcast, ""},
+		"4097:0:1:0:0:0:0:0:0:0:/media/hdd/movie/a.ts":                                      {"", ""},
+		"4097:0:1:0:0:0:0:0:0:0:file%3a//media/hdd/a.ts:A":                                  {"", ""},
+		"1:0:19:283D:3FB:1:C00000:0:0:0:":                                                   {"", ""},
+		"1:0:19:283D:3FB:1:C00000:0:0:0:/media/hdd/movie/a.ts":                              {"", ""},
+		"1:64:0:0:0:0:0:0:0:0:":                                                             {"", ""},
+		"":                                                                                  {"", ""},
+	} {
+		if k, s := StreamKind(ref); k != want[0] || s != want[1] {
+			t.Errorf("StreamKind(%q) = %q, %q; want %q, %q", ref, k, s, want[0], want[1])
+		}
+	}
+}

@@ -833,7 +833,8 @@
       "iptv_not_playlist": "Das ist keine M3U-Playlist.",
       "iptv_session_gone": "Die Liste wurde vor zu langer Zeit gelesen. Bitte noch einmal lesen.",
       "iptv_bouquet_exists": "Ein Bouquet mit diesem Namen gibt es schon. Wähle es stattdessen als Ziel.",
-      "iptv_nothing_to_add": "Alle gewählten Sender sind schon im Bouquet."
+      "iptv_nothing_to_add": "Alle gewählten Sender sind schon im Bouquet.",
+      "timer_no_tuner": "Ein Internet-Sender hat keinen Tuner und lässt sich nicht aufnehmen. Nimm denselben Sender über einen Satelliten-, Kabel- oder Antennen-Sender auf."
     },
     "media": {
       "not_a_recording": "Diese Aufnahme gibt es nicht (mehr).",
@@ -2502,7 +2503,36 @@
         "count": "{n} mit Programm | {n} mit Programm",
         "more": "Mehr anzeigen",
         "summary": "{n} Sender bekommt das Programm eines Senders der Box. | {n} Sender bekommen das Programm eines Senders der Box."
+      },
+      "logos": {
+        "option": "Logos der Liste holen",
+        "hint": "Die Box lädt sie nach deiner Bestätigung von den Servern der Liste.",
+        "preview": "Die Logos von {n} Sender werden nach deiner Bestätigung von {hosts} geholt. | Die Logos von {n} Sendern werden nach deiner Bestätigung von {hosts} geholt."
+      },
+      "test": {
+        "button": "Streams testen",
+        "running": "Teste {done} von {total}…",
+        "stop": "Anhalten",
+        "summary": "{ok} antworten, {bad} nicht | {ok} antworten, {bad} nicht",
+        "untick": "Die ohne Antwort abwählen",
+        "hint": "Öffnet jeden Stream kurz. Streams über rtsp, rtmp und udp werden nicht versucht.",
+        "result": {
+          "ok": "antwortet",
+          "login": "will Login",
+          "gone": "weg",
+          "unreachable": "keine Antwort",
+          "error": "Fehler",
+          "blocked": "nicht erlaubt"
+        }
       }
+    },
+    "stream": {
+      "iptv": "Internet",
+      "netcast": "Netcast",
+      "tip": "Ein Internet-Sender: Er läuft über den Player der Box und hat keinen Tuner, ist also nicht aufnehmbar.",
+      "play": "Abspielen",
+      "playNamed": "{name} auf dem Fernseher abspielen",
+      "playing": "„{name}“ startet auf dem Fernseher."
     }
   },
   "updates": {

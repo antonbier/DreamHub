@@ -77,6 +77,11 @@
             <span v-if="c.radio" class="shrink-0 rounded-sm border border-line px-1 text-[11px] text-muted">{{ t('channels.iptv.radio') }}</span>
             <span v-if="c.hasLogin" class="shrink-0 rounded-sm border border-line px-1 text-[11px] text-muted">{{ t('channels.iptv.login') }}</span>
             <span v-if="c.duplicate" class="shrink-0 rounded-sm border border-line px-1 text-[11px] text-muted">{{ t('channels.iptv.duplicate') }}</span>
+            <span
+              v-if="probe[c.id] && probe[c.id] !== 'unchecked' && probe[c.id] !== 'unknown'"
+              class="shrink-0 rounded-sm border px-1 text-[11px]"
+              :class="probe[c.id] === 'ok' ? 'border-ok text-ok' : 'border-warn text-warn'"
+            >{{ t(`channels.iptv.test.result.${probe[c.id]}`) }}</span>
             <span v-if="c.needsHeaders" class="shrink-0 rounded-sm border border-warn px-1 text-[11px] text-warn" :title="t('channels.iptv.headersTip')">{{ t('channels.iptv.headers') }}</span>
           </label>
         </li>
@@ -85,6 +90,16 @@
       <div v-if="!result && filtered.length > 0" class="mt-2 flex flex-wrap items-center gap-3 text-[13px] text-muted">
         <span>{{ t('channels.iptv.showing', { shown: number(visible.length), total: number(filtered.length) }) }}</span>
         <button v-if="visible.length < filtered.length" type="button" class="rounded-sm px-2 py-1 text-accent hover:bg-tile-2" @click="limit += PAGE">{{ t('channels.iptv.more') }}</button>
+      </div>
+
+      <div v-if="!result && selected.size > 0" class="mt-3 flex flex-wrap items-center gap-x-3 gap-y-1 text-[13px]">
+        <button type="button" class="rounded-sm border border-line px-3 py-1.5 text-[13.5px] text-text hover:bg-tile-2 disabled:opacity-50" :disabled="testing || busy" @click="runTest">
+          {{ testing ? t('channels.iptv.test.running', { done: number(testDone), total: number(testTotal) }) : t('channels.iptv.test.button') }}
+        </button>
+        <button v-if="testing" type="button" class="rounded-sm px-2 py-1 text-muted hover:bg-tile-2" @click="stopTest = true">{{ t('channels.iptv.test.stop') }}</button>
+        <span v-if="!testing && probeCounts.tested > 0" class="text-muted">{{ t('channels.iptv.test.summary', { ok: number(probeCounts.ok), bad: number(probeCounts.bad) }, probeCounts.bad) }}</span>
+        <button v-if="!testing && probeCounts.bad > 0" type="button" class="rounded-sm px-2 py-1 text-accent hover:bg-tile-2" @click="untickBad">{{ t('channels.iptv.test.untick') }}</button>
+        <span v-if="probeCounts.tested === 0 && !testing" class="text-[12px] text-faint">{{ t('channels.iptv.test.hint') }}</span>
       </div>
 
       <!-- 3. A guide (optional) -->
@@ -116,6 +131,13 @@
             <option v-for="b in bouquets" :key="b.ref" :value="b.ref">{{ b.name }} ({{ t(`channels.kind.${b.kind}`) }})</option>
           </select>
         </label>
+        <label v-if="selectedHaveLogo" class="flex w-full items-start gap-2 text-[13.5px]">
+          <input v-model="logos" type="checkbox" class="mt-0.5 h-4 w-4 shrink-0" />
+          <span>
+            {{ t('channels.iptv.logos.option') }}
+            <span class="block text-[12px] text-faint">{{ t('channels.iptv.logos.hint') }}</span>
+          </span>
+        </label>
         <label v-if="!list.fromFile" class="flex w-full items-start gap-2 text-[13.5px]">
           <input v-model="remember" type="checkbox" class="mt-0.5 h-4 w-4 shrink-0" />
           <span>
@@ -142,6 +164,7 @@
       >
         <p v-for="(c, n) in shownChanges" :key="n">{{ describeChange(c) }}</p>
         <p v-if="hiddenChanges > 0" class="text-muted">{{ t('channels.iptv.moreChanges', { n: number(hiddenChanges) }) }}</p>
+        <p v-if="result.logos && result.logos.count > 0" class="mt-2 text-[12.5px] text-muted">{{ t('channels.iptv.logos.preview', { n: number(result.logos.count), hosts: result.logos.hosts.join(', ') }, result.logos.count) }}</p>
         <p v-if="twinCount > 0" class="mt-2 text-[12.5px] text-muted">{{ t('channels.iptv.guide.summary', { n: number(twinCount) }, twinCount) }}</p>
         <p v-if="result.skipped.length > 0" class="mt-2 text-[12.5px] text-muted">{{ t('channels.iptv.leftOut', { n: number(result.skipped.length) }, result.skipped.length) }}</p>
         <p class="mt-2 text-[12.5px] text-faint">{{ t('channels.iptv.backupNote') }}</p>
@@ -161,7 +184,7 @@ import IptvGuidePicker from '@/components/channels/IptvGuidePicker.vue'
 import IptvSources from '@/components/channels/IptvSources.vue'
 import { useChannelChange } from '@/components/channels/useChannelChange'
 import { usePlanError } from '@/composables/usePlanError'
-import type { ChannelBouquet, IptvList, IptvPlanResult, IptvTwin } from '@/api/types'
+import type { ChannelBouquet, IptvList, IptvPlanResult, IptvProbe, IptvTwin } from '@/api/types'
 
 const props = defineProps<{ bouquets: ChannelBouquet[]; editor: boolean }>()
 const emit = defineEmits<{ done: [] }>()
@@ -196,6 +219,12 @@ const existing = ref('')
 const result = ref<IptvPlanResult | null>(null)
 const remember = ref(true)
 const twinPicks = ref<Record<number, IptvTwin>>({})
+const logos = ref(true)
+const probe = ref<Record<number, IptvProbe>>({})
+const testing = ref(false)
+const stopTest = ref(false)
+const testDone = ref(0)
+const testTotal = ref(0)
 
 const filtered = computed(() => {
   const l = list.value
@@ -234,6 +263,21 @@ watch(
 
 const selectedIds = computed(() => [...selected.value].sort((a, b) => a - b))
 const twinCount = computed(() => selectedIds.value.filter((id) => twinPicks.value[id]).length)
+const selectedHaveLogo = computed(() => selectedIds.value.some((id) => list.value?.channels[id]?.hasLogo))
+const BAD: IptvProbe[] = ['gone', 'unreachable', 'error']
+const probeCounts = computed(() => {
+  let tested = 0
+  let ok = 0
+  let bad = 0
+  for (const id of selectedIds.value) {
+    const r = probe.value[id]
+    if (!r || r === 'unchecked' || r === 'unknown') continue
+    tested++
+    if (r === 'ok') ok++
+    else if (BAD.includes(r)) bad++
+  }
+  return { tested, ok, bad }
+})
 const shownChanges = computed(() => result.value?.plan.changes.slice(0, PREVIEW_LINES) ?? [])
 const hiddenChanges = computed(() => Math.max(0, (result.value?.plan.changes.length ?? 0) - PREVIEW_LINES))
 
@@ -254,6 +298,7 @@ function take(l: IptvList) {
   list.value = l
   selected.value = new Set()
   twinPicks.value = {}
+  probe.value = {}
   query.value = ''
   group.value = ALL
   limit.value = PAGE
@@ -291,10 +336,44 @@ async function readFile() {
 }
 
 function reset() {
+  probe.value = {}
   list.value = null
   result.value = null
   selected.value = new Set()
   error.value = ''
+}
+
+const TEST_BATCH = 25
+
+// Opens the chosen streams for a moment, a batch at a time so it can be stopped.
+async function runTest() {
+  const l = list.value
+  if (!l) return
+  const ids = selectedIds.value
+  testing.value = true
+  stopTest.value = false
+  testDone.value = 0
+  testTotal.value = ids.length
+  error.value = ''
+  try {
+    for (let i = 0; i < ids.length && !stopTest.value; i += TEST_BATCH) {
+      const res = await api.channels.testIptv(l.token, ids.slice(i, i + TEST_BATCH))
+      const next = { ...probe.value }
+      for (const r of res.results) next[r.id] = r.result
+      probe.value = next
+      testDone.value = Math.min(ids.length, i + TEST_BATCH)
+    }
+  } catch (err) {
+    error.value = planErrorMessage(err)
+  } finally {
+    testing.value = false
+  }
+}
+
+function untickBad() {
+  const s = new Set(selected.value)
+  for (const id of selected.value) if (BAD.includes(probe.value[id])) s.delete(id)
+  selected.value = s
 }
 
 function cancelReview() {
@@ -311,8 +390,8 @@ async function review() {
     const ids = selectedIds.value
     const twins = ids.filter((id) => twinPicks.value[id]).map((id) => ({ id, service: twinPicks.value[id].ref }))
     result.value = await api.channels.planIptv(
-      mode.value === 'new' ? { token: l.token, ids, newName: newName.value.trim(), kind: kind.value, remember: remember.value && !l.fromFile, twins }
-        : { token: l.token, ids, bouquet: existing.value, remember: remember.value && !l.fromFile, twins },
+      mode.value === 'new' ? { token: l.token, ids, newName: newName.value.trim(), kind: kind.value, remember: remember.value && !l.fromFile, twins, logos: logos.value && selectedHaveLogo.value }
+        : { token: l.token, ids, bouquet: existing.value, remember: remember.value && !l.fromFile, twins, logos: logos.value && selectedHaveLogo.value },
     )
   } catch (err) {
     error.value = planErrorMessage(err)

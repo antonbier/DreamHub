@@ -100,6 +100,7 @@
           <button type="button" class="rounded-sm px-3 py-1.5 text-[13.5px] text-onair hover:bg-tile-2" @click="startBouquetAction('delete')">{{ t('channels.bouquet.delete') }}</button>
         </div>
 
+        <p v-if="playMessage" class="mt-3 text-[13.5px]" :class="playFailed ? 'text-warn' : 'text-ok'" role="status">{{ playMessage }}</p>
         <p v-if="entriesLoading" class="mt-4 text-[14px] text-muted">{{ t('common.loading') }}</p>
         <p v-else-if="entriesFailed" class="mt-4 text-[14px] text-muted"><ErrorText /></p>
         <BouquetDraftEditor
@@ -120,9 +121,22 @@
                 <span class="flex items-center gap-1.5">
                   <span class="truncate text-[14.5px] text-text">{{ e.name }}</span>
                   <QualityBadge :quality="e.quality" />
+                  <span v-if="e.stream" class="shrink-0 rounded-sm border border-line px-1 text-[10.5px] font-semibold text-muted" :title="t('channels.stream.tip')">
+                    {{ e.stream === 'netcast' ? t('channels.stream.netcast') : t('channels.stream.iptv') }}{{ e.source ? ' · ' + e.source : '' }}
+                  </span>
                 </span>
                 <span v-if="e.now" class="block truncate text-[12.5px] text-muted">{{ e.now.title }}</span>
               </span>
+              <button
+                v-if="e.stream"
+                type="button"
+                class="shrink-0 rounded-sm px-2.5 py-1.5 text-[13px] text-accent hover:bg-tile-2 disabled:opacity-50"
+                :disabled="playing === e.ref"
+                :aria-label="t('channels.stream.playNamed', { name: e.name })"
+                @click="playOnTv(e)"
+              >
+                {{ t('channels.stream.play') }}
+              </button>
             </div>
           </li>
         </ol>
@@ -438,6 +452,27 @@ function dateTime(iso: string) {
 // --- editing (C2) -----------------------------------------------------------
 const editing = ref(false)
 const saved = ref('')
+
+// Internet channels (N2) play through enigma2's own player: starting one is
+// a zap to its reference, like any channel.
+const playing = ref('')
+const playMessage = ref('')
+const playFailed = ref(false)
+
+async function playOnTv(e: BouquetEntry) {
+  playing.value = e.ref
+  playMessage.value = ''
+  try {
+    await api.control.zap(e.ref)
+    playFailed.value = false
+    playMessage.value = t('channels.stream.playing', { name: e.name })
+  } catch (err) {
+    playFailed.value = true
+    playMessage.value = friendly(err).text
+  } finally {
+    playing.value = ''
+  }
+}
 
 function startEditing() {
   saved.value = ''

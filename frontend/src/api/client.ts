@@ -46,6 +46,7 @@ import type {
   IptvCompare,
   IptvList,
   IptvPlanResult,
+  IptvProbe,
   IptvSource,
   IptvTwinHit,
   IptvTwinSuggestion,
@@ -288,7 +289,7 @@ export const api = {
     // chosen channels into a bouquet. Stream addresses never come back.
     readIptv: (url: string) => request<IptvList>('POST', '/api/v1/channels/iptv/read', { url }),
     uploadIptv: (file: Blob, name: string) => request<IptvList>('POST', `/api/v1/channels/iptv/upload?name=${encodeURIComponent(name)}`, file),
-    planIptv: (target: { token: string; ids: number[]; remember?: boolean; twins?: { id: number; service: string }[] } & ({ bouquet: string } | { newName: string; kind: 'tv' | 'radio' })) =>
+    planIptv: (target: { token: string; ids: number[]; remember?: boolean; twins?: { id: number; service: string }[]; logos?: boolean } & ({ bouquet: string } | { newName: string; kind: 'tv' | 'radio' })) =>
       request<IptvPlanResult>('POST', '/api/v1/channels/iptv/plan', target),
     // A guide for internet channels: the box's channel whose programme a channel shows.
     suggestIptvTwins: (token: string, ids: number[]) =>
@@ -297,8 +298,11 @@ export const api = {
     // Lists DreamHub remembers, compared with their bouquets again on request.
     iptvSources: () => request<{ sources: IptvSource[] }>('GET', '/api/v1/channels/iptv/sources'),
     compareIptv: (id: number) => request<IptvCompare>('POST', `/api/v1/channels/iptv/sources/${id}/compare`),
-    planIptvCompare: (id: number, token: string, ids: number[]) =>
-      request<{ plan: Plan }>('POST', `/api/v1/channels/iptv/sources/${id}/plan`, { token, ids }),
+    planIptvCompare: (id: number, token: string, ids: number[], logos = false) =>
+      request<{ plan: Plan; logos?: { count: number; hosts: string[] } }>('POST', `/api/v1/channels/iptv/sources/${id}/plan`, { token, ids, logos }),
+    // Opens the chosen streams for a moment and says which answer.
+    testIptv: (token: string, ids: number[]) =>
+      request<{ results: { id: number; result: IptvProbe; status?: number }[] }>('POST', '/api/v1/channels/iptv/test', { token, ids }),
     forgetIptv: (id: number) => request<void>('DELETE', `/api/v1/channels/iptv/sources/${id}`),
     backups: () => request<{ backups: ChannelBackup[] }>('GET', '/api/v1/channels/backups'),
     planRestore: (filename: string) => request<{ plan: Plan }>('POST', '/api/v1/channels/backups/restore/plan', { filename }),

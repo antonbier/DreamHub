@@ -127,7 +127,7 @@
         <template v-else>
           <div class="flex flex-wrap items-center gap-2">
             <button
-              v-if="!selectedEnded"
+              v-if="!selectedEnded && !selectedIsStream"
               type="button"
               class="rounded-sm bg-accent px-3.5 py-1.5 text-[13.5px] font-semibold text-bg disabled:opacity-60"
               :disabled="record.status === 'loading' || !canRecord"
@@ -169,6 +169,7 @@ import { computed, onMounted, ref, watch } from 'vue'
 import { useI18n } from 'vue-i18n'
 import { RouterLink, useRoute } from 'vue-router'
 import { api } from '@/api/client'
+import { isInternetChannel } from '@/lib/internetChannel'
 import Icon from '@/components/Icon.vue'
 import PlanPreview from '@/components/PlanPreview.vue'
 import ProgrammeDialog from '@/components/programme/ProgrammeDialog.vue'
@@ -265,6 +266,8 @@ const streamHubOn = computed(() => {
 const canRecord = computed(() => navigation.navigation?.sections.flatMap((s) => s.items).find((i) => i.id === 'timer')?.status !== 'unavailable')
 
 const selected = ref<EPGEvent | null>(null)
+// An internet channel has no tuner: nothing to record on it.
+const selectedIsStream = computed(() => !!selected.value && isInternetChannel(selected.value.serviceReference))
 type RecordState = { status: 'idle' | 'loading' | 'previewing' | 'applying' | 'created'; plan?: Plan; error?: string }
 const record = ref<RecordState>({ status: 'idle' })
 

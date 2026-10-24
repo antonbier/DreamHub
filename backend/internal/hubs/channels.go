@@ -61,6 +61,7 @@ type Channels struct {
 
 	iptvMu   sync.Mutex
 	iptvSess []*iptvSession // playlists read so far, kept for a while
+	logoWG   sync.WaitGroup // logos being fetched in the background (tests wait for it)
 }
 
 // KeyPiconSet is the picon set an admin chose for DreamHub's logos (a
@@ -105,6 +106,7 @@ func (h *Channels) Mount(mux httpx.Mux) {
 	mux.HandleFunc("POST /api/v1/channels/iptv/read", h.readIPTV)
 	mux.HandleFunc("POST /api/v1/channels/iptv/upload", h.uploadIPTV)
 	mux.HandleFunc("POST /api/v1/channels/iptv/plan", h.planIPTV)
+	mux.HandleFunc("POST /api/v1/channels/iptv/test", h.probeIPTV)
 	mux.HandleFunc("POST /api/v1/channels/iptv/twins", h.suggestIPTVTwins)
 	mux.HandleFunc("GET /api/v1/channels/iptv/twins/search", h.searchIPTVTwins)
 	mux.HandleFunc("GET /api/v1/channels/iptv/sources", h.iptvSources)
@@ -131,6 +133,7 @@ func (h *Channels) Perms() map[string]perm.Perm {
 		"POST /api/v1/channels/iptv/read":                 perm.ChannelsManage,
 		"POST /api/v1/channels/iptv/upload":               perm.ChannelsManage,
 		"POST /api/v1/channels/iptv/plan":                 perm.ChannelsManage,
+		"POST /api/v1/channels/iptv/test":                 perm.ChannelsManage,
 		"POST /api/v1/channels/iptv/twins":                perm.ChannelsManage,
 		"GET /api/v1/channels/iptv/twins/search":          perm.ChannelsManage,
 		"GET /api/v1/channels/iptv/sources":               perm.ChannelsManage,
@@ -257,6 +260,11 @@ type BouquetEntry struct {
 	Marker  bool   `json:"marker,omitempty"`
 	Quality string `json:"quality,omitempty"`
 	Picon   bool   `json:"picon"`
+	// Stream is "iptv" or "netcast" for an internet channel (no tuner: it
+	// cannot be recorded, it plays through enigma2's player); Source names the
+	// Netcast source of a Netcast entry. See iptv.StreamKind.
+	Stream string `json:"stream,omitempty"`
+	Source string `json:"source,omitempty"`
 	// Now is the programme on now, when the box has EPG for the channel.
 	Now *webcontrol.EPGEvent `json:"now,omitempty"`
 }
@@ -289,6 +297,7 @@ func (h *Channels) bouquet(w http.ResponseWriter, r *http.Request) {
 		if webcontrol.IsMarker(s.ServiceReference) {
 			e.Marker = true
 		} else {
+			e.Stream, e.Source = iptv.StreamKind(s.ServiceReference)
 			e.Quality = webcontrol.Quality(s.ServiceReference)
 			e.Picon = hasLogo(dirs, s.ServiceReference, s.ServiceName)
 			e.Now = now[channelKey(s.ServiceReference)]

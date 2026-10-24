@@ -197,6 +197,7 @@ type iptvCompareItemView struct {
 	Group    string `json:"group,omitempty"`
 	Host     string `json:"host,omitempty"`
 	HasLogin bool   `json:"hasLogin,omitempty"`
+	HasLogo  bool   `json:"hasLogo,omitempty"`
 }
 
 func (h *Channels) compareIPTV(w http.ResponseWriter, r *http.Request) {
@@ -253,7 +254,7 @@ func (h *Channels) compareIPTV(w http.ResponseWriter, r *http.Request) {
 		}
 		if it.Fresh >= 0 {
 			e := pl.Entries[it.Fresh]
-			v.Group, v.Host, v.HasLogin = e.Group, iptv.Host(e.URL), iptv.HasLogin(e.URL)
+			v.Group, v.Host, v.HasLogin, v.HasLogo = e.Group, iptv.Host(e.URL), iptv.HasLogin(e.URL), e.Logo != ""
 		}
 		items = append(items, v)
 	}
@@ -350,6 +351,8 @@ func compareIPTVList(pl *iptv.Playlist, current []webcontrol.Service, members []
 type iptvComparePlanRequest struct {
 	Token string `json:"token"`
 	IDs   []int  `json:"ids"` // comparison items to carry out
+	// Logos fetches the logos of the new channels chosen.
+	Logos bool `json:"logos"`
 }
 
 func (h *Channels) planIPTVCompare(w http.ResponseWriter, r *http.Request) {
@@ -399,6 +402,9 @@ func (h *Channels) planIPTVCompare(w http.ResponseWriter, r *http.Request) {
 	drop := map[string]bool{}
 	var appended []DraftEntry
 	remembered, _ := h.Store.IPTVTwins(ctx)
+	var logoJobs []iptvLogoJob
+	type moved struct{ from, to string }
+	var moves []moved
 	newRef := map[int]string{} // a new channel's reference: with its remembered guide, if it has one
 	var removeHashes []string
 	var addMembers []store.IPTVMember
@@ -419,6 +425,7 @@ func (h *Channels) planIPTVCompare(w http.ResponseWriter, r *http.Request) {
 				ref = iptv.Ref(e.URL)
 			}
 			replace[it.OldRef] = DraftEntry{Ref: ref, Name: it.OldName}
+			moves = append(moves, moved{it.OldRef, ref + ":" + it.OldName})
 			removeHashes = append(removeHashes, iptvURLHash(iptv.URLPart(it.OldRef)))
 			addMembers = append(addMembers, iptvMember(e))
 		case "gone":
@@ -438,6 +445,11 @@ func (h *Channels) planIPTVCompare(w http.ResponseWriter, r *http.Request) {
 			}
 			newRef[it.Fresh] = ref
 			appended = append(appended, DraftEntry{Ref: ref, Name: name})
+			if req.Logos {
+				if j, ok := iptvLogoJobFor(e, ref+":"+name); ok {
+					logoJobs = append(logoJobs, j)
+				}
+			}
 			addMembers = append(addMembers, iptvMember(e))
 		}
 	}
@@ -532,6 +544,10 @@ func (h *Channels) planIPTVCompare(w http.ResponseWriter, r *http.Request) {
 			}); err != nil {
 				return err
 			}
+			for _, m := range moves {
+				moveLogo(m.from, m.to)
+			}
+			h.fetchIPTVLogos(logoJobs)
 			err := h.Store.UpdateIPTVSource(ctx, src.ID, store.IPTVChange{RemoveHashes: removeHashes, Add: addMembers, Seen: seen, BouquetName: bouquetName})
 			if err != nil {
 				slog.Warn("could not update the remembered playlist", "err", err)
@@ -539,5 +555,5 @@ func (h *Channels) planIPTVCompare(w http.ResponseWriter, r *http.Request) {
 			return nil
 		},
 	})
-	httpx.WriteJSON(w, http.StatusOK, map[string]any{"plan": pl})
+	httpx.WriteJSON(w, http.StatusOK, map[string]any{"plan": pl, "logos": map[string]any{"count": len(logoJobs), "hosts": iptvLogoHosts(logoJobs)}})
 }

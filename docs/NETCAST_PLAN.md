@@ -1,6 +1,6 @@
 # Netcast and IPTV channels — plan
 
-Status: **planned 2026-10-24, packages N1–N5; N1 built in part 2026-10-24** — read a list or upload one, pick channels, plan and apply into a new or existing bouquet, remember a list and "Compare again" (tab "IPTV" in the channel list; mock-tested, not yet on a box). The guide twin (suggestions, search with "now", remembered matches) is built too. Still to do in N1: logos from `tvg-logo` and the stream test. Facts are in `ARCHITECTURE.md` ("Netcast and the channel list", "Netcast sources on the One, and what the forum says"). Netcast needs a Dreambox One with the Gemini plugins (Netcast 2.4); the Solo2 has none. Plain IPTV (N1) works on both boxes.
+Status: **planned 2026-10-24, packages N1–N5; N1 and N2 built 2026-10-24** (mock-tested, not yet on a box). N1: read a list or upload one, pick channels, plan and apply into a new or existing bouquet, remember a list and "Compare again", a guide twin with search, logos from `tvg-logo`, a stream test (tab "IPTV" in the channel list). N2: internet and Netcast entries marked in the channel list, played on the TV, and kept out of timers. Open: N3 (needs the box), N4, N5 (guide sources and the coverage check). Facts are in `ARCHITECTURE.md` ("Netcast and the channel list", "Netcast sources on the One, and what the forum says"). Netcast needs a Dreambox One with the Gemini plugins (Netcast 2.4); the Solo2 has none. Plain IPTV (N1) works on both boxes.
 
 ## What it could be
 
@@ -122,6 +122,8 @@ The EPG-Loader menu on the box has **"Komplette EPG-Datenbank löschen"** (OK, n
 - **Not tested:** the subchannel plugin (no `subchannel.xml` on the box), and whether the plugin re-reads a deleted source file the same way as an added one.
 
 ## Still open
+
+0. **A login in an address is visible to admins in the channel list API** once the channel is in a bouquet (the reference holds the address, as the box's own bouquet file does). The list reading, the previews, the plans and the logs never show it; redacting the reference in the channel list would need an opaque handle for every edit that sends a reference back, and was left out.
 
 1. **Vavoo**: only after the test above; whether the page is worth building depends on it.
 2. **Which GitHub repositories publish a ready guide file or playlist** — to be checked when the curated list is made.

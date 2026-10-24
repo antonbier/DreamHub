@@ -21,15 +21,23 @@ const RadioRoot = `1:7:2:0:0:0:0:0:0:0:FROM BOUQUET "bouquets.radio" ORDER BY bo
 const RadioAll = `1:7:2:0:0:0:0:0:0:0:(type == 2) || (type == 10) ORDER BY name`
 
 // serviceFields splits a service reference into its numeric fields
-// ("1:0:2:6F37:..." → 1, 0, 0x2, 0x6F37, …), hex as Enigma2 writes them.
-// ok is false for anything that isn't one.
+// ("1:0:2:6F37:..." → 1, 0, 0x2, 0x6F37, …): the type and the flags in
+// decimal, the rest in hex, as Enigma2 writes them. ok is false for anything
+// that isn't one.
 func serviceFields(ref string) (fields []uint64, ok bool) {
 	parts := strings.Split(ref, ":")
 	if len(parts) < 10 {
 		return nil, false
 	}
-	for _, p := range parts[:10] {
-		v, err := strconv.ParseUint(p, 16, 32)
+	for i, p := range parts[:10] {
+		// enigma2 writes the type and the flags (fields 1 and 2) in decimal
+		// and the rest in hex: Netcast's entries carry flags 256 (sortable),
+		// which read as hex would look like a heading.
+		base := 16
+		if i < 2 {
+			base = 10
+		}
+		v, err := strconv.ParseUint(p, base, 32)
 		if err != nil {
 			return nil, false
 		}

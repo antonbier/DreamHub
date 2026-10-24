@@ -1,12 +1,17 @@
 package api_test
 
 import (
+	"bytes"
+	"context"
+	"image"
+	"image/png"
 	"net/http"
 	"net/http/httptest"
 	"strconv"
 	"strings"
 	"sync"
 	"testing"
+	"time"
 
 	"github.com/antonbier/DreamHub/backend/internal/webcontrol/mock"
 )
@@ -659,5 +664,205 @@ func TestIPTV_ACompareKeepsTheGuide(t *testing.T) {
 	got := e.entries(t, srcs.Sources[0].BouquetRef)
 	if len(got.Entries) != 1 || got.Entries[0].Ref != "4097:0:19:2B66:3F3:1:C00000:0:0:0:http%3a//tv.example/zdf2.m3u8:ZDF" {
 		t.Fatalf("the new address keeps the guide: %+v", got.Entries)
+	}
+}
+
+// --- logos and the stream test -------------------------------------------------------------
+
+// A small real picture: the logo of a channel.
+var logoPNG = func() []byte {
+	img := image.NewNRGBA(image.Rect(0, 0, 8, 6))
+	for i := range img.Pix {
+		img.Pix[i] = 200
+	}
+	var buf bytes.Buffer
+	png.Encode(&buf, img)
+	return buf.Bytes()
+}()
+
+func (e *env) customLogoKeys(t *testing.T) []string {
+	t.Helper()
+	var r struct {
+		Keys []string `json:"keys"`
+	}
+	e.json(t, "GET", "/api/v1/channels/logo/custom", "", nil, 200, &r)
+	return r.Keys
+}
+
+func waitForLogos(t *testing.T, e *env, n int) []string {
+	t.Helper()
+	var keys []string
+	for i := 0; i < 100; i++ {
+		if keys = e.customLogoKeys(t); len(keys) >= n {
+			return keys
+		}
+		time.Sleep(50 * time.Millisecond)
+	}
+	t.Fatalf("expected %d logos, have %v", n, keys)
+	return nil
+}
+
+func TestIPTV_FetchesTheLogosOfTheList(t *testing.T) {
+	e := newEnvWith(t, mock.New())
+	logos := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		if r.URL.Path == "/one.png" {
+			w.Write(logoPNG)
+			return
+		}
+		http.NotFound(w, r)
+	}))
+	defer logos.Close()
+	list := "#EXTM3U\n" +
+		"#EXTINF:-1 tvg-logo=\"" + logos.URL + "/one.png\",One\nhttp://tv.example/one.m3u8\n" +
+		"#EXTINF:-1 tvg-logo=\"" + logos.URL + "/missing.png\",Two\nhttp://tv.example/two.m3u8\n" +
+		"#EXTINF:-1,Three\nhttp://tv.example/three.m3u8\n"
+	var r iptvRead
+	e.json(t, "POST", "/api/v1/channels/iptv/upload?name=l.m3u", list, nil, 200, &r)
+
+	// without asking, nothing is fetched
+	var p struct {
+		Plan  struct{ ID string } `json:"plan"`
+		Logos struct {
+			Count int      `json:"count"`
+			Hosts []string `json:"hosts"`
+		} `json:"logos"`
+	}
+	e.json(t, "POST", "/api/v1/channels/iptv/plan", `{"token":`+jsonStr(r.Token)+`,"ids":[0,1,2],"newName":"NoLogos","kind":"tv"}`, nil, 200, &p)
+	if p.Logos.Count != 0 {
+		t.Fatalf("logos without asking: %+v", p.Logos)
+	}
+
+	body := `{"token":` + jsonStr(r.Token) + `,"ids":[0,1,2],"newName":"Logos","kind":"tv","logos":true}`
+	e.json(t, "POST", "/api/v1/channels/iptv/plan", body, nil, 200, &p)
+	if p.Logos.Count != 2 || len(p.Logos.Hosts) != 1 || p.Logos.Hosts[0] != "127.0.0.1" {
+		t.Fatalf("the preview says where logos come from: %+v", p.Logos)
+	}
+	if keys := e.customLogoKeys(t); len(keys) != 0 {
+		t.Fatalf("a logo before the change was confirmed: %v", keys)
+	}
+	if resp, b := e.do(t, "POST", "/api/v1/plans/"+p.Plan.ID+"/apply", "", nil); resp.StatusCode != 200 {
+		t.Fatalf("apply: %d %s", resp.StatusCode, b)
+	}
+	// One's logo arrives; Two's address answers 404 and costs only Two's logo
+	keys := waitForLogos(t, e, 1)
+	time.Sleep(200 * time.Millisecond)
+	if keys = e.customLogoKeys(t); len(keys) != 1 || !strings.Contains(keys[0], "_H") {
+		t.Fatalf("logos: %v", keys)
+	}
+}
+
+func TestIPTV_ALogoFollowsAChangedAddress(t *testing.T) {
+	e := newEnvWith(t, mock.New())
+	logos := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) { w.Write(logoPNG) }))
+	defer logos.Close()
+	text := func(addr string) string {
+		return "#EXTM3U\n#EXTINF:-1 tvg-id=\"one\" tvg-logo=\"" + logos.URL + "/one.png\",One\n" + addr + "\n"
+	}
+	live := &liveList{text: text("http://tv.example/one1.m3u8")}
+	addr := e.serveLiveList(t, live)
+	var r iptvRead
+	e.json(t, "POST", "/api/v1/channels/iptv/read", `{"url":`+jsonStr(addr)+`}`, nil, 200, &r)
+	e.planAndApply(t, "/api/v1/channels/iptv/plan", `{"token":`+jsonStr(r.Token)+`,"ids":[0],"newName":"Net","kind":"tv","remember":true,"logos":true}`, 200)
+	first := waitForLogos(t, e, 1)
+
+	live.set(text("http://tv.example/one2.m3u8"))
+	var srcs iptvSources
+	e.json(t, "GET", "/api/v1/channels/iptv/sources", "", nil, 200, &srcs)
+	base := "/api/v1/channels/iptv/sources/" + strconv.FormatInt(srcs.Sources[0].ID, 10)
+	var c iptvCompared
+	e.json(t, "POST", base+"/compare", "", nil, 200, &c)
+	e.planAndApply(t, base+"/plan", `{"token":`+jsonStr(c.Token)+`,"ids":[0]}`, 200)
+	keys := e.customLogoKeys(t)
+	if len(keys) != 2 {
+		t.Fatalf("the logo should be under the new address too: before %v, after %v", first, keys)
+	}
+}
+
+func TestIPTV_TestsTheStreams(t *testing.T) {
+	e := newEnvWith(t, mock.New())
+	mux := http.NewServeMux()
+	mux.HandleFunc("/ok", func(w http.ResponseWriter, r *http.Request) { w.Write([]byte("x")) })
+	mux.HandleFunc("/login", func(w http.ResponseWriter, r *http.Request) { http.Error(w, "no", http.StatusForbidden) })
+	srv := httptest.NewServer(mux)
+	defer srv.Close()
+	list := "#EXTM3U\n#EXTINF:-1,Ok\n" + srv.URL + "/ok\n#EXTINF:-1,Login\n" + srv.URL + "/login\n#EXTINF:-1,Gone\n" + srv.URL + "/nothing\n#EXTINF:-1,Cam\nrtsp://cam.example/s\n"
+	var r iptvRead
+	e.json(t, "POST", "/api/v1/channels/iptv/upload?name=l.m3u", list, nil, 200, &r)
+	var res struct {
+		Results []struct {
+			ID     int    `json:"id"`
+			Result string `json:"result"`
+		} `json:"results"`
+	}
+	resp, raw := e.do(t, "POST", "/api/v1/channels/iptv/test", `{"token":`+jsonStr(r.Token)+`,"ids":[0,1,2,3]}`, nil)
+	if resp.StatusCode != 200 || strings.Contains(string(raw), srv.URL) {
+		t.Fatalf("test: %d %s", resp.StatusCode, raw)
+	}
+	e.json(t, "POST", "/api/v1/channels/iptv/test", `{"token":`+jsonStr(r.Token)+`,"ids":[0,1,2,3]}`, nil, 200, &res)
+	got := []string{}
+	for _, x := range res.Results {
+		got = append(got, x.Result)
+	}
+	if strings.Join(got, ",") != "ok,login,gone,unchecked" {
+		t.Fatalf("results: %v", got)
+	}
+	if resp, _ := e.do(t, "POST", "/api/v1/channels/iptv/test", `{"token":`+jsonStr(r.Token)+`,"ids":[]}`, nil); resp.StatusCode != http.StatusBadRequest {
+		t.Errorf("no ids: %d", resp.StatusCode)
+	}
+	if resp, _ := e.do(t, "POST", "/api/v1/channels/iptv/test", `{"token":"nope","ids":[0]}`, nil); resp.StatusCode != http.StatusGone {
+		t.Errorf("unknown token: %d", resp.StatusCode)
+	}
+}
+
+// --- internet channels in the channel list (N2) -------------------------------------------
+
+func TestIPTV_BouquetEntriesSayWhichAreInternetChannels(t *testing.T) {
+	m := mock.New()
+	e := newEnvWith(t, m)
+	// Put one of each kind into a bouquet directly: a plain stream, a Netcast
+	// entry, a Netcast placeholder, a recording played from the disk.
+	for _, x := range []struct{ ref, name string }{
+		{"4097:0:1:0:0:0:0:0:0:0:http%3a//tv.example/a.m3u8", "Plain"},
+		{"8193:256:0:73:1:66:515476:0:0:0:netcastserver_lgat%3a//host/p/playlist.m3u8", "Netcast"},
+		{"4097:0:16:197:4:85:C00000:0:0:0:None", "Placeholder"},
+		{"4097:0:1:0:0:0:0:0:0:0:/media/hdd/movie/a.ts", "Recording"},
+	} {
+		if err := m.AddToBouquet(context.Background(), freeTV, x.ref, "", x.name); err != nil {
+			t.Fatal(err)
+		}
+	}
+	var got struct {
+		Entries []struct {
+			Ref    string `json:"ref"`
+			Name   string `json:"name"`
+			Stream string `json:"stream"`
+			Source string `json:"source"`
+		} `json:"entries"`
+	}
+	e.json(t, "GET", "/api/v1/channels/bouquet?ref="+urlq(freeTV), "", nil, 200, &got)
+	seen := map[string][2]string{}
+	for _, x := range got.Entries {
+		seen[x.Name] = [2]string{x.Stream, x.Source}
+	}
+	want := map[string][2]string{
+		"Plain": {"iptv", ""}, "Netcast": {"netcast", "lgat"}, "Placeholder": {"netcast", ""}, "Recording": {"", ""}, "RTL Television": {"", ""},
+	}
+	for name, w := range want {
+		if seen[name] != w {
+			t.Errorf("%s: %v, want %v", name, seen[name], w)
+		}
+	}
+}
+
+func TestTimers_AnInternetChannelCannotBeRecorded(t *testing.T) {
+	e := newEnv(t)
+	body := timerBodyRef("4097:0:19:2B66:3F3:1:C00000:0:0:0:http%3a//tv.example/zdf.m3u8:ZDF", "Heute", ev(21, 45), ev(22, 30), 5, 5)
+	resp, b := e.do(t, "POST", "/api/v1/timers/plan", body, nil)
+	if resp.StatusCode != http.StatusConflict || !strings.Contains(string(b), "timer_no_tuner") {
+		t.Fatalf("a stream: %d %s", resp.StatusCode, b)
+	}
+	// a real channel is planned as before
+	if resp, b := e.do(t, "POST", "/api/v1/timers/plan", timerBody("Die Kanzlei", ev(21, 45), ev(22, 30), 0, 0), nil); resp.StatusCode != 200 {
+		t.Fatalf("a channel with a tuner: %d %s", resp.StatusCode, b)
 	}
 }

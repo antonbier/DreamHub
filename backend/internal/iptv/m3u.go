@@ -367,3 +367,38 @@ func RedactRef(ref string) string {
 	}
 	return strings.Join(parts[:10], ":") + ":<stream>"
 }
+
+// Kinds of internet stream (StreamKind).
+const (
+	StreamIPTV    = "iptv"    // a plain stream address: any receiver plays it
+	StreamNetcast = "netcast" // an entry of the Gemini Netcast plugin
+)
+
+// StreamKind tells whether a service reference of a bouquet entry is an
+// internet stream rather than a channel with a tuner: a 4097 (or 8193)
+// reference with a stream address, or one of Netcast's placeholders. For a
+// Netcast entry that names its source (`netcastserver_<id>://…`) source is the
+// id. A recording played from the disk (a path or file:// address) is not an
+// internet stream. kind is "" for everything else.
+func StreamKind(ref string) (kind, source string) {
+	parts := strings.SplitN(ref, ":", 12)
+	if len(parts) < 11 || (parts[0] != "4097" && parts[0] != "8193") {
+		return "", ""
+	}
+	tail := strings.ToLower(parts[10])
+	switch {
+	case tail == "":
+		return "", ""
+	case tail == "none":
+		return StreamNetcast, ""
+	case strings.HasPrefix(tail, "/"), strings.HasPrefix(tail, "%2f"), strings.HasPrefix(tail, "file%3a"):
+		return "", ""
+	case strings.HasPrefix(tail, "netcastserver_"):
+		id := tail[len("netcastserver_"):]
+		if i := strings.Index(id, "%3a"); i >= 0 {
+			id = id[:i]
+		}
+		return StreamNetcast, id
+	}
+	return StreamIPTV, ""
+}

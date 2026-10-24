@@ -166,6 +166,9 @@ func (h *BoxSettings) section(w http.ResponseWriter, r *http.Request) {
 		httpx.WriteError(w, r, http.StatusNotFound, "not_found", "no such section")
 		return
 	}
+	if items == nil {
+		items = []boxsettings.Item{} // a menu with no settings is [], not null: the web UI reads its length
+	}
 	httpx.WriteJSON(w, http.StatusOK, map[string]any{"section": info, "items": items})
 }
 

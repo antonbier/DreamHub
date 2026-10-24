@@ -351,8 +351,10 @@ export const api = {
   // The receiver's own setup menus, read only (docs/BOXSETTINGS_PLAN.md, S1).
   boxSettings: {
     overview: (refresh = false) => request<BoxSettingsOverview>('GET', `/api/v1/boxsettings${refresh ? '?refresh=1' : ''}`),
-    section: (key: string) =>
-      request<{ section: BoxSettingSection; items: BoxSetting[] }>('GET', `/api/v1/boxsettings/sections/${encodeURIComponent(key)}`),
+    section: async (key: string) => {
+      const r = await request<{ section: BoxSettingSection; items: BoxSetting[] | null }>('GET', `/api/v1/boxsettings/sections/${encodeURIComponent(key)}`)
+      return { ...r, items: r.items ?? [] } // a menu with no settings (an older backend sent null)
+    },
     search: (q: string) => request<{ available: boolean; hits: BoxSettingHit[] }>('GET', `/api/v1/boxsettings/search?q=${encodeURIComponent(q)}`),
   },
   navigation: () => request<Navigation>('GET', '/api/v1/navigation'),

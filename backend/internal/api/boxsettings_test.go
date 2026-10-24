@@ -29,7 +29,7 @@ func TestBoxSettings_Overview(t *testing.T) {
 	if err := json.Unmarshal(b, &body); err != nil {
 		t.Fatal(err)
 	}
-	if !body.Available || body.Writes || body.BoxLevel != 1 || body.BoxLevelName != "Advanced" || len(body.Sections) != 5 {
+	if !body.Available || body.Writes || body.BoxLevel != 1 || body.BoxLevelName != "Advanced" || len(body.Sections) != 6 {
 		t.Fatalf("overview: %s", b)
 	}
 	if body.Sections[0].Key != "usage" || body.Sections[0].Count != 5 || body.Sections[0].HiddenByLevel != 1 {
@@ -178,5 +178,34 @@ func TestBoxSettings_ADreamboxWithAnOldPluginSaysSo(t *testing.T) {
 	_, b = newEnvWith(t, m2).do(t, "GET", "/api/v1/boxsettings", "", nil)
 	if !strings.Contains(string(b), `"reason":"unsupported"`) {
 		t.Errorf("unsupported: %s", b)
+	}
+}
+
+// A menu with no settings (the One's "Fernbedienung" has none) is an empty
+// list, not null: the web UI reads its length, and an opening menu that threw
+// left the whole tab blank on a real Dreambox.
+func TestBoxSettings_AnEmptySectionIsAnEmptyList(t *testing.T) {
+	e := newEnv(t)
+	_, b := e.do(t, "GET", "/api/v1/boxsettings", "", nil)
+	var ov struct {
+		Sections []struct {
+			Key   string `json:"key"`
+			Count int    `json:"count"`
+		} `json:"sections"`
+	}
+	json.Unmarshal(b, &ov)
+	checked := 0
+	for _, s := range ov.Sections {
+		if s.Count != 0 {
+			continue
+		}
+		_, sb := e.do(t, "GET", "/api/v1/boxsettings/sections/"+s.Key, "", nil)
+		if strings.Contains(string(sb), `"items":null`) {
+			t.Errorf("section %s: %s", s.Key, sb)
+		}
+		checked++
+	}
+	if checked == 0 {
+		t.Skip("the mock catalog has no empty menu")
 	}
 }

@@ -60,6 +60,8 @@ func mockSettings() []mockSection {
 			{Path: "config.plugins.demo.lastscan", Label: "lastscan", Kind: webcontrol.KindNumber, Value: float64(1761300000)},
 			{Path: "config.plugins.demo.password", Label: "password", Kind: webcontrol.KindText, Secret: true, IsSet: true},
 		}},
+		// no settings at all, like the One's "Fernbedienung" (rc): a menu with no settings
+		{webcontrol.ConfigSection{Key: "rc", Title: "Remote control"}, nil},
 	}
 }
 

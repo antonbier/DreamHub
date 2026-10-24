@@ -18,6 +18,7 @@
         <template v-if="overview.boxLevelName">
           {{ t(groups.length > 1 ? 'boxsettings.levelAll' : 'boxsettings.level', { level: overview.boxLevelName }) }}
         </template>
+        {{ ' ' }}
         <button type="button" class="text-accent hover:underline disabled:opacity-60" :disabled="reloading" @click="reload">
           {{ reloading ? t('common.loading') : t('boxsettings.reload') }}
         </button>
@@ -187,12 +188,16 @@ watch(query, (q) => {
 
 // The box's menus are read once and kept on the server for a while; this
 // reads them again (slow on a VU+: a few seconds).
+// The first menu that has settings: some menus have none (the One's remote
+// control menu), and opening on an empty page looks broken.
+const firstWithSettings = <T extends { count: number }>(sections: T[]): T | undefined => sections.find((s) => s.count > 0) ?? sections[0]
+
 const reloading = ref(false)
 async function reload() {
   reloading.value = true
   try {
     overview.value = await api.boxSettings.overview(true)
-    const keep = overview.value.sections.find((s) => s.key === current.value) ?? overview.value.sections[0]
+    const keep = overview.value.sections.find((s) => s.key === current.value) ?? firstWithSettings(overview.value.sections)
     if (keep) await openSection(keep.key)
   } catch {
     loadFailed.value = true
@@ -204,7 +209,7 @@ async function reload() {
 onMounted(async () => {
   try {
     overview.value = await api.boxSettings.overview()
-    const first = overview.value.sections[0]
+    const first = firstWithSettings(overview.value.sections)
     if (overview.value.available && first) await openSection(first.key)
   } catch {
     loadFailed.value = true

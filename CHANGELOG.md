@@ -6,10 +6,13 @@ Format follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/); version
 
 ## [Unreleased]
 
+## [0.9.6] - 2026-10-24
+
 ### Added
 - **Netcast channels into a bouquet (Dreambox One)**: in the "Netcast" tab a source's channels open as a list in the IPTV tab — Samsung TV Plus (all regions, with their groups), Pluto TV (names only: Netcast keeps no more of it), and playlist sources — to pick, test and add to a bouquet like any list. The entries are the plugin's own kind (`8193`, `netcastserver_<id>://`), so Netcast keeps refreshing their addresses; with a twin from the guide matching they carry that channel's guide. Checked on the One: played, with and without a twin. Vavoo cannot be listed (it plays through a local proxy).
 
 ### Fixed
+- **Box admin → Box settings was blank on a Dreambox**: a menu with no settings (the One's "Fernbedienung") came as `null`, the page read its length and stopped, and that menu was the one opened first. Empty menus are now an empty list, the page copes with an old backend's `null`, and it opens on the first menu that has settings. The mock had no empty menu, which is why the browser run on it did not show this; it has one now.
 - **Radio**: the page logged "Cannot access before initialization" at load (the radio-text watcher read a value declared further down); on a phone the station names were cut to "Deutschl…" next to the buttons, they now wrap.
 - **Netcast tab**: its introduction still said "a view only: nothing is changed here", although sources can be added, changed and removed since 0.9.5.
 

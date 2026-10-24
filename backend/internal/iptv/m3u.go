@@ -11,6 +11,8 @@ package iptv
 import (
 	"bufio"
 	"errors"
+	"fmt"
+	"hash/fnv"
 	"io"
 	"net/url"
 	"path"
@@ -39,6 +41,12 @@ type Entry struct {
 	// UI can say the channel may not play on the box.
 	Options []string
 	Line    int // line of the #EXTINF (or of the address), for messages
+	// Netcast is the id of the Netcast source the entry came from, and
+	// NetcastURL what follows "netcastserver_<id>://" in the entry the plugin
+	// itself writes for it (docs/NETCAST_PLAN.md, N3c). Both empty for a list
+	// from anywhere else: the entry is then a plain 4097 stream.
+	Netcast    string
+	NetcastURL string
 }
 
 // Skip is an entry that was left out, and why.
@@ -299,6 +307,54 @@ func escapeURL(streamURL string) string {
 	return strings.ReplaceAll(esc, ":", "%3a")
 }
 
+// EntryRef is the reference an entry is added with: the plugin's own kind for
+// an entry of a Netcast source (type 8193, so Netcast keeps refreshing the
+// address — checked on the One 2026-10-24: the plugin plays one DreamHub
+// built), else a plain 4097 stream.
+func EntryRef(e Entry) string {
+	if e.Netcast == "" || e.NetcastURL == "" {
+		return Ref(e.URL)
+	}
+	return NativeRef(e.Netcast, nativeKey(e), e.NetcastURL)
+}
+
+func nativeKey(e Entry) string {
+	if e.TvgID != "" {
+		return e.TvgID
+	}
+	return e.NetcastURL
+}
+
+// NativeRef is "8193:256:0:<made-up identity>:netcastserver_<id>%3a//<rest>".
+// The identity comes from the channel (key), so the same channel always gets
+// the same one; the plugin makes up its own the same way (sid, tsid, onid and
+// a namespace, none of a real service of the box).
+func NativeRef(id, key, rest string) string {
+	h := fnv.New64a()
+	h.Write([]byte(id + "|" + key))
+	v := h.Sum64()
+	sid := 0x100 + v&0xFEFF
+	tsid := 1 + (v>>16)&0xFF
+	onid := 0x14 + (v>>24)%0x60
+	ns := 0x400000 + (v>>32)&0x3FFFFF
+	return fmt.Sprintf("8193:256:0:%X:%X:%X:%X:0:0:0:netcastserver_%s%%3a//%s", sid, tsid, onid, ns, id, escapeURL(rest))
+}
+
+// TwinEntryRef is TwinRef for an entry: a native Netcast reference carries
+// the twin's identity the same way (the guide shown is the twin's, checked on
+// the One 2026-10-24), a plain one is a 4097 stream.
+func TwinEntryRef(dvbRef string, e Entry) (string, bool) {
+	if e.Netcast == "" || e.NetcastURL == "" {
+		return TwinRef(dvbRef, e.URL)
+	}
+	plain, ok := TwinRef(dvbRef, e.NetcastURL)
+	if !ok {
+		return "", false
+	}
+	parts := strings.SplitN(plain, ":", 11) // 4097:flags:type:sid:tsid:onid:ns:0:0:0:<url>
+	return "8193:256:0:" + strings.Join(parts[3:7], ":") + ":0:0:0:netcastserver_" + e.Netcast + "%3a//" + escapeURL(e.NetcastURL), true
+}
+
 // TwinRef is the reference for a stream that carries the identity of a DVB
 // service of the box (type, sid, tsid, onid, namespace), so enigma2 shows
 // that service's guide for it: the same stream address with the identity of
@@ -333,7 +389,7 @@ func WithURL(ref, streamURL string) string {
 // output whatever name the box added after it.
 func URLPart(ref string) string {
 	parts := strings.SplitN(ref, ":", 12)
-	if len(parts) < 11 || parts[0] != "4097" {
+	if len(parts) < 11 || (parts[0] != "4097" && parts[0] != "8193") {
 		return ""
 	}
 	return lowerEscapes(parts[10])

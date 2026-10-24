@@ -6,6 +6,9 @@ Format follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/); version
 
 ## [Unreleased]
 
+### Added
+- **Netcast channels into a bouquet (Dreambox One)**: in the "Netcast" tab a source's channels open as a list in the IPTV tab — Samsung TV Plus (all regions, with their groups), Pluto TV (names only: Netcast keeps no more of it), and playlist sources — to pick, test and add to a bouquet like any list. The entries are the plugin's own kind (`8193`, `netcastserver_<id>://`), so Netcast keeps refreshing their addresses; with a twin from the guide matching they carry that channel's guide. Checked on the One: played, with and without a twin. Vavoo cannot be listed (it plays through a local proxy).
+
 ## [0.9.5] - 2026-10-24
 
 ### Added

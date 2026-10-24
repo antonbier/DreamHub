@@ -153,9 +153,12 @@ const form = reactive<Fields>({ kind: 'server', name: '', address: '', mediaType
 const editing = ref<{ file: string; id: string } | null>(null)
 const edit = reactive<Fields>({ kind: 'server', name: '', address: '', mediaType: '', desc: '' })
 
-// A playlist source Netcast has downloaded can be read like any list: the
-// IPTV tab then picks, tests and puts channels into a bouquet.
-const isPlaylist = (f: NetcastFile, s: NetcastSource) => f.kind === 'server' && !!s.id && (s.mediaType ?? '').startsWith('playlist')
+// A playlist source Netcast has downloaded, and the channel lists it keeps of
+// Samsung TV Plus and Pluto, can be read like any list: the IPTV tab then picks,
+// tests and puts channels into a bouquet (as entries Netcast keeps refreshing).
+const listedApis = ['samsungtvplusapi', 'plutotvapi']
+const isPlaylist = (f: NetcastFile, s: NetcastSource) =>
+  f.kind === 'server' && !!s.id && ((s.mediaType ?? '').startsWith('playlist') || listedApis.includes(s.id))
 
 async function useList(s: NetcastSource) {
   busy.value = true

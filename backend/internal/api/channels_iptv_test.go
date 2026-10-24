@@ -1150,3 +1150,63 @@ func TestIPTV_NamesWithPercentAndColon(t *testing.T) {
 		t.Fatalf("apply: %d %s", resp.StatusCode, b)
 	}
 }
+
+func TestNetcast_SamsungAndPlutoListsAreNativeEntries(t *testing.T) {
+	m := mock.New()
+	e := newEnvWith(t, m)
+	var r iptvRead
+	e.json(t, "POST", "/api/v1/channels/netcast/read", `{"id":"samsungtvplusapi"}`, nil, 200, &r)
+	// the plugin leaves "Sony One" out, and so do we
+	if r.Name != "Netcast: samsungtvplusapi" && !strings.HasPrefix(r.Name, "Netcast:") || len(r.Channels) != 3 {
+		t.Fatalf("read: %+v", r)
+	}
+	if r.Channels[0].Group != "Germany · News" {
+		t.Errorf("Germany first, with its group: %+v", r.Channels[0])
+	}
+	var p struct{ Plan struct{ ID string } }
+	e.json(t, "POST", "/api/v1/channels/iptv/plan", `{"token":`+jsonStr(r.Token)+`,"ids":[0,1],"newName":"Samsung","kind":"tv"}`, nil, 200, &p)
+	if resp, b := e.do(t, "POST", "/api/v1/plans/"+p.Plan.ID+"/apply", "", nil); resp.StatusCode != 200 {
+		t.Fatalf("apply: %d %s", resp.StatusCode, b)
+	}
+	var list struct {
+		Bouquets []struct{ Ref, Name string } `json:"bouquets"`
+	}
+	e.json(t, "GET", "/api/v1/channels/bouquets", "", nil, 200, &list)
+	ref := ""
+	for _, b := range list.Bouquets {
+		if b.Name == "Samsung (TV)" {
+			ref = b.Ref
+		}
+	}
+	got := e.entries(t, ref)
+	if len(got.Entries) != 2 || !strings.HasPrefix(got.Entries[0].Ref, "8193:256:0:") ||
+		!strings.Contains(got.Entries[0].Ref, ":netcastserver_samsungtvplusapi%3a//jmp2.uk/stvp-DE100:Euronews LIVE") {
+		t.Fatalf("entries: %+v", got.Entries)
+	}
+	var pr iptvRead
+	e.json(t, "POST", "/api/v1/channels/netcast/read", `{"id":"plutotvapi"}`, nil, 200, &pr)
+	if len(pr.Channels) != 2 || pr.Channels[0].Name != "CNNi" {
+		t.Errorf("pluto: %+v", pr.Channels)
+	}
+	if resp, b := e.do(t, "POST", "/api/v1/channels/netcast/read", `{"id":"vavooapi"}`, nil); resp.StatusCode != 422 || !strings.Contains(string(b), "netcast_source_unsupported") {
+		t.Errorf("vavoo: %d %s", resp.StatusCode, b)
+	}
+	// a playlist source of https addresses is native too, an http one stays a plain stream
+	var kr iptvRead
+	e.json(t, "POST", "/api/v1/channels/netcast/read", `{"id":"kodi"}`, nil, 200, &kr)
+	e.json(t, "POST", "/api/v1/channels/iptv/plan", `{"token":`+jsonStr(kr.Token)+`,"ids":[0,1],"newName":"Kodi native","kind":"tv"}`, nil, 200, &p)
+	if resp, b := e.do(t, "POST", "/api/v1/plans/"+p.Plan.ID+"/apply", "", nil); resp.StatusCode != 200 {
+		t.Fatalf("apply: %d %s", resp.StatusCode, b)
+	}
+	e.json(t, "GET", "/api/v1/channels/bouquets", "", nil, 200, &list)
+	for _, b := range list.Bouquets {
+		if b.Name == "Kodi native (TV)" {
+			ref = b.Ref
+		}
+	}
+	got = e.entries(t, ref)
+	if len(got.Entries) != 2 || !strings.HasPrefix(got.Entries[0].Ref, "4097:") || !strings.HasPrefix(got.Entries[1].Ref, "8193:256:0:") ||
+		!strings.Contains(got.Entries[1].Ref, "netcastserver_kodi%3a//tv.example/live/toon.m3u8") {
+		t.Errorf("playlist entries: %+v", got.Entries)
+	}
+}

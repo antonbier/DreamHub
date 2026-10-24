@@ -1,6 +1,8 @@
 package mock
 
 import (
+	"bytes"
+	"compress/gzip"
 	"context"
 	"fmt"
 	"path"
@@ -18,8 +20,25 @@ var (
 	_ webcontrol.BoxFileWriter = (*Client)(nil)
 )
 
+// gzipped compresses what Netcast stores gzipped (Samsung TV Plus's list).
+func gzipped(s string) []byte {
+	var b bytes.Buffer
+	zw := gzip.NewWriter(&b)
+	zw.Write([]byte(s))
+	zw.Close()
+	return b.Bytes()
+}
+
 func mockBoxFiles() map[string][]byte {
 	return map[string][]byte{
+		"/data/Netcast/server/netcastserver_samsungtvplusapi": gzipped(`{"slug":"stvp-{id}","headers":{},"regions":{
+			"de":{"name":"Germany","logo":"https://flags.example/de.png","channels":{
+				"DE100":{"name":"Euronews LIVE","chno":4601,"group":"News","logo":"https://logos.example/euronews.png","programs":[]},
+				"DE200":{"name":"100% Kino: Film","chno":4602,"group":"Filme"},
+				"DE300":{"name":"Sony One | Action","chno":4603,"group":"Filme"}}},
+			"at":{"name":"Austria","channels":{"AT100":{"name":"Servus","chno":10,"group":"News"}}}}}`),
+		"/data/Netcast/server/epgChannelList_netcastserver_plutotvapi.json": []byte(`{"name":"PlutoTV","entrys":[
+			{"id":"66c45b1803e3b20008d8c200","name":"CNNi","active":1},{"id":"abc123","name":"Euronews","active":1}]}`),
 		"/etc/enigma2/netcastserver_gemini.json": []byte(`{"serverlist":[
 			{"id":"kodi","name":"Kodi IPTV","mainUrl":"https://iptv.example/kodi/playlist.m3u","mediatype":"playlist_live","desc":"Live"},
 			{"id":"lgat","name":"LG Channels AT","mainUrl":"https://iptv.example/lg/at.m3u8","mediatype":"playlist_live"}]}`),

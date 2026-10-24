@@ -842,7 +842,8 @@
       "netcast_source_exists": "A source with that name exists already.",
       "netcast_bad_file": "That file is not a source list DreamHub can edit.",
       "netcast_write_mismatch": "The box does not hold what was written; the old file was put back.",
-      "netcast_list_missing": "Netcast has not downloaded this list yet. Open the source once in Netcast on the TV, then try again."
+      "netcast_list_missing": "Netcast has not downloaded this list yet. Open the source once in Netcast on the TV, then try again.",
+      "netcast_source_unsupported": "DreamHub cannot list the channels of this source: it plays through a local proxy or serves films, not channels."
     },
     "media": {
       "not_a_recording": "This recording doesn't exist (anymore).",

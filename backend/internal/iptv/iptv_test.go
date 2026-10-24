@@ -260,3 +260,27 @@ func TestStreamKind(t *testing.T) {
 		}
 	}
 }
+
+func TestNativeRef_StableAndTwin(t *testing.T) {
+	e := Entry{Name: "Euronews", TvgID: "DE100", Netcast: "samsungtvplusapi", NetcastURL: "jmp2.uk/stvp-DE100", URL: "https://jmp2.uk/stvp-DE100"}
+	a, b := EntryRef(e), EntryRef(e)
+	if a != b || !strings.HasPrefix(a, "8193:256:0:") || !strings.HasSuffix(a, ":0:0:0:netcastserver_samsungtvplusapi%3a//jmp2.uk/stvp-DE100") {
+		t.Fatalf("ref: %q", a)
+	}
+	if URLPart(a) != "netcastserver_samsungtvplusapi%3a//jmp2.uk/stvp-DE100" {
+		t.Errorf("URLPart: %q", URLPart(a))
+	}
+	other := e
+	other.TvgID = "DE200"
+	if EntryRef(other) == a {
+		t.Error("another channel, the same identity")
+	}
+	tr, ok := TwinEntryRef("1:0:1:445F:453:1:C00000:0:0:0:", e)
+	if !ok || tr != "8193:256:0:445F:453:1:C00000:0:0:0:netcastserver_samsungtvplusapi%3a//jmp2.uk/stvp-DE100" {
+		t.Errorf("twin: %q %v", tr, ok)
+	}
+	plain := Entry{URL: "http://a.example/x.m3u8"}
+	if EntryRef(plain) != Ref(plain.URL) {
+		t.Error("an entry of another list stays a 4097 stream")
+	}
+}

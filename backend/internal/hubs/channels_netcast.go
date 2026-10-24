@@ -108,7 +108,8 @@ const (
 	CodeNetcastExists      = "netcast_source_exists"
 	CodeNetcastBadFile     = "netcast_bad_file"
 	CodeNetcastMismatch    = "netcast_write_mismatch"
-	CodeNetcastNoList      = "netcast_list_missing" // the plugin has not downloaded that list yet
+	CodeNetcastNoList      = "netcast_list_missing"       // the plugin has not downloaded that list yet
+	CodeNetcastUnsupported = "netcast_source_unsupported" // a source with no channel list to pick from (Vavoo, films)
 )
 
 // backupSuffix is added to a file's name for the copy kept before an edit; it
@@ -326,21 +327,23 @@ func (h *Channels) readNetcastList(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 	ctx := r.Context()
-	raw, err := rd.ReadBoxFileMax(ctx, path.Join(netcastCacheDir, "playlist_netcastserver_"+body.ID), iptvMaxUploadSize)
+	pl, err := netcastCachedList(ctx, rd, body.ID)
+	var fe *iptv.FetchError
 	switch {
+	case errors.Is(err, errNetcastUnsupported):
+		httpx.WriteError(w, r, http.StatusUnprocessableEntity, CodeNetcastUnsupported, "DreamHub cannot list the channels of this source")
+		return
 	case errors.Is(err, webcontrol.ErrNotFound):
 		httpx.WriteError(w, r, http.StatusNotFound, CodeNetcastNoList, "Netcast has not downloaded that list yet")
 		return
 	case errors.Is(err, webcontrol.ErrTooLarge):
 		writeFetchError(w, r, &iptv.FetchError{Kind: iptv.KindTooLarge})
 		return
+	case errors.As(err, &fe):
+		writeFetchError(w, r, err)
+		return
 	case err != nil:
 		httpx.WriteError(w, r, http.StatusBadGateway, "webcontrol_unavailable", "could not reach WebControl")
-		return
-	}
-	pl, err := iptv.Parse(strings.NewReader(string(raw)))
-	if err != nil {
-		writeFetchError(w, r, err)
 		return
 	}
 	name := body.ID

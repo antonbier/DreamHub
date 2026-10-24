@@ -152,7 +152,7 @@ func iptvListView(s *iptvSession) map[string]any {
 	for i, e := range s.pl.Entries {
 		c := IPTVChannel{ID: i, Name: e.Name, Group: e.Group, TvgID: e.TvgID, Host: iptv.Host(e.URL), Scheme: iptv.Scheme(e.URL),
 			Radio: e.Radio, HasLogin: iptv.HasLogin(e.URL), HasLogo: e.Logo != "", NeedsHeaders: len(e.Options) > 0}
-		key := iptv.Ref(e.URL)
+		key := iptv.EntryRef(e)
 		c.Duplicate = seen[key]
 		seen[key] = true
 		groups[e.Group]++
@@ -430,10 +430,10 @@ func (h *Channels) planIPTV(w http.ResponseWriter, r *http.Request) {
 	var skipped []IPTVSkip
 	for _, id := range ids {
 		e := sess.pl.Entries[id]
-		ref := iptv.Ref(e.URL)
+		ref := iptv.EntryRef(e)
 		twin, hasTwin := twinOf[id]
 		if hasTwin {
-			if tr, ok := iptv.TwinRef(twin.ref, e.URL); ok {
+			if tr, ok := iptv.TwinEntryRef(twin.ref, e); ok {
 				ref = tr
 			} else {
 				hasTwin = false

@@ -63,7 +63,7 @@ func iptvKey(e iptv.Entry) uint64 {
 	} else if n := normName(e.Name); n != "" {
 		key = "n:" + n
 	} else {
-		key = "u:" + iptv.URLPart(iptv.Ref(e.URL))
+		key = "u:" + iptv.URLPart(iptv.EntryRef(e))
 	}
 	sum := sha256.Sum256([]byte(key))
 	return binary.BigEndian.Uint64(sum[:8])
@@ -79,7 +79,7 @@ func iptvURLHash(part string) string {
 }
 
 func iptvMember(e iptv.Entry) store.IPTVMember {
-	return store.IPTVMember{URLHash: iptvURLHash(iptv.URLPart(iptv.Ref(e.URL))), Ident: iptvIdentHex(iptvKey(e)), Name: e.Name}
+	return store.IPTVMember{URLHash: iptvURLHash(iptv.URLPart(iptv.EntryRef(e))), Ident: iptvIdentHex(iptvKey(e)), Name: e.Name}
 }
 
 func iptvSeenKeys(pl *iptv.Playlist) []uint64 {
@@ -280,7 +280,7 @@ func compareIPTVList(pl *iptv.Playlist, current []webcontrol.Service, members []
 	freshByIdent := map[string][]int{}
 	order := make([]int, 0, len(pl.Entries))
 	for i, e := range pl.Entries {
-		part := iptv.URLPart(iptv.Ref(e.URL))
+		part := iptv.URLPart(iptv.EntryRef(e))
 		if _, dup := freshByPart[part]; dup {
 			continue
 		}
@@ -322,7 +322,7 @@ func compareIPTVList(pl *iptv.Playlist, current []webcontrol.Service, members []
 	for _, p := range open {
 		match := -1
 		for _, i := range freshByIdent[p.m.Ident] {
-			if !used[i] && !inBouquet[iptv.URLPart(iptv.Ref(pl.Entries[i].URL))] {
+			if !used[i] && !inBouquet[iptv.URLPart(iptv.EntryRef(pl.Entries[i]))] {
 				match = i
 				break
 			}
@@ -337,7 +337,7 @@ func compareIPTVList(pl *iptv.Playlist, current []webcontrol.Service, members []
 	var fresh []iptvCompareItem
 	for _, i := range order {
 		e := pl.Entries[i]
-		if used[i] || inBouquet[iptv.URLPart(iptv.Ref(e.URL))] || seenSet[iptvKey(e)] {
+		if used[i] || inBouquet[iptv.URLPart(iptv.EntryRef(e))] || seenSet[iptvKey(e)] {
 			continue
 		}
 		fresh = append(fresh, iptvCompareItem{Action: "new", Fresh: i, Name: e.Name})
@@ -422,7 +422,7 @@ func (h *Channels) planIPTVCompare(w http.ResponseWriter, r *http.Request) {
 			// the channel keeps the identity (and so the guide) it has
 			ref := iptv.WithURL(it.OldRef, e.URL)
 			if ref == "" {
-				ref = iptv.Ref(e.URL)
+				ref = iptv.EntryRef(e)
 			}
 			replace[it.OldRef] = DraftEntry{Ref: ref, Name: it.OldName}
 			moves = append(moves, moved{it.OldRef, namedRef(ref, it.OldName)})
@@ -437,9 +437,9 @@ func (h *Channels) planIPTVCompare(w http.ResponseWriter, r *http.Request) {
 			if utf8.RuneCountInString(name) > 100 {
 				name = string([]rune(name)[:100])
 			}
-			ref := iptv.Ref(e.URL)
+			ref := iptv.EntryRef(e)
 			if t, ok := remembered[iptvIdentHex(iptvKey(e))]; ok {
-				if tr, ok := iptv.TwinRef(t.ServiceRef, e.URL); ok {
+				if tr, ok := iptv.TwinEntryRef(t.ServiceRef, e); ok {
 					ref = tr
 				}
 			}

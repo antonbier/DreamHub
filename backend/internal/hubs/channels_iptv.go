@@ -13,6 +13,7 @@ import (
 	"github.com/antonbier/DreamHub/backend/internal/httpx"
 	"github.com/antonbier/DreamHub/backend/internal/iptv"
 	"github.com/antonbier/DreamHub/backend/internal/plan"
+	"github.com/antonbier/DreamHub/backend/internal/store"
 	"github.com/antonbier/DreamHub/backend/internal/webcontrol"
 )
 
@@ -268,6 +269,14 @@ type iptvPlanRequest struct {
 	// Remember keeps the list's address so it can be compared with the
 	// bouquet later; ignored for an uploaded file.
 	Remember bool `json:"remember"`
+	// Twins gives channels of the list the guide of a channel of the box:
+	// Service is that channel's reference (internal/hubs/channels_iptv_twins.go).
+	Twins []iptvTwinPick `json:"twins"`
+}
+
+type iptvTwinPick struct {
+	ID      int    `json:"id"`
+	Service string `json:"service"`
 }
 
 // IPTVSkip is a chosen channel that is not added, and why.
@@ -348,6 +357,22 @@ func (h *Channels) planIPTV(w http.ResponseWriter, r *http.Request) {
 		}
 		picked[id] = true
 	}
+	twinOf := map[int]twinService{}
+	if len(req.Twins) > 0 && len(errs) == 0 {
+		_, byKey, terr := h.twinServices(ctx)
+		if terr != nil {
+			httpx.WriteError(w, r, http.StatusBadGateway, "webcontrol_unavailable", "could not reach WebControl")
+			return
+		}
+		for _, tw := range req.Twins {
+			svc, known := byKey[channelKey(tw.Service)]
+			if !picked[tw.ID] || !known {
+				errs["twins"] = httpx.FieldError{Code: "invalid"}
+				break
+			}
+			twinOf[tw.ID] = svc
+		}
+	}
 	if len(errs) > 0 {
 		httpx.WriteErrorDetails(w, r, http.StatusBadRequest, "validation_failed", "nothing was planned", errs)
 		return
@@ -397,10 +422,19 @@ func (h *Channels) planIPTV(w http.ResponseWriter, r *http.Request) {
 	sort.Ints(ids)
 	var add []DraftEntry
 	var addedEntries []iptv.Entry
+	usedTwins := map[string]store.IPTVTwin{}
 	var skipped []IPTVSkip
 	for _, id := range ids {
 		e := sess.pl.Entries[id]
 		ref := iptv.Ref(e.URL)
+		twin, hasTwin := twinOf[id]
+		if hasTwin {
+			if tr, ok := iptv.TwinRef(twin.ref, e.URL); ok {
+				ref = tr
+			} else {
+				hasTwin = false
+			}
+		}
 		name := strings.TrimSpace(e.Name)
 		if utf8.RuneCountInString(name) > 100 {
 			name = string([]rune(name)[:100])
@@ -412,6 +446,9 @@ func (h *Channels) planIPTV(w http.ResponseWriter, r *http.Request) {
 			have[iptv.URLPart(ref)] = true
 			add = append(add, DraftEntry{Ref: ref, Name: name})
 			addedEntries = append(addedEntries, e)
+			if hasTwin {
+				usedTwins[iptvIdentHex(iptvKey(e))] = store.IPTVTwin{ServiceRef: twin.ref, ServiceName: twin.name}
+			}
 		}
 	}
 	if len(add) == 0 {
@@ -457,6 +494,7 @@ func (h *Channels) planIPTV(w http.ResponseWriter, r *http.Request) {
 			if req.Remember {
 				h.rememberIPTV(ctx, sess, bref, bouquetName, kind, addedEntries)
 			}
+			h.rememberTwins(ctx, usedTwins)
 			return nil
 		}
 	} else {
@@ -483,6 +521,7 @@ func (h *Channels) planIPTV(w http.ResponseWriter, r *http.Request) {
 			if req.Remember {
 				h.rememberIPTV(ctx, sess, newRef, webcontrol.BouquetDisplayName(req.NewName, kind == "radio"), kind, addedEntries)
 			}
+			h.rememberTwins(ctx, usedTwins)
 			return nil
 		}
 	}

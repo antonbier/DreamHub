@@ -398,6 +398,8 @@ func (h *Channels) planIPTVCompare(w http.ResponseWriter, r *http.Request) {
 	replace := map[string]DraftEntry{}
 	drop := map[string]bool{}
 	var appended []DraftEntry
+	remembered, _ := h.Store.IPTVTwins(ctx)
+	newRef := map[int]string{} // a new channel's reference: with its remembered guide, if it has one
 	var removeHashes []string
 	var addMembers []store.IPTVMember
 	notTaken := map[uint64]bool{} // new channels left unticked stay "new" for the next comparison
@@ -411,7 +413,12 @@ func (h *Channels) planIPTVCompare(w http.ResponseWriter, r *http.Request) {
 		switch it.Action {
 		case "update":
 			e := sess.pl.Entries[it.Fresh]
-			replace[it.OldRef] = DraftEntry{Ref: iptv.Ref(e.URL), Name: it.OldName}
+			// the channel keeps the identity (and so the guide) it has
+			ref := iptv.WithURL(it.OldRef, e.URL)
+			if ref == "" {
+				ref = iptv.Ref(e.URL)
+			}
+			replace[it.OldRef] = DraftEntry{Ref: ref, Name: it.OldName}
 			removeHashes = append(removeHashes, iptvURLHash(iptv.URLPart(it.OldRef)))
 			addMembers = append(addMembers, iptvMember(e))
 		case "gone":
@@ -423,7 +430,14 @@ func (h *Channels) planIPTVCompare(w http.ResponseWriter, r *http.Request) {
 			if utf8.RuneCountInString(name) > 100 {
 				name = string([]rune(name)[:100])
 			}
-			appended = append(appended, DraftEntry{Ref: iptv.Ref(e.URL), Name: name})
+			ref := iptv.Ref(e.URL)
+			if t, ok := remembered[iptvIdentHex(iptvKey(e))]; ok {
+				if tr, ok := iptv.TwinRef(t.ServiceRef, e.URL); ok {
+					ref = tr
+				}
+			}
+			newRef[it.Fresh] = ref
+			appended = append(appended, DraftEntry{Ref: ref, Name: name})
 			addMembers = append(addMembers, iptvMember(e))
 		}
 	}
@@ -475,7 +489,7 @@ func (h *Channels) planIPTVCompare(w http.ResponseWriter, r *http.Request) {
 		case "new":
 			to := 0
 			for k, d := range draft {
-				if d.Ref == iptv.Ref(sess.pl.Entries[it.Fresh].URL) {
+				if d.Ref == newRef[it.Fresh] {
 					to = num[k]
 				}
 			}

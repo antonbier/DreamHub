@@ -87,7 +87,10 @@
         <button v-if="visible.length < filtered.length" type="button" class="rounded-sm px-2 py-1 text-accent hover:bg-tile-2" @click="limit += PAGE">{{ t('channels.iptv.more') }}</button>
       </div>
 
-      <!-- 3. Where to put them -->
+      <!-- 3. A guide (optional) -->
+      <IptvGuidePicker v-if="!result && selected.size > 0" v-model="twinPicks" class="mt-4" :token="list.token" :channels="list.channels" :ids="selectedIds" />
+
+      <!-- 4. Where to put them -->
       <form v-if="!result" class="mt-4 flex flex-wrap items-end gap-3 rounded-sm border border-line bg-tile p-3" @submit.prevent="review">
         <fieldset class="flex flex-col gap-1 text-[13.5px]">
           <legend class="mb-1 text-[13px] text-faint">{{ t('channels.iptv.target') }}</legend>
@@ -126,7 +129,7 @@
         <p v-if="error" class="w-full text-[13px] text-warn" role="alert">{{ error }}</p>
       </form>
 
-      <!-- 4. The preview -->
+      <!-- 5. The preview -->
       <PlanPreview
         v-if="result"
         class="mt-4"
@@ -139,6 +142,7 @@
       >
         <p v-for="(c, n) in shownChanges" :key="n">{{ describeChange(c) }}</p>
         <p v-if="hiddenChanges > 0" class="text-muted">{{ t('channels.iptv.moreChanges', { n: number(hiddenChanges) }) }}</p>
+        <p v-if="twinCount > 0" class="mt-2 text-[12.5px] text-muted">{{ t('channels.iptv.guide.summary', { n: number(twinCount) }, twinCount) }}</p>
         <p v-if="result.skipped.length > 0" class="mt-2 text-[12.5px] text-muted">{{ t('channels.iptv.leftOut', { n: number(result.skipped.length) }, result.skipped.length) }}</p>
         <p class="mt-2 text-[12.5px] text-faint">{{ t('channels.iptv.backupNote') }}</p>
       </PlanPreview>
@@ -153,10 +157,11 @@ import { computed, ref, watch } from 'vue'
 import { useI18n } from 'vue-i18n'
 import { api } from '@/api/client'
 import PlanPreview from '@/components/PlanPreview.vue'
+import IptvGuidePicker from '@/components/channels/IptvGuidePicker.vue'
 import IptvSources from '@/components/channels/IptvSources.vue'
 import { useChannelChange } from '@/components/channels/useChannelChange'
 import { usePlanError } from '@/composables/usePlanError'
-import type { ChannelBouquet, IptvList, IptvPlanResult } from '@/api/types'
+import type { ChannelBouquet, IptvList, IptvPlanResult, IptvTwin } from '@/api/types'
 
 const props = defineProps<{ bouquets: ChannelBouquet[]; editor: boolean }>()
 const emit = defineEmits<{ done: [] }>()
@@ -190,6 +195,7 @@ const kind = ref<'tv' | 'radio'>('tv')
 const existing = ref('')
 const result = ref<IptvPlanResult | null>(null)
 const remember = ref(true)
+const twinPicks = ref<Record<number, IptvTwin>>({})
 
 const filtered = computed(() => {
   const l = list.value
@@ -226,6 +232,8 @@ watch(
   { immediate: true },
 )
 
+const selectedIds = computed(() => [...selected.value].sort((a, b) => a - b))
+const twinCount = computed(() => selectedIds.value.filter((id) => twinPicks.value[id]).length)
 const shownChanges = computed(() => result.value?.plan.changes.slice(0, PREVIEW_LINES) ?? [])
 const hiddenChanges = computed(() => Math.max(0, (result.value?.plan.changes.length ?? 0) - PREVIEW_LINES))
 
@@ -245,6 +253,7 @@ function selectShown() {
 function take(l: IptvList) {
   list.value = l
   selected.value = new Set()
+  twinPicks.value = {}
   query.value = ''
   group.value = ALL
   limit.value = PAGE
@@ -299,10 +308,11 @@ async function review() {
   busy.value = true
   error.value = ''
   try {
-    const ids = [...selected.value].sort((a, b) => a - b)
+    const ids = selectedIds.value
+    const twins = ids.filter((id) => twinPicks.value[id]).map((id) => ({ id, service: twinPicks.value[id].ref }))
     result.value = await api.channels.planIptv(
-      mode.value === 'new' ? { token: l.token, ids, newName: newName.value.trim(), kind: kind.value, remember: remember.value && !l.fromFile }
-        : { token: l.token, ids, bouquet: existing.value, remember: remember.value && !l.fromFile },
+      mode.value === 'new' ? { token: l.token, ids, newName: newName.value.trim(), kind: kind.value, remember: remember.value && !l.fromFile, twins }
+        : { token: l.token, ids, bouquet: existing.value, remember: remember.value && !l.fromFile, twins },
     )
   } catch (err) {
     error.value = planErrorMessage(err)

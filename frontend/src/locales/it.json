@@ -2485,6 +2485,23 @@
         "confirm": "Applica",
         "close": "Chiudi",
         "saved": "Il bouquet ora corrisponde alla lista."
+      },
+      "guide": {
+        "title": "Guida programmi (facoltativa)",
+        "explain": "Dai a un canale la guida di un canale che il box ha già — a \"Das Erste\" quella di \"Das Erste HD\". Le corrispondenze certe sono già inserite; controlla il resto e correggi ciò che non va. La TV mostra la guida solo per i canali che ne hanno una.",
+        "none": "Nessuna guida",
+        "remembered": "{name} (scelto prima)",
+        "search": "Cerca nel box…",
+        "searchLabel": "Canale del box",
+        "searchHint": "Almeno due lettere",
+        "noResults": "Nessun canale trovato.",
+        "now": "ora: {title}",
+        "noNow": "nessun programma visibile",
+        "use": "Usa",
+        "close": "Chiudi",
+        "count": "{n} con guida | {n} con guida",
+        "more": "Mostra altri",
+        "summary": "{n} canale riceve la guida di un canale del box. | {n} canali ricevono la guida di un canale del box."
       }
     }
   },

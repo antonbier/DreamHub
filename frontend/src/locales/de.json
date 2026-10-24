@@ -2485,6 +2485,23 @@
         "confirm": "Übernehmen",
         "close": "Schließen",
         "saved": "Das Bouquet passt jetzt zur Liste."
+      },
+      "guide": {
+        "title": "Programm (optional)",
+        "explain": "Gib einem Sender das Programm eines Senders, den deine Box schon hat — „Das Erste“ das Programm von „Das Erste HD“. Sichere Treffer sind schon eingetragen; schau dir den Rest an und ändere, was nicht stimmt. Der Fernseher zeigt nur bei Sendern mit Programm etwas an.",
+        "none": "Kein Programm",
+        "remembered": "{name} (früher gewählt)",
+        "search": "In der Box suchen…",
+        "searchLabel": "Sender der Box",
+        "searchHint": "Mindestens zwei Buchstaben",
+        "noResults": "Kein Sender gefunden.",
+        "now": "jetzt: {title}",
+        "noNow": "kein Programm zu sehen",
+        "use": "Nehmen",
+        "close": "Schließen",
+        "count": "{n} mit Programm | {n} mit Programm",
+        "more": "Mehr anzeigen",
+        "summary": "{n} Sender bekommt das Programm eines Senders der Box. | {n} Sender bekommen das Programm eines Senders der Box."
       }
     }
   },

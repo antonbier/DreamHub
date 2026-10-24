@@ -291,9 +291,41 @@ func Scheme(raw string) string {
 // 4097 streams"). It has no name: the box appends ":<name>" when the entry
 // is added with one.
 func Ref(streamURL string) string {
+	return "4097:0:1:0:0:0:0:0:0:0:" + escapeURL(streamURL)
+}
+
+func escapeURL(streamURL string) string {
 	esc := strings.ReplaceAll(streamURL, "%", "%25")
-	esc = strings.ReplaceAll(esc, ":", "%3a")
-	return "4097:0:1:0:0:0:0:0:0:0:" + esc
+	return strings.ReplaceAll(esc, ":", "%3a")
+}
+
+// TwinRef is the reference for a stream that carries the identity of a DVB
+// service of the box (type, sid, tsid, onid, namespace), so enigma2 shows
+// that service's guide for it: the same stream address with the identity of
+// an existing channel of the same station (ARCHITECTURE.md, "The identity is
+// what carries the guide"). ok is false when dvbRef is not a DVB service.
+func TwinRef(dvbRef, streamURL string) (string, bool) {
+	parts := strings.SplitN(dvbRef, ":", 11)
+	// the second field is the flags: 0 for a service, 7 for a bouquet, 64 for a heading
+	if len(parts) < 10 || parts[0] != "1" || parts[1] != "0" {
+		return "", false
+	}
+	for _, f := range parts[1:10] {
+		if f == "" || len(f) > 8 || strings.Trim(f, "0123456789abcdefABCDEF") != "" {
+			return "", false
+		}
+	}
+	return "4097:" + strings.Join(parts[1:10], ":") + ":" + escapeURL(streamURL), true
+}
+
+// WithURL gives a 4097 reference a new stream address and keeps its identity
+// (and so its guide); "" when ref is not a 4097 reference.
+func WithURL(ref, streamURL string) string {
+	parts := strings.SplitN(ref, ":", 11)
+	if len(parts) < 10 || parts[0] != "4097" {
+		return ""
+	}
+	return strings.Join(parts[:10], ":") + ":" + escapeURL(streamURL)
 }
 
 // URLPart returns the escaped address of a 4097 reference ("" for any other

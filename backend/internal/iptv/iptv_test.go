@@ -185,3 +185,25 @@ func TestUploadIsLimitedAndUnpacked(t *testing.T) {
 		t.Error("an upload over the limit is refused")
 	}
 }
+
+func TestTwinRefAndWithURL(t *testing.T) {
+	got, ok := TwinRef("1:0:19:283D:3FB:1:C00000:0:0:0:", "http://h.example/a.m3u8")
+	if !ok || got != "4097:0:19:283D:3FB:1:C00000:0:0:0:http%3a//h.example/a.m3u8" {
+		t.Errorf("TwinRef: %q %v", got, ok)
+	}
+	for _, bad := range []string{"4097:0:1:0:0:0:0:0:0:0:x", "1:7:1:0:0:0:0:0:0:0:FROM BOUQUET", "1:0:19", "1:0:xx:1:1:1:1:0:0:0:"} {
+		if r, ok := TwinRef(bad, "http://h.example/a"); ok {
+			t.Errorf("TwinRef(%q) = %q", bad, r)
+		}
+	}
+	old := got + ":Das Erste HD"
+	if w := WithURL(old, "http://h.example/b:1.m3u8"); w != "4097:0:19:283D:3FB:1:C00000:0:0:0:http%3a//h.example/b%3a1.m3u8" {
+		t.Errorf("WithURL keeps the identity: %q", w)
+	}
+	if WithURL("1:0:19:283D:3FB:1:C00000:0:0:0:", "http://h.example/a") != "" {
+		t.Error("only a 4097 reference takes a new address")
+	}
+	if URLPart(got) != "http%3a//h.example/a.m3u8" {
+		t.Errorf("URLPart of a twin reference: %q", URLPart(got))
+	}
+}

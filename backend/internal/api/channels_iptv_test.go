@@ -514,3 +514,150 @@ func TestIPTV_NotRememberedUnlessAsked(t *testing.T) {
 		t.Fatalf("remembered without being asked: %+v", srcs)
 	}
 }
+
+// --- a guide for internet channels ------------------------------------------------------
+
+const twinList = "#EXTM3U\n" +
+	"#EXTINF:-1 tvg-id=\"zdf\" group-title=\"DE\",ZDF\nhttp://tv.example/zdf1.m3u8\n" +
+	"#EXTINF:-1 tvg-id=\"arte\" group-title=\"DE\",arte\nhttp://tv.example/arte1.m3u8\n" +
+	"#EXTINF:-1 group-title=\"DE\",Das Erste Österreich\nhttp://tv.example/erste1.m3u8\n" +
+	"#EXTINF:-1 group-title=\"DE\",Some Unknown Channel\nhttp://tv.example/unknown1.m3u8\n" +
+	"#EXTINF:-1 group-title=\"DE\",ZDFneo HD\nhttp://tv.example/neo1.m3u8\n"
+
+type twinSuggestions struct {
+	Suggestions []struct {
+		ID         int                   `json:"id"`
+		Remembered *struct{ Ref string } `json:"remembered"`
+		Sure       *struct {
+			Ref  string `json:"ref"`
+			Name string `json:"name"`
+		} `json:"sure"`
+		Candidates []struct {
+			Ref  string `json:"ref"`
+			Name string `json:"name"`
+		} `json:"candidates"`
+	} `json:"suggestions"`
+}
+
+func TestIPTV_SuggestsTheGuideOfAChannelOfTheBox(t *testing.T) {
+	e := newEnvWith(t, mock.New())
+	var r iptvRead
+	e.json(t, "POST", "/api/v1/channels/iptv/upload?name=t.m3u", twinList, nil, 200, &r)
+	var s twinSuggestions
+	e.json(t, "POST", "/api/v1/channels/iptv/twins", `{"token":`+jsonStr(r.Token)+`,"ids":[0,1,2,3,4]}`, nil, 200, &s)
+	if len(s.Suggestions) != 5 {
+		t.Fatalf("suggestions: %+v", s)
+	}
+	sure := func(i int) string {
+		if s.Suggestions[i].Sure == nil {
+			return ""
+		}
+		return s.Suggestions[i].Sure.Name
+	}
+	// the quality suffix does not matter, on either side
+	if sure(0) != "ZDF HD" || sure(1) != "arte HD" || sure(4) != "zdf_neo HD" {
+		t.Errorf("sure: %q %q %q", sure(0), sure(1), sure(4))
+	}
+	// a longer name only suggests; an unknown channel offers nothing
+	if sure(2) != "" || len(s.Suggestions[2].Candidates) != 1 || s.Suggestions[2].Candidates[0].Name != "Das Erste HD" {
+		t.Errorf("Das Erste Österreich: %+v", s.Suggestions[2])
+	}
+	if sure(3) != "" || len(s.Suggestions[3].Candidates) != 0 {
+		t.Errorf("unknown channel: %+v", s.Suggestions[3])
+	}
+	if resp, _ := e.do(t, "POST", "/api/v1/channels/iptv/twins", `{"token":`+jsonStr(r.Token)+`,"ids":[99]}`, nil); resp.StatusCode != http.StatusBadRequest {
+		t.Errorf("an id out of range: %d", resp.StatusCode)
+	}
+}
+
+func TestIPTV_SearchesTheBoxForAGuide(t *testing.T) {
+	e := newEnvWith(t, mock.New())
+	var res struct {
+		Results []struct {
+			Ref  string `json:"ref"`
+			Name string `json:"name"`
+			HD   bool   `json:"hd"`
+		} `json:"results"`
+	}
+	e.json(t, "GET", "/api/v1/channels/iptv/twins/search?q=zdf", "", nil, 200, &res)
+	names := []string{}
+	for _, x := range res.Results {
+		names = append(names, x.Name)
+	}
+	if strings.Join(names, "|") != "ZDF HD|zdf_neo HD" || !res.Results[0].HD {
+		t.Errorf("search: %v", names)
+	}
+	e.json(t, "GET", "/api/v1/channels/iptv/twins/search?q=z", "", nil, 200, &res)
+	if len(res.Results) != 0 {
+		t.Errorf("one letter finds nothing: %+v", res)
+	}
+}
+
+func TestIPTV_ChannelsGetTheIdentityOfTheirTwin(t *testing.T) {
+	e := newEnvWith(t, mock.New())
+	var r iptvRead
+	e.json(t, "POST", "/api/v1/channels/iptv/upload?name=t.m3u", twinList, nil, 200, &r)
+	body := `{"token":` + jsonStr(r.Token) + `,"ids":[0,3],"newName":"Guide","kind":"tv","twins":[{"id":0,"service":` + jsonStr(mock.TVZDF.ServiceReference) + `}]}`
+	e.planAndApply(t, "/api/v1/channels/iptv/plan", body, 200)
+	var list struct {
+		Bouquets []struct{ Ref, Name string } `json:"bouquets"`
+	}
+	e.json(t, "GET", "/api/v1/channels/bouquets", "", nil, 200, &list)
+	ref := ""
+	for _, b := range list.Bouquets {
+		if b.Name == "Guide (TV)" {
+			ref = b.Ref
+		}
+	}
+	got := e.entries(t, ref)
+	if len(got.Entries) != 2 || got.Entries[0].Ref != "4097:0:19:2B66:3F3:1:C00000:0:0:0:http%3a//tv.example/zdf1.m3u8:ZDF" {
+		t.Fatalf("a channel with a twin carries its identity: %+v", got.Entries)
+	}
+	if got.Entries[1].Ref != "4097:0:1:0:0:0:0:0:0:0:http%3a//tv.example/unknown1.m3u8:Some Unknown Channel" {
+		t.Errorf("a channel without one stays plain: %q", got.Entries[1].Ref)
+	}
+	// the match is remembered for the next list
+	var s twinSuggestions
+	var again iptvRead
+	e.json(t, "POST", "/api/v1/channels/iptv/upload?name=t.m3u", twinList, nil, 200, &again)
+	e.json(t, "POST", "/api/v1/channels/iptv/twins", `{"token":`+jsonStr(again.Token)+`,"ids":[0,3]}`, nil, 200, &s)
+	if s.Suggestions[0].Remembered == nil || s.Suggestions[0].Remembered.Ref != mock.TVZDF.ServiceReference || s.Suggestions[1].Remembered != nil {
+		t.Errorf("remembered: %+v", s.Suggestions)
+	}
+
+	// a channel that is not in the choice, a made-up service, a heading
+	for name, tw := range map[string]string{
+		"not chosen": `{"id":1,"service":` + jsonStr(mock.TVZDF.ServiceReference) + `}`,
+		"unknown":    `{"id":0,"service":"1:0:19:FFFF:FFF:1:C00000:0:0:0:"}`,
+		"a bouquet":  `{"id":0,"service":` + jsonStr(freeTV) + `}`,
+	} {
+		bad := `{"token":` + jsonStr(again.Token) + `,"ids":[0],"newName":"X","kind":"tv","twins":[` + tw + `]}`
+		if resp, b := e.do(t, "POST", "/api/v1/channels/iptv/plan", bad, nil); resp.StatusCode != http.StatusBadRequest || !strings.Contains(string(b), "twins") {
+			t.Errorf("%s: %d %s", name, resp.StatusCode, b)
+		}
+	}
+}
+
+func TestIPTV_ACompareKeepsTheGuide(t *testing.T) {
+	e := newEnvWith(t, mock.New())
+	live := &liveList{text: "#EXTM3U\n#EXTINF:-1 tvg-id=\"zdf\",ZDF\nhttp://tv.example/zdf1.m3u8\n"}
+	addr := e.serveLiveList(t, live)
+	var r iptvRead
+	e.json(t, "POST", "/api/v1/channels/iptv/read", `{"url":`+jsonStr(addr)+`}`, nil, 200, &r)
+	e.planAndApply(t, "/api/v1/channels/iptv/plan", `{"token":`+jsonStr(r.Token)+`,"ids":[0],"newName":"Net","kind":"tv","remember":true,"twins":[{"id":0,"service":`+jsonStr(mock.TVZDF.ServiceReference)+`}]}`, 200)
+
+	live.set("#EXTM3U\n#EXTINF:-1 tvg-id=\"zdf\",ZDF\nhttp://tv.example/zdf2.m3u8\n")
+	var srcs iptvSources
+	e.json(t, "GET", "/api/v1/channels/iptv/sources", "", nil, 200, &srcs)
+	base := "/api/v1/channels/iptv/sources/" + strconv.FormatInt(srcs.Sources[0].ID, 10)
+	var c iptvCompared
+	e.json(t, "POST", base+"/compare", "", nil, 200, &c)
+	if len(c.Items) != 1 || c.Items[0].Action != "update" {
+		t.Fatalf("compare: %+v", c)
+	}
+	e.planAndApply(t, base+"/plan", `{"token":`+jsonStr(c.Token)+`,"ids":[0]}`, 200)
+	got := e.entries(t, srcs.Sources[0].BouquetRef)
+	if len(got.Entries) != 1 || got.Entries[0].Ref != "4097:0:19:2B66:3F3:1:C00000:0:0:0:http%3a//tv.example/zdf2.m3u8:ZDF" {
+		t.Fatalf("the new address keeps the guide: %+v", got.Entries)
+	}
+}

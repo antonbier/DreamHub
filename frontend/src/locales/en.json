@@ -2485,6 +2485,23 @@
         "confirm": "Apply",
         "close": "Close",
         "saved": "The bouquet is brought in line with the list."
+      },
+      "guide": {
+        "title": "Programme guide (optional)",
+        "explain": "Give a channel the programme of a channel your box already has — \"Das Erste\" the guide of \"Das Erste HD\". Matches that are certain are filled in; look at the rest and change what is wrong. The TV shows the programme only for channels with a guide.",
+        "none": "No guide",
+        "remembered": "{name} (chosen before)",
+        "search": "Search the box…",
+        "searchLabel": "Channel of the box",
+        "searchHint": "At least two letters",
+        "noResults": "No channel found.",
+        "now": "now: {title}",
+        "noNow": "no programme shown",
+        "use": "Use",
+        "close": "Close",
+        "count": "{n} with a guide | {n} with a guide",
+        "more": "Show more",
+        "summary": "{n} channel gets the guide of a channel of the box. | {n} channels get the guide of a channel of the box."
       }
     }
   },

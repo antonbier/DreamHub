@@ -7239,7 +7239,7 @@
       "$ref": "#/components/parameters/Box"
      }
     ],
-    "description": "Body `{token, ids: [channel numbers of the list], bouquet | newName + kind, remember?}` (`remember` keeps the address of a list read from an address, to compare it later): puts the chosen channels into an existing bouquet (after its entries; one whose address is in it already is left out) or into a new one, as plain 4097 references. Changes nothing; apply the plan with `POST /plans/{id}/apply` — a backup of the channel list is made first and the bouquet is read back. The answer also lists `skipped` channels. `410 iptv_session_gone` when the list was read too long ago, `409 iptv_bouquet_exists`, `409 iptv_nothing_to_add`.",
+    "description": "Body `{token, ids: [channel numbers of the list], bouquet | newName + kind, remember?, twins?: [{id, service}]}` (`remember` keeps the address of a list read from an address, to compare it later; `twins` give chosen channels the guide of the box channel `service`, which is remembered): puts the chosen channels into an existing bouquet (after its entries; one whose address is in it already is left out) or into a new one, as plain 4097 references. Changes nothing; apply the plan with `POST /plans/{id}/apply` — a backup of the channel list is made first and the bouquet is read back. The answer also lists `skipped` channels. `410 iptv_session_gone` when the list was read too long ago, `409 iptv_bouquet_exists`, `409 iptv_nothing_to_add`.",
     "responses": {
      "200": {
       "description": "The plan",
@@ -7431,6 +7431,100 @@
      }
     },
     "x-csrf": true
+   }
+  },
+  "/channels/iptv/twins": {
+   "post": {
+    "summary": "Suggest a guide for internet channels",
+    "tags": [
+     "channels"
+    ],
+    "operationId": "POST_channels_iptv_twins",
+    "parameters": [
+     {
+      "$ref": "#/components/parameters/Box"
+     }
+    ],
+    "description": "Body `{token, ids}`. Changes nothing. For each channel of the list: `remembered` (a match made before), `sure` (the same station by name, quality suffixes aside, one channel fits) and up to five `candidates` among the box's channels (`{ref, name, hd}`). Giving a channel of the list that channel's reference as its twin makes enigma2 show that channel's guide for it.",
+    "responses": {
+     "200": {
+      "description": "The suggestions: `{suggestions: [{id, remembered?, sure?, candidates}]}`",
+      "content": {
+       "application/json": {
+        "schema": {
+         "type": "object"
+        }
+       }
+      }
+     },
+     "default": {
+      "$ref": "#/components/responses/Error"
+     }
+    },
+    "requestBody": {
+     "required": true,
+     "content": {
+      "application/json": {
+       "schema": {
+        "type": "object",
+        "properties": {
+         "token": {
+          "type": "string"
+         },
+         "ids": {
+          "type": "array",
+          "items": {
+           "type": "integer"
+          }
+         }
+        },
+        "required": [
+         "token",
+         "ids"
+        ]
+       }
+      }
+     }
+    },
+    "x-csrf": true
+   }
+  },
+  "/channels/iptv/twins/search": {
+   "get": {
+    "summary": "Search the box's channels for a guide",
+    "tags": [
+     "channels"
+    ],
+    "operationId": "GET_channels_iptv_twins_search",
+    "parameters": [
+     {
+      "$ref": "#/components/parameters/Box"
+     },
+     {
+      "name": "q",
+      "in": "query",
+      "required": true,
+      "schema": {
+       "type": "string"
+      }
+     }
+    ],
+    "description": "Channels of the box whose name holds `q` (two letters at least; at most 20): `{results: [{ref, name, hd, now: {title, start, end} | null}]}`. `now` is what the channel shows at the moment, so a wrong station shows at once.",
+    "responses": {
+     "200": {
+      "description": "The channels",
+      "content": {
+       "application/json": {
+        "schema": {
+         "type": "object"
+        }
+       }
+      }
+     },
+     "default": {
+      "$ref": "#/components/responses/Error"
+     }
+    }
    }
   }
  }

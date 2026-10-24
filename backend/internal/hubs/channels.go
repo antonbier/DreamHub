@@ -105,6 +105,8 @@ func (h *Channels) Mount(mux httpx.Mux) {
 	mux.HandleFunc("POST /api/v1/channels/iptv/read", h.readIPTV)
 	mux.HandleFunc("POST /api/v1/channels/iptv/upload", h.uploadIPTV)
 	mux.HandleFunc("POST /api/v1/channels/iptv/plan", h.planIPTV)
+	mux.HandleFunc("POST /api/v1/channels/iptv/twins", h.suggestIPTVTwins)
+	mux.HandleFunc("GET /api/v1/channels/iptv/twins/search", h.searchIPTVTwins)
 	mux.HandleFunc("GET /api/v1/channels/iptv/sources", h.iptvSources)
 	mux.HandleFunc("POST /api/v1/channels/iptv/sources/{id}/compare", h.compareIPTV)
 	mux.HandleFunc("POST /api/v1/channels/iptv/sources/{id}/plan", h.planIPTVCompare)
@@ -129,6 +131,8 @@ func (h *Channels) Perms() map[string]perm.Perm {
 		"POST /api/v1/channels/iptv/read":                 perm.ChannelsManage,
 		"POST /api/v1/channels/iptv/upload":               perm.ChannelsManage,
 		"POST /api/v1/channels/iptv/plan":                 perm.ChannelsManage,
+		"POST /api/v1/channels/iptv/twins":                perm.ChannelsManage,
+		"GET /api/v1/channels/iptv/twins/search":          perm.ChannelsManage,
 		"GET /api/v1/channels/iptv/sources":               perm.ChannelsManage,
 		"POST /api/v1/channels/iptv/sources/{id}/compare": perm.ChannelsManage,
 		"POST /api/v1/channels/iptv/sources/{id}/plan":    perm.ChannelsManage,

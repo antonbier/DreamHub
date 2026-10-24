@@ -71,3 +71,25 @@ func TestIPTVSources(t *testing.T) {
 		t.Fatalf("members remain: %+v", m)
 	}
 }
+
+func TestIPTVTwins(t *testing.T) {
+	s, _ := openTemp(t)
+	ctx := context.Background()
+	if err := s.SaveIPTVTwins(ctx, map[string]IPTVTwin{"a": {"1:0:19:283D:3FB:1:C00000:0:0:0:", "Das Erste HD"}, "b": {"1:0:1:1:1:1:C00000:0:0:0:", "ZDF"}}); err != nil {
+		t.Fatal(err)
+	}
+	if err := s.SaveIPTVTwins(ctx, map[string]IPTVTwin{"a": {"1:0:19:2:2:1:C00000:0:0:0:", "Das Erste"}}); err != nil {
+		t.Fatal(err)
+	}
+	got, _ := s.IPTVTwins(ctx)
+	if len(got) != 2 || got["a"].ServiceName != "Das Erste" {
+		t.Fatalf("twins: %+v", got)
+	}
+	if other, _ := s.IPTVTwins(box.With(ctx, "second")); len(other) != 0 {
+		t.Fatalf("another box sees %+v", other)
+	}
+	s.ForgetIPTVTwin(ctx, "a")
+	if got, _ = s.IPTVTwins(ctx); len(got) != 1 {
+		t.Fatalf("after forgetting: %+v", got)
+	}
+}

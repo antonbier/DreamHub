@@ -452,6 +452,19 @@ var migrations = []string{
 		PRIMARY KEY (source_id, url_hash)
 	);
 	`,
+	`
+	-- Which channel of the box carries the guide of an internet channel
+	-- (docs/NETCAST_PLAN.md, "Linking a guide"), chosen once and used again
+	-- the next time the list is compared. ident is the channel's key in the
+	-- list (its tvg-id, else its name).
+	CREATE TABLE iptv_twins (
+		box_id       TEXT NOT NULL DEFAULT 'main',
+		ident        TEXT NOT NULL,
+		service_ref  TEXT NOT NULL,
+		service_name TEXT NOT NULL,
+		PRIMARY KEY (box_id, ident)
+	);
+	`,
 }
 
 func (s *Store) migrate(ctx context.Context) error {

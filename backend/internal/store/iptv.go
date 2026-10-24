@@ -224,3 +224,53 @@ func (s *Store) DeleteIPTVSource(ctx context.Context, id int64) error {
 	}
 	return nil
 }
+
+// IPTVTwin is the box channel whose guide an internet channel shows.
+type IPTVTwin struct {
+	ServiceRef  string
+	ServiceName string
+}
+
+// IPTVTwins returns the remembered guide matches of the box of ctx, by the
+// channel's key in its list.
+func (s *Store) IPTVTwins(ctx context.Context) (map[string]IPTVTwin, error) {
+	rows, err := s.db.QueryContext(ctx, `SELECT ident, service_ref, service_name FROM iptv_twins WHERE box_id = ?`, box.Key(ctx))
+	if err != nil {
+		return nil, err
+	}
+	defer rows.Close()
+	out := map[string]IPTVTwin{}
+	for rows.Next() {
+		var ident string
+		var t IPTVTwin
+		if err := rows.Scan(&ident, &t.ServiceRef, &t.ServiceName); err != nil {
+			return nil, err
+		}
+		out[ident] = t
+	}
+	return out, rows.Err()
+}
+
+// SaveIPTVTwins remembers guide matches, replacing earlier ones of the same
+// channels.
+func (s *Store) SaveIPTVTwins(ctx context.Context, twins map[string]IPTVTwin) error {
+	tx, err := s.db.BeginTx(ctx, nil)
+	if err != nil {
+		return err
+	}
+	defer tx.Rollback()
+	for ident, t := range twins {
+		if _, err := tx.ExecContext(ctx, `INSERT INTO iptv_twins (box_id, ident, service_ref, service_name) VALUES (?, ?, ?, ?)
+			ON CONFLICT (box_id, ident) DO UPDATE SET service_ref = excluded.service_ref, service_name = excluded.service_name`,
+			box.Key(ctx), ident, t.ServiceRef, t.ServiceName); err != nil {
+			return err
+		}
+	}
+	return tx.Commit()
+}
+
+// ForgetIPTVTwin removes one remembered match.
+func (s *Store) ForgetIPTVTwin(ctx context.Context, ident string) error {
+	_, err := s.db.ExecContext(ctx, `DELETE FROM iptv_twins WHERE box_id = ? AND ident = ?`, box.Key(ctx), ident)
+	return err
+}

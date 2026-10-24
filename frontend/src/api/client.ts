@@ -47,6 +47,8 @@ import type {
   IptvList,
   IptvPlanResult,
   IptvSource,
+  IptvTwinHit,
+  IptvTwinSuggestion,
   DraftEntry,
   ChannelBouquet,
   ChannelInfo,
@@ -286,8 +288,12 @@ export const api = {
     // chosen channels into a bouquet. Stream addresses never come back.
     readIptv: (url: string) => request<IptvList>('POST', '/api/v1/channels/iptv/read', { url }),
     uploadIptv: (file: Blob, name: string) => request<IptvList>('POST', `/api/v1/channels/iptv/upload?name=${encodeURIComponent(name)}`, file),
-    planIptv: (target: { token: string; ids: number[]; remember?: boolean } & ({ bouquet: string } | { newName: string; kind: 'tv' | 'radio' })) =>
+    planIptv: (target: { token: string; ids: number[]; remember?: boolean; twins?: { id: number; service: string }[] } & ({ bouquet: string } | { newName: string; kind: 'tv' | 'radio' })) =>
       request<IptvPlanResult>('POST', '/api/v1/channels/iptv/plan', target),
+    // A guide for internet channels: the box's channel whose programme a channel shows.
+    suggestIptvTwins: (token: string, ids: number[]) =>
+      request<{ suggestions: IptvTwinSuggestion[] }>('POST', '/api/v1/channels/iptv/twins', { token, ids }),
+    searchIptvTwins: (q: string) => request<{ results: IptvTwinHit[] }>('GET', `/api/v1/channels/iptv/twins/search?q=${encodeURIComponent(q)}`),
     // Lists DreamHub remembers, compared with their bouquets again on request.
     iptvSources: () => request<{ sources: IptvSource[] }>('GET', '/api/v1/channels/iptv/sources'),
     compareIptv: (id: number) => request<IptvCompare>('POST', `/api/v1/channels/iptv/sources/${id}/compare`),

@@ -1566,6 +1566,25 @@ export interface IptvCompare {
   truncated: boolean
 }
 
+// A channel of the box that can lend its guide to an internet channel.
+export interface IptvTwin {
+  ref: string
+  name: string
+  hd?: boolean
+}
+
+export interface IptvTwinSuggestion {
+  id: number
+  remembered?: IptvTwin
+  sure?: IptvTwin
+  candidates: IptvTwin[]
+}
+
+export interface IptvTwinHit extends IptvTwin {
+  // What it shows now (Unix seconds, UTC), null without a guide.
+  now: { title: string; start: number; end: number } | null
+}
+
 export interface IptvPlanResult {
   plan: Plan
   skipped: { id: number; name: string; reason: string }[]

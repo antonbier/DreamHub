@@ -1,6 +1,6 @@
 # Netcast and IPTV channels — plan
 
-Status: **planned 2026-10-24, packages N1–N5; N1 built in part 2026-10-24** — read a list or upload one, pick channels, plan and apply into a new or existing bouquet, remember a list and "Compare again" (tab "IPTV" in the channel list; mock-tested, not yet on a box). Still to do in N1: logos from `tvg-logo`, the stream test, the guide twin with manual matching. Facts are in `ARCHITECTURE.md` ("Netcast and the channel list", "Netcast sources on the One, and what the forum says"). Netcast needs a Dreambox One with the Gemini plugins (Netcast 2.4); the Solo2 has none. Plain IPTV (N1) works on both boxes.
+Status: **planned 2026-10-24, packages N1–N5; N1 built in part 2026-10-24** — read a list or upload one, pick channels, plan and apply into a new or existing bouquet, remember a list and "Compare again" (tab "IPTV" in the channel list; mock-tested, not yet on a box). The guide twin (suggestions, search with "now", remembered matches) is built too. Still to do in N1: logos from `tvg-logo` and the stream test. Facts are in `ARCHITECTURE.md` ("Netcast and the channel list", "Netcast sources on the One, and what the forum says"). Netcast needs a Dreambox One with the Gemini plugins (Netcast 2.4); the Solo2 has none. Plain IPTV (N1) works on both boxes.
 
 ## What it could be
 

@@ -807,3 +807,13 @@ Dreambox One (enigma2 5.0.0, WebControl 1.9.1), DreamHub plugin 0.9.4 plus the n
 - **A service restart is needed for a changed plugin route**: `/web/powerstate?newstate=3` answered but did not restart enigma2 here; `systemctl restart enigma2` did.
 - **Not seen**: Netcast's own screen showing a source DreamHub wrote (the plan's 2026-10-23 test used a hand-written file of the same layout).
 - **State left on the box**: the plugin files `boxfiles.py`, `webfiles.py`, `webplay.py`, `__init__.py`, `DreamHubSetup.py` and the `.mo` files are the new ones next to the 0.9.4 package (backup of the old directory in `/tmp/dreamhub-plugin-0.9.4-backup.tgz`, RAM only); the switch is **on**.
+
+### Internet channels into a bouquet, on the One (2026-10-24)
+
+IPTV list = the Netcast-cached `playlist_netcastserver_lgat` (180 channels), a test bouquet through DreamHub's plan/apply, removed afterwards (`bouquets.tv`, `bouquets.radio` and the set of `userbouquet.*` files byte-identical to before).
+
+- **The stream test** (`/channels/iptv/test`) answered `ok`/200 for three LG streams (4.6 s).
+- **The box escapes a name in the reference**: BouquetEditor's `addservicetobouquet` with a name writes `<ref>:<name>` with `%` as `%25` and `:` as `%3a` (`50% off` → `50%25 off`, `A: B` → `A%3a B`; spaces, umlauts, `|`, `"`, `;`, `#` stay; `&` is `&amp;` in the XML only). DreamHub's read-back after an add expected the name unchanged, so a channel called "100% Weihnachten" made the apply fail with `channels_restored` — the backup put the list back correctly (this is the safety net doing its job, on a real box). Fixed (`namedRef`); an add with all three channels then went through, in the order given.
+- **Marking and playing**: the channel list marks the entry `stream: "iptv"` (a CRLF playlist's address trimmed); `POST /control/zap` with its reference plays it (`getcurrent` names it, the picture shows), `zap` back to the DVB channel works.
+- **Guide coverage**: against EPGShare01's Austria file (144 channels) the LG list had 0 of 180 channels known — right, the file has other stations; the download and the count work.
+

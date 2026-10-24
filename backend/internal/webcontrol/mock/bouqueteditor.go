@@ -263,7 +263,7 @@ func (c *Client) AddToBouquet(ctx context.Context, bouquetRef, ref, beforeRef, n
 	// ":", so this reads as the usual "...::name" bouquet entries show.
 	stored := ref
 	if name != "" {
-		stored = ref + ":" + name
+		stored = ref + ":" + strings.NewReplacer("%", "%25", ":", "%3a").Replace(name) // as enigma2 writes a name into a reference
 	}
 	c.insert(bouquetRef, webcontrol.Service{ServiceReference: stored, ServiceName: name}, beforeRef)
 	return nil

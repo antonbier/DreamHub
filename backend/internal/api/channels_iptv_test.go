@@ -1132,3 +1132,21 @@ func TestNetcast_ACachedListBecomesAnIPTVList(t *testing.T) {
 		t.Errorf("a box without files: %d %s", resp.StatusCode, b)
 	}
 }
+
+// The box writes '%' and ':' of a name into the reference as %25 and %3a
+// (Dreambox One, 2026-10-24); the read-back after the add has to expect that.
+func TestIPTV_NamesWithPercentAndColon(t *testing.T) {
+	e := newEnvWith(t, mock.New())
+	list := "#EXTM3U\n#EXTINF:-1,100% Weihnachten\nhttp://a.example/1.m3u8\n#EXTINF:-1,Live: Sport | HD\nhttp://a.example/2.m3u8\n#EXTINF:-1,Plain\nhttp://a.example/3.m3u8\n"
+	var r iptvRead
+	e.json(t, "POST", "/api/v1/channels/iptv/upload?name=l.m3u", list, nil, 200, &r)
+	var p struct {
+		Plan struct {
+			ID string `json:"id"`
+		} `json:"plan"`
+	}
+	e.json(t, "POST", "/api/v1/channels/iptv/plan", `{"token":`+jsonStr(r.Token)+`,"ids":[0,1,2],"newName":"Odd names","kind":"tv"}`, nil, 200, &p)
+	if resp, b := e.do(t, "POST", "/api/v1/plans/"+p.Plan.ID+"/apply", "", nil); resp.StatusCode != 200 {
+		t.Fatalf("apply: %d %s", resp.StatusCode, b)
+	}
+}

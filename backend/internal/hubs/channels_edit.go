@@ -353,7 +353,7 @@ func (h *Channels) applyBouquet(ctx context.Context, editor webcontrol.BouquetEd
 			target = append(target, newMarkers[m])
 			m++
 		case addedName[e.Ref] != "":
-			target = append(target, e.Ref+":"+addedName[e.Ref])
+			target = append(target, namedRef(e.Ref, addedName[e.Ref]))
 		default:
 			target = append(target, e.Ref)
 		}
@@ -629,4 +629,15 @@ func (h *Channels) planRestore(w http.ResponseWriter, r *http.Request) {
 		},
 	})
 	httpx.WriteJSON(w, http.StatusOK, map[string]any{"plan": pl})
+}
+
+// refNameEscaper is how the box writes a name into a service reference: the
+// BouquetEditor's add calls ref.setName(), which escapes '%' and ':' (checked
+// on the Dreambox One 2026-10-24: "50% off" is "50%25 off", "A: B" is
+// "A%3a B"; spaces, umlauts, '|' and quotes stay).
+var refNameEscaper = strings.NewReplacer("%", "%25", ":", "%3a")
+
+// namedRef is the reference the box lists for ref added with a name.
+func namedRef(ref, name string) string {
+	return ref + ":" + refNameEscaper.Replace(name)
 }

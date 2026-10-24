@@ -451,7 +451,7 @@ func (h *Channels) planIPTV(w http.ResponseWriter, r *http.Request) {
 			add = append(add, DraftEntry{Ref: ref, Name: name})
 			addedEntries = append(addedEntries, e)
 			if req.Logos {
-				if j, ok := iptvLogoJobFor(e, ref+":"+name); ok {
+				if j, ok := iptvLogoJobFor(e, namedRef(ref, name)); ok {
 					logoJobs = append(logoJobs, j)
 				}
 			}

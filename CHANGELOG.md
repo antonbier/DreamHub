@@ -17,6 +17,7 @@ Format follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/); version
 - **Other airings in the guide**: a programme's dialog lists when it runs again ("Also on"), each opening in the same dialog to be recorded there — the box's own search for repeats of the same broadcast, so it finds the next Tagesschau but not the next episode of a series. New: `GET /api/v1/guide/similar`. Checked on the Solo2; a Dreambox's answer is not checked yet.
 
 ### Fixed
+- **Internet channels with a `%` or `:` in their name could not be added to a bouquet**: the box writes those two characters of a name escaped into the reference, and DreamHub's check after the change did not expect that, so it undid the change ("the channel list was restored from the backup"). Found on the first real run of the IPTV import against a Dreambox One.
 - **Netcast entries looked like headings**: DreamHub read the flags of a service reference (`256` in Netcast's entries) as hex, where enigma2 writes them in decimal, so `0x256` contained the heading bit. Type and flags are now read in decimal.
 
 ## [0.9.4] - 2026-10-21

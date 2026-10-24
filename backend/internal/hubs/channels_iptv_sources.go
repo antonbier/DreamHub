@@ -425,7 +425,7 @@ func (h *Channels) planIPTVCompare(w http.ResponseWriter, r *http.Request) {
 				ref = iptv.Ref(e.URL)
 			}
 			replace[it.OldRef] = DraftEntry{Ref: ref, Name: it.OldName}
-			moves = append(moves, moved{it.OldRef, ref + ":" + it.OldName})
+			moves = append(moves, moved{it.OldRef, namedRef(ref, it.OldName)})
 			removeHashes = append(removeHashes, iptvURLHash(iptv.URLPart(it.OldRef)))
 			addMembers = append(addMembers, iptvMember(e))
 		case "gone":
@@ -446,7 +446,7 @@ func (h *Channels) planIPTVCompare(w http.ResponseWriter, r *http.Request) {
 			newRef[it.Fresh] = ref
 			appended = append(appended, DraftEntry{Ref: ref, Name: name})
 			if req.Logos {
-				if j, ok := iptvLogoJobFor(e, ref+":"+name); ok {
+				if j, ok := iptvLogoJobFor(e, namedRef(ref, name)); ok {
 					logoJobs = append(logoJobs, j)
 				}
 			}

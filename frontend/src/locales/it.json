@@ -2273,7 +2273,8 @@
       "bouquets": "Bouquet",
       "find": "Tutti i canali",
       "picons": "Loghi",
-      "iptv": "IPTV"
+      "iptv": "IPTV",
+      "netcast": "Netcast"
     },
     "kind": {
       "tv": "TV",
@@ -2553,6 +2554,11 @@
         "missing": "Non trovati in questa fonte ({n})",
         "missingMore": "e altri {n}",
         "playlistFile": "playlist"
+      },
+      "repo": {
+        "title": "Oppure una playlist da un repository GitHub",
+        "noFiles": "Nessun file playlist (.m3u, .m3u8) in questa cartella.",
+        "use": "Usa questa lista"
       }
     },
     "stream": {
@@ -2562,6 +2568,17 @@
       "play": "Riproduci",
       "playNamed": "Riproduci {name} sulla TV",
       "playing": "\"{name}\" sta partendo sulla TV."
+    },
+    "netcast": {
+      "explain": "Le fonti che il plugin Netcast ha impostato sul box — playlist internet, servizi e guide, lette dai suoi file. È solo una vista: qui non cambia nulla.",
+      "none": "Questo box non ha fonti Netcast (Netcast è un plugin della Dreambox One).",
+      "notListed": "Il box non ha potuto elencare i suoi file, quindi sono stati provati solo i nomi usuali. Un file proprio con un altro nome può mancare.",
+      "empty": "Nessuna fonte in questo file.",
+      "unreadable": "Non leggibile: {names}",
+      "kind": {
+        "server": "Fonti dei canali",
+        "epg": "Fonti della guida"
+      }
     }
   },
   "updates": {

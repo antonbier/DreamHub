@@ -20,6 +20,7 @@ var (
 	_ webcontrol.Client            = (*WebControl)(nil)
 	_ webcontrol.BouquetEditor     = (*WebControl)(nil)
 	_ webcontrol.BoxSettingsReader = (*WebControl)(nil)
+	_ webcontrol.BoxFileReader     = (*WebControl)(nil)
 )
 
 func (c *WebControl) DeviceInfo(ctx context.Context) (*webcontrol.DeviceInfo, error) {
@@ -380,4 +381,34 @@ func (c *WebControl) SetupDefinition(ctx context.Context) ([]webcontrol.SetupSec
 		return nil, err
 	}
 	return r.SetupDefinition(ctx)
+}
+
+// fileReader is the box client's file reading; a client without it answers
+// "not found".
+func (c *WebControl) fileReader(ctx context.Context) (webcontrol.BoxFileReader, error) {
+	e, err := c.reg.For(ctx)
+	if err != nil {
+		return nil, err
+	}
+	r, ok := e.WC.(webcontrol.BoxFileReader)
+	if !ok {
+		return nil, webcontrol.ErrNotFound
+	}
+	return r, nil
+}
+
+func (c *WebControl) ReadBoxFile(ctx context.Context, path string) ([]byte, error) {
+	r, err := c.fileReader(ctx)
+	if err != nil {
+		return nil, err
+	}
+	return r.ReadBoxFile(ctx, path)
+}
+
+func (c *WebControl) ListBoxFiles(ctx context.Context, dir, pattern string) ([]string, error) {
+	r, err := c.fileReader(ctx)
+	if err != nil {
+		return nil, err
+	}
+	return r.ListBoxFiles(ctx, dir, pattern)
 }

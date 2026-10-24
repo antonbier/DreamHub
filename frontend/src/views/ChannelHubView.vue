@@ -248,6 +248,7 @@
 
     <!-- Picons -->
     <IptvPanel v-else-if="tab === 'iptv'" :bouquets="bouquets" :editor="editor" @done="loadBouquets" />
+    <NetcastPanel v-else-if="tab === 'netcast'" />
 
     <section v-else class="mt-4">
       <p class="mb-3 text-[13.5px] text-muted">{{ t('channels.picons.explain') }}</p>
@@ -344,6 +345,7 @@ import PlanPreview from '@/components/PlanPreview.vue'
 import { useBoxesStore } from '@/stores/boxes'
 import ChannelSyncPanel from '@/components/channels/ChannelSyncPanel.vue'
 import IptvPanel from '@/components/channels/IptvPanel.vue'
+import NetcastPanel from '@/components/channels/NetcastPanel.vue'
 import BouquetDraftEditor from '@/components/channels/BouquetDraftEditor.vue'
 import ChannelLogoPicker from '@/components/channels/ChannelLogoPicker.vue'
 import { useChannelChange } from '@/components/channels/useChannelChange'
@@ -352,7 +354,7 @@ import { useFriendlyError } from '@/composables/useFriendlyError'
 import { usePlanError } from '@/composables/usePlanError'
 import type { BouquetEntry, ChannelBackup, ChannelBouquet, ChannelInfo, ChannelIssue, PiconSet, Plan } from '@/api/types'
 
-const TABS = ['bouquets', 'find', 'picons', 'iptv'] as const
+const TABS = ['bouquets', 'find', 'picons', 'iptv', 'netcast'] as const
 type Tab = (typeof TABS)[number]
 
 const { t, locale } = useI18n()

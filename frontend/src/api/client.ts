@@ -52,6 +52,7 @@ import type {
   IptvSource,
   IptvTwinHit,
   IptvTwinSuggestion,
+  NetcastSources,
   RepoListing,
   DraftEntry,
   ChannelBouquet,
@@ -306,6 +307,7 @@ export const api = {
     // Opens the chosen streams for a moment and says which answer.
     testIptv: (token: string, ids: number[]) =>
       request<{ results: { id: number; result: IptvProbe; status?: number }[] }>('POST', '/api/v1/channels/iptv/test', { token, ids }),
+    netcastSources: () => request<NetcastSources>('GET', '/api/v1/channels/netcast/sources'),
     guideSources: () => request<{ sources: GuideSource[] }>('GET', '/api/v1/channels/iptv/guide-sources'),
     listGithub: (url: string) => request<RepoListing>('POST', '/api/v1/channels/iptv/github', { url }),
     guideCoverage: (token: string, ids: number[], url: string) =>

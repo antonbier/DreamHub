@@ -36,6 +36,7 @@
       </button>
       <p v-if="error" class="w-full text-[13px] text-warn" role="alert">{{ error }}</p>
     </form>
+    <IptvRepoPicker v-if="!list" class="mt-3" @pick="(u) => (url = u)" />
 
     <template v-else>
       <!-- 2. The channels of the list -->
@@ -184,6 +185,7 @@ import { api } from '@/api/client'
 import PlanPreview from '@/components/PlanPreview.vue'
 import IptvGuidePicker from '@/components/channels/IptvGuidePicker.vue'
 import IptvGuideSources from '@/components/channels/IptvGuideSources.vue'
+import IptvRepoPicker from '@/components/channels/IptvRepoPicker.vue'
 import IptvSources from '@/components/channels/IptvSources.vue'
 import { useChannelChange } from '@/components/channels/useChannelChange'
 import { usePlanError } from '@/composables/usePlanError'

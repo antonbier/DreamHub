@@ -914,3 +914,69 @@ func TestIPTV_GuideSourcesAndGitHub(t *testing.T) {
 		t.Errorf("not github: %d %s", resp.StatusCode, b)
 	}
 }
+
+type netcastSourcesView struct {
+	Available bool `json:"available"`
+	Listed    bool `json:"listed"`
+	Files     []struct {
+		Name    string `json:"name"`
+		Kind    string `json:"kind"`
+		Sources []struct {
+			ID       string `json:"id"`
+			Name     string `json:"name"`
+			Address  string `json:"address"`
+			HasLogin bool   `json:"hasLogin"`
+		} `json:"sources"`
+	} `json:"files"`
+}
+
+func TestNetcast_SourcesAreListedWithoutLogins(t *testing.T) {
+	e := newEnv(t)
+	resp, raw := e.do(t, "GET", "/api/v1/channels/netcast/sources", "", nil)
+	if resp.StatusCode != 200 {
+		t.Fatalf("sources: %d %s", resp.StatusCode, raw)
+	}
+	for _, leak := range []string{"hunter2", `"me"`, "Password"} {
+		if strings.Contains(string(raw), leak) {
+			t.Errorf("the answer holds %q: %s", leak, raw)
+		}
+	}
+	var v netcastSourcesView
+	e.json(t, "GET", "/api/v1/channels/netcast/sources", "", nil, 200, &v)
+	if !v.Available || !v.Listed || len(v.Files) != 3 || v.Files[0].Name != "netcastserver_gemini.json" || v.Files[2].Kind != "epg" {
+		t.Fatalf("view: %+v", v)
+	}
+	var pluto bool
+	for _, f := range v.Files {
+		for _, s := range f.Sources {
+			if s.ID == "pluto" {
+				pluto = s.HasLogin
+			}
+		}
+	}
+	if !pluto {
+		t.Errorf("Pluto has a login: %+v", v.Files)
+	}
+}
+
+func TestNetcast_BoxWithoutFiles(t *testing.T) {
+	m := mock.New()
+	m.NoBoxFiles = true
+	e := newEnvWith(t, m)
+	var v netcastSourcesView
+	e.json(t, "GET", "/api/v1/channels/netcast/sources", "", nil, 200, &v)
+	if v.Available || len(v.Files) != 0 {
+		t.Errorf("a box with no files: %+v", v)
+	}
+}
+
+func TestNetcast_BoxThatCannotListFallsBackToKnownNames(t *testing.T) {
+	m := mock.New()
+	m.NoFileListing = true
+	e := newEnvWith(t, m)
+	var v netcastSourcesView
+	e.json(t, "GET", "/api/v1/channels/netcast/sources", "", nil, 200, &v)
+	if !v.Available || v.Listed || len(v.Files) != 3 {
+		t.Errorf("fallback: %+v", v)
+	}
+}

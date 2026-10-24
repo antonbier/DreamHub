@@ -7720,6 +7720,36 @@
     },
     "x-csrf": true
    }
+  },
+  "/channels/netcast/sources": {
+   "get": {
+    "summary": "List Netcast's sources on the box",
+    "tags": [
+     "channels"
+    ],
+    "operationId": "GET_channels_netcast_sources",
+    "parameters": [
+     {
+      "$ref": "#/components/parameters/Box"
+     }
+    ],
+    "description": "Read only. Lists the `netcastserver_*.json` and `netcastepg_*.json` files of the Gemini Netcast plugin in `/etc/enigma2` (through the box's `/file`) as `{available, listed, files: [{name, kind: server|epg, sources: [{id, name, mediaType, address, hasLogin, desc}], settings}], unreadable}`. `address` has no login, query or fragment; a user name, password or token is never sent, only `hasLogin`. `listed` is false when the box could not list the folder and only the usual file names were tried. A box without Netcast answers `available: false`. Nothing is changed.",
+    "responses": {
+     "200": {
+      "description": "The sources",
+      "content": {
+       "application/json": {
+        "schema": {
+         "type": "object"
+        }
+       }
+      }
+     },
+     "default": {
+      "$ref": "#/components/responses/Error"
+     }
+    }
+   }
   }
  }
 }

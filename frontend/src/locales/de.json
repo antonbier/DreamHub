@@ -2273,7 +2273,8 @@
       "bouquets": "Bouquets",
       "find": "Alle Sender",
       "picons": "Logos",
-      "iptv": "IPTV"
+      "iptv": "IPTV",
+      "netcast": "Netcast"
     },
     "kind": {
       "tv": "TV",
@@ -2553,6 +2554,11 @@
         "missing": "In dieser Quelle nicht gefunden ({n})",
         "missingMore": "und {n} weitere",
         "playlistFile": "Playlist"
+      },
+      "repo": {
+        "title": "Oder eine Playlist aus einem GitHub-Repository",
+        "noFiles": "In diesem Ordner liegen keine Playlist-Dateien (.m3u, .m3u8).",
+        "use": "Diese Liste nehmen"
       }
     },
     "stream": {
@@ -2562,6 +2568,17 @@
       "play": "Abspielen",
       "playNamed": "{name} auf dem Fernseher abspielen",
       "playing": "„{name}“ startet auf dem Fernseher."
+    },
+    "netcast": {
+      "explain": "Die Quellen, die das Netcast-Plugin auf der Box eingerichtet hat — Internet-Playlists, Dienste und Programmführer, gelesen aus seinen eigenen Dateien. Das ist nur eine Ansicht: hier wird nichts geändert.",
+      "none": "Diese Box hat keine Netcast-Quellen (Netcast ist ein Plugin der Dreambox One).",
+      "notListed": "Die Box konnte ihre Dateien nicht auflisten, deshalb wurden nur die üblichen Dateinamen versucht. Eine eigene Datei mit anderem Namen kann fehlen.",
+      "empty": "Keine Quellen in dieser Datei.",
+      "unreadable": "Nicht lesbar: {names}",
+      "kind": {
+        "server": "Sender-Quellen",
+        "epg": "Guide-Quellen"
+      }
     }
   },
   "updates": {

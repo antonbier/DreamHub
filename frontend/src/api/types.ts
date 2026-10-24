@@ -1640,3 +1640,29 @@ export interface GuideCoverage {
   missing: { id: number; name: string }[]
   missingCount: number
 }
+
+// Netcast's source files on the box, read only (N3). No logins: a source only
+// says it has one.
+export interface NetcastSource {
+  id?: string
+  name: string
+  mediaType?: string
+  address?: string
+  hasLogin?: boolean
+  desc?: string
+}
+
+export interface NetcastFile {
+  name: string
+  kind: 'server' | 'epg'
+  sources: NetcastSource[]
+  settings?: Record<string, string>
+}
+
+export interface NetcastSources {
+  available: boolean
+  files: NetcastFile[]
+  // The box listed its folder; false means only well-known names were tried.
+  listed: boolean
+  unreadable: string[]
+}

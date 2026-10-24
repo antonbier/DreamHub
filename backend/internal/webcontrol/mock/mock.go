@@ -39,6 +39,12 @@ type Client struct {
 	// NoBoxSettings plays a box that cannot list its setup menus (a
 	// Dreambox, until the TV plugin does).
 	NoBoxSettings bool
+	// Files are the box's small files by path (boxfiles.go); nil means the
+	// sample Netcast sources. NoBoxFiles plays a box that serves no file;
+	// NoFileListing one that serves files but cannot list a directory.
+	Files         map[string][]byte
+	NoBoxFiles    bool
+	NoFileListing bool
 	// OldSettingsPlugin plays a Dreambox whose DreamHub plugin has no
 	// settings route yet.
 	OldSettingsPlugin bool
